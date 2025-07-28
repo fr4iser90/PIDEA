@@ -131,6 +131,9 @@ class ManualTasksImportService {
                 let progressInfo = {};
                 if (structure === 'index') {
                     progressInfo = this._parseIndexFileContent(content);
+                } else if (structure === 'implementation') {
+                    // ✅ FIXED: Also parse implementation files for status and progress
+                    progressInfo = this._parseIndexFileContent(content);
                 }
                 
                 // Titel: name + ggf. Phase oder Index
@@ -380,24 +383,75 @@ class ManualTasksImportService {
                 progressInfo.currentPhase = parseInt(currentPhaseMatch[1]);
             }
 
-            // Extract status (with or without emoji)
-            const statusMatch = content.match(/Status.*?(✅|❌|⏳|🔄|🚫)?\s*(\w+)/);
-            if (statusMatch) {
-                const emoji = statusMatch[1] || '';
-                const statusText = statusMatch[2].toLowerCase();
-                
-                // Map emoji to status if present
-                if (emoji === '✅') {
-                    progressInfo.status = 'completed';
-                } else if (emoji === '❌' || emoji === '🚫') {
-                    progressInfo.status = 'blocked';
-                } else if (emoji === '⏳' || emoji === '🔄') {
-                    progressInfo.status = 'in_progress';
-                } else {
-                    progressInfo.status = statusText;
+            // Extract status with robust regex for various formats
+            const statusPatterns = [
+                // Pattern 1: Status with emoji and text (✅ COMPLETED, ✅ Complete, etc.)
+                /Status.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z_]+)/,
+                // Pattern 2: Just status text (COMPLETED, Complete, completed, etc.)
+                /Status.*?([A-Za-z_]+)/,
+                // Pattern 3: Status in different formats (✅ COMPLETED, ✅ Complete, etc.)
+                /Status.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z\s_]+)/,
+                // Pattern 4: Status with dashes (in-progress, in_progress, etc.)
+                /Status.*?([A-Za-z\-_\s]+)/,
+                // Pattern 5: Status with emoji and ALL CAPS text (✅ COMPLETED)
+                /Status.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Z]+)/,
+                // Pattern 6: Status with emoji and mixed case (✅ COMPLETED, ✅ Complete)
+                /Status.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z]+)/,
+                // Pattern 7: Markdown format with bold (**Status**: ✅ COMPLETED)
+                /\*\*Status\*\*.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z]+)/,
+                // Pattern 8: Markdown format with bold and ALL CAPS (**Status**: ✅ COMPLETED)
+                /\*\*Status\*\*.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Z]+)/,
+                // Pattern 9: Markdown format with dash and bold (- **Status**: ✅ COMPLETED)
+                /-\s*\*\*Status\*\*.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z]+)/,
+                // Pattern 10: Markdown format with dash, bold and ALL CAPS (- **Status**: ✅ COMPLETED)
+                /-\s*\*\*Status\*\*.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Z]+)/,
+                // Pattern 11: General markdown format with any prefix (- **Status**: ✅ COMPLETED)
+                /.*\*\*Status\*\*.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z]+)/,
+                // Pattern 12: General markdown format with any prefix and ALL CAPS (- **Status**: ✅ COMPLETED)
+                /.*\*\*Status\*\*.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Z]+)/
+            ];
+
+            let statusDetected = false;
+            for (const pattern of statusPatterns) {
+                const statusMatch = content.match(pattern);
+                if (statusMatch) {
+                    const emoji = statusMatch[1] || '';
+                    const statusText = (statusMatch[2] || statusMatch[1] || '').toLowerCase().trim();
+                    
+                    // Normalize status text
+                    let normalizedStatus = statusText;
+                    
+                    // Handle various completion statuses
+                    if (statusText.includes('complete') || statusText.includes('done') || statusText.includes('finished') || 
+                        statusText === 'COMPLETED' || statusText === 'complete' || statusText === 'Complete') {
+                        normalizedStatus = 'completed';
+                    } else if (statusText.includes('in_progress') || statusText.includes('in-progress') || statusText.includes('progress') ||
+                               statusText === 'IN_PROGRESS' || statusText === 'in_progress') {
+                        normalizedStatus = 'in_progress';
+                    } else if (statusText.includes('blocked') || statusText.includes('failed') || statusText.includes('error') ||
+                               statusText === 'BLOCKED' || statusText === 'blocked') {
+                        normalizedStatus = 'blocked';
+                    } else if (statusText.includes('planning') || statusText.includes('pending') ||
+                               statusText === 'PLANNING' || statusText === 'planning') {
+                        normalizedStatus = 'planning';
+                    }
+                    
+                    // Map emoji to status if present (but be more careful with completion)
+                    if (emoji === '❌' || emoji === '🚫') {
+                        normalizedStatus = 'blocked';
+                    } else if (emoji === '⏳' || emoji === '🔄') {
+                        normalizedStatus = 'in_progress';
+                    } else if (emoji === '✅' || emoji === '🎉') {
+                        // Only set to completed if we're sure it's 100% done
+                        // This will be overridden later if progress < 100%
+                        normalizedStatus = 'completed';
+                    }
+                    
+                    progressInfo.status = normalizedStatus;
+                    logger.info(`📊 [ManualTasksImportService] Status detected: ${emoji} ${statusText} -> ${normalizedStatus}`);
+                    statusDetected = true;
+                    break;
                 }
-                
-                logger.info(`📊 [ManualTasksImportService] Status detected: ${emoji} ${statusText} -> ${progressInfo.status}`);
             }
 
             // Extract estimated completion
@@ -434,6 +488,63 @@ class ManualTasksImportService {
                 progressInfo.implementationFiles = implementationStatus.files;
                 logger.info(`✅ Feature implementation detected: ${implementationStatus.files.length} files found`);
             }
+            
+            // ✅ NEW: Additional completion detection patterns (only for 100% completion)
+            const completionPatterns = [
+                /100%\s*(Complete|COMPLETED|complete)/gi,
+                /Overall Progress.*?100%/gi,
+                /Progress.*?100%/gi,
+                /TASK COMPLETED SUCCESSFULLY/gi,
+                /Task Completed Successfully/gi,
+                /COMPLETED SUCCESSFULLY/gi
+            ];
+            
+            for (const pattern of completionPatterns) {
+                if (pattern.test(content)) {
+                    progressInfo.status = 'completed';
+                    progressInfo.overallProgress = 100;
+                    logger.info(`✅ 100% Completion pattern detected: ${pattern.source}`);
+                    break;
+                }
+            }
+            
+            // ✅ NEW: Partial completion detection (don't override calculated progress)
+            const partialCompletionPatterns = [
+                /✅\s*(Complete|COMPLETED|complete|Done|done|Finished|finished)/gi,
+                /🎉\s*(Complete|COMPLETED|complete|Done|done|Finished|finished)/gi
+            ];
+            
+            let hasPartialCompletion = false;
+            for (const pattern of partialCompletionPatterns) {
+                if (pattern.test(content)) {
+                    hasPartialCompletion = true;
+                    logger.info(`✅ Partial completion pattern detected: ${pattern.source}`);
+                    break;
+                }
+            }
+            
+            // ✅ CRITICAL FIX: Only set status to completed if progress is actually 100%
+            // If we have partial completion but progress < 100%, keep it as in_progress
+            if (hasPartialCompletion && progressInfo.overallProgress < 100) {
+                progressInfo.status = 'in_progress';
+                logger.info(`🔄 Partial completion detected but progress is ${progressInfo.overallProgress}% - setting status to in_progress`);
+            }
+            
+            // ✅ FINAL VALIDATION: Ensure status matches progress
+            if (progressInfo.overallProgress >= 100) {
+                progressInfo.status = 'completed';
+                logger.info(`✅ Progress is 100% - final status set to completed`);
+            } else if (progressInfo.overallProgress > 0 && progressInfo.overallProgress < 100) {
+                if (progressInfo.status === 'completed') {
+                    progressInfo.status = 'in_progress';
+                    logger.info(`🔄 Progress is ${progressInfo.overallProgress}% but status was completed - corrected to in_progress`);
+                }
+            } else if (progressInfo.overallProgress === 0) {
+                if (progressInfo.status === 'completed') {
+                    progressInfo.status = 'planning';
+                    logger.info(`🔄 Progress is 0% but status was completed - corrected to planning`);
+                }
+            }
 
             return progressInfo;
             
@@ -448,31 +559,55 @@ class ManualTasksImportService {
      */
     _calculateProgressFromPhases(content) {
         try {
-            // Look for phase status patterns like "✅ Complete", "⏳ Pending", etc.
-            const phaseMatches = content.matchAll(/(?:Phase \d+|Phase \d+ of \d+).*?(✅|❌|⏳|🔄|🚫)?\s*(Complete|Pending|In Progress|Blocked|Planning)/gi);
-            
             let completedPhases = 0;
             let totalPhases = 0;
             
-            for (const match of phaseMatches) {
-                totalPhases++;
-                const emoji = match[1] || '';
-                const status = match[2].toLowerCase();
-                
-                // Count as completed if ✅ or "complete"
-                if (emoji === '✅' || status === 'complete') {
-                    completedPhases++;
+            // Pattern 1: Phase status patterns like "✅ Complete", "⏳ Pending", etc.
+            const phasePatterns = [
+                /(?:Phase \d+|Phase \d+ of \d+).*?(✅|❌|⏳|🔄|🚫|🎉)?\s*(Complete|Pending|In Progress|Blocked|Planning|COMPLETED|IN_PROGRESS)/gi,
+                /Phase.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*(Complete|Pending|In Progress|Blocked|Planning|COMPLETED|IN_PROGRESS)/gi
+            ];
+            
+            for (const pattern of phasePatterns) {
+                const phaseMatches = content.matchAll(pattern);
+                for (const match of phaseMatches) {
+                    totalPhases++;
+                    const emoji = match[1] || '';
+                    const status = (match[2] || '').toLowerCase();
+                    
+                    // Count as completed if ✅ or contains "complete"
+                    if (emoji === '✅' || emoji === '🎉' || status.includes('complete') || status.includes('done') || status.includes('finished')) {
+                        completedPhases++;
+                    }
                 }
             }
             
-            // Also check for individual phase status in tables
-            const tablePhaseMatches = content.matchAll(/\| (\d+[A-Z]?) \|.*?\| (🟢|🟡|🔴|✅) /g);
-            for (const match of tablePhaseMatches) {
-                totalPhases++;
-                const status = match[2];
-                if (status === '✅' || status === '🟢') {
-                    completedPhases++;
+            // Pattern 2: Individual phase status in tables
+            const tablePatterns = [
+                /\| (\d+[A-Z]?) \|.*?\| (🟢|🟡|🔴|✅|🎉) /g,
+                /\| (\d+[A-Z]?) \|.*?\| (✅|COMPLETED|Complete|complete) /gi,
+                /\| (\d+[A-Z]?) \|.*?\| (🔄|IN_PROGRESS|In Progress|in_progress) /gi
+            ];
+            
+            for (const pattern of tablePatterns) {
+                const tablePhaseMatches = content.matchAll(pattern);
+                for (const match of tablePhaseMatches) {
+                    totalPhases++;
+                    const status = match[2];
+                    if (status === '✅' || status === '🎉' || status === '🟢' || 
+                        status.toLowerCase().includes('complete') || 
+                        status.toLowerCase().includes('done') || 
+                        status.toLowerCase().includes('finished')) {
+                        completedPhases++;
+                    }
                 }
+            }
+            
+            // Pattern 3: Check for "✅ COMPLETED" patterns in phase descriptions
+            const completedPhaseMatches = content.matchAll(/✅\s*(COMPLETED|Complete|complete|Done|done|Finished|finished)/gi);
+            for (const match of completedPhaseMatches) {
+                totalPhases++;
+                completedPhases++;
             }
             
             if (totalPhases > 0) {
