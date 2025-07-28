@@ -41,6 +41,7 @@ const useIDEStore = create(
         git: {}, // { '/path1': { status, branches, lastUpdate }, '/path2': { status, branches, lastUpdate } }
         analysis: {}, // { '/path1': { status, metrics, history, lastUpdate }, '/path2': { status, metrics, history, lastUpdate } }
         chat: {}, // { '/path1': { messages, lastUpdate }, '/path2': { messages, lastUpdate } }
+        tasks: {}, // { '/path1': { tasks: [], lastUpdate }, '/path2': { tasks: [], lastUpdate } }
         lastUpdate: null
       },
 
@@ -348,6 +349,41 @@ const useIDEStore = create(
           logger.info('Project data loaded for workspace:', workspacePath);
         } catch (error) {
           logger.error('Failed to load project data:', error);
+        }
+      },
+
+      // NEW: Task Loading Action
+      loadProjectTasks: async (workspacePath) => {
+        if (!workspacePath) return;
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(workspacePath);
+          if (!projectId) return;
+          
+          logger.info('Loading project tasks for workspace:', workspacePath, 'projectId:', projectId);
+          
+          // Load tasks from API
+          const response = await apiCall(`/api/projects/${projectId}/tasks`);
+          
+          const taskData = {
+            tasks: response && response.success ? (Array.isArray(response.data) ? response.data : []) : [],
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              tasks: {
+                ...state.projectData.tasks,
+                [workspacePath]: taskData
+              },
+              lastUpdate: new Date().toISOString()
+            }
+          }));
+          
+          logger.info('Project tasks loaded for workspace:', workspacePath, 'taskCount:', taskData.tasks.length);
+        } catch (error) {
+          logger.error('Failed to load project tasks:', error);
         }
       },
 

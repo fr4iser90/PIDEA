@@ -125,13 +125,11 @@ class FileBasedWorkspaceDetector {
     try {
       logger.info('Closing terminal...');
       
-      // Terminal schließen (Ctrl+D oder Ctrl+W)
-      await page.keyboard.down('Control');
-      await page.keyboard.press('D');
-      await page.keyboard.up('Control');
+      await page.keyboard.type('exit');
+      await page.keyboard.press('Enter');
       
-      // Alternative: Ctrl+W falls Ctrl+D nicht funktioniert
-      await page.waitForTimeout(500);
+      // Warten bis Terminal geschlossen ist
+      await page.waitForTimeout(1000);
       
       logger.info('Terminal closed');
       

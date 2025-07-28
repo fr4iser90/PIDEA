@@ -135,6 +135,25 @@ export const useChatMessages = (workspacePath = null) => {
   }, [projectData?.chat, activeIDE, workspacePath]);
 };
 
+// Task selectors
+export const useProjectTasks = (workspacePath = null) => {
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
+  
+  return useMemo(() => {
+    const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
+    const taskData = projectData?.tasks?.[targetWorkspacePath];
+    
+    return {
+      tasks: taskData?.tasks || [],
+      hasTasks: (taskData?.tasks || []).length > 0,
+      taskCount: (taskData?.tasks || []).length,
+      lastUpdate: taskData?.lastUpdate,
+      projectId: targetWorkspacePath ? getProjectIdFromWorkspace(targetWorkspacePath) : null
+    };
+  }, [projectData?.tasks, activeIDE, workspacePath]);
+};
+
 // IDE selectors (enhanced with project data)
 export const useActiveIDE = () => {
   const { availableIDEs } = useIDEStore();
@@ -157,6 +176,7 @@ export const useProjectDataActions = () => {
   
   return {
     loadProjectData: store.loadProjectData,
+    loadProjectTasks: store.loadProjectTasks,
     setupWebSocketListeners: store.setupWebSocketListeners,
     cleanupWebSocketListeners: store.cleanupWebSocketListeners
   };

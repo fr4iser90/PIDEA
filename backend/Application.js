@@ -1030,22 +1030,8 @@ class Application {
         this.logger.info(`Database: ${this.databaseConnection.getType()}`);
         this.logger.info(`Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
         
-        // Start workspace detection after server is running (only if no existing data)
-        try {
-          this.logger.info('Checking if workspace detection is needed...');
-          const stats = this.ideWorkspaceDetectionService.getDetectionStats();
-          
-          if (stats.total === 0) {
-            this.logger.info('No existing detection data found, starting workspace detection...');
-            await this.ideWorkspaceDetectionService.detectAllWorkspaces();
-            const newStats = this.ideWorkspaceDetectionService.getDetectionStats();
-            this.logger.info(`Workspace detection completed: ${newStats.successful}/${newStats.total} successful`);
-          } else {
-            this.logger.info(`Found existing detection data (${stats.total} results), skipping workspace detection`);
-          }
-        } catch (error) {
-          this.logger.error('Workspace detection failed:', error);
-        }
+        // DISABLED: Automatic workspace detection to prevent duplicate terminal commands
+        this.logger.info('Automatic workspace detection disabled - will be triggered manually when needed');
       });
 
       // Graceful shutdown

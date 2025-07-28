@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { useActiveIDE, useProjectTasks, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
 import TaskCreationModal from '../modal/TaskCreationModal.jsx';
@@ -107,6 +108,11 @@ const VerticalActionButtons = ({
 function TasksPanelComponent({ eventBus, activePort }) {
   const api = new APIChatRepository();
   
+  // ✅ NEW: Use project-specific selectors
+  const { activeIDE, projectId, projectName } = useActiveIDE();
+  const { tasks: manualTasks, hasTasks, taskCount, lastUpdate } = useProjectTasks();
+  const { loadProjectTasks } = useProjectDataActions();
+  
   // Helper functions
   const getTaskFilename = (task) => {
     return task.filename || task.title || 'Unknown';
@@ -174,7 +180,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   // State management
-  const [manualTasks, setManualTasks] = useState([]);
+  const [localManualTasks, setLocalManualTasks] = useState([]);
   const [isLoadingManualTasks, setIsLoadingManualTasks] = useState(false);
   const [selectedManualTask, setSelectedManualTask] = useState(null);
   const [isManualTaskModalOpen, setIsManualTaskModalOpen] = useState(false);
@@ -192,19 +198,21 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const [isInitialSyncComplete, setIsInitialSyncComplete] = useState(false);
   const [isWaitingForSync, setIsWaitingForSync] = useState(true);
 
-  // Load tasks on component mount
+  // ✅ NEW: Load tasks on component mount and when project changes
   useEffect(() => {
-    loadTasks();
-    
-    // Wait a bit for backend sync to complete before showing "no tasks"
-    const initialDelay = setTimeout(() => {
-      if (manualTasks.length === 0 && !isLoadingManualTasks) {
-        setIsWaitingForSync(false);
-      }
-    }, 3000); // Wait 3 seconds for initial sync
-    
-    return () => clearTimeout(initialDelay);
-  }, []); // Only run once on mount
+    if (projectId && activeIDE?.workspacePath) {
+      loadTasks();
+      
+      // Wait a bit for backend sync to complete before showing "no tasks"
+      const initialDelay = setTimeout(() => {
+        if (manualTasks.length === 0 && !isLoadingManualTasks) {
+          setIsWaitingForSync(false);
+        }
+      }, 3000); // Wait 3 seconds for initial sync
+      
+      return () => clearTimeout(initialDelay);
+    }
+  }, [projectId, activeIDE?.workspacePath]); // Auto-reload when project changes
 
   // Listen for task sync events from WebSocket
   useEffect(() => {
@@ -232,6 +240,11 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const loadTasksThrottle = 5000; // 5 seconds
 
   const loadTasks = async (force = false) => {
+    if (!projectId || !activeIDE?.workspacePath) {
+      logger.debug('No project ID or workspace path available, skipping task load');
+      return;
+    }
+    
     const now = Date.now();
     
     // Prevent excessive loading
@@ -242,34 +255,19 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
     setIsLoadingManualTasks(true);
     try {
-      const response = await api.getManualTasks();
-      if (response && response.success) {
-        // Ensure we have an array of tasks
-        const tasks = Array.isArray(response.data) ? response.data : 
-                     Array.isArray(response.tasks) ? response.tasks : 
-                     Array.isArray(response.data?.tasks) ? response.data.tasks : [];
-        
-        setManualTasks(tasks);
-        setLastLoadTime(now);
-        
-        // If we found tasks, mark sync as complete
-        if (tasks.length > 0) {
-          setIsInitialSyncComplete(true);
-          setIsWaitingForSync(false);
-        }
-        
-        logger.debug('Tasks loaded successfully:', { taskCount: tasks.length });
-      } else {
-        logger.warn('Load response not successful:', response);
-        setManualTasks([]);
-        // Don't immediately show "no tasks" on first load
-        if (lastLoadTime > 0) {
-          setIsWaitingForSync(false);
-        }
+      // ✅ FIXED: Use project-specific task loading
+      await loadProjectTasks(activeIDE.workspacePath);
+      setLastLoadTime(now);
+      
+      // If we found tasks, mark sync as complete
+      if (manualTasks.length > 0) {
+        setIsInitialSyncComplete(true);
+        setIsWaitingForSync(false);
       }
+      
+      logger.debug('Tasks loaded successfully:', { taskCount: manualTasks.length, projectId });
     } catch (error) {
       logger.error('Error loading manual tasks:', error);
-      setManualTasks([]);
       // Don't immediately show "no tasks" on first load
       if (lastLoadTime > 0) {
         setIsWaitingForSync(false);
@@ -280,26 +278,34 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleSyncTasks = async () => {
+    if (!projectId || !activeIDE?.workspacePath) {
+      setFeedback('No project selected for task sync');
+      return;
+    }
+    
     setIsLoadingManualTasks(true);
     setIsWaitingForSync(true);
     try {
-      const response = await api.syncManualTasks();
+      // ✅ FIXED: Call backend sync endpoint to import tasks from workspace
+      const response = await apiCall(`/api/projects/${projectId}/tasks/sync-manual`, {
+        method: 'POST',
+        body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+      });
+      
       if (response && response.success) {
-        // Ensure we have an array of tasks
-        const tasks = Array.isArray(response.data) ? response.data : 
-                     Array.isArray(response.tasks) ? response.tasks : 
-                     Array.isArray(response.data?.tasks) ? response.data.tasks : [];
-        
-        setManualTasks(tasks);
-        setFeedback('Tasks synced successfully');
+        // Reload tasks after sync
+        await loadProjectTasks(activeIDE.workspacePath);
+        setFeedback(`Tasks synced successfully (${response.data?.importedCount || 0} imported)`);
         setLastLoadTime(Date.now());
         setIsInitialSyncComplete(true);
         setIsWaitingForSync(false);
-        logger.info('Tasks synced successfully:', { taskCount: tasks.length });
+        logger.info('Tasks synced successfully:', { 
+          taskCount: manualTasks.length, 
+          importedCount: response.data?.importedCount || 0,
+          projectId 
+        });
       } else {
-        logger.warn('Sync response not successful:', response);
-        setFeedback('Sync completed but no tasks returned');
-        setIsWaitingForSync(false);
+        throw new Error(response?.error || 'Task sync failed');
       }
     } catch (error) {
       logger.error('Error syncing tasks:', error);
@@ -312,12 +318,25 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleCleanTasks = async () => {
+    if (!projectId || !activeIDE?.workspacePath) {
+      setFeedback('No project selected for task cleaning');
+      return;
+    }
+    
     setIsLoadingManualTasks(true);
     try {
-      const response = await api.cleanManualTasks();
-      if (response && response.data) {
-        setManualTasks(response.data);
+      // ✅ FIXED: Use project-specific task cleaning
+      const response = await apiCall(`/api/projects/${projectId}/tasks/clean-manual`, {
+        method: 'POST',
+        body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+      });
+      
+      if (response && response.success) {
+        // Reload tasks after cleaning
+        await loadProjectTasks(activeIDE.workspacePath);
         setFeedback('Tasks cleaned successfully');
+      } else {
+        setFeedback('Task cleaning failed');
       }
     } catch (error) {
       logger.error('Error cleaning tasks:', error);
@@ -468,14 +487,24 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleTaskSubmit = async (taskData) => {
+    if (!projectId || !activeIDE?.workspacePath) {
+      setFeedback('No project selected for task creation');
+      return;
+    }
+    
     try {
-      // Get current project ID
-      const projectId = await api.getCurrentProjectId();
+      // ✅ FIXED: Use project-specific task creation
+      const response = await apiCall(`/api/projects/${projectId}/tasks`, {
+        method: 'POST',
+        body: JSON.stringify({
+          ...taskData,
+          projectPath: activeIDE.workspacePath
+        })
+      });
       
-      // Use the correct task creation endpoint
-      const response = await api.createTask(taskData, projectId);
       if (response && response.success) {
-        setManualTasks(prev => [...(Array.isArray(prev) ? prev : []), response.data]);
+        // Reload tasks after creation
+        await loadProjectTasks(activeIDE.workspacePath);
         setFeedback('Task created successfully');
         setShowTaskCreationModal(false);
       } else {
@@ -487,7 +516,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
     }
   };
 
-  // Filter and group tasks
+  // ✅ FIXED: Filter and group tasks using state-based data
   const filteredTasks = (Array.isArray(manualTasks) ? manualTasks : []).filter(task => {
     const matchesSearch = !taskSearch || 
       getTaskTitle(task).toLowerCase().includes(taskSearch.toLowerCase()) ||
@@ -525,23 +554,33 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   return (
     <div className="tasks-tab">
-      {/* Simplified Header */}
+      {/* ✅ NEW: Enhanced Header with Project Context */}
       <div className="tasks-header">
         <div className="tasks-header-content">
-          <h3 className="tasks-title">📋 Task Management</h3>
+          <div className="tasks-title-section">
+            <h3 className="tasks-title">📋 Task Management</h3>
+            {projectName && (
+              <div className="project-context">
+                <span className="project-label">Project:</span>
+                <span className="project-name">{projectName}</span>
+                <span className="task-count">({taskCount} tasks)</span>
+              </div>
+            )}
+          </div>
           <div className="tasks-header-buttons">
             <button 
               className="btn-primary text-sm"
               onClick={handleCreateTask}
-              title="Create new task"
+              disabled={!projectId}
+              title={projectId ? "Create new task" : "No project selected"}
             >
               ➕ Create
             </button>
             <button 
               className="btn-secondary text-sm"
               onClick={handleSyncTasks}
-              disabled={isLoadingManualTasks}
-              title="Sync tasks with backend"
+              disabled={isLoadingManualTasks || !projectId}
+              title={projectId ? "Sync tasks with backend" : "No project selected"}
             >
               {isLoadingManualTasks ? 'Syncing...' : '🔄 Sync'}
             </button>

@@ -24,11 +24,44 @@
   align-items: center;
 }
 
+.tasks-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .tasks-title {
   font-size: 1.125rem;
   font-weight: 600;
   margin: 0;
   color: var(--text-primary);
+}
+
+/* ✅ NEW: Project Context Styling */
+.project-context {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--success-bg, #f0fdf4);
+  border: 1px solid var(--success-border, #bbf7d0);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--success-text, #166534);
+}
+
+.project-label {
+  font-weight: 500;
+}
+
+.project-name {
+  font-weight: 600;
+  color: var(--success-text-dark, #15803d);
+}
+
+.task-count {
+  color: var(--text-muted);
+  font-size: 0.7rem;
 }
 
 .tasks-header-buttons {

@@ -6,6 +6,7 @@ class TaskType {
   static BUG = 'bug';
   static REFACTOR = 'refactor';
   static DOCUMENTATION = 'documentation';
+  static MANUAL = 'manual';
   static TEST = 'test';
   static TESTING = 'testing';
   static TEST_FIX = 'test_fix';
@@ -98,6 +99,7 @@ class TaskType {
       TaskType.OPTIMIZATION,
       TaskType.SECURITY,
       TaskType.ANALYSIS,
+      TaskType.MANUAL,
       TaskType.TEST,
       TaskType.TESTING,
       TaskType.TEST_FIX,
@@ -168,6 +170,7 @@ class TaskType {
       TaskType.OPTIMIZATION,
       TaskType.SECURITY,
       TaskType.DOCUMENTATION,
+      TaskType.MANUAL,
       TaskType.ANALYSIS,
       TaskType.TEST,
       TaskType.TESTING,
@@ -284,6 +287,10 @@ class TaskType {
 
   isDocumentation() {
     return this.value === TaskType.DOCUMENTATION;
+  }
+
+  isManual() {
+    return this.value === TaskType.MANUAL;
   }
 
   isTest() {
@@ -410,6 +417,8 @@ class TaskType {
       return 'bugfix';
     } else if (this.isDocumentation()) {
       return 'documentation';
+    } else if (this.isManual()) {
+      return 'manual';
     } else if (this.isOptimization()) {
       return 'optimization';
     } else if (this.isSecurity()) {
@@ -435,6 +444,8 @@ class TaskType {
         return ['investigation', 'fix', 'testing', 'verification'];
       case 'documentation':
         return ['research', 'writing', 'review', 'publishing'];
+      case 'manual':
+        return ['planning', 'execution', 'validation', 'completion'];
       case 'optimization':
         return ['baseline', 'optimization', 'testing', 'validation'];
       case 'security':
@@ -460,6 +471,8 @@ class TaskType {
         return ['debugger', 'code_analyzer', 'test_runner'];
       case 'documentation':
         return ['documentation_generator', 'markdown_processor'];
+      case 'manual':
+        return ['task_executor', 'code_generator'];
       case 'optimization':
         return ['performance_analyzer', 'optimizer', 'test_runner'];
       case 'security':
@@ -492,6 +505,8 @@ class TaskType {
         return 90; // 1.5 hours
       case TaskType.DOCUMENTATION:
         return 45; // 45 minutes
+      case TaskType.MANUAL:
+        return 60; // 1 hour
       case TaskType.TEST:
         return 30; // 30 minutes
       case TaskType.ANALYSIS:
@@ -516,6 +531,8 @@ class TaskType {
         return 4;
       case TaskType.DOCUMENTATION:
         return 2;
+      case TaskType.MANUAL:
+        return 3;
       case TaskType.TEST:
         return 2;
       case TaskType.ANALYSIS:
@@ -535,6 +552,7 @@ class TaskType {
       TaskType.BUG,
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
+      TaskType.MANUAL,
       TaskType.TEST,
       TaskType.TESTING,
       TaskType.TEST_FIX,
@@ -609,6 +627,7 @@ class TaskType {
       TaskType.BUG,
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
+      TaskType.MANUAL,
       TaskType.TEST,
       TaskType.TESTING,
       TaskType.TEST_FIX,

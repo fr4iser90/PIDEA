@@ -7,6 +7,7 @@ class TaskType {
   static BUG = 'bug';
   static REFACTOR = 'refactor';
   static DOCUMENTATION = 'documentation';
+  static MANUAL = 'manual';
   static TEST = 'test';
   static TESTING = 'testing';
   static TEST_FIX = 'test_fix';
@@ -97,7 +98,7 @@ class TaskType {
   requiresAI() {
     return [
       TaskType.FEATURE, TaskType.BUG, TaskType.OPTIMIZATION, TaskType.SECURITY, 
-      TaskType.ANALYSIS, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, 
+      TaskType.ANALYSIS, TaskType.MANUAL, TaskType.TEST, TaskType.TESTING, TaskType.TEST_FIX, 
       TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR, TaskType.REFACTOR,
       TaskType.REFACTOR_NODE, TaskType.REFACTOR_REACT, TaskType.REFACTOR_FRONTEND,
       TaskType.REFACTOR_BACKEND, TaskType.REFACTOR_DATABASE, TaskType.REFACTOR_API,
@@ -122,7 +123,7 @@ class TaskType {
   requiresExecution() {
     return [
       TaskType.FEATURE, TaskType.BUG, TaskType.REFACTOR, TaskType.OPTIMIZATION,
-      TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.ANALYSIS, TaskType.TEST,
+      TaskType.SECURITY, TaskType.DOCUMENTATION, TaskType.MANUAL, TaskType.ANALYSIS, TaskType.TEST,
       TaskType.TESTING, TaskType.TEST_FIX, TaskType.TEST_COVERAGE, TaskType.TEST_REFACTOR,
       TaskType.TEST_STATUS, TaskType.TEST_REPORT, TaskType.REFACTOR_NODE,
       TaskType.REFACTOR_REACT, TaskType.REFACTOR_FRONTEND, TaskType.REFACTOR_BACKEND,
@@ -184,6 +185,10 @@ class TaskType {
 
   isDocumentation() {
     return this.value === TaskType.DOCUMENTATION;
+  }
+
+  isManual() {
+    return this.value === TaskType.MANUAL;
   }
 
   isTest() {
@@ -439,6 +444,7 @@ class TaskType {
       TaskType.BUG,
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
+      TaskType.MANUAL,
       TaskType.TEST,
       TaskType.TESTING,
       TaskType.TEST_FIX,
@@ -508,6 +514,7 @@ class TaskType {
       TaskType.BUG,
       TaskType.REFACTOR,
       TaskType.DOCUMENTATION,
+      TaskType.MANUAL,
       TaskType.TEST,
       TaskType.TESTING,
       TaskType.TEST_FIX,
@@ -649,6 +656,7 @@ class TaskType {
     if (this.isFeature()) return 'feature';
     if (this.isBug()) return 'bugfix';
     if (this.isDocumentation()) return 'documentation';
+    if (this.isManual()) return 'manual';
     if (this.isOptimization()) return 'optimization';
     if (this.isSecurity()) return 'security';
     if (this.isAnalysis()) return 'analysis';

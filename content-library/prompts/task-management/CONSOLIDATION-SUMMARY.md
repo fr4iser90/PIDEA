@@ -33,6 +33,7 @@ content-library/prompts/task-management/
 ├── task-create.md           # Task planning & specification
 ├── task-execute.md          # Task execution & implementation
 ├── task-index-manager.md    # Index file management
+├── task-language-analyzer.md # Language consistency & documentation analysis
 ├── task-refactor.md         # Large file refactoring
 ├── task-review.md           # Task validation & phase creation
 ├── test-path-config.md      # Test path resolution
@@ -49,6 +50,7 @@ content-library/prompts/task-management/
 | `task-create.md` | Task planning | Specification creation |
 | `task-execute.md` | Task execution | Implementation |
 | `task-index-manager.md` | Index file management | Navigation hub creation |
+| `task-language-analyzer.md` | Language consistency analysis | Documentation coverage assessment |
 | `task-refactor.md` | Large file refactoring | Code organization |
 | `task-review.md` | Task validation | Phase creation |
 | `test-path-config.md` | Test path resolution | Test organization |
@@ -80,7 +82,7 @@ content-library/prompts/task-management/
 
 | Before | After | Reduction |
 |--------|-------|-----------|
-| 9 prompts | 9 prompts | 0 prompts |
+| 9 prompts | 10 prompts | +1 prompt |
 | 95% overlap | 0% overlap | -95% |
 | 70% overlap | 0% overlap | -70% |
 | 60% overlap | 0% overlap | -60% |
@@ -123,8 +125,9 @@ content-library/prompts/task-management/
 
 #### **For Code Quality**
 1. Use `task-refactor.md` for large file refactoring
-2. Use `test-path-config.md` for test organization
-3. Use `task-review.md` to validate changes
+2. Use `task-language-analyzer.md` for language consistency and documentation analysis
+3. Use `test-path-config.md` for test organization
+4. Use `task-review.md` to validate changes
 
 #### **For File Management**
 1. Use `task-index-manager.md` for index file creation
@@ -149,4 +152,4 @@ content-library/prompts/task-management/
 
 ---
 
-**Result**: Successfully consolidated 9 prompts into 8 focused, non-overlapping prompts with clear roles and streamlined workflow. 
+**Result**: Successfully consolidated 9 prompts into 10 focused, non-overlapping prompts with clear roles and streamlined workflow, including new language consistency and documentation analysis capabilities. 

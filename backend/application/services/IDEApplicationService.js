@@ -24,6 +24,7 @@ const Logger = require('@logging/Logger');
 class IDEApplicationService {
     constructor(dependencies = {}) {
         this.ideManager = dependencies.ideManager;
+        this.ideWorkspaceDetectionService = dependencies.ideWorkspaceDetectionService;
         this.eventBus = dependencies.eventBus;
         this.cursorIDEService = dependencies.cursorIDEService;
         this.taskRepository = dependencies.taskRepository;
@@ -310,7 +311,8 @@ class IDEApplicationService {
         try {
             this.logger.info('IDEApplicationService: Detecting all workspaces', { userId });
             
-            const workspaces = await this.ideManager.detectAllWorkspaces();
+            // Use the existing IDEWorkspaceDetectionService instead of ideManager
+            const workspaces = await this.ideWorkspaceDetectionService.detectAllWorkspaces();
             
             return {
                 success: true,

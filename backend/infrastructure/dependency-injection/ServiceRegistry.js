@@ -373,10 +373,11 @@ class ServiceRegistry {
 
 
         // IDE Application Service - coordinates IDE management use cases
-        this.container.register('ideApplicationService', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {
+        this.container.register('ideApplicationService', (ideManager, ideWorkspaceDetectionService, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {
             const IDEApplicationService = require('@application/services/IDEApplicationService');
             return new IDEApplicationService({
                 ideManager,
+                ideWorkspaceDetectionService,
                 eventBus,
                 cursorIDEService,
                 taskRepository,
@@ -385,7 +386,7 @@ class ServiceRegistry {
                 browserManager,
                 logger
             });
-        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
+        }, { singleton: true, dependencies: ['ideManager', 'ideWorkspaceDetectionService', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
 
         // WebChat Application Service - coordinates chat use cases
         this.container.register('webChatApplicationService', (stepRegistry, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
