@@ -49,6 +49,11 @@ Update existing Plan/Implementation [Name]-implementation.md in docs/09_roadmap/
 - [ ] Update implementation file with current status
 - [ ] Generate progress reports and summaries
 
+## Timestamp Generation
+Reference `@timestamp-utility.md` for timestamp generation commands and usage patterns.
+
+**Quick Command**: `date -u +"%Y-%m-%dT%H:%M:%S.000Z"`
+
 ## Language Detection & Translation
 
 ### Automated Language Detection
@@ -94,7 +99,7 @@ const translateContent = async (content, sourceLanguage, targetLanguage = 'en') 
 
 ### Translation Format
 ```markdown
-## Language Status - [Date]
+## Language Status - Last Updated: [TIMESTAMP]
 
 ### Original Language
 [Original task description in detected language]
@@ -169,7 +174,7 @@ const translateContent = async (content, sourceLanguage, targetLanguage = 'en') 
 
 ### Implementation File Update Format
 ```markdown
-## Current Status - [Date]
+## Current Status - Last Updated: [TIMESTAMP]
 
 ### ✅ Completed Items
 - [x] `backend/services/AuthService.js` - Fully implemented with JWT
@@ -323,15 +328,18 @@ grep -r "deve\|può\|sarà\|avere\|essere\|fare" . --exclude-dir=node_modules
 - Technical terms are accurately translated
 - Original language is preserved alongside English
 - All files updated automatically without user input
+- Timestamps used instead of hardcoded dates for better tracking
+- All status updates include proper timestamps
 
 ## Usage Instructions
-1. Provide task name and category for status checking
-2. System will automatically detect and translate non-English content
-3. All status checks and updates performed automatically
-4. Implementation files updated with current state
-5. Progress tracking and metrics calculated automatically
-6. Language optimization completed for AI processing
-7. No user input or confirmation required
+1. **Get real timestamp**: Reference `@timestamp-utility.md` for commands
+2. Provide task name and category for status checking
+3. System will automatically detect and translate non-English content
+4. All status checks and updates performed automatically
+5. Implementation files updated with current state using real timestamp
+6. Progress tracking and metrics calculated automatically
+7. Language optimization completed for AI processing
+8. No user input or confirmation required
 
 ## File Pattern Requirement
 > **File Pattern Requirement:**  
@@ -345,11 +353,13 @@ grep -r "deve\|può\|sarà\|avere\|essere\|fare" . --exclude-dir=node_modules
 ## Example Usage
 > Check current state of user authentication implementation. Automatically detect and translate any non-English content, update the auth-implementation.md file with current status indicators, progress percentages, identify any blockers, and ensure all content is optimized for AI processing. Execute all updates automatically without user input.
 
+**Note**: Use `@timestamp-utility.md` for timestamp generation.
+
 ## Template Structure for Status Updates
 
 ### Current Status Section
 ```markdown
-## Current Status - [Date]
+## Current Status - Last Updated: [TIMESTAMP]
 
 ### ✅ Completed Items
 - [x] `backend/services/AuthService.js` - Fully implemented with JWT

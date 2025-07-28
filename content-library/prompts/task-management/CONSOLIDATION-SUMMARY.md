@@ -36,6 +36,7 @@ content-library/prompts/task-management/
 ├── task-refactor.md         # Large file refactoring
 ├── task-review.md           # Task validation & phase creation
 ├── test-path-config.md      # Test path resolution
+├── timestamp-utility.md     # Timestamp generation utility
 └── CONSOLIDATION-SUMMARY.md # This file
 ```
 
@@ -51,6 +52,7 @@ content-library/prompts/task-management/
 | `task-refactor.md` | Large file refactoring | Code organization |
 | `task-review.md` | Task validation | Phase creation |
 | `test-path-config.md` | Test path resolution | Test organization |
+| `timestamp-utility.md` | Timestamp generation | Time tracking |
 
 ### 🔄 **Workflow Integration**
 
@@ -78,7 +80,7 @@ content-library/prompts/task-management/
 
 | Before | After | Reduction |
 |--------|-------|-----------|
-| 9 prompts | 8 prompts | -1 prompt |
+| 9 prompts | 9 prompts | 0 prompts |
 | 95% overlap | 0% overlap | -95% |
 | 70% overlap | 0% overlap | -70% |
 | 60% overlap | 0% overlap | -60% |

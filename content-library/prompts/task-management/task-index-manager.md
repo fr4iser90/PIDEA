@@ -28,8 +28,8 @@ docs/09_roadmap/tasks/[category]/[name]/[name]-index.md
 - **Status**: [Planning/In Progress/Completed/Blocked]
 - **Total Estimated Time**: [X hours]
 - **Actual Time**: [X hours]
-- **Created**: [Date]
-- **Last Updated**: [Date]
+- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
+- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
 - **Assigned To**: [Developer/Team]
 
 ## 📁 File Structure
@@ -83,13 +83,13 @@ docs/09_roadmap/tasks/[category]/[name]/
 - [Task Name](./../[related-task]/[related-task]-index.md) - [Status] - [Progress]%
 
 ## 📝 Notes & Updates
-### [Date] - [Update Type] - [Author]
+### [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - [Update Type] - [Author] - Reference `@timestamp-utility.md`
 - [Description of update]
 - [Files modified]
 - [Progress made]
 - [Time spent]
 
-### [Date] - [Update Type] - [Author]
+### [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - [Update Type] - [Author] - Reference `@timestamp-utility.md`
 - [Description of update]
 - [Files modified]
 - [Progress made]
@@ -136,7 +136,7 @@ docs/09_roadmap/tasks/[category]/[name]/
 
 ### Update Process
 ```markdown
-### [Current Date] - [Update Type] - [Author]
+### [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - [Update Type] - [Author] - Reference `@timestamp-utility.md`
 - **Action**: [What was done]
 - **Files Modified**: [List of files changed]
 - **Progress**: [X]% → [Y]%

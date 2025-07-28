@@ -17,6 +17,7 @@ Create new [Name]-analysis.md in docs/09_roadmap/tasks/[category]/[name]/ with t
 - **Estimated Analysis Time**: [X hours/days - maps to task.metadata.estimated_hours]
 - **Scope**: [What areas are being analyzed - maps to task.metadata.scope]
 - **Related Components**: [List components being analyzed]
+- **Analysis Date**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
 
 ### 2. Current State Assessment
 - **Codebase Health**: [Overall assessment - maps to task.metadata.codebase_health]

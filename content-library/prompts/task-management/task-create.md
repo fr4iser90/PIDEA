@@ -25,6 +25,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 - **Estimated Time**: [X hours/days - maps to task.metadata.estimated_hours]
 - **Dependencies**: [List prerequisites - maps to task.dependencies]
 - **Related Issues**: [Link to existing issues/tickets]
+- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
 
 ### 2. Technical Requirements
 - **Tech Stack**: [List all technologies - maps to task.metadata.tech_stack]
@@ -318,8 +319,8 @@ When creating a task, automatically generate a master index file:
 - **Priority**: [High/Medium/Low]
 - **Status**: [Planning/In Progress/Completed]
 - **Total Estimated Time**: [X hours]
-- **Created**: [Date]
-- **Last Updated**: [Date]
+- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
+- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
 
 ## 📁 File Structure
 ```

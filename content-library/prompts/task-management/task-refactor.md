@@ -12,6 +12,7 @@ Generate a complete, actionable refactoring plan for large files (>500 LOC) that
 - **Priority**: [High/Medium/Low based on complexity]
 - **Estimated Time**: [X hours]
 - **Risk Level**: [Low - no logic changes, only structure]
+- **Refactoring Date**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
 
 ### 2. Current File Analysis
 - **Main Responsibilities**: [List what this file currently does]

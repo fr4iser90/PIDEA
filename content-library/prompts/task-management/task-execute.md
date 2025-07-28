@@ -159,6 +159,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - Documentation complete and accurate
 - System ready for deployment
 - Zero user intervention required
+- Timestamps used for all status updates (Reference `@timestamp-utility.md`)
 
 ## Usage Instructions
 1. Provide task description with technical requirements
@@ -170,6 +171,8 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 
 ## Example Usage
 > Execute complete implementation of user authentication system with JWT tokens, including all frontend components, backend services, database schemas, API endpoints, tests, and documentation. Feature name: "User Authentication", Priority: High. Implement with zero user input required.
+
+**Note**: Use `@timestamp-utility.md` for timestamp generation in status updates.
 
 ## Integration with Other Prompts
 
