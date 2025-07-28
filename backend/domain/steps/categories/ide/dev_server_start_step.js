@@ -171,7 +171,7 @@ class DevServerStartStep {
   async detectDevServerPort(project, workspacePath) {
     try {
       // Try to detect port from common dev server outputs
-      const commonPorts = [3000, 3001, 4000, 4001, 5000, 5001, 8080, 8081];
+      const commonPorts = [3000, 4000, 4001, 5000, 5001, 8080, 8081];
       
       for (const port of commonPorts) {
         const isInUse = await this.checkPortInUse(port);

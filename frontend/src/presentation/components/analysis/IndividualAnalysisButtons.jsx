@@ -122,6 +122,19 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
     eventBus.on('analysis:completed', handleAnalysisCompleted);
     eventBus.on('analysis-completed', handleAnalysisCompleted);
 
+    // ALSO listen to WebSocket events directly (like Queue does)
+    import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+      const WebSocketService = module.default;
+      if (WebSocketService) {
+        WebSocketService.on('workflow:step:progress', handleStepProgress);
+        WebSocketService.on('workflow:step:completed', handleStepCompleted);
+        WebSocketService.on('workflow:step:failed', handleStepFailed);
+        logger.debug('WebSocket events connected for Individual Analysis');
+      }
+    }).catch(error => {
+      logger.warn('Could not import WebSocketService for Individual Analysis', error);
+    });
+
     return () => {
       eventBus.off('step:created', handleStepCreated);
       eventBus.off('step:started', handleStepStarted);
@@ -142,6 +155,18 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       eventBus.off('analysis:completed', handleAnalysisCompleted);
       eventBus.off('analysis-completed', handleAnalysisCompleted);
+      
+      // Cleanup WebSocket events
+      import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+        const WebSocketService = module.default;
+        if (WebSocketService) {
+          WebSocketService.off('workflow:step:progress', handleStepProgress);
+          WebSocketService.off('workflow:step:completed', handleStepCompleted);
+          WebSocketService.off('workflow:step:failed', handleStepFailed);
+        }
+      }).catch(error => {
+        logger.warn('Could not import WebSocketService for cleanup', error);
+      });
     };
   };
 
@@ -197,16 +222,41 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const handleStepProgress = (data) => {
     logger.info('Step progress:', data);
-    setStepProgress(prev => new Map(prev.set(data.id, data.progress)));
     
-    // Update Run All Analysis progress based on workflow steps
-    if (data.workflowId && runAllLoading) {
-      // Calculate progress based on current step vs total steps
-      const currentStep = data.currentStep || 0;
-      const totalSteps = data.totalSteps || 7; // Comprehensive analysis has 7 steps
-      const stepProgress = Math.round((currentStep / totalSteps) * 100);
-      setRunAllProgress(stepProgress);
-      logger.debug('Updated Run All progress', { currentStep, totalSteps, stepProgress });
+    // Use overallProgress like Queue does, not data.progress
+    const progress = data.overallProgress !== undefined ? data.overallProgress : (data.progress || 0);
+    
+    // Store progress with both step ID and analysis type for compatibility
+    setStepProgress(prev => {
+      const newMap = new Map(prev);
+      newMap.set(data.id, progress);
+      
+      // Also store with analysis type for Individual Analysis buttons
+      if (data.progress && data.progress.name) {
+        const analysisType = data.progress.name.replace('-analysis', '').replace('-', '-');
+        newMap.set(analysisType, progress);
+        logger.debug('Updated progress for analysis type', { analysisType, progress });
+        
+        // Set this analysis type as active when we get progress data
+        setActiveSteps(prev => {
+          const newActiveSteps = new Map(prev);
+          newActiveSteps.set(analysisType, {
+            id: data.id,
+            analysisType: analysisType,
+            status: 'running',
+            progress: progress
+          });
+          return newActiveSteps;
+        });
+      }
+      
+      return newMap;
+    });
+    
+    // ✅ FIX: Update Run All Analysis progress using overallProgress like Queue does
+    if (data.overallProgress !== undefined) {
+      setRunAllProgress(data.overallProgress);
+      logger.debug('Updated Run All progress', { progress: data.overallProgress });
     }
   };
 
@@ -410,13 +460,13 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
     const error = errorStates.get(analysisType);
     
     if (activeStep) {
-      const progress = stepProgress.get(activeStep.id) || 0;
       return {
         isActive: true,
         isLoading: false,
-        progress: progress,
+        progress: 0, // Individual Analysis buttons don't show progress
         status: activeStep.status,
-        error: null
+        error: null,
+        id: activeStep.id
       };
     }
     
@@ -445,7 +495,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
         <div className="analysis-button-content">
           <p className="analysis-description">{analysisType.description}</p>
           
-          {isActive && (
+          {isActive && status.progress < 100 && (
             <div className="analysis-progress">
               <div className="progress-bar">
                 <div 

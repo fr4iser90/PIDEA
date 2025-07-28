@@ -66,31 +66,52 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
     }, [projectId, loadQueueStatus]);
 
     /**
-     * Load step progress for selected task
+     * Load step progress for selected task from queue data
      */
     const loadStepProgress = useCallback(async (taskId) => {
-        if (!taskId) return;
+        if (!taskId || !queueStatus) return;
 
         try {
-            logger.debug('Loading step progress', { projectId, taskId });
-            const progress = await queueRepository.getStepProgress(projectId, taskId);
+            logger.debug('Loading step progress from queue data', { projectId, taskId });
+            
+            // Find the task in the queue
+            const task = queueStatus.queue?.find(item => item.id === taskId);
+            if (!task) {
+                logger.warn('Task not found in queue', { projectId, taskId });
+                return;
+            }
+
+            // Extract step progress from queue item
+            const progress = {
+                projectId,
+                taskId,
+                currentStep: task.workflow?.currentStep || 0,
+                totalSteps: task.workflow?.steps?.length || 0,
+                progressPercentage: task.workflow?.progress || 0,
+                steps: task.workflow?.steps || [],
+                status: task.status,
+                startedAt: task.startedAt,
+                completedAt: task.completedAt
+            };
+
             setStepProgress(progress);
 
-            logger.debug('Step progress loaded', { 
+            logger.debug('Step progress loaded from queue data', { 
                 projectId, 
                 taskId, 
-                currentStep: progress?.currentStep,
-                progressPercentage: progress?.progressPercentage
+                currentStep: progress.currentStep,
+                progressPercentage: progress.progressPercentage,
+                totalSteps: progress.totalSteps
             });
 
         } catch (error) {
-            logger.error('Failed to load step progress', { 
+            logger.error('Failed to load step progress from queue data', { 
                 projectId, 
                 taskId, 
                 error: error.message 
             });
         }
-    }, [projectId]);
+    }, [projectId, queueStatus]);
 
     /**
      * Cancel queue item
@@ -241,27 +262,154 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
                 webSocketService.on('queue:item:updated', (data) => {
                     logger.debug('Queue item updated via WebSocket', { projectId, data });
-                    loadQueueStatus();
+                    
+                    // Update specific queue item with progress data if available
+                    if (data.item && data.item.workflow) {
+                        setQueueStatus(prevStatus => {
+                            if (!prevStatus || !prevStatus.queue) return prevStatus;
+                            
+                            // Handle queue structure (could be array or object with active/completed)
+                            const queueItems = Array.isArray(prevStatus.queue) 
+                                ? prevStatus.queue 
+                                : [
+                                    ...(Array.isArray(prevStatus.queue.active) ? prevStatus.queue.active : []),
+                                    ...(Array.isArray(prevStatus.queue.completed) ? prevStatus.queue.completed : [])
+                                ];
+                            
+                            const updatedQueue = queueItems.map(item => {
+                                if (item.id === data.itemId) {
+                                    return {
+                                        ...item,
+                                        ...data.item,
+                                        workflow: {
+                                            ...item.workflow,
+                                            ...data.item.workflow
+                                        }
+                                    };
+                                }
+                                return item;
+                            });
+                            
+                            // Return appropriate structure
+                            if (Array.isArray(prevStatus.queue)) {
+                                return {
+                                    ...prevStatus,
+                                    queue: updatedQueue
+                                };
+                            } else {
+                                // Split back into active/completed
+                                const active = updatedQueue.filter(item => 
+                                    item.status === 'running' || item.status === 'queued'
+                                );
+                                const completed = updatedQueue.filter(item => 
+                                    item.status === 'completed' || item.status === 'failed'
+                                );
+                                
+                                return {
+                                    ...prevStatus,
+                                    queue: {
+                                        ...prevStatus.queue,
+                                        active,
+                                        completed,
+                                        total: updatedQueue.length,
+                                        running: active.filter(item => item.status === 'running').length,
+                                        queued: active.filter(item => item.status === 'queued').length,
+                                        completed: completed.filter(item => item.status === 'completed').length,
+                                        failed: completed.filter(item => item.status === 'failed').length
+                                    }
+                                };
+                            }
+                        });
+                        
+                        // Update step progress if this is the selected task
+                        if (selectedTask && data.itemId === selectedTask.id) {
+                            setTimeout(() => loadStepProgress(selectedTask.id), 100);
+                        }
+                    } else {
+                        // Fallback: reload entire queue status
+                        loadQueueStatus();
+                    }
                 });
 
                 // Subscribe to step progress events
                 webSocketService.on('workflow:step:progress', (data) => {
                     logger.debug('Step progress updated via WebSocket', { projectId, data });
-                    if (selectedTask && data.taskId === selectedTask.id) {
+                    
+                    // Update queue item with step progress data
+                    if (data.workflowId && data.overallProgress !== undefined) {
+                        setQueueStatus(prevStatus => {
+                            if (!prevStatus || !prevStatus.queue) return prevStatus;
+                            
+                            // Handle queue structure (could be array or object with active/completed)
+                            const queueItems = Array.isArray(prevStatus.queue) 
+                                ? prevStatus.queue 
+                                : [
+                                    ...(Array.isArray(prevStatus.queue.active) ? prevStatus.queue.active : []),
+                                    ...(Array.isArray(prevStatus.queue.completed) ? prevStatus.queue.completed : [])
+                                ];
+                            
+                            const updatedQueue = queueItems.map(item => {
+                                if (item.id === data.workflowId) {
+                                    return {
+                                        ...item,
+                                        workflow: {
+                                            ...item.workflow,
+                                            progress: data.overallProgress,
+                                            currentStep: data.currentStep || item.workflow?.currentStep
+                                        }
+                                    };
+                                }
+                                return item;
+                            });
+                            
+                            // Return appropriate structure
+                            if (Array.isArray(prevStatus.queue)) {
+                                return {
+                                    ...prevStatus,
+                                    queue: updatedQueue
+                                };
+                            } else {
+                                // Split back into active/completed
+                                const active = updatedQueue.filter(item => 
+                                    item.status === 'running' || item.status === 'queued'
+                                );
+                                const completed = updatedQueue.filter(item => 
+                                    item.status === 'completed' || item.status === 'failed'
+                                );
+                                
+                                return {
+                                    ...prevStatus,
+                                    queue: {
+                                        ...prevStatus.queue,
+                                        active,
+                                        completed,
+                                        total: updatedQueue.length,
+                                        running: active.filter(item => item.status === 'running').length,
+                                        queued: active.filter(item => item.status === 'queued').length,
+                                        completed: completed.filter(item => item.status === 'completed').length,
+                                        failed: completed.filter(item => item.status === 'failed').length
+                                    }
+                                };
+                            }
+                        });
+                    }
+                    
+                    // Load detailed step progress for selected task
+                    if (selectedTask && data.workflowId === selectedTask.id) {
                         loadStepProgress(selectedTask.id);
                     }
                 });
 
                 webSocketService.on('workflow:step:started', (data) => {
                     logger.debug('Step started via WebSocket', { projectId, data });
-                    if (selectedTask && data.taskId === selectedTask.id) {
+                    if (selectedTask && data.workflowId === selectedTask.id) {
                         loadStepProgress(selectedTask.id);
                     }
                 });
 
                 webSocketService.on('workflow:step:completed', (data) => {
                     logger.debug('Step completed via WebSocket', { projectId, data });
-                    if (selectedTask && data.taskId === selectedTask.id) {
+                    if (selectedTask && data.workflowId === selectedTask.id) {
                         loadStepProgress(selectedTask.id);
                     }
                 });

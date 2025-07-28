@@ -105,8 +105,8 @@ describe('DocumentationController', () => {
   describe('analyzeAllProjects', () => {
     beforeEach(() => {
       mockIDEManager.getAvailableIDEs.mockResolvedValue([
-        { port: 3000, name: 'IDE1' },
-        { port: 3001, name: 'IDE2' }
+        { port: 9222, name: 'IDE1' },
+        { port: 9223, name: 'IDE2' }
       ]);
       mockIDEManager.getWorkspacePath.mockImplementation((port) => {
         return port === 3000 ? '/path/to/project1' : '/path/to/project2';
@@ -279,8 +279,8 @@ describe('DocumentationController', () => {
   describe('findProjectIDE', () => {
     beforeEach(() => {
       mockIDEManager.getAvailableIDEs.mockResolvedValue([
-        { port: 3000, name: 'IDE1' },
-        { port: 3001, name: 'IDE2' }
+        { port: 9222, name: 'IDE1' },
+        { port: 9223, name: 'IDE2' }
       ]);
     });
 

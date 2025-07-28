@@ -420,12 +420,16 @@ class QueueRepository {
      */
     getWorkflowTypeLabel(type) {
         const labels = {
-            task: 'Task',
-            analysis: 'Analysis',
-            framework: 'Framework',
             refactoring: 'Refactoring',
             testing: 'Testing',
-            deployment: 'Deployment'
+            analysis: 'Analysis',
+            feature: 'Feature',
+            bugfix: 'Bug Fix',
+            documentation: 'Documentation',
+            manual: 'Manual',
+            optimization: 'Optimization',
+            security: 'Security',
+            generic: 'Generic'
         };
         return labels[type] || 'Unknown';
     }

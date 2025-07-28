@@ -123,7 +123,7 @@ describe('ScreenshotStreamingService', () => {
       const port = 3000;
 
       // Mock that browser is connected to a different port
-      mockBrowserManager.getCurrentPort.mockReturnValue(3001);
+      mockBrowserManager.getCurrentPort.mockReturnValue(4000);
 
       await service.startStreaming(port);
 
@@ -418,7 +418,7 @@ describe('ScreenshotStreamingService', () => {
   describe('getAllPorts', () => {
     test('should return all active ports', async () => {
       const port1 = 3000;
-      const port2 = 3001;
+      const port2 = 4000;
 
       await service.startStreaming(port1);
       await service.startStreaming(port2);
@@ -438,7 +438,7 @@ describe('ScreenshotStreamingService', () => {
   describe('getAllSessions', () => {
     test('should return all active sessions', async () => {
       const port1 = 3000;
-      const port2 = 3001;
+      const port2 = 4000;
 
       await service.startStreaming(port1);
       await service.startStreaming(port2);
@@ -562,7 +562,7 @@ describe('ScreenshotStreamingService', () => {
       
       const failingBrowserManager = {
         isConnected: jest.fn().mockReturnValue(true),
-        getCurrentPort: jest.fn().mockReturnValue(3001), // Different port to trigger connection
+        getCurrentPort: jest.fn().mockReturnValue(4000), // Different port to trigger connection
         connectToPort: jest.fn().mockRejectedValue(new Error('Connection failed')),
         captureScreenshot: jest.fn().mockResolvedValue(Buffer.from('mock-screenshot-data')),
         getPage: jest.fn().mockReturnValue({
@@ -604,7 +604,7 @@ describe('ScreenshotStreamingService', () => {
       // Recreate the service with fresh mocks
       const freshMockBrowserManager = {
         isConnected: jest.fn().mockReturnValue(true),
-        getCurrentPort: jest.fn().mockReturnValue(3001), // Different port to trigger connection
+        getCurrentPort: jest.fn().mockReturnValue(4000), // Different port to trigger connection
         connectToPort: jest.fn().mockRejectedValue(new Error('Connection failed')),
         captureScreenshot: jest.fn().mockResolvedValue(Buffer.from('mock-screenshot-data')),
         getPage: jest.fn().mockReturnValue({

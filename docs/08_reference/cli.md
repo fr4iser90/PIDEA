@@ -192,7 +192,7 @@ lsof -i :3000
 kill -9 <PID>
 
 # Use different port
-PORT=3001 npm run dev:full
+PORT=3000 npm run dev:full
 ```
 
 ### IDE Connection Issues

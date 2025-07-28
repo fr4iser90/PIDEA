@@ -55,8 +55,21 @@ const AnalysisStatus = ({ status, onStartAnalysis, loading }) => {
   };
 
   const getProgressPercentage = () => {
-    if (!status || !status.progress) return 0;
-    return Math.min(Math.max(status.progress, 0), 100);
+    // DEBUG: Log what we're getting
+    console.log('🔍 [DEBUG] getProgressPercentage:', {
+      status: status,
+      progress: status?.progress,
+      isRunning: status?.isRunning
+    });
+    
+    if (!status || !status.progress) {
+      console.log('❌ [DEBUG] No status or progress, returning 0');
+      return 0;
+    }
+    
+    const percentage = Math.min(Math.max(status.progress, 0), 100);
+    console.log('✅ [DEBUG] Returning percentage:', percentage);
+    return percentage;
   };
 
   const renderProgressBar = () => {

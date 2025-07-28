@@ -129,10 +129,10 @@ describe('PreviewComponent Integration Tests', () => {
       const portInput = screen.getByRole('textbox', { name: /port/i });
       
       // Change port value
-      fireEvent.change(portInput, { target: { value: '3001' } });
+      fireEvent.change(portInput, { target: { value: '4000' } });
       
       await waitFor(() => {
-        expect(mockSetCustomPort).toHaveBeenCalledWith('3001');
+        expect(mockSetCustomPort).toHaveBeenCalledWith('4000');
       });
     });
   });
@@ -218,13 +218,13 @@ describe('PreviewComponent Integration Tests', () => {
       render(
         <PreviewComponent 
           eventBus={mockEventBus} 
-          activePort={3001} 
+          activePort={4000} 
           projectId="test-project" 
         />
       );
 
       await waitFor(() => {
-        expect(mockAPIRepository.getUserAppUrlForPort).toHaveBeenCalledWith(3001);
+        expect(mockAPIRepository.getUserAppUrlForPort).toHaveBeenCalledWith(4000);
       });
     });
 
@@ -315,10 +315,10 @@ describe('PreviewComponent Integration Tests', () => {
         call => call[0] === 'activeIDEChanged'
       )[1];
 
-      ideChangeHandler({ port: 3001 });
+      ideChangeHandler({ port: 4000 });
       
       await waitFor(() => {
-        expect(mockAPIRepository.getUserAppUrlForPort).toHaveBeenCalledWith(3001);
+        expect(mockAPIRepository.getUserAppUrlForPort).toHaveBeenCalledWith(4000);
       });
     });
 
@@ -336,7 +336,7 @@ describe('PreviewComponent Integration Tests', () => {
         call => call[0] === 'userAppUrl'
       )[1];
 
-      userAppUrlHandler({ url: 'http://localhost:3001', port: 3001 });
+      userAppUrlHandler({ url: 'http://localhost:4000', port: 4000 });
       
       expect(screen.getByText('Preview')).toBeInTheDocument();
     });

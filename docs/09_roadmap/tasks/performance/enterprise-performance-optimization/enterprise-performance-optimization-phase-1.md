@@ -158,7 +158,7 @@ module.exports = {
   scrapeInterval: '15s',
   targets: [
     'localhost:3000/metrics',
-    'localhost:3001/metrics'
+    'localhost:3000/metrics'
   ],
   metrics: {
     requestDuration: true,

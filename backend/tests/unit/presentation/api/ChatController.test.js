@@ -548,7 +548,7 @@ describe('WebChatController', () => {
       const mockStatus = {
         connected: true,
         activePort: 3000,
-        availablePorts: [3000, 3001],
+        availablePorts: [3000, 4000],
         lastActivity: new Date()
       };
       mockCursorIDEService.getConnectionStatus.mockResolvedValue(mockStatus);
@@ -561,7 +561,7 @@ describe('WebChatController', () => {
         data: {
           connected: true,
           activePort: 3000,
-          availablePorts: [3000, 3001],
+          availablePorts: [3000, 4000],
           lastActivity: mockStatus.lastActivity,
           userPermissions: {
             canStartIDE: true,

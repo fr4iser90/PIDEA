@@ -20,13 +20,14 @@ const path = require('path');
  * Enhanced with GitWorkflowManager integration
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null) {
+  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
     this.cursorIDEService = cursorIDEService;
     this.autoFinishSystem = autoFinishSystem;
     this.workflowGitService = workflowGitService;
+    this.queueTaskExecutionService = queueTaskExecutionService;
     
     // Initialize enhanced git workflow manager if workflowGitService is available
     if (this.workflowGitService) {
@@ -166,126 +167,62 @@ class TaskService {
   }
 
   /**
-    @param {string} taskId - Task ID
+   * Execute task using queue-based system
+   * @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @param {Object} options - Execution options
-   * @returns {Promise<Object>} Execution result
+   * @returns {Promise<Object>} Queue execution result
    */
   async executeTask(taskId, userId, options = {}) {
-          logger.info('🔍 [TaskService] executeTask called with:', { taskId, options });
+    this.logger.info('🔍 [TaskService] executeTask called with queue system:', { taskId, options });
     
     try {
+      // Validate task exists
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
         throw new Error('Task not found');
       }
-
-      logger.info('🔍 [TaskService] Found task:', task);
-
+      
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
       }
-
-      // Simple task execution - just send the prompt to Cursor IDE
-      const taskPrompt = await this.buildTaskExecutionPrompt(task);
       
-      // Use modern workflow execution with IDE Steps
-      logger.info('🔍 [TaskService] Using modern workflow execution with IDE Steps');
-      
-      // Load workflow from JSON configuration
-      const WorkflowLoaderService = require('../workflow/WorkflowLoaderService');
-      const workflowLoader = new WorkflowLoaderService();
-      await workflowLoader.loadWorkflows();
-      
-      // Get standard task workflow
-      const workflow = workflowLoader.getWorkflow('standard-task-workflow');
-      if (!workflow) {
-        throw new Error('Standard task workflow not found');
+      // Use QueueTaskExecutionService for queue-based execution
+      if (!this.queueTaskExecutionService) {
+        throw new Error('QueueTaskExecutionService not available');
       }
       
-      // Create execution context
-      const context = {
-        task,
-        taskPrompt,
-        projectPath: options.projectPath,
+      // Add to queue instead of direct execution
+      const queueItem = await this.queueTaskExecutionService.addTaskToQueue(
+        options.projectId,
         userId,
-        projectId: options.projectId,
-        ...options
-      };
-      
-      // Execute workflow using StepRegistry
-      const { getStepRegistry } = require('@steps');
-      const stepRegistry = getStepRegistry();
-      
-      const results = [];
-      for (const step of workflow.steps) {
-        try {
-          logger.info(`🔧 [TaskService] Executing step: ${step.name} (${step.step})`);
-          
-          // Build step context with task data
-          const stepContext = {
-            ...step.options,
-            ...context,
-            taskData: {
-              id: task.id,
-              title: task.title,
-              description: task.description,
-              type: task.type?.value,
-              metadata: task.metadata || {}
-            }
-          };
-
-          // If this is the send-to-ide step and useTaskPrompt is true, add the message
-          if (step.step === 'IDESendMessageStep' && step.options?.useTaskPrompt) {
-            const taskPrompt = await this.buildTaskExecutionPrompt(task);
-            stepContext.message = taskPrompt;
-          }
-
-          const stepResult = await stepRegistry.executeStep(step.step, stepContext);
-          
-          results.push({
-            step: step.name,
-            success: stepResult.success,
-            data: stepResult.data,
-            error: stepResult.error
-          });
-          
-          if (!stepResult.success) {
-            logger.error(`❌ [TaskService] Step ${step.name} failed: ${stepResult.error}`);
-            
-            // Critical steps that should stop execution
-            const criticalSteps = ['create-chat', 'send-to-ide', 'completion-check'];
-            
-            // If step is critical or strict, stop execution
-            if (criticalSteps.includes(step.name) || step.strict !== false) {
-              throw new Error(`Critical step ${step.name} failed: ${stepResult.error}`);
-            }
-            
-            // If step is not critical and not strict, continue but log the failure
-            logger.warn(`⚠️ [TaskService] Non-critical step ${step.name} failed but continuing`);
-          }
-          
-        } catch (error) {
-          logger.error(`❌ [TaskService] Step ${step.name} failed:`, error.message);
-          throw error;
+        taskId,
+        {
+          priority: options.priority || 'normal',
+          createGitBranch: options.createGitBranch || false,
+          branchName: options.branchName,
+          autoExecute: options.autoExecute || true,
+          projectPath: options.projectPath
         }
-      }
+      );
+      
+      this.logger.info('✅ [TaskService] Task added to queue successfully', {
+        taskId,
+        queueItemId: queueItem.queueItemId
+      });
       
       return {
         success: true,
         taskId: task.id,
-        taskType: task.type?.value,
-        results,
-        message: `Task executed successfully: ${task.title}`,
-        metadata: {
-          executionTime: Date.now(),
-          stepCount: workflow.steps.length,
-          timestamp: new Date()
-        }
+        queueItemId: queueItem.queueItemId,
+        status: 'queued',
+        position: queueItem.position,
+        estimatedStartTime: queueItem.estimatedStartTime,
+        message: queueItem.message
       };
-
+      
     } catch (error) {
-      logger.error('❌ [TaskService] Task execution failed:', error.message);
+      this.logger.error('❌ [TaskService] Failed to add task to queue:', error.message);
       throw error;
     }
   }

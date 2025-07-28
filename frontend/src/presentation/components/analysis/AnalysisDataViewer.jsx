@@ -41,6 +41,11 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   });
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [localAnalysisStatus, setLocalAnalysisStatus] = useState({
+    isRunning: false,
+    progress: 0,
+    currentStep: null
+  });
   
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
@@ -91,6 +96,19 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     eventBus.on('step:completed', handleAnalysisCompleted);
     eventBus.on('step:failed', handleAnalysisCompleted);
 
+    // ALSO listen to WebSocket events directly LIKE THE QUEUE DOES!
+    import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+      const WebSocketService = module.default;
+      if (WebSocketService) {
+        WebSocketService.on('workflow:step:progress', handleAnalysisProgress);
+        WebSocketService.on('workflow:step:completed', handleAnalysisCompleted);
+        WebSocketService.on('workflow:step:failed', handleAnalysisCompleted);
+        logger.debug('WebSocket events connected for AnalysisDataViewer LIKE QUEUE');
+      }
+    }).catch(error => {
+      logger.warn('Could not import WebSocketService for AnalysisDataViewer', error);
+    });
+
     return () => {
       eventBus.off('analysis-status-update', handleAnalysisStatusUpdate);
       eventBus.off('analysis-completed', handleAnalysisCompleted);
@@ -98,6 +116,18 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       eventBus.off('analysis:completed', handleAnalysisCompleted);
       eventBus.off('step:completed', handleAnalysisCompleted);
       eventBus.off('step:failed', handleAnalysisCompleted);
+      
+      // Cleanup WebSocket events LIKE QUEUE
+      import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+        const WebSocketService = module.default;
+        if (WebSocketService) {
+          WebSocketService.off('workflow:step:progress', handleAnalysisProgress);
+          WebSocketService.off('workflow:step:completed', handleAnalysisCompleted);
+          WebSocketService.off('workflow:step:failed', handleAnalysisCompleted);
+        }
+      }).catch(error => {
+        logger.warn('Could not import WebSocketService for cleanup', error);
+      });
     };
   };
 
@@ -326,11 +356,20 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   };
 
   const handleAnalysisProgress = (data) => {
-    console.log('📈 [DEBUG] Analysis progress:', data);
     logger.info('Analysis progress:', data);
     
-    // Global state will be updated automatically via WebSocket
-    // No need to manually update local state
+    // UPDATE LOCAL STATE LIKE THE QUEUE DOES!
+    if (data.overallProgress !== undefined) {
+      setLocalAnalysisStatus({
+        isRunning: true,
+        progress: data.overallProgress,
+        currentStep: data.progress?.name || data.currentStep || 'Running...'
+      });
+      logger.debug('Updated local analysis status LIKE QUEUE', { 
+        progress: data.overallProgress, 
+        currentStep: data.progress?.name 
+      });
+    }
   };
 
   const handleFilterChange = (newFilters) => {
@@ -423,8 +462,9 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         {/* Header content: title, status, actions */}
         <div className="analysis-title">
           <h2>📊 Analysis Dashboard</h2>
+
           <AnalysisStatus 
-            status={analysisStatus.status} 
+            status={localAnalysisStatus} 
             onStartAnalysis={handleStartAnalysis}
             loading={loading}
           />

@@ -45,7 +45,7 @@ This starts both the backend server and frontend with hot reloading on port 3000
 # Backend only (serves frontend on port 3000)
 npm run dev
 
-# Frontend hot reload server only (port 3001 for live reload)
+# Frontend hot reload server only (port 3000 for live reload)
 npm run dev:frontend
 ```
 
@@ -79,8 +79,8 @@ The application automatically:
 
 ### Port Conflicts
 - The main application runs on port 3000
-- Hot reload server runs on port 3001
-- Change with environment variables: `PORT=3001 npm run dev:full`
+- Hot reload server runs on port 3000
+- Change with environment variables: `PORT=3000 npm run dev:full`
 
 ### Browser Automation Issues
 ```bash

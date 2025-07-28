@@ -162,13 +162,13 @@ describe('ScreenshotStreamingService - Port-Based', () => {
 
     test('should get all active ports', async () => {
       await service.startStreaming(3000);
-      await service.startStreaming(3001);
+      await service.startStreaming(4000);
 
       const ports = service.getAllPorts();
 
       expect(ports.length).toBe(2);
       expect(ports.map(p => p.port)).toContain(3000);
-      expect(ports.map(p => p.port)).toContain(3001);
+              expect(ports.map(p => p.port)).toContain(4000);
     });
 
     test('should return empty array when no ports active', () => {
@@ -260,7 +260,7 @@ describe('ScreenshotStreamingService - Port-Based', () => {
 
   describe('Multiple Ports', () => {
     test('should handle multiple concurrent ports', async () => {
-      const ports = [3000, 3001, 3002];
+      const ports = [3000, 4000, 3002];
       
       // Start streaming for all ports
       for (const port of ports) {

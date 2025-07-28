@@ -165,7 +165,7 @@ describe('PortStreamingWorkflow Integration', () => {
         .send({ fps: 10 });
 
       await request(app)
-        .post('/api/ide-mirror/3001/stream/start')
+        .post('/api/ide-mirror/4000/stream/start')
         .send({ fps: 10 });
 
       // Get all ports
@@ -275,7 +275,7 @@ describe('PortStreamingWorkflow Integration', () => {
 
   describe('Multiple Ports Workflow', () => {
     test('should handle multiple concurrent ports', async () => {
-      const ports = [3000, 3001, 3002];
+      const ports = [3000, 4000, 3002];
       
       // Start streaming for all ports
       for (const port of ports) {

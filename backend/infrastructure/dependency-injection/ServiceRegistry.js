@@ -256,6 +256,17 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['eventBus', 'logger'] });
 
+        // Queue Task Execution Service
+        this.container.register('queueTaskExecutionService', (queueMonitoringService, taskRepository, eventBus, logger) => {
+            const QueueTaskExecutionService = require('@domain/services/queue/QueueTaskExecutionService');
+            return new QueueTaskExecutionService({
+                queueMonitoringService,
+                taskRepository,
+                eventBus,
+                logger
+            });
+        }, { singleton: true, dependencies: ['queueMonitoringService', 'taskRepository', 'eventBus', 'logger'] });
+
         // Step Progress Service
         this.container.register('stepProgressService', (eventBus, logger) => {
             const StepProgressService = require('@domain/services/queue/StepProgressService');
@@ -353,10 +364,10 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
 
         // Task service
-        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService) => {
+        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService) => {
             const TaskService = require('@domain/services/task/TaskService');
-            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null); // autoFinishSystem removed
-        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'] });
+            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService); // autoFinishSystem and workflowGitService removed
+        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'] });
 
         // Manual Tasks Import Service
         this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
@@ -1409,6 +1420,17 @@ class ServiceRegistry {
                     });
                 }, { singleton: true, dependencies: ['eventBus', 'logger'] });
                 break;
+            case 'queueTaskExecutionService':
+                this.container.register('queueTaskExecutionService', (queueMonitoringService, taskRepository, eventBus, logger) => {
+                    const QueueTaskExecutionService = require('@domain/services/queue/QueueTaskExecutionService');
+                    return new QueueTaskExecutionService({
+                        queueMonitoringService,
+                        taskRepository,
+                        eventBus,
+                        logger
+                    });
+                }, { singleton: true, dependencies: ['queueMonitoringService', 'taskRepository', 'eventBus', 'logger'] });
+                break;
             case 'stepProgressService':
                 this.container.register('stepProgressService', (eventBus, logger) => {
                     const StepProgressService = require('@domain/services/queue/StepProgressService');
@@ -1506,10 +1528,10 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
                 break;
             case 'taskService':
-                this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService) => {
+                this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService) => {
                     const TaskService = require('@domain/services/task/TaskService');
-                    return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null);
-                }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'] });
+                    return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService);
+                }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'] });
                 break;
             case 'manualTasksImportService':
                 this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
@@ -1620,6 +1642,7 @@ class ServiceRegistry {
         this.addServiceDefinition('layerValidationService', ['logger'], 'domain');
         this.addServiceDefinition('logicValidationService', ['logger'], 'domain');
         this.addServiceDefinition('queueMonitoringService', ['eventBus', 'logger'], 'domain');
+        this.addServiceDefinition('queueTaskExecutionService', ['queueMonitoringService', 'taskRepository', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('stepProgressService', ['eventBus', 'logger'], 'domain');
         this.addServiceDefinition('executionQueue', ['logger'], 'domain');
         this.addServiceDefinition('chatSessionService', ['chatRepository', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
@@ -1631,7 +1654,7 @@ class ServiceRegistry {
         this.addServiceDefinition('vscodeIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('windsurfIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository'], 'domain');
-        this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService'], 'domain');
+                    this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'], 'domain');
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
         this.addServiceDefinition('workflowLoaderService', [], 'domain');
         this.addServiceDefinition('queueHistoryService', ['queueHistoryRepository', 'eventBus'], 'domain');

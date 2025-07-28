@@ -156,7 +156,7 @@ describe('StreamingWorkflow Integration', () => {
     test('should handle multiple concurrent sessions', async () => {
       const sessions = [
         { id: 'session-1', port: 3000 },
-        { id: 'session-2', port: 3001 },
+        { id: 'session-2', port: 4000 },
         { id: 'session-3', port: 3002 }
       ];
 

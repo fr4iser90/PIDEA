@@ -228,7 +228,7 @@ class TaskController {
     }
 
     /**
-     * POST /api/projects/:projectId/tasks/:id/execute - Execute task within project
+     * POST /api/projects/:projectId/tasks/:id/execute - Execute task within project via queue
      */
     async executeTask(req, res) {
         try {
@@ -236,28 +236,30 @@ class TaskController {
             const userId = req.user.id;
             const options = req.body.options || {};
 
-            this.logger.info('🚀 [TaskController] executeTask called with Categories system:', { 
+            this.logger.info('🚀 [TaskController] executeTask called with queue system:', { 
                 projectId, 
                 id, 
                 userId,
                 options 
             });
 
-            // Use Application Service for task execution
+            // Use Application Service for queue-based task execution
             const execution = await this.taskApplicationService.executeTask(id, projectId, userId, options);
 
-            this.logger.info('✅ [TaskController] Task execution completed successfully');
+            this.logger.info('✅ [TaskController] Task queued successfully');
 
             res.json({
                 success: true,
                 data: execution,
                 projectId,
                 taskId: id,
+                queueItemId: execution.queueItemId,
+                status: 'queued',
                 timestamp: new Date().toISOString()
             });
 
         } catch (error) {
-            this.logger.error('❌ [TaskController] Task execution failed:', error);
+            this.logger.error('❌ [TaskController] Task queueing failed:', error);
             if (error.message.includes('not found') || error.message.includes('does not belong')) {
                 res.status(404).json({
                     success: false,
@@ -267,7 +269,7 @@ class TaskController {
             } else {
                 res.status(500).json({
                     success: false,
-                    error: 'Task execution failed',
+                    error: 'Task queueing failed',
                     message: error.message
                 });
             }

@@ -52,7 +52,7 @@ class MockVSCodeIDE {
   async sendMessage() { return { success: true }; }
   async getWorkspacePath() { return '/workspace'; }
   async switchToPort() { return { success: true }; }
-  getActivePort() { return 3001; }
+  getActivePort() { return 4000; }
   async monitorTerminalOutput() { return null; }
   async getUserAppUrlForPort() { return null; }
   async detectDevServerFromPackageJson() { return null; }

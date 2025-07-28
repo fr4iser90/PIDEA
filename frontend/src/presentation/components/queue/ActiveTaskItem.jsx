@@ -19,6 +19,7 @@ const ActiveTaskItem = ({
     const [showPriorityMenu, setShowPriorityMenu] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [workflowType, setWorkflowType] = useState(null);
+    const [currentStepName, setCurrentStepName] = useState(null);
 
     const queueRepository = new QueueRepository();
     const formattedItem = queueRepository.formatQueueItem(item);
@@ -43,6 +44,40 @@ const ActiveTaskItem = ({
             type 
         });
     }, [getWorkflowType, item.projectId, item.id]);
+
+    // Listen for step progress updates
+    useEffect(() => {
+        const handleStepProgress = (data) => {
+            if (data.workflowId === item.id && data.progress?.name) {
+                setCurrentStepName(data.progress.name);
+                logger.debug('Updated current step name', { 
+                    taskId: item.id, 
+                    stepName: data.progress.name 
+                });
+            }
+        };
+        
+        // Subscribe to step progress events
+        import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+            const WebSocketService = module.default;
+            if (WebSocketService) {
+                WebSocketService.on('workflow:step:progress', handleStepProgress);
+            }
+        }).catch(error => {
+            logger.warn('Could not import WebSocketService for step progress', error);
+        });
+        
+        return () => {
+            import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+                const WebSocketService = module.default;
+                if (WebSocketService) {
+                    WebSocketService.off('workflow:step:progress', handleStepProgress);
+                }
+            }).catch(error => {
+                logger.warn('Could not import WebSocketService for cleanup', error);
+            });
+        };
+    }, [item.id]);
 
     /**
      * Handle priority change
@@ -107,15 +142,35 @@ const ActiveTaskItem = ({
     };
 
     /**
-     * Calculate progress percentage
+     * Get progress percentage from backend data
      */
-    const calculateProgress = () => {
+    const getProgressPercentage = () => {
+        // Use backend-calculated progress (most accurate)
+        if (item.workflow?.progress !== undefined) {
+            return item.workflow.progress;
+        }
+        
+        // Use queue item progress if available
+        if (item.progress !== undefined) {
+            return item.progress;
+        }
+        
+        // Fallback calculations only if backend data not available
         if (item.status === 'completed') return 100;
         if (item.status === 'queued') return 0;
         if (item.status === 'failed') return 0;
         
-        // For running tasks, estimate progress based on time
-        if (item.startedAt) {
+        // Calculate from steps if available
+        if (item.workflow?.steps && Array.isArray(item.workflow.steps)) {
+            const completedSteps = item.workflow.steps.filter(step => step.status === 'completed').length;
+            const totalSteps = item.workflow.steps.length;
+            if (totalSteps > 0) {
+                return Math.round((completedSteps / totalSteps) * 100);
+            }
+        }
+        
+        // Last resort: time-based estimation for running tasks
+        if (item.status === 'running' && item.startedAt) {
             const startTime = new Date(item.startedAt).getTime();
             const currentTime = Date.now();
             const elapsed = currentTime - startTime;
@@ -126,7 +181,7 @@ const ActiveTaskItem = ({
         return 0;
     };
 
-    const progressPercentage = calculateProgress();
+    const progressPercentage = getProgressPercentage();
 
     return (
         <div className={`active-task-item ${isSelected ? 'selected' : ''} ${item.status}`}>
@@ -139,14 +194,13 @@ const ActiveTaskItem = ({
                 
                 <div className="task-info">
                     <div className="task-name">
-                        {item.workflow?.name || item.workflow?.type || 'Unknown Task'}
+                        {currentStepName ? `🔍${currentStepName}` : (item.workflow?.name || item.workflow?.type || 'Unknown Task')}
                     </div>
                     <div className="task-meta">
                         <span className="task-type">{formattedItem.workflowTypeLabel}</span>
                         {workflowType && (
                             <WorkflowTypeBadge 
-                                type={workflowType.type} 
-                                confidence={workflowType.confidence}
+                                type={workflowType} 
                                 size="small"
                             />
                         )}

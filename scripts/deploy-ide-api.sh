@@ -393,7 +393,7 @@ run_health_checks() {
     fi
     
     # Check WebSocket connection
-    WS_URL="ws://localhost:3001/ws"
+    WS_URL="ws://localhost:3000/ws"
     if command -v websocat &> /dev/null; then
         if echo "ping" | websocat "$WS_URL" > /dev/null 2>&1; then
             print_success "WebSocket health check passed"
@@ -470,8 +470,8 @@ show_deployment_summary() {
         development)
             echo "Development servers are running:"
             echo "- Backend: http://localhost:3000"
-            echo "- Frontend: http://localhost:3001"
-            echo "- WebSocket: ws://localhost:3001/ws"
+            echo "- Frontend: http://localhost:4000"
+            echo "- WebSocket: ws://localhost:3000/ws"
             ;;
         staging)
             echo "Staging deployment completed:"

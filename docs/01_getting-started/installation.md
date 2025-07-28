@@ -169,7 +169,7 @@ npm run dev:full
 - **Main Application**: `http://localhost:3000` (serves both backend API and frontend)
 - **API Health Check**: `http://localhost:3000/api/health`
 - **WebSocket**: `ws://localhost:3000`
-- **Hot Reload Server**: `ws://localhost:3001` (for live reload)
+- **Hot Reload Server**: `ws://localhost:3000` (for live reload)
 
 ### 3. Test IDE Connection
 
@@ -191,7 +191,7 @@ lsof -i :3000
 kill -9 <PID>
 
 # Or use a different port
-PORT=3001 npm run dev:full
+PORT=3000 npm run dev:full
 ```
 
 #### Node.js Version Issues

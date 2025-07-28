@@ -236,47 +236,41 @@ class TaskApplicationService {
   }
 
   /**
-   * Execute task within project context
+   * Execute task within project context using queue system
    * @param {string} taskId - Task identifier
    * @param {string} projectId - Project identifier
    * @param {string} userId - User identifier
    * @param {Object} options - Execution options
-   * @returns {Promise<Object>} Execution result
+   * @returns {Promise<Object>} Queue execution result
    */
   async executeTask(taskId, projectId, userId, options = {}) {
     try {
-      this.logger.info(`🚀 Executing task: ${taskId} for project: ${projectId}`);
+      this.logger.info(`🚀 Executing task: ${taskId} for project: ${projectId} via queue`);
       
       // Validate task belongs to project
       const task = await this.getTask(taskId, projectId);
       
-      // Get project workspace path
-      const workspacePath = await this.getProjectWorkspacePath(projectId);
-      
-      // Execute task using domain service with Categories-based system
+      // Execute task using queue system
       const execution = await this.taskService.executeTask(taskId, userId, {
         ...options,
-        projectId,
-        workspacePath,
-        enableCategories: true
+        projectId
       });
       
-      this.logger.info(`✅ Task execution completed: ${taskId}`);
+      this.logger.info(`✅ Task queued successfully: ${taskId}`);
       
       return {
         taskId: execution.taskId,
-        executionId: execution.executionId,
+        queueItemId: execution.queueItemId,
         status: execution.status,
-        progress: execution.progress,
-        result: execution.result,
-        startedAt: execution.startedAt,
-        completedAt: execution.completedAt,
-        duration: execution.duration
+        position: execution.position,
+        estimatedStartTime: execution.estimatedStartTime,
+        message: execution.message,
+        queuedAt: new Date().toISOString()
       };
       
     } catch (error) {
-      this.logger.error('❌ Task execution failed:', error);
-      throw new Error(`Task execution failed: ${error.message}`);
+      this.logger.error('❌ Task queueing failed:', error);
+      throw new Error(`Task queueing failed: ${error.message}`);
     }
   }
 

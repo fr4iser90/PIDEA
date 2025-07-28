@@ -66,7 +66,7 @@ BROWSER_HEADLESS=false
 BROWSER_TIMEOUT=30000
 
 # Development Server
-DEV_SERVER_PORT=3001
+DEV_SERVER_PORT=3000
 HOT_RELOAD=true
 ```
 
@@ -356,7 +356,7 @@ lsof -i :3000
 kill -9 <PID>
 
 # Use different port
-PORT=3001 npm run dev:full
+PORT=3000 npm run dev:full
 ```
 
 #### IDE Connection Issues
