@@ -5,6 +5,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AITextDetector = require('@services/chat/AITextDetector');
 const logger = new Logger('ide_send_message_enhanced');
 
 // Enhanced Step configuration with feature flags
@@ -139,6 +140,80 @@ class IDESendMessageStepEnhanced {
       // Step 6: Send Message to IDE
       const result = await this.sendMessageToIDE(services, enhancedMessage, context, features);
 
+      // ✅ ENHANCED AI RESPONSE WAITING mit Confidence Checks
+      let aiResponse = null;
+      if (context.waitForResponse !== false) { // Default to true for enhanced step
+        logger.info('⏳ Enhanced AI response waiting with confidence checks...');
+        
+        // Get BrowserManager for AI response detection
+        const browserManager = context.getService('browserManager');
+        if (!browserManager) {
+          logger.warn('BrowserManager not available, skipping enhanced AI response waiting');
+        } else {
+          try {
+            const page = await browserManager.getPage();
+            if (page) {
+              // Initialize AITextDetector for enhanced AI response waiting
+              const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
+              const ideSelectors = await browserManager.getIDESelectors(ideType);
+              const aiTextDetector = new AITextDetector(ideSelectors);
+              
+              // Enhanced wait for AI response with confidence checks
+              const actualTimeout = context.timeout || 300000; // 5 minutes default
+              aiResponse = await aiTextDetector.waitForAIResponse(page, {
+                timeout: actualTimeout,
+                checkInterval: 2000, // Check every 2 seconds
+                requiredStableChecks: 5 // More stable checks for enhanced version
+              });
+              
+              // ✅ ENHANCED CONFIDENCE CHECKS
+              if (aiResponse.success && features.confidenceCheck) {
+                const responseConfidence = aiResponse.completion?.confidence || 0;
+                const qualityScore = aiResponse.quality?.score || 0;
+                
+                logger.info('📊 Enhanced confidence analysis:', {
+                  completionConfidence: responseConfidence,
+                  qualityScore: qualityScore,
+                  overallConfidence: (responseConfidence + qualityScore) / 2
+                });
+                
+                // Check if confidence meets threshold
+                if (responseConfidence < confidenceThreshold) {
+                  logger.warn('⚠️ Low AI response confidence detected', {
+                    confidence: responseConfidence,
+                    threshold: confidenceThreshold,
+                    response: aiResponse.response?.substring(0, 100) + '...'
+                  });
+                  
+                  // Add confidence warning to result
+                  aiResponse.confidenceWarning = {
+                    confidence: responseConfidence,
+                    threshold: confidenceThreshold,
+                    recommendation: 'Consider reviewing AI response quality'
+                  };
+                }
+              }
+              
+              logger.info('✅ Enhanced AI response received', {
+                success: aiResponse.success,
+                responseLength: aiResponse.response?.length || 0,
+                confidence: aiResponse.completion?.confidence || 0,
+                quality: aiResponse.quality?.score || 0,
+                duration: aiResponse.duration || 0,
+                stable: aiResponse.stable || false
+              });
+            }
+          } catch (error) {
+            logger.error('❌ Enhanced AI response waiting failed:', error.message);
+            aiResponse = {
+              success: false,
+              error: error.message,
+              response: null
+            };
+          }
+        }
+      }
+
       // Step 7: Suggestion Generation (if enabled)
       let suggestions = null;
       if (features.suggestionGeneration) {
@@ -159,6 +234,7 @@ class IDESendMessageStepEnhanced {
           projectId,
           ideType: ideType || 'auto-detected',
           confidence: confidenceScore,
+          aiResponseConfidence: aiResponse?.completion?.confidence || 0,
           features: Object.keys(features).filter(key => features[key]),
           timestamp: new Date()
         });
@@ -168,6 +244,7 @@ class IDESendMessageStepEnhanced {
         stepId,
         projectId,
         confidence: confidenceScore,
+        aiResponseConfidence: aiResponse?.completion?.confidence || 0,
         featuresUsed: Object.keys(features).filter(key => features[key])
       });
 
@@ -182,11 +259,13 @@ class IDESendMessageStepEnhanced {
           intentDetection: intentData,
           codeValidation: validationResult,
           confidenceScore,
+          aiResponse: aiResponse,
           suggestions,
           features: Object.keys(features).filter(key => features[key])
         },
         ideType: ideType || 'auto-detected',
         confidence: confidenceScore,
+        aiResponseConfidence: aiResponse?.completion?.confidence || 0,
         timestamp: new Date()
       };
       

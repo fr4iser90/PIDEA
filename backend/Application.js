@@ -556,6 +556,7 @@ class Application {
     this.workflowController = new WorkflowController({
         workflowApplicationService: this.serviceRegistry.getService('workflowApplicationService'),
         analysisApplicationService: this.serviceRegistry.getService('analysisApplicationService'),
+        analysisRepository: this.serviceRegistry.getService('analysisRepository'),
         ideManager: this.serviceRegistry.getService('ideManager'),
         taskService: this.serviceRegistry.getService('taskService'),
         queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),

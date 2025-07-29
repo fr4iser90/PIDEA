@@ -12,6 +12,7 @@ class WorkflowController {
         this.logger = dependencies.logger || new Logger('WorkflowController');
         this.eventBus = dependencies.eventBus;
         this.application = dependencies.application;
+        this.analysisRepository = dependencies.analysisRepository; // ← HIER das Repository speichern!
         this.ideManager = dependencies.ideManager;
         this.taskService = dependencies.taskService;
         this.analysisApplicationService = dependencies.analysisApplicationService;
@@ -807,49 +808,43 @@ class WorkflowController {
             const result = await stepRegistry.executeStep(stepName, stepOptions);
 
             // Save analysis result to database if this is an analysis step
-            if (result.success && this.application?.analysisRepository && stepOptions.analysisType) {
+            if (result.success && stepOptions.analysisType) {
                 try {
-                    const Analysis = require('@domain/entities/Analysis');
-                    const repo = this.application.analysisRepository;
-                    // Suche nach bestehendem 'pending' oder 'running' Eintrag
-                    const query = `SELECT * FROM analysis WHERE project_id = $1 AND analysis_type = $2 AND status IN ('pending', 'running') ORDER BY created_at ASC LIMIT 1`;
-                    const rows = await repo.databaseConnection.query(query, [projectId, stepOptions.analysisType]);
-                    let analysis;
-                    if (rows.length > 0) {
-                        // Update bestehenden Eintrag
-                        analysis = repo.mapRowToAnalysis(rows[0]);
-                        analysis.status = 'completed';
-                        analysis.progress = 100;
-                        analysis.completedAt = new Date();
-                        analysis.result = result.result;
-                        analysis.metadata = { ...analysis.metadata, ...{
-                            stepName,
-                            projectPath: workspacePath,
-                            mode,
-                            executionMethod: 'categories',
-                            timestamp: new Date().toISOString()
-                        }};
-                        analysis.updatedAt = new Date();
-                        await repo.update(analysis);
+                    // Use the centralized analysis repository (handles both PostgreSQL and SQLite)
+                    const analysisRepo = this.application?.analysisRepository;
+                    if (!analysisRepo) {
+                        this.logger.warn('WorkflowController: Analysis repository not available, skipping database save');
                     } else {
-                        // Neuer Eintrag wie bisher
-                        analysis = Analysis.create(projectId, stepOptions.analysisType, {
+                        const Analysis = require('@domain/entities/Analysis');
+                        
+                        // Create new analysis entry with proper metadata
+                        const analysis = Analysis.create(projectId, stepOptions.analysisType, {
                             result: result.result,
                             metadata: {
                                 stepName,
                                 projectPath: workspacePath,
                                 mode,
                                 executionMethod: 'categories',
-                                timestamp: new Date().toISOString()
+                                timestamp: new Date().toISOString(),
+                                executionTime: result.duration || null
                             }
                         });
-                        await repo.save(analysis);
+                        
+                        // Set as completed
+                        analysis.status = 'completed';
+                        analysis.progress = 100;
+                        analysis.completedAt = new Date();
+                        analysis.executionTime = result.duration || null;
+                        
+                        // Let the repository handle the database-specific logic
+                        await analysisRepo.save(analysis);
+                        
+                        this.logger.info('WorkflowController: Analysis result saved to database', {
+                            analysisId: analysis.id,
+                            analysisType: stepOptions.analysisType,
+                            stepName
+                        });
                     }
-                    this.logger.info('WorkflowController: Analysis result saved to database', {
-                        analysisId: analysis.id,
-                        analysisType: stepOptions.analysisType,
-                        stepName
-                    });
                 } catch (dbError) {
                     this.logger.warn('WorkflowController: Failed to save analysis result to database', {
                         error: dbError.message,
@@ -1525,6 +1520,55 @@ class WorkflowController {
                 stepName,
                 success: result.success
             });
+            
+            // Save analysis result to database if this is an analysis step and has results
+            if (result.success && step.type === 'analysis' && result.data) {
+                try {
+                    // Use the centralized analysis repository (handles both PostgreSQL and SQLite)
+                    const analysisRepo = this.analysisRepository;
+                    if (!analysisRepo) {
+                        this.logger.warn('WorkflowController: Analysis repository not available, skipping database save');
+                    } else {
+                        const Analysis = require('@domain/entities/Analysis');
+                        
+                        // Create new analysis entry with proper metadata
+                        const analysis = Analysis.create(projectId, stepName, {
+                            result: result.data,
+                            metadata: {
+                                stepName,
+                                projectPath: workspacePath,
+                                workflowExecution: true,
+                                executionMethod: 'workflow',
+                                timestamp: new Date().toISOString(),
+                                executionTime: result.duration || null,
+                                stepType: step.type,
+                                stepOptions: Object.keys(stepOptions)
+                            }
+                        });
+                        
+                        // Set as completed
+                        analysis.status = 'completed';
+                        analysis.progress = 100;
+                        analysis.completedAt = new Date();
+                        analysis.executionTime = result.duration || null;
+                        
+                        // Let the repository handle the database-specific logic
+                        await analysisRepo.save(analysis);
+                        
+                        this.logger.info('WorkflowController: Analysis result saved to database', {
+                            analysisId: analysis.id,
+                            analysisType: stepName,
+                            stepName
+                        });
+                    }
+                } catch (dbError) {
+                    this.logger.warn('WorkflowController: Failed to save analysis result to database', {
+                        error: dbError.message,
+                        stepName,
+                        analysisType: stepName
+                    });
+                }
+            }
             
             return {
                 success: result.success,
