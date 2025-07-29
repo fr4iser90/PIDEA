@@ -24,9 +24,6 @@ This directory contains analysis documents for refactoring the project structure
 
 **Usage**: Use this template for comprehensive project-wide analysis that can be parsed into database tasks for AI auto-implementation.
 
-### 🔄 [Refactor Structure Implementation (German)](./refactor-structure-implementation.md)
-**Purpose**: Original German analysis comparing current vs. desired layer distribution.
-
 **Key Content**:
 - **Current Structure Analysis**: Monolithic file organization issues
 - **Desired Structure**: Categorized approach with proper separation

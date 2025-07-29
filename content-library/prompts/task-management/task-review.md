@@ -1,20 +1,31 @@
 # Prompt: Task Review & Validation System
 
 ## Goal
-Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **DO NOT modify the docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md** - only analyze and create phase files.
+Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **AUTOMATICALLY CREATE MISSING FILES** (index, implementation, phase files) if they don't exist. **DO NOT modify existing docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md** - only analyze and create missing files.
 
 > **File Pattern Requirement:**  
-> All implementation and phase files must always be created using this pattern:  
-> - Implementation: docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md  
-> - Phase: docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md  
-> If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.
+> All Index, Implementation and Phase files must always be created using this pattern:  
+> - **Index**: docs/09_roadmap/tasks/[category]/[name]/[name]-index.md  
+> - **Implementation**: docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md  
+> - **Phase**: docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md  
+> If ANY file is missing, it MUST be created automatically. This pattern is required for orchestration and grouping in the system.
 
 ## Core Review Process
+- **File Structure Validation**: Check if all required files exist, create missing ones
 - **Analyze Codebase**: Check Plan against codebase, collect all data u need.
 - **Pattern**: Match current pattern / styles.
 - **Zero User Input Required**: Update file, and add Validation marker.
 - **Error Recovery**: Handle failures and continue execution
 - **Validation**: Verify each phase completion before proceeding
+
+### Phase 0: File Structure Validation & Auto-Creation
+- [ ] **Check Index File**: Verify `[name]-index.md` exists, create if missing
+- [ ] **Check Implementation File**: Verify `[name]-implementation.md` exists, create if missing
+- [ ] **Check Phase Files**: Verify all referenced phase files exist, create missing ones
+- [ ] **Validate Directory Structure**: Ensure category/task folders exist
+- [ ] **Extract Task Metadata**: Parse existing files for task name, category, priority
+- [ ] **Auto-Generate Missing Files**: Create any missing files with proper templates
+- [ ] **Update File References**: Ensure all files reference each other correctly
 
 ### Phase 1: Codebase Analysis
 - [ ] Scan entire project structure for current state
@@ -54,6 +65,219 @@ Review, validate, and analyze development tasks against the actual codebase. Ana
 - [ ] Evaluate and recommend task splitting if needed
 - [ ] Create subtask breakdown for large tasks
 
+## File Structure Validation Rules
+
+### Required File Check
+- **Index File**: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md` - MUST exist
+- **Implementation File**: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md` - MUST exist
+- **Phase Files**: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md` - MUST exist for all referenced phases
+- **Directory Structure**: Category and task folders MUST exist
+
+### Auto-Creation Process
+1. **Extract Task Info**: Parse existing files or URL path to get category and task name
+2. **Check File Existence**: Verify each required file exists
+3. **Create Missing Files**: Generate missing files using proper templates
+4. **Update References**: Ensure all files link to each other correctly
+5. **Validate Structure**: Confirm all files follow naming conventions
+
+### File Creation Templates
+
+#### Index File Template (if missing)
+```markdown
+# [Task Name] - Master Index
+
+## 📋 Task Overview
+- **Name**: [Extracted from path or existing files]
+- **Category**: [Extracted from path]
+- **Priority**: [Extracted from implementation file or default: Medium]
+- **Status**: [Planning/In Progress/Completed]
+- **Total Estimated Time**: [Extracted from implementation file]
+- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+
+## 📁 File Structure
+```
+docs/09_roadmap/tasks/[category]/[name]/
+├── [name]-index.md (this file)
+├── [name]-implementation.md
+├── [name]-phase-1.md
+├── [name]-phase-2.md
+└── [name]-phase-3.md
+```
+
+## 🎯 Main Implementation
+- **[Task Name Implementation](./[name]-implementation.md)** - Complete implementation plan and specifications
+
+## 📊 Phase Breakdown
+| Phase | File | Status | Time | Progress |
+|-------|------|--------|------|----------|
+| 1 | [Phase 1](./[name]-phase-1.md) | [Status] | [X]h | [X]% |
+| 2 | [Phase 2](./[name]-phase-2.md) | [Status] | [X]h | [X]% |
+| 3 | [Phase 3](./[name]-phase-3.md) | [Status] | [X]h | [X]% |
+
+## 🔄 Subtask Management
+### Active Subtasks
+- [ ] [Subtask Name](./[subtask-name].md) - [Status] - [Progress]%
+
+### Completed Subtasks
+- [x] [Completed Subtask](./[completed-subtask].md) - ✅ Done
+
+### Pending Subtasks
+- [ ] [Pending Subtask](./[pending-subtask].md) - ⏳ Waiting
+
+## 📈 Progress Tracking
+- **Overall Progress**: [X]% Complete
+- **Current Phase**: [Phase Number]
+- **Next Milestone**: [Description]
+- **Estimated Completion**: [Date]
+
+## 🔗 Related Tasks
+- **Dependencies**: [List of tasks this depends on]
+- **Dependents**: [List of tasks that depend on this]
+- **Related**: [List of related tasks]
+
+## 📝 Notes & Updates
+### [Date] - [Update Type]
+- [Description of update]
+- [Files modified]
+- [Progress made]
+
+## 🚀 Quick Actions
+- [View Implementation Plan](./[name]-implementation.md)
+- [Start Phase 1](./[name]-phase-1.md)
+- [Review Progress](#progress-tracking)
+- [Update Status](#notes--updates)
+```
+
+#### Implementation File Template (if missing)
+```markdown
+# [Task Name] - Implementation Plan
+
+## 1. Project Overview
+- **Feature/Component Name**: [Extracted from task name]
+- **Priority**: [Extracted or default: Medium]
+- **Category**: [Extracted from path]
+- **Estimated Time**: [To be determined]
+- **Dependencies**: [To be identified]
+- **Related Issues**: [To be identified]
+- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+
+## 2. Technical Requirements
+- **Tech Stack**: [To be determined based on codebase analysis]
+- **Architecture Pattern**: [To be determined]
+- **Database Changes**: [To be identified]
+- **API Changes**: [To be identified]
+- **Frontend Changes**: [To be identified]
+- **Backend Changes**: [To be identified]
+
+## 3. File Impact Analysis
+#### Files to Modify:
+- [ ] [To be identified during codebase analysis]
+
+#### Files to Create:
+- [ ] [To be identified during codebase analysis]
+
+#### Files to Delete:
+- [ ] [To be identified during codebase analysis]
+
+## 4. Implementation Phases
+#### Phase 1: Foundation Setup ([X] hours)
+- [ ] [To be detailed]
+
+#### Phase 2: Core Implementation ([X] hours)
+- [ ] [To be detailed]
+
+#### Phase 3: Integration ([X] hours)
+- [ ] [To be detailed]
+
+#### Phase 4: Testing & Documentation ([X] hours)
+- [ ] [To be detailed]
+
+#### Phase 5: Deployment & Validation ([X] hours)
+- [ ] [To be detailed]
+
+## 5. Code Standards & Patterns
+- **Coding Style**: [To be determined from codebase]
+- **Naming Conventions**: [To be determined from codebase]
+- **Error Handling**: [To be determined from codebase]
+- **Logging**: [To be determined from codebase]
+- **Testing**: [To be determined from codebase]
+- **Documentation**: [To be determined from codebase]
+
+## 6. Security Considerations
+- [ ] [To be identified]
+
+## 7. Performance Requirements
+- **Response Time**: [To be determined]
+- **Throughput**: [To be determined]
+- **Memory Usage**: [To be determined]
+- **Database Queries**: [To be determined]
+- **Caching Strategy**: [To be determined]
+
+## 8. Testing Strategy
+#### Unit Tests:
+- [ ] [To be identified]
+
+#### Integration Tests:
+- [ ] [To be identified]
+
+#### E2E Tests:
+- [ ] [To be identified]
+
+## 9. Documentation Requirements
+- [ ] [To be identified]
+
+## 10. Deployment Checklist
+- [ ] [To be identified]
+
+## 11. Rollback Plan
+- [ ] [To be identified]
+
+## 12. Success Criteria
+- [ ] [To be identified]
+
+## 13. Risk Assessment
+- [ ] [To be identified]
+
+## 14. AI Auto-Implementation Instructions
+- **source_type**: 'markdown_doc'
+- **source_path**: 'docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md'
+- **category**: '[category]'
+- **automation_level**: 'semi_auto'
+- **confirmation_required**: true
+- **max_attempts**: 3
+- **git_branch_required**: true
+- **new_chat_required**: true
+
+## 15. References & Resources
+- [To be identified]
+```
+
+#### Phase File Template (if missing)
+```markdown
+# [Task Name] – Phase [Number]: [Phase Title]
+
+## Overview
+[To be determined based on implementation plan]
+
+## Objectives
+- [ ] [To be identified]
+
+## Deliverables
+- [ ] [To be identified]
+
+## Dependencies
+- Requires: [To be identified]
+- Blocks: [To be identified]
+
+## Estimated Time
+[X] hours
+
+## Success Criteria
+- [ ] [To be identified]
+```
+
 ## Validation Rules
 
 ### File Existence Validation
@@ -88,6 +312,33 @@ Review, validate, and analyze development tasks against the actual codebase. Ana
 - **Atomic Units**: Each subtask should be independently testable
 
 ## Review Output Format
+
+### File Structure Validation Results
+```markdown
+## File Structure Validation - [Date]
+
+### ✅ Existing Files
+- [x] Index: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md` - Status: Found
+- [x] Implementation: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md` - Status: Found
+- [x] Phase 1: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-1.md` - Status: Found
+
+### ⚠️ Missing Files (Auto-Created)
+- [ ] Index: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md` - Status: Created with template
+- [ ] Implementation: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md` - Status: Created with template
+- [ ] Phase 2: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-2.md` - Status: Created with template
+
+### 🔧 Directory Structure
+- [x] Category folder: `docs/09_roadmap/tasks/[category]/` - Status: Exists
+- [x] Task folder: `docs/09_roadmap/tasks/[category]/[name]/` - Status: Exists
+- [ ] Missing directories created automatically
+
+### 📊 File Status Summary
+- **Total Required Files**: 5
+- **Existing Files**: 3
+- **Missing Files**: 2
+- **Auto-Created Files**: 2
+- **Validation Status**: ✅ Complete
+```
 
 ### Implementation File Updates
 ```markdown
@@ -258,6 +509,15 @@ npm run db:validate
 - [ ] Configure database and services
 - [ ] Run existing tests to verify baseline
 
+### File Structure Validation
+- [ ] Check if index file exists, create if missing
+- [ ] Check if implementation file exists, create if missing
+- [ ] Check if all phase files exist, create missing ones
+- [ ] Validate directory structure exists
+- [ ] Extract task metadata from existing files or path
+- [ ] Auto-generate missing files with proper templates
+- [ ] Update all file references and links
+
 ### Codebase Analysis
 - [ ] Map project structure and architecture
 - [ ] Identify key components and services
@@ -289,7 +549,8 @@ npm run db:validate
 - [ ] Update parent task with subtask references
 
 ## Success Criteria
-- All file paths match actual project structure
+- All required files (index, implementation, phase) exist
+- File paths match actual project structure
 - Implementation plan reflects real codebase state
 - Technical specifications are accurate and complete
 - Dependencies and imports are validated
@@ -301,19 +562,20 @@ npm run db:validate
 - Each subtask is independently deliverable and testable
 
 ## Usage Instructions
-1. Run codebase analysis to understand current state
-2. Validate implementation file against actual code
-3. Identify gaps, issues, and improvements needed
-4. Update implementation file with findings
-5. Provide actionable recommendations
-6. Document lessons learned and best practices
-7. Assess task size and complexity for splitting requirements
-8. Create subtask breakdown for large tasks
-9. Validate subtask dependencies and execution order
-10. Ensure each subtask meets size and complexity guidelines
+1. **Validate file structure** - Check if all required files exist, create missing ones
+2. Run codebase analysis to understand current state
+3. Validate implementation file against actual code
+4. Identify gaps, issues, and improvements needed
+5. Update implementation file with findings
+6. Provide actionable recommendations
+7. Document lessons learned and best practices
+8. Assess task size and complexity for splitting requirements
+9. Create subtask breakdown for large tasks
+10. Validate subtask dependencies and execution order
+11. Ensure each subtask meets size and complexity guidelines
 
 ## Example Usage
-> Review and validate the user authentication implementation against the current codebase. Analyze the auth-implementation.md file, check all planned files exist, verify API endpoints work, assess if the 12-hour task needs splitting into smaller subtasks, and update the implementation file with any gaps, improvements, or subtask breakdown found.
+> Review and validate the user authentication implementation against the current codebase. First check if all required files (index, implementation, phase files) exist and create any missing ones automatically. Then analyze the auth-implementation.md file, check all planned files exist, verify API endpoints work, assess if the 12-hour task needs splitting into smaller subtasks, and update the implementation file with any gaps, improvements, or subtask breakdown found.
 
 ## Phase File Creation for Subtasks
 

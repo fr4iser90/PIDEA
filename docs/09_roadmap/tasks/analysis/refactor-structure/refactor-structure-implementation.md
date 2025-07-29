@@ -224,51 +224,51 @@ mkdir -p backend/presentation/api/categories/analysis/{security,performance,arch
 - [ ] Code is more maintainable and testable
 - [ ] Team can easily locate and modify specific functionality 
 
-## **SecurityAnalysisStep MUSS RAUS!**
+## **SecurityAnalysisStep MUST BE REMOVED!**
 
-### **❌ FALSCH: Orchestrator behalten**
+### **❌ WRONG: Keep Orchestrator**
 ```
 security/
-├── SecurityAnalysisStep.js    # ❌ DAS MUSS RAUS!
-├── TrivySecurityStep.js       # ✅ Spezialisiert
-├── SnykSecurityStep.js        # ✅ Spezialisiert
+├── SecurityAnalysisStep.js    # ❌ THIS MUST BE REMOVED!
+├── TrivySecurityStep.js       # ✅ Specialized
+├── SnykSecurityStep.js        # ✅ Specialized
 └── ...
 ```
 
-### **✅ RICHTIG: Nur spezialisierte Steps**
+### **✅ CORRECT: Only specialized Steps**
 ```
 security/
-├── index.js                   # ✅ Export aller spezialisierten Steps
-├── TrivySecurityStep.js       # ✅ NUR Trivy
-├── SnykSecurityStep.js        # ✅ NUR Snyk
-├── SemgrepSecurityStep.js     # ✅ NUR Semgrep
-├── ZapSecurityStep.js         # ✅ NUR ZAP
-├── SecretScanningStep.js      # ✅ NUR Secrets
-└── ComplianceSecurityStep.js  # ✅ NUR Compliance
+├── index.js                   # ✅ Export all specialized Steps
+├── TrivySecurityStep.js       # ✅ ONLY Trivy
+├── SnykSecurityStep.js        # ✅ ONLY Snyk
+├── SemgrepSecurityStep.js     # ✅ ONLY Semgrep
+├── ZapSecurityStep.js         # ✅ ONLY ZAP
+├── SecretScanningStep.js      # ✅ ONLY Secrets
+└── ComplianceSecurityStep.js  # ✅ ONLY Compliance
 ```
 
-## 🎯 **Warum SecurityAnalysisStep raus muss:**
+## 🎯 **Why SecurityAnalysisStep must be removed:**
 
-### **❌ Problem mit Orchestrator:**
-- **Doppelte Verantwortlichkeit** = Orchestrator + Business Logic
-- **Monolithisch** = Alles wieder in einer Datei
-- **Schwer zu testen** = Komplexe Abhängigkeiten
-- **Nicht erweiterbar** = Neue Tools = Orchestrator ändern
+### **❌ Problem with Orchestrator:**
+- **Double Responsibility** = Orchestrator + Business Logic
+- **Monolithic** = Everything back in one file
+- **Hard to test** = Complex dependencies
+- **Not extensible** = New tools = Change orchestrator
 
-### **✅ Lösung: Nur spezialisierte Steps:**
-- **Single Responsibility** = Jeder Step macht nur eine Sache
-- **Einfach zu testen** = Isolierte Komponenten
-- **Einfach zu erweitern** = Neuer Step = Neue Datei
-- **Flexibel** = Steps können einzeln oder kombiniert verwendet werden
+### **✅ Solution: Only specialized Steps:**
+- **Single Responsibility** = Each step does only one thing
+- **Easy to test** = Isolated components
+- **Easy to extend** = New step = New file
+- **Flexible** = Steps can be used individually or combined
 
-## 📁 **Korrekte neue Struktur:**
+## 📁 **Correct new structure:**
 
 ### **Domain Layer:**
 ```
 <code_block_to_apply_changes_from>
 ```
 
-### **Index.js - Export aller spezialisierten Steps:**
+### **Index.js - Export all specialized Steps:**
 ```javascript
 // security/index.js
 const TrivySecurityStep = require('./TrivySecurityStep');
@@ -288,9 +288,9 @@ module.exports = {
 };
 ```
 
-##  **Orchestration in Application Layer:**
+## **Orchestration in Application Layer:**
 
-### **Application Service orchestriert:**
+### **Application Service orchestrates:**
 ```javascript
 // application/services/categories/analysis/security/SecurityAnalysisService.js
 class SecurityAnalysisService {
@@ -306,7 +306,7 @@ class SecurityAnalysisService {
 }
 ```
 
-**Du hast es perfekt erkannt!**  **SecurityAnalysisStep muss raus - nur spezialisierte Steps bleiben!** 
+**You've recognized it perfectly!** **SecurityAnalysisStep must be removed - only specialized Steps remain!** 
 
 ---
 
