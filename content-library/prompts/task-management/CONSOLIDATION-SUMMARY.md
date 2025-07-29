@@ -49,7 +49,7 @@ content-library/prompts/task-management/
 | `task-check-state.md` | Status tracking | Progress monitoring |
 | `task-create.md` | Task planning | Specification creation |
 | `task-execute.md` | Task execution | Implementation |
-| `task-index-manager.md` | Index file management | Navigation hub creation |
+
 | `task-language-analyzer.md` | Language consistency analysis | Documentation coverage assessment |
 | `task-refactor.md` | Large file refactoring | Code organization |
 | `task-review.md` | Task validation | Phase creation |
@@ -58,25 +58,27 @@ content-library/prompts/task-management/
 
 ### 🔄 **Workflow Integration**
 
-#### **Task Creation Workflow**
-1. `task-create.md` → Creates implementation plan
-2. `task-index-manager.md` → Creates index file
-3. `task-review.md` → Validates plan against codebase
-4. `task-execute.md` → Executes implementation
-5. `task-check-state.md` → Tracks progress
-6. `task-review.md` → Validates completion
+#### **Standard Task Workflow (Für neue Tasks)**
+1. `task-create.md` → Creates implementation plan and index file
+2. `task-review.md` → Validates and repairs implementation plan
+3. `task-execute.md` → Executes implementation
+4. `task-check-state.md` → Tracks current status and progress
+5. `task-review.md` → Validates completion
 
-#### **Project Analysis Workflow**
+#### **Project Analysis Workflow (Für Projekt-Analyse)**
 1. `task-analyze.md` → Identifies project-wide gaps
-2. `task-create.md` → Creates tasks for gaps
-3. `task-execute.md` → Implements solutions
-4. `task-check-state.md` → Tracks progress
+2. `task-create.md` → Creates tasks for identified gaps (mit Index-Dateien)
+3. `task-review.md` → Validates all new task plans
+4. `task-execute.md` → Executes implementation (für jeden Task)
+5. `task-check-state.md` → Tracks progress (für jeden Task)
 
-#### **Code Quality Workflow**
+#### **Code Quality Workflow (Für Refactoring)**
 1. `task-refactor.md` → Identifies refactoring needs
-2. `task-execute.md` → Performs refactoring
-3. `task-review.md` → Validates refactoring
-4. `test-path-config.md` → Organizes tests
+2. `task-create.md` → Creates refactoring task plan (mit Index-Datei)
+3. `task-review.md` → Validates refactoring plan
+4. `task-execute.md` → Performs refactoring
+5. `task-review.md` → Validates refactoring results
+6. `test-path-config.md` → Organizes tests
 
 ### 📊 **Redundancy Reduction Summary**
 
@@ -113,26 +115,33 @@ content-library/prompts/task-management/
 ### 🚀 **Usage Guidelines**
 
 #### **For New Tasks**
-1. Use `task-create.md` to plan the task
+1. Use `task-create.md` to plan the task (creates index file automatically)
 2. Use `task-review.md` to validate the plan
 3. Use `task-execute.md` to implement
 4. Use `task-check-state.md` to track progress
+5. Use `task-review.md` to validate completion
 
 #### **For Project Analysis**
 1. Use `task-analyze.md` for project-wide gaps
-2. Use `task-create.md` to create tasks for gaps
-3. Use `task-execute.md` to implement solutions
+2. Use `task-create.md` to create tasks for gaps (creates index files automatically)
+3. Use `task-review.md` to validate all task plans
+4. Use `task-execute.md` to implement solutions
+5. Use `task-check-state.md` to track progress
 
 #### **For Code Quality**
 1. Use `task-refactor.md` for large file refactoring
-2. Use `task-language-analyzer.md` for language consistency and documentation analysis
-3. Use `test-path-config.md` for test organization
-4. Use `task-review.md` to validate changes
+2. Use `task-create.md` to create refactoring task plan (creates index file automatically)
+3. Use `task-review.md` to validate refactoring plan
+4. Use `task-execute.md` to perform refactoring
+5. Use `task-review.md` to validate refactoring results
+6. Use `task-language-analyzer.md` for language consistency and documentation analysis
+7. Use `test-path-config.md` for test organization
 
 #### **For File Management**
-1. Use `task-index-manager.md` for index file creation
-2. Use `task-check-state.md` for status updates
-3. Use `task-review.md` for validation
+1. Use `task-check-state.md` for status updates
+2. Use `task-review.md` for validation
+
+
 
 ### 📝 **Next Steps**
 
@@ -141,6 +150,7 @@ content-library/prompts/task-management/
 3. **Update documentation** to reflect new structure
 4. **Train team members** on new prompt usage
 5. **Monitor effectiveness** and gather feedback
+
 
 ### 🔧 **Maintenance Notes**
 
