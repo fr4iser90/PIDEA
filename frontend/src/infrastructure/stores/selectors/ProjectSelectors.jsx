@@ -177,6 +177,7 @@ export const useProjectDataActions = () => {
   return {
     loadProjectData: store.loadProjectData,
     loadProjectTasks: store.loadProjectTasks,
+    refreshGitStatus: store.refreshGitStatus,
     setupWebSocketListeners: store.setupWebSocketListeners,
     cleanupWebSocketListeners: store.cleanupWebSocketListeners
   };
@@ -220,6 +221,8 @@ export const useProjectDataLoading = () => {
     loadingText: isLoading ? 'Loading project data...' : ''
   };
 };
+
+
 
 // Error state selector
 export const useProjectDataError = () => {

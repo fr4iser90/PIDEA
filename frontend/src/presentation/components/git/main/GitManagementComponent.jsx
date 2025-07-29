@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/git.css';
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
-import { useGitStatus, useGitBranches, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useGitStatus, useGitBranches, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 // Initialize API repository
 const apiRepository = new APIChatRepository();
@@ -25,6 +25,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const gitStatus = useGitStatus();
   const gitBranches = useGitBranches();
   const activeIDE = useActiveIDE();
+  const { refreshGitStatus } = useProjectDataActions();
 
   
   // Local state for UI interactions
@@ -45,8 +46,24 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   useEffect(() => {
     if (eventBus) {
       logger.info('Setting up WebSocket listeners for GitManagementComponent');
-      // WebSocket listeners are now handled by the store
-      // No need to set up individual listeners here
+      
+      // Listen to WebSocket events directly (like Queue component does)
+      import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+        const WebSocketService = module.default;
+        if (WebSocketService) {
+          WebSocketService.on('git-status-updated', (data) => {
+            logger.info('Git status updated via WebSocket:', data);
+            // The global state will handle the update automatically
+          });
+          WebSocketService.on('git-branch-changed', (data) => {
+            logger.info('Git branch changed via WebSocket:', data);
+            // The global state will handle the update automatically
+          });
+          logger.info('WebSocket events connected for GitManagementComponent');
+        }
+      }).catch(error => {
+        logger.warn('Could not import WebSocketService for GitManagementComponent', error);
+      });
     }
   }, [eventBus]);
 
@@ -129,6 +146,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     const confirmed = window.confirm(`Are you sure you want to switch to branch "${branchName}"?`);
     if (confirmed) {
       await handleGitOperation('checkout', { branch: branchName });
+      // Backend should send git:checkout:completed event which gets translated to git-branch-changed
     }
   };
 
@@ -161,10 +179,21 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         
         <div className="git-actions">
           <button
-            onClick={() => logger.info('Refresh button clicked - global state handles updates')}
+            onClick={async () => {
+              logger.info('Refresh button clicked - refreshing git status');
+              try {
+                setIsLoading(true);
+                await refreshGitStatus();
+                logger.info('Git status refreshed successfully');
+              } catch (error) {
+                logger.error('Failed to refresh git status:', error);
+              } finally {
+                setIsLoading(false);
+              }
+            }}
             className="git-btn refresh-btn"
             disabled={isLoading}
-            title="Refresh Git status (handled by global state)"
+            title="Refresh Git status"
           >
             🔄
           </button>

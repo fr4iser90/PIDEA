@@ -352,6 +352,46 @@ const useIDEStore = create(
         }
       },
 
+      // ✅ NEW: Refresh Git Status specifically
+      refreshGitStatus: async (workspacePath = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) {
+          logger.warn('No workspace path available for refreshing git status');
+          return;
+        }
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(targetWorkspacePath);
+          if (!projectId) return;
+          
+          logger.info('Refreshing git status for workspace:', targetWorkspacePath);
+          
+          const gitResult = await apiCall(`/api/projects/${projectId}/git/status`, { 
+            method: 'POST',
+            body: JSON.stringify({ projectPath: targetWorkspacePath })
+          });
+          
+          const gitData = {
+            status: gitResult.success ? gitResult.data : null,
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [targetWorkspacePath]: gitData
+              }
+            }
+          }));
+          
+          logger.info('Git status refreshed for workspace:', targetWorkspacePath);
+        } catch (error) {
+          logger.error('Failed to refresh git status:', error);
+        }
+      },
+
       // NEW: Task Loading Action
       loadProjectTasks: async (workspacePath) => {
         if (!workspacePath) return;
@@ -393,8 +433,8 @@ const useIDEStore = create(
         
         logger.info('Setting up WebSocket listeners for project data');
         
-        // Git Events
-        eventBus.on('git-status-updated', (data) => {
+        // Git Events - Listen to both local event bus and WebSocket service
+        const handleGitStatusUpdated = (data) => {
           const { workspacePath, gitStatus } = data;
           set(state => ({
             projectData: {
@@ -410,9 +450,9 @@ const useIDEStore = create(
             }
           }));
           logger.info('Git status updated via WebSocket for workspace:', workspacePath);
-        });
+        };
         
-        eventBus.on('git-branch-changed', (data) => {
+        const handleGitBranchChanged = (data) => {
           const { workspacePath, newBranch } = data;
           set(state => ({
             projectData: {
@@ -431,6 +471,22 @@ const useIDEStore = create(
             }
           }));
           logger.info('Git branch changed via WebSocket for workspace:', workspacePath, 'new branch:', newBranch);
+        };
+        
+        // Listen to local event bus
+        eventBus.on('git-status-updated', handleGitStatusUpdated);
+        eventBus.on('git-branch-changed', handleGitBranchChanged);
+        
+        // ALSO listen to WebSocket service directly (like other components do)
+        import('@/infrastructure/services/WebSocketService.jsx').then(module => {
+          const WebSocketService = module.default;
+          if (WebSocketService) {
+            WebSocketService.on('git-status-updated', handleGitStatusUpdated);
+            WebSocketService.on('git-branch-changed', handleGitBranchChanged);
+            logger.info('WebSocket events connected for Git status updates');
+          }
+        }).catch(error => {
+          logger.warn('Could not import WebSocketService for Git events', error);
         });
         
         // Analysis Events

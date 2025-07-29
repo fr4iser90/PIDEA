@@ -187,7 +187,7 @@ class GitController {
             }
 
             if (this.eventBus) {
-                this.eventBus.publish('git.validation.completed', {
+                this.eventBus.publish('git:validation:completed', {
                     projectPath,
                     validation,
                     userId,
@@ -266,7 +266,7 @@ class GitController {
             });
 
             if (this.eventBus) {
-                this.eventBus.publish('git.comparison.completed', {
+                this.eventBus.publish('git:comparison:completed', {
                     projectPath,
                     sourceBranch,
                     targetBranch,
@@ -352,7 +352,7 @@ class GitController {
             });
 
             if (this.eventBus) {
-                this.eventBus.publish('git.pull.completed', {
+                this.eventBus.publish('git:pull:completed', {
                     projectPath,
                     branch,
                     remote,
@@ -422,7 +422,7 @@ class GitController {
             const result = await this.gitService.checkoutBranch(projectPath, branch);
 
             if (this.eventBus) {
-                this.eventBus.publish('git.checkout.completed', {
+                this.eventBus.publish('git:checkout:completed', {
                     projectPath,
                     branch,
                     userId,
@@ -502,7 +502,7 @@ class GitController {
             const result = await this.gitService.mergeBranch(projectPath, sourceBranch);
 
             if (this.eventBus) {
-                this.eventBus.publish('git.merge.completed', {
+                this.eventBus.publish('git:merge:completed', {
                     projectPath,
                     sourceBranch,
                     targetBranch,
@@ -576,7 +576,7 @@ class GitController {
             });
 
             if (this.eventBus) {
-                this.eventBus.publish('git.branch.created', {
+                this.eventBus.publish('git:branch:created', {
                     projectPath,
                     branchName,
                     startPoint,
@@ -709,7 +709,7 @@ class GitController {
             });
 
             if (this.eventBus) {
-                this.eventBus.publish('git.pidea-agent.pull.completed', {
+                this.eventBus.publish('git:pidea-agent:pull:completed', {
                     projectPath,
                     remote,
                     force,
@@ -792,7 +792,7 @@ class GitController {
             const result = await this.gitService.mergeBranch(projectPath, sourceBranch);
 
             if (this.eventBus) {
-                this.eventBus.publish('git.pidea-agent.merge.completed', {
+                this.eventBus.publish('git:pidea-agent:merge:completed', {
                     projectPath,
                     sourceBranch,
                     result: result.success,
@@ -891,7 +891,7 @@ class GitController {
             const lastCommit = await this.gitApplicationService.getLastCommitDirect(projectPath);
 
             if (this.eventBus) {
-                this.eventBus.publish('git.pidea-agent.status.retrieved', {
+                this.eventBus.publish('git:pidea-agent:status:retrieved', {
                     projectPath,
                     currentBranch,
                     pideaAgentExists,
@@ -993,7 +993,7 @@ class GitController {
             });
 
             if (this.eventBus) {
-                this.eventBus.publish('git.pidea-agent.comparison.completed', {
+                this.eventBus.publish('git:pidea-agent:comparison:completed', {
                     projectPath,
                     sourceBranch,
                     diffLength: diff.length,

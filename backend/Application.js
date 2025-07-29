@@ -1073,6 +1073,68 @@ class Application {
           this.logger.warn('No WebSocket manager available for broadcasting workflow:step:failed');
         }
       });
+
+      // Git Events - Map backend events to frontend events
+      this.eventBus.subscribe('git:checkout:completed', (data) => {
+        this.logger.info('Git checkout completed event:', '[REDACTED_GIT_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting git-branch-changed to all clients');
+          this.webSocketManager.broadcastToAll('git-branch-changed', {
+            workspacePath: data.projectPath,
+            newBranch: data.branch
+          });
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting git-branch-changed');
+        }
+      });
+
+      this.eventBus.subscribe('git:pull:completed', (data) => {
+        this.logger.info('Git pull completed event:', '[REDACTED_GIT_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting git-status-updated to all clients');
+          this.webSocketManager.broadcastToAll('git-status-updated', {
+            workspacePath: data.projectPath,
+            gitStatus: {
+              currentBranch: data.branch,
+              lastUpdate: new Date().toISOString()
+            }
+          });
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
+        }
+      });
+
+      this.eventBus.subscribe('git:merge:completed', (data) => {
+        this.logger.info('Git merge completed event:', '[REDACTED_GIT_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting git-status-updated to all clients');
+          this.webSocketManager.broadcastToAll('git-status-updated', {
+            workspacePath: data.projectPath,
+            gitStatus: {
+              currentBranch: data.targetBranch,
+              lastUpdate: new Date().toISOString()
+            }
+          });
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
+        }
+      });
+
+      this.eventBus.subscribe('git:branch:created', (data) => {
+        this.logger.info('Git branch created event:', '[REDACTED_GIT_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting git-status-updated to all clients');
+          this.webSocketManager.broadcastToAll('git-status-updated', {
+            workspacePath: data.projectPath,
+            gitStatus: {
+              currentBranch: data.branchName,
+              lastUpdate: new Date().toISOString()
+            }
+          });
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
+        }
+      });
     } else {
       this.logger.warn('No EventBus available for setting up event handlers');
     }
