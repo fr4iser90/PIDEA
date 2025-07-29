@@ -14,8 +14,8 @@ const getProjectIdFromWorkspace = (workspacePath) => {
   const pathParts = workspacePath.split('/');
   const projectName = pathParts[pathParts.length - 1];
   
-  // Convert to lowercase and remove special characters
-  return projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Keep original case - Backend now supports it
+  return projectName.replace(/[^a-zA-Z0-9]/g, '_');
 };
 
 // Central API Configuration
