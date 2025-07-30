@@ -442,7 +442,7 @@ Database performance analysis completed with a score of 96% (excellent level).
 ## 📈 Metrics
 - **Queries**: 3 files with queries
 - **Config Files**: 7 analyzed
-- **File Coverage**: 1153 files analyzed
+- **File Coverage**: 1148 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider optimizing database queries and connection pooling to improve performance.

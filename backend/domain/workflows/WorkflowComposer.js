@@ -267,7 +267,7 @@ class WorkflowComposer {
     }).build();
     builder.addStep(projectAnalysisStep);
     
-    const securityAnalysisStep = new (require('../steps/categories/analysis/SecurityAnalysisStep'))();
+    const securityAnalysisStep = new (require('../steps/categories/analysis/SecurityAnalysisOrchestrator'))();
     builder.addStep(securityAnalysisStep);
 
     // Add security step
@@ -305,7 +305,7 @@ class WorkflowComposer {
     }).build();
     builder.addStep(projectAnalysisStep);
     
-    const performanceStep = new (require('../steps/categories/analysis/PerformanceAnalysisStep'))();
+    const performanceStep = new (require('../steps/categories/analysis/PerformanceAnalysisOrchestrator'))();
     builder.addStep(performanceStep);
 
     // Add optimization step

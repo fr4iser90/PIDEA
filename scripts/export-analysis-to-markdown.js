@@ -144,7 +144,10 @@ class AnalysisExporter {
         
         // Check if analysis table exists
         const checkQuery = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'analysis')";
-        const checkResult = execSync(`PGPASSWORD=${dbConfig.password} psql -h ${dbConfig.host} -p ${dbConfig.port} -U ${dbConfig.user} -d ${dbConfig.database} -t -c "${checkQuery}"`, { encoding: 'utf8' });
+        const checkResult = execSync(`PGPASSWORD=${dbConfig.password} psql -h ${dbConfig.host} -p ${dbConfig.port} -U ${dbConfig.user} -d ${dbConfig.database} -t -c "${checkQuery}"`, { 
+          encoding: 'utf8',
+          maxBuffer: 1024 * 1024 // 1MB buffer for simple check
+        });
         const tableExists = checkResult.trim() === 't';
         
         if (tableExists) {
@@ -193,7 +196,7 @@ class AnalysisExporter {
           params.push(this.limit);
         }
 
-        // Execute PostgreSQL query using psql command line
+        // Execute PostgreSQL query using psql command line with increased buffer size
         // Replace parameter placeholders with actual values
         let finalQuery = query;
         if (options.projectId) {
@@ -206,8 +209,13 @@ class AnalysisExporter {
           finalQuery = finalQuery.replace('?', this.limit.toString());
         }
         
+        // Use larger buffer size and stream output to avoid ENOBUFS
         const psqlCmd = `PGPASSWORD=${dbConfig.password} psql -h ${dbConfig.host} -p ${dbConfig.port} -U ${dbConfig.user} -d ${dbConfig.database} -t -A -F "|" -c "${finalQuery.replace(/\n/g, ' ')}"`;
-        const result = execSync(psqlCmd, { encoding: 'utf8' });
+        const result = execSync(psqlCmd, { 
+          encoding: 'utf8',
+          maxBuffer: 50 * 1024 * 1024, // 50MB buffer
+          stdio: ['pipe', 'pipe', 'pipe']
+        });
         
         return this.parsePostgreSQLResult(result);
       } else if (dbConfig.type === 'sqlite') {

@@ -502,7 +502,7 @@ class WorkflowController {
                         message: 'Architecture analysis completed successfully'
                     });
                 } else {
-                    stepName = 'ArchitectureAnalysisStep';
+                    stepName = 'ArchitectureAnalysisOrchestrator';
                     stepOptions.analysisType = 'architecture';
                     stepOptions.includePatterns = true;
                     stepOptions.includeStructure = true;
@@ -557,7 +557,7 @@ class WorkflowController {
                         message: 'Security analysis completed successfully'
                     });
                 } else {
-                    stepName = 'SecurityAnalysisStep';
+                    stepName = 'SecurityAnalysisOrchestrator';
                     stepOptions.analysisType = 'security';
                     stepOptions.includeVulnerabilities = true;
                     stepOptions.includeBestPractices = true;
@@ -573,7 +573,7 @@ class WorkflowController {
                         message: 'Performance analysis completed successfully'
                     });
                 } else {
-                    stepName = 'PerformanceAnalysisStep';
+                    stepName = 'PerformanceAnalysisOrchestrator';
                     stepOptions.analysisType = 'performance';
                     stepOptions.includeMetrics = true;
                     stepOptions.includeOptimizations = true;
@@ -599,9 +599,9 @@ class WorkflowController {
                 // Automatisch alle Einzelanalysen ausführen und Ergebnisse sammeln
                 const analysisSteps = [
                     { key: 'codeQuality', name: 'CodeQualityAnalysisStep' },
-                    { key: 'security', name: 'SecurityAnalysisStep' },
-                    { key: 'architecture', name: 'ArchitectureAnalysisStep' },
-                    { key: 'performance', name: 'PerformanceAnalysisStep' },
+                    { key: 'security', name: 'SecurityAnalysisOrchestrator' },
+                                { key: 'architecture', name: 'ArchitectureAnalysisOrchestrator' },
+            { key: 'performance', name: 'PerformanceAnalysisOrchestrator' },
                     { key: 'techStack', name: 'TechStackAnalysisStep' },
                     { key: 'manifest', name: 'ManifestAnalysisStep' },
                     { key: 'dependencies', name: 'DependencyAnalysisStep' }

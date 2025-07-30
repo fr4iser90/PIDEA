@@ -1077,27 +1077,6 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ### code Vulnerability
-- **File**: ../scripts/fix-all-syntax-errors.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/fix-all-syntax-errors.js
-- **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/fix-all-syntax-errors.js
-- **Message**: Debug logging detected
-- **Severity**: low
-- **Suggestion**: Review and secure this debug-info pattern
-
-
-### code Vulnerability
 - **File**: ../scripts/fix-git-step-names.js
 - **Message**: Debug logging detected
 - **Severity**: low
@@ -1120,27 +1099,6 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 ### code Vulnerability
 - **File**: ../scripts/fix-layer-violations.js
-- **Message**: Debug logging detected
-- **Severity**: low
-- **Suggestion**: Review and secure this debug-info pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/fix-syntax-errors.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/fix-syntax-errors.js
-- **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/fix-syntax-errors.js
 - **Message**: Debug logging detected
 - **Severity**: low
 - **Suggestion**: Review and secure this debug-info pattern
@@ -1176,69 +1134,6 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 ### code Vulnerability
 - **File**: ../scripts/refactor-active-to-selected.js
-- **Message**: Debug logging detected
-- **Severity**: low
-- **Suggestion**: Review and secure this debug-info pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-batch.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-batch.js
-- **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-batch.js
-- **Message**: Debug logging detected
-- **Severity**: low
-- **Suggestion**: Review and secure this debug-info pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-recommendations.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-recommendations.js
-- **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-recommendations.js
-- **Message**: Debug logging detected
-- **Severity**: low
-- **Suggestion**: Review and secure this debug-info pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-tasks.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-tasks.js
-- **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-tasks.js
 - **Message**: Debug logging detected
 - **Severity**: low
 - **Suggestion**: Review and secure this debug-info pattern
@@ -1406,7 +1301,7 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ## 📈 Metrics
-- **Vulnerabilities**: 200 found
+- **Vulnerabilities**: 185 found
 - **Best Practices**: 6 identified
 - **Confidence**: 100% analysis confidence
 

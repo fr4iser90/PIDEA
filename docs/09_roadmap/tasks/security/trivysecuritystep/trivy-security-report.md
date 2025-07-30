@@ -622,13 +622,6 @@ Trivy security analysis completed with a score of 0% and 100% coverage.
 
 
 ### code Vulnerability
-- **File**: ../scripts/fix-all-syntax-errors.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Review and secure this code pattern
-
-
-### code Vulnerability
 - **File**: ../scripts/fix-git-step-names.js
 - **Description**: undefined
 - **Severity**: low
@@ -637,13 +630,6 @@ Trivy security analysis completed with a score of 0% and 100% coverage.
 
 ### code Vulnerability
 - **File**: ../scripts/fix-layer-violations.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Review and secure this code pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/fix-syntax-errors.js
 - **Description**: undefined
 - **Severity**: low
 - **Suggestion**: Review and secure this code pattern
@@ -686,27 +672,6 @@ Trivy security analysis completed with a score of 0% and 100% coverage.
 
 ### code Vulnerability
 - **File**: ../scripts/refactor-active-to-selected.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Review and secure this code pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-batch.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Review and secure this code pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-recommendations.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Review and secure this code pattern
-
-
-### code Vulnerability
-- **File**: ../scripts/steps-standardization-tasks.js
 - **Description**: undefined
 - **Severity**: low
 - **Suggestion**: Review and secure this code pattern
@@ -853,7 +818,7 @@ Trivy security analysis completed with a score of 0% and 100% coverage.
 
 
 ## 📈 Metrics
-- **Vulnerabilities**: 121 found
+- **Vulnerabilities**: 116 found
 - **Best Practices**: 32 identified
 - **Confidence**: 100% analysis confidence
 

@@ -3,12 +3,12 @@
 ## 📋 Analysis Overview
 - **Step Name**: SemgrepSecurityStep
 - **Category**: security
-- **Analysis Date**: 2025-07-30T17:16:12.611Z
+- **Analysis Date**: 2025-07-30T19:03:02.095Z
 - **Code Security Score**: 0%
 - **Coverage**: 100%
 
 ## 📊 Analysis Results
-- **Vulnerabilities**: 200
+- **Vulnerabilities**: 185
 - **Best Practices**: 6
 - **Confidence**: 100%
 
@@ -166,12 +166,6 @@
 - **code**: Debug logging detected
 - **code**: Potential path traversal in file write
 - **code**: Debug logging detected
-- **code**: Potential path traversal in file read
-- **code**: Potential path traversal in file write
-- **code**: Debug logging detected
-- **code**: Debug logging detected
-- **code**: Potential path traversal in file read
-- **code**: Potential path traversal in file write
 - **code**: Debug logging detected
 - **code**: Potential path traversal in file read
 - **code**: Potential path traversal in file write
@@ -180,15 +174,6 @@
 - **code**: Potential path traversal in file write
 - **code**: Debug logging detected
 - **code**: Debug logging detected
-- **code**: Debug logging detected
-- **code**: Potential path traversal in file read
-- **code**: Potential path traversal in file write
-- **code**: Debug logging detected
-- **code**: Potential path traversal in file read
-- **code**: Potential path traversal in file write
-- **code**: Debug logging detected
-- **code**: Potential path traversal in file read
-- **code**: Potential path traversal in file write
 - **code**: Debug logging detected
 - **code**: Debug logging detected
 - **code**: Debug logging detected
@@ -215,7 +200,7 @@
 - **code**: Debug logging detected
 
 ## 📝 Recommendations
-- **Address Security Vulnerabilities**: 200 vulnerabilities found
+- **Address Security Vulnerabilities**: 185 vulnerabilities found
 
 ## 🔧 Implementation Tasks
 - **Improve SemgrepSecurityStep Results**: Address issues and implement recommendations from SemgrepSecurityStep analysis (4h)

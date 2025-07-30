@@ -3,17 +3,16 @@
 ## 📋 Analysis Overview
 - **Step Name**: CpuAnalysisStep
 - **Category**: analysis
-- **Analysis Date**: 2025-07-30T17:16:26.838Z
+- **Analysis Date**: 2025-07-30T19:03:16.109Z
 - **Score**: 83%
 - **Level**: good
 
 ## 📊 Analysis Results
 - **CPU Bottlenecks**: 0
 - **Optimizations Found**: 0
-- **Files Analyzed**: 1153
+- **Files Analyzed**: 1148
 
 ## 🎯 Key Findings
-- **cpu**: undefined
 - **cpu**: undefined
 - **cpu**: undefined
 - **cpu**: undefined

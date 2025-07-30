@@ -483,7 +483,7 @@ class AnalysisApplicationService {
       const projectPath = await this.getProjectPath(projectId);
       
       // Execute analysis step
-      const stepResult = await this.executeAnalysisStep('SecurityAnalysisStep', {
+      const stepResult = await this.executeAnalysisStep('SecurityAnalysisOrchestrator', {
         projectPath,
         projectId,
         ...options
@@ -492,7 +492,7 @@ class AnalysisApplicationService {
       // Save result to database if successful
       if (stepResult.success && stepResult.result) {
         await this.saveAnalysisResult(projectId, 'security', stepResult.result, {
-          stepName: 'SecurityAnalysisStep',
+          stepName: 'SecurityAnalysisOrchestrator',
           executionContext: options
         });
       }
@@ -519,7 +519,7 @@ class AnalysisApplicationService {
       const projectPath = await this.getProjectPath(projectId);
       
       // Execute analysis step
-      const stepResult = await this.executeAnalysisStep('PerformanceAnalysisStep', {
+      const stepResult = await this.executeAnalysisStep('PerformanceAnalysisOrchestrator', {
         projectPath,
         projectId,
         ...options
@@ -528,7 +528,7 @@ class AnalysisApplicationService {
       // Save result to database if successful
       if (stepResult.success && stepResult.result) {
         await this.saveAnalysisResult(projectId, 'performance', stepResult.result, {
-          stepName: 'PerformanceAnalysisStep',
+          stepName: 'PerformanceAnalysisOrchestrator',
           executionContext: options
         });
       }
@@ -627,7 +627,7 @@ class AnalysisApplicationService {
       const projectPath = await this.getProjectPath(projectId);
       
       // Execute analysis step
-      const stepResult = await this.executeAnalysisStep('ArchitectureAnalysisStep', {
+      const stepResult = await this.executeAnalysisStep('ArchitectureAnalysisOrchestrator', {
         projectPath,
         projectId,
         ...options
@@ -636,7 +636,7 @@ class AnalysisApplicationService {
       // Save result to database if successful
       if (stepResult.success && stepResult.result) {
         await this.saveAnalysisResult(projectId, 'architecture', stepResult.result, {
-          stepName: 'ArchitectureAnalysisStep',
+          stepName: 'ArchitectureAnalysisOrchestrator',
           executionContext: options
         });
       }

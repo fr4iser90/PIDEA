@@ -3,14 +3,14 @@
 ## 📋 Analysis Overview
 - **Step Name**: CouplingAnalysisStep
 - **Category**: analysis
-- **Analysis Date**: 2025-07-30T17:16:25.438Z
+- **Analysis Date**: 2025-07-30T19:03:14.784Z
 - **Score**: 33%
 - **Level**: critical
 
 ## 📊 Analysis Results
 - **High Coupling Modules**: 0
 - **Low Coupling Modules**: 0
-- **Files Analyzed**: 1153
+- **Files Analyzed**: 1148
 
 ## 🎯 Key Findings
 - No coupling issues detected

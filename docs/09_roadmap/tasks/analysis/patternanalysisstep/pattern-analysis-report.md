@@ -38,7 +38,7 @@ Pattern analysis completed with a score of 100% (excellent level).
 ## 📈 Metrics
 - **Pattern Coverage**: 18 patterns detected
 - **Category Diversity**: 4 categories found
-- **File Coverage**: 1153 files analyzed
+- **File Coverage**: 1148 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider implementing additional design patterns to improve code quality and maintainability.

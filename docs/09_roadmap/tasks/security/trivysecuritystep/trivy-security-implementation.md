@@ -3,12 +3,12 @@
 ## 📋 Analysis Overview
 - **Step Name**: TrivySecurityStep
 - **Category**: security
-- **Analysis Date**: 2025-07-30T17:16:12.021Z
+- **Analysis Date**: 2025-07-30T19:03:01.508Z
 - **Security Score**: 0%
 - **Coverage**: 100%
 
 ## 📊 Analysis Results
-- **Vulnerabilities**: 121
+- **Vulnerabilities**: 116
 - **Best Practices**: 32
 - **Confidence**: 100%
 
@@ -129,14 +129,9 @@
 - **code**: undefined
 - **code**: undefined
 - **code**: undefined
-- **code**: undefined
-- **code**: undefined
-- **code**: undefined
-- **code**: undefined
-- **code**: undefined
 
 ## 📝 Recommendations
-- **Address Security Vulnerabilities**: 121 vulnerabilities found
+- **Address Security Vulnerabilities**: 116 vulnerabilities found
 
 ## 🔧 Implementation Tasks
 - **Improve TrivySecurityStep Results**: Address issues and implement recommendations from TrivySecurityStep analysis (9.5h)
