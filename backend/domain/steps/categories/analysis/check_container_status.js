@@ -98,48 +98,60 @@ async function checkDockerContainers(context, options) {
   const issues = [];
 
   try {
-    // Simulate Docker container check
-    // In a real implementation, this would use Docker API or CLI
-    const mockContainers = [
-      {
-        id: 'container-1',
-        name: 'app-container',
-        status: 'running',
-        image: 'app:latest',
-        ports: ['3000:3000'],
-        health: 'healthy'
-      },
-      {
-        id: 'container-2',
-        name: 'db-container',
-        status: 'running',
-        image: 'postgres:13',
-        ports: ['5432:5432'],
-        health: 'healthy'
-      }
-    ];
-
-    for (const container of mockContainers) {
-      containers.push(container);
+    // Real Docker container check using Docker API
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execAsync = util.promisify(exec);
+    
+    try {
+      // Get running containers using docker ps
+      const { stdout } = await execAsync('docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}"');
       
-      // Check for issues
-      if (container.status !== 'running') {
-        issues.push({
-          severity: 'critical',
-          message: `Container ${container.name} is not running (status: ${container.status})`,
-          container: container.name,
-          timestamp: new Date()
-        });
-      }
+      const lines = stdout.trim().split('\n').slice(1); // Skip header
       
-      if (container.health !== 'healthy') {
-        issues.push({
-          severity: 'warning',
-          message: `Container ${container.name} health check failed (health: ${container.health})`,
-          container: container.name,
-          timestamp: new Date()
-        });
+      for (const line of lines) {
+        const [id, name, status, image, ports] = line.split('\t');
+        
+        if (id && name) {
+          const container = {
+            id: id.trim(),
+            name: name.trim(),
+            status: status.includes('Up') ? 'running' : 'stopped',
+            image: image.trim(),
+            ports: ports ? ports.trim().split(', ') : [],
+            health: status.includes('healthy') ? 'healthy' : 'unknown'
+          };
+          
+          containers.push(container);
+          
+          // Check for issues
+          if (container.status !== 'running') {
+            issues.push({
+              severity: 'critical',
+              message: `Container ${container.name} is not running (status: ${container.status})`,
+              container: container.name,
+              timestamp: new Date()
+            });
+          }
+          
+          if (container.health !== 'healthy' && container.health !== 'unknown') {
+            issues.push({
+              severity: 'warning',
+              message: `Container ${container.name} health check failed (health: ${container.health})`,
+              container: container.name,
+              timestamp: new Date()
+            });
+          }
+        }
       }
+    } catch (dockerError) {
+      // Docker not available or command failed
+      issues.push({
+        severity: 'warning',
+        message: 'Docker not available or command failed',
+        details: dockerError.message,
+        timestamp: new Date()
+      });
     }
 
   } catch (error) {
@@ -163,55 +175,59 @@ async function checkServices(context, options) {
   const issues = [];
 
   try {
-    // Simulate service check
-    // In a real implementation, this would check actual services
-    const mockServices = [
-      {
-        name: 'api-service',
-        status: 'running',
-        port: 3000,
-        health: 'healthy',
-        responseTime: 150
-      },
-      {
-        name: 'database-service',
-        status: 'running',
-        port: 5432,
-        health: 'healthy',
-        responseTime: 50
-      }
-    ];
-
-    for (const service of mockServices) {
-      services.push(service);
+    // Real service check using netstat and process checking
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execAsync = util.promisify(exec);
+    
+    try {
+      // Check for common services using netstat
+      const { stdout } = await execAsync('netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null');
       
-      // Check for issues
-      if (service.status !== 'running') {
-        issues.push({
-          severity: 'critical',
-          message: `Service ${service.name} is not running (status: ${service.status})`,
-          service: service.name,
-          timestamp: new Date()
-        });
-      }
+      const lines = stdout.trim().split('\n').slice(1); // Skip header
       
-      if (service.health !== 'healthy') {
-        issues.push({
-          severity: 'warning',
-          message: `Service ${service.name} health check failed (health: ${service.health})`,
-          service: service.name,
-          timestamp: new Date()
-        });
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 4) {
+          const address = parts[3];
+          const portMatch = address.match(/:(\d+)$/);
+          
+          if (portMatch) {
+            const port = parseInt(portMatch[1]);
+                         const serviceName = getServiceNameByPort(port);
+            
+            if (serviceName) {
+              const service = {
+                name: serviceName,
+                status: 'running',
+                port: port,
+                health: 'healthy',
+                responseTime: 0 // Would need actual health check
+              };
+              
+              services.push(service);
+              
+              // Check for issues
+              if (service.status !== 'running') {
+                issues.push({
+                  severity: 'critical',
+                  message: `Service ${service.name} is not running (status: ${service.status})`,
+                  service: service.name,
+                  timestamp: new Date()
+                });
+              }
+            }
+          }
+        }
       }
-      
-      if (service.responseTime > 1000) {
-        issues.push({
-          severity: 'warning',
-          message: `Service ${service.name} has slow response time (${service.responseTime}ms)`,
-          service: service.name,
-          timestamp: new Date()
-        });
-      }
+    } catch (netstatError) {
+      // Netstat not available or command failed
+      issues.push({
+        severity: 'warning',
+        message: 'Service check failed - netstat/ss not available',
+        details: netstatError.message,
+        timestamp: new Date()
+      });
     }
 
   } catch (error) {
@@ -223,6 +239,33 @@ async function checkServices(context, options) {
   }
 
   return { services, issues };
+}
+
+/**
+ * Get service name by port
+ * @param {number} port - Port number
+ * @returns {string|null} Service name
+ */
+function getServiceNameByPort(port) {
+  const commonServices = {
+    22: 'SSH',
+    25: 'SMTP',
+    53: 'DNS',
+    80: 'HTTP',
+    443: 'HTTPS',
+    3306: 'MySQL',
+    5432: 'PostgreSQL',
+    27017: 'MongoDB',
+    6379: 'Redis',
+    8080: 'HTTP-Alt',
+    3000: 'Node.js-App',
+    4000: 'Frontend-App',
+    5000: 'Python-App',
+    8000: 'Django-App',
+    9000: 'Jenkins'
+  };
+  
+  return commonServices[port] || `Service-${port}`;
 }
 
 /**

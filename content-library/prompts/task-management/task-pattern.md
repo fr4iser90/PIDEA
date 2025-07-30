@@ -365,11 +365,10 @@ const reviewAndRepair = async (taskPath) => {
 
 ### Prompt Integration Flow
 1. **task-create.md** → Creates implementation plan and specifications
-2. **task-index-manager.md** → Creates index file for navigation
-3. **task-review.md** → Analyzes, repairs, and validates implementation files
-4. **task-execute.md** → Executes implementation
-5. **task-check-state.md** → Tracks progress and status updates
-6. **task-analyze.md** → Performs project-wide gap analysis
+2. **task-review.md** → Analyzes, repairs, and validates implementation files
+3. **task-execute.md** → Executes implementation
+4. **task-check-state.md** → Tracks progress and status updates
+5. **task-analyze.md** → Performs project-wide gap analysis
 
 ### File Creation Order
 1. Create category folder if missing

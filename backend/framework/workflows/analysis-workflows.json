@@ -20,7 +20,7 @@
           "name": "security-analysis",
           "type": "analysis",
           "description": "Scan for security vulnerabilities and issues",
-          "step": "SecurityAnalysisStep",
+          "step": "SecurityAnalysisOrchestrator",
           "options": {
             "includeVulnerabilities": true,
             "includeBestPractices": true,
@@ -32,7 +32,7 @@
           "name": "architecture-analysis",
           "type": "analysis",
           "description": "Review architectural patterns and dependencies",
-          "step": "ArchitectureAnalysisStep",
+          "step": "ArchitectureAnalysisOrchestrator",
           "options": {
             "includePatterns": true,
             "includeStructure": true,
@@ -44,7 +44,7 @@
           "name": "performance-analysis",
           "type": "analysis",
           "description": "Analyze performance bottlenecks and optimizations",
-          "step": "PerformanceAnalysisStep",
+          "step": "PerformanceAnalysisOrchestrator",
           "options": {
             "includeMetrics": true,
             "includeOptimizations": true,

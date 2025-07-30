@@ -1518,14 +1518,28 @@ class WorkflowController {
             
             this.logger.info('WorkflowController: Step executed successfully', {
                 stepName,
-                success: result.success
+                success: result.success,
+                hasData: !!result.data,
+                hasResult: !!result.result,
+                resultKeys: result.result ? Object.keys(result.result) : null,
+                stepType: step.type
             });
             
             // Save analysis result to database if this is an analysis step and has results
-            if (result.success && step.type === 'analysis' && result.data) {
+            if (result.success && step.type === 'analysis' && (result.data || result.result)) {
                 try {
                     // Use the centralized analysis repository (handles both PostgreSQL and SQLite)
                     const analysisRepo = this.analysisRepository;
+                    
+                    // DEBUG: Log repository availability
+                    this.logger.info('WorkflowController: DEBUG - Analysis repository check', {
+                        hasAnalysisRepository: !!this.analysisRepository,
+                        analysisRepositoryType: typeof this.analysisRepository,
+                        stepName,
+                        stepType: step.type,
+                        hasResultData: !!result.data
+                    });
+                    
                     if (!analysisRepo) {
                         this.logger.warn('WorkflowController: Analysis repository not available, skipping database save');
                     } else {
@@ -1533,7 +1547,7 @@ class WorkflowController {
                         
                         // Create new analysis entry with proper metadata
                         const analysis = Analysis.create(projectId, stepName, {
-                            result: result.data,
+                            result: result.result || result.data,
                             metadata: {
                                 stepName,
                                 projectPath: workspacePath,
@@ -1566,6 +1580,67 @@ class WorkflowController {
                         error: dbError.message,
                         stepName,
                         analysisType: stepName
+                    });
+                }
+            }
+            
+            // Save individual step results to database (for orchestrators that contain multiple steps)
+            if (result.success && result.result && result.result.details) {
+                try {
+                    const analysisRepo = this.analysisRepository;
+                    
+                    // DEBUG: Log repository availability for individual steps
+                    this.logger.info('WorkflowController: DEBUG - Individual steps repository check', {
+                        hasAnalysisRepository: !!this.analysisRepository,
+                        analysisRepositoryType: typeof this.analysisRepository,
+                        stepName: step.step || step.type,
+                        hasResultDetails: !!result.result.details,
+                        detailsCount: Object.keys(result.result.details || {}).length
+                    });
+                    
+                    if (!analysisRepo) {
+                        this.logger.warn('WorkflowController: Analysis repository not available, skipping individual step saves');
+                    } else {
+                        const Analysis = require('@domain/entities/Analysis');
+                        
+                        // Save each individual step result
+                        for (const [stepName, stepResult] of Object.entries(result.result.details)) {
+                            if (stepResult && stepResult.success) {
+                                const individualAnalysis = Analysis.create(projectId, stepName, {
+                                    result: stepResult,
+                                    metadata: {
+                                        stepName,
+                                        projectPath: workspacePath,
+                                        workflowExecution: true,
+                                        executionMethod: 'workflow',
+                                        parentStep: step.step || step.type,
+                                        timestamp: new Date().toISOString(),
+                                        executionTime: stepResult.duration || null,
+                                        stepType: 'individual'
+                                    }
+                                });
+                                
+                                // Set as completed
+                                individualAnalysis.status = 'completed';
+                                individualAnalysis.progress = 100;
+                                individualAnalysis.completedAt = new Date();
+                                individualAnalysis.executionTime = stepResult.duration || null;
+                                
+                                // Save to database
+                                await analysisRepo.save(individualAnalysis);
+                                
+                                this.logger.info('WorkflowController: Individual step result saved to database', {
+                                    analysisId: individualAnalysis.id,
+                                    analysisType: stepName,
+                                    parentStep: step.step || step.type
+                                });
+                            }
+                        }
+                    }
+                } catch (dbError) {
+                    this.logger.warn('WorkflowController: Failed to save individual step results to database', {
+                        error: dbError.message,
+                        stepName: step.step || step.type
                     });
                 }
             }

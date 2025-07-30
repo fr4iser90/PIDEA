@@ -489,7 +489,7 @@ class WorkflowApplicationService {
           id: 'analysis',
           name: 'Project Analysis',
           description: 'Comprehensive project analysis including code quality, security, and architecture',
-          steps: ['project_analysis_step', 'architecture_analysis_step', 'security_analysis_step'],
+          steps: ['project_analysis_step', 'structure_analysis_step', 'pattern_analysis_step', 'coupling_analysis_step', 'layer_analysis_step', 'trivy_analysis_step', 'snyk_analysis_step', 'semgrep_analysis_step', 'zap_analysis_step', 'secret_scanning_step', 'compliance_analysis_step', 'memory_analysis_step', 'cpu_analysis_step', 'network_analysis_step', 'database_analysis_step'],
           estimatedDuration: '5-10 minutes'
         },
         {
