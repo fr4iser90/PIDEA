@@ -67,6 +67,49 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     }
   }, [eventBus]);
 
+  // ✅ NEW: Auto-refresh git status when tab becomes visible or focused
+  useEffect(() => {
+    let lastRefreshTime = 0;
+    const MIN_REFRESH_INTERVAL = 2000; // Minimum 2 seconds between refreshes
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && activeIDE.workspacePath) {
+        const now = Date.now();
+        if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
+          logger.info('Tab became visible, refreshing git status');
+          lastRefreshTime = now;
+          refreshGitStatus();
+        } else {
+          logger.info('Tab became visible, but skipping refresh (too soon)');
+        }
+      }
+    };
+
+    const handleFocus = () => {
+      if (activeIDE.workspacePath) {
+        const now = Date.now();
+        if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
+          logger.info('Window focused, refreshing git status');
+          lastRefreshTime = now;
+          refreshGitStatus();
+        } else {
+          logger.info('Window focused, but skipping refresh (too soon)');
+        }
+      }
+    };
+
+    // Listen for visibility changes (tab switching)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Listen for window focus (returning to browser)
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [activeIDE.workspacePath, refreshGitStatus]);
+
   // ✅ REFACTORED: Use global state instead of local state
   const currentBranch = gitStatus.currentBranch;
   const branches = gitBranches.branches;
