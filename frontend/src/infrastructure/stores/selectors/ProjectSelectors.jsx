@@ -116,6 +116,57 @@ export const useAnalysisHistory = (workspacePath = null) => {
   }, [projectData?.analysis, activeIDE, workspacePath]);
 };
 
+// ✅ NEW: Analysis Recommendations Selector
+export const useAnalysisRecommendations = (workspacePath = null) => {
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
+  
+  return useMemo(() => {
+    const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
+    const analysisData = projectData?.analysis?.[targetWorkspacePath];
+    
+    return {
+      recommendations: analysisData?.recommendations || [],
+      hasRecommendations: (analysisData?.recommendations || []).length > 0,
+      lastUpdate: analysisData?.lastUpdate
+    };
+  }, [projectData?.analysis, activeIDE, workspacePath]);
+};
+
+// ✅ NEW: Analysis Tech Stack Selector
+export const useAnalysisTechStack = (workspacePath = null) => {
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
+  
+  return useMemo(() => {
+    const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
+    const analysisData = projectData?.analysis?.[targetWorkspacePath];
+    
+    return {
+      techStack: analysisData?.techStack,
+      hasTechStack: !!analysisData?.techStack,
+      lastUpdate: analysisData?.lastUpdate
+    };
+  }, [projectData?.analysis, activeIDE, workspacePath]);
+};
+
+// ✅ NEW: Analysis Architecture Selector
+export const useAnalysisArchitecture = (workspacePath = null) => {
+  const { projectData, availableIDEs } = useIDEStore();
+  const activeIDE = availableIDEs.find(ide => ide.active);
+  
+  return useMemo(() => {
+    const targetWorkspacePath = workspacePath || activeIDE?.workspacePath;
+    const analysisData = projectData?.analysis?.[targetWorkspacePath];
+    
+    return {
+      architecture: analysisData?.architecture,
+      hasArchitecture: !!analysisData?.architecture,
+      lastUpdate: analysisData?.lastUpdate
+    };
+  }, [projectData?.analysis, activeIDE, workspacePath]);
+};
+
 // Chat selectors
 export const useChatMessages = (workspacePath = null) => {
   const { projectData, availableIDEs } = useIDEStore();
@@ -177,6 +228,7 @@ export const useProjectDataActions = () => {
   return {
     loadProjectData: store.loadProjectData,
     loadProjectTasks: store.loadProjectTasks,
+    loadAnalysisData: store.loadAnalysisData,
     refreshGitStatus: store.refreshGitStatus,
     setupWebSocketListeners: store.setupWebSocketListeners,
     cleanupWebSocketListeners: store.cleanupWebSocketListeners

@@ -66,8 +66,13 @@ const AnalysisCharts = ({ data, history, filters, loading }) => {
   const filterHistory = (history, filters) => {
     let filtered = [...history];
 
+    // Handle undefined filters
+    if (!filters) {
+      return filtered;
+    }
+
     // Filter by date range
-    if (filters.dateRange !== 'all') {
+    if (filters.dateRange && filters.dateRange !== 'all') {
       const now = new Date();
       const cutoffDate = new Date();
       
@@ -90,7 +95,7 @@ const AnalysisCharts = ({ data, history, filters, loading }) => {
     }
 
     // Filter by analysis type
-    if (filters.analysisType !== 'all') {
+    if (filters.analysisType && filters.analysisType !== 'all') {
       filtered = filtered.filter(item => item.type === filters.analysisType);
     }
 

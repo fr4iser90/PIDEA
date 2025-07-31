@@ -1,0 +1,472 @@
+/* Security Dashboard Styles */
+.security-dashboard {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+}
+
+/* Security Header */
+.security-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.security-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.security-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.score-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.score-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Security Tabs */
+.security-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.tab.active {
+  background: var(--primary-color);
+  color: white;
+  border-bottom-color: var(--primary-color);
+}
+
+/* Security Content */
+.security-content {
+  min-height: 300px;
+}
+
+/* Security Overview */
+.security-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.overview-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.overview-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  font-size: 1.25rem;
+}
+
+.card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.card-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.card-value.success {
+  color: #4CAF50;
+}
+
+.card-value.warning {
+  color: #FF9800;
+}
+
+.card-value.error {
+  color: #F44336;
+}
+
+.card-value.neutral {
+  color: var(--text-primary);
+}
+
+.security-score-chart {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* Security Vulnerabilities */
+.security-vulnerabilities {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vulnerabilities-summary h4,
+.vulnerabilities-list h4 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.severity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.severity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.severity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.severity-card.critical {
+  border-color: #D32F2F;
+  background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+}
+
+.severity-card.high {
+  border-color: #F44336;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+}
+
+.severity-card.medium {
+  border-color: #FF9800;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+}
+
+.severity-card.low {
+  border-color: #4CAF50;
+  background: linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%);
+}
+
+.severity-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.severity-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.severity-count {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.vulnerabilities-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vulnerability-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.vulnerability-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vulnerability-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.severity-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.severity-badge.critical {
+  background: #D32F2F;
+  color: white;
+}
+
+.severity-badge.high {
+  background: #F44336;
+  color: white;
+}
+
+.severity-badge.medium {
+  background: #FF9800;
+  color: white;
+}
+
+.severity-badge.low {
+  background: #4CAF50;
+  color: white;
+}
+
+.scanner-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.vulnerability-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.vulnerability-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Security Scanners */
+.security-scanners {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scanners-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* Loading and Error States */
+.security-dashboard.loading,
+.security-dashboard.error,
+.security-dashboard.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.loading-spinner::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message,
+.empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-icon,
+.empty-icon {
+  font-size: 2rem;
+}
+
+.empty-description {
+  max-width: 500px;
+  text-align: left;
+}
+
+.empty-description p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.empty-description ul {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.empty-description li {
+  margin: 6px 0;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .security-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .security-tabs {
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .severity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .scanners-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vulnerability-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .security-dashboard {
+    padding: 16px;
+    margin: 16px 0;
+  }
+
+  .security-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .score-value {
+    font-size: 1.5rem;
+  }
+
+  .severity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .security-dashboard {
+    background: var(--bg-secondary-dark, #1a1a1a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .overview-card,
+  .severity-card,
+  .vulnerability-item {
+    background: var(--bg-primary-dark, #2a2a2a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .severity-card.critical {
+    background: linear-gradient(135deg, #3d1a1a 0%, #4d1f1f 100%);
+  }
+
+  .severity-card.high {
+    background: linear-gradient(135deg, #3d2a1a 0%, #4d331f 100%);
+  }
+
+  .severity-card.medium {
+    background: linear-gradient(135deg, #3d2f1a 0%, #4d381f 100%);
+  }
+
+  .severity-card.low {
+    background: linear-gradient(135deg, #1a3d1a 0%, #1f4d1f 100%);
+  }
+} 

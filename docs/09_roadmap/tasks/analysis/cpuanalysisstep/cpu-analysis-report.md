@@ -1476,6 +1476,13 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
+- **File**: ../frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx
+- **Description**: undefined
+- **Severity**: medium
+- **Suggestion**: Use for...of loop or Promise.all for async operations
+
+
+### cpu Bottleneck
 - **File**: ../frontend/src/presentation/components/analysis/AnalysisRecommendations.jsx
 - **Description**: undefined
 - **Severity**: medium
@@ -1487,6 +1494,13 @@ CPU performance analysis completed with a score of 83% (good level).
 - **Description**: undefined
 - **Severity**: medium
 - **Suggestion**: Use for...of loop or Promise.all for async operations
+
+
+### cpu Bottleneck
+- **File**: ../frontend/src/presentation/components/analysis/SecurityDashboard.jsx
+- **Description**: undefined
+- **Severity**: medium
+- **Suggestion**: Combine map operations or use flatMap
 
 
 ### cpu Bottleneck
@@ -1954,7 +1968,7 @@ CPU performance analysis completed with a score of 83% (good level).
 ## 📈 Metrics
 - **Bottlenecks**: 0 issues found
 - **Optimizations**: 0 opportunities
-- **File Coverage**: 1148 files analyzed
+- **File Coverage**: 1152 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider implementing CPU optimizations to improve performance and reduce bottlenecks.

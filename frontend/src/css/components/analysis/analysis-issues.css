@@ -79,6 +79,37 @@
 .issues-actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.view-controls {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.view-btn {
+  background: none;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.view-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: 500;
 }
 
 .btn-export {
@@ -364,6 +395,19 @@
   color: #495057;
 }
 
+/* Scanner Badge */
+.scanner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #495057;
+  border: 1px solid #e9ecef;
+}
+
 /* Actions */
 .btn-expand {
   background: none;
@@ -494,6 +538,16 @@
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
+  }
+
+  .issues-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .view-controls {
+    width: 100%;
+    justify-content: center;
   }
 
   .issues-filters {

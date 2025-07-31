@@ -1,5 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
+import { processSecurityData, processCodeQualityData } from '@/utils/analysisDataProcessor';
 import '@/css/components/analysis/analysis-recommendations.css';
 
 const AnalysisRecommendations = ({ recommendations, loading, error }) => {
@@ -7,6 +8,7 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedEffort, setSelectedEffort] = useState('all');
+  const [selectedSource, setSelectedSource] = useState('all');
   const [sortBy, setSortBy] = useState('priority');
   const [sortOrder, setSortOrder] = useState('desc');
   const [expandedRecommendations, setExpandedRecommendations] = useState(new Set());
@@ -16,28 +18,78 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
   // Process recommendations data from backend structure
   const processedRecommendations = useMemo(() => {
     if (!recommendations) {
-          return null;
-  }
+      return null;
+    }
+
+    const allRecommendations = [];
+    
+    // Process security recommendations from SecurityAnalysisOrchestrator
+    if (recommendations.security) {
+      const securityData = processSecurityData(recommendations.security);
+      if (securityData?.bestPractices) {
+        allRecommendations.push(...securityData.bestPractices.map(bp => ({
+          title: bp.title || 'Security Best Practice',
+          description: bp.description || bp.message || 'No description available',
+          priority: bp.severity === 'critical' ? 'critical' : bp.severity === 'high' ? 'high' : 'medium',
+          category: 'security',
+          effort: bp.effort || 'medium',
+          impact: bp.impact || 'high',
+          file: bp.file || null,
+          estimatedTime: bp.estimatedTime || null,
+          dependencies: bp.dependencies || [],
+          tags: bp.tags || ['security'],
+          status: bp.status || 'pending',
+          source: 'security-analysis',
+          scanner: bp.scanner || 'security-scanner'
+        })));
+      }
+    }
+    
+    // Process code quality recommendations from CodeQualityAnalysisStep
+    if (recommendations.codeQuality) {
+      const codeQualityData = processCodeQualityData(recommendations.codeQuality);
+      if (codeQualityData?.recommendations) {
+        allRecommendations.push(...codeQualityData.recommendations.map(rec => ({
+          title: rec.title || 'Code Quality Improvement',
+          description: rec.description || rec.suggestion || 'No description available',
+          priority: rec.priority || 'medium',
+          category: 'code-quality',
+          effort: rec.effort || 'medium',
+          impact: rec.impact || 'medium',
+          file: rec.file || null,
+          estimatedTime: rec.estimatedTime || null,
+          dependencies: rec.dependencies || [],
+          tags: rec.tags || ['code-quality'],
+          status: rec.status || 'pending',
+          source: 'code-quality-analysis',
+          scanner: 'code-quality-analyzer'
+        })));
+      }
+    }
+    
+    // Legacy recommendations support
+    if (recommendations.recommendations) {
+      allRecommendations.push(...recommendations.recommendations.map(rec => ({
+        title: rec.title || 'Untitled Recommendation',
+        description: rec.description || 'No description available',
+        priority: rec.priority || 'medium',
+        category: rec.category || 'general',
+        effort: rec.effort || 'medium',
+        impact: rec.impact || 'medium',
+        file: rec.file || null,
+        estimatedTime: rec.estimatedTime || null,
+        dependencies: rec.dependencies || [],
+        tags: rec.tags || [],
+        status: rec.status || 'pending',
+        source: 'legacy-analysis',
+        scanner: 'legacy-analyzer'
+      })));
+    }
 
     const processed = {
-      recommendations: recommendations.recommendations || [],
+      recommendations: allRecommendations,
       integratedInsights: recommendations.integratedInsights || []
     };
-
-    // Add default values for missing fields
-    processed.recommendations = processed.recommendations.map(rec => ({
-      title: rec.title || 'Untitled Recommendation',
-      description: rec.description || 'No description available',
-      priority: rec.priority || 'medium',
-      category: rec.category || 'general',
-      effort: rec.effort || 'medium',
-      impact: rec.impact || 'medium',
-      file: rec.file || null,
-      estimatedTime: rec.estimatedTime || null,
-      dependencies: rec.dependencies || [],
-      tags: rec.tags || [],
-      status: rec.status || 'pending'
-    }));
 
     return processed;
   }, [recommendations]);

@@ -3,7 +3,7 @@
 ## 📋 Analysis Overview
 - **Step Name**: TrivySecurityStep
 - **Category**: security
-- **Analysis Date**: 2025-07-30T19:03:01.508Z
+- **Analysis Date**: 2025-07-31T15:51:48.448Z
 - **Security Score**: 0%
 - **Coverage**: 100%
 

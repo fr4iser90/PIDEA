@@ -1,0 +1,395 @@
+/* Security Score Chart Styles */
+.security-score-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Score Display */
+.score-display {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.score-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.score-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.score-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 1;
+}
+
+.score-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.score-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.score-max {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.score-info {
+  flex: 1;
+}
+
+.score-label {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.score-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Score Breakdown */
+.score-breakdown {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.score-breakdown h5 {
+  margin: 0 0 16px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.breakdown-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.breakdown-label {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 120px;
+}
+
+.breakdown-bar {
+  flex: 2;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.breakdown-progress {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease-out;
+  position: relative;
+}
+
+.breakdown-progress.excellent {
+  background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+}
+
+.breakdown-progress.good {
+  background: linear-gradient(90deg, #FF9800 0%, #FFB74D 100%);
+}
+
+.breakdown-progress.warning {
+  background: linear-gradient(90deg, #FF5722 0%, #FF8A65 100%);
+}
+
+.breakdown-progress.poor {
+  background: linear-gradient(90deg, #F44336 0%, #EF5350 100%);
+}
+
+.breakdown-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Score Recommendations */
+.score-recommendations {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.score-recommendations h5 {
+  margin: 0 0 16px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.recommendation-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color-hover);
+  transform: translateX(4px);
+}
+
+.recommendation-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.recommendation-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* CSS Variables for Score Colors */
+:root {
+  --score-excellent-color: #4CAF50;
+  --score-good-color: #FF9800;
+  --score-warning-color: #FF5722;
+  --score-poor-color: #F44336;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .score-display {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .score-circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .score-value {
+    font-size: 1.75rem;
+  }
+
+  .score-label {
+    font-size: 1.125rem;
+  }
+
+  .breakdown-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .breakdown-label {
+    min-width: auto;
+  }
+
+  .breakdown-bar {
+    width: 100%;
+  }
+
+  .breakdown-value {
+    text-align: left;
+    min-width: auto;
+  }
+
+  .recommendation-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .recommendation-icon {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .security-score-chart {
+    gap: 16px;
+  }
+
+  .score-display,
+  .score-breakdown,
+  .score-recommendations {
+    padding: 16px;
+  }
+
+  .score-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .score-value {
+    font-size: 1.5rem;
+  }
+
+  .score-icon {
+    font-size: 1.25rem;
+  }
+
+  .score-label {
+    font-size: 1rem;
+  }
+
+  .score-description {
+    font-size: 0.8rem;
+  }
+
+  .breakdown-label {
+    font-size: 0.8rem;
+  }
+
+  .breakdown-value {
+    font-size: 0.8rem;
+  }
+
+  .recommendation-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .score-display,
+  .score-breakdown,
+  .score-recommendations {
+    background: var(--bg-primary-dark, #2a2a2a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .breakdown-bar {
+    background: var(--bg-secondary-dark, #1a1a1a);
+  }
+
+  .recommendation-item {
+    background: var(--bg-secondary-dark, #1a1a1a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .recommendation-item:hover {
+    background: var(--bg-hover-dark, #333);
+  }
+}
+
+/* Animation for Progress Bars */
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--progress-width);
+  }
+}
+
+.breakdown-progress {
+  animation: progressFill 1s ease-out forwards;
+}
+
+/* Hover Effects */
+.score-circle:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.breakdown-item:hover .breakdown-bar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .breakdown-progress {
+    animation: none;
+  }
+
+  .score-circle:hover {
+    transform: none;
+  }
+
+  .recommendation-item:hover {
+    transform: none;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .breakdown-progress.excellent {
+    background: #4CAF50;
+  }
+
+  .breakdown-progress.good {
+    background: #FF9800;
+  }
+
+  .breakdown-progress.warning {
+    background: #FF5722;
+  }
+
+  .breakdown-progress.poor {
+    background: #F44336;
+  }
+
+  .recommendation-item {
+    border-width: 2px;
+  }
+} 

@@ -391,7 +391,7 @@ class AnalysisApplicationService {
         throw new Error(`Project path not found for project: ${projectId}`);
       }
 
-      const recommendations = await this.analysisOutputService.getAnalysisRecommendations(projectPath);
+      const recommendations = await this.analysisOutputService.getAnalysisRecommendations(projectId);
       
       return {
         projectId,

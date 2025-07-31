@@ -319,6 +319,11 @@ const useIDEStore = create(
           
           const analysisData = {
             status: analysisResult.status === 'fulfilled' && analysisResult.value.success ? analysisResult.value.data : null,
+            // ✅ LAZY LOADING: Recommendations, metrics, techStack, architecture werden erst geladen wenn AnalysisView geöffnet wird
+            recommendations: null,
+            metrics: null,
+            techStack: null,
+            architecture: null,
             lastUpdate: new Date().toISOString()
           };
           
@@ -349,6 +354,51 @@ const useIDEStore = create(
           logger.info('Project data loaded for workspace:', workspacePath);
         } catch (error) {
           logger.error('Failed to load project data:', error);
+        }
+      },
+
+      // ✅ NEW: Load Analysis Data (LAZY LOADING - nur wenn AnalysisView geöffnet wird)
+      loadAnalysisData: async (workspacePath = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) {
+          logger.warn('No workspace path available for loading analysis data');
+          return;
+        }
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(targetWorkspacePath);
+          if (!projectId) return;
+          
+          logger.info('Loading analysis data for workspace:', targetWorkspacePath);
+          
+          // Load all analysis data in parallel (nur wenn AnalysisView geöffnet wird)
+          const [recommendationsResult, metricsResult, techStackResult, architectureResult] = await Promise.allSettled([
+            apiCall(`/api/projects/${projectId}/analysis/recommendations`),
+            apiCall(`/api/projects/${projectId}/analysis/metrics`),
+            apiCall(`/api/projects/${projectId}/analysis/techstack`),
+            apiCall(`/api/projects/${projectId}/analysis/architecture`)
+          ]);
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              analysis: {
+                ...state.projectData.analysis,
+                [targetWorkspacePath]: {
+                  ...state.projectData.analysis[targetWorkspacePath],
+                  recommendations: recommendationsResult.status === 'fulfilled' && recommendationsResult.value.success ? recommendationsResult.value.data : [],
+                  metrics: metricsResult.status === 'fulfilled' && metricsResult.value.success ? metricsResult.value.data : null,
+                  techStack: techStackResult.status === 'fulfilled' && techStackResult.value.success ? techStackResult.value.data : null,
+                  architecture: architectureResult.status === 'fulfilled' && architectureResult.value.success ? architectureResult.value.data : null,
+                  lastUpdate: new Date().toISOString()
+                }
+              }
+            }
+          }));
+          
+          logger.info('Analysis data loaded for workspace:', targetWorkspacePath);
+        } catch (error) {
+          logger.error('Failed to load analysis data:', error);
         }
       },
 
@@ -483,29 +533,97 @@ const useIDEStore = create(
           if (WebSocketService) {
             WebSocketService.on('git-status-updated', handleGitStatusUpdated);
             WebSocketService.on('git-branch-changed', handleGitBranchChanged);
-            logger.info('WebSocket events connected for Git status updates');
+            WebSocketService.on('analysis-completed', (data) => {
+              const { workspacePath, analysisData, workflowId, projectId, type, results } = data;
+              logger.info('Analysis completed via WebSocketService for workspace:', workspacePath, 'type:', type);
+              
+              set(state => {
+                const currentAnalysis = state.projectData.analysis[workspacePath] || {};
+                const currentHistory = currentAnalysis.history || [];
+                
+                // Create new history entry
+                const newHistoryEntry = {
+                  id: workflowId || `analysis_${Date.now()}`,
+                  type: type,
+                  analysisType: type,
+                  data: results || analysisData,
+                  result: results || analysisData,
+                  timestamp: new Date().toISOString(),
+                  createdAt: new Date().toISOString(),
+                  projectId: projectId
+                };
+                
+                // Add to history (avoid duplicates)
+                const updatedHistory = [
+                  ...currentHistory.filter(h => h.id !== newHistoryEntry.id),
+                  newHistoryEntry
+                ];
+                
+                return {
+                  projectData: {
+                    ...state.projectData,
+                    analysis: {
+                      ...state.projectData.analysis,
+                      [workspacePath]: {
+                        ...currentAnalysis,
+                        history: updatedHistory,
+                        lastUpdate: new Date().toISOString()
+                      }
+                    }
+                  }
+                };
+              });
+            });
+            logger.info('WebSocket events connected for Git status and Analysis updates');
           }
         }).catch(error => {
-          logger.warn('Could not import WebSocketService for Git events', error);
+          logger.warn('Could not import WebSocketService for events', error);
         });
         
         // Analysis Events
         eventBus.on('analysis-completed', (data) => {
-          const { workspacePath, analysisData } = data;
-          set(state => ({
-            projectData: {
-              ...state.projectData,
-              analysis: {
-                ...state.projectData.analysis,
-                [workspacePath]: {
-                  ...state.projectData.analysis[workspacePath],
-                  ...analysisData,
-                  lastUpdate: new Date().toISOString()
+          const { workspacePath, analysisData, workflowId, projectId, type, results } = data;
+          logger.info('Analysis completed via WebSocket for workspace:', workspacePath, 'type:', type);
+          
+          set(state => {
+            const currentAnalysis = state.projectData.analysis[workspacePath] || {};
+            const currentHistory = currentAnalysis.history || [];
+            
+            // Create new history entry
+            const newHistoryEntry = {
+              id: workflowId || `analysis_${Date.now()}`,
+              type: type,
+              analysisType: type,
+              data: results || analysisData,
+              result: results || analysisData,
+              timestamp: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              projectId: projectId
+            };
+            
+            // Add to history (avoid duplicates)
+            const updatedHistory = [
+              ...currentHistory.filter(h => h.id !== newHistoryEntry.id),
+              newHistoryEntry
+            ];
+            
+            return {
+              projectData: {
+                ...state.projectData,
+                analysis: {
+                  ...state.projectData.analysis,
+                  [workspacePath]: {
+                    ...currentAnalysis,
+                    history: updatedHistory,
+                    lastUpdate: new Date().toISOString()
+                  }
                 }
               }
-            }
-          }));
-          logger.info('Analysis completed via WebSocket for workspace:', workspacePath);
+            };
+          });
+          
+          logger.info('Analysis history updated for workspace:', workspacePath, 'historyCount:', 
+            get().projectData.analysis[workspacePath]?.history?.length || 0);
         });
         
         eventBus.on('analysis-progress', (data) => {

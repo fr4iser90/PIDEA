@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
-import { Pie } from 'react-chartjs-2';
+import { Pie, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -11,6 +11,7 @@ import {
   BarElement,
   Title
 } from 'chart.js';
+import { processTechStackData } from '@/utils/analysisDataProcessor';
 import '@/css/components/analysis/analysis-techstack.css';
 
 // Register Chart.js components
@@ -27,11 +28,12 @@ ChartJS.register(
 const AnalysisTechStack = ({ techStack, loading, error }) => {
   const [activeView, setActiveView] = useState('overview');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedConfidence, setSelectedConfidence] = useState('all');
 
   // Add debugging
   console.log('🔧 [AnalysisTechStack] Received props:', { techStack, loading, error });
 
-  // Process tech stack data from backend structure
+  // Process tech stack data using the new processor
   const processedTechStack = useMemo(() => {
     if (!techStack) {
       console.log('🔧 [AnalysisTechStack] No techStack data provided');
@@ -39,110 +41,24 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
     }
 
     console.log('🔧 [AnalysisTechStack] Processing techStack data:', techStack);
-    console.log('🔧 [AnalysisTechStack] techStack.dependencies:', techStack.dependencies);
-    console.log('🔧 [AnalysisTechStack] techStack.structure:', techStack.structure);
-
-    // Extract dependencies and structure
-    const dependencies = techStack.dependencies || {};
-    const structure = techStack.structure || {};
     
-    // Use structure data if dependencies are empty
-    const directDeps = dependencies.direct || {};
-    const devDeps = dependencies.dev || {};
-    const outdatedDeps = dependencies.outdated || [];
+    // Use the new data processor
+    const processed = processTechStackData(techStack);
     
-    // Extract from structure if dependencies are empty
-    const frameworks = structure.frameworks || [];
-    const libraries = structure.libraries || [];
-    
-    // Convert frameworks and libraries to dependency format for processing
-    const structureDeps = {};
-    frameworks.forEach(fw => {
-      structureDeps[fw.name] = fw.version;
-    });
-    libraries.forEach(lib => {
-      structureDeps[lib.name] = lib.version;
-    });
-    
-    // Use structure dependencies if direct dependencies are empty
-    const effectiveDeps = Object.keys(directDeps).length > 0 ? directDeps : structureDeps;
-    
-    console.log('🔧 [AnalysisTechStack] Direct deps:', directDeps);
-    console.log('🔧 [AnalysisTechStack] Structure deps:', structureDeps);
-    console.log('🔧 [AnalysisTechStack] Effective deps:', effectiveDeps);
-    console.log('🔧 [AnalysisTechStack] Dev deps:', devDeps);
-    console.log('🔧 [AnalysisTechStack] Outdated deps:', outdatedDeps);
-
-    // Extract structure
-    const projectType = structure.projectType || 'unknown';
-    const fileTypes = structure.fileTypes || {};
-
-    console.log('🔧 [AnalysisTechStack] Project type:', projectType);
-    console.log('🔧 [AnalysisTechStack] File types:', fileTypes);
-    console.log('🔧 [AnalysisTechStack] Frameworks:', frameworks);
-    console.log('🔧 [AnalysisTechStack] Libraries:', libraries);
-
-    const categories = {
-      frameworks: ['react', 'vue', 'angular', 'express', 'fastify', 'koa', 'next', 'nuxt', 'gatsby'],
-      databases: ['mysql', 'postgresql', 'mongodb', 'redis', 'sqlite', 'mariadb', 'oracle'],
-      testing: ['jest', 'mocha', 'cypress', 'playwright', 'puppeteer', 'selenium', 'vitest'],
-      buildTools: ['webpack', 'vite', 'rollup', 'esbuild', 'parcel', 'gulp', 'grunt'],
-      linting: ['eslint', 'prettier', 'stylelint', 'tslint', 'husky', 'lint-staged'],
-      utilities: ['lodash', 'moment', 'dayjs', 'axios', 'fetch', 'uuid', 'crypto'],
-      ui: ['tailwind', 'bootstrap', 'material-ui', 'antd', 'chakra', 'semantic-ui'],
-      state: ['redux', 'mobx', 'zustand', 'recoil', 'jotai', 'valtio']
-    };
-
-    const categorized = {};
-    Object.entries(categories).forEach(([category, keywords]) => {
-      if (effectiveDeps) {
-        categorized[category] = Object.entries(effectiveDeps)
-          .filter(([pkg]) => keywords.some(keyword => pkg.toLowerCase().includes(keyword)))
-          .map(([pkg, version]) => ({ 
-            name: pkg, 
-            version,
-            isOutdated: outdatedDeps.some(o => o.name === pkg) || false
-          }));
-      }
-    });
-
-    // Add uncategorized dependencies
-    const categorizedPackages = new Set();
-    Object.values(categorized).forEach(packages => {
-      packages.forEach(pkg => categorizedPackages.add(pkg.name));
-    });
-
-    if (effectiveDeps) {
-      const uncategorized = Object.entries(effectiveDeps)
-        .filter(([pkg]) => !categorizedPackages.has(pkg))
-        .map(([pkg, version]) => ({ 
-          name: pkg, 
-          version,
-          isOutdated: outdatedDeps.some(o => o.name === pkg) || false
-        }));
-
-      if (uncategorized.length > 0) {
-        categorized.other = uncategorized;
-      }
+    if (!processed) {
+      console.log('🔧 [AnalysisTechStack] Failed to process tech stack data');
+      return null;
     }
 
-    return {
-      categorized,
-      outdated: outdatedDeps,
-      fileTypes: fileTypes,
-      projectType: projectType,
-      totalDependencies: Object.keys(effectiveDeps).length,
-      devDependencies: Object.keys(devDeps).length,
-      frameworks: frameworks,
-      libraries: libraries
-    };
+    console.log('🔧 [AnalysisTechStack] Processed data:', processed);
+    return processed;
   }, [techStack]);
 
   // Generate chart data for file types
   const fileTypeChartData = useMemo(() => {
-    if (!processedTechStack?.fileTypes) return null;
+    if (!processedTechStack?.structure?.fileTypes) return null;
 
-    const sortedTypes = Object.entries(processedTechStack.fileTypes)
+    const sortedTypes = Object.entries(processedTechStack.structure.fileTypes)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 10); // Top 10 file types
 
@@ -162,12 +78,12 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
     };
   }, [processedTechStack]);
 
-  // Generate chart data for dependency categories
-  const dependencyChartData = useMemo(() => {
-    if (!processedTechStack?.categorized) return null;
+  // Generate chart data for technology categories
+  const categoryChartData = useMemo(() => {
+    if (!processedTechStack?.categories) return null;
 
-    const categories = Object.entries(processedTechStack.categorized)
-      .filter(([, packages]) => packages.length > 0)
+    const categories = Object.entries(processedTechStack.categories)
+      .filter(([, technologies]) => technologies.length > 0)
       .sort(([,a], [,b]) => b.length - a.length);
 
     const colors = [
@@ -178,9 +94,36 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
     return {
       labels: categories.map(([category]) => category.replace(/\b\w/g, l => l.toUpperCase())),
       datasets: [{
-        data: categories.map(([, packages]) => packages.length),
+        data: categories.map(([, technologies]) => technologies.length),
         backgroundColor: colors.slice(0, categories.length),
         borderColor: colors.slice(0, categories.length).map(color => color + '80'),
+        borderWidth: 2
+      }]
+    };
+  }, [processedTechStack]);
+
+  // Generate chart data for confidence levels
+  const confidenceChartData = useMemo(() => {
+    if (!processedTechStack?.metrics?.technologiesByConfidence) return null;
+
+    const confidenceData = Object.entries(processedTechStack.metrics.technologiesByConfidence)
+      .sort(([a], [b]) => {
+        const order = { high: 0, medium: 1, low: 2 };
+        return order[a] - order[b];
+      });
+
+    const colors = {
+      high: '#4CAF50',
+      medium: '#FF9800',
+      low: '#F44336'
+    };
+
+    return {
+      labels: confidenceData.map(([confidence]) => confidence.charAt(0).toUpperCase() + confidence.slice(1)),
+      datasets: [{
+        data: confidenceData.map(([, count]) => count),
+        backgroundColor: confidenceData.map(([confidence]) => colors[confidence]),
+        borderColor: confidenceData.map(([confidence]) => colors[confidence] + '80'),
         borderWidth: 2
       }]
     };
@@ -216,20 +159,38 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
 
   const getCategoryIcon = (category) => {
     switch (category) {
-      case 'frameworks': return '⚡';
-      case 'databases': return '🗄️';
+      case 'framework': return '⚡';
+      case 'library': return '📚';
+      case 'tool': return '🛠️';
+      case 'runtime': return '🟢';
+      case 'database': return '🗄️';
       case 'testing': return '🧪';
-      case 'buildTools': return '🔨';
-      case 'linting': return '📝';
-      case 'utilities': return '🛠️';
-      case 'ui': return '🎨';
-      case 'state': return '📊';
       case 'other': return '📦';
       default: return '📋';
     }
   };
 
+  const getConfidenceIcon = (confidence) => {
+    switch (confidence) {
+      case 'high': return '🟢';
+      case 'medium': return '🟡';
+      case 'low': return '🔴';
+      default: return '⚪';
+    }
+  };
+
+  const getConfidenceColor = (confidence) => {
+    switch (confidence) {
+      case 'high': return 'high-confidence';
+      case 'medium': return 'medium-confidence';
+      case 'low': return 'low-confidence';
+      default: return 'unknown-confidence';
+    }
+  };
+
   const getProjectTypeIcon = (type) => {
+    if (!type) return '📁'; // Handle undefined/null type
+    
     switch (type.toLowerCase()) {
       case 'react': return '⚛️';
       case 'vue': return '💚';
@@ -257,14 +218,26 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
     setSelectedCategory(category === selectedCategory ? 'all' : category);
   };
 
-  const getFilteredDependencies = () => {
-    if (!processedTechStack?.categorized) return [];
+  const handleConfidenceSelect = (confidence) => {
+    setSelectedConfidence(confidence === selectedConfidence ? 'all' : confidence);
+  };
+
+  const getFilteredTechnologies = () => {
+    if (!processedTechStack?.technologies) return [];
     
-    if (selectedCategory === 'all') {
-      return Object.values(processedTechStack.categorized).flat();
+    let filtered = processedTechStack.technologies;
+    
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(tech => tech.category === selectedCategory);
     }
     
-    return processedTechStack.categorized[selectedCategory] || [];
+    // Apply confidence filter
+    if (selectedConfidence !== 'all') {
+      filtered = filtered.filter(tech => tech.confidence === selectedConfidence);
+    }
+    
+    return filtered;
   };
 
   if (loading) {
@@ -319,6 +292,12 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
               📊 Overview
             </button>
             <button
+              onClick={() => setActiveView('technologies')}
+              className={`view-btn ${activeView === 'technologies' ? 'active' : ''}`}
+            >
+              🛠️ Technologies
+            </button>
+            <button
               onClick={() => setActiveView('dependencies')}
               className={`view-btn ${activeView === 'dependencies' ? 'active' : ''}`}
             >
@@ -338,20 +317,20 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
       <div className="techstack-statistics">
         <div className="stats-grid">
           <div className="stat-item">
-            <span className="stat-label">Total Dependencies:</span>
-            <span className="stat-value">{processedTechStack.totalDependencies}</span>
+            <span className="stat-label">Total Technologies:</span>
+            <span className="stat-value">{processedTechStack.metrics?.totalTechnologies || 0}</span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Dev Dependencies:</span>
-            <span className="stat-value">{processedTechStack.devDependencies}</span>
+            <span className="stat-label">High Confidence:</span>
+            <span className="stat-value high-confidence">{processedTechStack.metrics?.technologiesByConfidence?.high || 0}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Outdated:</span>
-            <span className="stat-value outdated">{processedTechStack.outdated.length}</span>
+            <span className="stat-value outdated">{processedTechStack.metrics?.outdatedCount || 0}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">File Types:</span>
-            <span className="stat-value">{Object.keys(processedTechStack.fileTypes).length}</span>
+            <span className="stat-value">{Object.keys(processedTechStack.structure?.fileTypes || {}).length}</span>
           </div>
         </div>
       </div>
@@ -362,14 +341,27 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
           <div className="overview-view">
             <div className="charts-grid">
               <div className="chart-container">
-                <h4>📦 Dependency Categories</h4>
-                {dependencyChartData ? (
+                <h4>🛠️ Technology Categories</h4>
+                {categoryChartData ? (
                   <div className="chart-wrapper">
-                    <Pie data={dependencyChartData} options={chartOptions} />
+                    <Pie data={categoryChartData} options={chartOptions} />
                   </div>
                 ) : (
                   <div className="no-chart-data">
-                    <p>No dependency data available</p>
+                    <p>No technology data available</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="chart-container">
+                <h4>📊 Confidence Levels</h4>
+                {confidenceChartData ? (
+                  <div className="chart-wrapper">
+                    <Pie data={confidenceChartData} options={chartOptions} />
+                  </div>
+                ) : (
+                  <div className="no-chart-data">
+                    <p>No confidence data available</p>
                   </div>
                 )}
               </div>
@@ -388,26 +380,120 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
               </div>
             </div>
 
-            {processedTechStack.outdated.length > 0 && (
+            {processedTechStack.metrics?.outdatedCount > 0 && (
               <div className="outdated-section">
-                <h4>⚠️ Outdated Dependencies</h4>
+                <h4>⚠️ Outdated Technologies</h4>
                 <div className="outdated-list">
-                  {processedTechStack.outdated.slice(0, 5).map((dep, index) => (
-                    <div key={index} className="outdated-item">
-                      <span className="package-name">{dep.name}</span>
-                      <span className="version-info">
-                        {dep.current} → {dep.latest}
-                      </span>
-                    </div>
-                  ))}
-                  {processedTechStack.outdated.length > 5 && (
+                  {processedTechStack.technologies
+                    .filter(tech => tech.isOutdated)
+                    .slice(0, 5)
+                    .map((tech, index) => (
+                      <div key={index} className="outdated-item">
+                        <span className="package-name">{tech.name}</span>
+                        <span className="version-info">
+                          {tech.version} → {tech.latestVersion || 'Unknown'}
+                        </span>
+                      </div>
+                    ))}
+                  {processedTechStack.metrics.outdatedCount > 5 && (
                     <div className="more-outdated">
-                      +{processedTechStack.outdated.length - 5} more outdated packages
+                      +{processedTechStack.metrics.outdatedCount - 5} more outdated technologies
                     </div>
                   )}
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeView === 'technologies' && (
+          <div className="technologies-view">
+            {/* Filters */}
+            <div className="filters-section">
+              <div className="filter-group">
+                <label>Category:</label>
+                <div className="filter-buttons">
+                  <button
+                    onClick={() => handleCategorySelect('all')}
+                    className={`filter-btn ${selectedCategory === 'all' ? 'active' : ''}`}
+                  >
+                    All ({processedTechStack.technologies.length})
+                  </button>
+                  {Object.entries(processedTechStack.categories).map(([category, technologies]) => (
+                    <button
+                      key={category}
+                      onClick={() => handleCategorySelect(category)}
+                      className={`filter-btn ${selectedCategory === category ? 'active' : ''}`}
+                    >
+                      {getCategoryIcon(category)} {category.charAt(0).toUpperCase() + category.slice(1)} ({technologies.length})
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="filter-group">
+                <label>Confidence:</label>
+                <div className="filter-buttons">
+                  <button
+                    onClick={() => handleConfidenceSelect('all')}
+                    className={`filter-btn ${selectedConfidence === 'all' ? 'active' : ''}`}
+                  >
+                    All ({processedTechStack.technologies.length})
+                  </button>
+                  {Object.entries(processedTechStack.metrics?.technologiesByConfidence || {}).map(([confidence, count]) => (
+                    <button
+                      key={confidence}
+                      onClick={() => handleConfidenceSelect(confidence)}
+                      className={`filter-btn ${selectedConfidence === confidence ? 'active' : ''}`}
+                    >
+                      {getConfidenceIcon(confidence)} {confidence.charAt(0).toUpperCase() + confidence.slice(1)} ({count})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Technologies List */}
+            <div className="technologies-list">
+              {getFilteredTechnologies().map((tech, index) => (
+                <div key={index} className="technology-item">
+                  <div className="technology-info">
+                    <div className="technology-header">
+                      <span className="technology-name">{tech.name}</span>
+                      <span className={`confidence-badge ${getConfidenceColor(tech.confidence)}`}>
+                        {getConfidenceIcon(tech.confidence)} {tech.confidence}
+                      </span>
+                    </div>
+                    <div className="technology-details">
+                      <span className="technology-version">v{tech.version}</span>
+                      <span className="technology-category">
+                        {getCategoryIcon(tech.category)} {tech.category}
+                      </span>
+                      {tech.isOutdated && (
+                        <span className="outdated-badge">
+                          ⚠️ Outdated {tech.latestVersion && `(v${tech.latestVersion} available)`}
+                        </span>
+                      )}
+                    </div>
+                    {tech.description && (
+                      <p className="technology-description">{tech.description}</p>
+                    )}
+                  </div>
+                  <div className="technology-actions">
+                    {tech.homepage && (
+                      <a href={tech.homepage} target="_blank" rel="noopener noreferrer" className="action-link">
+                        🌐 Homepage
+                      </a>
+                    )}
+                    {tech.repository && (
+                      <a href={tech.repository} target="_blank" rel="noopener noreferrer" className="action-link">
+                        📦 Repository
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -419,30 +505,30 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
                 onClick={() => handleCategorySelect('all')}
                 className={`category-btn ${selectedCategory === 'all' ? 'active' : ''}`}
               >
-                📦 All ({Object.values(processedTechStack.categorized).flat().length})
+                📦 All ({Object.values(processedTechStack.categories).flat().length})
               </button>
-              {Object.entries(processedTechStack.categorized).map(([category, packages]) => (
+              {Object.entries(processedTechStack.categories).map(([category, technologies]) => (
                 <button
                   key={category}
                   onClick={() => handleCategorySelect(category)}
                   className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
                 >
-                  {getCategoryIcon(category)} {category.replace(/\b\w/g, l => l.toUpperCase())} ({packages.length})
+                  {getCategoryIcon(category)} {category.replace(/\b\w/g, l => l.toUpperCase())} ({technologies.length})
                 </button>
               ))}
             </div>
 
             {/* Dependencies List */}
             <div className="dependencies-list">
-              {getFilteredDependencies().map((dep, index) => (
+              {getFilteredTechnologies().map((tech, index) => (
                 <div key={index} className="dependency-item">
                   <div className="dependency-info">
-                    <span className="package-name">{dep.name}</span>
-                    <span className="package-version">{dep.version}</span>
+                    <span className="package-name">{tech.name}</span>
+                    <span className="package-version">{tech.version}</span>
                   </div>
                   <div className="dependency-status">
-                    <span className={`status-badge ${getUpdateStatusColor(dep.isOutdated)}`}>
-                      {getUpdateStatusIcon(dep.isOutdated)} {dep.isOutdated ? 'Outdated' : 'Up to date'}
+                    <span className={`status-badge ${getUpdateStatusColor(tech.isOutdated)}`}>
+                      {getUpdateStatusIcon(tech.isOutdated)} {tech.isOutdated ? 'Outdated' : 'Up to date'}
                     </span>
                   </div>
                 </div>
@@ -454,7 +540,7 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
         {activeView === 'files' && (
           <div className="files-view">
             <div className="file-types-grid">
-              {Object.entries(processedTechStack.fileTypes)
+              {Object.entries(processedTechStack.structure?.fileTypes || {})
                 .sort(([,a], [,b]) => b - a)
                 .map(([type, count]) => (
                   <div key={type} className="file-type-item">
@@ -481,7 +567,7 @@ const AnalysisTechStack = ({ techStack, loading, error }) => {
       </div>
 
       {/* No Data Message */}
-      {(!processedTechStack.totalDependencies && !Object.keys(processedTechStack.fileTypes).length) && (
+      {(!processedTechStack.metrics?.totalTechnologies && !Object.keys(processedTechStack.structure?.fileTypes || {}).length) && (
         <div className="no-data-message">
           <p>No tech stack information available. Run an analysis to see technology details.</p>
         </div>

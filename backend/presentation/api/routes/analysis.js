@@ -76,7 +76,7 @@ class AnalysisRoutes {
       this.analysisController.getAnalysisFile(req, res));
 
     // ========================================
-    // COMPONENT ROUTES - Specific Analysis Data
+    // COMPONENT ROUTES - Specific Analysis Data (LEGACY - KEEP FOR COMPATIBILITY)
     // ========================================
     
     // Analysis components for UI
@@ -90,6 +90,85 @@ class AnalysisRoutes {
       this.analysisController.getAnalysisRecommendations(req, res));
     app.get('/api/projects/:projectId/analysis/charts/:type', (req, res) => 
       this.analysisController.getAnalysisCharts(req, res));
+
+    // ========================================
+    // CATEGORY-BASED ROUTES - NEW STRUCTURE
+    // ========================================
+    
+    // Category-based analysis data retrieval
+    // Format: /api/projects/:projectId/analysis/:categoryId/:itemId
+    
+    // Security category
+    app.get('/api/projects/:projectId/analysis/security/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'security'));
+    app.get('/api/projects/:projectId/analysis/security/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'security'));
+    app.get('/api/projects/:projectId/analysis/security/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'security'));
+    app.get('/api/projects/:projectId/analysis/security/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'security'));
+    app.get('/api/projects/:projectId/analysis/security/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'security'));
+
+    // Performance category
+    app.get('/api/projects/:projectId/analysis/performance/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'performance'));
+    app.get('/api/projects/:projectId/analysis/performance/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'performance'));
+    app.get('/api/projects/:projectId/analysis/performance/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'performance'));
+    app.get('/api/projects/:projectId/analysis/performance/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'performance'));
+    app.get('/api/projects/:projectId/analysis/performance/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'performance'));
+
+    // Architecture category
+    app.get('/api/projects/:projectId/analysis/architecture/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'architecture'));
+    app.get('/api/projects/:projectId/analysis/architecture/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'architecture'));
+    app.get('/api/projects/:projectId/analysis/architecture/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'architecture'));
+    app.get('/api/projects/:projectId/analysis/architecture/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'architecture'));
+    app.get('/api/projects/:projectId/analysis/architecture/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'architecture'));
+
+    // Code Quality category
+    app.get('/api/projects/:projectId/analysis/code-quality/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'code-quality'));
+    app.get('/api/projects/:projectId/analysis/code-quality/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'code-quality'));
+    app.get('/api/projects/:projectId/analysis/code-quality/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'code-quality'));
+    app.get('/api/projects/:projectId/analysis/code-quality/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'code-quality'));
+    app.get('/api/projects/:projectId/analysis/code-quality/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'code-quality'));
+
+    // Tech Stack category
+    app.get('/api/projects/:projectId/analysis/tech-stack/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'tech-stack'));
+    app.get('/api/projects/:projectId/analysis/tech-stack/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'tech-stack'));
+    app.get('/api/projects/:projectId/analysis/tech-stack/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'tech-stack'));
+    app.get('/api/projects/:projectId/analysis/tech-stack/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'tech-stack'));
+    app.get('/api/projects/:projectId/analysis/tech-stack/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'tech-stack'));
+
+    // Dependencies category
+    app.get('/api/projects/:projectId/analysis/dependencies/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'dependencies'));
+    app.get('/api/projects/:projectId/analysis/dependencies/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'dependencies'));
+    app.get('/api/projects/:projectId/analysis/dependencies/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'dependencies'));
+    app.get('/api/projects/:projectId/analysis/dependencies/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'dependencies'));
+    app.get('/api/projects/:projectId/analysis/dependencies/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'dependencies'));
 
     // ========================================
     // WORKFLOW EXECUTION ROUTES - Complex Analysis Runs

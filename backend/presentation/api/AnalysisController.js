@@ -632,6 +632,243 @@ class AnalysisController {
       });
     }
   }
+
+  // ========================================
+  // CATEGORY-BASED METHODS - NEW STRUCTURE
+  // ========================================
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/recommendations
+   */
+  async getCategoryRecommendations(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`💡 Getting ${category} recommendations for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Filter for the specific category and extract recommendations
+      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      
+      let recommendations = [];
+      if (categoryAnalyses.length > 0) {
+        // Get the latest analysis for this category
+        const latestAnalysis = categoryAnalyses.sort((a, b) => 
+          new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
+        )[0];
+        
+        recommendations = latestAnalysis.result.recommendations || [];
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          recommendations,
+          count: recommendations.length,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} recommendations:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} recommendations`,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/issues
+   */
+  async getCategoryIssues(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`⚠️ Getting ${category} issues for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Filter for the specific category and extract issues
+      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      
+      let issues = [];
+      if (categoryAnalyses.length > 0) {
+        // Get the latest analysis for this category
+        const latestAnalysis = categoryAnalyses.sort((a, b) => 
+          new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
+        )[0];
+        
+        issues = latestAnalysis.result.issues || [];
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          issues,
+          count: issues.length,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} issues:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} issues`,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/metrics
+   */
+  async getCategoryMetrics(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`📊 Getting ${category} metrics for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Filter for the specific category
+      const categoryAnalyses = analyses.filter(a => a.analysisType === category);
+      
+      const metrics = {
+        totalAnalyses: categoryAnalyses.length,
+        completedAnalyses: categoryAnalyses.filter(a => a.status === 'completed').length,
+        failedAnalyses: categoryAnalyses.filter(a => a.status === 'failed').length,
+        lastAnalysis: categoryAnalyses.length > 0 ? 
+          new Date(Math.max(...categoryAnalyses.map(a => new Date(a.completedAt || a.createdAt)))) : null,
+        averageDuration: 0
+      };
+      
+      // Calculate average duration
+      const completedAnalyses = categoryAnalyses.filter(a => a.status === 'completed' && a.executionTime);
+      if (completedAnalyses.length > 0) {
+        const totalDuration = completedAnalyses.reduce((sum, a) => sum + (a.executionTime || 0), 0);
+        metrics.averageDuration = totalDuration / completedAnalyses.length;
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          metrics,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} metrics:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} metrics`,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/summary
+   */
+  async getCategorySummary(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`📋 Getting ${category} summary for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Filter for the specific category and get latest completed
+      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      
+      let summary = {};
+      if (categoryAnalyses.length > 0) {
+        // Get the latest analysis for this category
+        const latestAnalysis = categoryAnalyses.sort((a, b) => 
+          new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
+        )[0];
+        
+        summary = latestAnalysis.result.summary || {};
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          summary,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} summary:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} summary`,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/results
+   */
+  async getCategoryResults(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`📄 Getting ${category} results for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Filter for the specific category and get latest completed
+      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      
+      let results = {};
+      if (categoryAnalyses.length > 0) {
+        // Get the latest analysis for this category
+        const latestAnalysis = categoryAnalyses.sort((a, b) => 
+          new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
+        )[0];
+        
+        results = latestAnalysis.result || {};
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          results,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} results:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} results`,
+        message: error.message
+      });
+    }
+  }
 }
 
 module.exports = AnalysisController; 

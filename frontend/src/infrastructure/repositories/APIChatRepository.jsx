@@ -658,12 +658,26 @@ export default class APIChatRepository extends ChatRepository {
   async getAnalysisData(projectId = null, analysisType = null, options = {}) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     
-    const queryParams = new URLSearchParams();
-    if (analysisType) queryParams.append('type', analysisType);
-    if (options.cache !== undefined) queryParams.append('cache', options.cache);
-    if (options.memoryLimit) queryParams.append('memoryLimit', options.memoryLimit);
+    // Map analysis types to specific endpoints
+    const endpointMapping = {
+      'security': 'issues',
+      'code-quality': 'issues',
+      'architecture': 'architecture',
+      'tech-stack': 'techstack',
+      'recommendations': 'recommendations',
+      'charts': 'charts'
+    };
     
-    return apiCall(`/api/projects/${currentProjectId}/analysis/data?${queryParams}`, {}, currentProjectId);
+    const endpoint = endpointMapping[analysisType] || 'issues';
+    
+    if (endpoint === 'issues') {
+      return this.getAnalysisIssuesDirect(currentProjectId, analysisType);
+    } else if (endpoint === 'charts') {
+      return this.getAnalysisChartsDirect(currentProjectId, options.chartType || 'trends');
+    } else {
+      const methodName = `getAnalysis${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}Direct`;
+      return this[methodName]?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+    }
   }
 
   /**

@@ -364,8 +364,11 @@ class AnalysisOutputService {
                 return [];
             }
             
-            // Get latest completed analysis
-            const latestAnalysis = await this.analysisRepository.findLatestCompleted(projectId);
+            // Get latest completed analysis (any type)
+            const analyses = await this.analysisRepository.findByProjectId(projectId);
+            const latestAnalysis = analyses
+                .filter(a => a.status === 'completed' && a.result)
+                .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt))[0];
             
             if (!latestAnalysis || !latestAnalysis.result) {
                 return [];
@@ -495,8 +498,11 @@ class AnalysisOutputService {
                 };
             }
             
-            // Get latest tech stack analysis
-            const techStackAnalysis = await this.analysisRepository.findLatestByType(projectId, 'tech-stack');
+            // Get latest completed tech stack analysis
+            const analyses = await this.analysisRepository.findByProjectId(projectId);
+            const techStackAnalysis = analyses
+                .filter(a => a.status === 'completed' && a.result && (a.analysisType === 'tech-stack' || a.analysisType === 'TechStackAnalysisStep'))
+                .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt))[0];
             
             if (!techStackAnalysis || !techStackAnalysis.result) {
                 return {
@@ -554,8 +560,11 @@ class AnalysisOutputService {
                 };
             }
             
-            // Get latest architecture analysis
-            const architectureAnalysis = await this.analysisRepository.findLatestByType(projectId, 'architecture');
+            // Get latest completed architecture analysis
+            const analyses = await this.analysisRepository.findByProjectId(projectId);
+            const architectureAnalysis = analyses
+                .filter(a => a.status === 'completed' && a.result && (a.analysisType === 'architecture' || a.analysisType === 'ArchitectureAnalysisOrchestrator'))
+                .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt))[0];
             
             if (!architectureAnalysis || !architectureAnalysis.result) {
                 return {

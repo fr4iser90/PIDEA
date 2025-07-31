@@ -1,13 +1,16 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
+import { processSecurityData, processCodeQualityData } from '@/utils/analysisDataProcessor';
 import '@/css/components/analysis/analysis-issues.css';
 
 const AnalysisIssues = ({ issues, loading, error }) => {
+  const [activeView, setActiveView] = useState('all');
   const [sortBy, setSortBy] = useState('severity');
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [filterSource, setFilterSource] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [filterScanner, setFilterScanner] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedIssues, setExpandedIssues] = useState(new Set());
 
@@ -17,47 +20,80 @@ const AnalysisIssues = ({ issues, loading, error }) => {
 
     const allIssues = [];
     
-    // Layer validation violations
+    // Process security issues from SecurityAnalysisOrchestrator
+    if (issues.security) {
+      const securityData = processSecurityData(issues.security);
+      if (securityData?.vulnerabilities) {
+        allIssues.push(...securityData.vulnerabilities.map(v => ({
+          ...v,
+          source: 'security-scan',
+          category: 'security',
+          severity: v.severity || 'high',
+          type: 'security-vulnerability',
+          scanner: v.scanner || 'unknown'
+        })));
+      }
+    }
+    
+    // Process code quality issues from CodeQualityAnalysisStep
+    if (issues.codeQuality) {
+      const codeQualityData = processCodeQualityData(issues.codeQuality);
+      if (codeQualityData?.issues) {
+        allIssues.push(...codeQualityData.issues.map(i => ({
+          ...i,
+          source: 'code-quality',
+          category: 'quality',
+          severity: i.severity || 'low',
+          type: 'code-quality',
+          scanner: 'code-quality-analyzer'
+        })));
+      }
+    }
+    
+    // Layer validation violations (legacy support)
     if (issues.layerValidation?.violations) {
       allIssues.push(...issues.layerValidation.violations.map(v => ({
         ...v,
         source: 'layer-validation',
         category: 'architecture',
         severity: v.severity || 'medium',
-        type: 'layer-violation'
+        type: 'layer-violation',
+        scanner: 'architecture-validator'
       })));
     }
     
-    // Logic validation violations
+    // Logic validation violations (legacy support)
     if (issues.logicValidation?.violations) {
       allIssues.push(...issues.logicValidation.violations.map(v => ({
         ...v,
         source: 'logic-validation',
         category: v.type === 'security-violation' ? 'security' : 'logic',
         severity: v.severity || 'medium',
-        type: 'logic-violation'
+        type: 'logic-violation',
+        scanner: 'logic-validator'
       })));
     }
     
-    // Code quality issues
+    // Standard analysis issues (legacy support)
     if (issues.standardAnalysis?.codeQuality?.issues) {
       allIssues.push(...issues.standardAnalysis.codeQuality.issues.map(i => ({
         ...i,
         source: 'code-quality',
         category: 'quality',
         severity: i.severity || 'low',
-        type: 'code-quality'
+        type: 'code-quality',
+        scanner: 'standard-analyzer'
       })));
     }
 
-    // Security issues
     if (issues.standardAnalysis?.security?.vulnerabilities) {
       allIssues.push(...issues.standardAnalysis.security.vulnerabilities.map(v => ({
         ...v,
         source: 'security-scan',
         category: 'security',
         severity: v.severity || 'high',
-        type: 'security-vulnerability'
+        type: 'security-vulnerability',
+        scanner: 'standard-security'
       })));
     }
 
@@ -81,6 +117,27 @@ const AnalysisIssues = ({ issues, loading, error }) => {
     // Apply category filter
     if (filterCategory !== 'all') {
       filtered = filtered.filter(issue => issue.category === filterCategory);
+    }
+
+    // Apply scanner filter
+    if (filterScanner !== 'all') {
+      filtered = filtered.filter(issue => issue.scanner === filterScanner);
+    }
+
+    // Apply view filter
+    if (activeView !== 'all') {
+      filtered = filtered.filter(issue => {
+        switch (activeView) {
+          case 'security':
+            return issue.category === 'security';
+          case 'code-quality':
+            return issue.category === 'quality' || issue.type === 'code-quality';
+          case 'architecture':
+            return issue.category === 'architecture';
+          default:
+            return true;
+        }
+      });
     }
 
     // Apply search filter
@@ -143,6 +200,11 @@ const AnalysisIssues = ({ issues, loading, error }) => {
 
   const uniqueCategories = useMemo(() => 
     [...new Set(processedIssues.map(i => i.category))].filter(Boolean),
+    [processedIssues]
+  );
+
+  const uniqueScanners = useMemo(() => 
+    [...new Set(processedIssues.map(i => i.scanner))].filter(Boolean),
     [processedIssues]
   );
 
@@ -224,6 +286,7 @@ const AnalysisIssues = ({ issues, loading, error }) => {
     setFilterSeverity('all');
     setFilterSource('all');
     setFilterCategory('all');
+    setFilterScanner('all');
     setSearchTerm('');
   };
 
@@ -285,6 +348,32 @@ const AnalysisIssues = ({ issues, loading, error }) => {
           </div>
         </div>
         <div className="issues-actions">
+          <div className="view-controls">
+            <button
+              onClick={() => setActiveView('all')}
+              className={`view-btn ${activeView === 'all' ? 'active' : ''}`}
+            >
+              📋 All Issues
+            </button>
+            <button
+              onClick={() => setActiveView('security')}
+              className={`view-btn ${activeView === 'security' ? 'active' : ''}`}
+            >
+              🔒 Security
+            </button>
+            <button
+              onClick={() => setActiveView('code-quality')}
+              className={`view-btn ${activeView === 'code-quality' ? 'active' : ''}`}
+            >
+              📝 Code Quality
+            </button>
+            <button
+              onClick={() => setActiveView('architecture')}
+              className={`view-btn ${activeView === 'architecture' ? 'active' : ''}`}
+            >
+              🏗️ Architecture
+            </button>
+          </div>
           <button 
             onClick={exportIssues}
             className="btn-export"
@@ -379,6 +468,23 @@ const AnalysisIssues = ({ issues, loading, error }) => {
           </select>
         </div>
 
+        <div className="filter-group">
+          <label htmlFor="scanner-filter">Scanner:</label>
+          <select
+            id="scanner-filter"
+            value={filterScanner}
+            onChange={(e) => setFilterScanner(e.target.value)}
+            className="filter-select"
+          >
+            <option value="all">All Scanners</option>
+            {uniqueScanners.map(scanner => (
+              <option key={scanner} value={scanner}>
+                {scanner.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button onClick={clearFilters} className="btn-clear-filters">
           Clear Filters
         </button>
@@ -402,6 +508,9 @@ const AnalysisIssues = ({ issues, loading, error }) => {
                 <th>Message</th>
                 <th onClick={() => handleSort('source')} className="sortable">
                   Source {sortBy === 'source' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('scanner')} className="sortable">
+                  Scanner {sortBy === 'scanner' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
                 <th>Actions</th>
               </tr>
@@ -441,6 +550,11 @@ const AnalysisIssues = ({ issues, loading, error }) => {
                           {getSourceIcon(issue.source)} {issue.source.replace('-', ' ')}
                         </span>
                       </td>
+                      <td className="scanner-cell">
+                        <span className="scanner-badge">
+                          {issue.scanner ? issue.scanner.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown'}
+                        </span>
+                      </td>
                       <td className="actions-cell">
                         <button
                           onClick={() => toggleIssueExpansion(issueId)}
@@ -453,7 +567,7 @@ const AnalysisIssues = ({ issues, loading, error }) => {
                     </tr>
                     {isExpanded && (
                       <tr className="issue-details-row">
-                        <td colSpan="6" className="details-cell">
+                        <td colSpan="7" className="details-cell">
                           <div className="issue-details">
                             <div className="detail-section">
                               <h4>Full Message</h4>
@@ -487,6 +601,10 @@ const AnalysisIssues = ({ issues, loading, error }) => {
                                 <div className="metadata-item">
                                   <span className="metadata-label">Source:</span>
                                   <span className="metadata-value">{issue.source}</span>
+                                </div>
+                                <div className="metadata-item">
+                                  <span className="metadata-label">Scanner:</span>
+                                  <span className="metadata-value">{issue.scanner || 'Unknown'}</span>
                                 </div>
                                 {issue.rule && (
                                   <div className="metadata-item">

@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
-import { useAnalysisStatus, useAnalysisMetrics, useAnalysisHistory, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useAnalysisStatus, useAnalysisMetrics, useAnalysisHistory, useAnalysisRecommendations, useAnalysisTechStack, useAnalysisArchitecture, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import AnalysisCharts from './AnalysisCharts';
 import AnalysisMetrics from './AnalysisMetrics';
 import AnalysisFilters from './AnalysisFilters';
@@ -13,6 +13,7 @@ import AnalysisIssues from './AnalysisIssues';
 import AnalysisTechStack from './AnalysisTechStack';
 import AnalysisArchitecture from './AnalysisArchitecture';
 import AnalysisRecommendations from './AnalysisRecommendations';
+import SecurityDashboard from './SecurityDashboard';
 import IndividualAnalysisButtons from './IndividualAnalysisButtons';
 import '@/css/components/analysis/analysis-data-viewer.css';
 
@@ -21,7 +22,11 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const analysisStatus = useAnalysisStatus();
   const analysisMetrics = useAnalysisMetrics();
   const analysisHistory = useAnalysisHistory();
+  const analysisRecommendations = useAnalysisRecommendations();
+  const analysisTechStack = useAnalysisTechStack();
+  const analysisArchitecture = useAnalysisArchitecture();
   const activeIDE = useActiveIDE();
+  const { loadAnalysisData: loadAnalysisDataFromStore } = useProjectDataActions();
 
   
   // Local state for UI interactions and non-global data
@@ -32,6 +37,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     charts: null,
     architecture: null,
     recommendations: null,
+    security: null,
     hasRecentData: false
   });
   const [filters, setFilters] = useState({
@@ -53,6 +59,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     issues: false,
     techStack: false,
     architecture: false,
+    security: false,
     metrics: false,
     charts: false,
     history: false
@@ -66,18 +73,207 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     issues: false,
     techStack: false,
     architecture: false,
-    recommendations: false
+    recommendations: false,
+    security: false
   });
 
   const apiRepository = new APIChatRepository();
   const { showSuccess, showInfo } = useNotificationStore();
 
+  // ✅ LAZY LOADING: Load analysis data when AnalysisView is opened
+  useEffect(() => {
+    if (activeIDE.workspacePath) {
+      console.log('🎯 [DEBUG] AnalysisView opened, loading analysis data for:', activeIDE.workspacePath);
+      loadAnalysisDataFromStore(activeIDE.workspacePath);
+    }
+  }, [activeIDE.workspacePath, loadAnalysisDataFromStore]);
+
+  // Load analysis history from API
+  const loadAnalysisHistory = async () => {
+    try {
+      console.log('🎯 [DEBUG] Loading analysis history for project:', currentProjectId);
+      const response = await apiRepository.getAnalysisHistory?.(currentProjectId);
+      console.log('🎯 [DEBUG] Analysis history response:', response);
+      
+      if (response && response.success && response.data) {
+        // Update global state with history data
+        // This should trigger a re-render with the new data
+        console.log('🎯 [DEBUG] Analysis history loaded successfully');
+      }
+    } catch (error) {
+      console.error('🎯 [DEBUG] Failed to load analysis history:', error);
+    }
+  };
+
+  // Update global state when data is loaded via API
+  const updateGlobalStateWithData = (type, data) => {
+    const currentProjectId = projectId || activeIDE.projectId;
+    
+    if (!data || !currentProjectId) {
+      console.log('🎯 [DEBUG] updateGlobalStateWithData: Missing data or projectId', { hasData: !!data, hasProjectId: !!currentProjectId });
+      return;
+    }
+    
+    console.log('🎯 [DEBUG] Updating global state with data for type:', type, 'data type:', typeof data);
+    
+    // Import IDEStore to update global state
+    import('@/infrastructure/stores/IDEStore.jsx').then(module => {
+      const useIDEStore = module.default;
+      const store = useIDEStore.getState();
+      
+      const workspacePath = activeIDE.workspacePath;
+      if (!workspacePath) {
+        console.log('🎯 [DEBUG] updateGlobalStateWithData: No workspace path available');
+        return;
+      }
+      
+      console.log('🎯 [DEBUG] updateGlobalStateWithData: Using workspace path:', workspacePath);
+      
+      const currentAnalysis = store.projectData.analysis[workspacePath] || {};
+      const currentHistory = currentAnalysis.history || [];
+      
+      console.log('🎯 [DEBUG] updateGlobalStateWithData: Current history count:', currentHistory.length);
+      
+      // Create new history entry
+      const newHistoryEntry = {
+        id: `api_${type}_${Date.now()}`,
+        type: type,
+        analysisType: type,
+        data: data,
+        result: data,
+        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        projectId: currentProjectId
+      };
+      
+      // Add to history (avoid duplicates)
+      const updatedHistory = [
+        ...currentHistory.filter(h => h.id !== newHistoryEntry.id && h.type !== type),
+        newHistoryEntry
+      ];
+      
+      console.log('🎯 [DEBUG] updateGlobalStateWithData: Updated history count:', updatedHistory.length);
+      
+      // Update global state using Zustand's setState method
+      try {
+        useIDEStore.setState(state => ({
+          projectData: {
+            ...state.projectData,
+            analysis: {
+              ...state.projectData.analysis,
+              [workspacePath]: {
+                ...currentAnalysis,
+                history: updatedHistory,
+                lastUpdate: new Date().toISOString()
+              }
+            }
+          }
+        }));
+        
+        console.log('🎯 [DEBUG] Global state updated with', type, 'data, history count:', updatedHistory.length);
+      } catch (error) {
+        console.error('🎯 [DEBUG] Failed to update global state with setState:', error);
+      }
+    }).catch(error => {
+      console.error('🎯 [DEBUG] Failed to update global state:', error);
+    });
+  };
+
+  // Helper function to get data from global state
+  const getGlobalData = (type) => {
+    console.log('🎯 [DEBUG] getGlobalData called for type:', type);
+    console.log('🎯 [DEBUG] analysisHistory:', analysisHistory);
+    
+    // Check if we have history data
+    if (!analysisHistory.history || analysisHistory.history.length === 0) {
+      console.log('🎯 [DEBUG] No history data available');
+      return null;
+    }
+    
+    // Map frontend types to backend types
+    const typeMapping = {
+      'issues': ['issues', 'code-quality', 'security'],
+      'tech-stack': ['tech-stack', 'TechStackAnalysisStep'],
+      'architecture': ['architecture', 'ArchitectureAnalysisOrchestrator'],
+      'security': ['security', 'SecurityAnalysisOrchestrator'],
+      'recommendations': ['recommendations', 'CodeQualityAnalysisStep']
+    };
+    
+    const targetTypes = typeMapping[type] || [type];
+    console.log('🎯 [DEBUG] Looking for types:', targetTypes);
+    
+    // Find matching history entry
+    const matchingEntry = analysisHistory.history.find(h => 
+      targetTypes.includes(h.type) || targetTypes.includes(h.analysisType)
+    );
+    
+    if (matchingEntry) {
+      console.log('🎯 [DEBUG] Found matching entry:', matchingEntry.type, matchingEntry.analysisType);
+      return matchingEntry.data || matchingEntry.result || null;
+    }
+    
+    console.log('🎯 [DEBUG] No matching entry found');
+    return null;
+  };
+
   // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
     if (activeIDE.workspacePath) {
       logger.info('AnalysisDataViewer: active IDE changed to:', activeIDE.workspacePath);
+      
+      // Debug: Check if we have analysis data in global state
+      console.log('🎯 [DEBUG] Active IDE changed, checking global state...');
+      console.log('🎯 [DEBUG] analysisHistory:', analysisHistory);
+      console.log('🎯 [DEBUG] analysisStatus:', analysisStatus);
+      
+      // If no history data, try to load it
+      if (!analysisHistory.history || analysisHistory.history.length === 0) {
+        console.log('🎯 [DEBUG] No history data, attempting to load...');
+        // This will trigger the API call to get analysis history
+        loadAnalysisHistory();
+      }
     }
-  }, [activeIDE.workspacePath]);
+  }, [activeIDE.workspacePath, analysisHistory.history]);
+
+  // Force load data when sections are expanded but no data is available
+  useEffect(() => {
+    console.log('🎯 [DEBUG] Expanded sections changed:', expandedSections);
+    console.log('🎯 [DEBUG] Current analysisData:', analysisData);
+    
+    // Check if sections are expanded but have no data
+    Object.entries(expandedSections).forEach(([section, isExpanded]) => {
+      if (isExpanded) {
+        const hasLocalData = analysisData[section] !== null;
+        const hasGlobalData = getGlobalData(section) !== null;
+        
+        console.log(`🎯 [DEBUG] Section ${section}: expanded=${isExpanded}, hasLocalData=${hasLocalData}, hasGlobalData=${hasGlobalData}`);
+        
+        if (!hasLocalData && !hasGlobalData) {
+          console.log(`🎯 [DEBUG] Section ${section} expanded but no data available, triggering load...`);
+          // Trigger data loading for this section
+          switch (section) {
+            case 'issues':
+              loadIssuesData();
+              break;
+            case 'techStack':
+              loadTechStackData();
+              break;
+            case 'architecture':
+              loadArchitectureData();
+              break;
+            case 'security':
+              loadSecurityData();
+              break;
+            case 'recommendations':
+              loadRecommendationsData();
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    });
+  }, [expandedSections, analysisData]);
 
   useEffect(() => {
     // Only setup event listeners, don't auto-load data
@@ -188,76 +384,182 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     try {
       updateLoadingState('issues', true);
       const currentProjectId = projectId || activeIDE.projectId;
+      console.log('🔍 [DEBUG] loadIssuesData: Using projectId:', currentProjectId);
+      
       // ✅ OPTIMIZATION: Use direct API call (bypass StepRegistry) for faster loading
       const issuesResponse = await apiRepository.getAnalysisIssuesDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
       
+      console.log('🔍 [DEBUG] loadIssuesData: API response:', {
+        success: issuesResponse?.success,
+        hasData: !!issuesResponse?.data,
+        dataType: typeof issuesResponse?.data,
+        dataKeys: issuesResponse?.data ? Object.keys(issuesResponse.data) : null
+      });
+      
+      if (issuesResponse?.success && issuesResponse?.data) {
+        setAnalysisData(prev => ({
+          ...prev,
+          issues: issuesResponse.data
+        }));
+        // Update global state with the loaded data
+        updateGlobalStateWithData('issues', issuesResponse.data);
+        console.log('✅ Issues data loaded and stored in global state');
+      } else {
+        console.log('🔍 [DEBUG] loadIssuesData: No valid data in response');
+        setAnalysisData(prev => ({
+          ...prev,
+          issues: null
+        }));
+      }
+    } catch (err) {
+      console.error('❌ [DEBUG] loadIssuesData error:', err);
+      logger.error('Failed to load issues data:', err);
       setAnalysisData(prev => ({
         ...prev,
-        issues: issuesResponse.success ? issuesResponse.data : null
+        issues: null
       }));
-    } catch (err) {
-      logger.error('Failed to load issues data:', err);
     } finally {
       updateLoadingState('issues', false);
     }
   }, [analysisData.issues, expandedSections.issues, projectId, activeIDE.projectId, apiRepository]);
 
   const loadTechStackData = useCallback(async () => {
-    if (analysisData.techStack !== null) return; // Already loaded
-    
-    try {
-      updateLoadingState('techStack', true);
-      const currentProjectId = projectId || activeIDE.projectId;
-      const techStackResponse = await apiRepository.getAnalysisTechStackDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-      
-      setAnalysisData(prev => ({
-        ...prev,
-        techStack: techStackResponse.success ? techStackResponse.data : null
-      }));
-    } catch (err) {
-      logger.error('Failed to load tech stack data:', err);
-    } finally {
-      updateLoadingState('techStack', false);
+    // ✅ USE STATE DATA: Check if tech stack is already in global state
+    if (analysisTechStack.hasTechStack) {
+      console.log('✅ Tech stack already in global state, using existing data');
+      return;
     }
-  }, [analysisData.techStack, projectId, activeIDE.projectId, apiRepository]);
+    
+    // ✅ LAZY LOAD: Load from store if not available
+    if (activeIDE.workspacePath) {
+      console.log('🎯 Loading tech stack from store for:', activeIDE.workspacePath);
+      await loadAnalysisDataFromStore(activeIDE.workspacePath);
+    }
+  }, [analysisTechStack.hasTechStack, activeIDE.workspacePath, loadAnalysisDataFromStore]);
 
   const loadArchitectureData = useCallback(async () => {
-    if (analysisData.architecture !== null) return; // Already loaded
+    // ✅ USE STATE DATA: Check if architecture is already in global state
+    if (analysisArchitecture.hasArchitecture) {
+      console.log('✅ Architecture already in global state, using existing data');
+      return;
+    }
+    
+    // ✅ LAZY LOAD: Load from store if not available
+    if (activeIDE.workspacePath) {
+      console.log('🎯 Loading architecture from store for:', activeIDE.workspacePath);
+      await loadAnalysisDataFromStore(activeIDE.workspacePath);
+    }
+  }, [analysisArchitecture.hasArchitecture, activeIDE.workspacePath, loadAnalysisDataFromStore]);
+
+  const loadSecurityData = useCallback(async () => {
+    if (analysisData.security !== null) return; // Already loaded
     
     try {
-      updateLoadingState('architecture', true);
+      updateLoadingState('security', true);
       const currentProjectId = projectId || activeIDE.projectId;
-      const architectureResponse = await apiRepository.getAnalysisArchitectureDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      console.log('🔍 [DEBUG] loadSecurityData: Starting with projectId:', currentProjectId);
       
+      // Try multiple approaches to get security data
+      let securityResponse = null;
+      
+      // First, try to get security data from the issues endpoint with security type
+      try {
+        console.log('🔍 [DEBUG] loadSecurityData: Trying issues endpoint with security type');
+        securityResponse = await apiRepository.getAnalysisIssuesDirect?.(currentProjectId, 'security');
+        console.log('🔍 [DEBUG] loadSecurityData: Issues endpoint response:', {
+          success: securityResponse?.success,
+          hasData: !!securityResponse?.data,
+          dataType: typeof securityResponse?.data,
+          dataKeys: securityResponse?.data ? Object.keys(securityResponse.data) : null
+        });
+        
+        if (securityResponse?.success && securityResponse?.data) {
+          securityResponse = {
+            success: true,
+            data: {
+              summary: securityResponse.data.summary || {},
+              details: securityResponse.data.scanners || {},
+              vulnerabilities: securityResponse.data.vulnerabilities || [],
+              bestPractices: securityResponse.data.bestPractices || []
+            }
+          };
+          console.log('🔍 [DEBUG] loadSecurityData: Using actual security response:', securityResponse);
+        }
+      } catch (err) {
+        console.error('❌ [DEBUG] loadSecurityData: Issues endpoint error:', err);
+        logger.warn('Failed to get security data via issues endpoint:', err);
+      }
+      
+      // If that fails, try to get it from the architecture endpoint as fallback
+      if (!securityResponse?.success || !securityResponse?.data) {
+        console.log('🔍 [DEBUG] loadSecurityData: Trying architecture endpoint as fallback');
+        try {
+          const architectureResponse = await apiRepository.getAnalysisArchitectureDirect?.(currentProjectId);
+          console.log('🔍 [DEBUG] loadSecurityData: Architecture endpoint response:', {
+            success: architectureResponse?.success,
+            hasData: !!architectureResponse?.data,
+            dataType: typeof architectureResponse?.data
+          });
+          
+          if (architectureResponse?.success && architectureResponse?.data) {
+            // Don't transform architecture data to fake security data
+            // If no real security data is available, show "no data available"
+            console.log('🔍 [DEBUG] loadSecurityData: Architecture data available but not using as fake security data');
+            securityResponse = null;
+          }
+        } catch (err) {
+          console.error('❌ [DEBUG] loadSecurityData: Architecture endpoint error:', err);
+          logger.warn('Failed to get security data via architecture endpoint:', err);
+        }
+      }
+      
+      // If still no data, set null to show "no data available" message
+      console.log('🔍 [DEBUG] loadSecurityData: Final check - securityResponse:', {
+        success: securityResponse?.success,
+        hasData: !!securityResponse?.data,
+        dataType: typeof securityResponse?.data
+      });
+      
+      if (securityResponse?.success && securityResponse?.data) {
+        setAnalysisData(prev => ({
+          ...prev,
+          security: securityResponse.data
+        }));
+        // Update global state with the loaded data
+        updateGlobalStateWithData('security', securityResponse.data);
+        console.log('✅ Security data loaded and stored in global state');
+      } else {
+        console.log('🔍 [DEBUG] loadSecurityData: No valid security data, setting to null');
+        setAnalysisData(prev => ({
+          ...prev,
+          security: null
+        }));
+      }
+    } catch (err) {
+      console.error('❌ [DEBUG] loadSecurityData: Outer catch error:', err);
+      logger.error('Failed to load security data:', err);
       setAnalysisData(prev => ({
         ...prev,
-        architecture: architectureResponse.success ? architectureResponse.data : null
+        security: null
       }));
-    } catch (err) {
-      logger.error('Failed to load architecture data:', err);
     } finally {
-      updateLoadingState('architecture', false);
+      updateLoadingState('security', false);
     }
-  }, [analysisData.architecture, projectId, activeIDE.projectId, apiRepository]);
+  }, [analysisData.security, projectId, activeIDE.projectId, apiRepository]);
 
   const loadRecommendationsData = useCallback(async () => {
-    if (analysisData.recommendations !== null) return; // Already loaded
-    
-    try {
-      updateLoadingState('recommendations', true);
-      const currentProjectId = projectId || activeIDE.projectId;
-      const recommendationsResponse = await apiRepository.getAnalysisRecommendationsDirect?.(currentProjectId) || Promise.resolve({ success: false, data: null });
-      
-      setAnalysisData(prev => ({
-        ...prev,
-        recommendations: recommendationsResponse.success ? recommendationsResponse.data : null
-      }));
-    } catch (err) {
-      logger.error('Failed to load recommendations data:', err);
-    } finally {
-      updateLoadingState('recommendations', false);
+    // ✅ USE STATE DATA: Check if recommendations are already in global state
+    if (analysisRecommendations.hasRecommendations) {
+      console.log('✅ Recommendations already in global state, using existing data');
+      return;
     }
-  }, [analysisData.recommendations, projectId, activeIDE.projectId, apiRepository]);
+    
+    // ✅ LAZY LOAD: Load from store if not available
+    if (activeIDE.workspacePath) {
+      console.log('🎯 Loading recommendations from store for:', activeIDE.workspacePath);
+      await loadAnalysisDataFromStore(activeIDE.workspacePath);
+    }
+  }, [analysisRecommendations.hasRecommendations, activeIDE.workspacePath, loadAnalysisDataFromStore]);
 
   const loadChartsData = useCallback(async () => {
     if (analysisData.charts !== null) return; // Already loaded
@@ -281,6 +583,9 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   // ✅ REFACTORED: Use global state for section toggle logic
   const handleSectionToggle = (sectionName) => {
     console.log('🎯 [DEBUG] handleSectionToggle called:', sectionName);
+    console.log('🎯 [DEBUG] Current analysisHistory:', analysisHistory);
+    console.log('🎯 [DEBUG] Current analysisStatus:', analysisStatus);
+    console.log('🎯 [DEBUG] Current analysisMetrics:', analysisMetrics);
     
     setExpandedSections(prev => {
       const newExpandedSections = { ...prev, [sectionName]: !prev[sectionName] };
@@ -288,26 +593,46 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       return newExpandedSections;
     });
 
-    // Load data when section is expanded
+    // Only load data if section is expanded AND no data is available in global state
     if (!expandedSections[sectionName]) {
-      switch (sectionName) {
-        case 'issues':
-          loadIssuesData();
-          break;
-        case 'techStack':
-          loadTechStackData();
-          break;
-        case 'architecture':
-          loadArchitectureData();
-          break;
-        case 'recommendations':
-          loadRecommendationsData();
-          break;
-        case 'charts':
-          loadChartsData();
-          break;
-        default:
-          break;
+      const hasGlobalData = analysisHistory.history?.some(h => {
+        switch (sectionName) {
+          case 'issues': return h.type === 'issues';
+          case 'techStack': return h.type === 'tech-stack';
+          case 'architecture': return h.type === 'architecture';
+          case 'security': return h.type === 'security';
+          case 'recommendations': return h.type === 'recommendations';
+          default: return false;
+        }
+      });
+
+      // Only make API call if no global data is available
+      if (!hasGlobalData) {
+        console.log('🎯 [DEBUG] No global data found, loading via API for:', sectionName);
+        switch (sectionName) {
+          case 'issues':
+            loadIssuesData();
+            break;
+          case 'techStack':
+            loadTechStackData();
+            break;
+          case 'architecture':
+            loadArchitectureData();
+            break;
+          case 'security':
+            loadSecurityData();
+            break;
+          case 'recommendations':
+            loadRecommendationsData();
+            break;
+          case 'charts':
+            loadChartsData();
+            break;
+          default:
+            break;
+        }
+      } else {
+        console.log('🎯 [DEBUG] Global data found, skipping API call for:', sectionName);
       }
     }
   };
@@ -550,7 +875,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
             </div>
             {expandedSections.issues && (
               <AnalysisIssues 
-                issues={analysisData.issues}
+                issues={analysisData.issues || getGlobalData('issues')}
                 loading={loadingStates.issues}
                 onLoad={loadIssuesData}
               />
@@ -565,7 +890,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
             </div>
             {expandedSections.techStack && (
               <AnalysisTechStack 
-                techStack={analysisData.techStack}
+                techStack={analysisTechStack.techStack}
                 loading={loadingStates.techStack}
                 onLoad={loadTechStackData}
               />
@@ -580,9 +905,24 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
             </div>
             {expandedSections.architecture && (
               <AnalysisArchitecture 
-                architecture={analysisData.architecture}
+                architecture={analysisArchitecture.architecture}
                 loading={loadingStates.architecture}
                 onLoad={loadArchitectureData}
+              />
+            )}
+          </div>
+
+          {/* Security Dashboard Section */}
+          <div className={`analysis-section ${expandedSections.security ? 'expanded' : 'collapsed'}`}>
+            <div className="section-header" onClick={() => handleSectionToggle('security')}>
+              <h3>🔒 Security Dashboard</h3>
+              <span className="toggle-icon">{expandedSections.security ? '▼' : '▶'}</span>
+            </div>
+            {expandedSections.security && (
+              <SecurityDashboard 
+                securityData={analysisData.security || getGlobalData('security')}
+                loading={loadingStates.security}
+                onLoad={loadSecurityData}
               />
             )}
           </div>
@@ -595,7 +935,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
             </div>
             {expandedSections.recommendations && (
               <AnalysisRecommendations 
-                recommendations={analysisData.recommendations}
+                recommendations={analysisRecommendations.recommendations}
                 loading={loadingStates.recommendations}
                 onLoad={loadRecommendationsData}
               />
