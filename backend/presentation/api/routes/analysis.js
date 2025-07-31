@@ -170,6 +170,18 @@ class AnalysisRoutes {
     app.get('/api/projects/:projectId/analysis/dependencies/results', (req, res) => 
       this.analysisController.getCategoryResults(req, res, 'dependencies'));
 
+    // Manifest category
+    app.get('/api/projects/:projectId/analysis/manifest/recommendations', (req, res) => 
+      this.analysisController.getCategoryRecommendations(req, res, 'manifest'));
+    app.get('/api/projects/:projectId/analysis/manifest/issues', (req, res) => 
+      this.analysisController.getCategoryIssues(req, res, 'manifest'));
+    app.get('/api/projects/:projectId/analysis/manifest/metrics', (req, res) => 
+      this.analysisController.getCategoryMetrics(req, res, 'manifest'));
+    app.get('/api/projects/:projectId/analysis/manifest/summary', (req, res) => 
+      this.analysisController.getCategorySummary(req, res, 'manifest'));
+    app.get('/api/projects/:projectId/analysis/manifest/results', (req, res) => 
+      this.analysisController.getCategoryResults(req, res, 'manifest'));
+
     // ========================================
     // WORKFLOW EXECUTION ROUTES - Complex Analysis Runs
     // ========================================

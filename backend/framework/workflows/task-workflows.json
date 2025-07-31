@@ -45,7 +45,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Validate IDE response",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["code-quality", "syntax", "completeness"],
             "strict": false
@@ -145,7 +145,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Validate test implementation",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["test-syntax", "test-coverage", "test-quality"],
             "strict": true
@@ -218,7 +218,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Validate feature implementation",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["code-quality", "syntax", "architecture", "requirements"],
             "strict": true
@@ -292,7 +292,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Validate bug fix",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["test-syntax", "test-coverage", "test-quality"],
             "strict": true
@@ -365,7 +365,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Validate analysis results",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["analysis-completeness", "data-quality", "insights"],
             "strict": false

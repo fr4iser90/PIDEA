@@ -518,18 +518,28 @@ class WorkflowController {
                         message: 'Code quality analysis completed successfully'
                     });
                 } else {
-                    stepName = 'CodeQualityAnalysisStep';
+                    stepName = 'CodeQualityAnalysisOrchestrator';
                     stepOptions.analysisType = 'code-quality';
                     stepOptions.includeMetrics = true;
                     stepOptions.includeIssues = true;
                     stepOptions.includeSuggestions = true;
                 }
             } else if (mode === 'tech-stack-analysis') {
-                stepName = 'TechStackAnalysisStep';
-                stepOptions.analysisType = 'tech-stack';
-                stepOptions.includeFrameworks = true;
-                stepOptions.includeLibraries = true;
-                stepOptions.includeTools = true;
+                // Use AnalysisApplicationService instead of direct step execution
+                if (this.analysisApplicationService) {
+                    const result = await this.analysisApplicationService.executeTechStackAnalysis(projectId, stepOptions);
+                    return res.json({
+                        success: true,
+                        data: result,
+                        message: 'Tech stack analysis completed successfully'
+                    });
+                } else {
+                    stepName = 'TechStackAnalysisOrchestrator';
+                    stepOptions.analysisType = 'tech-stack';
+                    stepOptions.includeFrameworks = true;
+                    stepOptions.includeLibraries = true;
+                    stepOptions.includeTools = true;
+                }
             } else if (mode === 'manifest-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
@@ -540,7 +550,7 @@ class WorkflowController {
                         message: 'Manifest analysis completed successfully'
                     });
                 } else {
-                    stepName = 'ManifestAnalysisStep';
+                    stepName = 'ManifestAnalysisOrchestrator';
                     stepOptions.analysisType = 'manifest';
                     stepOptions.includePackageJson = true;
                     stepOptions.includeConfigFiles = true;
@@ -589,7 +599,7 @@ class WorkflowController {
                         message: 'Dependency analysis completed successfully'
                     });
                 } else {
-                    stepName = 'DependencyAnalysisStep';
+                    stepName = 'DependencyAnalysisOrchestrator';
                     stepOptions.analysisType = 'dependencies';
                     stepOptions.includeOutdated = true;
                     stepOptions.includeVulnerabilities = true;

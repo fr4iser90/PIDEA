@@ -8,7 +8,7 @@
           "name": "code-quality-analysis",
           "type": "analysis",
           "description": "Analyze code quality, complexity, and best practices",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "includeMetrics": true,
             "includeIssues": true,
@@ -56,7 +56,7 @@
           "name": "tech-stack-analysis",
           "type": "analysis",
           "description": "Analyze technologies, frameworks, and tools",
-          "step": "TechStackAnalysisStep",
+          "step": "TechStackAnalysisOrchestrator",
           "options": {
             "includeFrameworks": true,
             "includeLibraries": true,
@@ -68,7 +68,7 @@
           "name": "manifest-analysis",
           "type": "analysis",
           "description": "Analyze project configuration and manifest files",
-          "step": "ManifestAnalysisStep",
+          "step": "ManifestAnalysisOrchestrator",
           "options": {
             "includePackageJson": true,
             "includeConfigFiles": true,
@@ -81,7 +81,7 @@
           "name": "dependency-analysis",
           "type": "analysis",
           "description": "Analyze package dependencies and versions",
-          "step": "DependencyAnalysisStep",
+          "step": "DependencyAnalysisOrchestrator",
           "options": {
             "includeOutdated": true,
             "includeVulnerabilities": true,
@@ -106,7 +106,7 @@
           "name": "code-quality-analysis",
           "type": "analysis",
           "description": "Quick code quality check",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "includeMetrics": true,
             "includeIssues": true,
@@ -130,7 +130,7 @@
           "name": "dependency-analysis",
           "type": "analysis",
           "description": "Check for outdated dependencies",
-          "step": "DependencyAnalysisStep",
+          "step": "DependencyAnalysisOrchestrator",
           "options": {
             "includeOutdated": true,
             "includeVulnerabilities": true,
@@ -169,7 +169,7 @@
           "name": "dependency-analysis",
           "type": "analysis",
           "description": "Security-focused dependency analysis",
-          "step": "DependencyAnalysisStep",
+          "step": "DependencyAnalysisOrchestrator",
           "options": {
             "includeOutdated": true,
             "includeVulnerabilities": true,
@@ -235,7 +235,7 @@
           "name": "code-quality-analysis",
           "type": "analysis",
           "description": "Performance-focused code quality check",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "includeMetrics": true,
             "includeIssues": true,
@@ -261,7 +261,7 @@
           "name": "code-quality-analysis",
           "type": "analysis",
           "description": "Deep code quality analysis",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "includeMetrics": true,
             "includeIssues": true,
@@ -289,7 +289,7 @@
           "name": "dependency-analysis",
           "type": "analysis",
           "description": "Code quality impact of dependencies",
-          "step": "DependencyAnalysisStep",
+          "step": "DependencyAnalysisOrchestrator",
           "options": {
             "includeOutdated": true,
             "includeVulnerabilities": true,

@@ -622,13 +622,13 @@ export default class APIChatRepository extends ChatRepository {
     
     // Map frontend analysis types to backend step names
     const stepMapping = {
-      'code-quality': 'CodeQualityAnalysisStep',
-      'security': 'SecurityAnalysisStep',
-      'performance': 'PerformanceAnalysisStep',
-      'architecture': 'ArchitectureAnalysisStep',
-      'tech-stack': 'TechStackAnalysisStep',
-      'manifest': 'ManifestAnalysisStep',
-      'dependencies': 'DependencyAnalysisStep',
+      'code-quality': 'CodeQualityAnalysisOrchestrator',
+      'security': 'SecurityAnalysisOrchestrator',
+      'performance': 'PerformanceAnalysisOrchestrator',
+      'architecture': 'ArchitectureAnalysisOrchestrator',
+      'tech-stack': 'TechStackAnalysisOrchestrator',
+      'manifest': 'ManifestAnalysisOrchestrator',
+      'dependencies': 'DependencyAnalysisOrchestrator',
       'recommendations': 'RecommendationsStep'
     };
     

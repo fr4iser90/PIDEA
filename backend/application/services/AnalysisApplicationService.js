@@ -578,43 +578,93 @@ class AnalysisApplicationService {
   }
 
   /**
-   * Execute dependency analysis and save result
+   * Execute dependency analysis for a project
    * @param {string} projectId - Project identifier
    * @param {Object} options - Analysis options
    * @returns {Promise<Object>} Analysis result
    */
   async executeDependencyAnalysis(projectId, options = {}) {
     try {
-      this.logger.info(`📦 Executing dependency analysis for project: ${projectId}`);
+      this.logger.info(`🔍 Executing dependency analysis for project: ${projectId}`);
       
-      // Get project path
       const projectPath = await this.getProjectPath(projectId);
-      
-      // Execute analysis step
-      const stepResult = await this.executeAnalysisStep('DependencyAnalysisStep', {
-        projectPath,
-        projectId,
-        ...options
-      });
-      
-      // Save result to database if successful
-      if (stepResult.success && stepResult.result) {
-        await this.saveAnalysisResult(projectId, 'dependencies', stepResult.result, {
-          stepName: 'DependencyAnalysisStep',
-          executionContext: options
-        });
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
       }
+
+      const context = {
+        projectId,
+        projectPath,
+        analysisType: 'dependencies',
+        options: {
+          includeOutdated: true,
+          includeVulnerabilities: true,
+          includeUnused: true,
+          includeLicense: true,
+          ...options
+        }
+      };
+
+      const result = await this.executeAnalysisStep('DependencyAnalysisOrchestrator', context);
       
-      return stepResult;
-      
+      // Save result to database
+      await this.saveAnalysisResult(projectId, 'dependencies', result, {
+        executionTime: Date.now(),
+        options: context.options
+      });
+
+      return result;
     } catch (error) {
-      this.logger.error(`❌ Dependency analysis failed: ${error.message}`);
+      this.logger.error(`❌ Failed to execute dependency analysis for project ${projectId}:`, error);
       throw error;
     }
   }
 
   /**
-   * Execute architecture analysis and save result
+   * Execute tech stack analysis for a project
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeTechStackAnalysis(projectId, options = {}) {
+    try {
+      this.logger.info(`🔍 Executing tech stack analysis for project: ${projectId}`);
+      
+      const projectPath = await this.getProjectPath(projectId);
+      if (!projectPath) {
+        throw new Error(`Project path not found for project: ${projectId}`);
+      }
+
+      const context = {
+        projectId,
+        projectPath,
+        analysisType: 'tech-stack',
+        options: {
+          includeFrameworks: true,
+          includeLibraries: true,
+          includeTools: true,
+          includeVersions: true,
+          ...options
+        }
+      };
+
+      const result = await this.executeAnalysisStep('TechStackAnalysisOrchestrator', context);
+      
+      // Save result to database
+      await this.saveAnalysisResult(projectId, 'tech-stack', result, {
+        executionTime: Date.now(),
+        options: context.options
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error(`❌ Failed to execute tech stack analysis for project ${projectId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute architecture analysis for a project
    * @param {string} projectId - Project identifier
    * @param {Object} options - Analysis options
    * @returns {Promise<Object>} Analysis result

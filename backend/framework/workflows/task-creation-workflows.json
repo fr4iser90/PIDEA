@@ -50,7 +50,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Validate IDE response quality",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["completeness", "relevance", "structure"],
             "strict": false,
@@ -198,7 +198,7 @@
           "name": "validate-response",
           "type": "validation",
           "description": "Comprehensive response validation",
-          "step": "CodeQualityAnalysisStep",
+          "step": "CodeQualityAnalysisOrchestrator",
           "options": {
             "checks": ["completeness", "relevance", "structure", "security", "performance"],
             "strict": true,

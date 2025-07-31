@@ -804,6 +804,13 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
+- **File**: tests/integration/CategoryRoutes.test.js
+- **Description**: undefined
+- **Severity**: medium
+- **Suggestion**: Use for...of loop or Promise.all for async operations
+
+
+### cpu Bottleneck
 - **File**: tests/integration/StreamingWorkflow.test.js
 - **Description**: undefined
 - **Severity**: medium
@@ -1968,7 +1975,7 @@ CPU performance analysis completed with a score of 83% (good level).
 ## 📈 Metrics
 - **Bottlenecks**: 0 issues found
 - **Optimizations**: 0 opportunities
-- **File Coverage**: 1152 files analyzed
+- **File Coverage**: 1178 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider implementing CPU optimizations to improve performance and reduce bottlenecks.
