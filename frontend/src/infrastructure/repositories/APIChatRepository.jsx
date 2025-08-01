@@ -589,6 +589,229 @@ export default class APIChatRepository extends ChatRepository {
     return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
   }
 
+  // NEW: Category-based Analysis Methods (7 categories × 5 endpoints = 35 methods)
+  
+  // Security Analysis Methods
+  async getSecurityAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/security/recommendations`, {}, currentProjectId);
+  }
+
+  async getSecurityAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/security/issues`, {}, currentProjectId);
+  }
+
+  async getSecurityAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/security/metrics`, {}, currentProjectId);
+  }
+
+  async getSecurityAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/security/summary`, {}, currentProjectId);
+  }
+
+  async getSecurityAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/security/results`, {}, currentProjectId);
+  }
+
+  // Performance Analysis Methods
+  async getPerformanceAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/performance/recommendations`, {}, currentProjectId);
+  }
+
+  async getPerformanceAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/performance/issues`, {}, currentProjectId);
+  }
+
+  async getPerformanceAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/performance/metrics`, {}, currentProjectId);
+  }
+
+  async getPerformanceAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/performance/summary`, {}, currentProjectId);
+  }
+
+  async getPerformanceAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/performance/results`, {}, currentProjectId);
+  }
+
+  // Architecture Analysis Methods
+  async getArchitectureAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture/recommendations`, {}, currentProjectId);
+  }
+
+  async getArchitectureAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture/issues`, {}, currentProjectId);
+  }
+
+  async getArchitectureAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture/metrics`, {}, currentProjectId);
+  }
+
+  async getArchitectureAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture/summary`, {}, currentProjectId);
+  }
+
+  async getArchitectureAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture/results`, {}, currentProjectId);
+  }
+
+  // Code Quality Analysis Methods
+  async getCodeQualityAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/code-quality/recommendations`, {}, currentProjectId);
+  }
+
+  async getCodeQualityAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/code-quality/issues`, {}, currentProjectId);
+  }
+
+  async getCodeQualityAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/code-quality/metrics`, {}, currentProjectId);
+  }
+
+  async getCodeQualityAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/code-quality/summary`, {}, currentProjectId);
+  }
+
+  async getCodeQualityAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/code-quality/results`, {}, currentProjectId);
+  }
+
+  // Dependencies Analysis Methods
+  async getDependenciesAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/dependencies/recommendations`, {}, currentProjectId);
+  }
+
+  async getDependenciesAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/dependencies/issues`, {}, currentProjectId);
+  }
+
+  async getDependenciesAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/dependencies/metrics`, {}, currentProjectId);
+  }
+
+  async getDependenciesAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/dependencies/summary`, {}, currentProjectId);
+  }
+
+  async getDependenciesAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/dependencies/results`, {}, currentProjectId);
+  }
+
+  // Manifest Analysis Methods
+  async getManifestAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/manifest/recommendations`, {}, currentProjectId);
+  }
+
+  async getManifestAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/manifest/issues`, {}, currentProjectId);
+  }
+
+  async getManifestAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/manifest/metrics`, {}, currentProjectId);
+  }
+
+  async getManifestAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/manifest/summary`, {}, currentProjectId);
+  }
+
+  async getManifestAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/manifest/results`, {}, currentProjectId);
+  }
+
+  // Tech Stack Analysis Methods
+  async getTechStackAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/tech-stack/recommendations`, {}, currentProjectId);
+  }
+
+  async getTechStackAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/tech-stack/issues`, {}, currentProjectId);
+  }
+
+  async getTechStackAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/tech-stack/metrics`, {}, currentProjectId);
+  }
+
+  async getTechStackAnalysisSummary(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/tech-stack/summary`, {}, currentProjectId);
+  }
+
+  async getTechStackAnalysisResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/tech-stack/results`, {}, currentProjectId);
+  }
+
+  // Generic category-based method for dynamic access
+  async getCategoryAnalysis(category, endpoint, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const validCategories = ['security', 'performance', 'architecture', 'code-quality', 'dependencies', 'manifest', 'tech-stack'];
+    const validEndpoints = ['recommendations', 'issues', 'metrics', 'summary', 'results'];
+    
+    if (!validCategories.includes(category)) {
+      throw new Error(`Invalid category: ${category}. Valid categories: ${validCategories.join(', ')}`);
+    }
+    
+    if (!validEndpoints.includes(endpoint)) {
+      throw new Error(`Invalid endpoint: ${endpoint}. Valid endpoints: ${validEndpoints.join(', ')}`);
+    }
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/${category}/${endpoint}`, {}, currentProjectId);
+  }
+
+  // DEPRECATED: Legacy analysis methods (to be removed after migration)
+  // These methods are kept for backward compatibility during transition
+  async getAnalysisIssuesLegacy(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/issues`, {}, currentProjectId);
+  }
+
+  async getAnalysisTechStackLegacy(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`, {}, currentProjectId);
+  }
+
+  async getAnalysisArchitectureLegacy(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`, {}, currentProjectId);
+  }
+
+  async getAnalysisRecommendationsLegacy(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
+  }
+
   // Individual Analysis Step Methods
   async executeAnalysisStep(projectId = null, analysisType, options = {}) {
     const currentProjectId = projectId || await this.getCurrentProjectId();

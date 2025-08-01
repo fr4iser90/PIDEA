@@ -45,6 +45,19 @@ const useIDEStore = create(
         lastUpdate: null
       },
 
+      // NEW: Category-based Analysis Data Structure
+      categoryAnalysisData: {
+        // { '/path1': { 
+        //   security: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null },
+        //   performance: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null },
+        //   architecture: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null },
+        //   codeQuality: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null },
+        //   dependencies: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null },
+        //   manifest: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null },
+        //   techStack: { recommendations: null, issues: null, metrics: null, summary: null, results: null, lastUpdate: null }
+        // }}
+      },
+
       // Actions
       setActivePort: async (port) => {
         try {
@@ -400,6 +413,192 @@ const useIDEStore = create(
         } catch (error) {
           logger.error('Failed to load analysis data:', error);
         }
+      },
+
+      // NEW: Category-based Analysis Data Loading (7 categories with lazy loading)
+      loadCategoryAnalysisData: async (workspacePath = null, category = null, endpoint = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) {
+          logger.warn('No workspace path available for loading category analysis data');
+          return;
+        }
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(targetWorkspacePath);
+          if (!projectId) return;
+          
+          const validCategories = ['security', 'performance', 'architecture', 'code-quality', 'dependencies', 'manifest', 'tech-stack'];
+          const validEndpoints = ['recommendations', 'issues', 'metrics', 'summary', 'results'];
+          
+          // If specific category and endpoint provided, load only that
+          if (category && endpoint) {
+            if (!validCategories.includes(category)) {
+              throw new Error(`Invalid category: ${category}`);
+            }
+            if (!validEndpoints.includes(endpoint)) {
+              throw new Error(`Invalid endpoint: ${endpoint}`);
+            }
+            
+            logger.info(`Loading ${category}/${endpoint} data for workspace:`, targetWorkspacePath);
+            
+            const result = await apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId);
+            
+            set(state => ({
+              categoryAnalysisData: {
+                ...state.categoryAnalysisData,
+                [targetWorkspacePath]: {
+                  ...state.categoryAnalysisData[targetWorkspacePath],
+                  [category]: {
+                    ...state.categoryAnalysisData[targetWorkspacePath]?.[category],
+                    [endpoint]: result.success ? result.data : null,
+                    lastUpdate: new Date().toISOString()
+                  }
+                }
+              }
+            }));
+            
+            logger.info(`${category}/${endpoint} data loaded for workspace:`, targetWorkspacePath);
+            return;
+          }
+          
+          // If only category provided, load all endpoints for that category
+          if (category && !endpoint) {
+            if (!validCategories.includes(category)) {
+              throw new Error(`Invalid category: ${category}`);
+            }
+            
+            logger.info(`Loading all ${category} data for workspace:`, targetWorkspacePath);
+            
+            const promises = validEndpoints.map(endpoint => 
+              apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
+                .then(result => ({ endpoint, result }))
+                .catch(error => ({ endpoint, error }))
+            );
+            
+            const results = await Promise.allSettled(promises);
+            
+            const categoryData = {};
+            results.forEach((result, index) => {
+              if (result.status === 'fulfilled' && result.value.result?.success) {
+                categoryData[result.value.endpoint] = result.value.result.data;
+              } else {
+                categoryData[result.value.endpoint] = null;
+              }
+            });
+            
+            set(state => ({
+              categoryAnalysisData: {
+                ...state.categoryAnalysisData,
+                [targetWorkspacePath]: {
+                  ...state.categoryAnalysisData[targetWorkspacePath],
+                  [category]: {
+                    ...categoryData,
+                    lastUpdate: new Date().toISOString()
+                  }
+                }
+              }
+            }));
+            
+            logger.info(`All ${category} data loaded for workspace:`, targetWorkspacePath);
+            return;
+          }
+          
+          // If no specific category/endpoint, load all categories (full load)
+          logger.info('Loading all category analysis data for workspace:', targetWorkspacePath);
+          
+          const allPromises = validCategories.flatMap(category => 
+            validEndpoints.map(endpoint => 
+              apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
+                .then(result => ({ category, endpoint, result }))
+                .catch(error => ({ category, endpoint, error }))
+            )
+          );
+          
+          const allResults = await Promise.allSettled(allPromises);
+          
+          const allCategoryData = {};
+          validCategories.forEach(category => {
+            allCategoryData[category] = {
+              recommendations: null,
+              issues: null,
+              metrics: null,
+              summary: null,
+              results: null,
+              lastUpdate: new Date().toISOString()
+            };
+          });
+          
+          allResults.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value.result?.success) {
+              const { category, endpoint } = result.value;
+              allCategoryData[category][endpoint] = result.value.result.data;
+            }
+          });
+          
+          set(state => ({
+            categoryAnalysisData: {
+              ...state.categoryAnalysisData,
+              [targetWorkspacePath]: allCategoryData
+            }
+          }));
+          
+          logger.info('All category analysis data loaded for workspace:', targetWorkspacePath);
+        } catch (error) {
+          logger.error('Failed to load category analysis data:', error);
+        }
+      },
+
+      // NEW: Get category analysis data from store
+      getCategoryAnalysisData: (workspacePath = null, category = null, endpoint = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) return null;
+        
+        const categoryData = get().categoryAnalysisData[targetWorkspacePath];
+        if (!categoryData) return null;
+        
+        if (category && endpoint) {
+          return categoryData[category]?.[endpoint] || null;
+        }
+        
+        if (category && !endpoint) {
+          return categoryData[category] || null;
+        }
+        
+        return categoryData;
+      },
+
+      // NEW: Check if category data is loaded
+      isCategoryDataLoaded: (workspacePath = null, category = null, endpoint = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) return false;
+        
+        const categoryData = get().categoryAnalysisData[targetWorkspacePath];
+        if (!categoryData) return false;
+        
+        if (category && endpoint) {
+          return categoryData[category]?.[endpoint] !== null && categoryData[category]?.[endpoint] !== undefined;
+        }
+        
+        if (category && !endpoint) {
+          return categoryData[category] !== null && categoryData[category] !== undefined;
+        }
+        
+        return Object.keys(categoryData).length > 0;
+      },
+
+      // NEW: Clear category analysis data
+      clearCategoryAnalysisData: (workspacePath = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) return;
+        
+        set(state => ({
+          categoryAnalysisData: {
+            ...state.categoryAnalysisData,
+            [targetWorkspacePath]: null
+          }
+        }));
+        
+        logger.info('Category analysis data cleared for workspace:', targetWorkspacePath);
       },
 
       // ✅ NEW: Refresh Git Status specifically

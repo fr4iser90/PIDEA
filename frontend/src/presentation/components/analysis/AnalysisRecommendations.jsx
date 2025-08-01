@@ -1,9 +1,8 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
-import { processSecurityData, processCodeQualityData } from '@/utils/analysisDataProcessor';
 import '@/css/components/analysis/analysis-recommendations.css';
 
-const AnalysisRecommendations = ({ recommendations, loading, error }) => {
+const AnalysisRecommendations = ({ recommendations, loading, error, category = null }) => {
   const [activeView, setActiveView] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -13,106 +12,117 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [expandedRecommendations, setExpandedRecommendations] = useState(new Set());
 
-  // Debug logging removed for security
-
-  // Process recommendations data from backend structure
+  // ✅ NEW: Process recommendations from orchestrator data structure
   const processedRecommendations = useMemo(() => {
-    if (!recommendations) {
-      return null;
-    }
+    if (!recommendations) return [];
 
-    const allRecommendations = [];
-    
-    // Process security recommendations from SecurityAnalysisOrchestrator
-    if (recommendations.security) {
-      const securityData = processSecurityData(recommendations.security);
-      if (securityData?.bestPractices) {
-        allRecommendations.push(...securityData.bestPractices.map(bp => ({
-          title: bp.title || 'Security Best Practice',
-          description: bp.description || bp.message || 'No description available',
-          priority: bp.severity === 'critical' ? 'critical' : bp.severity === 'high' ? 'high' : 'medium',
-          category: 'security',
-          effort: bp.effort || 'medium',
-          impact: bp.impact || 'high',
-          file: bp.file || null,
-          estimatedTime: bp.estimatedTime || null,
-          dependencies: bp.dependencies || [],
-          tags: bp.tags || ['security'],
-          status: bp.status || 'pending',
-          source: 'security-analysis',
-          scanner: bp.scanner || 'security-scanner'
-        })));
-      }
-    }
-    
-    // Process code quality recommendations from CodeQualityAnalysisStep
-    if (recommendations.codeQuality) {
-      const codeQualityData = processCodeQualityData(recommendations.codeQuality);
-      if (codeQualityData?.recommendations) {
-        allRecommendations.push(...codeQualityData.recommendations.map(rec => ({
-          title: rec.title || 'Code Quality Improvement',
-          description: rec.description || rec.suggestion || 'No description available',
-          priority: rec.priority || 'medium',
-          category: 'code-quality',
-          effort: rec.effort || 'medium',
-          impact: rec.impact || 'medium',
-          file: rec.file || null,
-          estimatedTime: rec.estimatedTime || null,
-          dependencies: rec.dependencies || [],
-          tags: rec.tags || ['code-quality'],
-          status: rec.status || 'pending',
-          source: 'code-quality-analysis',
-          scanner: 'code-quality-analyzer'
-        })));
-      }
-    }
-    
-    // Legacy recommendations support
-    if (recommendations.recommendations) {
-      allRecommendations.push(...recommendations.recommendations.map(rec => ({
-        title: rec.title || 'Untitled Recommendation',
-        description: rec.description || 'No description available',
-        priority: rec.priority || 'medium',
-        category: rec.category || 'general',
+    // If recommendations is already an array (from orchestrator), use it directly
+    if (Array.isArray(recommendations)) {
+      return recommendations.map(rec => ({
+        ...rec,
+        source: rec.source || 'orchestrator',
+        category: rec.category || category || 'general',
+        priority: rec.priority || rec.impact || 'medium',
         effort: rec.effort || 'medium',
-        impact: rec.impact || 'medium',
-        file: rec.file || null,
-        estimatedTime: rec.estimatedTime || null,
-        dependencies: rec.dependencies || [],
-        tags: rec.tags || [],
-        status: rec.status || 'pending',
-        source: 'legacy-analysis',
-        scanner: 'legacy-analyzer'
-      })));
+        type: rec.type || 'recommendation',
+        scanner: rec.scanner || 'orchestrator'
+      }));
     }
 
-    const processed = {
-      recommendations: allRecommendations,
-      integratedInsights: recommendations.integratedInsights || []
-    };
+    // If recommendations is an object with category data (legacy support)
+    if (typeof recommendations === 'object') {
+      const allRecommendations = [];
+      
+      // Process category-specific recommendations
+      const categories = ['security', 'performance', 'architecture', 'code-quality', 'dependencies', 'manifest', 'tech-stack'];
+      
+      categories.forEach(cat => {
+        if (recommendations[cat] && Array.isArray(recommendations[cat])) {
+          allRecommendations.push(...recommendations[cat].map(rec => ({
+            ...rec,
+            source: rec.source || cat,
+            category: rec.category || cat,
+            priority: rec.priority || rec.impact || 'medium',
+            effort: rec.effort || 'medium',
+            type: rec.type || `${cat}-recommendation`,
+            scanner: rec.scanner || `${cat}-orchestrator`
+          })));
+        }
+      });
 
-    return processed;
-  }, [recommendations]);
+      // Process legacy recommendations structure
+      if (recommendations.recommendations && Array.isArray(recommendations.recommendations)) {
+        allRecommendations.push(...recommendations.recommendations.map(rec => ({
+          ...rec,
+          source: rec.source || 'legacy',
+          category: rec.category || category || 'general',
+          priority: rec.priority || rec.impact || 'medium',
+          effort: rec.effort || 'medium',
+          type: rec.type || 'legacy-recommendation',
+          scanner: rec.scanner || 'legacy-analyzer'
+        })));
+      }
+
+      return allRecommendations;
+    }
+
+    return [];
+  }, [recommendations, category]);
 
   // Filter and sort recommendations
   const filteredAndSortedRecommendations = useMemo(() => {
-    if (!processedRecommendations?.recommendations) return [];
+    let filtered = processedRecommendations;
 
-    let filtered = [...processedRecommendations.recommendations];
-
-    // Apply priority filter
+    // Filter by priority
     if (selectedPriority !== 'all') {
-      filtered = filtered.filter(rec => rec.priority === selectedPriority);
+      filtered = filtered.filter(rec => 
+        rec.priority?.toLowerCase() === selectedPriority.toLowerCase()
+      );
     }
 
-    // Apply category filter
+    // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(rec => rec.category === selectedCategory);
+      filtered = filtered.filter(rec => 
+        rec.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
     }
 
-    // Apply effort filter
+    // Filter by effort
     if (selectedEffort !== 'all') {
-      filtered = filtered.filter(rec => rec.effort === selectedEffort);
+      filtered = filtered.filter(rec => 
+        rec.effort?.toLowerCase() === selectedEffort.toLowerCase()
+      );
+    }
+
+    // Filter by source
+    if (selectedSource !== 'all') {
+      filtered = filtered.filter(rec => 
+        rec.source?.toLowerCase() === selectedSource.toLowerCase()
+      );
+    }
+
+    // Filter by view
+    if (activeView !== 'all') {
+      filtered = filtered.filter(rec => {
+        switch (activeView) {
+          case 'security':
+            return rec.category === 'security';
+          case 'performance':
+            return rec.category === 'performance';
+          case 'architecture':
+            return rec.category === 'architecture';
+          case 'code-quality':
+            return rec.category === 'code-quality';
+          case 'dependencies':
+            return rec.category === 'dependencies';
+          case 'manifest':
+            return rec.category === 'manifest';
+          case 'tech-stack':
+            return rec.category === 'tech-stack';
+          default:
+            return true;
+        }
+      });
     }
 
     // Sort recommendations
@@ -121,101 +131,84 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
 
       switch (sortBy) {
         case 'priority':
-          const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-          aValue = priorityOrder[a.priority] || 4;
-          bValue = priorityOrder[b.priority] || 4;
+          aValue = getPriorityWeight(a.priority);
+          bValue = getPriorityWeight(b.priority);
+          break;
+        case 'effort':
+          aValue = getEffortWeight(a.effort);
+          bValue = getEffortWeight(b.effort);
+          break;
+        case 'title':
+          aValue = a.title || '';
+          bValue = b.title || '';
           break;
         case 'category':
           aValue = a.category || '';
           bValue = b.category || '';
-          break;
-        case 'effort':
-          const effortOrder = { low: 0, medium: 1, high: 2 };
-          aValue = effortOrder[a.effort] || 3;
-          bValue = effortOrder[b.effort] || 3;
-          break;
-        case 'impact':
-          const impactOrder = { high: 0, medium: 1, low: 2 };
-          aValue = impactOrder[a.impact] || 3;
-          bValue = impactOrder[b.impact] || 3;
-          break;
-        case 'status':
-          const statusOrder = { 'in-progress': 0, planned: 1, pending: 2, completed: 3 };
-          aValue = statusOrder[a.status] || 4;
-          bValue = statusOrder[b.status] || 4;
           break;
         default:
           aValue = a[sortBy] || '';
           bValue = b[sortBy] || '';
       }
 
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+      if (sortOrder === 'desc') {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       } else {
-        return aValue < bValue ? 1 : -1;
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       }
     });
 
     return filtered;
-  }, [processedRecommendations, selectedPriority, selectedCategory, selectedEffort, sortBy, sortOrder]);
+  }, [processedRecommendations, selectedPriority, selectedCategory, selectedEffort, selectedSource, activeView, sortBy, sortOrder]);
 
-  // Get unique values for filters
-  const uniquePriorities = useMemo(() => 
-    [...new Set(processedRecommendations?.recommendations.map(r => r.priority))].filter(Boolean),
-    [processedRecommendations]
-  );
+  const getPriorityWeight = (priority) => {
+    const weights = { critical: 4, high: 3, medium: 2, low: 1 };
+    return weights[priority?.toLowerCase()] || 0;
+  };
 
-  const uniqueCategories = useMemo(() => 
-    [...new Set(processedRecommendations?.recommendations.map(r => r.category))].filter(Boolean),
-    [processedRecommendations]
-  );
+  const getEffortWeight = (effort) => {
+    const weights = { low: 1, medium: 2, high: 3 };
+    return weights[effort?.toLowerCase()] || 0;
+  };
 
-  const uniqueEfforts = useMemo(() => 
-    [...new Set(processedRecommendations?.recommendations.map(r => r.effort))].filter(Boolean),
-    [processedRecommendations]
-  );
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'critical':
+      case 'high':
+        return 'high';
+      case 'medium':
+        return 'medium';
+      case 'low':
+        return 'low';
+      default:
+        return 'medium';
+    }
+  };
 
-  // Recommendation statistics
-  const recommendationStats = useMemo(() => {
-    if (!processedRecommendations) return null;
+  const getPriorityIcon = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'critical':
+      case 'high':
+        return '🚀';
+      case 'medium':
+        return '⚡';
+      case 'low':
+        return '💡';
+      default:
+        return '💡';
+    }
+  };
 
-    const stats = {
-      total: processedRecommendations.recommendations.length,
-      byPriority: {},
-      byCategory: {},
-      byEffort: {},
-      byStatus: {},
-      totalEstimatedTime: 0
-    };
-
-    processedRecommendations.recommendations.forEach(rec => {
-      // Count by priority
-      stats.byPriority[rec.priority] = (stats.byPriority[rec.priority] || 0) + 1;
-      
-      // Count by category
-      stats.byCategory[rec.category] = (stats.byCategory[rec.category] || 0) + 1;
-      
-      // Count by effort
-      stats.byEffort[rec.effort] = (stats.byEffort[rec.effort] || 0) + 1;
-      
-      // Count by status
-      stats.byStatus[rec.status] = (stats.byStatus[rec.status] || 0) + 1;
-      
-      // Sum estimated time
-      if (rec.estimatedTime) {
-        stats.totalEstimatedTime += rec.estimatedTime;
-      }
-    });
-
-    return stats;
-  }, [processedRecommendations]);
-
-  const handleSort = (field) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
+  const getEffortIcon = (effort) => {
+    switch (effort?.toLowerCase()) {
+      case 'low':
+        return '⚡';
+      case 'medium':
+        return '🔧';
+      case 'high':
+        return '🏗️';
+      default:
+        return '🔧';
     }
   };
 
@@ -231,109 +224,6 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
     });
   };
 
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case 'critical': return '🚨';
-      case 'high': return '🔴';
-      case 'medium': return '🟡';
-      case 'low': return '🟢';
-      default: return '⚪';
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'critical': return 'critical';
-      case 'high': return 'high';
-      case 'medium': return 'medium';
-      case 'low': return 'low';
-      default: return 'neutral';
-    }
-  };
-
-  const getEffortIcon = (effort) => {
-    switch (effort) {
-      case 'low': return '⚡';
-      case 'medium': return '⚙️';
-      case 'high': return '🔧';
-      default: return '📋';
-    }
-  };
-
-  const getEffortColor = (effort) => {
-    switch (effort) {
-      case 'low': return 'success';
-      case 'medium': return 'warning';
-      case 'high': return 'critical';
-      default: return 'neutral';
-    }
-  };
-
-  const getImpactIcon = (impact) => {
-    switch (impact) {
-      case 'high': return '📈';
-      case 'medium': return '📊';
-      case 'low': return '📉';
-      default: return '📋';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'completed': return '✅';
-      case 'in-progress': return '🔄';
-      case 'planned': return '📅';
-      case 'pending': return '⏳';
-      default: return '❓';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'success';
-      case 'in-progress': return 'warning';
-      case 'planned': return 'info';
-      case 'pending': return 'neutral';
-      default: return 'neutral';
-    }
-  };
-
-  const clearFilters = () => {
-    setSelectedPriority('all');
-    setSelectedCategory('all');
-    setSelectedEffort('all');
-  };
-
-  const exportRecommendations = () => {
-    const csvContent = [
-      ['Priority', 'Title', 'Category', 'Effort', 'Impact', 'Status', 'Description'],
-      ...filteredAndSortedRecommendations.map(rec => [
-        rec.priority,
-        rec.title,
-        rec.category,
-        rec.effort,
-        rec.impact,
-        rec.status,
-        rec.description
-      ])
-    ].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analysis-recommendations-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const formatEstimatedTime = (hours) => {
-    if (!hours) return 'Unknown';
-    if (hours < 1) return `${Math.round(hours * 60)}m`;
-    if (hours < 8) return `${hours.toFixed(1)}h`;
-    return `${(hours / 8).toFixed(1)}d`;
-  };
-
   if (loading) {
     return (
       <div className="analysis-recommendations loading">
@@ -347,84 +237,103 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
     return (
       <div className="analysis-recommendations error">
         <div className="error-message">
-          <span className="error-icon">⚠️</span>
-          <span>{error}</span>
+          <span className="error-icon">❌</span>
+          <span>Error loading recommendations: {error}</span>
         </div>
       </div>
     );
   }
 
-  if (!processedRecommendations) {
+  if (!processedRecommendations || processedRecommendations.length === 0) {
     return (
       <div className="analysis-recommendations no-data">
-        <p>No recommendations data available.</p>
+        <div className="no-data-icon">💡</div>
+        <h4>No Recommendations</h4>
+        <p>No recommendations available for this analysis.</p>
+        <p>This could mean your code is already optimized.</p>
       </div>
     );
   }
+
+  // Get unique values for filters
+  const priorities = [...new Set(processedRecommendations.map(rec => rec.priority))].filter(Boolean);
+  const categories = [...new Set(processedRecommendations.map(rec => rec.category))].filter(Boolean);
+  const efforts = [...new Set(processedRecommendations.map(rec => rec.effort))].filter(Boolean);
+  const sources = [...new Set(processedRecommendations.map(rec => rec.source))].filter(Boolean);
 
   return (
     <div className="analysis-recommendations">
       {/* Header */}
       <div className="recommendations-header">
-        <div className="recommendations-title">
-          <h3>💡 Recommendations</h3>
-          <div className="recommendations-summary">
-            <span className="summary-text">
-              {recommendationStats?.total > 0 
-                ? `${recommendationStats.total} actionable recommendations`
-                : 'No recommendations available'
-              }
-            </span>
-          </div>
-        </div>
-        <div className="recommendations-actions">
-          <button 
-            onClick={exportRecommendations}
-            className="btn-export"
-            disabled={filteredAndSortedRecommendations.length === 0}
-            title="Export recommendations to CSV"
-          >
-            📊 Export
-          </button>
+        <h4>Analysis Recommendations ({filteredAndSortedRecommendations.length})</h4>
+        <div className="recommendations-summary">
+          <span className="total-recommendations">Total: {processedRecommendations.length}</span>
+          <span className="filtered-recommendations">Showing: {filteredAndSortedRecommendations.length}</span>
         </div>
       </div>
 
-      {/* Statistics */}
-      {recommendationStats && recommendationStats.total > 0 && (
-        <div className="recommendations-statistics">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-label">Total:</span>
-              <span className="stat-value">{recommendationStats.total}</span>
-            </div>
-            {Object.entries(recommendationStats.byPriority).map(([priority, count]) => (
-              <div key={priority} className={`stat-item ${getPriorityColor(priority)}`}>
-                <span className="stat-label">{priority}:</span>
-                <span className="stat-value">{count}</span>
-              </div>
-            ))}
-            {recommendationStats.totalEstimatedTime > 0 && (
-              <div className="stat-item">
-                <span className="stat-label">Est. Time:</span>
-                <span className="stat-value">{formatEstimatedTime(recommendationStats.totalEstimatedTime)}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* View Controls */}
+      <div className="view-controls">
+        <button
+          onClick={() => setActiveView('all')}
+          className={`view-btn ${activeView === 'all' ? 'active' : ''}`}
+        >
+          📋 All
+        </button>
+        <button
+          onClick={() => setActiveView('security')}
+          className={`view-btn ${activeView === 'security' ? 'active' : ''}`}
+        >
+          🔒 Security
+        </button>
+        <button
+          onClick={() => setActiveView('performance')}
+          className={`view-btn ${activeView === 'performance' ? 'active' : ''}`}
+        >
+          ⚡ Performance
+        </button>
+        <button
+          onClick={() => setActiveView('architecture')}
+          className={`view-btn ${activeView === 'architecture' ? 'active' : ''}`}
+        >
+          🏗️ Architecture
+        </button>
+        <button
+          onClick={() => setActiveView('code-quality')}
+          className={`view-btn ${activeView === 'code-quality' ? 'active' : ''}`}
+        >
+          📝 Code Quality
+        </button>
+        <button
+          onClick={() => setActiveView('dependencies')}
+          className={`view-btn ${activeView === 'dependencies' ? 'active' : ''}`}
+        >
+          📦 Dependencies
+        </button>
+        <button
+          onClick={() => setActiveView('manifest')}
+          className={`view-btn ${activeView === 'manifest' ? 'active' : ''}`}
+        >
+          📋 Manifest
+        </button>
+        <button
+          onClick={() => setActiveView('tech-stack')}
+          className={`view-btn ${activeView === 'tech-stack' ? 'active' : ''}`}
+        >
+          🛠️ Tech Stack
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="recommendations-filters">
         <div className="filter-group">
-          <label htmlFor="priority-filter">Priority:</label>
           <select
-            id="priority-filter"
             value={selectedPriority}
             onChange={(e) => setSelectedPriority(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Priorities</option>
-            {uniquePriorities.map(priority => (
+            {priorities.map(priority => (
               <option key={priority} value={priority}>
                 {priority.charAt(0).toUpperCase() + priority.slice(1)}
               </option>
@@ -433,32 +342,13 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
         </div>
 
         <div className="filter-group">
-          <label htmlFor="category-filter">Category:</label>
           <select
-            id="category-filter"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Categories</option>
-            {uniqueCategories.map(category => (
-              <option key={category} value={category}>
-                {category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="effort-filter">Effort:</label>
-          <select
-            id="effort-filter"
             value={selectedEffort}
             onChange={(e) => setSelectedEffort(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Efforts</option>
-            {uniqueEfforts.map(effort => (
+            {efforts.map(effort => (
               <option key={effort} value={effort}>
                 {effort.charAt(0).toUpperCase() + effort.slice(1)}
               </option>
@@ -466,140 +356,148 @@ const AnalysisRecommendations = ({ recommendations, loading, error }) => {
           </select>
         </div>
 
-        <button onClick={clearFilters} className="btn-clear-filters">
-          Clear Filters
-        </button>
+        <div className="filter-group">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="filter-select"
+          >
+            <option value="priority">Sort by Priority</option>
+            <option value="effort">Sort by Effort</option>
+            <option value="title">Sort by Title</option>
+            <option value="category">Sort by Category</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <button
+            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            className="sort-button"
+          >
+            {sortOrder === 'desc' ? '↓' : '↑'}
+          </button>
+        </div>
       </div>
 
       {/* Recommendations List */}
-      {filteredAndSortedRecommendations.length > 0 ? (
-        <div className="recommendations-list">
-          {filteredAndSortedRecommendations.map((rec, index) => {
-            const recId = `${rec.priority}-${index}`;
-            const isExpanded = expandedRecommendations.has(recId);
-            
-            return (
-              <div key={recId} className={`recommendation-item ${getPriorityColor(rec.priority)}`}>
-                <div className="recommendation-header">
-                  <div className="recommendation-priority">
-                    <span className={`priority-badge ${getPriorityColor(rec.priority)}`}>
-                      {getPriorityIcon(rec.priority)} {rec.priority}
-                    </span>
+      <div className="recommendations-list">
+        {filteredAndSortedRecommendations.map((rec, index) => (
+          <div
+            key={rec.id || index}
+            className={`recommendation-item ${getPriorityColor(rec.priority)}`}
+          >
+            <div className="recommendation-header" onClick={() => toggleRecommendationExpansion(rec.id || index)}>
+              <div className="recommendation-priority">
+                <span className="priority-icon">{getPriorityIcon(rec.priority)}</span>
+                <span className={`priority-badge ${getPriorityColor(rec.priority)}`}>
+                  {rec.priority}
+                </span>
+              </div>
+              
+              <div className="recommendation-title">
+                {rec.title || rec.suggestion || `Recommendation ${index + 1}`}
+              </div>
+              
+              <div className="recommendation-meta">
+                {rec.category && (
+                  <span className="recommendation-category">{rec.category}</span>
+                )}
+                {rec.effort && (
+                  <span className="recommendation-effort">
+                    {getEffortIcon(rec.effort)} {rec.effort}
+                  </span>
+                )}
+              </div>
+              
+              <div className="recommendation-toggle">
+                {expandedRecommendations.has(rec.id || index) ? '▼' : '▶'}
+              </div>
+            </div>
+
+            {expandedRecommendations.has(rec.id || index) && (
+              <div className="recommendation-details">
+                {rec.description && (
+                  <div className="recommendation-description">
+                    <strong>Description:</strong> {rec.description}
                   </div>
-                  
-                  <div className="recommendation-title">
-                    <h4>{rec.title}</h4>
-                    <div className="recommendation-meta">
-                      <span className="category-badge">{rec.category}</span>
-                      <span className={`effort-badge ${getEffortColor(rec.effort)}`}>
-                        {getEffortIcon(rec.effort)} {rec.effort}
-                      </span>
-                      <span className="impact-badge">
-                        {getImpactIcon(rec.impact)} {rec.impact}
-                      </span>
-                      <span className={`status-badge ${getStatusColor(rec.status)}`}>
-                        {getStatusIcon(rec.status)} {rec.status}
-                      </span>
+                )}
+                
+                {rec.suggestion && rec.suggestion !== rec.title && (
+                  <div className="recommendation-suggestion">
+                    <strong>Suggestion:</strong> {rec.suggestion}
+                  </div>
+                )}
+                
+                <div className="recommendation-info">
+                  {rec.impact && (
+                    <div className="recommendation-impact">
+                      <strong>Impact:</strong> {rec.impact}
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="recommendation-actions">
-                    <button
-                      onClick={() => toggleRecommendationExpansion(recId)}
-                      className="btn-expand"
-                      title={isExpanded ? 'Collapse details' : 'Expand details'}
-                    >
-                      {isExpanded ? '▼' : '▶'}
-                    </button>
+                  {rec.file && (
+                    <div className="recommendation-file">
+                      <strong>File:</strong> {rec.file}
+                      {rec.line && `:${rec.line}`}
+                    </div>
+                  )}
+                  
+                  {rec.scanner && (
+                    <div className="recommendation-scanner">
+                      <strong>Source:</strong> {rec.scanner}
+                    </div>
+                  )}
+                </div>
+
+                {rec.examples && (
+                  <div className="recommendation-examples">
+                    <strong>Examples:</strong>
+                    <ul>
+                      {Array.isArray(rec.examples) 
+                        ? rec.examples.map((example, i) => (
+                            <li key={i}>{example}</li>
+                          ))
+                        : <li>{rec.examples}</li>
+                      }
+                    </ul>
                   </div>
-                </div>
-
-                <div className="recommendation-description">
-                  <p>{rec.description}</p>
-                </div>
-
-                {isExpanded && (
-                  <div className="recommendation-details">
-                    {rec.file && (
-                      <div className="detail-section">
-                        <h5>📁 Related File</h5>
-                        <p className="file-path">{rec.file}</p>
-                      </div>
-                    )}
-                    
-                    {rec.estimatedTime && (
-                      <div className="detail-section">
-                        <h5>⏱️ Estimated Time</h5>
-                        <p>{formatEstimatedTime(rec.estimatedTime)}</p>
-                      </div>
-                    )}
-                    
-                    {rec.dependencies && rec.dependencies.length > 0 && (
-                      <div className="detail-section">
-                        <h5>🔗 Dependencies</h5>
-                        <div className="dependencies-list">
-                          {rec.dependencies.map((dep, depIndex) => (
-                            <span key={depIndex} className="dependency-tag">{dep}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {rec.tags && rec.tags.length > 0 && (
-                      <div className="detail-section">
-                        <h5>🏷️ Tags</h5>
-                        <div className="tags-list">
-                          {rec.tags.map((tag, tagIndex) => (
-                            <span key={tagIndex} className="tag">{tag}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                )}
+                
+                {rec.steps && (
+                  <div className="recommendation-steps">
+                    <strong>Implementation Steps:</strong>
+                    <ol>
+                      {Array.isArray(rec.steps) 
+                        ? rec.steps.map((step, i) => (
+                            <li key={i}>{step}</li>
+                          ))
+                        : <li>{rec.steps}</li>
+                      }
+                    </ol>
                   </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="no-recommendations-message">
-          <p>
-            {processedRecommendations.recommendations.length === 0 
-              ? 'No recommendations found in the analysis.'
-              : 'No recommendations match the current filters.'
-            }
-          </p>
-        </div>
-      )}
-
-      {/* Integrated Insights */}
-      {processedRecommendations.integratedInsights && processedRecommendations.integratedInsights.length > 0 && (
-        <div className="insights-section">
-          <h4>🧠 Integrated Insights</h4>
-          <div className="insights-list">
-            {processedRecommendations.integratedInsights.map((insight, index) => (
-              <div key={index} className="insight-item">
-                <div className="insight-header">
-                  <span className={`insight-type ${insight.severity || 'info'}`}>
-                    {insight.type || 'Insight'}
-                  </span>
-                  <span className="insight-severity">
-                    {insight.severity || 'info'}
-                  </span>
-                </div>
-                <p className="insight-description">{insight.description}</p>
-              </div>
-            ))}
+            )}
           </div>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* Summary */}
-      {filteredAndSortedRecommendations.length > 0 && (
-        <div className="recommendations-summary-footer">
-          <span className="summary-text">
-            Showing {filteredAndSortedRecommendations.length} of {processedRecommendations.recommendations.length} recommendations
-          </span>
+      {/* No Results */}
+      {filteredAndSortedRecommendations.length === 0 && processedRecommendations.length > 0 && (
+        <div className="no-results">
+          <p>No recommendations match your current filters.</p>
+          <button 
+            onClick={() => {
+              setSelectedPriority('all');
+              setSelectedCategory('all');
+              setSelectedEffort('all');
+              setSelectedSource('all');
+              setActiveView('all');
+            }}
+            className="clear-filters-btn"
+          >
+            Clear Filters
+          </button>
         </div>
       )}
     </div>

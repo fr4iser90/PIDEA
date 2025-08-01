@@ -1,9 +1,8 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
-import { processSecurityData, processCodeQualityData } from '@/utils/analysisDataProcessor';
 import '@/css/components/analysis/analysis-issues.css';
 
-const AnalysisIssues = ({ issues, loading, error }) => {
+const AnalysisIssues = ({ issues, loading, error, category = null }) => {
   const [activeView, setActiveView] = useState('all');
   const [sortBy, setSortBy] = useState('severity');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -14,139 +13,100 @@ const AnalysisIssues = ({ issues, loading, error }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedIssues, setExpandedIssues] = useState(new Set());
 
-  // Process issues from backend data structure
+  // ✅ NEW: Process issues from orchestrator data structure
   const processedIssues = useMemo(() => {
     if (!issues) return [];
 
-    const allIssues = [];
-    
-    // Process security issues from SecurityAnalysisOrchestrator
-    if (issues.security) {
-      const securityData = processSecurityData(issues.security);
-      if (securityData?.vulnerabilities) {
-        allIssues.push(...securityData.vulnerabilities.map(v => ({
-          ...v,
-          source: 'security-scan',
-          category: 'security',
-          severity: v.severity || 'high',
-          type: 'security-vulnerability',
-          scanner: v.scanner || 'unknown'
-        })));
-      }
-    }
-    
-    // Process code quality issues from CodeQualityAnalysisStep
-    if (issues.codeQuality) {
-      const codeQualityData = processCodeQualityData(issues.codeQuality);
-      if (codeQualityData?.issues) {
-        allIssues.push(...codeQualityData.issues.map(i => ({
-          ...i,
-          source: 'code-quality',
-          category: 'quality',
-          severity: i.severity || 'low',
-          type: 'code-quality',
-          scanner: 'code-quality-analyzer'
-        })));
-      }
-    }
-    
-    // Layer validation violations (legacy support)
-    if (issues.layerValidation?.violations) {
-      allIssues.push(...issues.layerValidation.violations.map(v => ({
-        ...v,
-        source: 'layer-validation',
-        category: 'architecture',
-        severity: v.severity || 'medium',
-        type: 'layer-violation',
-        scanner: 'architecture-validator'
-      })));
-    }
-    
-    // Logic validation violations (legacy support)
-    if (issues.logicValidation?.violations) {
-      allIssues.push(...issues.logicValidation.violations.map(v => ({
-        ...v,
-        source: 'logic-validation',
-        category: v.type === 'security-violation' ? 'security' : 'logic',
-        severity: v.severity || 'medium',
-        type: 'logic-violation',
-        scanner: 'logic-validator'
-      })));
-    }
-    
-    // Standard analysis issues (legacy support)
-    if (issues.standardAnalysis?.codeQuality?.issues) {
-      allIssues.push(...issues.standardAnalysis.codeQuality.issues.map(i => ({
-        ...i,
-        source: 'code-quality',
-        category: 'quality',
-        severity: i.severity || 'low',
-        type: 'code-quality',
-        scanner: 'standard-analyzer'
-      })));
+    // If issues is already an array (from orchestrator), use it directly
+    if (Array.isArray(issues)) {
+      return issues.map(issue => ({
+        ...issue,
+        source: issue.source || 'orchestrator',
+        category: issue.category || category || 'general',
+        severity: issue.severity || issue.level || 'medium',
+        type: issue.type || 'issue',
+        scanner: issue.scanner || 'orchestrator'
+      }));
     }
 
-    if (issues.standardAnalysis?.security?.vulnerabilities) {
-      allIssues.push(...issues.standardAnalysis.security.vulnerabilities.map(v => ({
-        ...v,
-        source: 'security-scan',
-        category: 'security',
-        severity: v.severity || 'high',
-        type: 'security-vulnerability',
-        scanner: 'standard-security'
-      })));
+    // If issues is an object with category data (legacy support)
+    if (typeof issues === 'object') {
+      const allIssues = [];
+      
+      // Process category-specific issues
+      const categories = ['security', 'performance', 'architecture', 'code-quality', 'dependencies', 'manifest', 'tech-stack'];
+      
+      categories.forEach(cat => {
+        if (issues[cat] && Array.isArray(issues[cat])) {
+          allIssues.push(...issues[cat].map(issue => ({
+            ...issue,
+            source: issue.source || cat,
+            category: issue.category || cat,
+            severity: issue.severity || issue.level || 'medium',
+            type: issue.type || `${cat}-issue`,
+            scanner: issue.scanner || `${cat}-orchestrator`
+          })));
+        }
+      });
+
+      // Process legacy issues structure
+      if (issues.issues && Array.isArray(issues.issues)) {
+        allIssues.push(...issues.issues.map(issue => ({
+          ...issue,
+          source: issue.source || 'legacy',
+          category: issue.category || category || 'general',
+          severity: issue.severity || issue.level || 'medium',
+          type: issue.type || 'legacy-issue',
+          scanner: issue.scanner || 'legacy-analyzer'
+        })));
+      }
+
+      return allIssues;
     }
 
-    return allIssues;
-  }, [issues]);
+    return [];
+  }, [issues, category]);
 
   // Filter and sort issues
   const filteredAndSortedIssues = useMemo(() => {
     let filtered = processedIssues;
 
-    // Apply severity filter
+    // Filter by severity
     if (filterSeverity !== 'all') {
-      filtered = filtered.filter(issue => issue.severity === filterSeverity);
+      filtered = filtered.filter(issue => 
+        issue.severity?.toLowerCase() === filterSeverity.toLowerCase()
+      );
     }
 
-    // Apply source filter
+    // Filter by source
     if (filterSource !== 'all') {
-      filtered = filtered.filter(issue => issue.source === filterSource);
+      filtered = filtered.filter(issue => 
+        issue.source?.toLowerCase() === filterSource.toLowerCase()
+      );
     }
 
-    // Apply category filter
+    // Filter by category
     if (filterCategory !== 'all') {
-      filtered = filtered.filter(issue => issue.category === filterCategory);
+      filtered = filtered.filter(issue => 
+        issue.category?.toLowerCase() === filterCategory.toLowerCase()
+      );
     }
 
-    // Apply scanner filter
+    // Filter by scanner
     if (filterScanner !== 'all') {
-      filtered = filtered.filter(issue => issue.scanner === filterScanner);
+      filtered = filtered.filter(issue => 
+        issue.scanner?.toLowerCase() === filterScanner.toLowerCase()
+      );
     }
 
-    // Apply view filter
-    if (activeView !== 'all') {
-      filtered = filtered.filter(issue => {
-        switch (activeView) {
-          case 'security':
-            return issue.category === 'security';
-          case 'code-quality':
-            return issue.category === 'quality' || issue.type === 'code-quality';
-          case 'architecture':
-            return issue.category === 'architecture';
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply search filter
+    // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(issue => 
+        issue.title?.toLowerCase().includes(term) ||
+        issue.description?.toLowerCase().includes(term) ||
         issue.message?.toLowerCase().includes(term) ||
-        issue.file?.toLowerCase().includes(term) ||
-        issue.type?.toLowerCase().includes(term)
+        issue.file?.toLowerCase().includes(term)
       );
     }
 
@@ -156,87 +116,58 @@ const AnalysisIssues = ({ issues, loading, error }) => {
 
       switch (sortBy) {
         case 'severity':
-          const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-          aValue = severityOrder[a.severity] || 0;
-          bValue = severityOrder[b.severity] || 0;
+          aValue = getSeverityWeight(a.severity);
+          bValue = getSeverityWeight(b.severity);
+          break;
+        case 'title':
+          aValue = a.title || '';
+          bValue = b.title || '';
           break;
         case 'file':
           aValue = a.file || '';
           bValue = b.file || '';
           break;
-        case 'type':
-          aValue = a.type || '';
-          bValue = b.type || '';
-          break;
-        case 'source':
-          aValue = a.source || '';
-          bValue = b.source || '';
+        case 'category':
+          aValue = a.category || '';
+          bValue = b.category || '';
           break;
         default:
           aValue = a[sortBy] || '';
           bValue = b[sortBy] || '';
       }
 
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+      if (sortOrder === 'desc') {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       } else {
-        return aValue < bValue ? 1 : -1;
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
       }
     });
 
     return filtered;
-  }, [processedIssues, filterSeverity, filterSource, filterCategory, searchTerm, sortBy, sortOrder]);
+  }, [processedIssues, filterSeverity, filterSource, filterCategory, filterScanner, searchTerm, sortBy, sortOrder]);
 
-  // Get unique values for filters
-  const uniqueSeverities = useMemo(() => 
-    [...new Set(processedIssues.map(i => i.severity))].filter(Boolean),
-    [processedIssues]
-  );
+  const getSeverityWeight = (severity) => {
+    const weights = { critical: 4, high: 3, medium: 2, low: 1 };
+    return weights[severity?.toLowerCase()] || 0;
+  };
 
-  const uniqueSources = useMemo(() => 
-    [...new Set(processedIssues.map(i => i.source))].filter(Boolean),
-    [processedIssues]
-  );
+  const getSeverityColor = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return 'critical';
+      case 'high': return 'high';
+      case 'medium': return 'medium';
+      case 'low': return 'low';
+      default: return 'unknown';
+    }
+  };
 
-  const uniqueCategories = useMemo(() => 
-    [...new Set(processedIssues.map(i => i.category))].filter(Boolean),
-    [processedIssues]
-  );
-
-  const uniqueScanners = useMemo(() => 
-    [...new Set(processedIssues.map(i => i.scanner))].filter(Boolean),
-    [processedIssues]
-  );
-
-  // Issue statistics
-  const issueStats = useMemo(() => {
-    const stats = {
-      total: processedIssues.length,
-      bySeverity: {},
-      byCategory: {},
-      bySource: {}
-    };
-
-    processedIssues.forEach(issue => {
-      // Count by severity
-      stats.bySeverity[issue.severity] = (stats.bySeverity[issue.severity] || 0) + 1;
-      
-      // Count by category
-      stats.byCategory[issue.category] = (stats.byCategory[issue.category] || 0) + 1;
-      
-      // Count by source
-      stats.bySource[issue.source] = (stats.bySource[issue.source] || 0) + 1;
-    });
-
-    return stats;
-  }, [processedIssues]);
-
-  const handleSort = (field) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
+  const getSeverityIcon = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return '🚨';
+      case 'high': return '⚠️';
+      case 'medium': return 'ℹ️';
+      case 'low': return '💡';
+      default: return '❓';
     }
   };
 
@@ -252,66 +183,6 @@ const AnalysisIssues = ({ issues, loading, error }) => {
     });
   };
 
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case 'critical': return '🚨';
-      case 'high': return '🔴';
-      case 'medium': return '🟡';
-      case 'low': return '🟢';
-      default: return '⚪';
-    }
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'critical';
-      case 'high': return 'high';
-      case 'medium': return 'medium';
-      case 'low': return 'low';
-      default: return 'neutral';
-    }
-  };
-
-  const getSourceIcon = (source) => {
-    switch (source) {
-      case 'layer-validation': return '🏗️';
-      case 'logic-validation': return '🧠';
-      case 'code-quality': return '📝';
-      case 'security-scan': return '🔒';
-      default: return '📋';
-    }
-  };
-
-  const clearFilters = () => {
-    setFilterSeverity('all');
-    setFilterSource('all');
-    setFilterCategory('all');
-    setFilterScanner('all');
-    setSearchTerm('');
-  };
-
-  const exportIssues = () => {
-    const csvContent = [
-      ['Severity', 'Type', 'File', 'Message', 'Source', 'Category'],
-      ...filteredAndSortedIssues.map(issue => [
-        issue.severity,
-        issue.type,
-        issue.file || '',
-        issue.message || '',
-        issue.source,
-        issue.category
-      ])
-    ].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analysis-issues-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
   if (loading) {
     return (
       <div className="analysis-issues loading">
@@ -325,108 +196,61 @@ const AnalysisIssues = ({ issues, loading, error }) => {
     return (
       <div className="analysis-issues error">
         <div className="error-message">
-          <span className="error-icon">⚠️</span>
-          <span>{error}</span>
+          <span className="error-icon">❌</span>
+          <span>Error loading issues: {error}</span>
         </div>
       </div>
     );
   }
 
+  if (!processedIssues || processedIssues.length === 0) {
+    return (
+      <div className="analysis-issues no-data">
+        <div className="no-data-icon">✅</div>
+        <h4>No Issues Found</h4>
+        <p>Great! No issues were detected in the analysis.</p>
+        <p>Your code appears to be following best practices.</p>
+      </div>
+    );
+  }
+
+  // Get unique values for filters
+  const severities = [...new Set(processedIssues.map(issue => issue.severity))].filter(Boolean);
+  const sources = [...new Set(processedIssues.map(issue => issue.source))].filter(Boolean);
+  const categories = [...new Set(processedIssues.map(issue => issue.category))].filter(Boolean);
+  const scanners = [...new Set(processedIssues.map(issue => issue.scanner))].filter(Boolean);
+
   return (
     <div className="analysis-issues">
       {/* Header */}
       <div className="issues-header">
-        <div className="issues-title">
-          <h3>⚠️ Issues</h3>
-          <div className="issues-summary">
-            <span className="summary-text">
-              {issueStats.total > 0 
-                ? `${issueStats.total} total issues found`
-                : 'No issues found'
-              }
-            </span>
-          </div>
-        </div>
-        <div className="issues-actions">
-          <div className="view-controls">
-            <button
-              onClick={() => setActiveView('all')}
-              className={`view-btn ${activeView === 'all' ? 'active' : ''}`}
-            >
-              📋 All Issues
-            </button>
-            <button
-              onClick={() => setActiveView('security')}
-              className={`view-btn ${activeView === 'security' ? 'active' : ''}`}
-            >
-              🔒 Security
-            </button>
-            <button
-              onClick={() => setActiveView('code-quality')}
-              className={`view-btn ${activeView === 'code-quality' ? 'active' : ''}`}
-            >
-              📝 Code Quality
-            </button>
-            <button
-              onClick={() => setActiveView('architecture')}
-              className={`view-btn ${activeView === 'architecture' ? 'active' : ''}`}
-            >
-              🏗️ Architecture
-            </button>
-          </div>
-          <button 
-            onClick={exportIssues}
-            className="btn-export"
-            disabled={filteredAndSortedIssues.length === 0}
-            title="Export issues to CSV"
-          >
-            📊 Export
-          </button>
+        <h4>Analysis Issues ({filteredAndSortedIssues.length})</h4>
+        <div className="issues-summary">
+          <span className="total-issues">Total: {processedIssues.length}</span>
+          <span className="filtered-issues">Showing: {filteredAndSortedIssues.length}</span>
         </div>
       </div>
-
-      {/* Statistics */}
-      {issueStats.total > 0 && (
-        <div className="issues-statistics">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-label">Total Issues:</span>
-              <span className="stat-value">{issueStats.total}</span>
-            </div>
-            {Object.entries(issueStats.bySeverity).map(([severity, count]) => (
-              <div key={severity} className={`stat-item ${getSeverityColor(severity)}`}>
-                <span className="stat-label">{severity}:</span>
-                <span className="stat-value">{count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="issues-filters">
         <div className="filter-group">
-          <label htmlFor="search-issues">Search:</label>
           <input
-            id="search-issues"
             type="text"
+            placeholder="Search issues..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search issues..."
-            className="filter-input"
+            className="search-input"
           />
         </div>
 
         <div className="filter-group">
-          <label htmlFor="severity-filter">Severity:</label>
           <select
-            id="severity-filter"
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Severities</option>
-            {uniqueSeverities.map(severity => (
+            {severities.map(severity => (
               <option key={severity} value={severity}>
                 {severity.charAt(0).toUpperCase() + severity.slice(1)}
               </option>
@@ -435,32 +259,13 @@ const AnalysisIssues = ({ issues, loading, error }) => {
         </div>
 
         <div className="filter-group">
-          <label htmlFor="source-filter">Source:</label>
           <select
-            id="source-filter"
-            value={filterSource}
-            onChange={(e) => setFilterSource(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Sources</option>
-            {uniqueSources.map(source => (
-              <option key={source} value={source}>
-                {source.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="category-filter">Category:</label>
-          <select
-            id="category-filter"
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className="filter-select"
           >
             <option value="all">All Categories</option>
-            {uniqueCategories.map(category => (
+            {categories.map(category => (
               <option key={category} value={category}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </option>
@@ -469,178 +274,124 @@ const AnalysisIssues = ({ issues, loading, error }) => {
         </div>
 
         <div className="filter-group">
-          <label htmlFor="scanner-filter">Scanner:</label>
           <select
-            id="scanner-filter"
-            value={filterScanner}
-            onChange={(e) => setFilterScanner(e.target.value)}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
             className="filter-select"
           >
-            <option value="all">All Scanners</option>
-            {uniqueScanners.map(scanner => (
-              <option key={scanner} value={scanner}>
-                {scanner.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </option>
-            ))}
+            <option value="severity">Sort by Severity</option>
+            <option value="title">Sort by Title</option>
+            <option value="file">Sort by File</option>
+            <option value="category">Sort by Category</option>
           </select>
         </div>
 
-        <button onClick={clearFilters} className="btn-clear-filters">
-          Clear Filters
-        </button>
+        <div className="filter-group">
+          <button
+            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            className="sort-button"
+          >
+            {sortOrder === 'desc' ? '↓' : '↑'}
+          </button>
+        </div>
       </div>
 
-      {/* Issues Table */}
-      {filteredAndSortedIssues.length > 0 ? (
-        <div className="issues-table-container">
-          <table className="issues-table">
-            <thead>
-              <tr>
-                <th onClick={() => handleSort('severity')} className="sortable">
-                  Severity {sortBy === 'severity' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th onClick={() => handleSort('type')} className="sortable">
-                  Type {sortBy === 'type' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th onClick={() => handleSort('file')} className="sortable">
-                  File {sortBy === 'file' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th>Message</th>
-                <th onClick={() => handleSort('source')} className="sortable">
-                  Source {sortBy === 'source' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th onClick={() => handleSort('scanner')} className="sortable">
-                  Scanner {sortBy === 'scanner' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAndSortedIssues.map((issue, index) => {
-                const issueId = `${issue.source}-${index}`;
-                const isExpanded = expandedIssues.has(issueId);
-                
-                return (
-                  <React.Fragment key={issueId}>
-                    <tr className={`issue-row ${getSeverityColor(issue.severity)}`}>
-                      <td className="severity-cell">
-                        <span className={`severity-badge ${getSeverityColor(issue.severity)}`}>
-                          {getSeverityIcon(issue.severity)} {issue.severity}
-                        </span>
-                      </td>
-                      <td className="type-cell">
-                        <span className="issue-type">{issue.type}</span>
-                      </td>
-                      <td className="file-cell">
-                        {issue.file ? (
-                          <span className="file-path" title={issue.file}>
-                            {issue.file.length > 50 ? issue.file.substring(0, 47) + '...' : issue.file}
-                          </span>
-                        ) : (
-                          <span className="no-file">N/A</span>
-                        )}
-                      </td>
-                      <td className="message-cell">
-                        <span className="issue-message" title={issue.message}>
-                          {issue.message?.length > 100 ? issue.message.substring(0, 97) + '...' : issue.message}
-                        </span>
-                      </td>
-                      <td className="source-cell">
-                        <span className="source-badge">
-                          {getSourceIcon(issue.source)} {issue.source.replace('-', ' ')}
-                        </span>
-                      </td>
-                      <td className="scanner-cell">
-                        <span className="scanner-badge">
-                          {issue.scanner ? issue.scanner.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown'}
-                        </span>
-                      </td>
-                      <td className="actions-cell">
-                        <button
-                          onClick={() => toggleIssueExpansion(issueId)}
-                          className="btn-expand"
-                          title={isExpanded ? 'Collapse details' : 'Expand details'}
-                        >
-                          {isExpanded ? '▼' : '▶'}
-                        </button>
-                      </td>
-                    </tr>
-                    {isExpanded && (
-                      <tr className="issue-details-row">
-                        <td colSpan="7" className="details-cell">
-                          <div className="issue-details">
-                            <div className="detail-section">
-                              <h4>Full Message</h4>
-                              <p className="full-message">{issue.message}</p>
-                            </div>
-                            
-                            {issue.file && (
-                              <div className="detail-section">
-                                <h4>File</h4>
-                                <p className="file-path-full">{issue.file}</p>
-                                {issue.line && (
-                                  <p className="line-number">Line: {issue.line}</p>
-                                )}
-                              </div>
-                            )}
-                            
-                            {issue.suggestion && (
-                              <div className="detail-section">
-                                <h4>Suggestion</h4>
-                                <p className="suggestion">{issue.suggestion}</p>
-                              </div>
-                            )}
-                            
-                            <div className="detail-section">
-                              <h4>Metadata</h4>
-                              <div className="metadata-grid">
-                                <div className="metadata-item">
-                                  <span className="metadata-label">Category:</span>
-                                  <span className="metadata-value">{issue.category}</span>
-                                </div>
-                                <div className="metadata-item">
-                                  <span className="metadata-label">Source:</span>
-                                  <span className="metadata-value">{issue.source}</span>
-                                </div>
-                                <div className="metadata-item">
-                                  <span className="metadata-label">Scanner:</span>
-                                  <span className="metadata-value">{issue.scanner || 'Unknown'}</span>
-                                </div>
-                                {issue.rule && (
-                                  <div className="metadata-item">
-                                    <span className="metadata-label">Rule:</span>
-                                    <span className="metadata-value">{issue.rule}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="no-issues-message">
-          <p>
-            {processedIssues.length === 0 
-              ? 'No issues found in the analysis.'
-              : 'No issues match the current filters.'
-            }
-          </p>
-        </div>
-      )}
+      {/* Issues List */}
+      <div className="issues-list">
+        {filteredAndSortedIssues.map((issue, index) => (
+          <div
+            key={issue.id || index}
+            className={`issue-item ${getSeverityColor(issue.severity)}`}
+          >
+            <div className="issue-header" onClick={() => toggleIssueExpansion(issue.id || index)}>
+              <div className="issue-severity">
+                <span className="severity-icon">{getSeverityIcon(issue.severity)}</span>
+                <span className={`severity-badge ${getSeverityColor(issue.severity)}`}>
+                  {issue.severity}
+                </span>
+              </div>
+              
+              <div className="issue-title">
+                {issue.title || issue.message || `Issue ${index + 1}`}
+              </div>
+              
+              <div className="issue-meta">
+                {issue.category && (
+                  <span className="issue-category">{issue.category}</span>
+                )}
+                {issue.file && (
+                  <span className="issue-file">📁 {issue.file}</span>
+                )}
+              </div>
+              
+              <div className="issue-toggle">
+                {expandedIssues.has(issue.id || index) ? '▼' : '▶'}
+              </div>
+            </div>
 
-      {/* Summary */}
-      {filteredAndSortedIssues.length > 0 && (
-        <div className="issues-summary-footer">
-          <span className="summary-text">
-            Showing {filteredAndSortedIssues.length} of {processedIssues.length} issues
-          </span>
+            {expandedIssues.has(issue.id || index) && (
+              <div className="issue-details">
+                {issue.description && (
+                  <div className="issue-description">
+                    <strong>Description:</strong> {issue.description}
+                  </div>
+                )}
+                
+                <div className="issue-info">
+                  {issue.file && issue.line && (
+                    <div className="issue-location">
+                      <strong>Location:</strong> {issue.file}:{issue.line}
+                    </div>
+                  )}
+                  
+                  {issue.rule && (
+                    <div className="issue-rule">
+                      <strong>Rule:</strong> {issue.rule}
+                    </div>
+                  )}
+                  
+                  {issue.scanner && (
+                    <div className="issue-scanner">
+                      <strong>Scanner:</strong> {issue.scanner}
+                    </div>
+                  )}
+                </div>
+
+                {issue.suggestions && (
+                  <div className="issue-suggestions">
+                    <strong>Suggestions:</strong>
+                    <ul>
+                      {Array.isArray(issue.suggestions) 
+                        ? issue.suggestions.map((suggestion, i) => (
+                            <li key={i}>{suggestion}</li>
+                          ))
+                        : <li>{issue.suggestions}</li>
+                      }
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* No Results */}
+      {filteredAndSortedIssues.length === 0 && processedIssues.length > 0 && (
+        <div className="no-results">
+          <p>No issues match your current filters.</p>
+          <button 
+            onClick={() => {
+              setFilterSeverity('all');
+              setFilterCategory('all');
+              setFilterSource('all');
+              setFilterScanner('all');
+              setSearchTerm('');
+            }}
+            className="clear-filters-btn"
+          >
+            Clear Filters
+          </button>
         </div>
       )}
     </div>
