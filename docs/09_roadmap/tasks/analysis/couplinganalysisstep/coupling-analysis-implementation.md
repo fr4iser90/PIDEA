@@ -3,7 +3,7 @@
 ## 📋 Analysis Overview
 - **Step Name**: CouplingAnalysisStep
 - **Category**: analysis
-- **Analysis Date**: 2025-07-31T19:37:17.389Z
+- **Analysis Date**: 2025-08-01T15:01:05.794Z
 - **Score**: 33%
 - **Level**: critical
 
