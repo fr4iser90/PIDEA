@@ -5,7 +5,7 @@
 - **Category**: frontend
 - **Priority**: High
 - **Status**: Ready
-- **Total Estimated Time**: 6 hours
+- **Total Estimated Time**: 8 hours
 - **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
 - **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
 - **Started**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
@@ -18,7 +18,11 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 ├── frontend-orchestrators-integration-phase-1.md
 ├── frontend-orchestrators-integration-phase-2.md
 ├── frontend-orchestrators-integration-phase-3.md
-└── frontend-orchestrators-integration-phase-4.md
+├── frontend-orchestrators-integration-phase-4.md
+├── frontend-orchestrators-integration-phase-5.md
+├── frontend-orchestrators-integration-phase-6.md
+├── frontend-orchestrators-integration-phase-7.md
+└── frontend-orchestrators-integration-phase-8.md
 ```
 
 ## 🎯 Main Implementation
@@ -28,25 +32,38 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 | Phase | File | Status | Time | Progress |
 |-------|------|--------|------|----------|
 | 1 | [Phase 1](./frontend-orchestrators-integration-phase-1.md) | Ready | 1.5h | 0% |
-| 2 | [Phase 2](./frontend-orchestrators-integration-phase-2.md) | Pending | 1.5h | 0% |
-| 3 | [Phase 3](./frontend-orchestrators-integration-phase-3.md) | Pending | 2h | 0% |
-| 4 | [Phase 4](./frontend-orchestrators-integration-phase-4.md) | Pending | 1h | 0% |
+| 2 | [Phase 2](./frontend-orchestrators-integration-phase-2.md) | Ready | 1.5h | 0% |
+| 3 | [Phase 3](./frontend-orchestrators-integration-phase-3.md) | Ready | 1h | 0% |
+| 4 | [Phase 4](./frontend-orchestrators-integration-phase-4.md) | Ready | 1h | 0% |
+| 5 | [Phase 5](./frontend-orchestrators-integration-phase-5.md) | Ready | 1h | 0% |
+| 6 | [Phase 6](./frontend-orchestrators-integration-phase-6.md) | Ready | 1h | 0% |
+| 7 | [Phase 7](./frontend-orchestrators-integration-phase-7.md) | Ready | 0.5h | 0% |
+| 8 | [Phase 8](./frontend-orchestrators-integration-phase-8.md) | Ready | 0.5h | 0% |
 
 ## 🔄 Subtask Management
 ### Active Subtasks
 - [ ] [Phase 1: API Repository Extension](./frontend-orchestrators-integration-phase-1.md) - Ready
-- [ ] [Phase 2: Global State Extension](./frontend-orchestrators-integration-phase-2.md) - Pending
-- [ ] [Phase 3: Component Enhancement](./frontend-orchestrators-integration-phase-3.md) - Pending
-- [ ] [Phase 4: Charts and Visualizations](./frontend-orchestrators-integration-phase-4.md) - Pending
+- [ ] [Phase 2: Global State Extension](./frontend-orchestrators-integration-phase-2.md) - Ready
+- [ ] [Phase 3: AnalysisDataViewer Update](./frontend-orchestrators-integration-phase-3.md) - Ready
+- [ ] [Phase 4: AnalysisIssues Update](./frontend-orchestrators-integration-phase-4.md) - Ready
+- [ ] [Phase 5: AnalysisRecommendations Update](./frontend-orchestrators-integration-phase-5.md) - Ready
+- [ ] [Phase 6: TechStack & Architecture Update](./frontend-orchestrators-integration-phase-6.md) - Ready
+- [ ] [Phase 7: Charts & Metrics Enhancement](./frontend-orchestrators-integration-phase-7.md) - Ready
+- [ ] [Phase 8: New Category Components](./frontend-orchestrators-integration-phase-8.md) - Ready
 
 ### Completed Subtasks
 - [x] [Task Planning](./frontend-orchestrators-integration-implementation.md) - ✅ Done
+- [x] [Task Splitting & Optimization](./frontend-orchestrators-integration-index.md) - ✅ Done
 
 ### Pending Subtasks
 - [ ] [API Repository Extension] - Ready
-- [ ] [Global State Extension] - Pending
-- [ ] [Component Enhancement] - Pending
-- [ ] [Charts and Visualizations] - Pending
+- [ ] [Global State Extension] - Ready
+- [ ] [AnalysisDataViewer Update] - Ready
+- [ ] [AnalysisIssues Update] - Ready
+- [ ] [AnalysisRecommendations Update] - Ready
+- [ ] [TechStack & Architecture Update] - Ready
+- [ ] [Charts & Metrics Enhancement] - Ready
+- [ ] [New Category Components] - Ready
 
 ## 📈 Progress Tracking
 - **Overall Progress**: 0% (Task ready to start)
@@ -61,13 +78,12 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 
 ## 📝 Notes & Updates
 
-### [Current Date] - Task Creation
-- ✅ **FRONTEND ORCHESTRATORS INTEGRATION TASK CREATED**
-- ✅ Comprehensive implementation plan created
-- ✅ All 4 phases defined with detailed specifications
-- ✅ Technical requirements and file impact analysis completed
-- ✅ Migration strategy and testing approach defined
-- ✅ Ready for Phase 1 implementation
+### [Current Date] - Task Splitting & Optimization
+- ✅ **TASK SPLITTING COMPLETED**: Broke down oversized phases into 8 manageable phases
+- ✅ **PHASE SIZE OPTIMIZATION**: Each phase now under 2 hours and focused on specific components
+- ✅ **FILE STRUCTURE VALIDATED**: All required files exist and follow naming conventions
+- ✅ **DEPENDENCIES MAPPED**: Clear phase dependencies and execution order defined
+- ✅ **READY FOR IMPLEMENTATION**: All phases properly sized and ready to start
 
 ### [Current Date] - Problem Analysis
 - ✅ **PROBLEM IDENTIFIED**: Frontend uses legacy analysis endpoints
@@ -147,33 +163,55 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 
 ## 📋 Implementation Checklist
 
-### Phase 1: API Repository Extension
+### Phase 1: API Repository Extension (1.5h)
 - [ ] Add category-based API methods to APIChatRepository
 - [ ] Implement all 7 categories × 5 endpoints = 35 new methods
 - [ ] Add error handling and retry logic
 - [ ] Create data processing utilities
 - [ ] Maintain backward compatibility
 
-### Phase 2: Global State Extension
+### Phase 2: Global State Extension (1.5h)
 - [ ] Extend IDEStore to load all 7 categories
 - [ ] Add new selectors for category data
 - [ ] Implement lazy loading for categories
 - [ ] Add data caching mechanisms
 - [ ] Update global state structure
 
-### Phase 3: Component Enhancement
-- [ ] Update AnalysisDataViewer for all categories
-- [ ] Enhance existing analysis components
-- [ ] Create new category-specific components
-- [ ] Implement category-based filtering
-- [ ] Add data visualization improvements
+### Phase 3: AnalysisDataViewer Update (1h)
+- [ ] Update AnalysisDataViewer for category-based data
+- [ ] Replace legacy API calls with global state selectors
+- [ ] Implement category selector UI
+- [ ] Add category-based filtering
 
-### Phase 4: Charts and Visualizations
-- [ ] Add category-specific charts
-- [ ] Create orchestrator score visualizations
-- [ ] Implement trend analysis
-- [ ] Add comparison charts
-- [ ] Enhance interactive filtering
+### Phase 4: AnalysisIssues Update (1h)
+- [ ] Update AnalysisIssues for orchestrator data
+- [ ] Implement category-based filtering
+- [ ] Add orchestrator data processing
+- [ ] Support new data structure
+
+### Phase 5: AnalysisRecommendations Update (1h)
+- [ ] Update AnalysisRecommendations for orchestrator data
+- [ ] Implement category-based filtering
+- [ ] Add orchestrator data processing
+- [ ] Support new data structure
+
+### Phase 6: TechStack & Architecture Update (1h)
+- [ ] Update AnalysisTechStack for orchestrator data
+- [ ] Update AnalysisArchitecture for orchestrator data
+- [ ] Implement category-specific processing
+- [ ] Add enhanced visualizations
+
+### Phase 7: Charts & Metrics Enhancement (1h)
+- [ ] Update AnalysisCharts for category-based visualizations
+- [ ] Enhance AnalysisMetrics for orchestrator data
+- [ ] Add orchestrator score visualizations
+- [ ] Implement category comparison charts
+
+### Phase 8: New Category Components (0.5h)
+- [ ] Create CategoryAnalysisView component
+- [ ] Create DependencyAnalysisView component
+- [ ] Create ManifestAnalysisView component
+- [ ] Create CodeQualityAnalysisView component
 
 ## 🎯 Success Criteria
 - [ ] All 7 analysis categories displayed correctly
@@ -208,4 +246,4 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 
 ---
 
-**Note**: This task will complete the frontend integration for the new analysis orchestrators, providing users with access to all analysis categories through an enhanced, category-based interface while maintaining backward compatibility with existing functionality. 
+**Note**: This task has been optimized with proper task splitting into 8 manageable phases, each focused on specific components and under 2 hours in duration. The implementation will complete the frontend integration for the new analysis orchestrators, providing users with access to all analysis categories through an enhanced, category-based interface while maintaining backward compatibility with existing functionality. 
