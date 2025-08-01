@@ -6,16 +6,16 @@
 - **Category**: frontend
 - **Estimated Time**: 6 hours
 - **Dependencies**: Backend Analysis Orchestrators Implementation (completed)
-- **Related Issues**: Frontend still uses legacy analysis endpoints, new orchestrator data not displayed, charts and visualizations need updating
-- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
-- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+- **Related Issues**: Frontend still uses legacy analysis endpoints, new orchestrator data not displayed
+- **Created**: 2025-08-01T20:59:25.000Z
+- **Last Updated**: 2025-08-01T20:59:25.000Z
 
 ## 2. Technical Requirements
 - **Tech Stack**: React, Chart.js, CSS3, JavaScript ES6+
 - **Architecture Pattern**: Component-based architecture with hooks and global state
 - **Database Changes**: None (uses existing analysis data)
 - **API Changes**: Migration from legacy endpoints to category-based endpoints
-- **Frontend Changes**: 12+ React components, new data processing logic, enhanced UI with category-based views
+- **Frontend Changes**: Complete AnalysisDataViewer restructure, new category-based components
 - **Backend Changes**: None (backend already working)
 
 ## 3. File Impact Analysis
@@ -24,35 +24,27 @@
 - [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add category-based API methods
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Extend analysis data loading for all 7 categories
 - [ ] `frontend/src/infrastructure/stores/selectors/ProjectSelectors.jsx` - Add selectors for new categories
-- [ ] `frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx` - Add category-based sections
+- [ ] `frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx` - COMPLETE RESTRUCTURE to 7 categories
 - [ ] `frontend/src/presentation/components/analysis/AnalysisIssues.jsx` - Support new orchestrator data
 - [ ] `frontend/src/presentation/components/analysis/AnalysisRecommendations.jsx` - Support new orchestrator data
-- [ ] `frontend/src/presentation/components/analysis/AnalysisTechStack.jsx` - Support new orchestrator data
-- [ ] `frontend/src/presentation/components/analysis/AnalysisArchitecture.jsx` - Support new orchestrator data
-- [ ] `frontend/src/presentation/components/analysis/AnalysisCharts.jsx` - Add category-based charts
-- [ ] `frontend/src/presentation/components/analysis/AnalysisMetrics.jsx` - Support new metrics structure
 
 ### Files to Create:
-- [ ] `frontend/src/presentation/components/analysis/CategoryAnalysisView.jsx` - New category-based analysis view
-- [ ] `frontend/src/presentation/components/analysis/DependencyAnalysisView.jsx` - New dependency analysis component
-- [ ] `frontend/src/presentation/components/analysis/ManifestAnalysisView.jsx` - New manifest analysis component
-- [ ] `frontend/src/presentation/components/analysis/CodeQualityAnalysisView.jsx` - Enhanced code quality view
-- [ ] `frontend/src/utils/orchestratorDataProcessor.js` - New data processing for orchestrator results
+- [ ] `frontend/src/presentation/components/analysis/CategoryAnalysisSection.jsx` - Generic category section component
+- [ ] `frontend/src/presentation/components/analysis/CategoryOverview.jsx` - Category overview component
+- [ ] `frontend/src/utils/orchestratorDataProcessor.js` - Data processing utilities
 - [ ] `frontend/src/css/components/analysis/category-analysis.css` - Category-based styling
-- [ ] `frontend/src/css/components/analysis/orchestrator-views.css` - Orchestrator-specific styling
 
 ## 4. Implementation Phases
 
 ### Phase 1: API Repository Extension (1.5 hours)
-**Objective**: Replace legacy endpoints with category-based API methods
+**Objective**: Add category-based API methods for all 7 categories
 
 **Tasks:**
-- [ ] Replace legacy methods with category-based methods for all 7 categories
-- [ ] Update `getAnalysisIssues()`, `getAnalysisTechStack()`, `getAnalysisArchitecture()`, `getAnalysisRecommendations()` to use new endpoints
-- [ ] Add `getCategoryAnalysisData()` method for all 7 categories
-- [ ] Add `getCategoryRecommendations()`, `getCategoryIssues()`, `getCategoryMetrics()`, `getCategorySummary()`, `getCategoryResults()` methods
-- [ ] Add `getAllCategoriesData()` method for comprehensive analysis
-- [ ] Add error handling and retry logic for new endpoints
+- [ ] Add `getCategoryAnalysisData(projectId, category, endpoint)` method
+- [ ] Add individual methods for each category: `getSecurityAnalysis`, `getPerformanceAnalysis`, etc.
+- [ ] Add `getAllCategoriesData(projectId)` method for comprehensive analysis
+- [ ] Add error handling and retry logic
+- [ ] Remove legacy API methods
 
 **Success Criteria:**
 - All 7 categories (security, performance, architecture, code-quality, dependencies, manifest, tech-stack) supported
@@ -64,52 +56,48 @@
 **Objective**: Replace legacy data loading with category-based data in IDEStore
 
 **Tasks:**
-- [ ] Replace `IDEStore.loadAnalysisData()` to load all 7 categories instead of legacy data
-- [ ] Update existing selectors to use new category-based data structure
-- [ ] Add new selectors: `useDependencyAnalysis()`, `useManifestAnalysis()`, `useCodeQualityAnalysis()`
+- [ ] Replace `IDEStore.loadAnalysisData()` to load all 7 categories
+- [ ] Add new selectors: `useSecurityAnalysis`, `usePerformanceAnalysis`, `useCodeQualityAnalysis`, etc.
 - [ ] Add `useAllCategoriesAnalysis()` selector for comprehensive data
 - [ ] Implement lazy loading for category-specific data
-- [ ] Add data caching and refresh mechanisms
+- [ ] Remove legacy data structures
 
 **Success Criteria:**
 - All 7 categories loaded in global state
 - Legacy data structure completely replaced
 - Lazy loading working correctly
-- Data caching implemented
 - Selectors provide clean data access
 
-### Phase 3: Component Enhancement (2 hours)
+### Phase 3: AnalysisDataViewer Complete Restructure (2 hours)
+**Objective**: COMPLETELY RESTRUCTURE AnalysisDataViewer to show 7 category sections
+
+**Tasks:**
+- [ ] **REMOVE** all old sections: Metrics, Charts, History, Issues, Tech Stack, Architecture, Security Dashboard, Recommendations
+- [ ] **CREATE** 7 new category sections: Security, Performance, Architecture, Code Quality, Dependencies, Manifest, Tech Stack
+- [ ] Each category section contains: Overview, Issues, Recommendations, Metrics, Charts tabs
+- [ ] Use category-based data from global state
+- [ ] **NO CATEGORY FILTERS** - each category is independent
+
+**Success Criteria:**
+- All old sections completely removed
+- 7 new category sections implemented
+- Each category has 5 tabs (Overview, Issues, Recommendations, Metrics, Charts)
+- No category filters anywhere
+- Clean, organized interface
+
+### Phase 4: Component Updates (1 hour)
 **Objective**: Update existing components to support new orchestrator data structures
 
 **Tasks:**
-- [ ] Update `AnalysisDataViewer` to show all 7 categories
-- [ ] Enhance `AnalysisIssues` to handle orchestrator-specific issues
+- [ ] Update `AnalysisIssues` to handle orchestrator-specific issues data
 - [ ] Update `AnalysisRecommendations` for category-based recommendations
-- [ ] Enhance `AnalysisTechStack` for new tech stack data
-- [ ] Update `AnalysisArchitecture` for new architecture data
-- [ ] Create new category-specific components
+- [ ] Create `CategoryAnalysisSection` component for reusable category sections
+- [ ] Create `CategoryOverview` component for category summaries
 
 **Success Criteria:**
 - All components display orchestrator data correctly
-- Category-based filtering working
-- Data visualization enhanced
+- Category-based data processing working
 - User experience improved
-
-### Phase 4: Charts and Visualizations (1 hour)
-**Objective**: Add category-based charts and metrics visualization
-
-**Tasks:**
-- [ ] Add category-specific charts to `AnalysisCharts`
-- [ ] Create orchestrator score visualizations
-- [ ] Add trend analysis for each category
-- [ ] Implement comparison charts between categories
-- [ ] Add interactive chart filtering
-
-**Success Criteria:**
-- Category-based charts implemented
-- Score visualizations working
-- Trend analysis functional
-- Interactive filtering available
 
 ## 5. Technical Specifications
 
@@ -128,7 +116,7 @@
 /api/projects/PIDEA/analysis/tech-stack/summary
 ```
 
-### Data Structure Changes
+### New Data Structure
 ```javascript
 // New orchestrator data structure
 {
@@ -144,38 +132,83 @@
     documentation: { /* analysis documentation */ },
     score: 85,
     executionTime: 15000,
-    timestamp: '2025-07-31T19:37:19.000Z'
+    timestamp: '2025-08-01T20:59:25.000Z'
   }
 }
 ```
 
-### Global State Structure
+### New Global State Structure
 ```javascript
 // New category-based analysis state (replaces legacy)
 analysis: {
   [workspacePath]: {
-    // Category-based data (replaces legacy structure)
     categories: {
+      'security': { summary, details, recommendations, issues, tasks, documentation, score },
+      'performance': { summary, details, recommendations, issues, tasks, documentation, score },
+      'architecture': { summary, details, recommendations, issues, tasks, documentation, score },
       'code-quality': { summary, details, recommendations, issues, tasks, documentation, score },
       'dependencies': { summary, details, recommendations, issues, tasks, documentation, score },
       'manifest': { summary, details, recommendations, issues, tasks, documentation, score },
-      'tech-stack': { summary, details, recommendations, issues, tasks, documentation, score },
-      'security': { summary, details, recommendations, issues, tasks, documentation, score },
-      'performance': { summary, details, recommendations, issues, tasks, documentation, score },
-      'architecture': { summary, details, recommendations, issues, tasks, documentation, score }
+      'tech-stack': { summary, details, recommendations, issues, tasks, documentation, score }
     },
-    lastUpdate: '2025-07-31T19:37:19.000Z'
+    lastUpdate: '2025-08-01T20:59:25.000Z'
   }
 }
 ```
 
-## 6. Migration Strategy
+## 6. New UI Design
+
+### AnalysisDataViewer Structure
+```javascript
+// NEW STRUCTURE - 7 Category Sections
+<div className="analysis-data-viewer">
+  <div className="analysis-header">
+    <h1>Analysis Dashboard</h1>
+  </div>
+  
+  {/* 7 Category Sections */}
+  <div className="category-sections">
+    <CategoryAnalysisSection category="security" />
+    <CategoryAnalysisSection category="performance" />
+    <CategoryAnalysisSection category="architecture" />
+    <CategoryAnalysisSection category="code-quality" />
+    <CategoryAnalysisSection category="dependencies" />
+    <CategoryAnalysisSection category="manifest" />
+    <CategoryAnalysisSection category="tech-stack" />
+  </div>
+</div>
+```
+
+### CategoryAnalysisSection Structure
+```javascript
+// Each category has 5 tabs
+<div className="category-section security">
+  <div className="category-header">
+    <h2>🔒 Security Analysis</h2>
+    <div className="category-score">Score: 85</div>
+  </div>
+  
+  <div className="category-tabs">
+    <button className="tab active">Overview</button>
+    <button className="tab">Issues</button>
+    <button className="tab">Recommendations</button>
+    <button className="tab">Metrics</button>
+    <button className="tab">Charts</button>
+  </div>
+  
+  <div className="tab-content">
+    {/* Tab content based on selected tab */}
+  </div>
+</div>
+```
+
+## 7. Migration Strategy
 
 ### Direct Replacement
 - Replace legacy API methods with category-based methods
 - Replace legacy data structures in global state
-- No fallback mechanisms needed
-- Immediate migration approach
+- **NO FALLBACK MECHANISMS** - direct migration
+- **NO CATEGORY FILTERS** - each category is independent
 
 ### Data Migration
 - Replace legacy endpoints with new category endpoints
@@ -187,9 +220,9 @@ analysis: {
 - Enhanced functionality with all 7 categories
 - Better performance with optimized data loading
 - Cleaner codebase without legacy complexity
-- Improved data visualization and filtering
+- **NO CONFUSING FILTERS** - clear category organization
 
-## 7. Testing Strategy
+## 8. Testing Strategy
 
 ### Unit Tests
 - [ ] Test new API methods
@@ -209,7 +242,7 @@ analysis: {
 - [ ] Test data visualization
 - [ ] Test user interactions
 
-## 8. Performance Considerations
+## 9. Performance Considerations
 
 ### Lazy Loading
 - Load category data only when needed
@@ -223,42 +256,42 @@ analysis: {
 - Use memoization for expensive operations
 - Optimize re-renders
 
-## 9. Success Criteria
+## 10. Success Criteria
 - [ ] All 7 analysis categories displayed correctly
 - [ ] Category-based API endpoints working
 - [ ] Global state properly updated with new data structure
 - [ ] Components handle new orchestrator data structures
-- [ ] Charts and visualizations enhanced
-- [ ] Legacy endpoints completely replaced
+- [ ] **ALL OLD SECTIONS REMOVED**
+- [ ] **NO CATEGORY FILTERS ANYWHERE**
 - [ ] Performance requirements met
 - [ ] All tests passing
 - [ ] User experience improved
 
-## 10. Risk Assessment
+## 11. Risk Assessment
 
 ### Technical Risks
-- **Data structure incompatibility**: Mitigated by backward compatibility
+- **Data structure incompatibility**: Mitigated by direct replacement
 - **Performance degradation**: Mitigated by lazy loading and caching
-- **API endpoint failures**: Mitigated by error handling and fallbacks
+- **API endpoint failures**: Mitigated by error handling
 
 ### User Experience Risks
-- **Breaking changes**: Mitigated by gradual migration
-- **Confusing interface**: Mitigated by clear category organization
+- **Breaking changes**: Mitigated by clear category organization
+- **Confusing interface**: Mitigated by removing filters and clear sections
 - **Performance issues**: Mitigated by optimization strategies
 
-## 11. Dependencies
+## 12. Dependencies
 - Backend Analysis Orchestrators Implementation (completed)
 - Existing frontend analysis components
 - Chart.js library
 - React hooks and context
 
-## 12. Timeline
+## 13. Timeline
 - **Phase 1**: API Repository Extension - 1.5 hours
 - **Phase 2**: Global State Extension - 1.5 hours  
-- **Phase 3**: Component Enhancement - 2 hours
-- **Phase 4**: Charts and Visualizations - 1 hour
+- **Phase 3**: AnalysisDataViewer Complete Restructure - 2 hours
+- **Phase 4**: Component Updates - 1 hour
 - **Total**: 6 hours
 
 ---
 
-**Note**: This implementation will provide a complete frontend integration for the new analysis orchestrators, ensuring users can access and visualize all analysis categories through an enhanced, category-based interface while maintaining backward compatibility. 
+**Note**: This implementation will provide a complete frontend integration for the new analysis orchestrators, ensuring users can access and visualize all analysis categories through an enhanced, category-based interface. **NO CATEGORY FILTERS** - each category is a clear, independent section with its own tabs.

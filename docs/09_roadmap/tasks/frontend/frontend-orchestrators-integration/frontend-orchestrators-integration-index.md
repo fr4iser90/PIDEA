@@ -5,10 +5,9 @@
 - **Category**: frontend
 - **Priority**: High
 - **Status**: Ready
-- **Total Estimated Time**: 8 hours
-- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
-- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
-- **Started**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+- **Total Estimated Time**: 6 hours
+- **Created**: 2025-08-01T20:59:25.000Z
+- **Last Updated**: 2025-08-01T20:59:25.000Z
 
 ## 📁 File Structure
 ```
@@ -18,11 +17,7 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 ├── frontend-orchestrators-integration-phase-1.md
 ├── frontend-orchestrators-integration-phase-2.md
 ├── frontend-orchestrators-integration-phase-3.md
-├── frontend-orchestrators-integration-phase-4.md
-├── frontend-orchestrators-integration-phase-5.md
-├── frontend-orchestrators-integration-phase-6.md
-├── frontend-orchestrators-integration-phase-7.md
-└── frontend-orchestrators-integration-phase-8.md
+└── frontend-orchestrators-integration-phase-4.md
 ```
 
 ## 🎯 Main Implementation
@@ -33,43 +28,30 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 |-------|------|--------|------|----------|
 | 1 | [Phase 1](./frontend-orchestrators-integration-phase-1.md) | Ready | 1.5h | 0% |
 | 2 | [Phase 2](./frontend-orchestrators-integration-phase-2.md) | Ready | 1.5h | 0% |
-| 3 | [Phase 3](./frontend-orchestrators-integration-phase-3.md) | Ready | 1h | 0% |
+| 3 | [Phase 3](./frontend-orchestrators-integration-phase-3.md) | Ready | 2h | 0% |
 | 4 | [Phase 4](./frontend-orchestrators-integration-phase-4.md) | Ready | 1h | 0% |
-| 5 | [Phase 5](./frontend-orchestrators-integration-phase-5.md) | Ready | 1h | 0% |
-| 6 | [Phase 6](./frontend-orchestrators-integration-phase-6.md) | Ready | 1h | 0% |
-| 7 | [Phase 7](./frontend-orchestrators-integration-phase-7.md) | Ready | 0.5h | 0% |
-| 8 | [Phase 8](./frontend-orchestrators-integration-phase-8.md) | Ready | 0.5h | 0% |
 
 ## 🔄 Subtask Management
 ### Active Subtasks
 - [ ] [Phase 1: API Repository Extension](./frontend-orchestrators-integration-phase-1.md) - Ready
 - [ ] [Phase 2: Global State Extension](./frontend-orchestrators-integration-phase-2.md) - Ready
-- [ ] [Phase 3: AnalysisDataViewer Update](./frontend-orchestrators-integration-phase-3.md) - Ready
-- [ ] [Phase 4: AnalysisIssues Update](./frontend-orchestrators-integration-phase-4.md) - Ready
-- [ ] [Phase 5: AnalysisRecommendations Update](./frontend-orchestrators-integration-phase-5.md) - Ready
-- [ ] [Phase 6: TechStack & Architecture Update](./frontend-orchestrators-integration-phase-6.md) - Ready
-- [ ] [Phase 7: Charts & Metrics Enhancement](./frontend-orchestrators-integration-phase-7.md) - Ready
-- [ ] [Phase 8: New Category Components](./frontend-orchestrators-integration-phase-8.md) - Ready
+- [ ] [Phase 3: AnalysisDataViewer Complete Restructure](./frontend-orchestrators-integration-phase-3.md) - Ready
+- [ ] [Phase 4: Component Updates](./frontend-orchestrators-integration-phase-4.md) - Ready
 
 ### Completed Subtasks
 - [x] [Task Planning](./frontend-orchestrators-integration-implementation.md) - ✅ Done
-- [x] [Task Splitting & Optimization](./frontend-orchestrators-integration-index.md) - ✅ Done
 
 ### Pending Subtasks
 - [ ] [API Repository Extension] - Ready
 - [ ] [Global State Extension] - Ready
-- [ ] [AnalysisDataViewer Update] - Ready
-- [ ] [AnalysisIssues Update] - Ready
-- [ ] [AnalysisRecommendations Update] - Ready
-- [ ] [TechStack & Architecture Update] - Ready
-- [ ] [Charts & Metrics Enhancement] - Ready
-- [ ] [New Category Components] - Ready
+- [ ] [AnalysisDataViewer Complete Restructure] - Ready
+- [ ] [Component Updates] - Ready
 
 ## 📈 Progress Tracking
 - **Overall Progress**: 0% (Task ready to start)
 - **Current Phase**: Phase 1 - API Repository Extension
 - **Next Milestone**: Complete API Repository Extension
-- **Estimated Completion**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - TBD
+- **Estimated Completion**: TBD
 
 ## 🔗 Related Tasks
 - **Dependencies**: Backend Analysis Orchestrators Implementation (completed)
@@ -78,23 +60,23 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 
 ## 📝 Notes & Updates
 
-### [Current Date] - Task Splitting & Optimization
-- ✅ **TASK SPLITTING COMPLETED**: Broke down oversized phases into 8 manageable phases
-- ✅ **PHASE SIZE OPTIMIZATION**: Each phase now under 2 hours and focused on specific components
-- ✅ **FILE STRUCTURE VALIDATED**: All required files exist and follow naming conventions
-- ✅ **DEPENDENCIES MAPPED**: Clear phase dependencies and execution order defined
-- ✅ **READY FOR IMPLEMENTATION**: All phases properly sized and ready to start
+### 2025-08-01T20:59:25.000Z - Task Planning Completed
+- ✅ **NEW IMPLEMENTATION CREATED**: Complete restructure to 7 category sections
+- ✅ **CATEGORY FILTERS REMOVED**: No more confusing filters - each category is independent
+- ✅ **OLD SECTIONS REMOVED**: All legacy sections (Metrics, Charts, History, Issues, etc.) will be removed
+- ✅ **NEW STRUCTURE**: 7 clear category sections with 5 tabs each
+- ✅ **READY FOR IMPLEMENTATION**: All phases properly planned and ready to start
 
-### [Current Date] - Problem Analysis
-- ✅ **PROBLEM IDENTIFIED**: Frontend uses legacy analysis endpoints
-- ✅ **SOLUTION APPROACH**: Systematic migration to category-based endpoints
-- ✅ **MIGRATION STRATEGY**: Backward compatibility with gradual transition
+### 2025-08-01T20:59:25.000Z - Problem Analysis
+- ✅ **PROBLEM IDENTIFIED**: Frontend uses legacy analysis endpoints and confusing filters
+- ✅ **SOLUTION APPROACH**: Complete restructure to 7 independent category sections
+- ✅ **MIGRATION STRATEGY**: Direct replacement with no fallbacks
 - ✅ **TECHNICAL APPROACH**: Phase-by-phase implementation with validation
 
-### [Current Date] - Architecture Analysis
-- ✅ **CURRENT STATE**: Frontend uses legacy endpoints in IDEStore and APIChatRepository
-- ✅ **TARGET STATE**: Category-based endpoints for all 7 analysis categories
-- ✅ **IMPACT ANALYSIS**: 12+ files to modify/create
+### 2025-08-01T20:59:25.000Z - Architecture Analysis
+- ✅ **CURRENT STATE**: Frontend uses legacy endpoints and confusing category filters
+- ✅ **TARGET STATE**: 7 independent category sections with clear organization
+- ✅ **IMPACT ANALYSIS**: 6 files to modify, 4 files to create
 - ✅ **DEPENDENCIES**: Backend orchestrators already implemented and working
 
 ## 🚀 Quick Actions
@@ -105,18 +87,18 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 
 ## 🎯 Integration Overview
 
-### Current Frontend State
+### Current Frontend State (TO BE REMOVED)
 - ❌ **Legacy Endpoints**: `/api/projects/:projectId/analysis/recommendations`
-- ❌ **Limited Categories**: Only basic analysis data
+- ❌ **Confusing Filters**: Category filters that confuse users
+- ❌ **Mixed Sections**: Metrics, Charts, History, Issues, Tech Stack, Architecture, Security Dashboard, Recommendations
 - ❌ **Old Data Structure**: Inconsistent with new orchestrators
-- ❌ **Missing Visualizations**: No category-based charts
 
-### Target Frontend State
+### Target Frontend State (NEW DESIGN)
 - ✅ **Category Endpoints**: `/api/projects/:projectId/analysis/:category/:endpoint`
-- ✅ **All 7 Categories**: security, performance, architecture, code-quality, dependencies, manifest, tech-stack
-- ✅ **Consistent Data**: Standardized orchestrator data structure
-- ✅ **Enhanced UI**: Category-based visualizations and filtering
-- ✅ **Clean Codebase**: No legacy endpoints or data structures
+- ✅ **7 Independent Categories**: security, performance, architecture, code-quality, dependencies, manifest, tech-stack
+- ✅ **NO CATEGORY FILTERS**: Each category is a clear, independent section
+- ✅ **5 Tabs Per Category**: Overview, Issues, Recommendations, Metrics, Charts
+- ✅ **Clean Organization**: No more confusing mixed sections
 
 ## 🔧 Technical Specifications
 
@@ -129,10 +111,10 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 - `security` → SecurityAnalysisOrchestrator
 - `performance` → PerformanceAnalysisOrchestrator  
 - `architecture` → ArchitectureAnalysisOrchestrator
-- `code-quality` → CodeQualityAnalysisOrchestrator (NEW)
-- `dependencies` → DependencyAnalysisOrchestrator (NEW)
-- `manifest` → ManifestAnalysisOrchestrator (NEW)
-- `tech-stack` → TechStackAnalysisOrchestrator (NEW)
+- `code-quality` → CodeQualityAnalysisOrchestrator
+- `dependencies` → DependencyAnalysisOrchestrator
+- `manifest` → ManifestAnalysisOrchestrator
+- `tech-stack` → TechStackAnalysisOrchestrator
 
 ### Endpoints Supported
 - `recommendations` - Improvement suggestions
@@ -156,7 +138,7 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
     documentation: { /* analysis documentation */ },
     score: 85,
     executionTime: 15000,
-    timestamp: '2025-07-31T19:37:19.000Z'
+    timestamp: '2025-08-01T20:59:25.000Z'
   }
 }
 ```
@@ -167,59 +149,36 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 - [ ] Add category-based API methods to APIChatRepository
 - [ ] Implement all 7 categories × 5 endpoints = 35 new methods
 - [ ] Add error handling and retry logic
+- [ ] Remove legacy API methods
 - [ ] Create data processing utilities
-- [ ] Maintain backward compatibility
 
 ### Phase 2: Global State Extension (1.5h)
 - [ ] Extend IDEStore to load all 7 categories
 - [ ] Add new selectors for category data
 - [ ] Implement lazy loading for categories
-- [ ] Add data caching mechanisms
+- [ ] Remove legacy data structures
 - [ ] Update global state structure
 
-### Phase 3: AnalysisDataViewer Update (1h)
-- [ ] Update AnalysisDataViewer for category-based data
-- [ ] Replace legacy API calls with global state selectors
-- [ ] Implement category selector UI
-- [ ] Add category-based filtering
+### Phase 3: AnalysisDataViewer Complete Restructure (2h)
+- [ ] **REMOVE** all old sections: Metrics, Charts, History, Issues, Tech Stack, Architecture, Security Dashboard, Recommendations
+- [ ] **CREATE** 7 new category sections: Security, Performance, Architecture, Code Quality, Dependencies, Manifest, Tech Stack
+- [ ] Each category section contains: Overview, Issues, Recommendations, Metrics, Charts tabs
+- [ ] **NO CATEGORY FILTERS** - each category is independent
+- [ ] Use category-based data from global state
 
-### Phase 4: AnalysisIssues Update (1h)
+### Phase 4: Component Updates (1h)
 - [ ] Update AnalysisIssues for orchestrator data
-- [ ] Implement category-based filtering
-- [ ] Add orchestrator data processing
-- [ ] Support new data structure
-
-### Phase 5: AnalysisRecommendations Update (1h)
 - [ ] Update AnalysisRecommendations for orchestrator data
-- [ ] Implement category-based filtering
-- [ ] Add orchestrator data processing
-- [ ] Support new data structure
-
-### Phase 6: TechStack & Architecture Update (1h)
-- [ ] Update AnalysisTechStack for orchestrator data
-- [ ] Update AnalysisArchitecture for orchestrator data
-- [ ] Implement category-specific processing
-- [ ] Add enhanced visualizations
-
-### Phase 7: Charts & Metrics Enhancement (1h)
-- [ ] Update AnalysisCharts for category-based visualizations
-- [ ] Enhance AnalysisMetrics for orchestrator data
-- [ ] Add orchestrator score visualizations
-- [ ] Implement category comparison charts
-
-### Phase 8: New Category Components (0.5h)
-- [ ] Create CategoryAnalysisView component
-- [ ] Create DependencyAnalysisView component
-- [ ] Create ManifestAnalysisView component
-- [ ] Create CodeQualityAnalysisView component
+- [ ] Create CategoryAnalysisSection component
+- [ ] Create CategoryOverview component
 
 ## 🎯 Success Criteria
 - [ ] All 7 analysis categories displayed correctly
 - [ ] Category-based API endpoints working
 - [ ] Global state properly extended
 - [ ] Components handle new data structures
-- [ ] Charts and visualizations enhanced
-- [ ] Backward compatibility maintained
+- [ ] **ALL OLD SECTIONS REMOVED**
+- [ ] **NO CATEGORY FILTERS ANYWHERE**
 - [ ] Performance requirements met
 - [ ] All tests passing
 - [ ] User experience improved
@@ -229,8 +188,8 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 ### Direct Replacement
 - Replace existing API methods with category-based methods
 - Replace legacy data structures in global state
-- No fallback mechanisms needed
-- Immediate migration approach
+- **NO FALLBACK MECHANISMS** - direct migration
+- **NO CATEGORY FILTERS** - each category is independent
 
 ### Data Migration
 - Replace legacy endpoints with new category endpoints
@@ -242,8 +201,8 @@ docs/09_roadmap/tasks/frontend/frontend-orchestrators-integration/
 - Enhanced functionality with all 7 categories
 - Better performance with optimized data loading
 - Cleaner codebase without legacy complexity
-- Improved data visualization and filtering
+- **NO CONFUSING FILTERS** - clear category organization
 
 ---
 
-**Note**: This task has been optimized with proper task splitting into 8 manageable phases, each focused on specific components and under 2 hours in duration. The implementation will complete the frontend integration for the new analysis orchestrators, providing users with access to all analysis categories through an enhanced, category-based interface while maintaining backward compatibility with existing functionality. 
+**Note**: This task has been completely redesigned to provide a clean, organized frontend integration for the new analysis orchestrators. **NO CATEGORY FILTERS** - each category is a clear, independent section with its own tabs. All legacy sections will be removed and replaced with the new 7-category structure. 

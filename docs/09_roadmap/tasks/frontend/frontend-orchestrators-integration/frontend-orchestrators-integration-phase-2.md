@@ -5,17 +5,16 @@
 - **Name**: Global State Extension
 - **Objective**: Replace legacy data loading with category-based data in IDEStore
 - **Estimated Time**: 1.5 hours
-- **Status**: Pending
-- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
-- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+- **Status**: Ready
+- **Created**: 2025-08-01T20:59:25.000Z
+- **Last Updated**: 2025-08-01T20:59:25.000Z
 
 ## 🎯 Objectives
-- [ ] Replace `IDEStore.loadAnalysisData()` to load all 7 categories instead of legacy data
-- [ ] Update existing selectors to use new category-based data structure
-- [ ] Add new selectors: `useDependencyAnalysis()`, `useManifestAnalysis()`, `useCodeQualityAnalysis()`
+- [ ] Replace `IDEStore.loadAnalysisData()` to load all 7 categories
+- [ ] Add new selectors: `useSecurityAnalysis`, `usePerformanceAnalysis`, `useCodeQualityAnalysis`, etc.
 - [ ] Add `useAllCategoriesAnalysis()` selector for comprehensive data
 - [ ] Implement lazy loading for category-specific data
-- [ ] Add data caching and refresh mechanisms
+- [ ] Remove legacy data structures
 
 ## 📁 Files to Modify
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Extend analysis data loading for all 7 categories
@@ -28,7 +27,7 @@
 
 **Implementation**:
 ```javascript
-// ✅ NEW: Replace legacy loadAnalysisData with category-based loading
+// NEW: Replace legacy loadAnalysisData with category-based loading
 async loadAnalysisData(workspacePath) {
   try {
     this.setAnalysisLoading(true);
@@ -63,12 +62,12 @@ async loadAnalysisData(workspacePath) {
   }
 }
 
-// ✅ NEW: Load specific category data
+// NEW: Load specific category data
 async loadCategoryData(workspacePath, category) {
   try {
     this.setCategoryLoading(category, true);
     
-    const data = await this.apiRepository.getCategoryResults(workspacePath, category);
+    const data = await this.apiRepository.getCategoryAnalysisData(workspacePath, category, 'results');
     
     this.updateCategoryData(workspacePath, category, data);
     
@@ -80,7 +79,7 @@ async loadCategoryData(workspacePath, category) {
   }
 }
 
-// ✅ NEW: Update category data in state
+// NEW: Update category data in state
 updateCategoryData(workspacePath, category, data) {
   const currentData = this.analysis[workspacePath] || { categories: {} };
   
@@ -94,13 +93,13 @@ updateCategoryData(workspacePath, category, data) {
   });
 }
 
-// ✅ NEW: Set category loading state
+// NEW: Set category loading state
 setCategoryLoading(category, loading) {
   const currentLoading = this.analysisLoading[category] || {};
   this.analysisLoading[category] = { ...currentLoading, loading };
 }
 
-// ✅ NEW: Set category error state
+// NEW: Set category error state
 setCategoryError(category, error) {
   const currentErrors = this.analysisErrors[category] || {};
   this.analysisErrors[category] = { ...currentErrors, error };
@@ -112,7 +111,7 @@ setCategoryError(category, error) {
 
 **Implementation**:
 ```javascript
-// ✅ NEW: Selector for all categories analysis
+// NEW: Selector for all categories analysis
 export const useAllCategoriesAnalysis = () => {
   const { activeIDE, analysis } = useIDEStore();
   const workspacePath = activeIDE?.workspacePath;
@@ -136,51 +135,7 @@ export const useAllCategoriesAnalysis = () => {
   };
 };
 
-// ✅ NEW: Selector for code quality analysis
-export const useCodeQualityAnalysis = () => {
-  const allCategories = useAllCategoriesAnalysis();
-  return {
-    data: allCategories.categories['code-quality'] || null,
-    loading: allCategories.loading,
-    error: allCategories.error,
-    hasData: allCategories.categories['code-quality'] !== null
-  };
-};
-
-// ✅ NEW: Selector for dependency analysis
-export const useDependencyAnalysis = () => {
-  const allCategories = useAllCategoriesAnalysis();
-  return {
-    data: allCategories.categories['dependencies'] || null,
-    loading: allCategories.loading,
-    error: allCategories.error,
-    hasData: allCategories.categories['dependencies'] !== null
-  };
-};
-
-// ✅ NEW: Selector for manifest analysis
-export const useManifestAnalysis = () => {
-  const allCategories = useAllCategoriesAnalysis();
-  return {
-    data: allCategories.categories['manifest'] || null,
-    loading: allCategories.loading,
-    error: allCategories.error,
-    hasData: allCategories.categories['manifest'] !== null
-  };
-};
-
-// ✅ NEW: Selector for tech stack analysis
-export const useTechStackAnalysis = () => {
-  const allCategories = useAllCategoriesAnalysis();
-  return {
-    data: allCategories.categories['tech-stack'] || null,
-    loading: allCategories.loading,
-    error: allCategories.error,
-    hasData: allCategories.categories['tech-stack'] !== null
-  };
-};
-
-// ✅ NEW: Selector for security analysis
+// NEW: Selector for security analysis
 export const useSecurityAnalysis = () => {
   const allCategories = useAllCategoriesAnalysis();
   return {
@@ -191,7 +146,7 @@ export const useSecurityAnalysis = () => {
   };
 };
 
-// ✅ NEW: Selector for performance analysis
+// NEW: Selector for performance analysis
 export const usePerformanceAnalysis = () => {
   const allCategories = useAllCategoriesAnalysis();
   return {
@@ -202,7 +157,7 @@ export const usePerformanceAnalysis = () => {
   };
 };
 
-// ✅ NEW: Selector for architecture analysis
+// NEW: Selector for architecture analysis
 export const useArchitectureAnalysis = () => {
   const allCategories = useAllCategoriesAnalysis();
   return {
@@ -212,6 +167,50 @@ export const useArchitectureAnalysis = () => {
     hasData: allCategories.categories['architecture'] !== null
   };
 };
+
+// NEW: Selector for code quality analysis
+export const useCodeQualityAnalysis = () => {
+  const allCategories = useAllCategoriesAnalysis();
+  return {
+    data: allCategories.categories['code-quality'] || null,
+    loading: allCategories.loading,
+    error: allCategories.error,
+    hasData: allCategories.categories['code-quality'] !== null
+  };
+};
+
+// NEW: Selector for dependencies analysis
+export const useDependenciesAnalysis = () => {
+  const allCategories = useAllCategoriesAnalysis();
+  return {
+    data: allCategories.categories['dependencies'] || null,
+    loading: allCategories.loading,
+    error: allCategories.error,
+    hasData: allCategories.categories['dependencies'] !== null
+  };
+};
+
+// NEW: Selector for manifest analysis
+export const useManifestAnalysis = () => {
+  const allCategories = useAllCategoriesAnalysis();
+  return {
+    data: allCategories.categories['manifest'] || null,
+    loading: allCategories.loading,
+    error: allCategories.error,
+    hasData: allCategories.categories['manifest'] !== null
+  };
+};
+
+// NEW: Selector for tech stack analysis
+export const useTechStackAnalysis = () => {
+  const allCategories = useAllCategoriesAnalysis();
+  return {
+    data: allCategories.categories['tech-stack'] || null,
+    loading: allCategories.loading,
+    error: allCategories.error,
+    hasData: allCategories.categories['tech-stack'] !== null
+  };
+};
 ```
 
 ### Task 3: Implement Lazy Loading
@@ -219,7 +218,7 @@ export const useArchitectureAnalysis = () => {
 
 **Implementation**:
 ```javascript
-// ✅ NEW: Lazy load category data
+// NEW: Lazy load category data
 async lazyLoadCategory(workspacePath, category) {
   const currentData = this.analysis[workspacePath]?.categories?.[category];
   
@@ -235,7 +234,7 @@ async lazyLoadCategory(workspacePath, category) {
   return this.loadCategoryData(workspacePath, category);
 }
 
-// ✅ NEW: Refresh all categories data
+// NEW: Refresh all categories data
 async refreshAllCategories(workspacePath) {
   try {
     this.setAnalysisLoading(true);
@@ -263,7 +262,6 @@ async refreshAllCategories(workspacePath) {
 - [ ] All 7 categories loaded in global state
 - [ ] Legacy data structure completely replaced
 - [ ] Lazy loading working correctly
-- [ ] Data caching implemented
 - [ ] Selectors provide clean data access
 - [ ] Error handling robust
 - [ ] Performance optimized
@@ -272,13 +270,12 @@ async refreshAllCategories(workspacePath) {
 1. **Global State**: Verify all categories loaded correctly
 2. **Selectors**: Test all new selectors return correct data
 3. **Lazy Loading**: Test lazy loading functionality
-4. **Caching**: Verify data caching works
-5. **Error Handling**: Test error scenarios
+4. **Error Handling**: Test error scenarios
 
 ## 📊 Progress Tracking
-- **Status**: Pending
+- **Status**: Ready
 - **Progress**: 0%
-- **Next Phase**: Phase 3 - Core Components Update
+- **Next Phase**: Phase 3 - AnalysisDataViewer Complete Restructure
 
 ## 🔗 Dependencies
 - Phase 1: API Repository Extension (completed)
@@ -293,4 +290,4 @@ async refreshAllCategories(workspacePath) {
 
 ---
 
-**Next**: [Phase 3 - Core Components Update](./frontend-orchestrators-integration-phase-3.md) 
+**Next**: [Phase 3 - AnalysisDataViewer Complete Restructure](./frontend-orchestrators-integration-phase-3.md) 

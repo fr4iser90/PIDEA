@@ -3,24 +3,24 @@
 ## 📋 Phase Overview
 - **Phase**: 1
 - **Name**: API Repository Extension
-- **Objective**: Add category-based API methods while maintaining backward compatibility
+- **Objective**: Add category-based API methods for all 7 categories
 - **Estimated Time**: 1.5 hours
 - **Status**: Ready
-- **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
-- **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
+- **Created**: 2025-08-01T20:59:25.000Z
+- **Last Updated**: 2025-08-01T20:59:25.000Z
 
 ## 🎯 Objectives
-- [ ] Replace legacy API methods with category-based methods for all 7 analysis categories
-- [ ] Update existing methods to use new category endpoints
-- [ ] Implement all 5 endpoints per category (recommendations, issues, metrics, summary, results)
-- [ ] Add robust error handling and retry logic
-- [ ] Create comprehensive data fetching utilities
+- [ ] Add `getCategoryAnalysisData(projectId, category, endpoint)` method
+- [ ] Add individual methods for each category: `getSecurityAnalysis`, `getPerformanceAnalysis`, etc.
+- [ ] Add `getAllCategoriesData(projectId)` method for comprehensive analysis
+- [ ] Add error handling and retry logic
+- [ ] Remove legacy API methods
 
 ## 📁 Files to Modify
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add new category-based methods
+- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add category-based API methods
 
 ## 📁 Files to Create
-- [ ] `frontend/src/utils/orchestratorDataProcessor.js` - Data processing utilities for orchestrator results
+- [ ] `frontend/src/utils/orchestratorDataProcessor.js` - Data processing utilities
 
 ## 🔧 Implementation Tasks
 
@@ -36,24 +36,32 @@ async getCategoryAnalysisData(projectId = null, category, endpoint) {
 }
 
 // NEW: Individual category methods for convenience
-async getCategoryRecommendations(projectId = null, category) {
-  return this.getCategoryAnalysisData(projectId, category, 'recommendations');
+async getSecurityAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'security', endpoint);
 }
 
-async getCategoryIssues(projectId = null, category) {
-  return this.getCategoryAnalysisData(projectId, category, 'issues');
+async getPerformanceAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'performance', endpoint);
 }
 
-async getCategoryMetrics(projectId = null, category) {
-  return this.getCategoryAnalysisData(projectId, category, 'metrics');
+async getArchitectureAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'architecture', endpoint);
 }
 
-async getCategorySummary(projectId = null, category) {
-  return this.getCategoryAnalysisData(projectId, category, 'summary');
+async getCodeQualityAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'code-quality', endpoint);
 }
 
-async getCategoryResults(projectId = null, category) {
-  return this.getCategoryAnalysisData(projectId, category, 'results');
+async getDependenciesAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'dependencies', endpoint);
+}
+
+async getManifestAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'manifest', endpoint);
+}
+
+async getTechStackAnalysis(projectId = null, endpoint = 'results') {
+  return this.getCategoryAnalysisData(projectId, 'tech-stack', endpoint);
 }
 
 // NEW: Comprehensive analysis data for all categories
@@ -149,21 +157,6 @@ export const processAllCategoriesResults = (results) => {
   
   return processedData;
 };
-
-/**
- * Validate orchestrator data structure
- */
-export const validateOrchestratorData = (data) => {
-  const requiredFields = ['category', 'projectId', 'score', 'timestamp'];
-  const missingFields = requiredFields.filter(field => !data[field]);
-  
-  if (missingFields.length > 0) {
-    console.warn('Missing required fields in orchestrator data:', missingFields);
-    return false;
-  }
-  
-  return true;
-};
 ```
 
 ### Task 3: Add Error Handling and Retry Logic
@@ -183,7 +176,6 @@ async getCategoryAnalysisDataWithRetry(projectId = null, category, endpoint, max
         return result;
       }
       
-      // If not successful but no error, return the result
       if (!result.error) {
         return result;
       }
@@ -196,32 +188,8 @@ async getCategoryAnalysisDataWithRetry(projectId = null, category, endpoint, max
         throw error;
       }
       
-      // Wait before retry (exponential backoff)
       await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
     }
-  }
-}
-
-// NEW: Fallback to legacy endpoints if category endpoints fail
-async getCategoryAnalysisDataWithFallback(projectId = null, category, endpoint) {
-  try {
-    return await this.getCategoryAnalysisDataWithRetry(projectId, category, endpoint);
-  } catch (error) {
-    console.warn(`Category endpoint failed, falling back to legacy for ${category}/${endpoint}:`, error);
-    
-    // Fallback mapping
-    const fallbackMapping = {
-      'code-quality': { issues: 'issues', recommendations: 'recommendations' },
-      'tech-stack': { results: 'techstack' },
-      'architecture': { results: 'architecture' }
-    };
-    
-    const fallbackEndpoint = fallbackMapping[category]?.[endpoint];
-    if (fallbackEndpoint) {
-      return this.getAnalysisData(projectId, category, { endpoint: fallbackEndpoint });
-    }
-    
-    throw error;
   }
 }
 ```
@@ -229,18 +197,16 @@ async getCategoryAnalysisDataWithFallback(projectId = null, category, endpoint) 
 ## ✅ Success Criteria
 - [ ] All 7 categories (security, performance, architecture, code-quality, dependencies, manifest, tech-stack) supported
 - [ ] All 5 endpoints per category (recommendations, issues, metrics, summary, results) implemented
-- [ ] Legacy endpoints completely replaced with category-based endpoints
+- [ ] Legacy endpoints completely replaced
 - [ ] Error handling and retry logic implemented
 - [ ] Data processing utilities created
 - [ ] All existing methods updated to use new endpoints
-- [ ] Clean migration to new API structure
 
 ## 🔍 Validation Steps
 1. **API Endpoint Testing**: Verify all category endpoints return correct data
 2. **Error Handling**: Test error scenarios and retry logic
-3. **Backward Compatibility**: Ensure existing methods still work
-4. **Data Processing**: Validate data processing utilities
-5. **Performance**: Check API call performance and caching
+3. **Data Processing**: Validate data processing utilities
+4. **Performance**: Check API call performance
 
 ## 📊 Progress Tracking
 - **Status**: Ready
