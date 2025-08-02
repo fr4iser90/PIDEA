@@ -159,6 +159,36 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Connect to a port without switching (for workspace detection)
+   * This method is used when we need to connect to a port for detection purposes
+   * but don't want to track it as a "switch" operation
+   */
+  async connectToPortForDetection(port) {
+    if (this.currentPort === port) {
+      logger.debug(`Already connected to port ${port}`);
+      return; // Already connected to this port
+    }
+    
+    logger.info(`Connecting to port ${port} for workspace detection...`);
+    
+    try {
+      // Get connection from pool (instant if cached, creates new if needed)
+      const connection = await this.connectionPool.getConnection(port);
+      
+      // Update current port and connection state
+      this.currentPort = port;
+      this.browser = connection.browser;
+      this.page = connection.page;
+      
+      logger.info(`Successfully connected to port ${port} for detection`);
+      
+    } catch (error) {
+      logger.error(`Failed to connect to port ${port} for detection:`, error.message);
+      throw error;
+    }
+  }
+
   async connectToPort(port) {
     logger.info(`Connecting to port ${port}...`);
     this.currentPort = port;

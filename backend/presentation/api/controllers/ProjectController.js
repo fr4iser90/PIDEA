@@ -67,34 +67,7 @@ class ProjectController {
     }
   }
 
-  /**
-   * Get project by IDE port
-   */
-  async getByIDEPort(req, res) {
-    try {
-      const { idePort } = req.params;
-      const project = await this.projectApplicationService.getProjectByIDEPort(idePort);
-      
-      res.json({
-        success: true,
-        data: project
-      });
-    } catch (error) {
-      this.logger.error('Failed to get project by IDE port:', error);
-      
-      if (error.message.includes('Project not found')) {
-        return res.status(404).json({
-          success: false,
-          error: 'Project not found for IDE port'
-        });
-      }
-      
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get project'
-      });
-    }
-  }
+
 
   /**
    * Save project port

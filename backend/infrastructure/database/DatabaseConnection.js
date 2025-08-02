@@ -2,6 +2,7 @@ const Logger = require('@logging/Logger');
 const SQLiteConnection = require('./SQLiteConnection');
 const PostgreSQLConnection = require('./PostgreSQLConnection');
 const MemoryConnection = require('./MemoryConnection');
+const SQLTranslator = require('./SQLTranslator');
 const logger = new Logger('DatabaseConnection');
 
 class DatabaseConnection {
@@ -16,6 +17,7 @@ class DatabaseConnection {
     this.dbConnection = null; // The actual database connection instance
     this.type = null;
     this.isConnected = false;
+    this.sqlTranslator = new SQLTranslator(); // SQL translator for PostgreSQL → SQLite conversion
     
     // Store instance
     if (!DatabaseConnection.instances) {
@@ -124,6 +126,13 @@ class DatabaseConnection {
       throw new Error('Database not connected');
     }
 
+    // If using SQLite, translate PostgreSQL syntax to SQLite
+    if (this.type === 'sqlite' && this.sqlTranslator.canTranslate(sql)) {
+      const translation = this.sqlTranslator.translate(sql, params);
+      logger.debug(`Executing translated SQL: ${translation.sql.substring(0, 100)}...`);
+      return await this.dbConnection.execute(translation.sql, translation.params);
+    }
+
     // Delegate to the specific connection class
     return await this.dbConnection.execute(sql, params);
   }
@@ -133,6 +142,13 @@ class DatabaseConnection {
       throw new Error('Database not connected');
     }
 
+    // If using SQLite, translate PostgreSQL syntax to SQLite
+    if (this.type === 'sqlite' && this.sqlTranslator.canTranslate(sql)) {
+      const translation = this.sqlTranslator.translate(sql, params);
+      logger.debug(`Querying translated SQL: ${translation.sql.substring(0, 100)}...`);
+      return await this.dbConnection.query(translation.sql, translation.params);
+    }
+
     // Delegate to the specific connection class
     return await this.dbConnection.query(sql, params);
   }
@@ -140,6 +156,13 @@ class DatabaseConnection {
   async getOne(sql, params = []) {
     if (!this.isConnected || !this.dbConnection) {
       throw new Error('Database not connected');
+    }
+
+    // If using SQLite, translate PostgreSQL syntax to SQLite
+    if (this.type === 'sqlite' && this.sqlTranslator.canTranslate(sql)) {
+      const translation = this.sqlTranslator.translate(sql, params);
+      logger.debug(`Getting one with translated SQL: ${translation.sql.substring(0, 100)}...`);
+      return await this.dbConnection.getOne(translation.sql, translation.params);
     }
 
     // Delegate to the specific connection class
@@ -165,7 +188,11 @@ class DatabaseConnection {
 
   getConnectionStatus() {
     if (this.dbConnection) {
-      return this.dbConnection.getConnectionStatus();
+      const status = this.dbConnection.getConnectionStatus();
+      if (this.type === 'sqlite') {
+        status.sqlTranslator = this.sqlTranslator.getStats();
+      }
+      return status;
     }
     
     return {
@@ -176,18 +203,32 @@ class DatabaseConnection {
   }
 
   getRepository(repositoryName) {
-    // Diese Methode ist für Kompatibilität erhalten
-    // Keine Warnung mehr ausgeben
+    // Always use PostgreSQL repositories with SQL translator for SQLite fallback
     const dbType = this.getType();
-    const prefix = dbType === 'sqlite' ? 'SQLite' : 'PostgreSQL';
-    try {
-      const RepositoryClass = require(`./${prefix}${repositoryName}Repository`);
-      return new RepositoryClass(this);
-    } catch (error) {
-      if (error.code === 'MODULE_NOT_FOUND') {
-        throw new Error(`Repository ${repositoryName} not implemented for ${dbType}`);
+    
+    if (dbType === 'sqlite') {
+      // Use PostgreSQL repository with SQL translator for SQLite
+      try {
+        const RepositoryClass = require(`./PostgreSQL${repositoryName}Repository`);
+        logger.debug(`Using PostgreSQL${repositoryName}Repository with SQL translator for SQLite`);
+        return new RepositoryClass(this);
+      } catch (error) {
+        if (error.code === 'MODULE_NOT_FOUND') {
+          throw new Error(`Repository ${repositoryName} not implemented for PostgreSQL`);
+        }
+        throw error;
       }
-      throw error;
+    } else {
+      // Use PostgreSQL repository directly for PostgreSQL
+      try {
+        const RepositoryClass = require(`./PostgreSQL${repositoryName}Repository`);
+        return new RepositoryClass(this);
+      } catch (error) {
+        if (error.code === 'MODULE_NOT_FOUND') {
+          throw new Error(`Repository ${repositoryName} not implemented for PostgreSQL`);
+        }
+        throw error;
+      }
     }
   }
 }

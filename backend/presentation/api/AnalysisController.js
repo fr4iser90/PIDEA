@@ -649,6 +649,21 @@ class AnalysisController {
       // Get all analyses for the project and filter by category
       const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
       
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty recommendations`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            recommendations: [],
+            count: 0,
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
       // Filter for the specific category and extract recommendations
       const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
       
@@ -695,6 +710,21 @@ class AnalysisController {
       // Get all analyses for the project and filter by category
       const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
       
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty issues`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            issues: [],
+            count: 0,
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
       // Filter for the specific category and extract issues
       const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
       
@@ -740,6 +770,26 @@ class AnalysisController {
       
       // Get all analyses for the project and filter by category
       const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty metrics`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            metrics: {
+              totalAnalyses: 0,
+              completedAnalyses: 0,
+              failedAnalyses: 0,
+              averageExecutionTime: 0,
+              lastAnalysis: null
+            },
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
       
       // Filter for the specific category
       const categoryAnalyses = analyses.filter(a => a.analysisType === category);
@@ -792,6 +842,20 @@ class AnalysisController {
       // Get all analyses for the project and filter by category
       const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
       
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty summary`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            summary: {},
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
       // Filter for the specific category and get latest completed
       const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
       
@@ -836,6 +900,20 @@ class AnalysisController {
       
       // Get all analyses for the project and filter by category
       const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty results`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            results: {},
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
       
       // Filter for the specific category and get latest completed
       const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);

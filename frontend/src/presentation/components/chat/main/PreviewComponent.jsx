@@ -251,17 +251,23 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
         // Save port to database for current project
         if (activePort) {
           try {
-            // Get current project from IDE port
-            const projectResult = await apiRepository.getProjectByIDEPort(activePort);
-            if (projectResult.success && projectResult.data) {
-              const project = projectResult.data;
+            // Get workspace info from IDE API
+            const workspaceResult = await apiRepository.getWorkspaceInfo();
+            if (workspaceResult.success && workspaceResult.data && workspaceResult.data.workspacePath) {
+              const workspacePath = workspaceResult.data.workspacePath;
               
-              // Save frontend port to database
-              const saveResult = await apiRepository.saveProjectPort(project.id, validationResult.port, 'frontend');
-              if (saveResult.success) {
-                logger.info('Port saved to database for project:', project.id);
-              } else {
-                logger.warn('Failed to save port to database:', saveResult.error);
+              // Get current project from workspace path
+              const projectResult = await apiRepository.getProjectByWorkspacePath(workspacePath);
+              if (projectResult.success && projectResult.data) {
+                const project = projectResult.data;
+                
+                // Save frontend port to database
+                const saveResult = await apiRepository.saveProjectPort(project.id, validationResult.port, 'frontend');
+                if (saveResult.success) {
+                  logger.info('Port saved to database for project:', project.id);
+                } else {
+                  logger.warn('Failed to save port to database:', saveResult.error);
+                }
               }
             }
           } catch (error) {
@@ -291,26 +297,33 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   const loadProjectPorts = async () => {
     try {
       if (activePort) {
-        const projectResult = await apiRepository.getProjectByIDEPort(activePort);
-        if (projectResult.success && projectResult.data) {
-          const project = projectResult.data;
+        // Get workspace info from IDE API
+        const workspaceResult = await apiRepository.getWorkspaceInfo();
+        if (workspaceResult.success && workspaceResult.data && workspaceResult.data.workspacePath) {
+          const workspacePath = workspaceResult.data.workspacePath;
           
-          // Set custom port from database
-          if (project.frontendPort) {
-            setCustomPort(project.frontendPort);
-            logger.info('Loaded frontend port from database:', project.frontendPort);
+          // Get current project from workspace path
+          const projectResult = await apiRepository.getProjectByWorkspacePath(workspacePath);
+          if (projectResult.success && projectResult.data) {
+            const project = projectResult.data;
             
-            // Create preview data with loaded port
-            const newPreviewData = {
-              url: `http://localhost:${project.frontendPort}`,
-              title: `Preview - User App (Port: ${project.frontendPort})`,
-              timestamp: new Date().toISOString(),
-              port: project.frontendPort,
-              workspacePath: project.workspacePath
-            };
-            setPreviewData(newPreviewData);
-            setError(null);
-            logger.info('Preview data updated with loaded port:', project.frontendPort);
+            // Set custom port from database
+            if (project.frontendPort) {
+              setCustomPort(project.frontendPort);
+              logger.info('Loaded frontend port from database:', project.frontendPort);
+              
+              // Create preview data with loaded port
+              const newPreviewData = {
+                url: `http://localhost:${project.frontendPort}`,
+                title: `Preview - User App (Port: ${project.frontendPort})`,
+                timestamp: new Date().toISOString(),
+                port: project.frontendPort,
+                workspacePath: project.workspacePath
+              };
+              setPreviewData(newPreviewData);
+              setError(null);
+              logger.info('Preview data updated with loaded port:', project.frontendPort);
+            }
           }
         }
       }

@@ -17,13 +17,12 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     const sql = `
       INSERT INTO ${this.tableName} (
         id, name, description, workspace_path, type,
-        ide_type, ide_port, ide_status,
         backend_port, frontend_port, database_port,
         start_command, build_command, dev_command, test_command,
         framework, language, package_manager,
         status, priority, last_accessed, access_count,
         metadata, config, created_at, updated_at, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
     `;
 
     const now = new Date().toISOString();
@@ -33,11 +32,6 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       projectData.description || null,
       projectData.workspacePath,
       projectData.type || 'development',
-      
-      // IDE Configuration
-      projectData.ideType || 'cursor',
-      projectData.idePort || null,
-      projectData.ideStatus || 'inactive',
       
       // Development Server Configuration
       projectData.backendPort || null,
@@ -99,13 +93,12 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     const sql = `
       UPDATE ${this.tableName} SET
         name = $1, description = $2, workspace_path = $3, type = $4,
-        ide_type = $5, ide_port = $6, ide_status = $7,
-        backend_port = $8, frontend_port = $9, database_port = $10,
-        start_command = $11, build_command = $12, dev_command = $13, test_command = $14,
-        framework = $15, language = $16, package_manager = $17,
-        status = $18, priority = $19, last_accessed = $20, access_count = $21,
-        metadata = $22, config = $23, updated_at = $24
-      WHERE id = $25
+        backend_port = $5, frontend_port = $6, database_port = $7,
+        start_command = $8, build_command = $9, dev_command = $10, test_command = $11,
+        framework = $12, language = $13, package_manager = $14,
+        status = $15, priority = $16, last_accessed = $17, access_count = $18,
+        metadata = $19, config = $20, updated_at = $21
+      WHERE id = $22
     `;
 
     const now = new Date().toISOString();
@@ -114,11 +107,6 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       projectData.description || null,
       projectData.workspacePath,
       projectData.type || 'development',
-      
-      // IDE Configuration
-      projectData.ideType || 'cursor',
-      projectData.idePort || null,
-      projectData.ideStatus || 'inactive',
       
       // Development Server Configuration
       projectData.backendPort || null,
@@ -177,16 +165,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     return results.length > 0 ? this._rowToProject(results[0]) : null;
   }
 
-  /**
-   * Find project by IDE port
-   * @param {number} idePort - IDE port
-   * @returns {Promise<Object|null>} Project or null
-   */
-  async findByIDEPort(idePort) {
-    const sql = `SELECT * FROM ${this.tableName} WHERE ide_port = $1`;
-    const results = await this.databaseConnection.query(sql, [idePort]);
-    return results.length > 0 ? this._rowToProject(results[0]) : null;
-  }
+
 
   /**
    * Find projects by framework
@@ -249,25 +228,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     return project;
   }
 
-  /**
-   * Update IDE status for a project
-   * @param {string} projectId - Project ID
-   * @param {string} ideStatus - IDE status
-   * @param {number|null} idePort - IDE port
-   * @returns {Promise<Object>} Updated project
-   */
-  async updateIDEStatus(projectId, ideStatus, idePort = null) {
-    const sql = `
-      UPDATE ${this.tableName} 
-      SET ide_status = $1, ide_port = $2, updated_at = $3
-      WHERE id = $4
-    `;
-    
-    const now = new Date().toISOString();
-    await this.databaseConnection.execute(sql, [ideStatus, idePort, now, projectId]);
-    
-    return this.findById(projectId);
-  }
+
 
   /**
    * Update access information for a project
@@ -376,9 +337,6 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       description: row.description,
       workspacePath: row.workspace_path,
       type: row.type,
-      ideType: row.ide_type,
-      idePort: row.ide_port,
-      ideStatus: row.ide_status,
       backendPort: row.backend_port,
       frontendPort: row.frontend_port,
       databasePort: row.database_port,

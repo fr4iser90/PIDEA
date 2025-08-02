@@ -46,11 +46,6 @@ CREATE TABLE IF NOT EXISTS projects (
     workspace_path TEXT NOT NULL, -- Path on YOUR computer
     type TEXT NOT NULL DEFAULT 'development', -- 'development', 'documentation', 'testing', 'deployment'
     
-    -- IDE Configuration
-    ide_type TEXT NOT NULL DEFAULT 'cursor', -- 'cursor', 'vscode', 'windsurf'
-    ide_port INTEGER, -- IDE Port (9222, 9232, etc.)
-    ide_status TEXT DEFAULT 'inactive', -- 'active', 'inactive', 'starting', 'error'
-    
     -- Development Server Configuration
     backend_port INTEGER, -- Backend development server port
     frontend_port INTEGER, -- Frontend development server port
@@ -329,7 +324,6 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_token_lookup ON user_sessions(acces
 
 -- Projects indexes
 CREATE INDEX IF NOT EXISTS idx_projects_workspace_path ON projects(workspace_path);
-CREATE INDEX IF NOT EXISTS idx_projects_ide_port ON projects(ide_port);
 CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
 CREATE INDEX IF NOT EXISTS idx_projects_type ON projects(type);
 CREATE INDEX IF NOT EXISTS idx_projects_framework ON projects(framework);

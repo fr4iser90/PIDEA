@@ -53,7 +53,7 @@ const API_CONFIG = {
     projects: {
       list: '/api/projects',
       byId: (id) => `/api/projects/${id}`,
-      byIDEPort: (idePort) => `/api/projects/ide-port/${idePort}`,
+  
       updatePort: (projectId) => `/api/projects/${projectId}/port`,
       savePort: (projectId) => `/api/projects/${projectId}/save-port`
     },
@@ -1355,16 +1355,33 @@ export default class APIChatRepository extends ChatRepository {
     }
   }
 
+
+
   /**
-   * Get project by IDE port
-   * @param {number} idePort - IDE port number
+   * Get project by workspace path
+   * @param {string} workspacePath - Workspace path
    * @returns {Promise<Object>} Project data
    */
-  async getProjectByIDEPort(idePort) {
+  async getProjectByWorkspacePath(workspacePath) {
     try {
-      return apiCall(API_CONFIG.endpoints.projects.byIDEPort(idePort));
+      // Get workspace info from IDE API
+      const workspaceResult = await this.getWorkspaceInfo();
+      if (workspaceResult.success && workspaceResult.data) {
+        const workspaceInfo = workspaceResult.data;
+        
+        // Find project by workspace path
+        const projectsResult = await apiCall(API_CONFIG.endpoints.projects.list);
+        if (projectsResult.success && projectsResult.data) {
+          const project = projectsResult.data.find(p => p.workspacePath === workspacePath);
+          if (project) {
+            return { success: true, data: project };
+          }
+        }
+      }
+      
+      return { success: false, error: 'Project not found for workspace path' };
     } catch (error) {
-      logger.error('Failed to get project by IDE port:', error);
+      logger.error('Failed to get project by workspace path:', error);
       return { success: false, error: 'Failed to get project' };
     }
   }

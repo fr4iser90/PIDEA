@@ -16,7 +16,7 @@ describe('ProjectController', () => {
     mockProjectApplicationService = {
       getAllProjects: jest.fn(),
       getProject: jest.fn(),
-      getProjectByIDEPort: jest.fn(),
+    
       saveProjectPort: jest.fn(),
       updateProjectPort: jest.fn()
     };
@@ -127,37 +127,7 @@ describe('ProjectController', () => {
     });
   });
 
-  describe('getByIDEPort', () => {
-    it('should return project by IDE port successfully', async () => {
-      const mockProject = { id: '1', name: 'Project 1' };
-      mockReq.params = { idePort: '9222' };
 
-      mockProjectApplicationService.getProjectByIDEPort.mockResolvedValue(mockProject);
-
-      await projectController.getByIDEPort(mockReq, mockRes);
-
-      expect(mockProjectApplicationService.getProjectByIDEPort).toHaveBeenCalledWith('9222');
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockProject
-      });
-    });
-
-    it('should return 404 when project not found for IDE port', async () => {
-      const error = new Error('Project not found for IDE port: 9999');
-      mockReq.params = { idePort: '9999' };
-
-      mockProjectApplicationService.getProjectByIDEPort.mockRejectedValue(error);
-
-      await projectController.getByIDEPort(mockReq, mockRes);
-
-      expect(mockRes.status).toHaveBeenCalledWith(404);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Project not found for IDE port'
-      });
-    });
-  });
 
   describe('savePort', () => {
     it('should save project port successfully', async () => {

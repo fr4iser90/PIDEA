@@ -347,40 +347,7 @@ class ProjectApplicationService {
     }
   }
 
-  /**
-   * Get project by IDE port
-   * @param {number} idePort - IDE port number
-   * @returns {Promise<Object>} Project data
-   */
-  async getProjectByIDEPort(idePort) {
-    try {
-      // // // this.logger.info(`Getting project by IDE port: ${idePort}`);
-      
-      const project = await this.projectRepository.findByIDEPort(parseInt(idePort));
-      
-      if (!project) {
-        throw new Error(`Project not found for IDE port: ${idePort}`);
-      }
-      
-      return {
-        id: project.id,
-        name: project.name,
-        description: project.description,
-        workspacePath: project.workspacePath,
-        type: project.type,
-        framework: project.framework,
-        frontendPort: project.frontendPort,
-        backendPort: project.backendPort,
-        databasePort: project.databasePort,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt
-      };
-      
-    } catch (error) {
-      this.logger.error('❌ Failed to get project by IDE port:', error);
-      throw new Error(`Failed to get project by IDE port: ${error.message}`);
-    }
-  }
+
 
   /**
    * Save project port

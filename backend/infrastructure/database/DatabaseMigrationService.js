@@ -24,15 +24,21 @@ class DatabaseMigrationService {
     async createMigrationsTable() {
         const createTableSQL = `
             CREATE TABLE IF NOT EXISTS migrations (
-                id SERIAL PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 migration_name TEXT UNIQUE NOT NULL,
-                applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 status TEXT DEFAULT 'applied',
                 execution_time_ms INTEGER
             );
         `;
         
-        await this.databaseConnection.execute(createTableSQL);
+        // Use the SQLite connection directly to avoid SQL translation issues
+        if (this.databaseConnection.getType() === 'sqlite') {
+            await this.databaseConnection.dbConnection.execute(createTableSQL);
+        } else {
+            await this.databaseConnection.execute(createTableSQL);
+        }
+        
         this.logger.debug('✅ Migrations table created/verified');
     }
 
@@ -107,8 +113,41 @@ class DatabaseMigrationService {
             const migrationPath = path.join(this.migrationsPath, migrationFile);
             const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
             
-            // Execute migration
-            await this.databaseConnection.execute(migrationSQL);
+            // Execute migration with SQL translation for SQLite
+            if (this.databaseConnection.getType() === 'sqlite') {
+                this.logger.info(`🔄 Using SQLite translation for migration`);
+                // Split migration into individual statements and translate each one
+                const statements = this.parseSQLStatements(migrationSQL);
+                this.logger.info(`🔄 Found ${statements.length} SQL statements in migration`);
+                
+                for (let i = 0; i < statements.length; i++) {
+                    const statement = statements[i];
+                    if (statement.trim()) {
+                        try {
+                            this.logger.info(`🔄 Processing statement ${i + 1} (${statement.length} chars)`);
+                            const translation = this.databaseConnection.sqlTranslator.translate(statement);
+                            this.logger.info(`🔄 Translated statement ${i + 1} (${translation.sql.length} chars)`);
+                            this.logger.info(`🔄 Full translated SQL: ${translation.sql}`);
+                            
+                            // Check if table already exists before creating
+                            if (translation.sql.toUpperCase().includes('CREATE TABLE IF NOT EXISTS')) {
+                                this.logger.info(`🔄 Using IF NOT EXISTS - table creation should be safe`);
+                            }
+                            
+                            await this.databaseConnection.dbConnection.execute(translation.sql, translation.params);
+                        } catch (error) {
+                            this.logger.warn(`⚠️ Statement ${i + 1} failed: ${error.message}`);
+                            // Continue with other statements unless it's a critical error
+                            if (!error.message.includes('already exists')) {
+                                throw error;
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Execute migration directly for PostgreSQL
+                await this.databaseConnection.execute(migrationSQL);
+            }
             
             // Record migration as applied
             const executionTime = Date.now() - startTime;
@@ -147,6 +186,33 @@ class DatabaseMigrationService {
             this.logger.error('❌ Error getting migration status:', error);
             return [];
         }
+    }
+
+    parseSQLStatements(sql) {
+        // Remove SQL comments first
+        const sqlWithoutComments = sql
+            .split('\n')
+            .map(line => {
+                const commentIndex = line.indexOf('--');
+                return commentIndex >= 0 ? line.substring(0, commentIndex) : line;
+            })
+            .join('\n');
+        
+        // Split by semicolons and filter out empty statements
+        const statements = sqlWithoutComments
+            .split(';')
+            .map(stmt => stmt.trim())
+            .filter(stmt => stmt.length > 0)
+            .map(stmt => stmt.endsWith(')') ? stmt + ';' : stmt);
+        
+        // Log the first few statements for debugging
+        statements.forEach((stmt, index) => {
+            if (index < 3) {
+                this.logger.info(`📝 Statement ${index + 1} (${stmt.length} chars): ${stmt.substring(0, 200)}...`);
+            }
+        });
+        
+        return statements;
     }
 }
 

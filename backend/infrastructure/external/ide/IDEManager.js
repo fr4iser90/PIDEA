@@ -408,9 +408,9 @@ class IDEManager {
       // File-based method
       if (this.fileDetector) {
         try {
-          // Switch to target port
+          // Connect to target port for detection (not switching)
           if (this.browserManager) {
-            await this.browserManager.switchToPort(port);
+            await this.browserManager.connectToPortForDetection(port);
           }
           
           // Get workspace info
@@ -486,9 +486,9 @@ class IDEManager {
     }
     
     try {
-      // Switch to target port
+      // Connect to target port for detection (not switching)
       if (this.browserManager) {
-        await this.browserManager.switchToPort(port);
+        await this.browserManager.connectToPortForDetection(port);
       }
       
       return await this.fileDetector.getWorkspaceInfo(port);

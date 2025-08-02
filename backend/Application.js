@@ -929,7 +929,7 @@ class Application {
     this.app.use('/api/projects', this.authMiddleware.authenticate());
     this.app.get('/api/projects', (req, res) => this.projectController.list(req, res));
     this.app.get('/api/projects/:id', (req, res) => this.projectController.getById(req, res));
-    this.app.get('/api/projects/ide-port/:idePort', (req, res) => this.projectController.getByIDEPort(req, res));
+
     this.app.post('/api/projects/:id/save-port', (req, res) => this.projectController.savePort(req, res));
     this.app.put('/api/projects/:id/port', (req, res) => this.projectController.updatePort(req, res));
 
