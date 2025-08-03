@@ -36,7 +36,7 @@ const config = {
 
 class LayerAnalysisStep {
   constructor() {
-    this.name = 'LayerAnalysisStep';
+    LayerAnalysisStep = 'LayerAnalysisStep';
     this.description = 'Analyzes layer organization and separation of concerns';
     this.category = 'analysis';
     this.subcategory = 'architecture';
@@ -52,7 +52,7 @@ class LayerAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${this.name}...`);
+      logger.info(`⚡ Executing ${LayerAnalysisStep}...`);
       
       // Validate context
       this.validateContext(context);
@@ -97,7 +97,7 @@ class LayerAnalysisStep {
         success: true,
         result: cleanResult,
         metadata: {
-          stepName: this.name,
+          stepName: "LayerAnalysisStep",
           projectPath,
           timestamp: new Date()
         }
@@ -110,7 +110,7 @@ class LayerAnalysisStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
+          stepName: "LayerAnalysisStep",
           projectPath: context.projectPath,
           timestamp: new Date()
         }
@@ -465,7 +465,7 @@ class LayerAnalysisStep {
     return {
       ...result,
       timestamp: new Date().toISOString(),
-      step: this.name,
+      step: LayerAnalysisStep,
       category: 'architecture',
       subcategory: 'layer'
     };
@@ -531,7 +531,7 @@ class LayerAnalysisStep {
         severity: 'medium',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: LayerAnalysisStep,
         location: 'layer-organization',
         suggestion: 'Improve layer separation and organization following architectural principles'
       });
@@ -546,7 +546,7 @@ class LayerAnalysisStep {
         severity: 'high',
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: LayerAnalysisStep,
         location: 'layer-organization',
         suggestion: 'Implement proper layer separation (presentation, business, data, infrastructure)'
       });
@@ -561,7 +561,7 @@ class LayerAnalysisStep {
         severity: 'high',
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: LayerAnalysisStep,
         location: 'layer-boundaries',
         suggestion: 'Fix layer boundary violations to maintain architectural integrity'
       });
@@ -579,7 +579,7 @@ class LayerAnalysisStep {
         severity: 'medium',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: LayerAnalysisStep,
         location: 'layer-organization',
         suggestion: 'Implement a domain layer to encapsulate core business logic'
       });
@@ -601,16 +601,16 @@ class LayerAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${this.name.toLowerCase()}-improvement-${Date.now()}`,
-      title: `Improve ${this.name} Results`,
-      description: `Address issues and implement recommendations from ${this.name} analysis`,
+      id: `${LayerAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      title: `Improve ${LayerAnalysisStep} Results`,
+      description: `Address issues and implement recommendations from ${LayerAnalysisStep} analysis`,
       type: 'improvement',
       category: this.category,
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: this.name,
+        source: LayerAnalysisStep,
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
@@ -625,8 +625,8 @@ class LayerAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${this.name.toLowerCase()}-critical-${Date.now()}`,
-        title: `Fix Critical Issues from ${this.name}`,
+        id: `${LayerAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        title: `Fix Critical Issues from ${LayerAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -635,7 +635,7 @@ class LayerAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: LayerAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -648,8 +648,8 @@ class LayerAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${this.name.toLowerCase()}-high-${Date.now()}`,
-        title: `Fix High Priority Issues from ${this.name}`,
+        id: `${LayerAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        title: `Fix High Priority Issues from ${LayerAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -658,7 +658,7 @@ class LayerAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: LayerAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -721,7 +721,7 @@ class LayerAnalysisStep {
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: LayerAnalysisStep,
         action: 'Implement better layer separation and organization',
         impact: 'Better code organization and maintainability'
       });
@@ -735,7 +735,7 @@ class LayerAnalysisStep {
         description: 'Consider implementing additional layers',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: LayerAnalysisStep,
         action: 'Research and implement appropriate layer patterns',
         impact: 'Improved separation of concerns'
       });
@@ -753,7 +753,7 @@ class LayerAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${this.name.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${LayerAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });
@@ -772,12 +772,12 @@ class LayerAnalysisStep {
    * @returns {Promise<Object>} Implementation doc
    */
   async createImplementationDoc(result, docsDir) {
-    const implementationPath = path.join(docsDir, `${this.name.toLowerCase()}-implementation.md`);
+    const implementationPath = path.join(docsDir, `${LayerAnalysisStep.toLowerCase()}-implementation.md`);
     
-    let content = `# ${this.name} Implementation
+    let content = `# ${LayerAnalysisStep} Implementation
 
 ## 1. Project Overview
-- **Feature/Component Name**: ${this.name}
+- **Feature/Component Name**: ${LayerAnalysisStep}
 - **Priority**: Medium
 - **Category**: ${this.category}
 - **Estimated Time**: ${this.calculateEstimatedHours(result)} hours
@@ -821,7 +821,7 @@ class LayerAnalysisStep {
     return {
       type: 'implementation',
       file: implementationPath,
-      title: `${this.name} Implementation`,
+      title: `${LayerAnalysisStep} Implementation`,
       description: 'Implementation plan for layer organization improvements'
     };
   }

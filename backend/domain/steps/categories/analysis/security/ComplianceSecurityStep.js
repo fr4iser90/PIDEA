@@ -94,7 +94,7 @@ class ComplianceSecurityStep {
         success: true,
         result: cleanResult,
         metadata: {
-          stepName: this.name,
+          stepName: 'ComplianceSecurityStep',
           projectPath,
           projectId,
           timestamp: new Date()
@@ -108,7 +108,7 @@ class ComplianceSecurityStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
+          stepName: 'ComplianceSecurityStep',
           projectPath: context.projectPath,
           timestamp: new Date()
         }
@@ -613,8 +613,8 @@ class ComplianceSecurityStep {
         description: `Analysis score of ${result.score}% indicates areas for improvement`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         location: 'analysis-results',
         suggestion: 'Improve analysis results by addressing identified issues'
       });
@@ -628,8 +628,8 @@ class ComplianceSecurityStep {
         description: 'Critical issues found in the analysis',
         severity: 'critical',
         priority: 'critical',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         location: 'analysis-results',
         suggestion: 'Immediately address critical issues'
       });
@@ -643,8 +643,8 @@ class ComplianceSecurityStep {
         description: 'High severity issues found in the analysis',
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         location: 'analysis-results',
         suggestion: 'Address high severity issues promptly'
       });
@@ -667,8 +667,8 @@ class ComplianceSecurityStep {
         title: 'Improve Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -681,8 +681,8 @@ class ComplianceSecurityStep {
         title: 'Add More Design Patterns',
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -695,8 +695,8 @@ class ComplianceSecurityStep {
         title: 'Address Security Vulnerabilities',
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -709,8 +709,8 @@ class ComplianceSecurityStep {
         title: 'Improve Performance',
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'ComplianceSecurityStep',
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -734,12 +734,12 @@ class ComplianceSecurityStep {
       title: `Improve ${this.name} Results`,
       description: `Address issues and implement recommendations from ${this.name} analysis`,
       type: 'improvement',
-      category: this.category,
+      category: 'security',
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: this.name,
+        source: 'ComplianceSecurityStep',
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
@@ -758,13 +758,13 @@ class ComplianceSecurityStep {
         title: `Fix Critical Issues from ${this.name}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'security',
         priority: 'critical',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: 'ComplianceSecurityStep',
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -781,13 +781,13 @@ class ComplianceSecurityStep {
         title: `Fix High Priority Issues from ${this.name}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'security',
         priority: 'high',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: 'ComplianceSecurityStep',
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -898,8 +898,8 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       type: 'implementation',
       title: 'Compliance Security Analysis Implementation',
       path: docPath,
-      category: this.category,
-      source: this.name
+      category: 'security',
+      source: "TrivySecurityStep"
     };
   }
 
@@ -941,8 +941,8 @@ Based on the analysis, consider addressing identified compliance issues and impl
       type: 'report',
       title: 'Compliance Security Analysis Report',
       path: docPath,
-      category: this.category,
-      source: this.name
+      category: 'security',
+      source: "TrivySecurityStep"
     };
   }
 }

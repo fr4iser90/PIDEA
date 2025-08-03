@@ -79,18 +79,12 @@ class DependencyAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          outdatedDependencies: [],
-          vulnerableDependencies: [],
-          unusedDependencies: [],
-          licenseIssues: [],
-          securityIssues: [],
-          sizeIssues: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -109,27 +103,7 @@ class DependencyAnalysisOrchestrator extends StepBuilder {
           results.details[stepName] = stepResult;
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.outdatedDependencies) {
-            results.summary.outdatedDependencies.push(...stepResult.outdatedDependencies);
-          }
-          if (stepResult.vulnerableDependencies) {
-            results.summary.vulnerableDependencies.push(...stepResult.vulnerableDependencies);
-          }
-          if (stepResult.unusedDependencies) {
-            results.summary.unusedDependencies.push(...stepResult.unusedDependencies);
-          }
-          if (stepResult.licenseIssues) {
-            results.summary.licenseIssues.push(...stepResult.licenseIssues);
-          }
-          if (stepResult.securityIssues) {
-            results.summary.securityIssues.push(...stepResult.securityIssues);
-          }
-          if (stepResult.sizeIssues) {
-            results.summary.sizeIssues.push(...stepResult.sizeIssues);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -141,6 +115,22 @@ class DependencyAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -196,21 +186,25 @@ class DependencyAnalysisOrchestrator extends StepBuilder {
    * Calculate overall dependency health score
    */
   calculateDependencyHealthScore(results) {
-    const { outdatedDependencies, vulnerableDependencies, unusedDependencies, licenseIssues } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Deduct points for vulnerable dependencies
-    score -= vulnerableDependencies.length * 15;
-    
-    // Deduct points for outdated dependencies
-    score -= outdatedDependencies.length * 5;
-    
-    // Deduct points for unused dependencies
-    score -= unusedDependencies.length * 3;
-    
-    // Deduct points for license issues
-    score -= licenseIssues.length * 8;
+    // Deduct points for dependency issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

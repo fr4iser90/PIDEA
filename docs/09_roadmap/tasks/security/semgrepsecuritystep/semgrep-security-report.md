@@ -335,41 +335,6 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ### code Vulnerability
-- **File**: domain/steps/categories/analysis/architecture_analysis_step_OLD.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: domain/steps/categories/analysis/code_quality_analysis_step.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: domain/steps/categories/analysis/dependency_analysis_step.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: domain/steps/categories/analysis/layer_violation_analysis_step.js
-- **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: domain/steps/categories/analysis/manifest_analysis_step.js
-- **Message**: Potential path traversal in file read
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
 - **File**: domain/steps/categories/analysis/performance/CpuAnalysisStep.js
 - **Message**: Potential path traversal in file read
 - **Severity**: medium
@@ -526,13 +491,6 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 ### code Vulnerability
 - **File**: domain/steps/categories/analysis/security/ZapSecurityStep.js
 - **Message**: Potential path traversal in file write
-- **Severity**: medium
-- **Suggestion**: Review and secure this path-traversal pattern
-
-
-### code Vulnerability
-- **File**: domain/steps/categories/analysis/tech_stack_analysis_step.js
-- **Message**: Potential path traversal in file read
 - **Severity**: medium
 - **Suggestion**: Review and secure this path-traversal pattern
 
@@ -965,14 +923,14 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ### code Vulnerability
-- **File**: ../frontend/src/presentation/components/analysis/AnalysisArchitecture.jsx
+- **File**: ../frontend/src/infrastructure/repositories/AnalysisRepository.jsx
 - **Message**: Debug logging detected
 - **Severity**: low
 - **Suggestion**: Review and secure this debug-info pattern
 
 
 ### code Vulnerability
-- **File**: ../frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx
+- **File**: ../frontend/src/presentation/components/analysis/AnalysisArchitecture.jsx
 - **Message**: Debug logging detected
 - **Severity**: low
 - **Suggestion**: Review and secure this debug-info pattern
@@ -1301,7 +1259,7 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ## 📈 Metrics
-- **Vulnerabilities**: 185 found
+- **Vulnerabilities**: 179 found
 - **Best Practices**: 6 identified
 - **Confidence**: 100% analysis confidence
 

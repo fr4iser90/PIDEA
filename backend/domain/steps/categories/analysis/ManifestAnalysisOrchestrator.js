@@ -79,18 +79,12 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          packageJsonIssues: [],
-          dockerfileIssues: [],
-          ciConfigIssues: [],
-          environmentIssues: [],
-          scriptIssues: [],
-          metadataIssues: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -109,27 +103,7 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
           results.details[stepName] = stepResult;
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.packageJsonIssues) {
-            results.summary.packageJsonIssues.push(...stepResult.packageJsonIssues);
-          }
-          if (stepResult.dockerfileIssues) {
-            results.summary.dockerfileIssues.push(...stepResult.dockerfileIssues);
-          }
-          if (stepResult.ciConfigIssues) {
-            results.summary.ciConfigIssues.push(...stepResult.ciConfigIssues);
-          }
-          if (stepResult.environmentIssues) {
-            results.summary.environmentIssues.push(...stepResult.environmentIssues);
-          }
-          if (stepResult.scriptIssues) {
-            results.summary.scriptIssues.push(...stepResult.scriptIssues);
-          }
-          if (stepResult.metadataIssues) {
-            results.summary.metadataIssues.push(...stepResult.metadataIssues);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -141,6 +115,22 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -196,21 +186,25 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
    * Calculate overall manifest quality score
    */
   calculateManifestQualityScore(results) {
-    const { packageJsonIssues, dockerfileIssues, ciConfigIssues, environmentIssues } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Deduct points for package.json issues
-    score -= packageJsonIssues.length * 8;
-    
-    // Deduct points for dockerfile issues
-    score -= dockerfileIssues.length * 10;
-    
-    // Deduct points for CI config issues
-    score -= ciConfigIssues.length * 6;
-    
-    // Deduct points for environment issues
-    score -= environmentIssues.length * 12;
+    // Deduct points for manifest issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

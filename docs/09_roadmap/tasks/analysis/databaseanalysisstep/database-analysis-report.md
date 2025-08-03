@@ -223,160 +223,6 @@ Database performance analysis completed with a score of 96% (excellent level).
 
 
 ### database Bottleneck
-- **File**: infrastructure/database/SQLiteAnalysisRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteAnalysisRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteChatRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteChatRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteProjectRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteProjectRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteQueueHistoryRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteQueueHistoryRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteStreamingSessionRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteStreamingSessionRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskExecutionRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskExecutionRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskSessionRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskSessionRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskTemplateRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteTaskTemplateRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteUserRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteUserRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteUserSessionRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Specify only needed columns to reduce data transfer
-
-
-### database Bottleneck
-- **File**: infrastructure/database/SQLiteUserSessionRepository.js
-- **Description**: undefined
-- **Severity**: low
-- **Suggestion**: Consider if DESC ordering is necessary for performance
-
-
-### database Bottleneck
 - **File**: infrastructure/database/StreamingSessionRepository.js
 - **Description**: undefined
 - **Severity**: medium
@@ -406,6 +252,20 @@ Database performance analysis completed with a score of 96% (excellent level).
 
 ### database Bottleneck
 - **File**: scripts/dev-setup.js
+- **Description**: undefined
+- **Severity**: low
+- **Suggestion**: Consider if DESC ordering is necessary for performance
+
+
+### database Bottleneck
+- **File**: tests/unit/SQLTranslator.test.js
+- **Description**: undefined
+- **Severity**: medium
+- **Suggestion**: Specify only needed columns to reduce data transfer
+
+
+### database Bottleneck
+- **File**: tests/unit/SQLTranslator.test.js
 - **Description**: undefined
 - **Severity**: low
 - **Suggestion**: Consider if DESC ordering is necessary for performance
@@ -442,7 +302,7 @@ Database performance analysis completed with a score of 96% (excellent level).
 ## 📈 Metrics
 - **Queries**: 3 files with queries
 - **Config Files**: 7 analyzed
-- **File Coverage**: 1178 files analyzed
+- **File Coverage**: 1173 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider optimizing database queries and connection pooling to improve performance.

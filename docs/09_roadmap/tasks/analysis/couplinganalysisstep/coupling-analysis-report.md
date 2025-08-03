@@ -9,7 +9,7 @@ No coupling issues found
 ## 📈 Metrics
 - **High Coupling**: 0 modules
 - **Low Coupling**: 0 modules
-- **File Coverage**: 1178 files analyzed
+- **File Coverage**: 1173 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider reducing coupling between modules to improve maintainability and testability.

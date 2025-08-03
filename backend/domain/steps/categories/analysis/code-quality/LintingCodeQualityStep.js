@@ -46,11 +46,9 @@ class LintingCodeQualityStep extends StepBuilder {
       
       const result = {
         success: true,
-        lintingIssues,
-        codeStyleIssues,
-        bestPractices,
-        recommendations: this.generateRecommendations(lintingIssues, codeStyleIssues),
+        // Return only standardized format
         issues: this.generateIssues(lintingIssues, codeStyleIssues),
+        recommendations: this.generateRecommendations(lintingIssues, codeStyleIssues),
         tasks: this.generateTasks(lintingIssues, codeStyleIssues),
         documentation: this.generateDocumentation(lintingIssues, codeStyleIssues)
       };
@@ -63,11 +61,9 @@ class LintingCodeQualityStep extends StepBuilder {
       return {
         success: false,
         error: error.message,
-        lintingIssues: [],
-        codeStyleIssues: [],
-        bestPractices: [],
-        recommendations: [],
+        // Return only standardized format
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };

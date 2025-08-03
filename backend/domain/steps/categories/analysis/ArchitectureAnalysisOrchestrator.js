@@ -79,18 +79,12 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          patterns: [],
-          structures: [],
-          recommendations: [],
-          securityPatterns: [],
-          performancePatterns: [],
-          codeQualityPatterns: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -109,27 +103,7 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
           results.details[stepName] = stepResult;
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.patterns) {
-            results.summary.patterns.push(...stepResult.patterns);
-          }
-          if (stepResult.structures) {
-            results.summary.structures.push(...stepResult.structures);
-          }
-          if (stepResult.recommendations) {
-            results.summary.recommendations.push(...stepResult.recommendations);
-          }
-          if (stepResult.securityPatterns) {
-            results.summary.securityPatterns.push(...stepResult.securityPatterns);
-          }
-          if (stepResult.performancePatterns) {
-            results.summary.performancePatterns.push(...stepResult.performancePatterns);
-          }
-          if (stepResult.codeQualityPatterns) {
-            results.summary.codeQualityPatterns.push(...stepResult.codeQualityPatterns);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -141,6 +115,22 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -196,27 +186,25 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
    * Calculate overall architecture score
    */
   calculateArchitectureScore(results) {
-    const { patterns, structures, recommendations, securityPatterns, performancePatterns, codeQualityPatterns } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Add points for good patterns
-    score += patterns.length * 5;
-    
-    // Add points for good structures
-    score += structures.length * 3;
-    
-    // Add points for security patterns
-    score += securityPatterns.length * 8;
-    
-    // Add points for performance patterns
-    score += performancePatterns.length * 6;
-    
-    // Add points for code quality patterns
-    score += codeQualityPatterns.length * 4;
-    
-    // Add points for recommendations (shows good analysis)
-    score += recommendations.length * 2;
+    // Deduct points for architecture issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

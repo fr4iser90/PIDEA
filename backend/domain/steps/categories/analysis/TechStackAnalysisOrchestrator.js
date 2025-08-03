@@ -79,18 +79,12 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          frameworks: [],
-          libraries: [],
-          tools: [],
-          versions: [],
-          compatibilityIssues: [],
-          trendAnalysis: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -109,27 +103,7 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
           results.details[stepName] = stepResult;
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.frameworks) {
-            results.summary.frameworks.push(...stepResult.frameworks);
-          }
-          if (stepResult.libraries) {
-            results.summary.libraries.push(...stepResult.libraries);
-          }
-          if (stepResult.tools) {
-            results.summary.tools.push(...stepResult.tools);
-          }
-          if (stepResult.versions) {
-            results.summary.versions.push(...stepResult.versions);
-          }
-          if (stepResult.compatibilityIssues) {
-            results.summary.compatibilityIssues.push(...stepResult.compatibilityIssues);
-          }
-          if (stepResult.trendAnalysis) {
-            results.summary.trendAnalysis.push(...stepResult.trendAnalysis);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -141,6 +115,22 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -196,25 +186,25 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
    * Calculate overall tech stack maturity score
    */
   calculateTechStackMaturityScore(results) {
-    const { frameworks, libraries, tools, compatibilityIssues, trendAnalysis } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Add points for modern frameworks
-    score += frameworks.length * 5;
-    
-    // Add points for essential libraries
-    score += libraries.length * 2;
-    
-    // Add points for development tools
-    score += tools.length * 3;
-    
-    // Deduct points for compatibility issues
-    score -= compatibilityIssues.length * 10;
-    
-    // Add points for trending technologies
-    const trendingCount = trendAnalysis.filter(trend => trend.status === 'trending').length;
-    score += trendingCount * 5;
+    // Deduct points for tech stack issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

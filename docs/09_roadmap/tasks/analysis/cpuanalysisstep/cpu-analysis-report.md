@@ -1,7 +1,7 @@
 # CPU Performance Analysis Report
 
 ## 📊 Executive Summary
-CPU performance analysis completed with a score of 83% (good level).
+CPU performance analysis completed with a score of 84% (good level).
 
 ## 🔍 Detailed Analysis
 
@@ -377,34 +377,6 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
-- **File**: domain/steps/categories/analysis/architecture_analysis_step_OLD.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: domain/steps/categories/analysis/code_quality_analysis_step.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: domain/steps/categories/analysis/dependency_analysis_step.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: domain/steps/categories/analysis/layer_violation_analysis_step.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
 - **File**: domain/steps/categories/analysis/performance/CpuAnalysisStep.js
 - **Description**: undefined
 - **Severity**: medium
@@ -475,13 +447,6 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
-- **File**: domain/steps/categories/analysis/tech_stack_analysis_step.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
 - **File**: domain/steps/categories/completion/confirmation_step.js
 - **Description**: undefined
 - **Severity**: medium
@@ -500,6 +465,13 @@ CPU performance analysis completed with a score of 83% (good level).
 - **Description**: undefined
 - **Severity**: medium
 - **Suggestion**: Use for...of loop or Promise.all for async operations
+
+
+### cpu Bottleneck
+- **File**: infrastructure/database/DatabaseMigrationService.js
+- **Description**: undefined
+- **Severity**: medium
+- **Suggestion**: Combine map operations or use flatMap
 
 
 ### cpu Bottleneck
@@ -524,42 +496,7 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
-- **File**: infrastructure/database/SQLiteAnalysisRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: infrastructure/database/SQLiteChatRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Combine map operations or use flatMap
-
-
-### cpu Bottleneck
 - **File**: infrastructure/database/SQLiteConnection.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Combine map operations or use flatMap
-
-
-### cpu Bottleneck
-- **File**: infrastructure/database/SQLiteTaskRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: infrastructure/database/SQLiteTaskTemplateRepository.js
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: infrastructure/database/SQLiteUserRepository.js
 - **Description**: undefined
 - **Severity**: medium
 - **Suggestion**: Combine map operations or use flatMap
@@ -1476,6 +1413,13 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
+- **File**: ../frontend/src/infrastructure/stores/IDEStore.jsx
+- **Description**: undefined
+- **Severity**: medium
+- **Suggestion**: Use for...of loop or Promise.all for async operations
+
+
+### cpu Bottleneck
 - **File**: ../frontend/src/presentation/components/analysis/AnalysisCharts.jsx
 - **Description**: undefined
 - **Severity**: medium
@@ -1483,14 +1427,7 @@ CPU performance analysis completed with a score of 83% (good level).
 
 
 ### cpu Bottleneck
-- **File**: ../frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx
-- **Description**: undefined
-- **Severity**: medium
-- **Suggestion**: Use for...of loop or Promise.all for async operations
-
-
-### cpu Bottleneck
-- **File**: ../frontend/src/presentation/components/analysis/AnalysisRecommendations.jsx
+- **File**: ../frontend/src/presentation/components/analysis/CategoryMetrics.jsx
 - **Description**: undefined
 - **Severity**: medium
 - **Suggestion**: Combine map operations or use flatMap
@@ -1975,7 +1912,7 @@ CPU performance analysis completed with a score of 83% (good level).
 ## 📈 Metrics
 - **Bottlenecks**: 0 issues found
 - **Optimizations**: 0 opportunities
-- **File Coverage**: 1178 files analyzed
+- **File Coverage**: 1173 files analyzed
 
 ## 🎯 Next Steps
 Based on the analysis, consider implementing CPU optimizations to improve performance and reduce bottlenecks.

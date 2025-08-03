@@ -173,8 +173,8 @@ class AnalysisStepRepository {
         step.status,
         step.progress,
         step.completedAt,
-        JSON.stringify(step.result),
-        JSON.stringify(step.metadata),
+        JSON.stringify(this._sanitizeForJSON(step.result)),
+        JSON.stringify(this._sanitizeForJSON(step.metadata)),
         step.executionTime,
         step.updatedAt,
         step.id
@@ -537,6 +537,71 @@ class AnalysisStepRepository {
         timestamp: new Date().toISOString()
       });
     }
+  }
+
+  /**
+   * Sanitize object for JSON serialization by removing circular references
+   * @param {any} obj - Object to sanitize
+   * @returns {any} Sanitized object
+   */
+  _sanitizeForJSON(obj) {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+    
+    if (typeof obj !== 'object') {
+      return obj;
+    }
+    
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => this._sanitizeForJSON(item));
+    }
+    
+    // Handle objects
+    const sanitized = {};
+    const seen = new WeakSet();
+    
+    const sanitize = (obj) => {
+      if (obj === null || typeof obj !== 'object') {
+        return obj;
+      }
+      
+      // Check for circular references
+      if (seen.has(obj)) {
+        return '[Circular Reference]';
+      }
+      
+      // Skip Node.js internal objects that cause circular references
+      if (obj.constructor && (
+        obj.constructor.name === 'Timeout' ||
+        obj.constructor.name === 'TimersList' ||
+        obj.constructor.name === 'EventEmitter' ||
+        obj.constructor.name === 'Stream' ||
+        obj.constructor.name === 'Buffer'
+      )) {
+        return `[${obj.constructor.name}]`;
+      }
+      
+      seen.add(obj);
+      
+      if (Array.isArray(obj)) {
+        return obj.map(item => sanitize(item));
+      }
+      
+      const result = {};
+      for (const [key, value] of Object.entries(obj)) {
+        try {
+          result[key] = sanitize(value);
+        } catch (error) {
+          result[key] = '[Error serializing]';
+        }
+      }
+      
+      return result;
+    };
+    
+    return sanitize(obj);
   }
 }
 

@@ -80,17 +80,12 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          vulnerabilities: [],
-          bestPractices: [],
-          dependencies: [],
-          secrets: [],
-          permissions: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -106,30 +101,17 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
           
           const stepResult = await stepModule.execute(context);
           
-          results.details[stepName] = stepResult;
+          results.details[stepName] = {
+            success: stepResult.success,
+            issues: stepResult.issues || [],
+            recommendations: stepResult.recommendations || [],
+            tasks: stepResult.tasks || [],
+            documentation: stepResult.documentation || [],
+            error: stepResult.error || null
+          };
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.vulnerabilities) {
-            results.summary.vulnerabilities.push(...stepResult.vulnerabilities);
-          }
-          if (stepResult.bestPractices) {
-            results.summary.bestPractices.push(...stepResult.bestPractices);
-          }
-          if (stepResult.dependencies) {
-            results.summary.dependencies.push(...stepResult.dependencies);
-          }
-          if (stepResult.secrets) {
-            results.summary.secrets.push(...stepResult.secrets);
-          }
-          if (stepResult.permissions) {
-            results.summary.permissions.push(...stepResult.permissions);
-          }
-          if (stepResult.recommendations) {
-            results.summary.recommendations.push(...stepResult.recommendations);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -141,6 +123,22 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -196,21 +194,25 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
    * Calculate overall security score
    */
   calculateSecurityScore(results) {
-    const { vulnerabilities, bestPractices, secrets, permissions } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Deduct points for vulnerabilities
-    score -= vulnerabilities.length * 10;
-    
-    // Deduct points for secrets found
-    score -= secrets.length * 15;
-    
-    // Deduct points for permission issues
-    score -= permissions.length * 5;
-    
-    // Add points for best practices
-    score += bestPractices.length * 2;
+    // Deduct points for security issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

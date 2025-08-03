@@ -65,13 +65,8 @@ class TrivySecurityStep {
         includeBestPractices: context.includeBestPractices !== false
       });
 
-      // Clean and format result
+      // Clean and format result - Return only standardized format
       const cleanResult = this.cleanResult(security);
-
-      // Generate issues if requested
-      if (context.includeIssues !== false) {
-        cleanResult.issues = this.generateIssues(cleanResult);
-      }
 
       // Generate recommendations if requested
       if (context.includeRecommendations !== false) {
@@ -94,7 +89,7 @@ class TrivySecurityStep {
         success: true,
         result: cleanResult,
         metadata: {
-          stepName: this.name,
+          stepName: 'TrivySecurityStep',
           projectPath,
           projectId,
           timestamp: new Date()
@@ -108,7 +103,7 @@ class TrivySecurityStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
+          stepName: 'TrivySecurityStep',
           projectPath: context.projectPath,
           timestamp: new Date()
         }
@@ -287,20 +282,54 @@ class TrivySecurityStep {
   }
 
   /**
-   * Clean and format result
+   * Clean and format result - Return only standardized format
    */
   cleanResult(result) {
+    // Convert vulnerabilities to standardized issues
+    const issues = [];
+    if (result.vulnerabilities && result.vulnerabilities.length > 0) {
+      issues.push(...result.vulnerabilities.map(vuln => ({
+        id: `sec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        category: 'security',
+        subcategory: 'vulnerability',
+        severity: vuln.severity || 'medium',
+        title: vuln.message || 'Security Vulnerability Detected',
+        description: vuln.description || vuln.message || 'Security vulnerability found',
+        file: vuln.file || 'unknown',
+        line: vuln.line || 0,
+        suggestion: vuln.suggestion || 'Review and fix security vulnerability',
+        metadata: {
+          cve: vuln.cve || 'N/A',
+          scanner: 'trivy',
+          confidence: vuln.confidence || 80
+        }
+      })));
+    }
+
+    // Convert best practices to standardized issues
+    if (result.bestPractices && result.bestPractices.length > 0) {
+      issues.push(...result.bestPractices.map(bp => ({
+        id: `bp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        category: 'security',
+        subcategory: 'best-practice',
+        severity: 'low',
+        title: bp.title || 'Security Best Practice',
+        description: bp.description || 'Security best practice recommendation',
+        file: bp.file || 'unknown',
+        line: bp.line || 0,
+        suggestion: bp.suggestion || 'Follow security best practices',
+        metadata: {
+          scanner: 'trivy',
+          confidence: bp.confidence || 90
+        }
+      })));
+    }
+
     return {
-      vulnerabilities: result.vulnerabilities || [],
-      bestPractices: result.bestPractices || [],
-      metrics: result.metrics || {},
-      summary: {
-        totalVulnerabilities: (result.vulnerabilities || []).length,
-        totalBestPractices: (result.bestPractices || []).length,
-        securityScore: result.metrics?.securityScore || 0,
-        coverage: result.metrics?.coverage || 0,
-        confidence: result.metrics?.confidence || 0
-      }
+      issues,
+      recommendations: [],
+      tasks: [],
+      documentation: []
     };
   }
 
@@ -379,8 +408,8 @@ class TrivySecurityStep {
         description: `Security score of ${result.metrics.securityScore}% indicates security vulnerabilities`,
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         location: 'security-analysis',
         suggestion: 'Address security vulnerabilities to improve security score'
       });
@@ -394,8 +423,8 @@ class TrivySecurityStep {
         description: 'Critical security vulnerabilities found in the codebase',
         severity: 'critical',
         priority: 'critical',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         location: 'security-analysis',
         suggestion: 'Immediately address critical security vulnerabilities'
       });
@@ -409,8 +438,8 @@ class TrivySecurityStep {
         description: 'High severity security vulnerabilities found in the codebase',
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         location: 'security-analysis',
         suggestion: 'Address high severity security vulnerabilities promptly'
       });
@@ -424,8 +453,8 @@ class TrivySecurityStep {
         description: 'eval() function usage detected, which is a security risk',
         severity: 'critical',
         priority: 'critical',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         location: 'security-analysis',
         suggestion: 'Replace eval() with safer alternatives to prevent code injection'
       });
@@ -449,8 +478,8 @@ class TrivySecurityStep {
         title: 'Improve Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -463,8 +492,8 @@ class TrivySecurityStep {
         title: 'Add More Design Patterns',
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -477,8 +506,8 @@ class TrivySecurityStep {
         title: 'Address Security Vulnerabilities',
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -491,8 +520,8 @@ class TrivySecurityStep {
         title: 'Improve Performance',
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
-        category: this.category,
-        source: this.name,
+        category: 'security',
+        source: 'TrivySecurityStep',
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -516,12 +545,12 @@ class TrivySecurityStep {
       title: `Improve ${this.name} Results`,
       description: `Address issues and implement recommendations from ${this.name} analysis`,
       type: 'improvement',
-      category: this.category,
+      category: 'security',
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: this.name,
+        source: 'TrivySecurityStep',
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
@@ -540,13 +569,13 @@ class TrivySecurityStep {
         title: `Fix Critical Issues from ${this.name}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'security',
         priority: 'critical',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: 'TrivySecurityStep',
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -563,13 +592,13 @@ class TrivySecurityStep {
         title: `Fix High Priority Issues from ${this.name}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'security',
         priority: 'high',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: 'TrivySecurityStep',
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -680,8 +709,8 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       type: 'implementation',
       title: 'Trivy Security Analysis Implementation',
       path: docPath,
-      category: this.category,
-      source: this.name
+      category: 'security',
+      source: 'TrivySecurityStep'
     };
   }
 
@@ -723,8 +752,8 @@ Based on the analysis, consider addressing identified vulnerabilities and implem
       type: 'report',
       title: 'Trivy Security Analysis Report',
       path: docPath,
-      category: this.category,
-      source: this.name
+      category: 'security',
+      source: 'TrivySecurityStep'
     };
   }
 }

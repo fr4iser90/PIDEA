@@ -36,7 +36,7 @@ const config = {
 
 class NetworkAnalysisStep {
   constructor() {
-    this.name = 'NetworkAnalysisStep';
+    NetworkAnalysisStep = 'NetworkAnalysisStep';
     this.description = 'Analyzes network performance patterns and optimizations';
     this.category = 'analysis';
     this.subcategory = 'performance';
@@ -52,7 +52,7 @@ class NetworkAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${this.name}...`);
+      logger.info(`⚡ Executing ${NetworkAnalysisStep}...`);
       
       // Validate context
       this.validateContext(context);
@@ -97,7 +97,7 @@ class NetworkAnalysisStep {
         success: true,
         result: cleanResult,
         metadata: {
-          stepName: this.name,
+          stepName: "NetworkAnalysisStep",
           projectPath,
           timestamp: new Date()
         }
@@ -110,7 +110,7 @@ class NetworkAnalysisStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
+          stepName: "NetworkAnalysisStep",
           projectPath: context.projectPath,
           timestamp: new Date()
         }
@@ -514,7 +514,7 @@ class NetworkAnalysisStep {
     return {
       ...result,
       timestamp: new Date().toISOString(),
-      step: this.name,
+      step: NetworkAnalysisStep,
       category: 'performance',
       subcategory: 'network'
     };
@@ -578,7 +578,7 @@ class NetworkAnalysisStep {
         severity: 'medium',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         location: 'analysis-results',
         suggestion: 'Improve analysis results by addressing identified issues'
       });
@@ -593,7 +593,7 @@ class NetworkAnalysisStep {
         severity: 'critical',
         priority: 'critical',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         location: 'analysis-results',
         suggestion: 'Immediately address critical issues'
       });
@@ -608,7 +608,7 @@ class NetworkAnalysisStep {
         severity: 'high',
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         location: 'analysis-results',
         suggestion: 'Address high severity issues promptly'
       });
@@ -632,7 +632,7 @@ class NetworkAnalysisStep {
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -646,7 +646,7 @@ class NetworkAnalysisStep {
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -660,7 +660,7 @@ class NetworkAnalysisStep {
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -674,7 +674,7 @@ class NetworkAnalysisStep {
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: NetworkAnalysisStep,
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -694,16 +694,16 @@ class NetworkAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${this.name.toLowerCase()}-improvement-${Date.now()}`,
-      title: `Improve ${this.name} Results`,
-      description: `Address issues and implement recommendations from ${this.name} analysis`,
+      id: `${NetworkAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      title: `Improve ${NetworkAnalysisStep} Results`,
+      description: `Address issues and implement recommendations from ${NetworkAnalysisStep} analysis`,
       type: 'improvement',
       category: this.category,
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: this.name,
+        source: NetworkAnalysisStep,
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
@@ -718,8 +718,8 @@ class NetworkAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${this.name.toLowerCase()}-critical-${Date.now()}`,
-        title: `Fix Critical Issues from ${this.name}`,
+        id: `${NetworkAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        title: `Fix Critical Issues from ${NetworkAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -728,7 +728,7 @@ class NetworkAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: NetworkAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -741,8 +741,8 @@ class NetworkAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${this.name.toLowerCase()}-high-${Date.now()}`,
-        title: `Fix High Priority Issues from ${this.name}`,
+        id: `${NetworkAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        title: `Fix High Priority Issues from ${NetworkAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -751,7 +751,7 @@ class NetworkAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: NetworkAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -807,7 +807,7 @@ class NetworkAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${this.name.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${NetworkAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });
@@ -835,7 +835,7 @@ class NetworkAnalysisStep {
     const content = `# Network Performance Analysis Implementation
 
 ## 📋 Analysis Overview
-- **Step Name**: ${this.name}
+- **Step Name**: ${NetworkAnalysisStep}
 - **Category**: ${this.category}
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
@@ -863,7 +863,7 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       title: 'Network Performance Analysis Implementation',
       path: docPath,
       category: this.category,
-      source: this.name
+      source: NetworkAnalysisStep
     };
   }
 
@@ -906,7 +906,7 @@ Based on the analysis, consider optimizing network performance through better bu
       title: 'Network Performance Analysis Report',
       path: docPath,
       category: this.category,
-      source: this.name
+      source: NetworkAnalysisStep
     };
   }
 }

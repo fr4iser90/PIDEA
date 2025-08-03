@@ -278,19 +278,38 @@ class AnalysisApplicationService {
    * @returns {Promise<Object>} Analysis data from database
    */
   async getAnalysisFromDatabase(projectId) {
-    this.logger.info(`Getting analysis from database for project: ${projectId}`);
-    
     try {
-      const analysis = await this.analysisRepository.findByProjectId(projectId);
+      this.logger.info(`🔍 [AnalysisApplicationService] Getting analysis from database for project: ${projectId}`);
       
-      return {
-        projectId,
-        analysis,
-        timestamp: new Date().toISOString()
-      };
+      if (!this.analysisRepository) {
+        this.logger.error(`❌ [AnalysisApplicationService] AnalysisRepository not available!`);
+        return { projectId, analysis: [] };
+      }
+      
+      const analyses = await this.analysisRepository.findByProjectId(projectId);
+      
+      this.logger.info(`🔍 [AnalysisApplicationService] Repository returned ${analyses ? analyses.length : 0} analyses`);
+      
+      if (analyses && analyses.length > 0) {
+        this.logger.info(`🔍 [AnalysisApplicationService] First analysis structure:`, JSON.stringify({
+          id: analyses[0].id,
+          projectId: analyses[0].projectId,
+          analysisType: analyses[0].analysisType,
+          hasResult: !!analyses[0].result,
+          resultType: typeof analyses[0].result,
+          resultKeys: analyses[0].result ? Object.keys(analyses[0].result) : []
+        }, null, 2));
+        
+        // Log the actual result content
+        if (analyses[0].result) {
+          this.logger.info(`🔍 [AnalysisApplicationService] First analysis result:`, JSON.stringify(analyses[0].result, null, 2));
+        }
+      }
+      
+      return { projectId, analysis: analyses || [] };
     } catch (error) {
-      this.logger.error(`Failed to get analysis from database for ${projectId}:`, error);
-      throw error;
+      this.logger.error(`❌ [AnalysisApplicationService] Error getting analysis from database:`, error);
+      return { projectId, analysis: [] };
     }
   }
 

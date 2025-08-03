@@ -45,10 +45,9 @@ class CoverageCodeQualityStep extends StepBuilder {
       
       const result = {
         success: true,
-        coverageIssues,
-        metrics,
-        recommendations: this.generateRecommendations(coverageIssues, metrics),
+        // Return only standardized format
         issues: this.generateIssues(coverageIssues),
+        recommendations: this.generateRecommendations(coverageIssues, metrics),
         tasks: this.generateTasks(coverageIssues),
         documentation: this.generateDocumentation(coverageIssues, metrics)
       };
@@ -61,10 +60,9 @@ class CoverageCodeQualityStep extends StepBuilder {
       return {
         success: false,
         error: error.message,
-        coverageIssues: [],
-        metrics: {},
-        recommendations: [],
+        // Return only standardized format
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };

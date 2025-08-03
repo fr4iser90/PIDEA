@@ -78,17 +78,12 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          metrics: [],
-          optimizations: [],
-          bottlenecks: [],
-          profiling: [],
-          loadTesting: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -107,27 +102,7 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
           results.details[stepName] = stepResult;
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.metrics) {
-            results.summary.metrics.push(...stepResult.metrics);
-          }
-          if (stepResult.optimizations) {
-            results.summary.optimizations.push(...stepResult.optimizations);
-          }
-          if (stepResult.bottlenecks) {
-            results.summary.bottlenecks.push(...stepResult.bottlenecks);
-          }
-          if (stepResult.profiling) {
-            results.summary.profiling.push(...stepResult.profiling);
-          }
-          if (stepResult.loadTesting) {
-            results.summary.loadTesting.push(...stepResult.loadTesting);
-          }
-          if (stepResult.recommendations) {
-            results.summary.recommendations.push(...stepResult.recommendations);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -139,6 +114,22 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -194,24 +185,25 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
    * Calculate overall performance score
    */
   calculatePerformanceScore(results) {
-    const { metrics, optimizations, bottlenecks, profiling, loadTesting } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Deduct points for bottlenecks
-    score -= bottlenecks.length * 15;
-    
-    // Add points for optimizations found
-    score += optimizations.length * 5;
-    
-    // Add points for good metrics
-    score += metrics.length * 3;
-    
-    // Add points for profiling data
-    score += profiling.length * 4;
-    
-    // Add points for load testing data
-    score += loadTesting.length * 6;
+    // Deduct points for performance issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

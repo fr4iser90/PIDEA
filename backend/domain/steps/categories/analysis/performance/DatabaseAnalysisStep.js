@@ -36,7 +36,7 @@ const config = {
 
 class DatabaseAnalysisStep {
   constructor() {
-    this.name = 'DatabaseAnalysisStep';
+    DatabaseAnalysisStep = 'DatabaseAnalysisStep';
     this.description = 'Analyzes database performance patterns and optimizations';
     this.category = 'analysis';
     this.subcategory = 'performance';
@@ -52,7 +52,7 @@ class DatabaseAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${this.name}...`);
+      logger.info(`⚡ Executing ${DatabaseAnalysisStep}...`);
       
       // Validate context
       this.validateContext(context);
@@ -97,7 +97,7 @@ class DatabaseAnalysisStep {
         success: true,
         result: cleanResult,
         metadata: {
-          stepName: this.name,
+          stepName: "DatabaseAnalysisStep",
           projectPath,
           timestamp: new Date()
         }
@@ -110,7 +110,7 @@ class DatabaseAnalysisStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
+          stepName: "DatabaseAnalysisStep",
           projectPath: context.projectPath,
           timestamp: new Date()
         }
@@ -590,7 +590,7 @@ class DatabaseAnalysisStep {
     return {
       ...result,
       timestamp: new Date().toISOString(),
-      step: this.name,
+      step: DatabaseAnalysisStep,
       category: 'performance',
       subcategory: 'database'
     };
@@ -654,7 +654,7 @@ class DatabaseAnalysisStep {
         severity: 'medium',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         location: 'analysis-results',
         suggestion: 'Improve analysis results by addressing identified issues'
       });
@@ -669,7 +669,7 @@ class DatabaseAnalysisStep {
         severity: 'critical',
         priority: 'critical',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         location: 'analysis-results',
         suggestion: 'Immediately address critical issues'
       });
@@ -684,7 +684,7 @@ class DatabaseAnalysisStep {
         severity: 'high',
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         location: 'analysis-results',
         suggestion: 'Address high severity issues promptly'
       });
@@ -709,7 +709,7 @@ class DatabaseAnalysisStep {
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -723,7 +723,7 @@ class DatabaseAnalysisStep {
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -737,7 +737,7 @@ class DatabaseAnalysisStep {
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -751,7 +751,7 @@ class DatabaseAnalysisStep {
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: DatabaseAnalysisStep,
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -771,16 +771,16 @@ class DatabaseAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${this.name.toLowerCase()}-improvement-${Date.now()}`,
-      title: `Improve ${this.name} Results`,
-      description: `Address issues and implement recommendations from ${this.name} analysis`,
+      id: `${DatabaseAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      title: `Improve ${DatabaseAnalysisStep} Results`,
+      description: `Address issues and implement recommendations from ${DatabaseAnalysisStep} analysis`,
       type: 'improvement',
       category: this.category,
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: this.name,
+        source: DatabaseAnalysisStep,
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
@@ -795,8 +795,8 @@ class DatabaseAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${this.name.toLowerCase()}-critical-${Date.now()}`,
-        title: `Fix Critical Issues from ${this.name}`,
+        id: `${DatabaseAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        title: `Fix Critical Issues from ${DatabaseAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -805,7 +805,7 @@ class DatabaseAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: DatabaseAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -818,8 +818,8 @@ class DatabaseAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${this.name.toLowerCase()}-high-${Date.now()}`,
-        title: `Fix High Priority Issues from ${this.name}`,
+        id: `${DatabaseAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        title: `Fix High Priority Issues from ${DatabaseAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -828,7 +828,7 @@ class DatabaseAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: DatabaseAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -884,7 +884,7 @@ class DatabaseAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${this.name.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${DatabaseAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });
@@ -912,7 +912,7 @@ class DatabaseAnalysisStep {
     const content = `# Database Performance Analysis Implementation
 
 ## 📋 Analysis Overview
-- **Step Name**: ${this.name}
+- **Step Name**: ${DatabaseAnalysisStep}
 - **Category**: ${this.category}
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
@@ -940,7 +940,7 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       title: 'Database Performance Analysis Implementation',
       path: docPath,
       category: this.category,
-      source: this.name
+      source: DatabaseAnalysisStep
     };
   }
 
@@ -983,7 +983,7 @@ Based on the analysis, consider optimizing database queries and connection pooli
       title: 'Database Performance Analysis Report',
       path: docPath,
       category: this.category,
-      source: this.name
+      source: DatabaseAnalysisStep
     };
   }
 } 

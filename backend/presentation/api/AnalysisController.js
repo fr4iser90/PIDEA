@@ -638,6 +638,89 @@ class AnalysisController {
   // ========================================
 
   /**
+   * Map API category to database analysis type
+   * @param {string} category - API category (security, code-quality, etc.)
+   * @returns {string} Database analysis type
+   */
+  mapCategoryToAnalysisType(category) {
+    const categoryMapping = {
+      'security': 'SecurityAnalysisOrchestrator',
+      'code-quality': 'CodeQualityAnalysisOrchestrator',
+      'architecture': 'ArchitectureAnalysisOrchestrator',
+      'performance': 'PerformanceAnalysisOrchestrator',
+      'tech-stack': 'TechStackAnalysisOrchestrator',
+      'dependencies': 'DependencyAnalysisOrchestrator',
+      'manifest': 'ManifestAnalysisOrchestrator'
+    };
+    
+    const mappedType = categoryMapping[category] || category;
+    this.logger.info(`🔍 [AnalysisController] Mapping category '${category}' to analysis type: '${mappedType}'`);
+    
+    return mappedType;
+  }
+
+  /**
+   * Map database analysis type to API category
+   * @param {string} analysisType - Database analysis type
+   * @returns {string} API category
+   */
+  mapAnalysisTypeToCategory(analysisType) {
+    const analysisTypeMapping = {
+      'SecurityAnalysisOrchestrator': 'security',
+      'CodeQualityAnalysisOrchestrator': 'code-quality',
+      'ArchitectureAnalysisOrchestrator': 'architecture',
+      'PerformanceAnalysisOrchestrator': 'performance',
+      'TechStackAnalysisOrchestrator': 'tech-stack',
+      'DependencyAnalysisOrchestrator': 'dependencies',
+      'ManifestAnalysisOrchestrator': 'manifest'
+    };
+    
+    return analysisTypeMapping[analysisType] || analysisType;
+  }
+
+  /**
+   * Helper method to get analyses from database
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Array>} Array of analyses
+   */
+  async getAnalysesFromDatabase(projectId) {
+    try {
+      logger.info(`🔍 [AnalysisController] Getting analysis from database for project: ${projectId}`);
+      
+      const result = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      
+      logger.info(`🔍 [AnalysisController] Service returned:`, JSON.stringify(result, null, 2));
+      
+      if (!result) {
+        logger.warn(`⚠️ [AnalysisController] Service returned null/undefined`);
+        return [];
+      }
+      
+      if (!result.analysis) {
+        logger.warn(`⚠️ [AnalysisController] Service result has no 'analysis' field`);
+        return [];
+      }
+      
+      if (!Array.isArray(result.analysis)) {
+        logger.warn(`⚠️ [AnalysisController] Service result.analysis is not an array:`, typeof result.analysis);
+        return [];
+      }
+      
+      logger.info(`✅ [AnalysisController] Returning ${result.analysis.length} analyses`);
+      
+      // Log all available analysis types
+      const analysisTypes = result.analysis.map(a => a.analysisType);
+      const uniqueTypes = [...new Set(analysisTypes)];
+      logger.info(`🔍 [AnalysisController] Available analysis types in database:`, uniqueTypes);
+      
+      return result.analysis;
+    } catch (error) {
+      logger.error(`❌ [AnalysisController] Error in getAnalysesFromDatabase:`, error);
+      return [];
+    }
+  }
+
+  /**
    * GET /api/projects/:projectId/analysis/:category/recommendations
    */
   async getCategoryRecommendations(req, res, category) {
@@ -647,7 +730,7 @@ class AnalysisController {
       this.logger.info(`💡 Getting ${category} recommendations for project: ${projectId}`);
       
       // Get all analyses for the project and filter by category
-      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      const analyses = await this.getAnalysesFromDatabase(projectId);
       
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
@@ -665,7 +748,11 @@ class AnalysisController {
       }
       
       // Filter for the specific category and extract recommendations
-      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      this.logger.info(`🔍 [AnalysisController] Looking for analysis type: ${targetAnalysisType} in category: ${category}`);
+      
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType && a.status === 'completed' && a.result);
+      this.logger.info(`🔍 [AnalysisController] Found ${categoryAnalyses.length} completed analyses for category ${category}`);
       
       let recommendations = [];
       if (categoryAnalyses.length > 0) {
@@ -674,7 +761,23 @@ class AnalysisController {
           new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
         )[0];
         
-        recommendations = latestAnalysis.result.recommendations || [];
+        this.logger.info(`🔍 [AnalysisController] Latest analysis for ${category}:`, {
+          id: latestAnalysis.id,
+          analysisType: latestAnalysis.analysisType,
+          status: latestAnalysis.status,
+          hasResult: !!latestAnalysis.result,
+          resultKeys: latestAnalysis.result ? Object.keys(latestAnalysis.result) : 'NO_RESULT',
+          resultStructure: latestAnalysis.result ? JSON.stringify(latestAnalysis.result, null, 2) : 'NO_RESULT'
+        });
+        
+        if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.recommendations) {
+          recommendations = latestAnalysis.result.result.recommendations;
+          this.logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations in result.result.recommendations`);
+        } else {
+          this.logger.warn(`⚠️ [AnalysisController] No recommendations found in result.result.recommendations`);
+        }
+      } else {
+        this.logger.warn(`⚠️ [AnalysisController] No completed analyses found for category: ${category}`);
       }
       
       res.json({
@@ -708,7 +811,7 @@ class AnalysisController {
       this.logger.info(`⚠️ Getting ${category} issues for project: ${projectId}`);
       
       // Get all analyses for the project and filter by category
-      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      const analyses = await this.getAnalysesFromDatabase(projectId);
       
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
@@ -726,7 +829,11 @@ class AnalysisController {
       }
       
       // Filter for the specific category and extract issues
-      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      this.logger.info(`🔍 [AnalysisController] Looking for analysis type: ${targetAnalysisType} in category: ${category}`);
+      
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType && a.status === 'completed' && a.result);
+      this.logger.info(`🔍 [AnalysisController] Found ${categoryAnalyses.length} completed analyses for category ${category}`);
       
       let issues = [];
       if (categoryAnalyses.length > 0) {
@@ -735,8 +842,28 @@ class AnalysisController {
           new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
         )[0];
         
-        issues = latestAnalysis.result.issues || [];
+        this.logger.info(`🔍 [AnalysisController] Latest analysis for ${category}:`, {
+          id: latestAnalysis.id,
+          analysisType: latestAnalysis.analysisType,
+          status: latestAnalysis.status,
+          hasResult: !!latestAnalysis.result,
+          resultKeys: latestAnalysis.result ? Object.keys(latestAnalysis.result) : 'NO_RESULT'
+        });
+        
+        if (latestAnalysis.result) {
+          // KORREKTE Struktur: result.result.issues (nicht result.issues)
+          if (latestAnalysis.result.result && latestAnalysis.result.result.issues) {
+            issues = latestAnalysis.result.result.issues;
+            this.logger.info(`✅ [AnalysisController] Found ${issues.length} issues in result.result.issues`);
+          } else {
+            this.logger.warn(`⚠️ [AnalysisController] No issues found in result.result.issues`);
+          }
+        }
+      } else {
+        this.logger.warn(`⚠️ [AnalysisController] No completed analyses found for category: ${category}`);
       }
+      
+      this.logger.info(`📤 [AnalysisController] Sending ${issues.length} issues to frontend for category: ${category}`);
       
       res.json({
         success: true,
@@ -769,7 +896,7 @@ class AnalysisController {
       this.logger.info(`📊 Getting ${category} metrics for project: ${projectId}`);
       
       // Get all analyses for the project and filter by category
-      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      const analyses = await this.getAnalysesFromDatabase(projectId);
       
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
@@ -792,7 +919,8 @@ class AnalysisController {
       }
       
       // Filter for the specific category
-      const categoryAnalyses = analyses.filter(a => a.analysisType === category);
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType);
       
       const metrics = {
         totalAnalyses: categoryAnalyses.length,
@@ -808,6 +936,21 @@ class AnalysisController {
       if (completedAnalyses.length > 0) {
         const totalDuration = completedAnalyses.reduce((sum, a) => sum + (a.executionTime || 0), 0);
         metrics.averageDuration = totalDuration / completedAnalyses.length;
+      }
+      
+      // FIXED: Also include metrics from the latest analysis result
+      const latestCompletedAnalysis = categoryAnalyses
+        .filter(a => a.status === 'completed' && a.result)
+        .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt))[0];
+      
+      if (latestCompletedAnalysis) {
+        // Look for metrics in the correct structure (result.result.metrics)
+        if (latestCompletedAnalysis.result && latestCompletedAnalysis.result.result && latestCompletedAnalysis.result.result.metrics) {
+          Object.assign(metrics, latestCompletedAnalysis.result.result.metrics);
+        } else if (latestCompletedAnalysis.result && latestCompletedAnalysis.result.metrics) {
+          // Fallback to direct metrics
+          Object.assign(metrics, latestCompletedAnalysis.result.metrics);
+        }
       }
       
       res.json({
@@ -840,11 +983,14 @@ class AnalysisController {
       this.logger.info(`📋 Getting ${category} summary for project: ${projectId}`);
       
       // Get all analyses for the project and filter by category
-      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // ADD DETAILED LOGGING
+      this.logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
       
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
-        this.logger.warn(`No analyses found for project: ${projectId}, returning empty summary`);
+        this.logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}, returning empty summary`);
         return res.json({
           success: true,
           data: {
@@ -856,8 +1002,12 @@ class AnalysisController {
         });
       }
       
-      // Filter for the specific category and get latest completed
-      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      // Filter for the specific category and extract summary
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      this.logger.info(`🔍 [AnalysisController] Mapping category '${category}' to analysis type: '${targetAnalysisType}'`);
+      
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType && a.status === 'completed' && a.result);
+      this.logger.info(`🔍 [AnalysisController] Found ${categoryAnalyses.length} completed analyses for category '${category}'`);
       
       let summary = {};
       if (categoryAnalyses.length > 0) {
@@ -866,9 +1016,22 @@ class AnalysisController {
           new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
         )[0];
         
-        summary = latestAnalysis.result.summary || {};
+        this.logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
+        
+        // FIXED: Look for summary in the correct structure (result.result.summary)
+        if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.summary) {
+          summary = latestAnalysis.result.result.summary;
+          this.logger.info(`✅ [AnalysisController] Found summary in result.result.summary`);
+        } else if (latestAnalysis.result && latestAnalysis.result.summary) {
+          // Fallback to direct summary
+          summary = latestAnalysis.result.summary;
+          this.logger.info(`✅ [AnalysisController] Found summary in result.summary`);
+        } else {
+          this.logger.warn(`⚠️ [AnalysisController] No summary found in analysis result structure`);
+        }
       }
       
+      this.logger.info(`📤 [AnalysisController] Sending summary to frontend:`, JSON.stringify(summary, null, 2));
       res.json({
         success: true,
         data: {
@@ -899,7 +1062,7 @@ class AnalysisController {
       this.logger.info(`📄 Getting ${category} results for project: ${projectId}`);
       
       // Get all analyses for the project and filter by category
-      const analyses = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
+      const analyses = await this.getAnalysesFromDatabase(projectId);
       
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
@@ -915,8 +1078,9 @@ class AnalysisController {
         });
       }
       
-      // Filter for the specific category and get latest completed
-      const categoryAnalyses = analyses.filter(a => a.analysisType === category && a.status === 'completed' && a.result);
+      // Filter for the specific category and extract results
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType && a.status === 'completed' && a.result);
       
       let results = {};
       if (categoryAnalyses.length > 0) {
@@ -925,7 +1089,13 @@ class AnalysisController {
           new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
         )[0];
         
-        results = latestAnalysis.result || {};
+        // FIXED: Look for results in the correct structure (result.result)
+        if (latestAnalysis.result && latestAnalysis.result.result) {
+          results = latestAnalysis.result.result;
+        } else if (latestAnalysis.result) {
+          // Fallback to direct result
+          results = latestAnalysis.result;
+        }
       }
       
       res.json({
@@ -945,6 +1115,319 @@ class AnalysisController {
         error: `Failed to get ${category} results`,
         message: error.message
       });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/tasks
+   */
+  async getCategoryTasks(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`📋 Getting ${category} tasks for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty tasks`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            tasks: [],
+            count: 0,
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
+      // Filter for the specific category and extract tasks
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType && a.status === 'completed' && a.result);
+      
+      let tasks = [];
+      if (categoryAnalyses.length > 0) {
+        // Get the latest analysis for this category
+        const latestAnalysis = categoryAnalyses.sort((a, b) => 
+          new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
+        )[0];
+        
+        // FIXED: Look for tasks in the correct structure (result.result.tasks)
+        // ECHTE SecurityAnalysisOrchestrator Struktur!
+        if (latestAnalysis.result && latestAnalysis.result.tasks) {
+          tasks = latestAnalysis.result.tasks;
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          tasks,
+          count: tasks.length,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} tasks:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} tasks`,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/projects/:projectId/analysis/:category/documentation
+   */
+  async getCategoryDocumentation(req, res, category) {
+    try {
+      const { projectId } = req.params;
+      
+      this.logger.info(`📄 Getting ${category} documentation for project: ${projectId}`);
+      
+      // Get all analyses for the project and filter by category
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // Defensive check: ensure analyses is an array
+      if (!analyses || !Array.isArray(analyses)) {
+        this.logger.warn(`No analyses found for project: ${projectId}, returning empty documentation`);
+        return res.json({
+          success: true,
+          data: {
+            category,
+            documentation: [],
+            count: 0,
+            projectId,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+      
+      // Filter for the specific category and extract documentation
+      const targetAnalysisType = this.mapCategoryToAnalysisType(category);
+      const categoryAnalyses = analyses.filter(a => a.analysisType === targetAnalysisType && a.status === 'completed' && a.result);
+      
+      let documentation = [];
+      if (categoryAnalyses.length > 0) {
+        // Get the latest analysis for this category
+        const latestAnalysis = categoryAnalyses.sort((a, b) => 
+          new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt)
+        )[0];
+        
+        // FIXED: Look for documentation in the correct structure (result.result.documentation)
+        if (latestAnalysis.result && latestAnalysis.result.documentation) {
+          documentation = latestAnalysis.result.documentation;
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          category,
+          documentation,
+          count: documentation.length,
+          projectId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      this.logger.error(`❌ Failed to get ${category} documentation:`, error);
+      res.status(500).json({
+        success: false,
+        error: `Failed to get ${category} documentation`,
+        message: error.message
+      });
+    }
+  }
+
+  async getSecurityIssues(req, res) {
+    try {
+      const { projectId } = req.params;
+      logger.warn(`⚠️ Getting security issues for project: ${projectId}`);
+      
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // ADD DETAILED LOGGING
+      logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
+      
+      if (!analyses || analyses.length === 0) {
+        logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
+        return res.json({ issues: [] });
+      }
+
+      const latestAnalysis = analyses[0];
+      logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
+      
+      let issues = [];
+      
+      // Try to extract issues from the result structure
+      if (latestAnalysis.result && latestAnalysis.result.issues) {
+        issues = latestAnalysis.result.issues;
+        logger.info(`✅ [AnalysisController] Found ${issues.length} issues in result.issues`);
+      } else if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.issues) {
+        issues = latestAnalysis.result.result.issues;
+        logger.info(`✅ [AnalysisController] Found ${issues.length} issues in result.result.issues`);
+      } else {
+        logger.warn(`⚠️ [AnalysisController] No issues found in analysis result structure`);
+      }
+      
+      logger.info(`📤 [AnalysisController] Sending ${issues.length} issues to frontend`);
+      res.json({ issues });
+    } catch (error) {
+      logger.error(`❌ Error getting security issues:`, error);
+      res.status(500).json({ error: 'Failed to get security issues' });
+    }
+  }
+
+  async getSecurityRecommendations(req, res) {
+    try {
+      const { projectId } = req.params;
+      logger.info(`💡 Getting security recommendations for project: ${projectId}`);
+      
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // ADD DETAILED LOGGING
+      logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
+      
+      if (!analyses || analyses.length === 0) {
+        logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
+        return res.json({ recommendations: [] });
+      }
+
+      const latestAnalysis = analyses[0];
+      logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
+      
+      let recommendations = [];
+      
+      // Try to extract recommendations from the result structure
+      if (latestAnalysis.result && latestAnalysis.result.recommendations) {
+        recommendations = latestAnalysis.result.recommendations;
+        logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations in result.recommendations`);
+      } else if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.recommendations) {
+        recommendations = latestAnalysis.result.result.recommendations;
+        logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations in result.result.recommendations`);
+      } else {
+        logger.warn(`⚠️ [AnalysisController] No recommendations found in analysis result structure`);
+      }
+      
+      logger.info(`📤 [AnalysisController] Sending ${recommendations.length} recommendations to frontend`);
+      res.json({ recommendations });
+    } catch (error) {
+      logger.error(`❌ Error getting security recommendations:`, error);
+      res.status(500).json({ error: 'Failed to get security recommendations' });
+    }
+  }
+
+  async getSecurityMetrics(req, res) {
+    try {
+      const { projectId } = req.params;
+      this.logger.info(`📊 Getting security metrics for project: ${projectId}`);
+      
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // ADD DETAILED LOGGING
+      this.logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
+      
+      if (!analyses || analyses.length === 0) {
+        this.logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
+        return res.json({ metrics: {} });
+      }
+
+      const latestAnalysis = analyses[0];
+      this.logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
+      
+      let metrics = {};
+      
+      // Try to extract metrics from the result structure
+      if (latestAnalysis.result && latestAnalysis.result.metrics) {
+        metrics = latestAnalysis.result.metrics;
+        this.logger.info(`✅ [AnalysisController] Found metrics in result.metrics`);
+      } else if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.metrics) {
+        metrics = latestAnalysis.result.result.metrics;
+        this.logger.info(`✅ [AnalysisController] Found metrics in result.result.metrics`);
+      } else {
+        this.logger.warn(`⚠️ [AnalysisController] No metrics found in analysis result structure`);
+      }
+      
+      this.logger.info(`📤 [AnalysisController] Sending metrics to frontend:`, JSON.stringify(metrics, null, 2));
+      res.json({ metrics });
+    } catch (error) {
+      this.logger.error(`❌ Error getting security metrics:`, error);
+      res.status(500).json({ error: 'Failed to get security metrics' });
+    }
+  }
+
+  async getSecuritySummary(req, res) {
+    try {
+      const { projectId } = req.params;
+      this.logger.info(`📋 Getting security summary for project: ${projectId}`);
+      
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // ADD DETAILED LOGGING
+      this.logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
+      
+      if (!analyses || analyses.length === 0) {
+        this.logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
+        return res.json({ summary: {} });
+      }
+
+      const latestAnalysis = analyses[0];
+      this.logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
+      
+      let summary = {};
+      
+      // Try to extract summary from the result structure
+      if (latestAnalysis.result && latestAnalysis.result.summary) {
+        summary = latestAnalysis.result.summary;
+        this.logger.info(`✅ [AnalysisController] Found summary in result.summary`);
+      } else if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.summary) {
+        summary = latestAnalysis.result.result.summary;
+        this.logger.info(`✅ [AnalysisController] Found summary in result.result.summary`);
+      } else {
+        this.logger.warn(`⚠️ [AnalysisController] No summary found in analysis result structure`);
+      }
+      
+      this.logger.info(`📤 [AnalysisController] Sending summary to frontend:`, JSON.stringify(summary, null, 2));
+      res.json({ summary });
+    } catch (error) {
+      this.logger.error(`❌ Error getting security summary:`, error);
+      res.status(500).json({ error: 'Failed to get security summary' });
+    }
+  }
+
+  async getSecurityResults(req, res) {
+    try {
+      const { projectId } = req.params;
+      this.logger.info(`📄 Getting security results for project: ${projectId}`);
+      
+      const analyses = await this.getAnalysesFromDatabase(projectId);
+      
+      // ADD DETAILED LOGGING
+      this.logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
+      
+      if (!analyses || analyses.length === 0) {
+        this.logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
+        return res.json({ results: {} });
+      }
+
+      const latestAnalysis = analyses[0];
+      this.logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
+      
+      this.logger.info(`📤 [AnalysisController] Sending full results to frontend`);
+      res.json({ results: latestAnalysis.result });
+    } catch (error) {
+      this.logger.error(`❌ Error getting security results:`, error);
+      res.status(500).json({ error: 'Failed to get security results' });
     }
   }
 }

@@ -5,13 +5,15 @@
  * Purpose: Test the TechStackAnalysisOrchestrator functionality
  */
 
-const TechStackAnalysisOrchestrator = require('@domain/steps/categories/analysis/TechStackAnalysisOrchestrator');
+const TechStackAnalysisOrchestratorModule = require('@domain/steps/categories/analysis/TechStackAnalysisOrchestrator');
 
 describe('TechStackAnalysisOrchestrator', () => {
   let orchestrator;
 
   beforeEach(() => {
-    orchestrator = new TechStackAnalysisOrchestrator();
+    // Create instance using the module's exported class
+    const TechStackAnalysisOrchestrator = require('@domain/steps/StepBuilder').StepBuilder;
+    orchestrator = new TechStackAnalysisOrchestrator(TechStackAnalysisOrchestratorModule.config);
   });
 
   describe('Configuration', () => {
@@ -62,45 +64,30 @@ describe('TechStackAnalysisOrchestrator', () => {
   describe('Score Calculation', () => {
     it('should calculate tech stack maturity score correctly', () => {
       const results = {
-        summary: {
-          frameworkIssues: [{ severity: 'medium' }],
-          libraryIssues: [{ severity: 'high' }],
-          toolIssues: [],
-          versionIssues: [],
-          bestPractices: [{ type: 'good' }]
-        }
+        issues: [
+          { severity: 'medium' },
+          { severity: 'high' }
+        ]
       };
 
       const score = orchestrator.calculateTechStackMaturityScore(results);
       
-      // 100 - 3 (framework) - 8 (library) + 2 (best practices) = 91
-      expect(score).toBe(91);
+      // 100 - 4 (medium) - 7 (high) = 89
+      expect(score).toBe(89);
     });
 
     it('should return minimum score of 0', () => {
       const results = {
-        summary: {
-          frameworkIssues: Array(15).fill({ severity: 'high' }),
-          libraryIssues: Array(10).fill({ severity: 'critical' }),
-          toolIssues: Array(8).fill({ severity: 'high' }),
-          versionIssues: Array(5).fill({ severity: 'high' }),
-          bestPractices: []
-        }
+        issues: Array(15).fill({ severity: 'high' })
       };
 
       const score = orchestrator.calculateTechStackMaturityScore(results);
       expect(score).toBe(0);
     });
 
-    it('should return maximum score of 100', () => {
+        it('should return maximum score of 100', () => {
       const results = {
-        summary: {
-          frameworkIssues: [],
-          libraryIssues: [],
-          toolIssues: [],
-          versionIssues: [],
-          bestPractices: []
-        }
+        issues: []
       };
 
       const score = orchestrator.calculateTechStackMaturityScore(results);

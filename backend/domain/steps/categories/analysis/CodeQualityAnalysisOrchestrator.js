@@ -79,18 +79,12 @@ class CodeQualityAnalysisOrchestrator extends StepBuilder {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0,
-          lintingIssues: [],
-          complexityIssues: [],
-          coverageIssues: [],
-          documentationIssues: [],
-          bestPractices: [],
-          codeStyleIssues: []
+          failedSteps: 0
         },
         details: {},
-        recommendations: [],
-        // Standardized outputs
+        // Standardized outputs only
         issues: [],
+        recommendations: [],
         tasks: [],
         documentation: []
       };
@@ -109,27 +103,7 @@ class CodeQualityAnalysisOrchestrator extends StepBuilder {
           results.details[stepName] = stepResult;
           results.summary.completedSteps++;
           
-          // Aggregate results
-          if (stepResult.lintingIssues) {
-            results.summary.lintingIssues.push(...stepResult.lintingIssues);
-          }
-          if (stepResult.complexityIssues) {
-            results.summary.complexityIssues.push(...stepResult.complexityIssues);
-          }
-          if (stepResult.coverageIssues) {
-            results.summary.coverageIssues.push(...stepResult.coverageIssues);
-          }
-          if (stepResult.documentationIssues) {
-            results.summary.documentationIssues.push(...stepResult.documentationIssues);
-          }
-          if (stepResult.bestPractices) {
-            results.summary.bestPractices.push(...stepResult.bestPractices);
-          }
-          if (stepResult.codeStyleIssues) {
-            results.summary.codeStyleIssues.push(...stepResult.codeStyleIssues);
-          }
-          
-          // Aggregate standardized outputs
+          // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
           }
@@ -141,6 +115,22 @@ class CodeQualityAnalysisOrchestrator extends StepBuilder {
           }
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
+          }
+          
+          // Also check stepResult.result for nested data
+          if (stepResult.result) {
+            if (stepResult.result.issues) {
+              results.issues.push(...stepResult.result.issues);
+            }
+            if (stepResult.result.recommendations) {
+              results.recommendations.push(...stepResult.result.recommendations);
+            }
+            if (stepResult.result.tasks) {
+              results.tasks.push(...stepResult.result.tasks);
+            }
+            if (stepResult.result.documentation) {
+              results.documentation.push(...stepResult.result.documentation);
+            }
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -196,24 +186,25 @@ class CodeQualityAnalysisOrchestrator extends StepBuilder {
    * Calculate overall code quality score
    */
   calculateCodeQualityScore(results) {
-    const { lintingIssues, complexityIssues, coverageIssues, documentationIssues, bestPractices } = results.summary;
+    const { issues } = results;
     
     let score = 100;
     
-    // Deduct points for linting issues
-    score -= lintingIssues.length * 5;
-    
-    // Deduct points for complexity issues
-    score -= complexityIssues.length * 8;
-    
-    // Deduct points for coverage issues
-    score -= coverageIssues.length * 10;
-    
-    // Deduct points for documentation issues
-    score -= documentationIssues.length * 3;
-    
-    // Add points for best practices
-    score += bestPractices.length * 2;
+    // Deduct points for code quality issues
+    if (issues && issues.length > 0) {
+      const severityWeights = {
+        critical: 10,
+        high: 7,
+        medium: 4,
+        low: 1
+      };
+      
+      const totalWeight = issues.reduce((sum, issue) => {
+        return sum + (severityWeights[issue.severity] || 1);
+      }, 0);
+      
+      score -= totalWeight;
+    }
     
     return Math.max(0, Math.min(100, score));
   }

@@ -450,7 +450,7 @@ const useIDEStore = create(
                   ...state.categoryAnalysisData[targetWorkspacePath],
                   [category]: {
                     ...state.categoryAnalysisData[targetWorkspacePath]?.[category],
-                    [endpoint]: result.success ? result.data : null,
+                    [endpoint]: result,
                     lastUpdate: new Date().toISOString()
                   }
                 }
@@ -479,8 +479,9 @@ const useIDEStore = create(
             
             const categoryData = {};
             results.forEach((result, index) => {
-              if (result.status === 'fulfilled' && result.value.result?.success) {
-                categoryData[result.value.endpoint] = result.value.result.data;
+              if (result.status === 'fulfilled' && result.value.result) {
+                // Backend returns direct data structure: { issues: [...] }, { recommendations: [...] }, etc.
+                categoryData[result.value.endpoint] = result.value.result;
               } else {
                 categoryData[result.value.endpoint] = null;
               }
@@ -503,10 +504,12 @@ const useIDEStore = create(
             return;
           }
           
-          // If no specific category/endpoint, load all categories (full load)
-          logger.info('Loading all category analysis data for workspace:', targetWorkspacePath);
+          // If no specific category/endpoint, load only security by default (lazy loading)
+          logger.info('Loading only security category by default for workspace:', targetWorkspacePath);
           
-          const allPromises = validCategories.flatMap(category => 
+          // Only load security category initially, others will be loaded on demand
+          const defaultCategory = 'security';
+          const allPromises = [defaultCategory].flatMap(category => 
             validEndpoints.map(endpoint => 
               apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
                 .then(result => ({ category, endpoint, result }))
@@ -529,9 +532,10 @@ const useIDEStore = create(
           });
           
           allResults.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value.result?.success) {
+            if (result.status === 'fulfilled' && result.value.result) {
               const { category, endpoint } = result.value;
-              allCategoryData[category][endpoint] = result.value.result.data;
+              // Backend returns direct data structure: { issues: [...] }, { recommendations: [...] }, etc.
+              allCategoryData[category][endpoint] = result.value.result;
             }
           });
           

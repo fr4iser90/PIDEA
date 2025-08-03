@@ -66,10 +66,35 @@ const CategoryAnalysisSection = ({
     if (!analysis.data) return null;
     
     if (dataKey === 'summary') {
-      return analysis.data.summary || analysis.data;
+      // For summary tab, return all data so CategoryOverview can access issues and recommendations
+      // Backend returns: { success: true, data: { issues: [...], recommendations: [...], summary: {...} } }
+      return {
+        summary: analysis.data.summary?.data?.summary || analysis.data.summary?.summary || analysis.data.summary || analysis.data,
+        issues: analysis.data.issues?.data?.issues || analysis.data.issues?.issues || analysis.data.issues,
+        recommendations: analysis.data.recommendations?.data?.recommendations || analysis.data.recommendations?.recommendations || analysis.data.recommendations,
+        tasks: analysis.data.tasks?.data?.tasks || analysis.data.tasks?.tasks || analysis.data.tasks,
+        documentation: analysis.data.documentation?.data?.documentation || analysis.data.documentation?.documentation || analysis.data.documentation,
+        metrics: analysis.data.metrics?.data?.metrics || analysis.data.metrics?.metrics || analysis.data.metrics,
+        results: analysis.data.results?.data?.results || analysis.data.results?.results || analysis.data.results
+      };
     }
     
-    return analysis.data[dataKey] || null;
+    // For other tabs, extract the data from the endpoint response structure
+    const endpointData = analysis.data[dataKey];
+    if (endpointData && typeof endpointData === 'object') {
+      // Backend returns: { success: true, data: { issues: [...] } }
+      if (endpointData.data && endpointData.data[dataKey]) {
+        return endpointData.data[dataKey];
+      }
+      // If the endpoint data has the key (e.g., { issues: [...] }), extract it
+      if (endpointData[dataKey]) {
+        return endpointData[dataKey];
+      }
+      // Otherwise return the data as is
+      return endpointData;
+    }
+    
+    return endpointData || null;
   };
 
   const getActiveTabData = () => {

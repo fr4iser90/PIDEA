@@ -170,16 +170,11 @@ const useAuthStore = create(
           return true;
         }
         
-        // CRITICAL FIX: Always validate on app start, even if we think we're authenticated
-        // This prevents the frontend from trusting localStorage when cookies are expired
+        // ALWAYS validate with backend - never trust localStorage
         const now = new Date();
         const shouldValidate = !lastAuthCheck || (now - lastAuthCheck) >= authCheckInterval;
         
-        if (!shouldValidate && isAuthenticated) {
-          logger.debug('🔍 [AuthStore] Skipping validation, already authenticated and recent');
-          return true;
-        }
-        
+        // Remove the localStorage trust - always validate
         logger.debug('🔍 [AuthStore] Validating authentication with backend...');
 
         try {
@@ -206,16 +201,22 @@ const useAuthStore = create(
           return true;
         } catch (error) {
           logger.error('❌ [AuthStore] Authentication validation error:', error);
-          set({ lastAuthCheck: now, isValidating: false });
+          set({ 
+            isAuthenticated: false, 
+            user: null,
+            isValidating: false,
+            redirectToLogin: true,
+            error: error.message
+          });
           
-          // Handle different types of auth failures
-          if (error.message.includes('401') || error.message.includes('SESSION_EXPIRED')) {
-            await get().handleAuthFailure('Session expired');
-          } else if (error.message.includes('429') || error.message.includes('BRUTE_FORCE')) {
-            await get().handleAuthFailure('Too many failed attempts. Please try again later.');
-          } else {
-            await get().handleAuthFailure('Authentication check failed');
-          }
+          // Show notification
+          const notificationStore = useNotificationStore.getState();
+          notificationStore.showNotification(
+            'Session expired. Please log in again.',
+            'Session Expired',
+            false
+          );
+
           return false;
         }
       },

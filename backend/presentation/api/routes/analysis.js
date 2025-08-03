@@ -103,6 +103,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'security'));
     app.get('/api/projects/:projectId/analysis/security/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'security'));
+    app.get('/api/projects/:projectId/analysis/security/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'security'));
+    app.get('/api/projects/:projectId/analysis/security/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'security'));
     app.get('/api/projects/:projectId/analysis/security/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'security'));
     app.get('/api/projects/:projectId/analysis/security/summary', (req, res) => 
@@ -115,6 +119,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'performance'));
     app.get('/api/projects/:projectId/analysis/performance/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'performance'));
+    app.get('/api/projects/:projectId/analysis/performance/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'performance'));
+    app.get('/api/projects/:projectId/analysis/performance/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'performance'));
     app.get('/api/projects/:projectId/analysis/performance/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'performance'));
     app.get('/api/projects/:projectId/analysis/performance/summary', (req, res) => 
@@ -127,6 +135,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'architecture'));
     app.get('/api/projects/:projectId/analysis/architecture/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'architecture'));
+    app.get('/api/projects/:projectId/analysis/architecture/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'architecture'));
+    app.get('/api/projects/:projectId/analysis/architecture/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'architecture'));
     app.get('/api/projects/:projectId/analysis/architecture/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'architecture'));
     app.get('/api/projects/:projectId/analysis/architecture/summary', (req, res) => 
@@ -139,6 +151,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'code-quality'));
     app.get('/api/projects/:projectId/analysis/code-quality/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'code-quality'));
+    app.get('/api/projects/:projectId/analysis/code-quality/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'code-quality'));
+    app.get('/api/projects/:projectId/analysis/code-quality/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'code-quality'));
     app.get('/api/projects/:projectId/analysis/code-quality/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'code-quality'));
     app.get('/api/projects/:projectId/analysis/code-quality/summary', (req, res) => 
@@ -151,6 +167,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'tech-stack'));
     app.get('/api/projects/:projectId/analysis/tech-stack/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'tech-stack'));
+    app.get('/api/projects/:projectId/analysis/tech-stack/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'tech-stack'));
+    app.get('/api/projects/:projectId/analysis/tech-stack/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'tech-stack'));
     app.get('/api/projects/:projectId/analysis/tech-stack/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'tech-stack'));
     app.get('/api/projects/:projectId/analysis/tech-stack/summary', (req, res) => 
@@ -163,6 +183,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'dependencies'));
     app.get('/api/projects/:projectId/analysis/dependencies/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'dependencies'));
+    app.get('/api/projects/:projectId/analysis/dependencies/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'dependencies'));
+    app.get('/api/projects/:projectId/analysis/dependencies/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'dependencies'));
     app.get('/api/projects/:projectId/analysis/dependencies/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'dependencies'));
     app.get('/api/projects/:projectId/analysis/dependencies/summary', (req, res) => 
@@ -175,6 +199,10 @@ class AnalysisRoutes {
       this.analysisController.getCategoryRecommendations(req, res, 'manifest'));
     app.get('/api/projects/:projectId/analysis/manifest/issues', (req, res) => 
       this.analysisController.getCategoryIssues(req, res, 'manifest'));
+    app.get('/api/projects/:projectId/analysis/manifest/tasks', (req, res) => 
+      this.analysisController.getCategoryTasks(req, res, 'manifest'));
+    app.get('/api/projects/:projectId/analysis/manifest/documentation', (req, res) => 
+      this.analysisController.getCategoryDocumentation(req, res, 'manifest'));
     app.get('/api/projects/:projectId/analysis/manifest/metrics', (req, res) => 
       this.analysisController.getCategoryMetrics(req, res, 'manifest'));
     app.get('/api/projects/:projectId/analysis/manifest/summary', (req, res) => 

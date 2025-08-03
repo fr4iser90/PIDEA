@@ -32,7 +32,7 @@ module.exports.config = config;
 
 class RepositoryTypeAnalysisStep {
   constructor() {
-    this.name = config.name;
+    repository_type_analysis_step = config.name;
     this.type = config.type;
     this.description = config.description;
     this.category = config.category;
@@ -50,7 +50,7 @@ class RepositoryTypeAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`🔍 Executing ${this.name}...`);
+      logger.info(`🔍 Executing ${repository_type_analysis_step}...`);
       
       // Validate context
       this.validateContext(context);
@@ -90,26 +90,26 @@ class RepositoryTypeAnalysisStep {
         result.recommendations = this.generateRecommendations(result);
       }
 
-      logger.info(`✅ ${this.name} completed successfully in ${result.detectionTime}ms`);
+      logger.info(`✅ ${repository_type_analysis_step} completed successfully in ${result.detectionTime}ms`);
       logger.info(`📊 Repository type: ${repoType} (confidence: ${confidence}%)`);
 
       return {
         success: true,
         result: result,
         metadata: {
-          stepName: this.name,
+          stepName: "RepositoryTypeAnalysisStep",
           duration: result.detectionTime,
           cacheTTL: this.settings.cacheTTL
         }
       };
 
     } catch (error) {
-      logger.error(`❌ ${this.name} failed:`, error.message);
+      logger.error(`❌ ${repository_type_analysis_step} failed:`, error.message);
       return {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name
+          stepName: "RepositoryTypeAnalysisStep"
         }
       };
     }

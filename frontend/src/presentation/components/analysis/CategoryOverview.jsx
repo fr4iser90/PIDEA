@@ -2,31 +2,78 @@ import React from 'react';
 import '@/css/components/analysis/category-overview.css';
 
 const CategoryOverview = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
+  // DEBUG: Log the data being passed
+  console.log('🔍 [CategoryOverview] Received data:', data);
+  console.log('🔍 [CategoryOverview] Category:', category);
+  console.log('🔍 [CategoryOverview] Data type:', typeof data);
+  console.log('🔍 [CategoryOverview] Data keys:', data ? Object.keys(data) : 'null');
+
   if (loading) {
     return (
       <div className="category-overview loading">
         <div className="loading-spinner"></div>
-        <p>Loading overview...</p>
+        <p>Loading {categoryName.toLowerCase()} analysis...</p>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="category-overview no-data">
-        <div className="no-data-icon">📋</div>
-        <h4>No Overview Data</h4>
+      <div className="category-overview empty">
         <p>No {categoryName.toLowerCase()} analysis data available.</p>
         <p>Run a {categoryName.toLowerCase()} analysis to see the overview.</p>
       </div>
     );
   }
 
-  // Extract summary information
+  // Extract summary information - handle both summary object and direct data
   const summary = data.summary || data;
   const score = summary.score || summary.overallScore || 0;
-  const totalIssues = summary.totalIssues || summary.issuesCount || 0;
-  const totalRecommendations = summary.totalRecommendations || summary.recommendationsCount || 0;
+  
+  // Handle different data structures for issues and recommendations
+  let totalIssues = 0;
+  let totalRecommendations = 0;
+  
+  // Check if data has issues array directly
+  if (data.issues && Array.isArray(data.issues)) {
+    // Data comes as arrays from backend
+    totalIssues = data.issues.length;
+  } else if (data.issues && data.issues.data && data.issues.data.issues && Array.isArray(data.issues.data.issues)) {
+    // Data comes as { success: true, data: { issues: [...] } } from backend
+    totalIssues = data.issues.data.issues.length;
+  } else if (data.issues && data.issues.issues && Array.isArray(data.issues.issues)) {
+    // Data comes as { issues: [...] } from backend
+    totalIssues = data.issues.issues.length;
+  } else if (summary.totalIssues !== undefined) {
+    // Data comes as summary fields
+    totalIssues = summary.totalIssues;
+  } else if (summary.issuesCount !== undefined) {
+    totalIssues = summary.issuesCount;
+  } else if (summary.issues && Array.isArray(summary.issues)) {
+    // Issues might be in summary
+    totalIssues = summary.issues.length;
+  }
+  
+  // Check if data has recommendations array directly
+  if (data.recommendations && Array.isArray(data.recommendations)) {
+    // Data comes as arrays from backend
+    totalRecommendations = data.recommendations.length;
+  } else if (data.recommendations && data.recommendations.data && data.recommendations.data.recommendations && Array.isArray(data.recommendations.data.recommendations)) {
+    // Data comes as { success: true, data: { recommendations: [...] } } from backend
+    totalRecommendations = data.recommendations.data.recommendations.length;
+  } else if (data.recommendations && data.recommendations.recommendations && Array.isArray(data.recommendations.recommendations)) {
+    // Data comes as { recommendations: [...] } from backend
+    totalRecommendations = data.recommendations.recommendations.length;
+  } else if (summary.totalRecommendations !== undefined) {
+    // Data comes as summary fields
+    totalRecommendations = summary.totalRecommendations;
+  } else if (summary.recommendationsCount !== undefined) {
+    totalRecommendations = summary.recommendationsCount;
+  } else if (summary.recommendations && Array.isArray(summary.recommendations)) {
+    // Recommendations might be in summary
+    totalRecommendations = summary.recommendations.length;
+  }
+  
   const executionTime = summary.executionTime || 0;
   const timestamp = summary.timestamp || summary.createdAt;
 
@@ -35,45 +82,45 @@ const CategoryOverview = ({ data, category, categoryName, loading, onAnalysisSel
     switch (category) {
       case 'security':
         return {
-          vulnerabilities: summary.vulnerabilities || summary.criticalIssues || 0,
+          vulnerabilities: summary.vulnerabilities || summary.criticalIssues || totalIssues,
           securityScore: summary.securityScore || score,
           complianceStatus: summary.complianceStatus || 'Unknown'
         };
       case 'performance':
         return {
           performanceScore: summary.performanceScore || score,
-          bottlenecks: summary.bottlenecks || summary.performanceIssues || 0,
-          optimizationOpportunities: summary.optimizationOpportunities || 0
+          bottlenecks: summary.bottlenecks || summary.performanceIssues || totalIssues,
+          optimizationOpportunities: summary.optimizationOpportunities || totalRecommendations
         };
       case 'architecture':
         return {
           architectureScore: summary.architectureScore || score,
           designPatterns: summary.designPatterns || summary.patterns || 0,
-          architecturalIssues: summary.architecturalIssues || 0
+          architecturalIssues: summary.architecturalIssues || totalIssues
         };
       case 'codeQuality':
         return {
           codeQualityScore: summary.codeQualityScore || score,
-          codeSmells: summary.codeSmells || 0,
+          codeSmells: summary.codeSmells || totalIssues,
           technicalDebt: summary.technicalDebt || summary.debt || 0
         };
       case 'dependencies':
         return {
           dependencyScore: summary.dependencyScore || score,
-          outdatedDependencies: summary.outdatedDependencies || 0,
+          outdatedDependencies: summary.outdatedDependencies || totalIssues,
           securityVulnerabilities: summary.securityVulnerabilities || 0
         };
       case 'manifest':
         return {
           manifestScore: summary.manifestScore || score,
-          configurationIssues: summary.configurationIssues || 0,
+          configurationIssues: summary.configurationIssues || totalIssues,
           missingFields: summary.missingFields || 0
         };
       case 'techStack':
         return {
           techStackScore: summary.techStackScore || score,
           technologies: summary.technologies || summary.techCount || 0,
-          recommendations: summary.techRecommendations || 0
+          recommendations: summary.techRecommendations || totalRecommendations
         };
       default:
         return {};

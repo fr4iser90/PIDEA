@@ -36,7 +36,7 @@ const config = {
 
 class PatternAnalysisStep {
   constructor() {
-    this.name = 'PatternAnalysisStep';
+    PatternAnalysisStep = 'PatternAnalysisStep';
     this.description = 'Analyzes code patterns and design patterns';
     this.category = 'analysis';
     this.subcategory = 'architecture';
@@ -52,7 +52,7 @@ class PatternAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${this.name}...`);
+      logger.info(`⚡ Executing ${PatternAnalysisStep}...`);
       
       // Validate context
       this.validateContext(context);
@@ -97,7 +97,7 @@ class PatternAnalysisStep {
         success: true,
         result: cleanResult,
         metadata: {
-          stepName: this.name,
+          stepName: "PatternAnalysisStep",
           projectPath,
           timestamp: new Date()
         }
@@ -110,7 +110,7 @@ class PatternAnalysisStep {
         success: false,
         error: error.message,
         metadata: {
-          stepName: this.name,
+          stepName: "PatternAnalysisStep",
           projectPath: context.projectPath,
           timestamp: new Date()
         }
@@ -584,7 +584,7 @@ class PatternAnalysisStep {
     return {
       ...result,
       timestamp: new Date().toISOString(),
-      step: this.name,
+      step: PatternAnalysisStep,
       category: 'architecture',
       subcategory: 'pattern'
     };
@@ -647,7 +647,7 @@ class PatternAnalysisStep {
         severity: 'medium',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         location: 'pattern-analysis',
         suggestion: 'Improve pattern implementation and follow design pattern best practices'
       });
@@ -662,7 +662,7 @@ class PatternAnalysisStep {
         severity: 'medium',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         location: 'pattern-analysis',
         suggestion: 'Implement more design patterns to improve code organization and maintainability'
       });
@@ -677,7 +677,7 @@ class PatternAnalysisStep {
         severity: 'high',
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         location: 'pattern-analysis',
         suggestion: 'Refactor code to remove anti-patterns and improve code quality'
       });
@@ -695,7 +695,7 @@ class PatternAnalysisStep {
         severity: 'high',
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         location: 'pattern-analysis',
         suggestion: 'Implement architectural patterns (MVC, DDD, CQRS, etc.) for better organization'
       });
@@ -720,7 +720,7 @@ class PatternAnalysisStep {
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -734,7 +734,7 @@ class PatternAnalysisStep {
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -748,7 +748,7 @@ class PatternAnalysisStep {
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -762,7 +762,7 @@ class PatternAnalysisStep {
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
         category: this.category,
-        source: this.name,
+        source: PatternAnalysisStep,
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -782,16 +782,16 @@ class PatternAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${this.name.toLowerCase()}-improvement-${Date.now()}`,
-      title: `Improve ${this.name} Results`,
-      description: `Address issues and implement recommendations from ${this.name} analysis`,
+      id: `${PatternAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      title: `Improve ${PatternAnalysisStep} Results`,
+      description: `Address issues and implement recommendations from ${PatternAnalysisStep} analysis`,
       type: 'improvement',
       category: this.category,
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: this.name,
+        source: PatternAnalysisStep,
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
@@ -806,8 +806,8 @@ class PatternAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${this.name.toLowerCase()}-critical-${Date.now()}`,
-        title: `Fix Critical Issues from ${this.name}`,
+        id: `${PatternAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        title: `Fix Critical Issues from ${PatternAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -816,7 +816,7 @@ class PatternAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: PatternAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -829,8 +829,8 @@ class PatternAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${this.name.toLowerCase()}-high-${Date.now()}`,
-        title: `Fix High Priority Issues from ${this.name}`,
+        id: `${PatternAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        title: `Fix High Priority Issues from ${PatternAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
         category: this.category,
@@ -839,7 +839,7 @@ class PatternAnalysisStep {
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: this.name,
+          source: PatternAnalysisStep,
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -895,7 +895,7 @@ class PatternAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${this.name.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${PatternAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });
@@ -923,7 +923,7 @@ class PatternAnalysisStep {
     const content = `# Pattern Analysis Implementation
 
 ## 📋 Analysis Overview
-- **Step Name**: ${this.name}
+- **Step Name**: ${PatternAnalysisStep}
 - **Category**: ${this.category}
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
@@ -951,7 +951,7 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       title: 'Pattern Analysis Implementation',
       path: docPath,
       category: this.category,
-      source: this.name
+      source: PatternAnalysisStep
     };
   }
 
@@ -991,7 +991,7 @@ Based on the analysis, consider implementing additional design patterns to impro
       title: 'Pattern Analysis Report',
       path: docPath,
       category: this.category,
-      source: this.name
+      source: PatternAnalysisStep
     };
   }
 }
