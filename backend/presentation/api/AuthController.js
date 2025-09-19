@@ -83,6 +83,8 @@ class AuthController {
         // Note: No domain specified for development to allow cross-port cookies
       };
 
+      logger.info('🔍 [AuthController] Setting cookies with options:', cookieOptions);
+
       res.cookie('accessToken', result.data.session.accessToken, {
         ...cookieOptions,
         maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
@@ -93,6 +95,7 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
+      logger.info('✅ [AuthController] Cookies set successfully');
       res.json(responseData);
     } catch (error) {
       logger.error('Login error:', error);
@@ -243,9 +246,18 @@ class AuthController {
   // GET /api/auth/validate
   async validateToken(req, res) {
     try {
+      logger.info('🔍 [AuthController] Token validation request received');
+      logger.info('🔍 [AuthController] Cookies received:', req.cookies);
+      
       // Check for cookies directly since this is a public route
       const accessToken = req.cookies?.accessToken;
       const refreshToken = req.cookies?.refreshToken;
+      
+      logger.info('🔍 [AuthController] Extracted tokens:', {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        accessTokenLength: accessToken ? accessToken.length : 0
+      });
       
       if (!accessToken && !refreshToken) {
         logger.info('❌ [AuthController] No authentication tokens found in cookies');

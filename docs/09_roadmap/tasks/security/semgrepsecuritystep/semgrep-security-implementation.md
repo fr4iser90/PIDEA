@@ -3,12 +3,12 @@
 ## 📋 Analysis Overview
 - **Step Name**: SemgrepSecurityStep
 - **Category**: security
-- **Analysis Date**: 2025-08-03T09:30:04.215Z
+- **Analysis Date**: 2025-09-19T12:15:15.775Z
 - **Code Security Score**: 0%
 - **Coverage**: 100%
 
 ## 📊 Analysis Results
-- **Vulnerabilities**: 179
+- **Vulnerabilities**: 182
 - **Best Practices**: 6
 - **Confidence**: 100%
 
@@ -148,6 +148,9 @@
 - **code**: Debug logging detected
 - **code**: Debug logging detected
 - **code**: Debug logging detected
+- **code**: Debug logging detected
+- **code**: Debug logging detected
+- **code**: Debug logging detected
 - **code**: Hardcoded password detected
 - **code**: Hardcoded password detected
 - **code**: Debug logging detected
@@ -194,7 +197,7 @@
 - **code**: Debug logging detected
 
 ## 📝 Recommendations
-- **Address Security Vulnerabilities**: 179 vulnerabilities found
+- **Address Security Vulnerabilities**: 182 vulnerabilities found
 
 ## 🔧 Implementation Tasks
 - **Improve SemgrepSecurityStep Results**: Address issues and implement recommendations from SemgrepSecurityStep analysis (4h)

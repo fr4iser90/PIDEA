@@ -14,7 +14,7 @@ const useAuthStore = create(
       error: null,
       redirectToLogin: false,
       lastAuthCheck: null,
-      authCheckInterval: 5 * 60 * 1000, // 5 minutes (increased to reduce requests)
+      authCheckInterval: 24 * 60 * 60 * 1000, // 24 hours (temporarily disabled auto-validation)
       isValidating: false, // New state for race condition protection
 
       // Actions
@@ -44,15 +44,9 @@ const useAuthStore = create(
           logger.info('🔍 [AuthStore] Login successful, cookies set by backend');
           logger.info('🔍 [AuthStore] User data:', userData.user);
 
-          // CRITICAL FIX: Validate authentication with backend before setting state
-          logger.info('🔍 [AuthStore] Validating authentication with backend...');
-          const validationResult = await get().validateToken();
-          
-          if (!validationResult) {
-            throw new Error('Authentication validation failed after login');
-          }
-
-          logger.info('✅ [AuthStore] Authentication validated successfully with backend');
+          // SIMPLIFIED: Trust the login response and set state immediately
+          // Cookies are set by backend, no need for immediate validation
+          logger.info('✅ [AuthStore] Login successful, setting authentication state');
 
           set({
             user: userData.user,
@@ -175,21 +169,24 @@ const useAuthStore = create(
         const shouldValidate = !lastAuthCheck || (now - lastAuthCheck) >= authCheckInterval;
         
         // Remove the localStorage trust - always validate
-        logger.debug('🔍 [AuthStore] Validating authentication with backend...');
+        logger.info('🔍 [AuthStore] Validating authentication with backend...');
 
         try {
           set({ isValidating: true });
-          logger.debug('🔍 [AuthStore] Validating authentication...');
+          logger.info('🔍 [AuthStore] Making validation request to /api/auth/validate...');
           
           const data = await apiCall('/api/auth/validate');
           
+          logger.info('🔍 [AuthStore] Validation response received:', data);
+          
           // Check if validation was successful
           if (!data.success) {
+            logger.error('❌ [AuthStore] Validation failed:', data.error);
             throw new Error(data.error || 'Authentication validation failed');
           }
           
           // Simple validation - if we get here, we're authenticated
-          logger.debug('✅ [AuthStore] Authentication validation successful');
+          logger.info('✅ [AuthStore] Authentication validation successful');
           set({ 
             user: data.data?.user || data.user || null, 
             isAuthenticated: true, 

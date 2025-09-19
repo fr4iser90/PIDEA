@@ -6,6 +6,36 @@
 import React from 'react';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 
+/**
+ * Get display name for queue item
+ */
+const getDisplayName = (item) => {
+    if (item.workflow?.name) {
+        return item.workflow.name;
+    }
+    
+    if (item.workflow?.type) {
+        const typeLabels = {
+            analysis: '🔍 Analysis',
+            security: '🔒 Security Analysis',
+            performance: '⚡ Performance Analysis',
+            architecture: '🏗️ Architecture Analysis',
+            dependency: '📦 Dependency Analysis',
+            codequality: '✨ Code Quality Analysis',
+            refactoring: '🔧 Refactoring',
+            testing: '🧪 Testing',
+            feature: '✨ Feature',
+            bugfix: '🐛 Bug Fix',
+            documentation: '📚 Documentation',
+            manual: '👤 Manual Task',
+            optimization: '⚡ Optimization'
+        };
+        return typeLabels[item.workflow.type] || `📋 ${item.workflow.type}`;
+    }
+    
+    return '📋 Task';
+};
+
 const QueueItem = ({ item, showActions = true }) => {
     const queueRepository = new QueueRepository();
     const formattedItem = queueRepository.formatQueueItem(item);
@@ -66,7 +96,7 @@ const QueueItem = ({ item, showActions = true }) => {
                 
                 <div className="item-info">
                     <div className="item-name">
-                        {item.workflow?.name || item.workflow?.type || 'Unknown Task'}
+                        {getDisplayName(item)}
                     </div>
                     <div className="item-meta">
                         <span className="item-type">{formattedItem.workflowTypeLabel}</span>

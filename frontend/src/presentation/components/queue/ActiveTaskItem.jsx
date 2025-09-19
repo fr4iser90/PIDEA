@@ -8,6 +8,36 @@ import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WorkflowTypeBadge from './WorkflowTypeBadge.jsx';
 
+/**
+ * Get display name for queue item
+ */
+const getDisplayName = (item) => {
+    if (item.workflow?.name) {
+        return item.workflow.name;
+    }
+    
+    if (item.workflow?.type) {
+        const typeLabels = {
+            analysis: '🔍 Analysis',
+            security: '🔒 Security Analysis',
+            performance: '⚡ Performance Analysis',
+            architecture: '🏗️ Architecture Analysis',
+            dependency: '📦 Dependency Analysis',
+            codequality: '✨ Code Quality Analysis',
+            refactoring: '🔧 Refactoring',
+            testing: '🧪 Testing',
+            feature: '✨ Feature',
+            bugfix: '🐛 Bug Fix',
+            documentation: '📚 Documentation',
+            manual: '👤 Manual Task',
+            optimization: '⚡ Optimization'
+        };
+        return typeLabels[item.workflow.type] || `📋 ${item.workflow.type}`;
+    }
+    
+    return '📋 Task';
+};
+
 const ActiveTaskItem = ({ 
     item, 
     isSelected, 
@@ -194,7 +224,7 @@ const ActiveTaskItem = ({
                 
                 <div className="task-info">
                     <div className="task-name">
-                        {currentStepName ? `🔍${currentStepName}` : (item.workflow?.name || item.workflow?.type || 'Unknown Task')}
+                        {currentStepName ? `🔍${currentStepName}` : getDisplayName(item)}
                     </div>
                     <div className="task-meta">
                         <span className="task-type">{formattedItem.workflowTypeLabel}</span>

@@ -685,11 +685,9 @@ class AnalysisController {
    */
   async getAnalysesFromDatabase(projectId) {
     try {
-      logger.info(`🔍 [AnalysisController] Getting analysis from database for project: ${projectId}`);
+      logger.debug(`🔍 [AnalysisController] Getting analysis from database for project: ${projectId}`);
       
       const result = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
-      
-      logger.info(`🔍 [AnalysisController] Service returned:`, JSON.stringify(result, null, 2));
       
       if (!result) {
         logger.warn(`⚠️ [AnalysisController] Service returned null/undefined`);
@@ -706,12 +704,7 @@ class AnalysisController {
         return [];
       }
       
-      logger.info(`✅ [AnalysisController] Returning ${result.analysis.length} analyses`);
-      
-      // Log all available analysis types
-      const analysisTypes = result.analysis.map(a => a.analysisType);
-      const uniqueTypes = [...new Set(analysisTypes)];
-      logger.info(`🔍 [AnalysisController] Available analysis types in database:`, uniqueTypes);
+      logger.debug(`✅ [AnalysisController] Returning ${result.analysis.length} analyses`);
       
       return result.analysis;
     } catch (error) {
@@ -1256,16 +1249,12 @@ class AnalysisController {
       
       const analyses = await this.getAnalysesFromDatabase(projectId);
       
-      // ADD DETAILED LOGGING
-      logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
-      
       if (!analyses || analyses.length === 0) {
         logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
         return res.json({ issues: [] });
       }
 
       const latestAnalysis = analyses[0];
-      logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
       
       let issues = [];
       
@@ -1412,16 +1401,12 @@ class AnalysisController {
       
       const analyses = await this.getAnalysesFromDatabase(projectId);
       
-      // ADD DETAILED LOGGING
-      this.logger.info(`🔍 [AnalysisController] Raw analyses from database:`, JSON.stringify(analyses, null, 2));
-      
       if (!analyses || analyses.length === 0) {
         this.logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}`);
         return res.json({ results: {} });
       }
 
       const latestAnalysis = analyses[0];
-      this.logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
       
       this.logger.info(`📤 [AnalysisController] Sending full results to frontend`);
       res.json({ results: latestAnalysis.result });

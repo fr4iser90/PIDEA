@@ -909,6 +909,20 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ### code Vulnerability
+- **File**: ../find-git.js
+- **Message**: Debug logging detected
+- **Severity**: low
+- **Suggestion**: Review and secure this debug-info pattern
+
+
+### code Vulnerability
+- **File**: ../find-workspace.js
+- **Message**: Debug logging detected
+- **Severity**: low
+- **Suggestion**: Review and secure this debug-info pattern
+
+
+### code Vulnerability
 - **File**: ../frontend/src/infrastructure/cache/AnalysisDataCache.js
 - **Message**: Debug logging detected
 - **Severity**: low
@@ -945,6 +959,13 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 ### code Vulnerability
 - **File**: ../frontend/src/presentation/components/analysis/AnalysisTechStack.jsx
+- **Message**: Debug logging detected
+- **Severity**: low
+- **Suggestion**: Review and secure this debug-info pattern
+
+
+### code Vulnerability
+- **File**: ../frontend/src/presentation/components/analysis/CategoryOverview.jsx
 - **Message**: Debug logging detected
 - **Severity**: low
 - **Suggestion**: Review and secure this debug-info pattern
@@ -1259,7 +1280,7 @@ Semgrep security analysis completed with a score of 0% and 100% coverage.
 
 
 ## 📈 Metrics
-- **Vulnerabilities**: 179 found
+- **Vulnerabilities**: 182 found
 - **Best Practices**: 6 identified
 - **Confidence**: 100% analysis confidence
 

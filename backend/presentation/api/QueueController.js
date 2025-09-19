@@ -31,7 +31,7 @@ class QueueController {
             const { projectId } = req.params;
             const { userId } = req.user;
 
-            this.logger.info('Getting queue status', { projectId, userId });
+            this.logger.debug('Getting queue status', { projectId, userId });
 
             const queueStatus = await this.queueMonitoringService.getProjectQueueStatus(projectId, userId);
             
@@ -352,7 +352,7 @@ class QueueController {
                 search 
             } = req.query;
 
-            this.logger.info('Getting queue history', { 
+            this.logger.debug('Getting queue history', { 
                 projectId, 
                 userId, 
                 page, 
@@ -593,7 +593,7 @@ class QueueController {
             const userId = req.user?.id || 'me';
             const { type, status, startDate, endDate } = req.query;
 
-            this.logger.info('Getting history statistics', { 
+            this.logger.debug('Getting history statistics', { 
                 projectId, 
                 userId,
                 filters: { type, status, startDate, endDate }
