@@ -287,20 +287,23 @@ class ConnectionPool {
    */
   async cleanup() {
     const now = Date.now();
-    const staleThreshold = now - (this.cleanupInterval * 2); // 4 minutes - more aggressive
+    const staleThreshold = now - (this.cleanupInterval * 4); // 8 minutes - less aggressive
     
     logger.debug(`Cleaning up stale connections, threshold: ${staleThreshold}`);
     
     const stalePorts = [];
     for (const [port, connection] of this.connections) {
-      // More aggressive cleanup conditions
+      // Less aggressive cleanup conditions
       const isStale = connection.lastUsed < staleThreshold;
-      const isUnhealthy = connection.health !== 'healthy';
-      const isOld = (now - connection.createdAt) > (this.cleanupInterval * 6); // 12 minutes old
+      const isUnhealthy = connection.health === 'failed'; // Only clean up truly failed connections
+      const isVeryOld = (now - connection.createdAt) > (this.cleanupInterval * 12); // 24 minutes old
+      const isUnstableTooLong = connection.health === 'unstable' && 
+                                (now - connection.lastUsed) > (this.cleanupInterval * 6); // 12 minutes unstable
       
-      // Clean up if any condition is met
-      if (isStale || isUnhealthy || isOld) {
+      // Clean up only if connection is truly stale and very old, or truly failed, or unstable too long
+      if ((isStale && isVeryOld) || isUnhealthy || isUnstableTooLong) {
         stalePorts.push(port);
+        logger.debug(`Marking connection for cleanup - port: ${port}, stale: ${isStale}, old: ${isVeryOld}, unhealthy: ${isUnhealthy}, unstableTooLong: ${isUnstableTooLong}`);
       }
     }
     
@@ -363,12 +366,14 @@ class ConnectionPool {
                   connection.health = 'healthy';
                   logger.debug(`Health check recovered for port ${port}`);
                 } else {
-                  connection.health = 'failed';
-                  logger.warn(`Health check failed for port ${port} - no pages`);
+                  // Don't mark as failed immediately - IDE might be restarting
+                  connection.health = 'unstable';
+                  logger.debug(`Health check unstable for port ${port} - no pages, but browser exists`);
                 }
               } else {
-                connection.health = 'failed';
-                logger.warn(`Health check failed for port ${port} - no contexts`);
+                // Don't mark as failed immediately - IDE might be restarting
+                connection.health = 'unstable';
+                logger.debug(`Health check unstable for port ${port} - no contexts, but browser exists`);
               }
             } catch (contextError) {
               connection.health = 'failed';
