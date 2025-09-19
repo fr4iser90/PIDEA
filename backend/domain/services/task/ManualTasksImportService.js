@@ -45,7 +45,8 @@ class ManualTasksImportService {
             let completedCount = 0;
             let totalProcessedFiles = 0;
             
-            const featuresDir = path.join(workspacePath, 'docs/09_roadmap/tasks');
+            // Updated to scan the new status-based structure
+            const roadmapDir = path.join(workspacePath, 'docs/09_roadmap');
             // Hilfsfunktion: rekursiv alle .md-Dateien finden
             async function getAllMarkdownFiles(dir) {
                 let results = [];
@@ -61,20 +62,71 @@ class ManualTasksImportService {
                 }
                 return results;
             }
-            const allFiles = await getAllMarkdownFiles(featuresDir);
-            logger.info(`📁 Found ${allFiles.length} markdown files in ${featuresDir}`);
+            const allFiles = await getAllMarkdownFiles(roadmapDir);
+            logger.info(`📁 Found ${allFiles.length} markdown files in ${roadmapDir}`);
             const importedTasks = [];
             for (const filePath of allFiles) {
-                // category = Ordner unter features, name = Ordner unter category
-                const rel = path.relative(featuresDir, filePath);
+                // Updated path logic for new status-based structure
+                const rel = path.relative(roadmapDir, filePath);
                 const parts = rel.split(path.sep);
                 if (parts.length < 3) {
                     logger.debug(`⏭️ Skipping file with insufficient path parts: ${rel} (${parts.length} parts)`);
-                    continue; // category/name/file
+                    continue; // status/priority/category/file or status/category/file
                 }
-                const category = parts[0];
-                const name = parts[1];
-                const filename = parts[2];
+                
+                // New structure: status/priority/category/file or status/category/file
+                let status, priority, category;
+                if (parts[0] === 'completed') {
+                    status = 'completed';
+                    if (parts[1].includes('q')) {
+                        // completed/2025-q3/category/file
+                        priority = 'medium'; // Default for completed
+                        category = parts[2];
+                    } else {
+                        // completed/category/file
+                        priority = 'medium';
+                        category = parts[1];
+                    }
+                } else if (parts[0] === 'pending') {
+                    status = 'pending';
+                    // Check if second part is a priority or category
+                    if (['high', 'medium', 'low', 'critical'].includes(parts[1])) {
+                        priority = parts[1];
+                        category = parts[2];
+                    } else {
+                        priority = 'medium'; // Default
+                        category = parts[1];
+                    }
+                } else if (parts[0] === 'in-progress') {
+                    status = 'in_progress';
+                    priority = 'medium'; // Default for in-progress
+                    category = parts[1];
+                } else if (parts[0] === 'failed') {
+                    status = 'failed';
+                    priority = 'medium'; // Default for failed
+                    category = parts[1];
+                } else {
+                    // Fallback for old structure or other paths
+                    status = 'pending';
+                    priority = 'medium';
+                    category = parts[0];
+                }
+                
+                // Extract filename and task name
+                const filename = parts[parts.length - 1]; // Last part is always the filename
+                let name = filename.replace('.md', '').replace('-index', '').replace('-implementation', '').replace('-phase-', '');
+                
+                // ✅ IMPROVED: Better title formatting
+                // Convert kebab-case to Title Case and handle special cases
+                name = name
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+                
+                // Handle special cases - avoid double "Master Index"
+                if (filename.includes('-index') && !name.includes('Master Index')) {
+                    name += ' Master Index';
+                }
                 // Typ und Phase anhand des Dateinamens bestimmen
                 let type = null, phase = null;
                 if (filename.endsWith('-index.md')) {
@@ -147,17 +199,51 @@ class ManualTasksImportService {
                 }
                 title = title.replace(/-/g, ' ');
                 
-                // Prüfe ob Task schon existiert (nach title+projectId+category+type+phase)
+                // ✅ IMPROVED: Better duplicate checking with normalized title
+                const normalizedTitle = title.toLowerCase().trim();
+                
+                // Check for exact match first
                 const existing = await this.taskRepository.findAll({
                     title: title,
                     projectId: projectId
                 });
-                logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}`);
-                logger.info(`🔍 DEBUG: existing.length = ${existing.length}, condition: ${existing.length === 0}`);
-                if (existing.length === 0) {
+                
+                // Also check for case-insensitive matches
+                const allTasks = await this.taskRepository.findByProject(projectId);
+                const similarTask = allTasks.find(task => 
+                    task.title.toLowerCase().trim() === normalizedTitle
+                );
+                
+                logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}, Similar: ${similarTask ? 1 : 0}`);
+                
+                if (existing.length === 0 && !similarTask) {
                     // ✅ FIXED: Extract status and progress from progressInfo for direct task creation
-                    const taskStatus = progressInfo.status || 'pending';
-                    const taskProgress = progressInfo.overallProgress || 0;
+                    // Auto-detect status from file path if not found in content
+                    let taskStatus = progressInfo.status;
+                    if (!taskStatus) {
+                        // Auto-detect from file path structure
+                        if (status === 'completed') {
+                            taskStatus = 'completed';
+                        } else if (status === 'in_progress') {
+                            taskStatus = 'in_progress';
+                        } else if (status === 'failed') {
+                            taskStatus = 'failed';
+                        } else {
+                            taskStatus = 'pending';
+                        }
+                    }
+                    
+                    // Auto-calculate progress based on status if not found in content
+                    let taskProgress = progressInfo.overallProgress;
+                    if (!taskProgress && taskStatus === 'completed') {
+                        taskProgress = 100;
+                    } else if (!taskProgress && taskStatus === 'in_progress') {
+                        taskProgress = 50;
+                    } else if (!taskProgress && taskStatus === 'failed') {
+                        taskProgress = 0;
+                    } else if (!taskProgress) {
+                        taskProgress = 0;
+                    }
                     
                     // Erstelle Task mit Gruppierungs-Metadaten
                     const taskMetadata = {
@@ -194,7 +280,16 @@ class ManualTasksImportService {
                     
                                         // ✅ FIXED: Prepare task data with timestamps from markdown file
                     const taskData = {
-                        ...taskMetadata
+                        title: title,
+                        description: `Manual task imported from ${filename}`,
+                        type: 'manual',
+                        priority: priority, // This is the actual priority (high, medium, low, critical)
+                        status: taskStatus,
+                        progress: taskProgress,
+                        category: category,
+                        projectId: projectId,
+                        createdBy: 'me',
+                        metadata: JSON.stringify(taskMetadata)
                     };
 
                     if (progressInfo.createdDate) {
@@ -210,16 +305,21 @@ class ManualTasksImportService {
                     if (progressInfo.completionDate) {
                         taskData.completedAt = new Date(progressInfo.completionDate);
                         logger.info(`📅 Set task completion date from markdown: ${progressInfo.completionDate}`);
+                    } else if (taskStatus === 'completed') {
+                        // Auto-set completion date for completed tasks
+                        taskData.completedAt = new Date();
+                        logger.info(`📅 Auto-set completion date for completed task: ${title}`);
                     }
 
                     // ✅ FIXED: Create task with explicit status and progress
                     const task = await this.taskService.createTask(
                         projectId,
                         title,
-                        content,
-                        'medium', // Priority kann aus content extrahiert werden
-                        type,
-                        taskData
+                        taskData.description,
+                        taskData.priority,
+                        taskData.type,
+                        taskData.category,
+                        taskData.metadata
                     );
                     
                     // ✅ FIXED: Update task status and progress after creation
@@ -246,7 +346,7 @@ class ManualTasksImportService {
                     importedTasks.push(task);
                 } else {
                     // ✅ FIXED: Update existing task with current status and progress
-                    const existingTask = existing[0];
+                    const existingTask = existing[0] || similarTask;
                     const taskStatus = progressInfo.status || 'pending';
                     const taskProgress = progressInfo.overallProgress || 0;
                     

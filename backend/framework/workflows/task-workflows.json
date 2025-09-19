@@ -87,6 +87,29 @@
             "waitForReady": true,
             "timeout": 30000
           }
+        },
+        {
+          "name": "update-task-status",
+          "type": "status",
+          "description": "Update task status and organize files",
+          "step": "TaskStatusUpdateStep",
+          "options": {
+            "autoMoveFiles": true,
+            "updateDatabase": true
+          },
+          "strict": false
+        },
+        {
+          "name": "organize-task-files",
+          "type": "organization",
+          "description": "Organize task files based on status",
+          "step": "TaskFileOrganizationStep",
+          "options": {
+            "createDirectories": true,
+            "moveFiles": true,
+            "updateReferences": true
+          },
+          "strict": false
         }
       ],
       "options": {

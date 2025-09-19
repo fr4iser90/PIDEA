@@ -77,7 +77,7 @@ category: 'security', // or 'performance', 'architecture', etc.
 
 #### Examples Found:
 - `estimatedHours: this.calculateEstimatedHours(result),`
-- `const docsDir = path.join(projectPath, \`docs/09_roadmap/tasks/\${this.category}/\${PatternAnalysisStep.toLowerCase()}\`);`
+- `const docsDir = path.join(projectPath, \`{{taskDocumentationPath}}\${this.category}/\${PatternAnalysisStep.toLowerCase()}\`);`
 
 #### Solution:
 ```javascript
@@ -100,10 +100,10 @@ estimatedHours: 4, // Calculate and store the value directly
 #### Solution:
 ```javascript
 // INSTEAD OF:
-const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${PatternAnalysisStep.toLowerCase()}`);
+const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${PatternAnalysisStep.toLowerCase()}`);
 
 // USE:
-const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/pattern-analysis-step`);
+const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/pattern-analysis-step`);
 ```
 
 ## 🚀 FIX PRIORITY

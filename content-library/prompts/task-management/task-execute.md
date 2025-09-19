@@ -3,7 +3,7 @@
 ## Goal
 Execute complete development tasks automatically with phase-by-phase implementation, automatic file creation/modification, and full task completion without requiring user input or confirmation.
 
-**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/tasks/[category]/[name]/`
+**Note**: Tasks are automatically organized in hierarchical folder structure: `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
 
 ## Core Principles
 - **Zero User Input Required**: Execute all phases automatically
@@ -74,7 +74,7 @@ Execute complete development tasks automatically with phase-by-phase implementat
 - Include all necessary imports and dependencies
 - Add proper error handling and validation
 - Implement complete functionality, not stubs
-- **Organize files in hierarchical structure**: `docs/09_roadmap/tasks/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
 - **Create main implementation file**: `[name]-implementation.md`
 - **Create phase files**: `[name]-phase-[number].md` for subtasks
 
@@ -115,8 +115,8 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - Ensure backward compatibility
 
 ### Implementation File Updates
-- Create/update `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
-- Create/update phase files: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
+- Create/update `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md`
+- Create/update phase files: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md`
 - Track progress through all phases with timestamps: `[RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]` - Reference `@timestamp-utility.md`
 - Document all changes and decisions with timestamps
 - Update completion status automatically with timestamps

@@ -807,7 +807,7 @@ class NetworkAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${NetworkAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${NetworkAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });

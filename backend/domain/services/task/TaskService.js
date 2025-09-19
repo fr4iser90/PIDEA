@@ -1,3 +1,61 @@
+
+// Dynamic path resolution functions
+function getTaskDocumentationPath(task) {
+  const { status, priority, category, completedAt } = task;
+  
+  if (status === 'completed') {
+    const quarter = getCompletionQuarter(completedAt);
+    return `docs/09_roadmap/completed/${quarter}/${category}/`;
+  } else if (status === 'in_progress') {
+    return `docs/09_roadmap/in-progress/${category}/`;
+  } else if (status === 'pending') {
+    return `docs/09_roadmap/pending/${priority}/${category}/`;
+  } else if (status === 'blocked') {
+    return `docs/09_roadmap/blocked/${category}/`;
+  } else if (status === 'cancelled') {
+    return `docs/09_roadmap/cancelled/${category}/`;
+  }
+  
+  return `docs/09_roadmap/pending/${priority}/${category}/`;
+}
+
+function getCompletionQuarter(completedAt) {
+  if (!completedAt) {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    
+    if (month <= 3) return `${year}-q1`;
+    if (month <= 6) return `${year}-q2`;
+    if (month <= 9) return `${year}-q3`;
+    return `${year}-q4`;
+  }
+  
+  const date = new Date(completedAt);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  
+  if (month <= 3) return `${year}-q1`;
+  if (month <= 6) return `${year}-q2`;
+  if (month <= 9) return `${year}-q3`;
+  return `${year}-q4`;
+}
+
+function getPromptPath(promptType) {
+  const promptPaths = {
+    'task-create': 'content-library/prompts/task-management/task-create.md',
+    'task-execute': 'content-library/prompts/task-management/task-execute.md',
+    'task-analyze': 'content-library/prompts/task-management/task-analyze.md',
+    'task-review': 'content-library/prompts/task-management/task-review.md'
+  };
+  
+  return promptPaths[promptType] || promptPaths['task-create'];
+}
+
+function getWorkflowPath(workflowType) {
+  return `backend/framework/workflows/${workflowType}-workflows.json`;
+}
+
 const Task = require('@entities/Task');
 const TaskStatus = require('@value-objects/TaskStatus');
 const TaskPriority = require('@value-objects/TaskPriority');
@@ -47,6 +105,89 @@ class TaskService {
     
   }
 
+  /**
+   * Get task file path based on status and metadata
+   * @param {Object} task - Task object with status, priority, category, etc.
+   * @returns {string} Dynamic file path based on task status
+   */
+  getTaskFilePath(task) {
+    const status = task.status;
+    const priority = task.priority;
+    const category = task.category;
+    
+    // Extract task name from title or metadata
+    let taskName = task.metadata?.name || task.title?.toLowerCase().replace(/\s+/g, '-') || 'unknown-task';
+    
+    if (status === 'completed') {
+      const quarter = this.getCompletionQuarter(task.completedAt);
+      return `docs/09_roadmap/completed/${quarter}/${category}/${taskName}/`;
+    } else if (status === 'in_progress') {
+      return `docs/09_roadmap/in-progress/${priority}/${category}/${taskName}/`;
+    } else if (status === 'pending') {
+      return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
+    } else if (status === 'blocked') {
+      return `docs/09_roadmap/blocked/${priority}/${category}/${taskName}/`;
+    } else if (status === 'cancelled') {
+      return `docs/09_roadmap/cancelled/${priority}/${category}/${taskName}/`;
+    } else if (status === 'failed') {
+      return `docs/09_roadmap/failed/${priority}/${category}/${taskName}/`;
+    }
+    
+    return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
+  }
+
+  /**
+   * Get completion quarter from date
+   * @param {string} completedAt - Completion date string
+   * @returns {string} Quarter string (e.g., '2024-q4')
+   */
+  getCompletionQuarter(completedAt) {
+    if (!completedAt) {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      if (month <= 3) return `${year}-q1`;
+      if (month <= 6) return `${year}-q2`;
+      if (month <= 9) return `${year}-q3`;
+      return `${year}-q4`;
+    }
+    
+    const date = new Date(completedAt);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    
+    if (month <= 3) return `${year}-q1`;
+    if (month <= 6) return `${year}-q2`;
+    if (month <= 9) return `${year}-q3`;
+    return `${year}-q4`;
+  }
+
+  /**
+   * Get prompt path dynamically based on prompt type
+   * @param {string} promptType - Type of prompt (task-create, task-execute, etc.)
+   * @returns {string} Dynamic prompt path
+   */
+  getPromptPath(promptType) {
+    const promptPaths = {
+      'task-create': '{{promptPath("task-create")}}',
+      'task-execute': '{{promptPath("task-execute")}}',
+      'task-analyze': '{{promptPath("task-analyze")}}',
+      'task-review': '{{promptPath("task-review")}}'
+    };
+    
+    return promptPaths[promptType] || promptPaths['task-create'];
+  }
+
+  /**
+   * Get workflow path dynamically based on workflow type
+   * @param {string} workflowType - Type of workflow
+   * @returns {string} Dynamic workflow path
+   */
+  getWorkflowPath(workflowType) {
+    return `backend/framework/workflows/${workflowType}-workflows.json`;
+  }
+
   buildRefactoringPrompt(task) {
     const file = task.metadata?.filePath || task.metadata?.originalFile || 'UNKNOWN FILE';
     const title = task.title || 'Refactor File';
@@ -75,12 +216,13 @@ class TaskService {
       hasTaskFilePath: !!task.metadata?.taskFilePath
     });
     
-    // Lade task-execute.md Prompt direkt aus der Datei
+    // Load task-execute.md prompt using dynamic path resolution
     let taskExecutePrompt = '';
     try {
-      logger.info('🔍 [TaskService] Loading task-execute.md directly from file...');
-      const taskExecutePath = path.join(process.cwd(), '../content-library/prompts/task-management/task-execute.md');
-      taskExecutePrompt = fs.readFileSync(taskExecutePath, 'utf8');
+      logger.info('🔍 [TaskService] Loading task-execute.md using dynamic path resolution...');
+      const taskExecutePath = this.getPromptPath('task-execute');
+      const fullPath = path.join(process.cwd(), taskExecutePath);
+      taskExecutePrompt = fs.readFileSync(fullPath, 'utf8');
       logger.info('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
     } catch (error) {
       logger.error('❌ [TaskService] Error reading task-execute.md from file:', error);

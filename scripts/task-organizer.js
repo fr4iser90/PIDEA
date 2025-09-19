@@ -1,3 +1,61 @@
+
+// Dynamic path resolution functions
+function getTaskDocumentationPath(task) {
+  const { status, priority, category, completedAt } = task;
+  
+  if (status === 'completed') {
+    const quarter = getCompletionQuarter(completedAt);
+    return `docs/09_roadmap/completed/${quarter}/${category}/`;
+  } else if (status === 'in_progress') {
+    return `docs/09_roadmap/in-progress/${category}/`;
+  } else if (status === 'pending') {
+    return `docs/09_roadmap/pending/${priority}/${category}/`;
+  } else if (status === 'blocked') {
+    return `docs/09_roadmap/blocked/${category}/`;
+  } else if (status === 'cancelled') {
+    return `docs/09_roadmap/cancelled/${category}/`;
+  }
+  
+  return `docs/09_roadmap/pending/${priority}/${category}/`;
+}
+
+function getCompletionQuarter(completedAt) {
+  if (!completedAt) {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    
+    if (month <= 3) return `${year}-q1`;
+    if (month <= 6) return `${year}-q2`;
+    if (month <= 9) return `${year}-q3`;
+    return `${year}-q4`;
+  }
+  
+  const date = new Date(completedAt);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  
+  if (month <= 3) return `${year}-q1`;
+  if (month <= 6) return `${year}-q2`;
+  if (month <= 9) return `${year}-q3`;
+  return `${year}-q4`;
+}
+
+function getPromptPath(promptType) {
+  const promptPaths = {
+    'task-create': 'content-library/prompts/task-management/task-create.md',
+    'task-execute': 'content-library/prompts/task-management/task-execute.md',
+    'task-analyze': 'content-library/prompts/task-management/task-analyze.md',
+    'task-review': 'content-library/prompts/task-management/task-review.md'
+  };
+  
+  return promptPaths[promptType] || promptPaths['task-create'];
+}
+
+function getWorkflowPath(workflowType) {
+  return `backend/framework/workflows/${workflowType}-workflows.json`;
+}
+
 const Logger = require('@logging/Logger');
 
 const logger = new Logger('ServiceName');

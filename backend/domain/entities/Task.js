@@ -33,6 +33,7 @@ class Task {
     this._createdAt = new Date(createdAt);
     this._updatedAt = new Date(updatedAt);
     this._completedAt = null;
+    this._progress = 0; // Progress percentage (0-100)
     this._dependencies = [];
     this._tags = [];
     this._assignee = null;
@@ -61,6 +62,7 @@ class Task {
   get dueDate() { return this._dueDate ? new Date(this._dueDate) : null; }
   get startedAt() { return this._startedAt ? new Date(this._startedAt) : null; }
   get completedAt() { return this._completedAt ? new Date(this._completedAt) : null; }
+  get progress() { return this._progress; }
   get executionHistory() { return [...this._executionHistory]; }
   get workflowContext() { return this._workflowContext; }
 
@@ -321,6 +323,10 @@ class Task {
     this._updatedAt = new Date();
   }
 
+  getMetadata(key) {
+    return this._metadata[key];
+  }
+
   setCategory(category) {
     this._category = category;
     this._updatedAt = new Date();
@@ -472,7 +478,7 @@ class Task {
       updated_at: this._updatedAt.toISOString(),
       completed_at: this._completedAt ? this._completedAt.toISOString() : null,
       executionHistory: this._executionHistory,
-      progress: this.getProgress(),
+      progress: this._progress,
       actualDuration: this.getActualDuration(),
       isOverdue: this.isOverdue(),
       requiresAI: this.requiresAI(),
@@ -589,6 +595,22 @@ class Task {
     
     if (newStatus === TaskStatus.COMPLETED) {
       this._completedAt = new Date();
+      this._progress = 100; // Auto-set progress to 100% when completed
+    }
+  }
+
+  updateProgress(newProgress) {
+    if (newProgress < 0 || newProgress > 100) {
+      throw new Error('Progress must be between 0 and 100');
+    }
+    this._progress = newProgress;
+    this._updatedAt = new Date();
+    
+    // Auto-update status based on progress
+    if (newProgress === 100 && !this._status.isCompleted()) {
+      this.updateStatus(TaskStatus.COMPLETED);
+    } else if (newProgress > 0 && this._status.isPending()) {
+      this.updateStatus(TaskStatus.IN_PROGRESS);
     }
   }
 

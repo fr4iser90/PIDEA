@@ -1,13 +1,13 @@
 # Prompt: Task Review & Validation System
 
 ## Goal
-Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **AUTOMATICALLY CREATE MISSING FILES** (index, implementation, phase files) if they don't exist. **DO NOT modify existing docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md** - only analyze and create missing files.
+Review, validate, and analyze development tasks against the actual codebase. Analyze implementation files, verify code existence, identify gaps, and create phase files for task splitting when needed. **AUTOMATICALLY CREATE MISSING FILES** (index, implementation, phase files) if they don't exist. **DO NOT modify existing docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md** - only analyze and create missing files.
 
 > **File Pattern Requirement:**  
 > All Index, Implementation and Phase files must always be created using this pattern:  
-> - **Index**: docs/09_roadmap/tasks/[category]/[name]/[name]-index.md  
-> - **Implementation**: docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md  
-> - **Phase**: docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md  
+> - **Index**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md  
+> - **Implementation**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md  
+> - **Phase**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md  
 > If ANY file is missing, it MUST be created automatically. This pattern is required for orchestration and grouping in the system.
 
 ## Core Review Process
@@ -68,10 +68,10 @@ Review, validate, and analyze development tasks against the actual codebase. Ana
 ## File Structure Validation Rules
 
 ### Required File Check
-- **Index File**: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md` - MUST exist
-- **Implementation File**: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md` - MUST exist
-- **Phase Files**: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md` - MUST exist for all referenced phases
-- **Directory Structure**: Category and task folders MUST exist
+- **Index File**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md` - MUST exist
+- **Implementation File**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md` - MUST exist
+- **Phase Files**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md` - MUST exist for all referenced phases
+- **Directory Structure**: Status, priority, category and task folders MUST exist
 
 ### Auto-Creation Process
 1. **Extract Task Info**: Parse existing files or URL path to get category and task name
@@ -97,7 +97,7 @@ Review, validate, and analyze development tasks against the actual codebase. Ana
 
 ## 📁 File Structure
 ```
-docs/09_roadmap/tasks/[category]/[name]/
+docs/09_roadmap/[status]/[priority]/[category]/[name]/
 ├── [name]-index.md (this file)
 ├── [name]-implementation.md
 ├── [name]-phase-1.md
@@ -242,7 +242,7 @@ docs/09_roadmap/tasks/[category]/[name]/
 
 ## 14. AI Auto-Implementation Instructions
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md'
+- **source_path**: 'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md'
 - **category**: '[category]'
 - **automation_level**: 'semi_auto'
 - **confirmation_required**: true
@@ -318,18 +318,20 @@ docs/09_roadmap/tasks/[category]/[name]/
 ## File Structure Validation - [Date]
 
 ### ✅ Existing Files
-- [x] Index: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md` - Status: Found
-- [x] Implementation: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md` - Status: Found
-- [x] Phase 1: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-1.md` - Status: Found
+- [x] Index: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md` - Status: Found
+- [x] Implementation: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md` - Status: Found
+- [x] Phase 1: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-1.md` - Status: Found
 
 ### ⚠️ Missing Files (Auto-Created)
-- [ ] Index: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md` - Status: Created with template
-- [ ] Implementation: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md` - Status: Created with template
-- [ ] Phase 2: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-2.md` - Status: Created with template
+- [ ] Index: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md` - Status: Created with template
+- [ ] Implementation: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md` - Status: Created with template
+- [ ] Phase 2: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-2.md` - Status: Created with template
 
 ### 🔧 Directory Structure
-- [x] Category folder: `docs/09_roadmap/tasks/[category]/` - Status: Exists
-- [x] Task folder: `docs/09_roadmap/tasks/[category]/[name]/` - Status: Exists
+- [x] Status folder: `docs/09_roadmap/[status]/` - Status: Exists
+- [x] Priority folder: `docs/09_roadmap/[status]/[priority]/` - Status: Exists
+- [x] Category folder: `docs/09_roadmap/[status]/[priority]/[category]/` - Status: Exists
+- [x] Task folder: `docs/09_roadmap/[status]/[priority]/[category]/[name]/` - Status: Exists
 - [ ] Missing directories created automatically
 
 ### 📊 File Status Summary
@@ -584,14 +586,14 @@ When a task needs to be split into subtasks, create individual phase files follo
 
 **File Path Pattern:**
 ```
-docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md
+docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md
 ```
 
 **Example:**
 ```
-docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
-docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
-docs/09_roadmap/tasks/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
+docs/09_roadmap/pending/high/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-1.md
+docs/09_roadmap/pending/high/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-2.md
+docs/09_roadmap/pending/high/backend/unified-workflow-legacy-migration/unified-workflow-legacy-migration-phase-3.md
 ```
 
 ### Phase File Content Template

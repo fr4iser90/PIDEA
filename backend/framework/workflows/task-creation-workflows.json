@@ -85,6 +85,18 @@
             "enableMultiLanguage": true
           },
           "strict": false
+        },
+        {
+          "name": "organize-task-files",
+          "type": "organization",
+          "description": "Organize newly created task files",
+          "step": "TaskFileOrganizationStep",
+          "options": {
+            "createDirectories": true,
+            "moveFiles": true,
+            "updateReferences": true
+          },
+          "strict": false
         }
       ],
       "options": {
@@ -267,9 +279,9 @@
   },
   "contentLibrary": {
     "prompts": {
-      "task-creation": "content-library/prompts/task-management/task-create.md",
-      "quick-task": "content-library/prompts/task-management/task-create.md",
-      "advanced-task": "content-library/prompts/task-management/task-create.md"
+      "task-creation": "{{promptPath("task-create")}}",
+      "quick-task": "{{promptPath("task-create")}}",
+      "advanced-task": "{{promptPath("task-create")}}"
     },
     "templates": {
       "task-creation": "content-library/templates/",

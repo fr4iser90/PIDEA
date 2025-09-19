@@ -815,7 +815,7 @@ class CouplingAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${CouplingAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${CouplingAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });

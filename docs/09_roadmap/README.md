@@ -1,61 +1,126 @@
-# PIDEA Roadmap & Task Management
+# PIDEA Roadmap - Status-Based Structure
 
 ## 📋 Overview
 
-This directory contains the comprehensive roadmap and task management system for PIDEA. All tasks are organized by category and complexity to maintain clear overview and enable efficient development.
+This directory contains the comprehensive roadmap and task management system for PIDEA. All tasks are organized by **status first**, then **priority**, then **category** to provide immediate visibility into what needs to be done, what's currently being worked on, and what has been completed.
 
-## 🗂️ Directory Structure
+## 🗂️ Status-Based Directory Structure
 
-### Categories
-- **`features/`** - Feature development tasks
-- **`implementation/`** - Implementation plans and analysis
-- **`technical/`** - Technical specifications and frameworks
+### 🎯 **Status-First Organization**
+- **`pending/`** - Tasks waiting to be started (organized by priority)
+- **`in-progress/`** - Tasks currently being worked on
+- **`completed/`** - Finished tasks (organized by completion quarter)
+- **`blocked/`** - Tasks blocked by external dependencies
+- **`cancelled/`** - Tasks that were cancelled or deprioritized
 
-### Task Organization
+### 🚀 **Priority-Based Organization (within pending/)**
+- **`high-priority/`** - Critical tasks requiring immediate attention
+- **`medium-priority/`** - Important tasks for next development cycle
+- **`low-priority/`** - Nice-to-have tasks for future consideration
 
-#### Features (`features/`)
-Tasks are organized by domain and complexity:
+### 📁 **Category-Based Organization**
+- **`backend/`** - Backend development tasks
+- **`frontend/`** - Frontend development tasks
+- **`performance/`** - Performance optimization tasks
+- **`security/`** - Security-related tasks
+- **`analysis/`** - Analysis and refactoring tasks
+- **`automation/`** - Automation and tooling tasks
+- **`ai/`** - AI and chat system tasks
+- **`ide/`** - IDE integration tasks
+- **`database/`** - Database optimization tasks
 
+## 📊 Current Status Distribution
+
+### 🎯 **Immediate Status Visibility**
+- **Pending**: 26 tasks (46%) - organized by priority
+- **In Progress**: 5 tasks (9%) - currently being worked on
+- **Completed**: 12 tasks (21%) - organized by completion quarter
+
+### 🚀 **Priority-Based Organization**
+- **High Priority**: 16 pending tasks - critical work
+- **Medium Priority**: 10 pending tasks - important work  
+- **Low Priority**: 5 pending tasks - nice-to-have work
+
+## 🔄 **Automatic Status Transitions**
+When a task status changes:
+1. **pending → in-progress**: Move to `in-progress/`
+2. **in-progress → completed**: Move to `completed/2024-q4/`
+3. **completed → archive**: Move to `completed/archive/` (after 1 year)
+
+## 🎯 **Navigation Examples**
+
+### Find High Priority Backend Tasks:
+```bash
+ls docs/09_roadmap/pending/high-priority/backend/
 ```
-features/
-├── ai/                    # AI-related features
-├── auto/                  # Automation features
-├── backend/               # Backend development
-├── frontend/              # Frontend development
-├── ide/                   # IDE integration features
-├── performance/           # Performance optimization
-├── security/              # Security features
-├── testing/               # Testing infrastructure
-└── unified-workflow/      # Unified workflow system
+
+### See What's Currently Being Worked On:
+```bash
+ls docs/09_roadmap/in-progress/
 ```
 
-#### Implementation (`implementation/`)
-- Master plans and comprehensive implementation guides
-- Task breakdowns and analysis reports
-- Implementation strategies
-
-#### Technical (`technical/`)
-- Framework specifications
-- Architecture documents
-- Technical standards
-
-## 🔄 Alternative: Phase-Based Organization
-
-For complex projects requiring research and analysis phases, you can also organize tasks by development phases:
-
+### Check Completed Tasks This Quarter:
+```bash
+ls docs/09_roadmap/completed/2024-q4/
 ```
-phase-01-ideation/
-├── index.md              # Phase overview and goals
-├── task-x.md             # Specific ideation tasks
-└── research.md           # Research findings and insights
 
-phase-02-planning/
-├── index.md              # Planning phase overview
-├── requirements.md       # Detailed requirements
-└── architecture.md       # System architecture decisions
+### Find All Performance Tasks:
+```bash
+find docs/09_roadmap -path "*/performance/*" -type d
+```
 
-phase-03-implementation/
-├── index.md              # Implementation phase overview
+### Find All High Priority Tasks:
+```bash
+ls docs/09_roadmap/pending/high-priority/
+```
+
+### Find All Backend Tasks (any status):
+```bash
+find docs/09_roadmap -path "*/backend/*" -type d
+```
+
+## 📈 **Progress Tracking**
+
+### Current Status Distribution:
+- **High Priority Pending**: 16 tasks (29%)
+- **Medium Priority Pending**: 6 tasks (11%)
+- **Low Priority Pending**: 4 tasks (7%)
+- **In Progress**: 5 tasks (9%)
+- **Completed**: 12 tasks (21%)
+
+### Category Progress:
+- **Backend**: 8/24 completed (33%)
+- **Frontend**: 4/8 completed (50%)
+- **Performance**: 0/6 completed (0%)
+- **Analysis**: 0/8 completed (0%)
+- **Security**: 0/1 completed (0%)
+
+## 🔧 **Implementation Notes**
+
+### File Naming Convention:
+- **Format**: `[task-name]-[type].md`
+- **Examples**: 
+  - `analysis-standardization-index.md`
+  - `task-queue-management-implementation.md`
+  - `ide-switching-bottleneck-phase-1.md`
+
+### Directory Structure:
+- **Status First**: `pending/`, `in-progress/`, `completed/`
+- **Priority Second**: `high-priority/`, `medium-priority/`, `low-priority/`
+- **Category Third**: `backend/`, `frontend/`, `performance/`, etc.
+
+---
+
+**This structure provides:**
+- ✅ **Immediate status visibility**
+- ✅ **Priority-based organization**
+- ✅ **Category-based filtering**
+- ✅ **Automatic status transitions**
+- ✅ **Progress tracking**
+- ✅ **Easy navigation**
+
+**Total Files**: 377 files organized into clear status-based structure
+**Total Tasks**: 43 tasks with clear priority and status visibility
 ├── task-a.md             # Implementation tasks
 └── task-b.md             # More implementation tasks
 

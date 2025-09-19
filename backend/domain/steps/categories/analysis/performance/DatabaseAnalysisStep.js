@@ -884,7 +884,7 @@ class DatabaseAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `docs/09_roadmap/tasks/${this.category}/${DatabaseAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${DatabaseAnalysisStep.toLowerCase()}`);
     
     // Ensure docs directory exists
     await fs.mkdir(docsDir, { recursive: true });

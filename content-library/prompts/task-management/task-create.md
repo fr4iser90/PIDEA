@@ -5,17 +5,17 @@ Generate a complete, actionable development plan that will be parsed into a data
 
 ## Phase
 Check Plan against codebase, collect all data u need!
-Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks/[category]/[name]/ with the following structure:
-**Note**: The system automatically creates a hierarchical folder structure: Category → Task Name → Implementation files
+Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/[status]/[priority]/[category]/[name]/ with the following structure:
+**Note**: The system automatically creates a hierarchical folder structure: Status → Priority → Category → Task Name → Implementation files
 
 ## Template Structure
 
 > **File Pattern Requirement:**  
 > All Index, Implementation and Phase files must always be created using this pattern:
-> - **Index**: docs/09_roadmap/tasks/[category]/[name]/[name]-index.md  
+> - **Index**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md  
 > If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.  
-> - **Implementation**: docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md  
-> - **Phase**: docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md  
+> - **Implementation**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md  
+> - **Phase**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md  
 
 
 ### 1. Project Overview
@@ -264,7 +264,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md'
+- **source_path**: 'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md'
 - **category**: '[category]' - Automatically set from Category field above
 - **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
 - **confirmation_required**: true | false
@@ -305,7 +305,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 ### Automatic Index File Generation
 When creating a task, automatically generate a master index file:
 
-**File Path**: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md`
+**File Path**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md`
 
 **Purpose**: Central overview and navigation hub for all task-related files
 
@@ -324,7 +324,7 @@ When creating a task, automatically generate a master index file:
 
 ## 📁 File Structure
 ```
-docs/09_roadmap/tasks/[category]/[name]/
+docs/09_roadmap/[status]/[priority]/[category]/[name]/
 ├── [name]-index.md (this file)
 ├── [name]-implementation.md
 ├── [name]-phase-1.md
@@ -416,8 +416,8 @@ INSERT INTO tasks (
   '[Priority]', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md', -- Main implementation file
-  'docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md', -- Individual phase files
+  'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md', -- Main implementation file
+  'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md', -- Individual phase files
   '[Full markdown content]', -- For reference
   '[JSON with all metadata]', -- All technical details
   '[Estimated Time in hours]' -- From section 1
@@ -441,11 +441,13 @@ INSERT INTO tasks (
 
 When you specify a **Category** in section 1, the system automatically:
 
-1. **Creates category folder** if it doesn't exist: `docs/09_roadmap/tasks/[category]/`
-2. **Creates task folder** for each task: `docs/09_roadmap/tasks/[category]/[name]/`
-3. **Places main implementation file**: `docs/09_roadmap/tasks/[category]/[name]/[name]-implementation.md`
-4. **Creates phase files** for subtasks: `docs/09_roadmap/tasks/[category]/[name]/[name]-phase-[number].md`
-5. **Creates master index file**: `docs/09_roadmap/tasks/[category]/[name]/[name]-index.md`
+1. **Creates status folder** if it doesn't exist: `docs/09_roadmap/[status]/`
+2. **Creates priority folder** if it doesn't exist: `docs/09_roadmap/[status]/[priority]/`
+3. **Creates category folder** if it doesn't exist: `docs/09_roadmap/[status]/[priority]/[category]/`
+4. **Creates task folder** for each task: `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
+5. **Places main implementation file**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md`
+6. **Creates phase files** for subtasks: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md`
+7. **Creates master index file**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md`
 6. **Sets database category** field to the specified category
 7. **Organizes tasks hierarchically** for better management
 
@@ -464,28 +466,34 @@ When you specify a **Category** in section 1, the system automatically:
 
 ### Example Folder Structure:
 ```
-docs/09_roadmap/tasks/
-├── backend/
-│   ├── user-authentication/
-│   │   ├── user-authentication-index.md
-│   │   ├── user-authentication-implementation.md
-│   │   ├── user-authentication-phase-1.md
-│   │   ├── user-authentication-phase-2.md
-│   │   └── user-authentication-phase-3.md
-│   └── database-migration/
-│       ├── database-migration-index.md
-│       ├── database-migration-implementation.md
-│       └── database-migration-phase-1.md
-├── frontend/
-│   └── ui-redesign/
-│       ├── ui-redesign-index.md
-│       ├── ui-redesign-implementation.md
-│       └── ui-redesign-phase-1.md
-└── ide/
-    └── vscode-integration/
-        ├── vscode-integration-index.md
-        ├── vscode-integration-implementation.md
-        └── vscode-integration-phase-1.md
+docs/09_roadmap/
+├── pending/
+│   ├── high/
+│   │   ├── backend/
+│   │   │   ├── user-authentication/
+│   │   │   │   ├── user-authentication-index.md
+│   │   │   │   ├── user-authentication-implementation.md
+│   │   │   │   ├── user-authentication-phase-1.md
+│   │   │   │   ├── user-authentication-phase-2.md
+│   │   │   │   └── user-authentication-phase-3.md
+│   │   │   └── database-migration/
+│   │   │       ├── database-migration-index.md
+│   │   │       ├── database-migration-implementation.md
+│   │   │       └── database-migration-phase-1.md
+│   │   └── frontend/
+│   │       └── ui-redesign/
+│   │           ├── ui-redesign-index.md
+│   │           ├── ui-redesign-implementation.md
+│   │           └── ui-redesign-phase-1.md
+│   └── medium/
+│       └── ide/
+│           └── vscode-integration/
+│               ├── vscode-integration-index.md
+│               ├── vscode-integration-implementation.md
+│               └── vscode-integration-phase-1.md
+├── in-progress/
+├── completed/
+└── failed/
 ```
 
 ## Example Usage
