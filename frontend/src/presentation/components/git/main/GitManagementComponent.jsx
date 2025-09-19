@@ -129,7 +129,16 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       
       logger.info('Starting periodic git status refresh (15s interval)');
       intervalId = setInterval(() => {
-        logger.info('Periodic git status refresh');
+        // Only log periodic refresh occasionally to avoid spam
+        const now = Date.now();
+        const lastLogTime = window.lastGitRefreshLogTime || 0;
+        const shouldLog = (now - lastLogTime) > 300000; // Log max every 5 minutes
+        
+        if (shouldLog) {
+          logger.info('Periodic git status refresh');
+          window.lastGitRefreshLogTime = now;
+        }
+        
         refreshGitStatus();
       }, REFRESH_INTERVAL);
     };

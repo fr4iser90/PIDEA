@@ -138,7 +138,46 @@ class CDPWorkspaceDetector {
     try {
       logger.debug(`Resolving workspace path for: ${workspaceName}`);
       
-      // Start from current directory and search upward
+      // Common workspace directories to search
+      const searchPaths = [
+        '/home/fr4iser/Documents/Git',
+        '/home/fr4iser/Documents',
+        '/home/fr4iser/Projects',
+        '/home/fr4iser/Code',
+        process.cwd()
+      ];
+      
+      // First, try exact match
+      for (const searchPath of searchPaths) {
+        if (fs.existsSync(searchPath)) {
+          const exactPath = path.join(searchPath, workspaceName);
+          if (fs.existsSync(exactPath)) {
+            logger.debug(`Found exact workspace path: ${exactPath}`);
+            return exactPath;
+          }
+        }
+      }
+      
+      // Then try partial matches (contains workspace name)
+      for (const searchPath of searchPaths) {
+        if (fs.existsSync(searchPath)) {
+          try {
+            const entries = fs.readdirSync(searchPath);
+            for (const entry of entries) {
+              const fullPath = path.join(searchPath, entry);
+              if (fs.statSync(fullPath).isDirectory() && 
+                  entry.toLowerCase().includes(workspaceName.toLowerCase())) {
+                logger.debug(`Found partial match workspace path: ${fullPath}`);
+                return fullPath;
+              }
+            }
+          } catch (readError) {
+            logger.debug(`Could not read directory ${searchPath}: ${readError.message}`);
+          }
+        }
+      }
+      
+      // Fallback: search upward from current directory
       let currentDir = process.cwd();
       const maxDepth = this.options.maxSearchDepth;
       let depth = 0;
@@ -147,7 +186,7 @@ class CDPWorkspaceDetector {
         const workspacePath = path.join(currentDir, workspaceName);
         
         if (fs.existsSync(workspacePath)) {
-          logger.debug(`Found workspace path: ${workspacePath}`);
+          logger.debug(`Found workspace path in parent directory: ${workspacePath}`);
           return workspacePath;
         }
         

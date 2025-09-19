@@ -336,10 +336,28 @@ class IDEManager {
     
     logger.info(`Successfully switched to IDE on port ${port}`);
     
+    // ✅ NEW: Automatically detect workspace for the switched IDE
+    let workspacePath = this.ideWorkspaces.get(port);
+    if (!workspacePath) {
+      logger.info(`No cached workspace for port ${port}, detecting now...`);
+      try {
+        workspacePath = await this.detectWorkspacePath(port);
+        if (workspacePath) {
+          logger.info(`✅ Workspace detected for port ${port}: ${workspacePath}`);
+        } else {
+          logger.warn(`⚠️ No workspace detected for port ${port}`);
+        }
+      } catch (error) {
+        logger.error(`❌ Workspace detection failed for port ${port}:`, error.message);
+      }
+    } else {
+      logger.info(`Using cached workspace for port ${port}: ${workspacePath}`);
+    }
+    
     return {
       port: port,
       status: 'active',
-      workspacePath: this.ideWorkspaces.get(port) || null,
+      workspacePath: workspacePath,
       previousPort: previousPort
     };
   }

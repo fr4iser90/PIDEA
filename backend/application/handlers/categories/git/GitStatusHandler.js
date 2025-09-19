@@ -20,10 +20,20 @@ class GitStatusHandler {
 
       const { projectPath, porcelain } = command.getCommandData();
 
-      this.logger.info('GitStatusHandler: Executing git status', {
-        projectPath,
-        porcelain
-      });
+      // Only log git status execution if there are changes or it's been a while
+      const logKey = `git-status-${projectPath}`;
+      const lastLogTime = this.lastLogTimes?.get(logKey) || 0;
+      const now = Date.now();
+      const shouldLog = (now - lastLogTime) > 300000; // Log max every 5 minutes
+      
+      if (shouldLog) {
+        this.logger.info('GitStatusHandler: Executing git status', {
+          projectPath,
+          porcelain
+        });
+        if (!this.lastLogTimes) this.lastLogTimes = new Map();
+        this.lastLogTimes.set(logKey, now);
+      }
 
       // Build status command
       const statusCommand = porcelain ? 'git status --porcelain' : 'git status';

@@ -43,7 +43,17 @@ class GitController {
                 });
             }
 
-            this.logger.info('GitController: Getting Git status', { projectId, userId });
+            // Only log if there's a significant change or it's the first request
+            const logKey = `git-status-${projectId}`;
+            const lastLogTime = this.lastLogTimes?.get(logKey) || 0;
+            const now = Date.now();
+            const shouldLog = (now - lastLogTime) > 60000; // Log max every 60 seconds
+            
+            if (shouldLog) {
+                this.logger.info('GitController: Getting Git status', { projectId, userId });
+                if (!this.lastLogTimes) this.lastLogTimes = new Map();
+                this.lastLogTimes.set(logKey, now);
+            }
 
             // ✅ OPTIMIZATION: Parallel Git operations (no Steps)
             const [status, currentBranch] = await Promise.all([
@@ -60,6 +70,22 @@ class GitController {
                 message: 'Git status retrieved successfully',
                 timestamp: new Date().toISOString()
             };
+            
+            // Check if there are changes and log accordingly
+            const hasChanges = status.modified?.length > 0 || status.added?.length > 0 || 
+                             status.deleted?.length > 0 || status.untracked?.length > 0;
+            
+            if (hasChanges && shouldLog) {
+                this.logger.info('GitController: Git status with changes detected', { 
+                    projectId, 
+                    changes: {
+                        modified: status.modified?.length || 0,
+                        added: status.added?.length || 0,
+                        deleted: status.deleted?.length || 0,
+                        untracked: status.untracked?.length || 0
+                    }
+                });
+            }
             
             res.json(responseData);
 
