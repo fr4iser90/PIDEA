@@ -4,7 +4,7 @@ cd "$HOME/Documents" || exit 1
 
 # IDE Konfigurationen
 declare -A IDES=(
-  ["cursor"]="./Cursor-1.2.2-x86_64.AppImage"
+  ["cursor"]="./Cursor-1.5.7-x86_64.AppImage"
   ["vscode"]="code"
 )
 

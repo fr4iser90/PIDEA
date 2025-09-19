@@ -314,7 +314,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                                         total: updatedQueue.length,
                                         running: active.filter(item => item.status === 'running').length,
                                         queued: active.filter(item => item.status === 'queued').length,
-                                        completed: completed.filter(item => item.status === 'completed').length,
+                                        completedCount: completed.filter(item => item.status === 'completed').length,
                                         failed: completed.filter(item => item.status === 'failed').length
                                     }
                                 };
@@ -386,7 +386,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                                         total: updatedQueue.length,
                                         running: active.filter(item => item.status === 'running').length,
                                         queued: active.filter(item => item.status === 'queued').length,
-                                        completed: completed.filter(item => item.status === 'completed').length,
+                                        completedCount: completed.filter(item => item.status === 'completed').length,
                                         failed: completed.filter(item => item.status === 'failed').length
                                     }
                                 };
@@ -543,7 +543,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label">Completed:</span>
-                                <span className="stat-value completed">{statistics.completed || 0}</span>
+                                <span className="stat-value completed">{statistics.completedCount || 0}</span>
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label">Failed:</span>

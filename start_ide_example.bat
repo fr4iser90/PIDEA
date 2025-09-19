@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 cd /d "%USERPROFILE%\Documents" || exit /b 1
 
 REM IDE Konfigurationen
-set "CURSOR_PATH=.\Cursor-1.2.2-x86_64.AppImage"
+set "CURSOR_PATH=.\Cursor-1.5.7-x86_64.AppImage"
 set "VSCODE_PATH=code"
 
 REM Port Ranges für verschiedene IDEs
