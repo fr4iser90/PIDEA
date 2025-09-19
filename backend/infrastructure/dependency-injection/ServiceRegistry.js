@@ -176,6 +176,38 @@ class ServiceRegistry {
             return new IDEWorkspaceDetectionService(ideManager, projectRepository);
         }, { singleton: true, dependencies: ['ideManager', 'projectRepository'] });
 
+        // CDP Connection Manager for Workspace Detection
+        this.container.register('cdpConnectionManager', () => {
+            const CDPConnectionManager = require('@external/cdp/CDPConnectionManager');
+            return new CDPConnectionManager({
+                maxConnections: 5,
+                connectionTimeout: 15000,
+                healthCheckInterval: 30000,
+                cleanupInterval: 60000
+            });
+        }, { singleton: true });
+
+        // CDP Workspace Detector
+        this.container.register('cdpWorkspaceDetector', (cdpConnectionManager) => {
+            const CDPWorkspaceDetector = require('@services/workspace/CDPWorkspaceDetector');
+            return new CDPWorkspaceDetector(cdpConnectionManager, {
+                cacheTimeout: 300000, // 5 minutes
+                maxSearchDepth: 10,
+                enableFallback: true
+            });
+        }, { singleton: true, dependencies: ['cdpConnectionManager'] });
+
+        // CDP Git Detector
+        this.container.register('cdpGitDetector', (cdpConnectionManager) => {
+            const CDPGitDetector = require('@services/git/CDPGitDetector');
+            return new CDPGitDetector(cdpConnectionManager, {
+                cacheTimeout: 300000, // 5 minutes
+                commandTimeout: 5000,
+                enableCDPExtraction: true,
+                enableLocalExtraction: true
+            });
+        }, { singleton: true, dependencies: ['cdpConnectionManager'] });
+
         // Subproject Detector
         this.container.register('subprojectDetector', () => {
             const SubprojectDetector = require('@domain/services/analysis/SubprojectDetector');

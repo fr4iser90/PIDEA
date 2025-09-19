@@ -89,7 +89,7 @@ class WorkflowController {
                 }
             }
 
-            // Use File-based Workspace Detection as fallback
+            // Use CDP-based Workspace Detection as fallback
             if (!workspacePath) {
                 try {
                     // Try to get workspace path from active IDE
@@ -99,7 +99,7 @@ class WorkflowController {
                             const workspaceInfo = await this.ideManager.getWorkspaceInfo(activeIDE.port);
                             if (workspaceInfo && workspaceInfo.workspace) {
                                 workspacePath = workspaceInfo.workspace;
-                                this.logger.info('🔍 Using workspace path from File-based detection', {
+                                this.logger.info('🔍 Using workspace path from CDP-based detection', {
                                     port: activeIDE.port,
                                     workspacePath
                                 });
@@ -107,7 +107,7 @@ class WorkflowController {
                         }
                     }
                 } catch (error) {
-                    this.logger.warn('🔍 File-based detection failed, using project root', {
+                    this.logger.warn('🔍 CDP-based detection failed, using project root', {
                         error: error.message
                     });
                 }

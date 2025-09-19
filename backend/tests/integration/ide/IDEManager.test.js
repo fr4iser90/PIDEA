@@ -7,8 +7,9 @@ const IDEDetectorFactory = require('@external/ide/IDEDetectorFactory');
 const IDEStarterFactory = require('@external/ide/IDEStarterFactory');
 const IDEConfigManager = require('@external/ide/IDEConfigManager');
 
-// Mock the workspace detector
-jest.mock('../../../domain/services/workspace/FileBasedWorkspaceDetector');
+// Mock the CDP workspace detector
+jest.mock('../../../domain/services/workspace/CDPWorkspaceDetector');
+jest.mock('../../../infrastructure/external/cdp/CDPConnectionManager');
 
 describe('IDEManager Integration', () => {
   let ideManager;

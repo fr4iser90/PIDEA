@@ -11,7 +11,8 @@ const IDEConfigManager = require('./IDEConfigManager');
 const IDEHealthMonitor = require('./IDEHealthMonitor');
 const IDEPortManager = require('@domain/services/ide/IDEPortManager');
 const path = require('path');
-const FileBasedWorkspaceDetector = require('@services/workspace/FileBasedWorkspaceDetector');
+const CDPConnectionManager = require('../cdp/CDPConnectionManager');
+const CDPWorkspaceDetector = require('@services/workspace/CDPWorkspaceDetector');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('IDEManager');
 
@@ -29,7 +30,8 @@ class IDEManager {
     this.portManager = new IDEPortManager(this, eventBus);
     
     // Initialize workspace detection (only if browserManager is provided)
-    this.fileDetector = null;
+    this.cdpConnectionManager = null;
+    this.cdpWorkspaceDetector = null;
     this.browserManager = browserManager;
     this.eventBus = eventBus;
     this.gitService = gitService;
@@ -41,9 +43,24 @@ class IDEManager {
     
     if (browserManager) {
       try {
-        this.fileDetector = new FileBasedWorkspaceDetector(browserManager);
+        // Initialize modern CDP-based detection
+        this.cdpConnectionManager = new CDPConnectionManager({
+          maxConnections: 5,
+          connectionTimeout: 15000,
+          healthCheckInterval: 30000,
+          cleanupInterval: 60000
+        });
+        
+        this.cdpWorkspaceDetector = new CDPWorkspaceDetector(this.cdpConnectionManager, {
+          cacheTimeout: 300000, // 5 minutes
+          maxSearchDepth: 10,
+          enableFallback: true
+        });
+        
+        logger.info('IDEManager: CDP-based workspace detection initialized');
+        
       } catch (error) {
-        logger.warn('Could not initialize FileBasedWorkspaceDetector:', error.message);
+        logger.warn('Could not initialize workspace detectors:', error.message);
       }
     }
     
@@ -93,6 +110,17 @@ class IDEManager {
     try {
       // Load configuration
       await this.configManager.loadConfig();
+      
+      // Initialize CDP-based workspace detection
+      if (this.cdpConnectionManager && this.cdpWorkspaceDetector) {
+        try {
+          await this.cdpConnectionManager.initialize();
+          await this.cdpWorkspaceDetector.initialize();
+          logger.info('CDP-based workspace detection initialized successfully');
+        } catch (cdpError) {
+          logger.warn('Failed to initialize CDP-based workspace detection:', cdpError.message);
+        }
+      }
       
       // Scan for existing IDEs with timeout
       logger.info('Scanning for existing IDEs...');
@@ -403,37 +431,35 @@ class IDEManager {
         return this.ideWorkspaces.get(port);
       }
       
-      logger.info(`Starting file-based workspace detection for port ${port}`);
+      logger.info(`Starting workspace detection for port ${port}`);
       
-      // File-based method
-      if (this.fileDetector) {
+      // Try modern CDP-based detection first
+      if (this.cdpWorkspaceDetector) {
         try {
-          // Connect to target port for detection (not switching)
-          if (this.browserManager) {
-            await this.browserManager.connectToPortForDetection(port);
-          }
+          logger.info(`Using CDP-based workspace detection for port ${port}`);
           
-          // Get workspace info
-          const workspaceInfo = await this.fileDetector.getWorkspaceInfo(port);
+          const workspaceInfo = await this.cdpWorkspaceDetector.detectWorkspace(port);
           
-          if (workspaceInfo && workspaceInfo.workspace) {
-            logger.info(`File-based detected workspace path for port ${port}: ${workspaceInfo.workspace}`);
-            this.ideWorkspaces.set(port, workspaceInfo.workspace);
+          if (workspaceInfo && workspaceInfo.workspacePath) {
+            logger.info(`CDP-based detected workspace path for port ${port}: ${workspaceInfo.workspacePath}`);
+            this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
             
             // AUTOMATISCH Projekt in der DB erstellen
-            await this.createProjectInDatabase(workspaceInfo.workspace, port);
+            await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
             
-            return workspaceInfo.workspace;
+            return workspaceInfo.workspacePath;
           }
-        } catch (error) {
-          logger.info('File-based detection failed for port', port, ':', error.message);
+        } catch (cdpError) {
+          logger.warn('CDP-based detection failed for port', port, ':', cdpError.message);
         }
       }
       
-              logger.info('No workspace path detected for port', port);
+      // No fallback - CDP is the only detection method
+      
+      logger.info('No workspace path detected for port', port);
       return null;
     } catch (error) {
-              logger.info('Error in workspace detection for port', port, ':', error.message);
+      logger.error('Error in workspace detection for port', port, ':', error.message);
     }
     return null;
   }
@@ -480,18 +506,27 @@ class IDEManager {
    * @returns {Promise<Object|null>} Workspace information
    */
   async getWorkspaceInfo(port) {
-    if (!this.fileDetector) {
-      logger.error('File detector not available');
-      return null;
-    }
-    
     try {
-      // Connect to target port for detection (not switching)
-      if (this.browserManager) {
-        await this.browserManager.connectToPortForDetection(port);
+      // Try modern CDP-based detection first
+      if (this.cdpWorkspaceDetector) {
+        try {
+          logger.info(`Getting comprehensive workspace info via CDP for port ${port}`);
+          
+          const comprehensiveInfo = await this.cdpWorkspaceDetector.getComprehensiveWorkspaceInfo(port);
+          
+          if (comprehensiveInfo) {
+            logger.info(`CDP-based workspace info retrieved for port ${port}`);
+            return comprehensiveInfo;
+          }
+        } catch (cdpError) {
+          logger.warn('CDP-based workspace info retrieval failed for port', port, ':', cdpError.message);
+        }
       }
       
-      return await this.fileDetector.getWorkspaceInfo(port);
+      // No fallback - CDP is the only detection method
+      
+      logger.error('No workspace detector available for port', port);
+      return null;
     } catch (error) {
       logger.error('Error getting workspace info for port', port, ':', error.message);
       return null;
@@ -499,23 +534,20 @@ class IDEManager {
   }
 
   /**
-   * Get files list for IDE
+   * Get files list for IDE using CDP
    * @param {number} port - IDE port
    * @returns {Promise<Array>} Files list
    */
   async getFilesList(port) {
-    if (!this.fileDetector) {
-      logger.error('File detector not available');
+    if (!this.cdpWorkspaceDetector) {
+      logger.error('CDP workspace detector not available');
       return [];
     }
     
     try {
-      // Switch to target port
-      if (this.browserManager) {
-        await this.browserManager.switchToPort(port);
-      }
-      
-      return await this.fileDetector.getFilesList(port);
+      // Use CDP-based detection to get files list
+      const workspaceInfo = await this.cdpWorkspaceDetector.getComprehensiveWorkspaceInfo(port);
+      return workspaceInfo.files || [];
     } catch (error) {
       logger.error('Error getting files list for port', port, ':', error.message);
       return [];
@@ -779,6 +811,25 @@ class IDEManager {
     // Save configuration
     if (this.configManager && typeof this.configManager.saveConfig === 'function') {
       this.configManager.saveConfig();
+    }
+    
+    // Cleanup CDP-based workspace detection
+    if (this.cdpWorkspaceDetector) {
+      try {
+        await this.cdpWorkspaceDetector.destroy();
+        logger.info('CDP workspace detector destroyed');
+      } catch (error) {
+        logger.warn('Error destroying CDP workspace detector:', error.message);
+      }
+    }
+    
+    if (this.cdpConnectionManager) {
+      try {
+        await this.cdpConnectionManager.destroy();
+        logger.info('CDP connection manager destroyed');
+      } catch (error) {
+        logger.warn('Error destroying CDP connection manager:', error.message);
+      }
     }
     
     logger.info('Cleanup complete');
