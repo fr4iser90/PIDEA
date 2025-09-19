@@ -49,8 +49,7 @@ When a task status changes:
 
 ## 🎯 **Navigation Examples**
 
-### Find High Priority Backend Tasks:
-```bash
+### Find High Priority Backend Tasks:s```bash
 ls docs/09_roadmap/pending/high-priority/backend/
 ```
 
