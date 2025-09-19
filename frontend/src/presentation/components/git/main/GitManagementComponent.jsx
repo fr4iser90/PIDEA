@@ -64,8 +64,14 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       }).catch(error => {
         logger.warn('Could not import WebSocketService for GitManagementComponent', error);
       });
+      
+      // ✅ NEW: Listen for git view opened event
+      eventBus.on('git-view-opened', (data) => {
+        logger.info('Git view opened - auto-refreshing git status');
+        refreshGitStatus();
+      });
     }
-  }, [eventBus]);
+  }, [eventBus, refreshGitStatus]);
 
   // ✅ NEW: Auto-refresh git status when tab becomes visible or focused
   useEffect(() => {
@@ -107,6 +113,41 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+    };
+  }, [activeIDE.workspacePath, refreshGitStatus]);
+
+  // ✅ NEW: Periodic refresh every 15 seconds when git view is active
+  useEffect(() => {
+    if (!activeIDE.workspacePath) return;
+
+    const REFRESH_INTERVAL = 15000; // 15 seconds
+    let intervalId = null;
+
+    // Only start periodic refresh when git view is active
+    const startPeriodicRefresh = () => {
+      if (intervalId) return; // Already running
+      
+      logger.info('Starting periodic git status refresh (15s interval)');
+      intervalId = setInterval(() => {
+        logger.info('Periodic git status refresh');
+        refreshGitStatus();
+      }, REFRESH_INTERVAL);
+    };
+
+    const stopPeriodicRefresh = () => {
+      if (intervalId) {
+        logger.info('Stopping periodic git status refresh');
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    // Start periodic refresh when component mounts
+    startPeriodicRefresh();
+
+    // Cleanup on unmount
+    return () => {
+      stopPeriodicRefresh();
     };
   }, [activeIDE.workspacePath, refreshGitStatus]);
 

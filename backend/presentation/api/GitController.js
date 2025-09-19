@@ -51,14 +51,28 @@ class GitController {
                 this.gitApplicationService.getCurrentBranchDirect(projectPath)
             ]);
             
-            res.json({
+            const responseData = {
                 success: true,
                 data: {
                     status,
                     currentBranch
                 },
-                message: 'Git status retrieved successfully'
-            });
+                message: 'Git status retrieved successfully',
+                timestamp: new Date().toISOString()
+            };
+            
+            res.json(responseData);
+
+            // ✅ NEW: Emit WebSocket event for real-time updates
+            if (this.eventBus) {
+                this.eventBus.emit('git-status-updated', {
+                    projectId,
+                    projectPath,
+                    status,
+                    currentBranch,
+                    timestamp: responseData.timestamp
+                });
+            }
 
         } catch (error) {
             this.logger.error('GitController: Failed to get Git status', {

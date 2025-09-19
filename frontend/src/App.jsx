@@ -204,6 +204,14 @@ function App() {
     } else {
       setIsSplitView(false); // Exit split view for other views
       setCurrentView(view);
+      
+      // ✅ NEW: Auto-refresh git status when git view is opened
+      if (view === 'git') {
+        logger.info('Git view opened - triggering auto-refresh');
+        if (eventBus) {
+          eventBus.emit('git-view-opened', { timestamp: Date.now() });
+        }
+      }
     }
     if (eventBus) {
       eventBus.emit('view-changed', { view });
