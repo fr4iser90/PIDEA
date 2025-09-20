@@ -150,6 +150,11 @@ class DockerfileManifestStep extends StepBuilder {
     }));
   }
 
+  generateIssues(dockerfileIssues) {
+    // Return the issues directly - they're already in the correct format
+    return dockerfileIssues;
+  }
+
   generateDocumentation(dockerfileIssues, metrics) {
     return [
       {

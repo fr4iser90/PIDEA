@@ -8,6 +8,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AnalysisTaskService = require('@services/analysis/AnalysisTaskService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -40,6 +41,7 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
   constructor() {
     super(config);
     this.performanceSteps = null;
+    this.taskService = new AnalysisTaskService();
   }
 
   /**
@@ -99,7 +101,14 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
           
           const stepResult = await stepModule.execute(context);
           
-          results.details[stepName] = stepResult;
+          results.details[stepName] = {
+            success: stepResult.success,
+            issues: stepResult.issues || [],
+            recommendations: stepResult.recommendations || [],
+            tasks: stepResult.tasks || [],
+            documentation: stepResult.documentation || [],
+            error: stepResult.error || null
+          };
           results.summary.completedSteps++;
           
           // Aggregate standardized outputs only
@@ -157,6 +166,14 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
         performanceScore: performanceScore
       });
 
+      // Generate tasks using unified task service
+      const tasks = await this.taskService.createTasksFromAnalysis(
+        results, 
+        context, 
+        'PerformanceAnalysisOrchestrator'
+      );
+      results.tasks = tasks;
+
       // Database saving is handled by WorkflowController
       logger.info('📊 Performance analysis results ready for database save by WorkflowController');
 
@@ -167,7 +184,8 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
           type: 'performance-analysis',
           category: 'performance',
           stepsExecuted: results.summary.totalSteps,
-          performanceScore: performanceScore
+          performanceScore: performanceScore,
+          tasksCreated: tasks.length
         }
       };
 

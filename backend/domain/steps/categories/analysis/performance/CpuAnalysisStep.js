@@ -36,7 +36,7 @@ const config = {
 
 class CpuAnalysisStep {
   constructor() {
-    CpuAnalysisStep = 'CpuAnalysisStep';
+    this.name = 'CpuAnalysisStep';
     this.description = 'Analyzes CPU performance patterns and optimizations';
     this.category = 'analysis';
     this.subcategory = 'performance';
@@ -52,7 +52,7 @@ class CpuAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${CpuAnalysisStep}...`);
+      logger.info(`⚡ Executing CpuAnalysisStep...`);
       
       // Validate context
       this.validateContext(context);
@@ -461,8 +461,8 @@ class CpuAnalysisStep {
         description: `Analysis score of ${result.score}% indicates areas for improvement`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         location: 'analysis-results',
         suggestion: 'Improve analysis results by addressing identified issues'
       });
@@ -476,8 +476,8 @@ class CpuAnalysisStep {
         description: 'Critical issues found in the analysis',
         severity: 'critical',
         priority: 'critical',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         location: 'analysis-results',
         suggestion: 'Immediately address critical issues'
       });
@@ -491,8 +491,8 @@ class CpuAnalysisStep {
         description: 'High severity issues found in the analysis',
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         location: 'analysis-results',
         suggestion: 'Address high severity issues promptly'
       });
@@ -515,8 +515,8 @@ class CpuAnalysisStep {
         title: 'Improve Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -529,8 +529,8 @@ class CpuAnalysisStep {
         title: 'Add More Design Patterns',
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -543,8 +543,8 @@ class CpuAnalysisStep {
         title: 'Address Security Vulnerabilities',
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -557,8 +557,8 @@ class CpuAnalysisStep {
         title: 'Improve Performance',
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
-        category: this.category,
-        source: CpuAnalysisStep,
+        category: 'performance',
+        source: 'CpuAnalysisStep',
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -578,21 +578,21 @@ class CpuAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${CpuAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      id: `cpu-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${CpuAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${CpuAnalysisStep} analysis`,
       type: 'improvement',
-      category: this.category,
+      category: 'performance',
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: CpuAnalysisStep,
+        source: 'CpuAnalysisStep',
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
       },
-      estimatedHours: this.calculateEstimatedHours(result),
+      estimatedHours: 4,
       phase: 'improvement',
       stage: 'planning'
     };
@@ -602,17 +602,17 @@ class CpuAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${CpuAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        id: `cpu-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${CpuAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'performance',
         priority: 'critical',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: CpuAnalysisStep,
+          source: 'CpuAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -625,17 +625,17 @@ class CpuAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${CpuAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        id: `cpu-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${CpuAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'performance',
         priority: 'high',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: CpuAnalysisStep,
+          source: 'CpuAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -691,7 +691,14 @@ class CpuAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${CpuAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, 'docs', 'analysis', 'performance', 'cpu-analysis-step');
+    
+    // Ensure directory exists
+    try {
+      await fs.mkdir(docsDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     
     
     // Create implementation file
@@ -718,7 +725,7 @@ class CpuAnalysisStep {
 
 ## 📋 Analysis Overview
 - **Step Name**: ${CpuAnalysisStep}
-- **Category**: ${this.category}
+- **Category**: performance
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
 - **Level**: ${result.level || 'unknown'}
@@ -744,7 +751,7 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       type: 'implementation',
       title: 'CPU Performance Analysis Implementation',
       path: docPath,
-      category: this.category,
+      category: 'performance',
       source: CpuAnalysisStep
     };
   }
@@ -787,7 +794,7 @@ Based on the analysis, consider implementing CPU optimizations to improve perfor
       type: 'report',
       title: 'CPU Performance Analysis Report',
       path: docPath,
-      category: this.category,
+      category: 'performance',
       source: CpuAnalysisStep
     };
   }

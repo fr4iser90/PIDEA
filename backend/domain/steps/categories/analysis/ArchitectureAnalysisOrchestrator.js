@@ -8,6 +8,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AnalysisTaskService = require('@services/analysis/AnalysisTaskService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -41,6 +42,7 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
   constructor() {
     super(config);
     this.architectureSteps = null;
+    this.taskService = new AnalysisTaskService();
   }
 
   /**
@@ -100,7 +102,14 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
           
           const stepResult = await stepModule.execute(context);
           
-          results.details[stepName] = stepResult;
+          results.details[stepName] = {
+            success: stepResult.success,
+            issues: stepResult.issues || [],
+            recommendations: stepResult.recommendations || [],
+            tasks: stepResult.tasks || [],
+            documentation: stepResult.documentation || [],
+            error: stepResult.error || null
+          };
           results.summary.completedSteps++;
           
           // Aggregate standardized outputs only
@@ -158,6 +167,14 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
         architectureScore: architectureScore
       });
 
+      // Generate tasks using unified task service
+      const tasks = await this.taskService.createTasksFromAnalysis(
+        results, 
+        context, 
+        'ArchitectureAnalysisOrchestrator'
+      );
+      results.tasks = tasks;
+
       // Database saving is handled by WorkflowController
       logger.info('📊 Architecture analysis results ready for database save by WorkflowController');
 
@@ -168,7 +185,8 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
           type: 'architecture-analysis',
           category: 'architecture',
           stepsExecuted: results.summary.totalSteps,
-          architectureScore: architectureScore
+          architectureScore: architectureScore,
+          tasksCreated: tasks.length
         }
       };
 

@@ -147,6 +147,11 @@ class CIConfigManifestStep extends StepBuilder {
     }));
   }
 
+  generateIssues(ciConfigIssues) {
+    // Return the issues directly - they're already in the correct format
+    return ciConfigIssues;
+  }
+
   generateDocumentation(ciConfigIssues, metrics) {
     return [
       {

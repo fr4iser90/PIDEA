@@ -300,10 +300,7 @@ class AnalysisApplicationService {
           resultKeys: analyses[0].result ? Object.keys(analyses[0].result) : []
         }, null, 2));
         
-        // Log the actual result content
-        if (analyses[0].result) {
-          this.logger.info(`🔍 [AnalysisApplicationService] First analysis result:`, JSON.stringify(analyses[0].result, null, 2));
-        }
+        // Analysis result processed successfully
       }
       
       return { projectId, analysis: analyses || [] };

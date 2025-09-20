@@ -36,7 +36,7 @@ const config = {
 
 class CouplingAnalysisStep {
   constructor() {
-    CouplingAnalysisStep = 'CouplingAnalysisStep';
+    this.name = 'CouplingAnalysisStep';
     this.description = 'Analyzes coupling between components and dependencies';
     this.category = 'analysis';
     this.subcategory = 'architecture';
@@ -52,7 +52,7 @@ class CouplingAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${CouplingAnalysisStep}...`);
+      logger.info(`⚡ Executing CouplingAnalysisStep...`);
       
       // Validate context
       this.validateContext(context);
@@ -569,8 +569,8 @@ class CouplingAnalysisStep {
         description: `Coupling analysis score of ${result.score}% indicates poor coupling management`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         location: 'coupling-analysis',
         suggestion: 'Improve coupling management and reduce tight coupling between components'
       });
@@ -584,8 +584,8 @@ class CouplingAnalysisStep {
         description: `${result.metrics.highCouplingFiles} files with high coupling detected`,
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         location: 'coupling-analysis',
         suggestion: 'Refactor high coupling files to reduce dependencies and improve maintainability'
       });
@@ -599,8 +599,8 @@ class CouplingAnalysisStep {
         description: `${result.metrics.totalDependencies} package dependencies detected, may indicate over-coupling`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         location: 'package-dependencies',
         suggestion: 'Review and reduce unnecessary package dependencies'
       });
@@ -614,8 +614,8 @@ class CouplingAnalysisStep {
         description: 'Circular dependencies found in package structure',
         severity: 'critical',
         priority: 'critical',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         location: 'package-dependencies',
         suggestion: 'Break circular dependencies to prevent build and runtime issues'
       });
@@ -639,8 +639,8 @@ class CouplingAnalysisStep {
         title: 'Improve Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -653,8 +653,8 @@ class CouplingAnalysisStep {
         title: 'Add More Design Patterns',
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -667,8 +667,8 @@ class CouplingAnalysisStep {
         title: 'Address Security Vulnerabilities',
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -681,8 +681,8 @@ class CouplingAnalysisStep {
         title: 'Improve Performance',
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
-        category: this.category,
-        source: CouplingAnalysisStep,
+        category: 'architecture',
+        source: 'CouplingAnalysisStep',
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -702,21 +702,21 @@ class CouplingAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${CouplingAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      id: `coupling-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${CouplingAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${CouplingAnalysisStep} analysis`,
       type: 'improvement',
-      category: this.category,
+      category: 'architecture',
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: CouplingAnalysisStep,
+        source: 'CouplingAnalysisStep',
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
       },
-      estimatedHours: this.calculateEstimatedHours(result),
+      estimatedHours: 4,
       phase: 'improvement',
       stage: 'planning'
     };
@@ -726,17 +726,17 @@ class CouplingAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${CouplingAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        id: `coupling-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${CouplingAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'architecture',
         priority: 'critical',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: CouplingAnalysisStep,
+          source: 'CouplingAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -749,17 +749,17 @@ class CouplingAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${CouplingAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        id: `coupling-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${CouplingAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'architecture',
         priority: 'high',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: CouplingAnalysisStep,
+          source: 'CouplingAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -815,7 +815,14 @@ class CouplingAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${CouplingAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, 'docs', 'analysis', 'architecture', 'coupling-analysis-step');
+    
+    // Ensure directory exists
+    try {
+      await fs.mkdir(docsDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     
     
     // Create implementation file
@@ -842,7 +849,7 @@ class CouplingAnalysisStep {
 
 ## 📋 Analysis Overview
 - **Step Name**: ${CouplingAnalysisStep}
-- **Category**: ${this.category}
+- **Category**: architecture
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
 - **Level**: ${result.level || 'unknown'}
@@ -868,7 +875,7 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       type: 'implementation',
       title: 'Coupling Analysis Implementation',
       path: docPath,
-      category: this.category,
+      category: 'architecture',
       source: CouplingAnalysisStep
     };
   }
@@ -911,7 +918,7 @@ Based on the analysis, consider reducing coupling between modules to improve mai
       type: 'report',
       title: 'Coupling Analysis Report',
       path: docPath,
-      category: this.category,
+      category: 'architecture',
       source: CouplingAnalysisStep
     };
   }

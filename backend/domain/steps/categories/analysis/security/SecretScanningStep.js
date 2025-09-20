@@ -730,7 +730,7 @@ class SecretScanningStep {
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
       },
-      estimatedHours: this.calculateEstimatedHours(result),
+      estimatedHours: 4,
       phase: 'improvement',
       stage: 'planning'
     };
@@ -829,7 +829,14 @@ class SecretScanningStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${this.name.toLowerCase()}`);
+    const docsDir = path.join(projectPath, 'docs', 'analysis', 'security', 'secret-scanning-step');
+    
+    // Ensure directory exists
+    try {
+      await fs.mkdir(docsDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     
     
     // Create implementation file
@@ -856,7 +863,7 @@ class SecretScanningStep {
 
 ## 📋 Analysis Overview
 - **Step Name**: ${this.name}
-- **Category**: ${this.category}
+- **Category**: security
 - **Analysis Date**: ${new Date().toISOString()}
 - **Secret Security Score**: ${result.summary?.secretSecurityScore || 0}%
 - **Coverage**: ${result.summary?.coverage || 0}%

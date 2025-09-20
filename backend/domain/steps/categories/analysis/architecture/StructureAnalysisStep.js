@@ -36,7 +36,7 @@ const config = {
 
 class StructureAnalysisStep {
   constructor() {
-    StructureAnalysisStep = 'StructureAnalysisStep';
+    this.name = 'StructureAnalysisStep';
     this.description = 'Analyzes project structure and architectural patterns';
     this.category = 'analysis';
     this.subcategory = 'architecture';
@@ -52,7 +52,7 @@ class StructureAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${StructureAnalysisStep}...`);
+      logger.info(`⚡ Executing StructureAnalysisStep...`);
       
       // Validate context
       this.validateContext(context);
@@ -524,8 +524,8 @@ class StructureAnalysisStep {
         description: `Structure analysis score of ${result.score}% indicates poor architectural organization`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         location: 'project-structure',
         suggestion: 'Consider reorganizing project structure following architectural best practices'
       });
@@ -539,8 +539,8 @@ class StructureAnalysisStep {
         description: 'No clear architectural patterns were identified in the project structure',
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         location: 'project-structure',
         suggestion: 'Implement a clear architectural pattern (MVC, DDD, Layered Architecture, etc.)'
       });
@@ -554,8 +554,8 @@ class StructureAnalysisStep {
         description: 'No clear layer separation was identified in the project structure',
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         location: 'project-structure',
         suggestion: 'Organize code into logical layers (presentation, business, data, etc.)'
       });
@@ -569,8 +569,8 @@ class StructureAnalysisStep {
         description: `Large number of directories (${result.metrics.totalDirectories}) without clear architectural patterns`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         location: 'project-structure',
         suggestion: 'Reorganize directories following architectural principles and best practices'
       });
@@ -594,8 +594,8 @@ class StructureAnalysisStep {
         title: 'Improve Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -608,8 +608,8 @@ class StructureAnalysisStep {
         title: 'Add More Design Patterns',
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -622,8 +622,8 @@ class StructureAnalysisStep {
         title: 'Address Security Vulnerabilities',
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -636,8 +636,8 @@ class StructureAnalysisStep {
         title: 'Improve Performance',
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -657,21 +657,21 @@ class StructureAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${StructureAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      id: `structure-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${StructureAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${StructureAnalysisStep} analysis`,
       type: 'improvement',
-      category: this.category,
+      category: 'architecture',
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: StructureAnalysisStep,
+        source: 'StructureAnalysisStep',
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
       },
-      estimatedHours: this.calculateEstimatedHours(result),
+      estimatedHours: 4,
       phase: 'improvement',
       stage: 'planning'
     };
@@ -681,17 +681,17 @@ class StructureAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${StructureAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        id: `structure-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${StructureAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'architecture',
         priority: 'critical',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: StructureAnalysisStep,
+          source: 'StructureAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -704,17 +704,17 @@ class StructureAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${StructureAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        id: `structure-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${StructureAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'architecture',
         priority: 'high',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: StructureAnalysisStep,
+          source: 'StructureAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -776,8 +776,8 @@ class StructureAnalysisStep {
         title: 'Improve Structure Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         action: 'Implement architectural best practices to improve structure score',
         impact: 'Better code organization and maintainability'
       });
@@ -790,8 +790,8 @@ class StructureAnalysisStep {
         title: 'Add More Architectural Patterns',
         description: 'Consider implementing additional architectural patterns',
         priority: 'medium',
-        category: this.category,
-        source: StructureAnalysisStep,
+        category: 'architecture',
+        source: 'StructureAnalysisStep',
         action: 'Research and implement appropriate architectural patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -809,7 +809,14 @@ class StructureAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${StructureAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, 'docs', 'analysis', 'architecture', 'structure-analysis-step');
+    
+    // Ensure directory exists
+    try {
+      await fs.mkdir(docsDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     
     
     // Create implementation file
@@ -826,15 +833,15 @@ class StructureAnalysisStep {
    * @returns {Promise<Object>} Implementation doc
    */
   async createImplementationDoc(result, docsDir) {
-    const implementationPath = path.join(docsDir, `${StructureAnalysisStep.toLowerCase()}-implementation.md`);
+    const implementationPath = path.join(docsDir, `structure-analysis-step-implementation.md`);
     
     let content = `# ${StructureAnalysisStep} Implementation
 
 ## 1. Project Overview
 - **Feature/Component Name**: ${StructureAnalysisStep}
 - **Priority**: Medium
-- **Category**: ${this.category}
-- **Estimated Time**: ${this.calculateEstimatedHours(result)} hours
+- **Category**: architecture
+- **Estimated Time**: 4 hours
 - **Dependencies**: None
 - **Related Issues**: Structure analysis improvements
 
@@ -849,12 +856,12 @@ class StructureAnalysisStep {
 
 ## 3. Implementation Phases
 
-#### Phase 1: Structure Analysis (${Math.round(this.calculateEstimatedHours(result) * 0.3)} hours)
+#### Phase 1: Structure Analysis (1 hour)
 - [ ] Analyze current structure
 - [ ] Identify improvement areas
 - [ ] Plan restructuring
 
-#### Phase 2: Implementation (${Math.round(this.calculateEstimatedHours(result) * 0.7)} hours)
+#### Phase 2: Implementation (3 hours)
 - [ ] Implement structural improvements
 - [ ] Validate changes
 - [ ] Update documentation

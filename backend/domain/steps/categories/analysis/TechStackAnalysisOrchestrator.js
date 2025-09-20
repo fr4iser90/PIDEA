@@ -8,6 +8,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AnalysisTaskService = require('@services/analysis/AnalysisTaskService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -41,6 +42,7 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
   constructor() {
     super(config);
     this.techStackSteps = null;
+    this.taskService = new AnalysisTaskService();
   }
 
   /**
@@ -100,7 +102,14 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
           
           const stepResult = await stepModule.execute(context);
           
-          results.details[stepName] = stepResult;
+          results.details[stepName] = {
+            success: stepResult.success,
+            issues: stepResult.issues || [],
+            recommendations: stepResult.recommendations || [],
+            tasks: stepResult.tasks || [],
+            documentation: stepResult.documentation || [],
+            error: stepResult.error || null
+          };
           results.summary.completedSteps++;
           
           // Aggregate standardized outputs only
@@ -158,6 +167,14 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
         techStackMaturityScore: techStackMaturityScore
       });
 
+      // Generate tasks using unified task service
+      const tasks = await this.taskService.createTasksFromAnalysis(
+        results, 
+        context, 
+        'TechStackAnalysisOrchestrator'
+      );
+      results.tasks = tasks;
+
       // Database saving is handled by WorkflowController
       logger.info('📊 Tech stack analysis results ready for database save by WorkflowController');
 
@@ -168,7 +185,8 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
           type: 'tech-stack-analysis',
           category: 'tech-stack',
           stepsExecuted: results.summary.totalSteps,
-          techStackMaturityScore: techStackMaturityScore
+          techStackMaturityScore: techStackMaturityScore,
+          tasksCreated: tasks.length
         }
       };
 

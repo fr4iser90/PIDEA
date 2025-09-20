@@ -586,7 +586,8 @@ class AnalysisController {
       
       // Set the mode for workflow execution
       req.body = req.body || {};
-      req.body.mode = `${finalAnalysisType}-analysis`;
+      // Don't add -analysis suffix if it's already an analysis type
+      req.body.mode = finalAnalysisType.includes('-analysis') ? finalAnalysisType : `${finalAnalysisType}-analysis`;
       req.body.projectId = projectId;
       
       // Delegate to the injected WorkflowController for sequential execution
@@ -763,11 +764,42 @@ class AnalysisController {
           resultStructure: latestAnalysis.result ? JSON.stringify(latestAnalysis.result, null, 2) : 'NO_RESULT'
         });
         
-        if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.recommendations) {
-          recommendations = latestAnalysis.result.result.recommendations;
-          this.logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations in result.result.recommendations`);
-        } else {
-          this.logger.warn(`⚠️ [AnalysisController] No recommendations found in result.result.recommendations`);
+        if (latestAnalysis.result) {
+          // First, try to extract from individual step details (new structure)
+          if (latestAnalysis.result.details) {
+            const details = latestAnalysis.result.details;
+            // Aggregate recommendations from all steps in details
+            for (const stepName in details) {
+              const stepDetails = details[stepName];
+              if (stepDetails.recommendations && Array.isArray(stepDetails.recommendations)) {
+                // Filter out circular reference strings
+                const validRecommendations = stepDetails.recommendations.filter(rec => 
+                  typeof rec === 'object' && rec !== null && rec !== '[Circular Reference]'
+                );
+                recommendations.push(...validRecommendations);
+              }
+            }
+            this.logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations from step details`);
+          }
+          
+          // Fallback: Check traditional structures (for backwards compatibility)
+          if (recommendations.length === 0) {
+            if (latestAnalysis.result.recommendations && Array.isArray(latestAnalysis.result.recommendations)) {
+              // Filter out circular reference strings
+              recommendations = latestAnalysis.result.recommendations.filter(rec => 
+                typeof rec === 'object' && rec !== null && rec !== '[Circular Reference]'
+              );
+              this.logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations in result.recommendations (filtered)`);
+            } else if (latestAnalysis.result.result && latestAnalysis.result.result.recommendations && Array.isArray(latestAnalysis.result.result.recommendations)) {
+              // Filter out circular reference strings
+              recommendations = latestAnalysis.result.result.recommendations.filter(rec => 
+                typeof rec === 'object' && rec !== null && rec !== '[Circular Reference]'
+              );
+              this.logger.info(`✅ [AnalysisController] Found ${recommendations.length} recommendations in result.result.recommendations (filtered)`);
+            } else {
+              this.logger.warn(`⚠️ [AnalysisController] No recommendations found in any structure`);
+            }
+          }
         }
       } else {
         this.logger.warn(`⚠️ [AnalysisController] No completed analyses found for category: ${category}`);
@@ -844,12 +876,40 @@ class AnalysisController {
         });
         
         if (latestAnalysis.result) {
-          // KORREKTE Struktur: result.result.issues (nicht result.issues)
-          if (latestAnalysis.result.result && latestAnalysis.result.result.issues) {
-            issues = latestAnalysis.result.result.issues;
-            this.logger.info(`✅ [AnalysisController] Found ${issues.length} issues in result.result.issues`);
-          } else {
-            this.logger.warn(`⚠️ [AnalysisController] No issues found in result.result.issues`);
+          // First, try to extract from individual step details (new structure)
+          if (latestAnalysis.result.details) {
+            const details = latestAnalysis.result.details;
+            // Aggregate issues from all steps in details
+            for (const stepName in details) {
+              const stepDetails = details[stepName];
+              if (stepDetails.issues && Array.isArray(stepDetails.issues)) {
+                // Filter out circular reference strings
+                const validIssues = stepDetails.issues.filter(issue => 
+                  typeof issue === 'object' && issue !== null && issue !== '[Circular Reference]'
+                );
+                issues.push(...validIssues);
+              }
+            }
+            this.logger.info(`✅ [AnalysisController] Found ${issues.length} issues from step details`);
+          }
+          
+          // Fallback: Check traditional structures (for backwards compatibility)
+          if (issues.length === 0) {
+            if (latestAnalysis.result.issues && Array.isArray(latestAnalysis.result.issues)) {
+              // Filter out circular reference strings
+              issues = latestAnalysis.result.issues.filter(issue => 
+                typeof issue === 'object' && issue !== null && issue !== '[Circular Reference]'
+              );
+              this.logger.info(`✅ [AnalysisController] Found ${issues.length} issues in result.issues (filtered)`);
+            } else if (latestAnalysis.result.result && latestAnalysis.result.result.issues && Array.isArray(latestAnalysis.result.result.issues)) {
+              // Filter out circular reference strings
+              issues = latestAnalysis.result.result.issues.filter(issue => 
+                typeof issue === 'object' && issue !== null && issue !== '[Circular Reference]'
+              );
+              this.logger.info(`✅ [AnalysisController] Found ${issues.length} issues in result.result.issues (filtered)`);
+            } else {
+              this.logger.warn(`⚠️ [AnalysisController] No issues found in any structure`);
+            }
           }
         }
       } else {
@@ -1011,16 +1071,17 @@ class AnalysisController {
         
         this.logger.info(`🔍 [AnalysisController] Latest analysis result:`, JSON.stringify(latestAnalysis.result, null, 2));
         
-        // FIXED: Look for summary in the correct structure (result.result.summary)
-        if (latestAnalysis.result && latestAnalysis.result.result && latestAnalysis.result.result.summary) {
-          summary = latestAnalysis.result.result.summary;
-          this.logger.info(`✅ [AnalysisController] Found summary in result.result.summary`);
-        } else if (latestAnalysis.result && latestAnalysis.result.summary) {
-          // Fallback to direct summary
-          summary = latestAnalysis.result.summary;
-          this.logger.info(`✅ [AnalysisController] Found summary in result.summary`);
-        } else {
-          this.logger.warn(`⚠️ [AnalysisController] No summary found in analysis result structure`);
+        // Check both possible structures: result.summary and result.result.summary
+        if (latestAnalysis.result) {
+          if (latestAnalysis.result.summary) {
+            summary = latestAnalysis.result.summary;
+            this.logger.info(`✅ [AnalysisController] Found summary in result.summary`);
+          } else if (latestAnalysis.result.result && latestAnalysis.result.result.summary) {
+            summary = latestAnalysis.result.result.summary;
+            this.logger.info(`✅ [AnalysisController] Found summary in result.result.summary`);
+          } else {
+            this.logger.warn(`⚠️ [AnalysisController] No summary found in either result.summary or result.result.summary`);
+          }
         }
       }
       

@@ -149,6 +149,11 @@ class EnvironmentManifestStep extends StepBuilder {
     }));
   }
 
+  generateIssues(environmentIssues) {
+    // Return the issues directly - they're already in the correct format
+    return environmentIssues;
+  }
+
   generateDocumentation(environmentIssues, metrics) {
     return [
       {

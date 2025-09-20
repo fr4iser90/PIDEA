@@ -191,7 +191,7 @@ class LayerViolationCommands {
                 spinner.succeed(`Report saved to: ${options.output}`);
             } else {
                 spinner.succeed('Report generated');
-                console.log(report);
+                // Report generated successfully
             }
 
         } catch (error) {

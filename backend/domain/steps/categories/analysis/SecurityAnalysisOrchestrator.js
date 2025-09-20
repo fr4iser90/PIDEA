@@ -8,6 +8,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AnalysisTaskService = require('@services/analysis/AnalysisTaskService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -40,6 +41,7 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
   constructor() {
     super(config);
     this.securitySteps = null;
+    this.taskService = new AnalysisTaskService();
   }
 
   /**
@@ -166,6 +168,14 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
         securityScore: securityScore
       });
 
+      // Generate tasks using unified task service
+      const tasks = await this.taskService.createTasksFromAnalysis(
+        results, 
+        context, 
+        'SecurityAnalysisOrchestrator'
+      );
+      results.tasks = tasks;
+
       // Database saving is handled by WorkflowController
       logger.info('📊 Security analysis results ready for database save by WorkflowController');
 
@@ -176,7 +186,8 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
           type: 'security-analysis',
           category: 'security',
           stepsExecuted: results.summary.totalSteps,
-          securityScore: securityScore
+          securityScore: securityScore,
+          tasksCreated: tasks.length
         }
       };
 

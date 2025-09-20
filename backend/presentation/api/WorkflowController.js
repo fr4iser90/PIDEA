@@ -637,83 +637,82 @@ class WorkflowController {
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 20;
                 stepOptions.analysis_results = analysis_results;
-            } else if (mode === 'comprehensive-analysis') {
-                // Load comprehensive analysis workflow from JSON
+            } else if (mode === 'individual-analysis') {
+                // Execute individual analysis orchestrators separately
                 try {
-                    // Get workflowLoaderService from application's service registry
-                    let workflowLoaderService = this.workflowLoaderService;
+                    const analysisOrchestrators = [
+                        'SecurityAnalysisOrchestrator',
+                        'ArchitectureAnalysisOrchestrator', 
+                        'PerformanceAnalysisOrchestrator',
+                        'ManifestAnalysisOrchestrator',
+                        'DependencyAnalysisOrchestrator',
+                        'TechStackAnalysisOrchestrator',
+                        'CodeQualityAnalysisOrchestrator'
+                    ];
                     
-                    // Debug logging
-                    this.logger.info('WorkflowController: Debugging workflowLoaderService', {
-                        hasWorkflowLoaderService: !!workflowLoaderService,
-                        hasApplication: !!this.application,
-                        hasServiceRegistry: !!(this.application && this.application.serviceRegistry),
-                        workflowLoaderServiceType: typeof workflowLoaderService,
-                        workflowLoaderServiceKeys: workflowLoaderService ? Object.keys(workflowLoaderService) : null,
-                        hasGetWorkflowMethod: workflowLoaderService ? typeof workflowLoaderService.getWorkflow : null,
-                        userId
-                    });
-                    if (!workflowLoaderService && this.application && this.application.serviceRegistry) {
+                    const results = [];
+                    
+                    for (const orchestratorName of analysisOrchestrators) {
                         try {
-                            workflowLoaderService = this.application.serviceRegistry.getService('workflowLoaderService');
-                            this.logger.info('WorkflowController: Retrieved workflowLoaderService from service registry', {
-                                hasWorkflowLoaderService: !!workflowLoaderService,
-                                userId
+                            this.logger.info(`WorkflowController: Executing individual analysis: ${orchestratorName}`, { userId });
+                            
+                            const stepResult = await this.executeStep({
+                                step: orchestratorName,
+                                type: 'analysis'
+                            }, {
+                                projectId,
+                                userId,
+                                workspacePath,
+                                ...options
+                            }, projectId, userId, workspacePath, options);
+                            
+                            results.push({
+                                orchestrator: orchestratorName,
+                                success: stepResult.success,
+                                result: stepResult.result,
+                                error: stepResult.error
                             });
+                            
                         } catch (error) {
-                            this.logger.error('WorkflowController: Failed to get workflowLoaderService from service registry', {
+                            this.logger.error(`WorkflowController: Failed to execute ${orchestratorName}`, {
                                 error: error.message,
                                 userId
                             });
+                            
+                            results.push({
+                                orchestrator: orchestratorName,
+                                success: false,
+                                error: error.message
+                            });
                         }
                     }
                     
-                    if (!workflowLoaderService) {
-                        throw new Error('WorkflowLoaderService not available');
-                    }
-                    
-                    // Load the comprehensive analysis workflow from analysis-workflows.json
-                    const workflow = workflowLoaderService.getWorkflow('comprehensive-analysis-workflow');
-                    if (!workflow) {
-                        throw new Error('Comprehensive analysis workflow not found');
-                    }
-                    
-                    this.logger.info('WorkflowController: Successfully loaded comprehensive analysis workflow', {
-                        workflowSteps: workflow.steps?.length || 0,
-                        userId
-                    });
-                    
-                    // Define taskData for comprehensive analysis
-                    const taskData = {
-                        type: 'comprehensive-analysis',
-                        projectId,
-                        userId,
-                        workspacePath,
-                        options: {
-                            ...options,
-                            analysisType: 'comprehensive'
-                        }
-                    };
-                    
-                    // Execute the workflow with queue integration
-                    const workflowResult = await this.executeWorkflowSteps(workflow, taskData, projectId, userId, workspacePath, options);
+                    const successCount = results.filter(r => r.success).length;
+                    const totalCount = results.length;
                     
                     return res.json({
-                        success: workflowResult.success,
-                        data: workflowResult,
-                        message: workflowResult.success ? 'Comprehensive analysis completed successfully' : 'Comprehensive analysis failed',
-                        workflowId: workflowResult.workflowId
+                        success: successCount > 0,
+                        data: {
+                            results,
+                            summary: {
+                                total: totalCount,
+                                successful: successCount,
+                                failed: totalCount - successCount
+                            }
+                        },
+                        message: `Individual analysis completed: ${successCount}/${totalCount} successful`,
+                        analysisType: 'individual'
                     });
                     
                 } catch (error) {
-                    this.logger.error('WorkflowController: Failed to execute comprehensive analysis workflow', {
+                    this.logger.error('WorkflowController: Failed to execute individual analysis', {
                         error: error.message,
                         userId
                     });
                     
                     return res.status(500).json({
                         success: false,
-                        error: `Failed to execute comprehensive analysis: ${error.message}`
+                        error: `Failed to execute individual analysis: ${error.message}`
                     });
                 }
             } else if (mode === 'security-recommendations' || mode === 'security-recommendations-analysis') {

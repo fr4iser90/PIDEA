@@ -254,7 +254,8 @@ async function main() {
     
     if (args.includes('--report')) {
         const report = validator.generateReport();
-        console.log(report);
+        console.logconsole.logconsole.logconsole.logconsole.log
+        (report);
         return 0;
     }
 

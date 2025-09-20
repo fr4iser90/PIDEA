@@ -311,8 +311,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
     setLoadingStates(new Map());
     setErrorStates(new Map());
     
-    // Hide Run All Analysis progress bar when comprehensive analysis is completed
-    if (data.analysisType === 'comprehensive' || data.type === 'comprehensive') {
+    // Hide Run All Analysis progress bar when individual analysis is completed
+    if (data.analysisType === 'individual' || data.type === 'individual') {
       setRunAllLoading(false);
       setRunAllProgress(0);
       logger.debug('Comprehensive analysis completed, hiding progress bar');
@@ -326,7 +326,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   // Queue event handlers
   const handleQueueItemAdded = (data) => {
     logger.info('Queue item added:', data);
-    // Set loading states for comprehensive analysis when workflow is added to queue
+    // Set loading states for individual analysis when workflow is added to queue
     if (data.workflow && data.workflow.type === 'workflow') {
       setRunAllLoading(true);
       setRunAllProgress(0);
@@ -438,12 +438,12 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
         throw new Error('No project ID available');
       }
       
-      // Make ONE comprehensive analysis call instead of 7 separate calls
+      // Make ONE individual analysis call instead of 7 separate calls
       try {
-        await handleStartAnalysis('comprehensive');
+        await handleStartAnalysis('individual-analysis');
         // DON'T set progress here - let backend events handle it!
       } catch (error) {
-        logger.error('Failed to start comprehensive analysis:', error);
+        logger.error('Failed to start individual analysis:', error);
         throw error;
       }
       

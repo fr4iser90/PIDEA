@@ -53,27 +53,37 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const apiRepository = new APIChatRepository();
   const { showNotification } = useNotificationStore();
 
-  // ✅ NEW: Load category data when component mounts
+  // ✅ NEW: Load only basic analysis status when component mounts (no detailed data)
   useEffect(() => {
     if (activeIDE?.workspacePath) {
-      logger.info('AnalysisDataViewer: Loading category analysis data for workspace:', activeIDE.workspacePath);
-      loadCategoryAnalysisData(activeIDE.workspacePath);
+      logger.info('AnalysisDataViewer: Loading basic analysis status for workspace:', activeIDE.workspacePath);
+      // Only load basic status, not detailed category data
+      loadCategoryAnalysisData(activeIDE.workspacePath, 'status-only');
     }
   }, [activeIDE?.workspacePath, loadCategoryAnalysisData]);
 
-  // ✅ NEW: Handle category section toggle
+  // ✅ NEW: Handle category section toggle with lazy loading
   const handleCategoryToggle = useCallback((category) => {
+    const isExpanding = !expandedCategories[category];
+    
     setExpandedCategories(prev => ({
       ...prev,
       [category]: !prev[category]
     }));
     
-    // Load category data if not already loaded
-    if (activeIDE?.workspacePath && !categoryLoading.loadedCategories.includes(category)) {
-      logger.info(`Loading ${category} data for workspace:`, activeIDE.workspacePath);
-      loadCategoryAnalysisData(activeIDE.workspacePath, category);
+    // Only load data when expanding (not when collapsing)
+    if (isExpanding && activeIDE?.workspacePath) {
+      // Check if data is already loaded for this category
+      const hasData = categoryLoading.loadedCategories.includes(category);
+      
+      if (!hasData) {
+        logger.info(`🔄 Lazy loading ${category} data for workspace:`, activeIDE.workspacePath);
+        loadCategoryAnalysisData(activeIDE.workspacePath, category);
+      } else {
+        logger.info(`✅ ${category} data already loaded, skipping API call`);
+      }
     }
-  }, [activeIDE?.workspacePath, categoryLoading.loadedCategories, loadCategoryAnalysisData]);
+  }, [activeIDE?.workspacePath, categoryLoading.loadedCategories, loadCategoryAnalysisData, expandedCategories]);
 
   // ✅ NEW: Handle analysis execution
   const handleAnalysisExecute = useCallback(async (analysisType, options = {}) => {

@@ -415,6 +415,24 @@ class IndividualAnalysisService {
       
       // Check for circular references
       if (seen.has(obj)) {
+        // For analysis results, try to extract serializable data
+        if (obj.issues && Array.isArray(obj.issues)) {
+          return { issues: obj.issues, recommendations: obj.recommendations || [], summary: obj.summary || null };
+        }
+        if (obj.recommendations && Array.isArray(obj.recommendations)) {
+          return { issues: obj.issues || [], recommendations: obj.recommendations, summary: obj.summary || null };
+        }
+        if (obj.summary) {
+          return { issues: obj.issues || [], recommendations: obj.recommendations || [], summary: obj.summary };
+        }
+        // For other objects with circular references, try to extract common properties
+        if (obj.result && typeof obj.result === 'object') {
+          return { result: obj.result };
+        }
+        if (obj.success !== undefined) {
+          return { success: obj.success };
+        }
+        // Only return '[Circular Reference]' as last resort
         return '[Circular Reference]';
       }
       

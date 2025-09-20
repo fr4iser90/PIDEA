@@ -94,7 +94,6 @@
     "joi": "^17.11.0",
     "jsdom": "^23.0.1",
     "jsonwebtoken": "^9.0.2",
-    "module-alias": "^2.2.3",
     "morgan": "^1.10.0",
     "ora": "^7.0.1",
     "pg": "^8.11.3",
@@ -117,6 +116,7 @@
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
     "mocha": "^11.7.1",
+    "module-alias": "^2.2.3",
     "nodemon": "^3.0.2",
     "sinon": "^21.0.0",
     "supertest": "^6.3.3"
@@ -126,5 +126,36 @@
   },
   "bin": {
     "task": "./cli/index.js"
+  },
+  "_moduleAliases": {
+    "@steps": "./domain/steps",
+    "@logging": "./infrastructure/logging",
+    "@domain": "./domain",
+    "@application": "./application",
+    "@infrastructure": "./infrastructure",
+    "@presentation": "./presentation",
+    "@tests": "./tests",
+    "@cli": "./cli",
+    "@scripts": "./scripts",
+    "@commands": "./application/commands",
+    "@handlers": "./application/handlers",
+    "@workflows": "./domain/workflows",
+    "@frameworks": "./domain/frameworks",
+    "@entities": "./domain/entities",
+    "@repositories": "./domain/repositories",
+    "@services": "./domain/services",
+    "@value-objects": "./domain/value-objects",
+    "@messaging": "./infrastructure/messaging",
+    "@database": "./infrastructure/database",
+    "@external": "./infrastructure/external",
+    "@auth": "./infrastructure/auth",
+    "@auto": "./infrastructure/auto",
+    "@security": "./infrastructure/security",
+    "@templates": "./infrastructure/templates",
+    "@strategies": "./infrastructure/strategies",
+    "@controllers": "./presentation/api/controllers",
+    "@websocket": "./presentation/websocket",
+    "@api": "./presentation/api",
+    "@config": "./config"
   }
 }

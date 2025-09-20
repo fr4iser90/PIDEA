@@ -129,13 +129,8 @@ class PackageJsonManifestStep extends StepBuilder {
   }
 
   generateIssues(packageJsonIssues) {
-    return packageJsonIssues.map(issue => ({
-      type: 'package-json',
-      severity: issue.severity,
-      message: issue.message,
-      field: issue.field,
-      recommendation: issue.recommendation
-    }));
+    // Return the issues directly - they're already in the correct format
+    return packageJsonIssues;
   }
 
   generateTasks(packageJsonIssues) {

@@ -35,7 +35,7 @@ const config = {
 
 class MemoryAnalysisStep {
   constructor() {
-    MemoryAnalysisStep = 'MemoryAnalysisStep';
+    this.name = 'MemoryAnalysisStep';
     this.description = 'Analyzes memory usage patterns and optimizations';
     this.category = 'performance';
     this.dependencies = [];
@@ -50,7 +50,7 @@ class MemoryAnalysisStep {
     const step = StepBuilder.build(config, context);
     
     try {
-      logger.info(`⚡ Executing ${MemoryAnalysisStep}...`);
+      logger.info(`⚡ Executing MemoryAnalysisStep...`);
       
       // Validate context
       this.validateContext(context);
@@ -672,8 +672,8 @@ class MemoryAnalysisStep {
         description: `Analysis score of ${result.score}% indicates areas for improvement`,
         severity: 'medium',
         priority: 'medium',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         location: 'analysis-results',
         suggestion: 'Improve analysis results by addressing identified issues'
       });
@@ -687,8 +687,8 @@ class MemoryAnalysisStep {
         description: 'Critical issues found in the analysis',
         severity: 'critical',
         priority: 'critical',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         location: 'analysis-results',
         suggestion: 'Immediately address critical issues'
       });
@@ -702,8 +702,8 @@ class MemoryAnalysisStep {
         description: 'High severity issues found in the analysis',
         severity: 'high',
         priority: 'high',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         location: 'analysis-results',
         suggestion: 'Address high severity issues promptly'
       });
@@ -726,8 +726,8 @@ class MemoryAnalysisStep {
         title: 'Improve Analysis Score',
         description: `Current score of ${result.score}% can be improved`,
         priority: 'medium',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         action: 'Implement best practices to improve analysis score',
         impact: 'Better code quality and maintainability'
       });
@@ -740,8 +740,8 @@ class MemoryAnalysisStep {
         title: 'Add More Design Patterns',
         description: 'Consider implementing additional design patterns',
         priority: 'medium',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         action: 'Research and implement appropriate design patterns',
         impact: 'Improved code organization and maintainability'
       });
@@ -754,8 +754,8 @@ class MemoryAnalysisStep {
         title: 'Address Security Vulnerabilities',
         description: `${result.vulnerabilities.length} vulnerabilities found`,
         priority: 'high',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         action: 'Review and fix identified security vulnerabilities',
         impact: 'Enhanced security posture'
       });
@@ -768,8 +768,8 @@ class MemoryAnalysisStep {
         title: 'Improve Performance',
         description: 'Performance analysis indicates room for improvement',
         priority: 'medium',
-        category: this.category,
-        source: MemoryAnalysisStep,
+        category: 'performance',
+        source: 'MemoryAnalysisStep',
         action: 'Optimize code for better performance',
         impact: 'Faster execution and better user experience'
       });
@@ -789,21 +789,21 @@ class MemoryAnalysisStep {
     
     // Create main improvement task
     const mainTask = {
-      id: `${MemoryAnalysisStep.toLowerCase()}-improvement-${Date.now()}`,
+      id: `memory-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${MemoryAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${MemoryAnalysisStep} analysis`,
       type: 'improvement',
-      category: this.category,
+      category: 'performance',
       priority: 'medium',
       status: 'pending',
       projectId: projectId,
       metadata: {
-        source: MemoryAnalysisStep,
+        source: 'MemoryAnalysisStep',
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
         recommendations: result.recommendations ? result.recommendations.length : 0
       },
-      estimatedHours: this.calculateEstimatedHours(result),
+      estimatedHours: 4,
       phase: 'improvement',
       stage: 'planning'
     };
@@ -813,17 +813,17 @@ class MemoryAnalysisStep {
     // Create subtasks for critical issues
     if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
       const criticalTask = {
-        id: `${MemoryAnalysisStep.toLowerCase()}-critical-${Date.now()}`,
+        id: `memory-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${MemoryAnalysisStep}`,
         description: 'Address critical issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'performance',
         priority: 'critical',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: MemoryAnalysisStep,
+          source: 'MemoryAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'critical')
         },
         estimatedHours: 4,
@@ -836,17 +836,17 @@ class MemoryAnalysisStep {
     // Create subtasks for high priority issues
     if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
       const highTask = {
-        id: `${MemoryAnalysisStep.toLowerCase()}-high-${Date.now()}`,
+        id: `memory-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${MemoryAnalysisStep}`,
         description: 'Address high priority issues identified in analysis',
         type: 'fix',
-        category: this.category,
+        category: 'performance',
         priority: 'high',
         status: 'pending',
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: MemoryAnalysisStep,
+          source: 'MemoryAnalysisStep',
           issues: result.issues.filter(issue => issue.severity === 'high')
         },
         estimatedHours: 3,
@@ -902,7 +902,14 @@ class MemoryAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${MemoryAnalysisStep.toLowerCase()}`);
+    const docsDir = path.join(projectPath, 'docs', 'analysis', 'performance', 'memory-analysis-step');
+    
+    // Ensure directory exists
+    try {
+      await fs.mkdir(docsDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     
     
     // Create implementation file
@@ -929,7 +936,7 @@ class MemoryAnalysisStep {
 
 ## 📋 Analysis Overview
 - **Step Name**: ${MemoryAnalysisStep}
-- **Category**: ${this.category}
+- **Category**: performance
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.summary?.memoryScore || 0}%
 - **Coverage**: ${result.summary?.coverage || 0}%
@@ -955,7 +962,7 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
       type: 'implementation',
       title: 'Memory Performance Analysis Implementation',
       path: docPath,
-      category: this.category,
+      category: 'performance',
       source: MemoryAnalysisStep
     };
   }
@@ -997,7 +1004,7 @@ Based on the analysis, consider implementing memory optimizations to improve per
       type: 'report',
       title: 'Memory Performance Analysis Report',
       path: docPath,
-      category: this.category,
+      category: 'performance',
       source: MemoryAnalysisStep
     };
   }

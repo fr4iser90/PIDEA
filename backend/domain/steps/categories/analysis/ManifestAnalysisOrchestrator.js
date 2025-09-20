@@ -8,6 +8,7 @@
 
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
+const AnalysisTaskService = require('@services/analysis/AnalysisTaskService');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -41,6 +42,7 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
   constructor() {
     super(config);
     this.manifestSteps = null;
+    this.taskService = new AnalysisTaskService();
   }
 
   /**
@@ -100,37 +102,28 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
           
           const stepResult = await stepModule.execute(context);
           
-          results.details[stepName] = stepResult;
+          results.details[stepName] = {
+            success: stepResult.success,
+            issues: stepResult.issues || [],
+            recommendations: stepResult.recommendations || [],
+            tasks: stepResult.tasks || [],
+            documentation: stepResult.documentation || [],
+            error: stepResult.error || null
+          };
           results.summary.completedSteps++;
           
-          // Aggregate standardized outputs only
-          if (stepResult.issues) {
-            results.issues.push(...stepResult.issues);
+          // Aggregate standardized outputs from details only (no circular references)
+          if (results.details[stepName].issues) {
+            results.issues.push(...results.details[stepName].issues);
           }
-          if (stepResult.recommendations) {
-            results.recommendations.push(...stepResult.recommendations);
+          if (results.details[stepName].recommendations) {
+            results.recommendations.push(...results.details[stepName].recommendations);
           }
-          if (stepResult.tasks) {
-            results.tasks.push(...stepResult.tasks);
+          if (results.details[stepName].tasks) {
+            results.tasks.push(...results.details[stepName].tasks);
           }
-          if (stepResult.documentation) {
-            results.documentation.push(...stepResult.documentation);
-          }
-          
-          // Also check stepResult.result for nested data
-          if (stepResult.result) {
-            if (stepResult.result.issues) {
-              results.issues.push(...stepResult.result.issues);
-            }
-            if (stepResult.result.recommendations) {
-              results.recommendations.push(...stepResult.result.recommendations);
-            }
-            if (stepResult.result.tasks) {
-              results.tasks.push(...stepResult.result.tasks);
-            }
-            if (stepResult.result.documentation) {
-              results.documentation.push(...stepResult.result.documentation);
-            }
+          if (results.details[stepName].documentation) {
+            results.documentation.push(...results.details[stepName].documentation);
           }
           
           logger.info(`✅ ${stepName} completed successfully`);
@@ -158,6 +151,14 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
         manifestQualityScore: manifestQualityScore
       });
 
+      // Generate tasks using unified task service
+      const tasks = await this.taskService.createTasksFromAnalysis(
+        results, 
+        context, 
+        'ManifestAnalysisOrchestrator'
+      );
+      results.tasks = tasks;
+
       // Database saving is handled by WorkflowController
       logger.info('📊 Manifest analysis results ready for database save by WorkflowController');
 
@@ -168,7 +169,8 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
           type: 'manifest-analysis',
           category: 'manifest',
           stepsExecuted: results.summary.totalSteps,
-          manifestQualityScore: manifestQualityScore
+          manifestQualityScore: manifestQualityScore,
+          tasksCreated: tasks.length
         }
       };
 
