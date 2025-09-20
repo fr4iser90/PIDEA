@@ -202,7 +202,7 @@ class DatabaseConnection {
     };
   }
 
-  getRepository(repositoryName) {
+  getRepository(repositoryName, eventBus = null, statusTransitionService = null) {
     // Always use PostgreSQL repositories with SQL translator for SQLite fallback
     const dbType = this.getType();
     
@@ -211,7 +211,7 @@ class DatabaseConnection {
       try {
         const RepositoryClass = require(`./PostgreSQL${repositoryName}Repository`);
         logger.debug(`Using PostgreSQL${repositoryName}Repository with SQL translator for SQLite`);
-        return new RepositoryClass(this);
+        return new RepositoryClass(this, eventBus, statusTransitionService);
       } catch (error) {
         if (error.code === 'MODULE_NOT_FOUND') {
           throw new Error(`Repository ${repositoryName} not implemented for PostgreSQL`);
@@ -222,7 +222,7 @@ class DatabaseConnection {
       // Use PostgreSQL repository directly for PostgreSQL
       try {
         const RepositoryClass = require(`./PostgreSQL${repositoryName}Repository`);
-        return new RepositoryClass(this);
+        return new RepositoryClass(this, eventBus, statusTransitionService);
       } catch (error) {
         if (error.code === 'MODULE_NOT_FOUND') {
           throw new Error(`Repository ${repositoryName} not implemented for PostgreSQL`);

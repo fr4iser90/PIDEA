@@ -48,8 +48,8 @@ File Management? → File Management Guidelines
 
 **Core Workflow:**
 0. **Create new GIT branch**
-1. **prompt + [`task-analyze.md`](./task-analyze.md)** = `[name]-analysis.md` in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
-2. **`[name]-analysis.md` + [`task-create.md`](./task-create.md)** = `[name]-implementation.md` / `[name]-index.md` / `[name]-phase-[number].md` in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
+1. **prompt + [`task-analyze.md`](./task-analyze.md)** = `[name]-analysis.md` in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
+2. **`[name]-analysis.md` + [`task-create.md`](./task-create.md)** = `[name]-implementation.md` / `[name]-index.md` / `[name]-phase-[number].md` in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
 3. **[`task-review.md`](./task-review.md) + `[name]-index.md`** = `[name]-phase-[number].md` (updated)
 4. **[`task-execute.md`](./task-execute.md) + `[name]-index.md`** = `[name]-phase-[number].md` (updated)  
 5. **[`task-review.md`](./task-review.md) + `[name]-index.md`** = `[name]-index.md` (updated)
@@ -60,22 +60,22 @@ File Management? → File Management Guidelines
    - Repeat step 4 if more implementation needed
 
 #### **Standard Task Workflow (For New Tasks)**
-1. `task-create.md` → Creates implementation plan and index file in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
+1. `task-create.md` → Creates implementation plan and index file in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
 2. `task-review.md` → Validates and repairs implementation plan
 3. `task-execute.md` → Executes implementation
 4. `task-check-state.md` → Tracks current status and progress
 5. `task-review.md` → Validates completion
 
 #### **Project Analysis Workflow (For Project Analysis)**
-1. `task-analyze.md` → Identifies project-wide gaps in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
-2. `task-create.md` → Creates tasks for identified gaps (with index files) in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
+1. `task-analyze.md` → Identifies project-wide gaps in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
+2. `task-create.md` → Creates tasks for identified gaps (with index files) in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
 3. `task-review.md` → Validates all new task plans
 4. `task-execute.md` → Executes implementation (for each task)
 5. `task-check-state.md` → Tracks progress (for each task)
 
 #### **Code Quality Workflow (For Refactoring)**
 1. `task-refactor.md` → Identifies refactoring needs
-2. `task-create.md` → Creates refactoring task plan (with index file) in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
+2. `task-create.md` → Creates refactoring task plan (with index file) in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
 3. `task-review.md` → Validates refactoring plan
 4. `task-execute.md` → Performs refactoring
 5. `task-review.md` → Validates refactoring results
@@ -84,22 +84,22 @@ File Management? → File Management Guidelines
 ### 🚀 **Usage Guidelines**
 
 #### **For New Tasks**
-1. Use `task-create.md` to plan the task (creates index file automatically in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`)
+1. Use `task-create.md` to plan the task (creates index file automatically in `docs/09_roadmap/pending/[priority]/[category]/[name]/`)
 2. Use `task-review.md` to validate the plan
 3. Use `task-execute.md` to implement
 4. Use `task-check-state.md` to track progress
 5. Use `task-review.md` to validate completion
 
 #### **For Project Analysis**
-1. Use `task-analyze.md` for project-wide gaps in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
-2. Use `task-create.md` to create tasks for gaps (creates index files automatically in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`)
+1. Use `task-analyze.md` for project-wide gaps in `docs/09_roadmap/pending/[priority]/[category]/[name]/`
+2. Use `task-create.md` to create tasks for gaps (creates index files automatically in `docs/09_roadmap/pending/[priority]/[category]/[name]/`)
 3. Use `task-review.md` to validate all task plans
 4. Use `task-execute.md` to implement solutions
 5. Use `task-check-state.md` to track progress
 
 #### **For Code Quality**
 1. Use `task-refactor.md` for large file refactoring
-2. Use `task-create.md` to create refactoring task plan (creates index file automatically in `docs/09_roadmap/[status]/[priority]/[category]/[name]/`)
+2. Use `task-create.md` to create refactoring task plan (creates index file automatically in `docs/09_roadmap/pending/[priority]/[category]/[name]/`)
 3. Use `task-review.md` to validate refactoring plan
 4. Use `task-execute.md` to perform refactoring
 5. Use `task-review.md` to validate refactoring results

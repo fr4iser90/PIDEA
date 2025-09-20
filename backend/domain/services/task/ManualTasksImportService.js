@@ -82,6 +82,10 @@ class ManualTasksImportService {
                         // completed/2025-q3/category/file
                         priority = 'medium'; // Default for completed
                         category = parts[2];
+                    } else if (parts[1].includes('-priority')) {
+                        // Handle medium-priority, high-priority, etc.
+                        priority = parts[1].replace('-priority', '');
+                        category = parts[2];
                     } else {
                         // completed/category/file
                         priority = 'medium';
@@ -93,23 +97,54 @@ class ManualTasksImportService {
                     if (['high', 'medium', 'low', 'critical'].includes(parts[1])) {
                         priority = parts[1];
                         category = parts[2];
+                    } else if (parts[1].includes('-priority')) {
+                        // Handle medium-priority, high-priority, etc.
+                        priority = parts[1].replace('-priority', '');
+                        category = parts[2];
                     } else {
                         priority = 'medium'; // Default
                         category = parts[1];
                     }
                 } else if (parts[0] === 'in-progress') {
                     status = 'in_progress';
-                    priority = 'medium'; // Default for in-progress
-                    category = parts[1];
+                    // Check if second part is a priority or category
+                    if (['high', 'medium', 'low', 'critical'].includes(parts[1])) {
+                        priority = parts[1];
+                        category = parts[2];
+                    } else if (parts[1].includes('-priority')) {
+                        // Handle medium-priority, high-priority, etc.
+                        priority = parts[1].replace('-priority', '');
+                        category = parts[2];
+                    } else {
+                        priority = 'medium'; // Default for in-progress
+                        category = parts[1];
+                    }
                 } else if (parts[0] === 'failed') {
                     status = 'failed';
-                    priority = 'medium'; // Default for failed
-                    category = parts[1];
+                    // Check if second part is a priority or category
+                    if (['high', 'medium', 'low', 'critical'].includes(parts[1])) {
+                        priority = parts[1];
+                        category = parts[2];
+                    } else if (parts[1].includes('-priority')) {
+                        // Handle medium-priority, high-priority, etc.
+                        priority = parts[1].replace('-priority', '');
+                        category = parts[2];
+                    } else {
+                        priority = 'medium'; // Default for failed
+                        category = parts[1];
+                    }
                 } else {
-                    // Fallback for old structure or other paths
-                    status = 'pending';
-                    priority = 'medium';
-                    category = parts[0];
+                    // ✅ FIXED: Handle old structure (docs/09_roadmap/tasks/category/task/)
+                    if (parts[0] === 'tasks') {
+                        status = 'pending'; // Default for old structure
+                        priority = 'medium'; // Default for old structure
+                        category = parts[1]; // Category is the second part
+                    } else {
+                        // Fallback for other paths
+                        status = 'pending';
+                        priority = 'medium';
+                        category = parts[0];
+                    }
                 }
                 
                 // Extract filename and task name
@@ -218,10 +253,29 @@ class ManualTasksImportService {
                 
                 if (existing.length === 0 && !similarTask) {
                     // ✅ FIXED: Extract status and progress from progressInfo for direct task creation
-                    // Auto-detect status from file path if not found in content
+                    // Auto-detect status from content first, then fallback to file path
                     let taskStatus = progressInfo.status;
+                    if (!taskStatus && content) {
+                        // Look for status in content
+                        const statusMatch = content.match(/status[:\s]+(pending|in-progress|completed|blocked|cancelled)/i);
+                        if (statusMatch) {
+                            taskStatus = statusMatch[1].toLowerCase();
+                        }
+                        // Look for status indicators in content
+                        else if (content.includes('**Status**: In Progress') || content.includes('Status: In Progress') || content.includes('🔄 In Progress')) {
+                            taskStatus = 'in-progress';
+                        } else if (content.includes('**Status**: Completed') || content.includes('Status: Completed') || content.includes('✅ Completed')) {
+                            taskStatus = 'completed';
+                        } else if (content.includes('**Status**: Pending') || content.includes('Status: Pending') || content.includes('⏳ Pending')) {
+                            taskStatus = 'pending';
+                        } else if (content.includes('**Status**: Blocked') || content.includes('Status: Blocked') || content.includes('🚫 Blocked')) {
+                            taskStatus = 'blocked';
+                        } else if (content.includes('**Status**: Cancelled') || content.includes('Status: Cancelled') || content.includes('❌ Cancelled')) {
+                            taskStatus = 'cancelled';
+                        }
+                    }
                     if (!taskStatus) {
-                        // Auto-detect from file path structure
+                        // ✅ FIXED: Auto-detect from file path structure
                         if (status === 'completed') {
                             taskStatus = 'completed';
                         } else if (status === 'in_progress') {
@@ -230,6 +284,64 @@ class ManualTasksImportService {
                             taskStatus = 'failed';
                         } else {
                             taskStatus = 'pending';
+                        }
+                    }
+                    
+                    // ✅ FIXED: Override status with content-based detection if found
+                    if (content) {
+                        // Look for status indicators in content (more comprehensive)
+                        if (content.includes('🔄 In Progress') || content.includes('**Status**: In Progress') || content.includes('Status: In Progress')) {
+                            taskStatus = 'in-progress';
+                        } else if (content.includes('✅ Completed') || content.includes('**Status**: Completed') || content.includes('Status: Completed')) {
+                            taskStatus = 'completed';
+                        } else if (content.includes('⏳ Pending') || content.includes('**Status**: Pending') || content.includes('Status: Pending')) {
+                            taskStatus = 'pending';
+                        } else if (content.includes('🚫 Blocked') || content.includes('**Status**: Blocked') || content.includes('Status: Blocked')) {
+                            taskStatus = 'blocked';
+                        } else if (content.includes('❌ Cancelled') || content.includes('**Status**: Cancelled') || content.includes('Status: Cancelled')) {
+                            taskStatus = 'cancelled';
+                        }
+                    }
+                    
+                    // ✅ FIXED: Better priority detection from content
+                    let taskPriority = priority;
+                    if (content) {
+                        // Look for priority in content
+                        const priorityMatch = content.match(/priority[:\s]+(high|medium|low|critical)/i);
+                        if (priorityMatch) {
+                            taskPriority = priorityMatch[1].toLowerCase();
+                        }
+                        // Look for priority indicators in content (more comprehensive)
+                        else if (content.includes('**Priority**: High') || content.includes('Priority: High') || content.includes('🔥 High')) {
+                            taskPriority = 'high';
+                        } else if (content.includes('**Priority**: Medium') || content.includes('Priority: Medium') || content.includes('⚡ Medium')) {
+                            taskPriority = 'medium';
+                        } else if (content.includes('**Priority**: Low') || content.includes('Priority: Low') || content.includes('📝 Low')) {
+                            taskPriority = 'low';
+                        } else if (content.includes('**Priority**: Critical') || content.includes('Priority: Critical') || content.includes('🚨 Critical')) {
+                            taskPriority = 'critical';
+                        }
+                    }
+                    
+                    // ✅ FIXED: Better category detection from content
+                    let taskCategory = category;
+                    if (content) {
+                        // Look for category in content
+                        const categoryMatch = content.match(/category[:\s]+(backend|frontend|performance|security|architecture|general)/i);
+                        if (categoryMatch) {
+                            taskCategory = categoryMatch[1].toLowerCase();
+                        }
+                        // Look for category indicators in content
+                        else if (content.includes('**Category**: Backend') || content.includes('Category: Backend')) {
+                            taskCategory = 'backend';
+                        } else if (content.includes('**Category**: Frontend') || content.includes('Category: Frontend')) {
+                            taskCategory = 'frontend';
+                        } else if (content.includes('**Category**: Performance') || content.includes('Category: Performance')) {
+                            taskCategory = 'performance';
+                        } else if (content.includes('**Category**: Security') || content.includes('Category: Security')) {
+                            taskCategory = 'security';
+                        } else if (content.includes('**Category**: Architecture') || content.includes('Category: Architecture')) {
+                            taskCategory = 'architecture';
                         }
                     }
                     
@@ -251,7 +363,7 @@ class ManualTasksImportService {
                         name,
                         phase,
                         filename,
-                        filePath,
+                        sourcePath: filePath, // ✅ FIXED: Rename to sourcePath to avoid confusion
                         importedAt: new Date(),
                         featureId, // Eindeutige ID für das Feature
                         featureGroup: `${category}/${name}`, // Gruppierungs-Key
@@ -278,18 +390,34 @@ class ManualTasksImportService {
                         taskMetadata.isSummaryTask = true;
                     }
                     
-                                        // ✅ FIXED: Prepare task data with timestamps from markdown file
+                                        // ✅ FIXED: Extract full task details from markdown content
+                    const taskDetails = this.extractTaskDetailsFromMarkdown(content, filename);
+                    
+                    // ✅ FIXED: Prepare task data with timestamps from markdown file
                     const taskData = {
                         title: title,
-                        description: `Manual task imported from ${filename}`,
+                        description: taskDetails.description || `Manual task imported from ${filename}`,
                         type: 'manual',
-                        priority: priority, // This is the actual priority (high, medium, low, critical)
+                        priority: taskPriority, // This is the actual priority (high, medium, low, critical)
                         status: taskStatus,
                         progress: taskProgress,
-                        category: category,
+                        category: taskCategory,
                         projectId: projectId,
                         createdBy: 'me',
-                        metadata: JSON.stringify(taskMetadata)
+                        metadata: {
+                            ...taskMetadata,
+                            ...taskDetails.metadata,
+                            sourceFile: filename,
+                            sourcePath: filePath,
+                            // ✅ FIXED: Add content for frontend display
+                            content: content,
+                            htmlContent: content,
+                            steps: taskDetails.metadata.steps || [],
+                            requirements: taskDetails.metadata.requirements || [],
+                            acceptanceCriteria: taskDetails.metadata.acceptanceCriteria || [],
+                            // ✅ FIXED: Add new status-based path structure
+                            newPath: this.generateNewStatusBasedPath(taskStatus, taskPriority, taskCategory, name)
+                        }
                     };
 
                     if (progressInfo.createdDate) {
@@ -319,7 +447,7 @@ class ManualTasksImportService {
                         taskData.priority,
                         taskData.type,
                         taskData.category,
-                        taskData.metadata
+                        taskData.metadata // Pass object directly, not JSON string
                     );
                     
                     // ✅ FIXED: Update task status and progress after creation
@@ -896,6 +1024,179 @@ class ManualTasksImportService {
             logger.error(`❌ [ManualTasksImportService] Error getting feature progress:`, error);
             return null;
         }
+    }
+
+    /**
+     * Extract detailed task information from markdown content
+     * @param {string} content - Markdown content
+     * @param {string} filename - Source filename
+     * @returns {Object} Extracted task details
+     */
+    extractTaskDetailsFromMarkdown(content, filename) {
+        try {
+            const lines = content.split('\n');
+            let description = '';
+            let steps = [];
+            let requirements = [];
+            let acceptanceCriteria = [];
+            let currentSection = '';
+            let metadata = {};
+
+            // Extract sections from markdown
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                // Detect section headers
+                if (line.startsWith('## ')) {
+                    currentSection = line.replace('## ', '').toLowerCase();
+                    continue;
+                }
+                
+                // Extract description (first paragraph or overview section)
+                if (currentSection === 'overview' || (!currentSection && line && !line.startsWith('#') && !line.startsWith('-') && !line.startsWith('*'))) {
+                    if (description === '') {
+                        description = line;
+                    } else if (description.length < 200) {
+                        description += ' ' + line;
+                    }
+                }
+                
+                // Extract steps
+                if (currentSection.includes('step') || currentSection.includes('phase') || currentSection.includes('implementation')) {
+                    if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('1. ')) {
+                        steps.push(line.replace(/^[-*]\s*|\d+\.\s*/, ''));
+                    }
+                }
+                
+                // Extract requirements
+                if (currentSection.includes('requirement') || currentSection.includes('specification')) {
+                    if (line.startsWith('- ') || line.startsWith('* ')) {
+                        requirements.push(line.replace(/^[-*]\s*/, ''));
+                    }
+                }
+                
+                // Extract acceptance criteria
+                if (currentSection.includes('acceptance') || currentSection.includes('criteria') || currentSection.includes('definition')) {
+                    if (line.startsWith('- ') || line.startsWith('* ')) {
+                        acceptanceCriteria.push(line.replace(/^[-*]\s*/, ''));
+                    }
+                }
+                
+                // Extract metadata
+                if (line.startsWith('- **') && line.includes('**:')) {
+                    const match = line.match(/- \*\*([^*]+)\*\*: (.+)/);
+                    if (match) {
+                        const key = match[1].toLowerCase().replace(/\s+/g, '_');
+                        metadata[key] = match[2];
+                    }
+                }
+            }
+
+            // Clean up description
+            description = description.replace(/\s+/g, ' ').trim();
+            if (description.length > 500) {
+                description = description.substring(0, 500) + '...';
+            }
+
+            // If no description found, try to extract from title or first meaningful line
+            if (!description) {
+                const firstMeaningfulLine = lines.find(line => 
+                    line.trim() && 
+                    !line.startsWith('#') && 
+                    !line.startsWith('-') && 
+                    !line.startsWith('*') &&
+                    line.length > 10
+                );
+                if (firstMeaningfulLine) {
+                    description = firstMeaningfulLine.trim();
+                }
+            }
+
+            logger.debug(`📝 Extracted task details from ${filename}:`, {
+                description: description.substring(0, 100) + '...',
+                stepsCount: steps.length,
+                requirementsCount: requirements.length,
+                acceptanceCriteriaCount: acceptanceCriteria.length,
+                metadataKeys: Object.keys(metadata)
+            });
+
+            return {
+                description,
+                metadata: {
+                    ...metadata,
+                    steps: steps,
+                    requirements: requirements,
+                    acceptanceCriteria: acceptanceCriteria,
+                    extractedAt: new Date().toISOString()
+                }
+            };
+
+        } catch (error) {
+            logger.error(`❌ Failed to extract task details from ${filename}:`, error.message);
+            return {
+                description: `Manual task imported from ${filename}`,
+                metadata: {
+                    extractionError: error.message,
+                    extractedAt: new Date().toISOString()
+                }
+            };
+        }
+    }
+
+    /**
+     * Generate new status-based path structure
+     * @param {string} status - Task status (pending, in-progress, completed, etc.)
+     * @param {string} priority - Task priority (high, medium, low, critical)
+     * @param {string} category - Task category
+     * @param {string} title - Task title
+     * @returns {string} New status-based path
+     */
+    generateNewStatusBasedPath(status, priority, category, title) {
+        try {
+            // Convert title to task name (kebab-case)
+            const taskName = title.toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9-]/g, '')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+
+            // Generate path based on status
+            if (status === 'completed') {
+                // For completed tasks, use quarter-based organization
+                const quarter = this.getCurrentQuarter();
+                return `docs/09_roadmap/completed/${quarter}/${category}/${taskName}/`;
+            } else if (status === 'in-progress') {
+                return `docs/09_roadmap/in-progress/${priority}/${category}/${taskName}/`;
+            } else if (status === 'blocked') {
+                return `docs/09_roadmap/blocked/${priority}/${category}/${taskName}/`;
+            } else if (status === 'cancelled') {
+                return `docs/09_roadmap/cancelled/${priority}/${category}/${taskName}/`;
+            } else {
+                // Default to pending
+                return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
+            }
+        } catch (error) {
+            logger.error(`❌ Failed to generate new path for ${title}:`, error.message);
+            return `docs/09_roadmap/pending/medium/${category}/${title.toLowerCase().replace(/\s+/g, '-')}/`;
+        }
+    }
+
+    /**
+     * Get current quarter for completed tasks organization
+     * @returns {string} Current quarter (e.g., '2024-q4')
+     */
+    getCurrentQuarter() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1; // 0-based to 1-based
+        
+        let quarter;
+        if (month <= 3) quarter = 'q1';
+        else if (month <= 6) quarter = 'q2';
+        else if (month <= 9) quarter = 'q3';
+        else quarter = 'q4';
+        
+        return `${year}-${quarter}`;
     }
 }
 

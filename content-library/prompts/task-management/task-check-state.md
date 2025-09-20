@@ -5,8 +5,8 @@ Automatically check current implementation status, update progress indicators, t
 
 ## Phase
 Check current state against codebase, collect all data needed!
-Update existing Plan/Implementation [Name]-implementation.md in docs/09_roadmap/[status]/[priority]/[category]/[name]/ with current status, progress, and translation updates.
-**Note**: The system automatically creates a hierarchical folder structure: Status → Priority → Category → Task Name → Implementation files
+Update existing Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pending/[priority]/[category]/[name]/ with current status, progress, and translation updates.
+**Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Implementation files
 
 ## Core Principles
 - **Zero User Input Required**: Execute all status checks and updates automatically
@@ -168,7 +168,7 @@ const translateContent = async (content, sourceLanguage, targetLanguage = 'en') 
 - Create translation files if needed
 - Update progress tracking files
 - Modify documentation files with current state
-- **Organize files in hierarchical structure**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
+- **Organize files in hierarchical structure**: `docs/09_roadmap/pending/[priority]/[category]/[name]/`
 - **Update main implementation file**: `[name]-implementation.md`
 - **Create translation files**: `[name]-translation-[language].md`
 
@@ -344,11 +344,11 @@ grep -r "deve\|può\|sarà\|avere\|essere\|fare" . --exclude-dir=node_modules
 ## File Pattern Requirement
 > **File Pattern Requirement:**  
 > All Index, Implementation and Phase files must always be created using this pattern:
-> - **Index**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md  
+> - **Index**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-index.md  
 > If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.  
-> - **Implementation**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md  
-> - **Phase**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md  
-> - **Translation**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-translation-[language].md
+> - **Implementation**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md  
+> - **Phase**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md  
+> - **Translation**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-translation-[language].md
 
 ## Example Usage
 > Check current state of user authentication implementation. Automatically detect and translate any non-English content, update the auth-implementation.md file with current status indicators, progress percentages, identify any blockers, and ensure all content is optimized for AI processing. Execute all updates automatically without user input.

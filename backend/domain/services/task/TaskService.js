@@ -65,6 +65,7 @@ const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowCo
 // SequentialExecutionEngine removed - no longer needed
 const StepRegistry = require('../../steps/StepRegistry');
 const FrameworkRegistry = require('../../frameworks/FrameworkRegistry');
+const TaskStatusTransitionService = require('./TaskStatusTransitionService');
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new Logger('TaskService');
@@ -78,7 +79,7 @@ const path = require('path');
  * Enhanced with GitWorkflowManager integration
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null) {
+  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null, fileSystemService = null, eventBus = null) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
@@ -86,6 +87,10 @@ class TaskService {
     this.autoFinishSystem = autoFinishSystem;
     this.workflowGitService = workflowGitService;
     this.queueTaskExecutionService = queueTaskExecutionService;
+    this.fileSystemService = fileSystemService;
+    this.eventBus = eventBus;
+    
+    // Initialize TaskFileOrganizationStep for standardized directory structure
     
     // Initialize enhanced git workflow manager if workflowGitService is available
     if (this.workflowGitService) {
@@ -102,6 +107,12 @@ class TaskService {
         this.stepRegistry = new StepRegistry();
         this.frameworkRegistry = new FrameworkRegistry();
 
+    // Initialize TaskStatusTransitionService for automatic status transitions
+    this.statusTransitionService = new TaskStatusTransitionService(
+      this.taskRepository,
+      this.fileSystemService,
+      this.eventBus
+    );
     
   }
 
@@ -118,22 +129,16 @@ class TaskService {
     // Extract task name from title or metadata
     let taskName = task.metadata?.name || task.title?.toLowerCase().replace(/\s+/g, '-') || 'unknown-task';
     
-    if (status === 'completed') {
-      const quarter = this.getCompletionQuarter(task.completedAt);
-      return `docs/09_roadmap/completed/${quarter}/${category}/${taskName}/`;
-    } else if (status === 'in_progress') {
-      return `docs/09_roadmap/in-progress/${priority}/${category}/${taskName}/`;
-    } else if (status === 'pending') {
-      return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
-    } else if (status === 'blocked') {
-      return `docs/09_roadmap/blocked/${priority}/${category}/${taskName}/`;
-    } else if (status === 'cancelled') {
-      return `docs/09_roadmap/cancelled/${priority}/${category}/${taskName}/`;
-    } else if (status === 'failed') {
-      return `docs/09_roadmap/failed/${priority}/${category}/${taskName}/`;
-    }
+    // Use TaskFileOrganizationStep to determine standardized path
+    const taskMetadata = {
+      status,
+      priority,
+      category,
+      id: taskName,
+      completedAt: task.completedAt
+    };
     
-    return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
+    return this.taskFileOrganizationStep.determineTargetPath(taskMetadata);
   }
 
   /**
@@ -274,7 +279,10 @@ class TaskService {
     }
 
     const task = Task.create(projectId, title, description, priority, type, { ...metadata, category });
-    return await this.taskRepository.create(task);
+    const createdTask = await this.taskRepository.create(task);
+    
+    
+    return createdTask;
   }
 
   /**
@@ -420,6 +428,12 @@ class TaskService {
         throw new Error('Task is already completed');
       }
 
+      // 🔄 AUTOMATIC STATUS TRANSITION: Move task to in-progress
+      if (task.status.value === 'pending') {
+        logger.info('🔄 [TaskService] Moving task to in-progress before execution', { taskId });
+        await this.statusTransitionService.moveTaskToInProgress(taskId);
+      }
+
       // Create workflow from task
       const workflow = await this.createWorkflowFromTask(task, options);
       
@@ -440,6 +454,12 @@ class TaskService {
         success: result.isSuccess(),
         duration: result.getFormattedDuration()
       });
+
+      // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed if successful
+      if (result.isSuccess()) {
+        logger.info('🔄 [TaskService] Moving task to completed after successful execution', { taskId });
+        await this.statusTransitionService.moveTaskToCompleted(taskId);
+      }
 
       return {
         success: result.isSuccess(),
@@ -463,6 +483,52 @@ class TaskService {
       logger.error('❌ [TaskService] Core engine task execution failed:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * Get the status transition service for external use
+   * @returns {TaskStatusTransitionService} Status transition service
+   */
+  getStatusTransitionService() {
+    return this.statusTransitionService;
+  }
+
+  /**
+   * Move task to in-progress status
+   * @param {string} taskId - Task ID
+   * @returns {Promise<Object>} Transition result
+   */
+  async moveTaskToInProgress(taskId) {
+    return await this.statusTransitionService.moveTaskToInProgress(taskId);
+  }
+
+  /**
+   * Move task to completed status
+   * @param {string} taskId - Task ID
+   * @returns {Promise<Object>} Transition result
+   */
+  async moveTaskToCompleted(taskId) {
+    return await this.statusTransitionService.moveTaskToCompleted(taskId);
+  }
+
+  /**
+   * Move task to blocked status
+   * @param {string} taskId - Task ID
+   * @param {string} reason - Block reason
+   * @returns {Promise<Object>} Transition result
+   */
+  async moveTaskToBlocked(taskId, reason) {
+    return await this.statusTransitionService.moveTaskToBlocked(taskId, reason);
+  }
+
+  /**
+   * Move task to cancelled status
+   * @param {string} taskId - Task ID
+   * @param {string} reason - Cancellation reason
+   * @returns {Promise<Object>} Transition result
+   */
+  async moveTaskToCancelled(taskId, reason) {
+    return await this.statusTransitionService.moveTaskToCancelled(taskId, reason);
   }
 
   /**

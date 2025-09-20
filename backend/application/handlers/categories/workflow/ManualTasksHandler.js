@@ -40,7 +40,8 @@ class ManualTasksHandler {
     }
     
     logger.info(`Workspace root: ${workspaceRoot}`);
-            const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap/tasks');
+    // ✅ FIXED: Use new status-based structure instead of old tasks structure
+    const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap');
     logger.info(`Features directory resolved: ${featuresDir}`);
     
     return featuresDir;
@@ -141,8 +142,17 @@ class ManualTasksHandler {
         });
       }
 
+      // Parse metadata to extract content and details
+      let parsedMetadata = {};
+      try {
+        parsedMetadata = JSON.parse(task.metadata || '{}');
+      } catch (error) {
+        logger.warn('Failed to parse task metadata:', error.message);
+      }
+
       // Convert markdown content to HTML
-      const htmlContent = this.convertMarkdownToHtml(task.description || '');
+      const content = parsedMetadata.content || task.description || '';
+      const htmlContent = this.convertMarkdownToHtml(content);
 
       const taskDetails = {
         id: task.id,
@@ -151,9 +161,16 @@ class ManualTasksHandler {
         category: task.category,
         type: task.type,
         status: task.status,
-        content: task.description,
+        content: content,
         htmlContent: htmlContent,
         metadata: task.metadata,
+        // ✅ FIXED: Add new status-based path structure
+        filePath: parsedMetadata.newPath || parsedMetadata.sourcePath || this.generateStatusBasedPath(task),
+        sourceFile: parsedMetadata.sourceFile,
+        sourcePath: parsedMetadata.sourcePath,
+        steps: parsedMetadata.steps || [],
+        requirements: parsedMetadata.requirements || [],
+        acceptanceCriteria: parsedMetadata.acceptanceCriteria || [],
         createdAt: task.createdAt,
         updatedAt: task.updatedAt
       };
@@ -340,6 +357,63 @@ class ManualTasksHandler {
     const match = content.match(/^#\s+(.+)/m);
     if (match) return match[1].trim();
     return path.basename(filePath, '.md');
+  }
+
+  /**
+   * Generate new status-based path structure
+   * @param {Object} task - Task object
+   * @returns {string} New status-based path
+   */
+  generateStatusBasedPath(task) {
+    try {
+      const status = task.status?.value || task.status || 'pending';
+      const priority = task.priority?.value || task.priority || 'medium';
+      const category = task.category || 'general';
+      
+      // Convert title to task name (kebab-case)
+      const taskName = task.title.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      // Generate path based on status
+      if (status === 'completed') {
+        // For completed tasks, use quarter-based organization
+        const quarter = this.getCurrentQuarter();
+        return `docs/09_roadmap/completed/${quarter}/${category}/${taskName}/`;
+      } else if (status === 'in-progress') {
+        return `docs/09_roadmap/in-progress/${priority}/${category}/${taskName}/`;
+      } else if (status === 'blocked') {
+        return `docs/09_roadmap/blocked/${priority}/${category}/${taskName}/`;
+      } else if (status === 'cancelled') {
+        return `docs/09_roadmap/cancelled/${priority}/${category}/${taskName}/`;
+      } else {
+        // Default to pending
+        return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
+      }
+    } catch (error) {
+      logger.error(`❌ Failed to generate new path for ${task.title}:`, error.message);
+      return `docs/09_roadmap/pending/medium/${task.category || 'general'}/${task.title?.toLowerCase().replace(/\s+/g, '-')}/`;
+    }
+  }
+
+  /**
+   * Get current quarter for completed tasks organization
+   * @returns {string} Current quarter (e.g., '2024-q4')
+   */
+  getCurrentQuarter() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // 0-based to 1-based
+    
+    let quarter;
+    if (month <= 3) quarter = 'q1';
+    else if (month <= 6) quarter = 'q2';
+    else if (month <= 9) quarter = 'q3';
+    else quarter = 'q4';
+    
+    return `${year}-${quarter}`;
   }
 }
 

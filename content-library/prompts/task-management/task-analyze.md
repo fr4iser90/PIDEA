@@ -5,8 +5,8 @@ Generate a comprehensive analysis of what's missing, incomplete, or needs improv
 
 **Note**: This prompt focuses on project-wide analysis, not individual task validation. For task-specific validation, use `task-review.md`.
 
-Create new [Name]-analysis.md in docs/09_roadmap/[status]/[priority]/[category]/[name]/ with the following structure:
-**Note**: The system automatically creates a hierarchical folder structure: Status → Priority → Category → Task Name → Analysis files
+Create new [Name]-analysis.md in docs/09_roadmap/pending/[priority]/[category]/[name]/ with the following structure:
+**Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Analysis files
 
 ## Template Structure
 
@@ -214,7 +214,7 @@ Create new [Name]-analysis.md in docs/09_roadmap/[status]/[priority]/[category]/
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-analysis.md'
+- **source_path**: 'docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-analysis.md'
 - **category**: '[category]' - Automatically set from Category field above
 - **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
 - **confirmation_required**: true | false
@@ -268,7 +268,7 @@ INSERT INTO tasks (
   '[Priority]', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-analysis.md', -- Source path with category
+  'docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-analysis.md', -- Source path with category
   '[Full markdown content]', -- For reference
   '[JSON with all metadata]', -- All analysis details
   '[Estimated Time in hours]' -- From section 1

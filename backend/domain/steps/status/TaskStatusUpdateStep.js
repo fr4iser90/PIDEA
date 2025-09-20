@@ -166,31 +166,37 @@ class TaskStatusUpdateStep extends BaseStep {
       
       this.logger.info(`📁 Moving files from ${currentPath} to ${newPath}`);
       
-      // Create target directory
-      const fullNewPath = path.join(process.cwd(), newPath);
-      await fs.mkdir(fullNewPath, { recursive: true });
       
       // Move files
       const fullCurrentPath = path.join(process.cwd(), currentPath);
-      const files = await fs.readdir(fullCurrentPath);
+      const fullNewPath = path.join(process.cwd(), newPath);
       
-      for (const file of files) {
-        const sourceFile = path.join(fullCurrentPath, file);
-        const targetFile = path.join(fullNewPath, file);
+      try {
+        const files = await fs.readdir(fullCurrentPath);
         
-        // Create backup
-        const backupFile = `${sourceFile}.backup`;
-        await fs.copyFile(sourceFile, backupFile);
+        for (const file of files) {
+          const sourceFile = path.join(fullCurrentPath, file);
+          const targetFile = path.join(fullNewPath, file);
+          
+          // Create backup
+          const backupFile = `${sourceFile}.backup`;
+          await fs.copyFile(sourceFile, backupFile);
+          
+          // Move file
+          await fs.rename(sourceFile, targetFile);
+          
+          // Remove backup after successful move
+          await fs.unlink(backupFile);
+        }
         
-        // Move file
-        await fs.rename(sourceFile, targetFile);
-        
-        // Remove backup after successful move
-        await fs.unlink(backupFile);
+        // Remove empty source directory
+        await fs.rmdir(fullCurrentPath);
+      } catch (error) {
+        // If source directory doesn't exist, that's okay
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
       }
-      
-      // Remove empty source directory
-      await fs.rmdir(fullCurrentPath);
       
       this.logger.info(`✅ Files moved successfully: ${currentPath} -> ${newPath}`);
       
@@ -207,31 +213,8 @@ class TaskStatusUpdateStep extends BaseStep {
    * @returns {string} New file path
    */
   determineNewPath(newStatus, taskMetadata) {
-    const { priority = 'medium', category = 'uncategorized', completedAt } = taskMetadata;
-    
-    switch (newStatus) {
-      case 'completed':
-        const quarter = this.getCompletionQuarter(completedAt);
-        return `docs/09_roadmap/completed/${quarter}/${category}/${taskMetadata.id}/`;
-        
-      case 'in_progress':
-        return `docs/09_roadmap/in-progress/${category}/${taskMetadata.id}/`;
-        
-      case 'pending':
-        return `docs/09_roadmap/pending/${priority}/${category}/${taskMetadata.id}/`;
-        
-      case 'blocked':
-        return `docs/09_roadmap/blocked/${category}/${taskMetadata.id}/`;
-        
-      case 'cancelled':
-        return `docs/09_roadmap/cancelled/${category}/${taskMetadata.id}/`;
-        
-      case 'failed':
-        return `docs/09_roadmap/failed/${category}/${taskMetadata.id}/`;
-        
-      default:
-        return `docs/09_roadmap/pending/${priority}/${category}/${taskMetadata.id}/`;
-    }
+    // Use TaskFileOrganizationStep to determine standardized path
+    return this.determineTaskPath(newStatus, taskMetadata);
   }
 
   /**

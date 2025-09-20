@@ -112,23 +112,45 @@ class TaskApplicationService {
         type
       });
       
-      const mappedTasks = tasks.map(task => ({
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        status: task.status?.value || task.status,
-        priority: task.priority?.value || task.priority,
-        type: task.type?.value || task.type,
-        projectId: task.projectId,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        metadata: task.metadata
-      }));
+      const mappedTasks = tasks.map(task => {
+        // Parse metadata to extract content and details
+        let parsedMetadata = {};
+        try {
+          // Check if metadata is already an object or needs parsing
+          if (typeof task.metadata === 'string') {
+            parsedMetadata = JSON.parse(task.metadata || '{}');
+          } else {
+            parsedMetadata = task.metadata || {};
+          }
+        } catch (error) {
+          this.logger.warn('Failed to parse task metadata:', error.message);
+        }
+
+        return {
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status?.value || task.status,
+          priority: task.priority?.value || task.priority,
+          type: task.type?.value || task.type,
+          projectId: task.projectId,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          metadata: task.metadata,
+          // ✅ FIXED: Add content and details for frontend display
+          content: parsedMetadata.content || task.description,
+          htmlContent: parsedMetadata.htmlContent || parsedMetadata.content || task.description,
+          steps: parsedMetadata.steps || [],
+          requirements: parsedMetadata.requirements || [],
+          acceptanceCriteria: parsedMetadata.acceptanceCriteria || [],
+          sourceFile: parsedMetadata.sourceFile,
+          sourcePath: parsedMetadata.sourcePath,
+          // ✅ FIXED: Use new status-based path for filePath
+          filePath: parsedMetadata.newPath || parsedMetadata.sourcePath || `docs/09_roadmap/pending/${task.priority?.value || 'medium'}/${task.category || 'general'}/${task.title?.toLowerCase().replace(/\s+/g, '-')}/`,
+          progress: task.progress || 0
+        };
+      });
       
-      // ✅ NEW: Debug log to see what's actually being returned
-      this.logger.info(`🔍 DEBUG: API Response - ${mappedTasks.length} tasks with statuses:`, 
-        mappedTasks.map(t => ({ title: t.title, status: t.status, progress: t.metadata?.progress }))
-      );
       
       return mappedTasks;
       
@@ -158,6 +180,21 @@ class TaskApplicationService {
         throw new Error(`Task ${taskId} does not belong to project ${projectId}`);
       }
       
+      // Parse metadata to extract content and details
+      let parsedMetadata = {};
+      try {
+        // Check if metadata is already an object or needs parsing
+        if (typeof task.metadata === 'string') {
+          parsedMetadata = JSON.parse(task.metadata || '{}');
+        } else {
+          parsedMetadata = task.metadata || {};
+        }
+      } catch (error) {
+        this.logger.warn('Failed to parse task metadata:', error.message);
+      }
+
+      const finalFilePath = parsedMetadata.newPath || parsedMetadata.sourcePath || `docs/09_roadmap/pending/${task.priority?.value || 'medium'}/${task.category || 'general'}/${task.title?.toLowerCase().replace(/\s+/g, '-')}/`;
+
       return {
         id: task.id,
         title: task.title,
@@ -169,7 +206,16 @@ class TaskApplicationService {
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         metadata: task.metadata,
-        steps: task.steps || [],
+        // ✅ FIXED: Add content and details for frontend display
+        content: parsedMetadata.content || task.description,
+        htmlContent: parsedMetadata.htmlContent || parsedMetadata.content || task.description,
+        steps: parsedMetadata.steps || task.steps || [],
+        requirements: parsedMetadata.requirements || [],
+        acceptanceCriteria: parsedMetadata.acceptanceCriteria || [],
+        sourceFile: parsedMetadata.sourceFile,
+        sourcePath: parsedMetadata.sourcePath,
+        // ✅ FIXED: Use new status-based path for filePath
+        filePath: finalFilePath,
         progress: task.progress || 0
       };
       

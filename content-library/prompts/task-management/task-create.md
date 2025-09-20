@@ -5,23 +5,24 @@ Generate a complete, actionable development plan that will be parsed into a data
 
 ## Phase
 Check Plan against codebase, collect all data u need!
-Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/[status]/[priority]/[category]/[name]/ with the following structure:
-**Note**: The system automatically creates a hierarchical folder structure: Status → Priority → Category → Task Name → Implementation files
+Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pending/[priority]/[category]/[name]/ with the following structure:
+**Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Implementation files
 
 ## Template Structure
 
 > **File Pattern Requirement:**  
 > All Index, Implementation and Phase files must always be created using this pattern:
-> - **Index**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md  
+> - **Index**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-index.md  
 > If a file is missing, it must be created automatically. This pattern is required for orchestration and grouping in the system.  
-> - **Implementation**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md  
-> - **Phase**: docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md  
+> - **Implementation**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md  
+> - **Phase**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md  
 
 
 ### 1. Project Overview
 - **Feature/Component Name**: [Exact name for task.title]
 - **Priority**: [High/Medium/Low - maps to task.priority]
 - **Category**: [ai/automation/backend/frontend/ide/migration/performance/security/testing/documentation/ - maps to task.category]
+- **Status**: pending (default - tasks are created in pending status)
 - **Estimated Time**: [X hours/days - maps to task.metadata.estimated_hours]
 - **Dependencies**: [List prerequisites - maps to task.dependencies]
 - **Related Issues**: [Link to existing issues/tickets]
@@ -264,7 +265,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 
 #### Task Database Fields:
 - **source_type**: 'markdown_doc'
-- **source_path**: 'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md'
+- **source_path**: 'docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md'
 - **category**: '[category]' - Automatically set from Category field above
 - **automation_level**: 'semi_auto' | 'full_auto' | 'manual'
 - **confirmation_required**: true | false
@@ -305,7 +306,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 ### Automatic Index File Generation
 When creating a task, automatically generate a master index file:
 
-**File Path**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md`
+**File Path**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-index.md`
 
 **Purpose**: Central overview and navigation hub for all task-related files
 
@@ -324,7 +325,7 @@ When creating a task, automatically generate a master index file:
 
 ## 📁 File Structure
 ```
-docs/09_roadmap/[status]/[priority]/[category]/[name]/
+docs/09_roadmap/pending/[priority]/[category]/[name]/
 ├── [name]-index.md (this file)
 ├── [name]-implementation.md
 ├── [name]-phase-1.md
@@ -416,8 +417,8 @@ INSERT INTO tasks (
   '[Priority]', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md', -- Main implementation file
-  'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md', -- Individual phase files
+  'docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md', -- Main implementation file
+  'docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md', -- Individual phase files
   '[Full markdown content]', -- For reference
   '[JSON with all metadata]', -- All technical details
   '[Estimated Time in hours]' -- From section 1
@@ -439,15 +440,22 @@ INSERT INTO tasks (
 
 ## Automatic Category Organization
 
+**Default Status**: All new tasks are created with `pending` status and placed in `docs/09_roadmap/pending/` directory. This ensures consistent organization and allows for proper status transitions later.
+
+**Status Transition Flow**:
+- **pending** → **in-progress**: Task moves to `docs/09_roadmap/in-progress/[priority]/[category]/[name]/`
+- **in-progress** → **completed**: Task moves to `docs/09_roadmap/completed/[quarter]/[category]/[name]/`
+- **completed** → **archive**: Task moves to `docs/09_roadmap/completed/archive/[category]/[name]/` (after 1 year)
+
 When you specify a **Category** in section 1, the system automatically:
 
-1. **Creates status folder** if it doesn't exist: `docs/09_roadmap/[status]/`
-2. **Creates priority folder** if it doesn't exist: `docs/09_roadmap/[status]/[priority]/`
-3. **Creates category folder** if it doesn't exist: `docs/09_roadmap/[status]/[priority]/[category]/`
-4. **Creates task folder** for each task: `docs/09_roadmap/[status]/[priority]/[category]/[name]/`
-5. **Places main implementation file**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md`
-6. **Creates phase files** for subtasks: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md`
-7. **Creates master index file**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md`
+1. **Creates status folder** if it doesn't exist: `docs/09_roadmap/pending/` (default status)
+2. **Creates priority folder** if it doesn't exist: `docs/09_roadmap/pending/[priority]/`
+3. **Creates category folder** if it doesn't exist: `docs/09_roadmap/pending/[priority]/[category]/`
+4. **Creates task folder** for each task: `docs/09_roadmap/pending/[priority]/[category]/[name]/`
+5. **Places main implementation file**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md`
+6. **Creates phase files** for subtasks: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md`
+7. **Creates master index file**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-index.md`
 6. **Sets database category** field to the specified category
 7. **Organizes tasks hierarchically** for better management
 

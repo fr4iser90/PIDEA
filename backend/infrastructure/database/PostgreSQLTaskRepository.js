@@ -12,10 +12,12 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
 class PostgreSQLTaskRepository extends TaskRepository {
-  constructor(databaseConnection) {
+  constructor(databaseConnection, eventBus = null, statusTransitionService = null) {
     super();
     this.databaseConnection = databaseConnection;
     this.tableName = 'tasks';
+    this.eventBus = eventBus;
+    this.statusTransitionService = statusTransitionService;
     // Disable init() to prevent overriding the correct schema from DatabaseConnection.js
     // this.init();
   }
@@ -344,9 +346,97 @@ class PostgreSQLTaskRepository extends TaskRepository {
       }
 
       await this.databaseConnection.execute(sql, params);
+      
+      // 🔄 AUTOMATIC FILE MOVING: Check if status changed and trigger file movement
+      await this.handleStatusChange(taskId, task, taskOrUpdates);
+      
       return task;
     } catch (error) {
       throw new Error(`Failed to update task: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle status changes by automatically moving files
+   * @param {string} taskId - Task ID
+   * @param {Task} task - Task object
+   * @param {Object} updates - Updates object
+   */
+  async handleStatusChange(taskId, task, updates) {
+    try {
+      // Create TaskStatusTransitionService if not provided
+      if (!this.statusTransitionService) {
+        const TaskStatusTransitionService = require('@domain/services/task/TaskStatusTransitionService');
+        const FileSystemService = require('@domain/services/shared/FileSystemService');
+        this.statusTransitionService = new TaskStatusTransitionService(
+          this,
+          new FileSystemService(),
+          this.eventBus
+        );
+      }
+
+      // Check if status was updated
+      let statusChanged = false;
+      let newStatus = null;
+      let oldStatus = null;
+
+      if (updates && typeof updates === 'object' && updates.status !== undefined) {
+        // Direct status update
+        newStatus = updates.status;
+        oldStatus = task.status?.value || task.status;
+        statusChanged = newStatus !== oldStatus;
+      } else if (task.status && task.status.value) {
+        // Task object with status
+        newStatus = task.status.value;
+        // We need to get the old status from database
+        const oldTask = await this.findById(taskId);
+        oldStatus = oldTask?.status?.value || oldTask?.status;
+        statusChanged = newStatus !== oldStatus;
+      }
+
+      if (statusChanged && newStatus && oldStatus) {
+        logger.info(`🔄 Status changed detected: ${taskId} ${oldStatus} -> ${newStatus}`);
+        
+        // Trigger automatic file movement based on status change
+        try {
+          switch (newStatus) {
+            case 'completed':
+              await this.statusTransitionService.moveTaskToCompleted(taskId);
+              break;
+            case 'in-progress':
+            case 'in_progress':
+              await this.statusTransitionService.moveTaskToInProgress(taskId);
+              break;
+            case 'blocked':
+              await this.statusTransitionService.moveTaskToBlocked(taskId);
+              break;
+            case 'cancelled':
+              await this.statusTransitionService.moveTaskToCancelled(taskId);
+              break;
+            default:
+              logger.debug(`No automatic file movement for status: ${newStatus}`);
+          }
+          
+          // Emit event if eventBus is available
+          if (this.eventBus) {
+            this.eventBus.emit('task:status:changed', {
+              taskId,
+              oldStatus,
+              newStatus,
+              timestamp: new Date(),
+              source: 'database_update'
+            });
+          }
+          
+        } catch (fileMoveError) {
+          logger.error(`❌ Failed to move files for status change: ${fileMoveError.message}`);
+          // Don't throw - we don't want to break the database update
+        }
+      }
+      
+    } catch (error) {
+      logger.error(`❌ Error handling status change: ${error.message}`);
+      // Don't throw - we don't want to break the database update
     }
   }
 

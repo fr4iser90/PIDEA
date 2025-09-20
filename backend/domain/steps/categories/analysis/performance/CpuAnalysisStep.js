@@ -693,8 +693,6 @@ class CpuAnalysisStep {
     const docs = [];
     const docsDir = path.join(projectPath, `{{taskDocumentationPath}}${this.category}/${CpuAnalysisStep.toLowerCase()}`);
     
-    // Ensure docs directory exists
-    await fs.mkdir(docsDir, { recursive: true });
     
     // Create implementation file
     const implementationDoc = await this.createImplementationDoc(result, docsDir);

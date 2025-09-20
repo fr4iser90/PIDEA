@@ -396,10 +396,11 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
 
         // Task service
-        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService) => {
+        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService, fileSystemService, eventBus) => {
             const TaskService = require('@domain/services/task/TaskService');
-            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService); // autoFinishSystem and workflowGitService removed
-        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'] });
+            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService, fileSystemService, eventBus); // autoFinishSystem and workflowGitService removed
+        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService', 'fileSystemService', 'eventBus'] });
+
 
         // Manual Tasks Import Service
         this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
@@ -1013,9 +1014,9 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // Task repository
-        this.container.register('taskRepository', (databaseConnection) => {
-            return databaseConnection.getRepository('Task');
-        }, { singleton: true, dependencies: ['databaseConnection'] });
+        this.container.register('taskRepository', (databaseConnection, eventBus) => {
+            return databaseConnection.getRepository('Task', eventBus);
+        }, { singleton: true, dependencies: ['databaseConnection', 'eventBus'] });
 
         // Task execution repository
         this.container.register('taskExecutionRepository', () => {

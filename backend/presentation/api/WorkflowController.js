@@ -1429,6 +1429,22 @@ class WorkflowController {
                 }
             }
 
+            // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed if workflow was successful
+            if (results.success && taskData && taskData.id && this.taskService) {
+                try {
+                    this.logger.info('🔄 WorkflowController: Moving task to completed after successful workflow', { 
+                        taskId: taskData.id,
+                        workflowName: workflow.name 
+                    });
+                    await this.taskService.moveTaskToCompleted(taskData.id);
+                } catch (error) {
+                    this.logger.error('❌ WorkflowController: Failed to move task to completed', {
+                        taskId: taskData.id,
+                        error: error.message
+                    });
+                }
+            }
+
         } catch (error) {
             this.logger.error('WorkflowController: Workflow execution failed', {
                 workflowName: workflow.name,

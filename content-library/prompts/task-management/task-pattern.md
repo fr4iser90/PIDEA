@@ -7,7 +7,7 @@ Centralized reference for all task management patterns, file structures, databas
 
 ### File Path Structure
 ```
-docs/09_roadmap/[status]/[priority]/[category]/[name]/
+docs/09_roadmap/pending/[priority]/[category]/[name]/
 ├── [name]-index.md
 ├── [name]-implementation.md
 ├── [name]-phase-[number].md
@@ -18,11 +18,11 @@ docs/09_roadmap/[status]/[priority]/[category]/[name]/
 ### File Pattern Requirements
 > **File Pattern Requirement:**  
 > All Index, Implementation and Phase files must always be created using this pattern:
-> - **Index**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-index.md`  
-> - **Implementation**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md`  
-> - **Phase**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-phase-[number].md`  
-> - **Analysis**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-analysis.md`
-> - **Review**: `docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-review.md`
+> - **Index**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-index.md`  
+> - **Implementation**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md`  
+> - **Phase**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md`  
+> - **Analysis**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-analysis.md`
+> - **Review**: `docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-review.md`
 > 
 > If ANY file is missing, it MUST be created automatically. This pattern is required for orchestration and grouping in the system.
 
@@ -42,7 +42,7 @@ status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'in_progress', 'completed'
 
 -- Source Information
 source_type TEXT DEFAULT 'markdown_doc',
-source_path TEXT, -- 'docs/09_roadmap/[status]/[priority]/[category]/[name]/[name]-implementation.md'
+source_path TEXT, -- 'docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-implementation.md'
 source_content TEXT, -- Full markdown content for reference
 
 -- AI Automation Fields
