@@ -891,7 +891,7 @@ Based on the analysis, consider reducing coupling between modules to improve mai
   }
 }
 - **Category**: architecture
-- **Analysis Date**: 2025-09-20T19:59:00.402Z
+- **Analysis Date**: 2025-09-20T20:05:35.907Z
 - **Score**: 33%
 - **Level**: critical
 
