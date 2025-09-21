@@ -478,6 +478,38 @@ class FrameworkConfig {
     
     return envVars;
   }
+
+  /**
+   * Get framework config health status
+   */
+  getHealthStatus() {
+    const isInitialized = this.isInitialized;
+    const hasValidConfig = this.config && typeof this.config === 'object';
+    const hasRequiredSections = hasValidConfig && 
+      this.config.framework && 
+      this.config.directories && 
+      this.config.security && 
+      this.config.performance && 
+      this.config.logging;
+    
+    let validationErrors = [];
+    if (hasValidConfig) {
+      try {
+        this.validateConfig();
+      } catch (error) {
+        validationErrors.push(error.message);
+      }
+    }
+    
+    return {
+      isInitialized,
+      hasValidConfig,
+      hasRequiredSections,
+      validationErrors,
+      healthScore: isInitialized && hasValidConfig && hasRequiredSections && validationErrors.length === 0 ? 100 : 0,
+      isHealthy: isInitialized && hasValidConfig && hasRequiredSections && validationErrors.length === 0
+    };
+  }
 }
 
 module.exports = FrameworkConfig; 

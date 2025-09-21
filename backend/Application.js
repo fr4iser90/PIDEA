@@ -193,50 +193,10 @@ class Application {
     this.migrationService = new DatabaseMigrationService(this.databaseConnection);
     await this.migrationService.initialize();
     
-    // Check if default user exists
-    await this.checkDefaultUser();
+    // Default user check is handled in server.js - no need to check again here
+    this.logger.info('ℹ️ Skipping redundant user check - already handled in server.js');
   }
 
-  async checkDefaultUser() {
-    try {
-      // Wait a moment for database to be fully ready
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Check if database is connected
-      if (!this.databaseConnection || !this.databaseConnection.isConnected()) {
-        this.logger.warn('⚠️ Database not ready, skipping user check for now...');
-        return;
-      }
-      
-      const dbType = this.databaseConnection.getType();
-      const param = dbType === 'postgresql' ? '$1' : '?';
-      
-      const checkResult = await this.databaseConnection.query(
-        `SELECT id, email, username FROM users WHERE id = ${param}`,
-        ['me']
-      );
-      
-      if (!checkResult || checkResult.length === 0) {
-        this.logger.warn('⚠️ No default user found, creating one automatically...');
-        
-        // Try to create default user automatically
-        try {
-          const createDefaultUser = require('./scripts/create-default-user');
-          await createDefaultUser();
-          this.logger.info('✅ Default user created automatically');
-        } catch (createError) {
-          this.logger.error('❌ Could not create default user automatically:', createError.message);
-          this.logger.error('📝 Please run manually: node scripts/create-default-user.js');
-          process.exit(0);
-        }
-      } else {
-        this.logger.info('✅ Default user found in database');
-      }
-    } catch (error) {
-      this.logger.warn('⚠️ Could not check for default user, continuing anyway:', error.message);
-      // Don't exit, just continue - the user might be created later
-    }
-  }
 
   async initializeInfrastructure() {
     this.logger.info('🏗️ Initializing infrastructure...');
@@ -403,9 +363,26 @@ class Application {
       this.frameworkValidator = frameworkInfrastructure.validator;
       this.frameworkConfig = frameworkInfrastructure.config;
       this.frameworkStepRegistry = frameworkInfrastructure.stepRegistry;
+      this.frameworkInitializationResults = frameworkInfrastructure.initializationResults;
+      
+      // Log initialization results
       this.logger.info('Framework Infrastructure initialized');
+      this.logger.info('Framework initialization results:', this.frameworkInitializationResults);
+      
+      // Log health status
+      if (this.frameworkLoader.getHealthStatus) {
+        const healthStatus = this.frameworkLoader.getHealthStatus();
+        this.logger.info('Framework Loader health status:', healthStatus);
+      }
+      
+      if (this.frameworkStepRegistry.getHealthStatus) {
+        const stepHealthStatus = this.frameworkStepRegistry.getHealthStatus();
+        this.logger.info('Framework Step Registry health status:', stepHealthStatus);
+      }
     } catch (error) {
       this.logger.warn('Framework Infrastructure initialization failed, continuing without framework support:', error.message);
+      this.frameworkInitializationResults = { error: error.message };
+      
       // Create fallback framework services
       this.frameworkManager = { 
         activateFramework: () => Promise.resolve({}),
@@ -413,13 +390,17 @@ class Application {
         getActiveFramework: () => null,
         getAllActiveFrameworks: () => []
       };
-      this.frameworkLoader = { getStats: () => ({}) };
+      this.frameworkLoader = { 
+        getStats: () => ({}),
+        getHealthStatus: () => ({ isHealthy: false, error: 'Framework infrastructure not initialized' })
+      };
       this.frameworkValidator = { validateFramework: () => Promise.resolve({ isValid: true }) };
       this.frameworkConfig = { getConfigStats: () => ({}) };
       this.frameworkStepRegistry = { 
         getFrameworkSteps: () => [], 
         isFrameworkStep: () => false,
-        getLoadedFrameworks: () => []
+        getLoadedFrameworks: () => [],
+        getHealthStatus: () => ({ isHealthy: false, error: 'Framework step registry not initialized' })
       };
     }
 
@@ -1331,6 +1312,10 @@ class Application {
 
   getFrameworkStepRegistry() {
     return this.frameworkStepRegistry;
+  }
+
+  getFrameworkInitializationResults() {
+    return this.frameworkInitializationResults || { error: 'Framework infrastructure not initialized' };
   }
 }
 

@@ -367,6 +367,11 @@ Please provide a complete, actionable implementation plan in Markdown format.`;
   }
 }
 
-// Export both the class and a factory function for StepRegistry
-module.exports = TaskPromptGenerationStep;
-module.exports.default = TaskPromptGenerationStep; 
+// Create instance for execution
+const stepInstance = new TaskPromptGenerationStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+}; 

@@ -24,25 +24,77 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
   try {
     console.log('🚀 Initializing Framework Infrastructure...');
     
-    // Initialize components in order
-    await frameworkConfig.initialize();
-    await frameworkValidator.initialize();
-    await frameworkLoader.initialize();
-    await frameworkManager.initialize();
+    const initializationResults = {
+      config: false,
+      validator: false,
+      loader: false,
+      manager: false,
+      stepRegistry: false
+    };
+    
+    // Initialize components in order with error handling
+    try {
+      await frameworkConfig.initialize();
+      initializationResults.config = true;
+      console.log('✅ Framework Config initialized');
+    } catch (error) {
+      console.warn('⚠️ Framework Config initialization failed:', error.message);
+    }
+    
+    try {
+      await frameworkValidator.initialize();
+      initializationResults.validator = true;
+      console.log('✅ Framework Validator initialized');
+    } catch (error) {
+      console.warn('⚠️ Framework Validator initialization failed:', error.message);
+    }
+    
+    try {
+      await frameworkLoader.initialize();
+      initializationResults.loader = true;
+      console.log('✅ Framework Loader initialized');
+    } catch (error) {
+      console.warn('⚠️ Framework Loader initialization failed:', error.message);
+    }
+    
+    try {
+      await frameworkManager.initialize();
+      initializationResults.manager = true;
+      console.log('✅ Framework Manager initialized');
+    } catch (error) {
+      console.warn('⚠️ Framework Manager initialization failed:', error.message);
+    }
     
     // Initialize framework step registry if step registry is provided
     if (stepRegistry) {
-      const frameworkBasePath = path.join(__dirname, '../../framework');
-      await frameworkStepRegistry.initialize(frameworkBasePath, stepRegistry);
+      try {
+        const frameworkBasePath = path.join(__dirname, '../../framework');
+        await frameworkStepRegistry.initialize(frameworkBasePath, stepRegistry);
+        initializationResults.stepRegistry = true;
+        console.log('✅ Framework Step Registry initialized');
+      } catch (error) {
+        console.warn('⚠️ Framework Step Registry initialization failed:', error.message);
+      }
+    }
+    
+    // Check if critical components initialized successfully
+    const criticalComponents = ['loader'];
+    const criticalSuccess = criticalComponents.every(component => initializationResults[component]);
+    
+    if (!criticalSuccess) {
+      throw new Error(`Critical framework components failed to initialize: ${criticalComponents.filter(c => !initializationResults[c]).join(', ')}`);
     }
     
     console.log('✅ Framework Infrastructure initialized successfully');
+    console.log('📊 Initialization results:', initializationResults);
+    
     return {
       loader: frameworkLoader,
       manager: frameworkManager,
       validator: frameworkValidator,
       config: frameworkConfig,
-      stepRegistry: frameworkStepRegistry
+      stepRegistry: frameworkStepRegistry,
+      initializationResults
     };
   } catch (error) {
     console.error('❌ Failed to initialize Framework Infrastructure:', error.message);

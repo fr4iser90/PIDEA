@@ -161,6 +161,11 @@ class FrameworkValidator {
       errors.push(...configValidation.errors);
       warnings.push(...configValidation.warnings);
 
+      // Infrastructure-specific validation
+      const infrastructureValidation = await this.validateInfrastructureConcerns(framework);
+      errors.push(...infrastructureValidation.errors);
+      warnings.push(...infrastructureValidation.warnings);
+
       // File system validation
       const fileSystemValidation = await this.validateFileSystem(framework);
       errors.push(...fileSystemValidation.errors);
@@ -346,6 +351,147 @@ class FrameworkValidator {
   }
 
   /**
+   * Validate infrastructure-specific concerns
+   */
+  async validateInfrastructureConcerns(framework) {
+    const errors = [];
+    const warnings = [];
+
+    try {
+      // Validate steps configuration (infrastructure concern)
+      if (framework.config.steps) {
+        const stepsValidation = this.validateStepsConfiguration(framework.config.steps);
+        errors.push(...stepsValidation.errors);
+        warnings.push(...stepsValidation.warnings);
+      }
+
+      // Validate workflows configuration (infrastructure concern)
+      if (framework.config.workflows) {
+        const workflowsValidation = this.validateWorkflowsConfiguration(framework.config.workflows);
+        errors.push(...workflowsValidation.errors);
+        warnings.push(...workflowsValidation.warnings);
+      }
+
+      // Validate file paths and step files
+      if (framework.path) {
+        const pathValidation = await this.validateFrameworkPaths(framework);
+        errors.push(...pathValidation.errors);
+        warnings.push(...pathValidation.warnings);
+      }
+
+    } catch (error) {
+      errors.push(`Infrastructure validation error: ${error.message}`);
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
+   * Validate steps configuration (infrastructure concern)
+   */
+  validateStepsConfiguration(steps) {
+    const errors = [];
+    const warnings = [];
+
+    if (typeof steps !== 'object') {
+      errors.push('Steps configuration must be an object');
+      return { errors, warnings };
+    }
+
+    for (const [stepName, stepConfig] of Object.entries(steps)) {
+      if (!stepConfig.file) {
+        errors.push(`Step "${stepName}" missing required "file" property`);
+      }
+
+      if (stepConfig.file && typeof stepConfig.file !== 'string') {
+        errors.push(`Step "${stepName}" file property must be a string`);
+      }
+
+      if (stepConfig.type && !['action', 'validation', 'utility', 'workflow'].includes(stepConfig.type)) {
+        warnings.push(`Step "${stepName}" has unknown type: ${stepConfig.type}`);
+      }
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
+   * Validate workflows configuration (infrastructure concern)
+   */
+  validateWorkflowsConfiguration(workflows) {
+    const errors = [];
+    const warnings = [];
+
+    if (typeof workflows !== 'object') {
+      errors.push('Workflows configuration must be an object');
+      return { errors, warnings };
+    }
+
+    for (const [workflowName, workflowConfig] of Object.entries(workflows)) {
+      if (!workflowConfig.steps || !Array.isArray(workflowConfig.steps)) {
+        errors.push(`Workflow "${workflowName}" missing required "steps" array`);
+      }
+
+      if (workflowConfig.steps && Array.isArray(workflowConfig.steps)) {
+        for (const step of workflowConfig.steps) {
+          if (typeof step !== 'string') {
+            errors.push(`Workflow "${workflowName}" step must be a string, got ${typeof step}`);
+          }
+        }
+      }
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
+   * Validate framework paths and step files
+   */
+  async validateFrameworkPaths(framework) {
+    const errors = [];
+    const warnings = [];
+
+    try {
+      const frameworkPath = framework.path;
+      
+      // Check if framework directory exists
+      try {
+        await fs.access(frameworkPath);
+      } catch {
+        errors.push(`Framework directory not found: ${frameworkPath}`);
+        return { errors, warnings };
+      }
+
+      // Check steps directory if steps are defined
+      if (framework.config.steps) {
+        const stepsPath = path.join(frameworkPath, 'steps');
+        try {
+          await fs.access(stepsPath);
+        } catch {
+          warnings.push(`Steps directory not found: ${stepsPath}`);
+        }
+
+        // Validate individual step files
+        for (const [stepName, stepConfig] of Object.entries(framework.config.steps)) {
+          if (stepConfig.file) {
+            const stepFilePath = path.join(stepsPath, stepConfig.file);
+            try {
+              await fs.access(stepFilePath);
+            } catch {
+              errors.push(`Step file not found: ${stepFilePath}`);
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      errors.push(`Path validation error: ${error.message}`);
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
    * Validate file system access
    */
   async validateFileSystem(framework) {
@@ -520,6 +666,25 @@ class FrameworkValidator {
     }
 
     return { isValid: true };
+  }
+
+  /**
+   * Get framework validator health status
+   */
+  getHealthStatus() {
+    const isInitialized = this.isInitialized;
+    const hasValidationRules = this.validationRules.size > 0;
+    const hasSecurityRules = this.securityRules.size > 0;
+    
+    return {
+      isInitialized,
+      hasValidationRules,
+      hasSecurityRules,
+      validationRulesCount: this.validationRules.size,
+      securityRulesCount: this.securityRules.size,
+      healthScore: isInitialized && hasValidationRules && hasSecurityRules ? 100 : 0,
+      isHealthy: isInitialized && hasValidationRules && hasSecurityRules
+    };
   }
 }
 

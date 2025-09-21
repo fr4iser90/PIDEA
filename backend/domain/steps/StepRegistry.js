@@ -60,6 +60,26 @@ class StepRegistry {
       // Validate step configuration
       this.validateStepConfig(config);
       
+      // Check if step already exists
+      if (this.steps.has(name)) {
+        this.logger.warn(`⚠️ Step "${name}" already registered, updating...`);
+        // Update existing step
+        const existingStep = this.steps.get(name);
+        existingStep.config = config;
+        existingStep.category = finalCategory;
+        existingStep.executor = executor;
+        existingStep.updatedAt = new Date();
+        existingStep.metadata.version = config.version || '1.0.0';
+        
+        // Update executor if provided
+        if (executor && typeof executor === 'function') {
+          this.executors.set(name, executor);
+        }
+        
+        this.logger.info(`✅ Updated existing step "${name}"`);
+        return true;
+      }
+      
       // Store step configuration
       this.steps.set(name, {
         name,
@@ -73,7 +93,9 @@ class StepRegistry {
         metadata: {
           type: 'step',
           category: finalCategory,
-          version: config.version || '1.0.0'
+          version: config.version || '1.0.0',
+          isFrameworkStep: config.framework ? true : false,
+          framework: config.framework || null
         }
       });
 
@@ -85,10 +107,11 @@ class StepRegistry {
 
       // Store executor if provided
       if (executor && typeof executor === 'function') {
-              this.executors.set(name, executor);
-    }
+        this.executors.set(name, executor);
+      }
 
-    return true;
+      this.logger.info(`✅ Registered step "${name}" in category "${finalCategory}"`);
+      return true;
     } catch (error) {
       this.logger.error(`❌ Failed to register step "${name}":`, error.message);
       throw error;
@@ -839,6 +862,69 @@ class StepRegistry {
     instance.categories.clear();
     instance.executors.clear();
     return true;
+  }
+
+  /**
+   * Get all framework steps
+   */
+  getFrameworkSteps() {
+    const frameworkSteps = [];
+    for (const [name, step] of this.steps) {
+      if (step.metadata.isFrameworkStep) {
+        frameworkSteps.push({
+          name,
+          framework: step.metadata.framework,
+          category: step.category,
+          config: step.config
+        });
+      }
+    }
+    return frameworkSteps;
+  }
+
+  /**
+   * Get steps by framework
+   */
+  getStepsByFramework(frameworkName) {
+    const frameworkSteps = [];
+    for (const [name, step] of this.steps) {
+      if (step.metadata.isFrameworkStep && step.metadata.framework === frameworkName) {
+        frameworkSteps.push({
+          name,
+          framework: step.metadata.framework,
+          category: step.category,
+          config: step.config
+        });
+      }
+    }
+    return frameworkSteps;
+  }
+
+  /**
+   * Check if a step is a framework step
+   */
+  isFrameworkStep(stepName) {
+    const step = this.steps.get(stepName);
+    return step ? step.metadata.isFrameworkStep : false;
+  }
+
+  /**
+   * Get step registry health status
+   */
+  getHealthStatus() {
+    const totalSteps = this.steps.size;
+    const frameworkSteps = this.getFrameworkSteps().length;
+    const categories = this.categories.size;
+    const executors = this.executors.size;
+    
+    return {
+      totalSteps,
+      frameworkSteps,
+      categories,
+      executors,
+      healthScore: totalSteps > 0 ? 100 : 0,
+      isHealthy: totalSteps > 0 && executors > 0
+    };
   }
 
   /**

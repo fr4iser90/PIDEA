@@ -5,8 +5,7 @@
  * Implements IStandardRegistry interface for consistent patterns
  */
 
-const path = require('path');
-const fs = require('fs').promises;
+// Removed file system imports - domain layer should not handle file operations
 const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
 const IStandardRegistry = require('../interfaces/IStandardRegistry');
 const Logger = require('@logging/Logger');
@@ -67,37 +66,21 @@ class FrameworkRegistry {
   }
 
   /**
-   * Load framework configurations from configs directory
+   * Load framework configurations from provided configs
+   * Note: File system operations moved to infrastructure layer
+   * @param {Array} configs - Array of framework configurations
    */
-  async loadFrameworkConfigs() {
+  async loadFrameworkConfigs(configs = []) {
     try {
-      const configsDir = path.join(__dirname, 'configs');
-      
-      // Check if configs directory exists
-      try {
-        await fs.access(configsDir);
-      } catch {
-        logger.info('📁 Creating configs directory...');
-        await fs.mkdir(configsDir, { recursive: true });
-        return;
-      }
-
-      const files = await fs.readdir(configsDir);
-      const jsonFiles = files.filter(file => file.endsWith('.json'));
-
-      for (const file of jsonFiles) {
+      for (const config of configs) {
         try {
-          const configPath = path.join(configsDir, file);
-          const configContent = await fs.readFile(configPath, 'utf8');
-          const config = JSON.parse(configContent);
-          
-          const frameworkName = path.basename(file, '.json');
+          const frameworkName = config.name;
           const category = config.category || 'general';
           
           await this.registerFramework(frameworkName, config, category);
-          this.configs.set(frameworkName, configPath);
+          this.configs.set(frameworkName, config);
         } catch (error) {
-          logger.error(`❌ Failed to load config "${file}":`, error.message);
+          logger.error(`❌ Failed to load config "${config.name}":`, error.message);
         }
       }
 
@@ -211,9 +194,8 @@ class FrameworkRegistry {
       throw new Error('Framework configuration must have a "description" property');
     }
 
-    if (!config.steps || !Array.isArray(config.steps)) {
-      throw new Error('Framework configuration must have a "steps" array');
-    }
+    // Domain layer only validates metadata - steps validation moved to infrastructure layer
+    // Steps validation is now handled by FrameworkValidator in infrastructure layer
 
     return true;
   }
@@ -419,6 +401,20 @@ class FrameworkRegistry {
     instance.categories.clear();
     instance.configs.clear();
     return true;
+  }
+
+  /**
+   * Get framework count
+   */
+  getFrameworkCount() {
+    return this.frameworks.size;
+  }
+
+  /**
+   * Get category count
+   */
+  getCategoryCount() {
+    return this.categories.size;
   }
 
   /**

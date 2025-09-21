@@ -5,7 +5,7 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const { frameworkRegistry } = require('@domain/frameworks');
+const { initializeFrameworks } = require('@domain/frameworks');
 const Logger = require('@logging/Logger');
 const logger = new Logger('FrameworkLoader');
 
@@ -15,6 +15,8 @@ class FrameworkLoader {
     this.frameworkPaths = new Map();
     this.loadingQueue = [];
     this.isLoading = false;
+    this.frameworkConfigs = []; // Store configurations for domain layer
+    this.domainFrameworkSystem = null; // Domain layer system
   }
 
   /**
@@ -30,6 +32,14 @@ class FrameworkLoader {
       // Load framework configurations
       await this.loadFrameworkConfigs();
       
+      // Initialize domain layer with collected configurations
+      try {
+        this.domainFrameworkSystem = await initializeFrameworks(this.frameworkConfigs);
+        logger.info(`✅ Domain framework system initialized with ${this.frameworkConfigs.length} configurations`);
+      } catch (domainError) {
+        logger.warn(`⚠️ Domain framework system initialization failed:`, domainError.message);
+      }
+
       logger.info(`✅ Framework Loader initialized with ${this.loadedFrameworks.size} frameworks`);
       return true;
     } catch (error) {
@@ -113,8 +123,8 @@ class FrameworkLoader {
       // Validate configuration
       this.validateFrameworkConfig(config);
       
-      // Register with domain FrameworkRegistry
-      await frameworkRegistry.registerFramework(frameworkName, config, config.category);
+      // Store configuration for domain layer initialization
+      this.frameworkConfigs.push(config);
       
       // Store loaded framework
       this.loadedFrameworks.set(frameworkName, {
@@ -122,12 +132,22 @@ class FrameworkLoader {
         path: frameworkPath,
         config: config,
         status: 'loaded',
-        loadedAt: new Date()
+        loadedAt: new Date(),
+        domainRegistered: true
       });
 
       logger.info(`✅ Loaded framework "${frameworkName}" successfully`);
     } catch (error) {
       logger.error(`❌ Failed to load framework config "${frameworkName}":`, error.message);
+      // Store failed framework for debugging
+      this.loadedFrameworks.set(frameworkName, {
+        name: frameworkName,
+        path: frameworkPath,
+        config: null,
+        status: 'failed',
+        loadedAt: new Date(),
+        error: error.message
+      });
       throw error;
     }
   }
@@ -155,8 +175,8 @@ class FrameworkLoader {
     const configPath = path.join(frameworkPath, 'framework.json');
     await fs.writeFile(configPath, JSON.stringify(defaultConfig, null, 2));
     
-    // Register with domain FrameworkRegistry
-    await frameworkRegistry.registerFramework(frameworkName, defaultConfig, defaultConfig.category);
+    // Store configuration for domain layer initialization
+    this.frameworkConfigs.push(defaultConfig);
     
     // Store loaded framework
     this.loadedFrameworks.set(frameworkName, {
@@ -164,7 +184,9 @@ class FrameworkLoader {
       path: frameworkPath,
       config: defaultConfig,
       status: 'loaded',
-      loadedAt: new Date()
+      loadedAt: new Date(),
+      domainRegistered: true,
+      isDefault: true
     });
 
     logger.info(`✅ Created default config for framework "${frameworkName}"`);
@@ -203,8 +225,17 @@ class FrameworkLoader {
         return false;
       }
 
-      // Remove from domain FrameworkRegistry
-      frameworkRegistry.unregisterFramework(frameworkName);
+      const frameworkInfo = this.loadedFrameworks.get(frameworkName);
+      
+      // Remove from domain FrameworkRegistry if it was registered
+      if (frameworkInfo.domainRegistered) {
+        try {
+          frameworkRegistry.unregisterFramework(frameworkName);
+          logger.info(`✅ Unregistered framework "${frameworkName}" from domain registry`);
+        } catch (registryError) {
+          logger.warn(`⚠️ Failed to unregister framework "${frameworkName}" from domain registry:`, registryError.message);
+        }
+      }
       
       // Remove from loaded frameworks
       this.loadedFrameworks.delete(frameworkName);
@@ -324,11 +355,46 @@ class FrameworkLoader {
     const stats = {};
     
     for (const framework of this.loadedFrameworks.values()) {
-      const category = framework.config.category;
-      stats[category] = (stats[category] || 0) + 1;
+      if (framework.config && framework.config.category) {
+        const category = framework.config.category;
+        stats[category] = (stats[category] || 0) + 1;
+      }
     }
     
     return stats;
+  }
+
+  /**
+   * Get domain framework system
+   */
+  getDomainFrameworkSystem() {
+    return this.domainFrameworkSystem;
+  }
+
+  /**
+   * Get framework configurations
+   */
+  getFrameworkConfigs() {
+    return this.frameworkConfigs;
+  }
+
+  /**
+   * Get framework loading health status
+   */
+  getHealthStatus() {
+    const totalFrameworks = this.frameworkPaths.size;
+    const loadedFrameworks = Array.from(this.loadedFrameworks.values()).filter(f => f.status === 'loaded').length;
+    const failedFrameworks = Array.from(this.loadedFrameworks.values()).filter(f => f.status === 'failed').length;
+    const domainInitialized = this.domainFrameworkSystem !== null;
+    
+    return {
+      totalFrameworks,
+      loadedFrameworks,
+      failedFrameworks,
+      domainInitialized,
+      healthScore: totalFrameworks > 0 ? (loadedFrameworks / totalFrameworks) * 100 : 100,
+      isHealthy: failedFrameworks === 0 && loadedFrameworks > 0 && domainInitialized
+    };
   }
 }
 
