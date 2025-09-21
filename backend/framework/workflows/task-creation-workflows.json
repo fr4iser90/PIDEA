@@ -279,9 +279,9 @@
   },
   "contentLibrary": {
     "prompts": {
-      "task-creation": "{{promptPath(\"task-create\")}}",
-      "quick-task": "{{promptPath(\"task-create\")}}",
-      "advanced-task": "{{promptPath(\"task-create\")}}"
+      "task-creation": "content-library/prompts/task-management/task-create.md",
+      "quick-task": "content-library/prompts/task-management/task-create.md",
+      "advanced-task": "content-library/prompts/task-management/task-create.md"
     },
     "templates": {
       "task-creation": "content-library/templates/",

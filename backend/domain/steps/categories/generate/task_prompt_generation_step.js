@@ -185,9 +185,9 @@ class TaskPromptGenerationStep {
     try {
       // Define prompt paths based on type
       const promptPaths = {
-        'task-creation': '{{promptPath("task-create")}}',
-        'quick-task': '{{promptPath("task-create")}}',
-        'advanced-task': '{{promptPath("task-create")}}'
+        'task-creation': 'content-library/prompts/task-management/task-create.md',
+        'quick-task': 'content-library/prompts/task-management/task-create.md',
+        'advanced-task': 'content-library/prompts/task-management/task-create.md'
       };
 
       const promptPath = promptPaths[promptType] || promptPaths['task-creation'];

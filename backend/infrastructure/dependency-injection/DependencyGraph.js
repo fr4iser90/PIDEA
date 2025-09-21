@@ -212,6 +212,7 @@ class DependencyGraph {
             // During shutdown, be more lenient and return what we have
             if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
                 this.logger.warn('Development mode: Returning partial topological sort for shutdown');
+                this.logger.warn('Unprocessed nodes:', unprocessedNodes.join(', '));
                 return result;
             }
             

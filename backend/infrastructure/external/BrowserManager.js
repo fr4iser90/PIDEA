@@ -95,23 +95,27 @@ class BrowserManager {
   }
 
   async getPage() {
-    try {
-      if (!this.currentPort) {
-        throw new Error('No active port selected');
-      }
-      
-      // Get connection from pool (handles reconnection automatically)
-      const connection = await this.connectionPool.getConnection(this.currentPort);
-      
-      // Update current state
-      this.browser = connection.browser;
-      this.page = connection.page;
-      
-      return this.page;
-    } catch (error) {
-      logger.error('Error getting page:', error.message);
-      return null;
+    if (!this.currentPort) {
+      throw new Error('No active port selected');
     }
+    
+    // Get connection from pool (handles reconnection automatically)
+    const connection = await this.connectionPool.getConnection(this.currentPort);
+    
+    if (!connection) {
+      throw new Error('Failed to get connection from pool');
+    }
+    
+    if (!connection.page) {
+      throw new Error('Connection exists but page is null');
+    }
+    
+    // Update current state
+    this.browser = connection.browser;
+    this.page = connection.page;
+    
+    logger.debug(`Successfully got page for port ${this.currentPort}`);
+    return this.page;
   }
 
   async switchToPort(port) {
@@ -615,6 +619,11 @@ class BrowserManager {
 
       // Try multiple selectors for the New Chat button
       const selectors = [
+        // New Cursor selector with data-command-id
+        '[data-command-id="composer.createNewComposerTab"]',
+        'li[data-command-id="composer.createNewComposerTab"] a',
+        'li[data-command-id="composer.createNewComposerTab"] .action-label',
+        // Original selectors
         'a.action-label.codicon.codicon-add-two[aria-label*="New Chat"]',
         'a.action-label.codicon.codicon-add-two[aria-label*="New Tab"]',
         'a.action-label.codicon.codicon-add-two[role="button"]',
@@ -701,7 +710,7 @@ class BrowserManager {
 
     } catch (error) {
       logger.error('Error clicking New Chat button:', error.message);
-      return false;
+      throw error; // Re-throw the error instead of returning false
     }
   }
 
@@ -992,7 +1001,7 @@ class BrowserManager {
     } catch (error) {
       logger.error('Error typing message:', error.message);
       logger.error('Error stack:', error.stack);
-      return false;
+      throw error; // Re-throw the error instead of returning false
     }
   }
 
@@ -1025,7 +1034,7 @@ class BrowserManager {
 
     } catch (error) {
       logger.error('Error creating new chat:', error.message);
-      return false;
+      throw error; // Re-throw the error instead of returning false
     }
   }
 

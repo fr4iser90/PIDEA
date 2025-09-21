@@ -42,14 +42,14 @@ class SendMessageHandler {
    * Get the BrowserManager instance
    * @returns {Object} The BrowserManager instance
    */
-  getBrowserManager() {
+  async getBrowserManager() {
     const activePort = this.ideManager.getActivePort();
     logger.info(`Active port: ${activePort}`);
     
     // Ensure BrowserManager is connected to the correct port
     if (this.browserManager.getCurrentPort() !== activePort) {
       logger.info(`Switching BrowserManager to port ${activePort}`);
-      this.browserManager.switchToPort(activePort);
+      await this.browserManager.switchToPort(activePort);
     }
     
     return this.browserManager;
@@ -87,14 +87,14 @@ class SendMessageHandler {
         timestamp: new Date()
       });
       // Use BrowserManager for message sending (replaces deprecated IDE service sendMessage)
-      const browserManager = this.getBrowserManager();
+      const browserManager = await this.getBrowserManager();
       this.logger.info('Sending message via BrowserManager:', command.message);
-      const result = await browserManager.typeMessage(command.message, true);
+      await browserManager.typeMessage(command.message, true); // This now throws on error instead of returning false
       await this.eventBus.publish('message.sent', {
         commandId: command.commandId,
         requestedBy: command.requestedBy,
         message: command.message,
-        result,
+        result: true, // Always true if no error thrown
         timestamp: new Date()
       });
       this.logger.info('SendMessageHandler: Message sent', {
@@ -103,8 +103,8 @@ class SendMessageHandler {
       });
       return {
         success: true,
-        result,
-        codeBlocks: result.codeBlocks || []
+        result: true, // Always true if no error thrown
+        codeBlocks: [] // No code blocks from typeMessage
       };
     } catch (error) {
       this.logger.error('SendMessageHandler: Message sending failed', {

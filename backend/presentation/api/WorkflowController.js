@@ -1287,6 +1287,25 @@ class WorkflowController {
                 }
             }
 
+            // 🔄 AUTOMATIC STATUS TRANSITION: Move task to in-progress before workflow execution
+            if (taskData && taskData.id && this.taskService) {
+                try {
+                    const task = await this.taskService.taskRepository.findById(taskData.id);
+                    if (task && task.status.value === 'pending') {
+                        this.logger.info('🔄 WorkflowController: Moving task to in-progress before workflow execution', { 
+                            taskId: taskData.id,
+                            workflowName: workflow.name 
+                        });
+                        await this.taskService.moveTaskToInProgress(taskData.id);
+                    }
+                } catch (error) {
+                    this.logger.error('❌ WorkflowController: Failed to move task to in-progress', {
+                        taskId: taskData.id,
+                        error: error.message
+                    });
+                }
+            }
+
             for (let i = 0; i < workflow.steps.length; i++) {
                 const step = workflow.steps[i];
                 const stepStartTime = Date.now();
@@ -1428,12 +1447,17 @@ class WorkflowController {
                 }
             }
 
-            // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed if workflow was successful
-            if (results.success && taskData && taskData.id && this.taskService) {
+            // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed ONLY if workflow was truly successful
+            // Check if workflow was successful AND no critical steps failed
+            const hasCriticalFailures = results.errors && results.errors.length > 0;
+            const isWorkflowTrulySuccessful = results.success && !hasCriticalFailures;
+            
+            if (isWorkflowTrulySuccessful && taskData && taskData.id && this.taskService) {
                 try {
                     this.logger.info('🔄 WorkflowController: Moving task to completed after successful workflow', { 
                         taskId: taskData.id,
-                        workflowName: workflow.name 
+                        workflowName: workflow.name,
+                        errorsCount: results.errors ? results.errors.length : 0
                     });
                     await this.taskService.moveTaskToCompleted(taskData.id);
                 } catch (error) {
@@ -1442,6 +1466,14 @@ class WorkflowController {
                         error: error.message
                     });
                 }
+            } else if (taskData && taskData.id) {
+                this.logger.warn('⚠️ WorkflowController: NOT moving task to completed due to workflow failures', {
+                    taskId: taskData.id,
+                    workflowName: workflow.name,
+                    success: results.success,
+                    errorsCount: results.errors ? results.errors.length : 0,
+                    hasCriticalFailures
+                });
             }
 
         } catch (error) {

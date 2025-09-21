@@ -175,10 +175,10 @@ class TaskService {
    */
   getPromptPath(promptType) {
     const promptPaths = {
-      'task-create': '{{promptPath("task-create")}}',
-      'task-execute': '{{promptPath("task-execute")}}',
-      'task-analyze': '{{promptPath("task-analyze")}}',
-      'task-review': '{{promptPath("task-review")}}'
+      'task-create': 'content-library/prompts/task-management/task-create.md',
+      'task-execute': 'content-library/prompts/task-management/task-execute.md',
+      'task-analyze': 'content-library/prompts/task-management/task-analyze.md',
+      'task-review': 'content-library/prompts/task-management/task-review.md'
     };
     
     return promptPaths[promptType] || promptPaths['task-create'];

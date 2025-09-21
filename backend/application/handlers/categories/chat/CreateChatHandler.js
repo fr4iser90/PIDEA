@@ -44,6 +44,23 @@ class CreateChatHandler {
   }
 
   /**
+   * Get BrowserManager with correct port set
+   * @returns {BrowserManager} BrowserManager instance
+   */
+  async getBrowserManager() {
+    const activePort = this.ideManager.getActivePort();
+    this.logger.info(`Active port: ${activePort}`);
+    
+    // Ensure BrowserManager is connected to the correct port
+    if (this.browserManager.getCurrentPort() !== activePort) {
+      this.logger.info(`Switching BrowserManager to port ${activePort}`);
+      await this.browserManager.switchToPort(activePort);
+    }
+    
+    return this.browserManager;
+  }
+
+  /**
    * Handle CreateChatCommand
    * @param {CreateChatCommand} command - Chat creation command
    * @param {Object} options - Execution options
@@ -74,11 +91,8 @@ class CreateChatHandler {
 
       // First, click New Chat button in the IDE using BrowserManager
       this.logger.info('Clicking New Chat button in IDE...');
-      const browserResult = await this.browserManager.clickNewChat();
-      
-      if (!browserResult) {
-        throw new Error('Failed to click New Chat button in IDE');
-      }
+      const browserManager = await this.getBrowserManager();
+      await browserManager.clickNewChat(); // This now throws on error instead of returning false
       
       this.logger.info('New Chat button clicked successfully');
       

@@ -39,9 +39,17 @@ class TaskStatusTransitionService {
             task.updateStatus('in-progress');
             await this.taskRepository.update(taskId, task);
 
-            // 4. Move files from pending/ to in-progress/
-            const oldPath = `docs/09_roadmap/pending/${task.priority.value}/${task.category}/${task.name}/`;
-            const newPath = `docs/09_roadmap/in-progress/${task.priority.value}/${task.category}/${task.name}/`;
+            // 4. Normalize task name for directory path
+            const taskName = this.normalizeTaskName(task.title || 'unknown-task');
+            
+            // 5. Handle priority directory mapping (high -> high, medium -> medium-priority, etc.)
+            const priorityDir = this.mapPriorityToDirectory(task.priority.value);
+            
+            // 6. Move files from pending/ to in-progress/
+            // Note: pending has priority subdirs, in-progress goes directly to category
+            const projectRoot = process.cwd();
+            const oldPath = path.join(projectRoot, `docs/09_roadmap/pending/${priorityDir}/${task.category}/${taskName}/`);
+            const newPath = path.join(projectRoot, `docs/09_roadmap/in-progress/${task.category}/${taskName}/`);
 
             await this.moveTaskFiles(oldPath, newPath, taskId);
 
@@ -101,7 +109,8 @@ class TaskStatusTransitionService {
             // 2. Check if task is already completed AND files are in correct location
             if (task.status.value === 'completed') {
                 const quarter = this.getCurrentQuarter();
-                const expectedPath = `docs/09_roadmap/completed/${quarter}/${task.category}/${task.name}/`;
+                const projectRoot = process.cwd();
+                const expectedPath = path.join(projectRoot, `docs/09_roadmap/completed/${quarter}/${task.category}/${this.normalizeTaskName(task.title || 'unknown-task')}/`);
                 
                 try {
                     await fs.access(expectedPath);
@@ -125,31 +134,24 @@ class TaskStatusTransitionService {
             // 4. Find and move files from ANY possible source location
             const quarter = this.getCurrentQuarter();
             
-            // Extract the actual folder name from the task title
-            let taskName = task.name || task.title || 'unknown-task';
-            if (taskName.includes('Task Panel')) {
-                // Extract the specific task panel name (e.g., "task-panel-category-improvement")
-                if (taskName.includes('Category Improvement')) {
-                    taskName = 'task-panel-category-improvement';
-                } else if (taskName.includes('Completion Filter')) {
-                    taskName = 'task-panel-completion-filter';
-                } else if (taskName.includes('Project Specific')) {
-                    taskName = 'task-panel-project-specific';
-                }
-            }
+            // Normalize task name for directory path
+            const taskName = this.normalizeTaskName(task.title || 'unknown-task');
             
             const taskCategory = task.category || 'unknown';
-            const newPath = `docs/09_roadmap/completed/${quarter}/${taskCategory}/${taskName}/`;
+            const projectRoot = process.cwd();
+            const newPath = path.join(projectRoot, `docs/09_roadmap/completed/${quarter}/${taskCategory}/${taskName}/`);
             
             // Try to find the task files in different possible locations
-            const taskPriority = task.priority?.value || 'medium-priority';
+            const taskPriority = task.priority?.value || 'medium';
+            const priorityDir = this.mapPriorityToDirectory(taskPriority);
             const possibleOldPaths = [
-                `docs/09_roadmap/in-progress/${taskPriority}/${taskCategory}/${taskName}/`,
-                `docs/09_roadmap/pending/${taskPriority}/${taskCategory}/${taskName}/`,
-                `docs/09_roadmap/pending/medium-priority/${taskCategory}/${taskName}/`,
-                `docs/09_roadmap/pending/high-priority/${taskCategory}/${taskName}/`,
-                `docs/09_roadmap/pending/low-priority/${taskCategory}/${taskName}/`,
-                `docs/09_roadmap/planning/${taskPriority}/${taskCategory}/${taskName}/`
+                path.join(projectRoot, `docs/09_roadmap/in-progress/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/${priorityDir}/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/medium-priority/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/high-priority/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/low-priority/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/high/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/planning/${priorityDir}/${taskCategory}/${taskName}/`)
             ];
 
             let oldPath = null;
@@ -219,6 +221,52 @@ class TaskStatusTransitionService {
             });
             throw error;
         }
+    }
+
+    /**
+     * Map priority value to directory name
+     * @param {string} priority - Priority value
+     * @returns {string} Directory name
+     */
+    mapPriorityToDirectory(priority) {
+        const priorityMap = {
+            'high': 'high',
+            'medium': 'medium-priority', 
+            'low': 'low-priority',
+            'critical': 'high-priority'
+        };
+        return priorityMap[priority] || 'medium-priority';
+    }
+
+    /**
+     * Normalize task name for directory path
+     * @param {string} taskName - Raw task name
+     * @returns {string} Normalized task name
+     */
+    normalizeTaskName(taskName) {
+        if (!taskName) return 'unknown-task';
+        
+        // Handle specific known cases
+        if (taskName.includes('Framework Missing Steps Completion')) {
+            return 'framework-missing-steps-completion';
+        }
+        
+        // Remove common suffixes that don't belong in directory names
+        let cleanedName = taskName
+            .replace(/\s+Master\s+Index\s*$/i, '') // Remove "Master Index" suffix
+            .replace(/\s+Index\s*$/i, '') // Remove "Index" suffix
+            .replace(/\s+Task\s*$/i, '') // Remove "Task" suffix
+            .replace(/\s+Implementation\s*$/i, '') // Remove "Implementation" suffix
+            .replace(/\s+Plan\s*$/i, '') // Remove "Plan" suffix
+            .replace(/\s+Phase\s+\d+\s*$/i, '') // Remove "Phase X" suffix
+            .trim();
+        
+        // Convert to kebab-case and clean up
+        return cleanedName.toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
     }
 
     /**
@@ -358,9 +406,17 @@ class TaskStatusTransitionService {
             task.setMetadata('blockReason', reason);
             await this.taskRepository.update(taskId, task);
 
+            // Normalize task name for directory path
+            const taskName = this.normalizeTaskName(task.title || 'unknown-task');
+            
+            // Handle priority directory mapping
+            const priorityDir = this.mapPriorityToDirectory(task.priority.value);
+            
             // Move files to blocked directory
-            const oldPath = `docs/09_roadmap/in-progress/${task.priority.value}/${task.category}/${task.name}/`;
-            const newPath = `docs/09_roadmap/blocked/${task.priority.value}/${task.category}/${task.name}/`;
+            // Note: in-progress goes directly to category, blocked might have priority subdirs
+            const projectRoot = process.cwd();
+            const oldPath = path.join(projectRoot, `docs/09_roadmap/in-progress/${task.category}/${taskName}/`);
+            const newPath = path.join(projectRoot, `docs/09_roadmap/blocked/${priorityDir}/${task.category}/${taskName}/`);
 
             await this.moveTaskFiles(oldPath, newPath, taskId);
             await this.updateFileReferences(taskId, oldPath, newPath);
@@ -415,9 +471,17 @@ class TaskStatusTransitionService {
             task.setMetadata('cancellationReason', reason);
             await this.taskRepository.update(taskId, task);
 
+            // Normalize task name for directory path
+            const taskName = this.normalizeTaskName(task.title || 'unknown-task');
+            
+            // Handle priority directory mapping
+            const priorityDir = this.mapPriorityToDirectory(task.priority.value);
+            
             // Move files to cancelled directory
-            const oldPath = `docs/09_roadmap/in-progress/${task.priority.value}/${task.category}/${task.name}/`;
-            const newPath = `docs/09_roadmap/cancelled/${task.priority.value}/${task.category}/${task.name}/`;
+            // Note: in-progress goes directly to category, cancelled might have priority subdirs
+            const projectRoot = process.cwd();
+            const oldPath = path.join(projectRoot, `docs/09_roadmap/in-progress/${task.category}/${taskName}/`);
+            const newPath = path.join(projectRoot, `docs/09_roadmap/cancelled/${priorityDir}/${task.category}/${taskName}/`);
 
             await this.moveTaskFiles(oldPath, newPath, taskId);
             await this.updateFileReferences(taskId, oldPath, newPath);
