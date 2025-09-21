@@ -19,6 +19,7 @@
       "description": "Analyze project structure to identify documentation needs",
       "order": 1,
       "required": true,
+      "step-file": "analyze_project_structure_step.js",
       "settings": {
         "scanDepth": 3,
         "includeHidden": false
@@ -32,6 +33,7 @@
       "description": "Generate structure documentation from script",
       "order": 2,
       "required": true,
+      "step-file": "generate_structure_docs_step.js",
       "settings": {
         "format": "markdown",
         "includeExamples": true
@@ -45,6 +47,7 @@
       "description": "Generate code documentation from AI analysis",
       "order": 3,
       "required": false,
+      "step-file": "generate_code_docs_step.js",
       "settings": {
         "includeScreenshots": true,
         "stepByStep": true
@@ -58,6 +61,7 @@
       "description": "Validate documentation completeness and accuracy",
       "order": 4,
       "required": true,
+      "step-file": "validate_documentation_step.js",
       "settings": {
         "checkLinks": true,
         "validateExamples": true

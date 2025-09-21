@@ -206,6 +206,7 @@ class StepRegistry {
           loadedCount++;
         } catch (error) {
           this.logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
+          this.logger.error(`❌ Full error stack:`, error.stack);
         }
       }
       
