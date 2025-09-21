@@ -18,6 +18,7 @@
       "description": "Analyze current development context and requirements",
       "order": 1,
       "required": true,
+      "step-file": "analyze_context_step.js",
       "settings": {
         "contextWindow": 8000,
         "includeCodebase": true
@@ -29,6 +30,7 @@
       "description": "Generate AI-powered suggestions and recommendations",
       "order": 2,
       "required": true,
+      "step-file": "generate_suggestions_step.js",
       "settings": {
         "suggestionTypes": ["code", "architecture", "optimization"],
         "maxSuggestions": 5
@@ -40,6 +42,7 @@
       "description": "Implement automated code generation and refactoring",
       "order": 3,
       "required": false,
+      "step-file": "implement_automation_step.js",
       "settings": {
         "autoApply": false,
         "reviewRequired": true
@@ -51,6 +54,7 @@
       "description": "Validate AI-generated code and suggestions",
       "order": 4,
       "required": true,
+      "step-file": "validate_ai_output_step.js",
       "settings": {
         "runTests": true,
         "checkQuality": true
