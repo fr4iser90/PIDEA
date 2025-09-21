@@ -1345,10 +1345,10 @@ Please proceed with the task execution.
      * @returns {Promise<string>} Task execution prompt
      */
     async buildTaskExecutionPrompt(task) {
-        // Use existing TaskService buildTaskExecutionPrompt
-        const taskService = new (require('../task/TaskService'))();
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+        // Use TaskService from DI container
+        const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
+        const container = getServiceContainer();
+        const taskService = container.resolve('taskService');
         return await taskService.buildTaskExecutionPrompt(task);
     }
 
