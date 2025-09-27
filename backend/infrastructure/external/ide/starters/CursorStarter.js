@@ -6,6 +6,8 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
+const ServiceLogger = require('@logging/ServiceLogger');
+const logger = new ServiceLogger('CursorStarter');
 
 class CursorStarter {
   constructor() {
@@ -72,7 +74,7 @@ class CursorStarter {
     }
 
     try {
-      const process = spawn('cursor', args, {
+      const childProcess = spawn('cursor', args, {
         detached: true,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
@@ -82,19 +84,19 @@ class CursorStarter {
       });
 
       // Handle process events
-      process.stdout.on('data', (data) => {
+      childProcess.stdout.on('data', (data) => {
         logger.info(`Cursor IDE ${port} stdout received`);
       });
 
-      process.stderr.on('data', (data) => {
+      childProcess.stderr.on('data', (data) => {
         logger.info(`Cursor IDE ${port} stderr received`);
       });
 
-      process.on('close', (code) => {
+      childProcess.on('close', (code) => {
         logger.info(`Cursor IDE ${port} process closed with code ${code}`);
       });
 
-      process.on('error', (error) => {
+      childProcess.on('error', (error) => {
         logger.error(`Cursor IDE ${port} process error:`, error);
       });
 
@@ -106,7 +108,6 @@ class CursorStarter {
         pid: process.pid,
         status: 'starting',
         ideType: 'cursor',
-        process: process,
         args: args,
         workspacePath: workspacePath
       };
@@ -194,16 +195,14 @@ class CursorStarter {
   async getVersion() {
     return new Promise((resolve) => {
       const { spawn } = require('child_process');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-      const process = spawn('cursor', ['--version'], { stdio: 'pipe' });
+      const versionProcess = spawn('cursor', ['--version'], { stdio: 'pipe' });
       
       let output = '';
-      process.stdout.on('data', (data) => {
+      versionProcess.stdout.on('data', (data) => {
         output += data.toString();
       });
       
-      process.on('close', (code) => {
+      versionProcess.on('close', (code) => {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
@@ -211,7 +210,7 @@ const logger = new Logger('Logger');
         }
       });
       
-      process.on('error', () => {
+      versionProcess.on('error', () => {
         resolve(null);
       });
     });

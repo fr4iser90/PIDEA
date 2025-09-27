@@ -483,6 +483,31 @@ class IDEManager {
   }
 
   /**
+   * Detect workspace paths (simple wrapper for API compatibility)
+   * @returns {Promise<Object>} Object with paths array
+   */
+  async detectWorkspacePaths() {
+    try {
+      const results = await this.detectWorkspacePathsForAllIDEs();
+      const paths = results
+        .filter(result => result.success && result.workspacePath)
+        .map(result => result.workspacePath);
+      
+      return {
+        success: true,
+        paths: paths
+      };
+    } catch (error) {
+      logger.error('Error detecting workspace paths:', error);
+      return {
+        success: false,
+        paths: [],
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Detect workspace paths for all available IDEs
    * @returns {Promise<Array>} Array of detection results
    */

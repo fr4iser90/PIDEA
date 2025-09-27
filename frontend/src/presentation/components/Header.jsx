@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React from 'react';
 import UserMenu from './auth/UserMenu.jsx';
+import StatusBadge from './ide/StatusBadge.jsx';
 
 function Header({ eventBus, currentView, onNavigationClick, onLeftSidebarToggle, onRightSidebarToggle }) {
   const handleNavigationClick = (view) => {
@@ -32,6 +33,9 @@ function Header({ eventBus, currentView, onNavigationClick, onLeftSidebarToggle,
     <header className="app-header">
       <div className="header-content">
         <h1 className="app-title">PIDEA - Your personal AI agent</h1>
+        
+        {/* Status Badge */}
+        <StatusBadge className="header-status-badge" />
         
         {/* Navigation */}
         <nav className="header-navigation">

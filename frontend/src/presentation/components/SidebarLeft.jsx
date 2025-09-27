@@ -14,12 +14,14 @@ import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
+import IDEStartModal from './ide/IDEStartModal.jsx';
 import '@/css/global/sidebar-left.css';
 
 function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
   logger.info('🔍 SidebarLeft RENDERING!');
   
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [showIDEStartModal, setShowIDEStartModal] = useState(false);
   const { isAuthenticated } = useAuthStore();
   
   // Use IDEStore instead of local state
@@ -70,7 +72,29 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
     }
   }, [isAuthenticated]);
 
-  const handleNewIDE = () => eventBus.emit('sidebar-left:new-ide');
+  const handleNewIDE = () => {
+    setShowIDEStartModal(true);
+    eventBus.emit('sidebar-left:new-ide');
+  };
+  
+  const handleIDEStartSuccess = (ideData) => {
+    logger.info('IDE started successfully:', ideData);
+    setShowIDEStartModal(false);
+    
+    // Switch to the new IDE if it has a port
+    if (ideData.port && onActivePortChange) {
+      onActivePortChange(ideData.port);
+    }
+    
+    // Refresh IDE list
+    loadAvailableIDEs();
+    
+    eventBus.emit('sidebar-left:ide-started', { ideData });
+  };
+  
+  const handleIDEStartModalClose = () => {
+    setShowIDEStartModal(false);
+  };
   
   const handleSwitchDirectlyToIDE = async (port) => {
     try {
@@ -243,6 +267,13 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
         {renderPanel()}
       </div>
       </div>
+      
+      {/* IDE Start Modal */}
+      <IDEStartModal
+        isOpen={showIDEStartModal}
+        onClose={handleIDEStartModalClose}
+        onSuccess={handleIDEStartSuccess}
+      />
     </div>
   );
 }

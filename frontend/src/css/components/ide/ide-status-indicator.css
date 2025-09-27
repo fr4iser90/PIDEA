@@ -1,0 +1,358 @@
+/* IDEStatusIndicator Component Styles */
+.ide-status-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.ide-status-indicator.animating {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.status-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.status-icon.green {
+  color: var(--accent-green);
+}
+
+.status-icon.yellow {
+  color: var(--accent-yellow);
+}
+
+.status-icon.red {
+  color: var(--accent-red);
+}
+
+.status-icon.gray {
+  color: var(--text-secondary);
+}
+
+/* Status Icon Animations */
+.status-icon.pulse {
+  animation: pulse 2s infinite;
+}
+
+.status-icon.spin {
+  animation: spin 1s linear infinite;
+}
+
+.status-icon.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.status-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-text {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9em;
+}
+
+.status-details {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+}
+
+.ide-name {
+  text-transform: capitalize;
+}
+
+.port-info {
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.loading-indicator,
+.error-indicator {
+  font-size: 12px;
+}
+
+.loading-indicator {
+  color: var(--accent-yellow);
+}
+
+.error-indicator {
+  color: var(--accent-red);
+}
+
+/* Metrics Display */
+.status-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+.metric-item.error {
+  color: var(--accent-red);
+}
+
+.metric-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.metric-value {
+  color: var(--text-primary);
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/* Status History */
+.status-history {
+  padding: 8px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.history-header {
+  margin-bottom: 6px;
+}
+
+.history-title {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75em;
+  padding: 2px 0;
+}
+
+.history-status {
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+}
+
+.history-text {
+  flex: 1;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.history-time {
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.7em;
+}
+
+/* Last Update */
+.last-update {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  font-size: 0.75em;
+}
+
+.update-label {
+  color: var(--text-secondary);
+}
+
+.update-time {
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+/* Status-specific styling */
+.ide-status-indicator.running {
+  border-color: var(--accent-green);
+  background: rgba(var(--accent-green-rgb), 0.05);
+}
+
+.ide-status-indicator.starting {
+  border-color: var(--accent-yellow);
+  background: rgba(var(--accent-yellow-rgb), 0.05);
+}
+
+.ide-status-indicator.stopped,
+.ide-status-indicator.error {
+  border-color: var(--accent-red);
+  background: rgba(var(--accent-red-rgb), 0.05);
+}
+
+.ide-status-indicator.disconnected,
+.ide-status-indicator.unknown {
+  border-color: var(--text-secondary);
+  background: rgba(var(--text-secondary-rgb), 0.05);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ide-status-indicator {
+    padding: 8px;
+    font-size: 0.8em;
+  }
+  
+  .status-main {
+    gap: 6px;
+  }
+  
+  .status-icon {
+    font-size: 14px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .status-metrics,
+  .status-history {
+    padding: 6px;
+  }
+  
+  .metric-item,
+  .history-item {
+    font-size: 0.75em;
+  }
+}
+
+@media (max-width: 480px) {
+  .ide-status-indicator {
+    padding: 6px;
+    font-size: 0.75em;
+  }
+  
+  .status-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  
+  .status-metrics {
+    display: none; /* Hide metrics on very small screens */
+  }
+  
+  .status-history {
+    display: none; /* Hide history on very small screens */
+  }
+}
+
+/* Compact mode */
+.ide-status-indicator.compact {
+  padding: 6px 8px;
+  font-size: 0.8em;
+}
+
+.ide-status-indicator.compact .status-metrics,
+.ide-status-indicator.compact .status-history {
+  display: none;
+}
+
+.ide-status-indicator.compact .last-update {
+  display: none;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .ide-status-indicator {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .ide-status-indicator {
+    border-width: 2px;
+  }
+  
+  .status-icon {
+    font-weight: bold;
+  }
+  
+  .status-text {
+    font-weight: bold;
+  }
+}
+
+/* Print styles */
+@media print {
+  .ide-status-indicator {
+    background: white;
+    border: 1px solid black;
+    color: black;
+  }
+  
+  .status-icon {
+    color: black;
+  }
+  
+  .status-metrics,
+  .status-history {
+    background: white;
+    border: 1px solid black;
+  }
+}

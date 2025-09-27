@@ -4,7 +4,7 @@
 - **Feature/Component Name**: IDE Start Button Script Integration
 - **Priority**: High
 - **Category**: frontend
-- **Status**: pending
+- **Status**: completed
 - **Estimated Time**: 8 hours
 - **Dependencies**: Existing IDE integration system, start scripts (start_ide_example.bat/.ps1/.sh)
 - **Related Issues**: IDE start button should execute local scripts instead of API calls
@@ -281,7 +281,7 @@ When creating a task, automatically generate a master index file:
 - **Status**: Planning
 - **Total Estimated Time**: 12 hours
 - **Created**: 2024-12-19T10:30:00.000Z
-- **Last Updated**: 2024-12-19T10:30:00.000Z
+- **Last Updated**: 2025-09-27T21:31:50.000Z
 
 ## 📁 File Structure
 ```
