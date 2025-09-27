@@ -10,7 +10,7 @@ class ConnectionPool {
   constructor(options = {}) {
     this.connections = new Map(); // port -> {browser, page, lastUsed, health, createdAt, isConnecting}
     this.maxConnections = options.maxConnections || 10; // Increased for better performance
-    this.connectionTimeout = options.connectionTimeout || 20000; // Increased timeout for stability
+    this.connectionTimeout = options.connectionTimeout || 5000; // Reduced timeout for faster failure detection
     this.cleanupInterval = options.cleanupInterval || 120000; // 2 minutes - less frequent cleanup
     this.healthCheckInterval = options.healthCheckInterval || 60000; // 1 minute - less frequent health checks
     this.host = options.host || '127.0.0.1';
@@ -144,7 +144,7 @@ class ConnectionPool {
       logger.info(`Connecting to Chrome DevTools on port ${port}...`);
       
       // Use shorter timeout for initial connection to fail fast
-      const initialTimeout = Math.min(this.connectionTimeout, 10000); // Max 10 seconds for initial connection
+      const initialTimeout = Math.min(this.connectionTimeout, 3000); // Max 3 seconds for initial connection
       
       // Connect to Chrome DevTools Protocol with retry logic
       let browser = null;

@@ -182,7 +182,7 @@ class IDEManager {
       allIDEs.set(ide.port, {
         ...ide,
         source: 'detected',
-        workspacePath: this.ideWorkspaces.get(ide.port) || null,
+        workspacePath: null, // Will be detected on demand
         ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
         active: ide.port === this.activePort,
         healthStatus: this.healthMonitor && typeof this.healthMonitor.getIDEHealthStatus === 'function' 
@@ -195,7 +195,7 @@ class IDEManager {
       allIDEs.set(ide.port, {
         ...ide,
         source: 'started',
-        workspacePath: this.ideWorkspaces.get(ide.port) || null,
+        workspacePath: null, // Will be detected on demand
         ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
         active: ide.port === this.activePort,
         healthStatus: this.healthMonitor && typeof this.healthMonitor.getIDEHealthStatus === 'function' 
@@ -204,7 +204,26 @@ class IDEManager {
       });
     });
 
-    return Array.from(allIDEs.values());
+    // Detect workspace paths for all IDEs
+    const idesWithWorkspaces = await Promise.all(
+      Array.from(allIDEs.values()).map(async (ide) => {
+        try {
+          const workspacePath = await this.detectWorkspacePath(ide.port);
+          return {
+            ...ide,
+            workspacePath: workspacePath
+          };
+        } catch (error) {
+          logger.warn(`Failed to detect workspace for port ${ide.port}:`, error.message);
+          return {
+            ...ide,
+            workspacePath: null
+          };
+        }
+      })
+    );
+
+    return idesWithWorkspaces;
   }
 
   /**
@@ -226,12 +245,9 @@ class IDEManager {
       throw new Error(`IDE type ${ideType} is not enabled in configuration`);
     }
 
-    // If no workspace path provided, use the project root
+    // If no workspace path provided, start IDE without workspace
     if (!workspacePath) {
-      const currentDir = process.cwd();
-      const projectRoot = path.resolve(currentDir, '..');
-      workspacePath = projectRoot;
-      logger.info('No workspace path provided, using project root:', workspacePath);
+      logger.info('No workspace path provided, starting IDE without workspace');
     }
     
     // Get IDE configuration
@@ -306,6 +322,9 @@ class IDEManager {
     // Use port manager to validate and set active port
     const success = await this.portManager.setActivePort(port);
     if (!success) {
+      // Clean up stale IDE entry if switching failed
+      logger.info(`Switching to port ${port} failed, cleaning up stale entry`);
+      await this.cleanupStaleIDEs(port);
       throw new Error(`Failed to switch to IDE on port ${port}`);
     }
     
@@ -337,21 +356,17 @@ class IDEManager {
     logger.info(`Successfully switched to IDE on port ${port}`);
     
     // ✅ NEW: Automatically detect workspace for the switched IDE
-    let workspacePath = this.ideWorkspaces.get(port);
-    if (!workspacePath) {
-      logger.info(`No cached workspace for port ${port}, detecting now...`);
-      try {
-        workspacePath = await this.detectWorkspacePath(port);
-        if (workspacePath) {
-          logger.info(`✅ Workspace detected for port ${port}: ${workspacePath}`);
-        } else {
-          logger.warn(`⚠️ No workspace detected for port ${port}`);
-        }
-      } catch (error) {
-        logger.error(`❌ Workspace detection failed for port ${port}:`, error.message);
+    logger.info(`[IDEManager] Detecting workspace for port ${port}`);
+    let workspacePath = null;
+    try {
+      workspacePath = await this.detectWorkspacePath(port);
+      if (workspacePath) {
+        logger.info(`[IDEManager] ✅ Workspace detected for port ${port}: ${workspacePath}`);
+      } else {
+        logger.warn(`[IDEManager] ⚠️ No workspace detected for port ${port}`);
       }
-    } else {
-      logger.info(`Using cached workspace for port ${port}: ${workspacePath}`);
+    } catch (error) {
+      logger.error(`[IDEManager] ❌ Workspace detection failed for port ${port}:`, error.message);
     }
     
     return {
@@ -437,18 +452,32 @@ class IDEManager {
   }
 
   /**
+   * Force detect workspace path for IDE (ignores cache)
+   * @param {number} port - IDE port
+   * @returns {Promise<string|null>} Workspace path or null
+   */
+  async forceDetectWorkspacePath(port) {
+    try {
+      logger.info(`Force detecting workspace for port ${port} (ignoring cache)`);
+      
+      // Clear cached workspace for this port
+      this.ideWorkspaces.delete(port);
+      
+      // Use regular detection method
+      return await this.detectWorkspacePath(port);
+    } catch (error) {
+      logger.error('Error in force workspace detection for port', port, ':', error.message);
+      return null;
+    }
+  }
+
+  /**
    * Detect workspace path for IDE
    * @param {number} port - IDE port
    * @returns {Promise<string|null>} Workspace path or null
    */
   async detectWorkspacePath(port) {
     try {
-      // Check cache first
-      if (this.ideWorkspaces.has(port)) {
-        logger.info('Workspace path already cached for port', port, ':', this.ideWorkspaces.get(port));
-        return this.ideWorkspaces.get(port);
-      }
-      
       logger.info(`Starting workspace detection for port ${port}`);
       
       // Try modern CDP-based detection first
@@ -460,7 +489,6 @@ class IDEManager {
           
           if (workspaceInfo && workspaceInfo.workspacePath) {
             logger.info(`CDP-based detected workspace path for port ${port}: ${workspaceInfo.workspacePath}`);
-            this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
             
             // AUTOMATISCH Projekt in der DB erstellen
             await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
@@ -655,6 +683,51 @@ class IDEManager {
     }
     
     return availableIDEs;
+  }
+
+  /**
+   * Clean up stale IDE entries
+   * Removes IDE entries that are no longer running
+   * @param {number} port - Port to clean up (optional, cleans all if not provided)
+   * @returns {Promise<void>}
+   */
+  async cleanupStaleIDEs(port = null) {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    logger.info('Cleaning up stale IDE entries...');
+    
+    // Get currently available IDEs
+    const availableIDEs = await this.getAvailableIDEs();
+    const availablePorts = new Set(availableIDEs.map(ide => ide.port));
+    
+    // Clean up stale entries
+    const portsToClean = port ? [port] : Array.from(this.ideStatus.keys());
+    
+    for (const stalePort of portsToClean) {
+      if (!availablePorts.has(stalePort)) {
+        logger.info(`Cleaning up stale IDE entry for port ${stalePort}`);
+        
+        // Remove from all tracking maps
+        this.ideStatus.delete(stalePort);
+        this.ideWorkspaces.delete(stalePort);
+        this.ideTypes.delete(stalePort);
+        
+        // Unregister from health monitoring
+        if (this.healthMonitor && typeof this.healthMonitor.unregisterIDE === 'function') {
+          this.healthMonitor.unregisterIDE(stalePort);
+        }
+        
+        // If this was the active port, clear it
+        if (this.activePort === stalePort) {
+          this.activePort = null;
+          logger.info(`Cleared active port ${stalePort} due to cleanup`);
+        }
+      }
+    }
+    
+    logger.info('Stale IDE cleanup completed');
   }
 
   /**

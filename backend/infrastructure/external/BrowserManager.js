@@ -9,7 +9,7 @@ class BrowserManager {
     // Initialize connection pool with optimized settings
     this.connectionPool = new ConnectionPool({
       maxConnections: 10, // Increased for better performance
-      connectionTimeout: 20000, // Increased timeout for stability
+      connectionTimeout: 5000, // Reduced timeout for faster failure detection
       cleanupInterval: 120000, // 2 minutes - less frequent cleanup
       healthCheckInterval: 60000, // 1 minute - less frequent health checks
       host: '127.0.0.1'

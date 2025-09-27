@@ -1158,6 +1158,18 @@ class Application {
       }
     }, 6 * 60 * 60 * 1000); // 6 hours
 
+    // Cleanup stale IDE entries every 2 minutes
+    setInterval(async () => {
+      try {
+        if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
+          await this.ideManager.cleanupStaleIDEs();
+          this.logger.info('Cleaned up stale IDE entries');
+        }
+      } catch (error) {
+        this.logger.error('Failed to cleanup stale IDE entries:', error);
+      }
+    }, 2 * 60 * 1000); // 2 minutes
+
     this.logger.info('Cleanup tasks setup complete');
   }
 

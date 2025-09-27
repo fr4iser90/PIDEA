@@ -241,10 +241,20 @@ class IDEPortManager {
         return true;
       } else {
         logger.warn(`Port ${port} is not healthy: ${health.reason}`);
+        // Clean up stale IDE entry when validation fails
+        if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
+          logger.info(`Cleaning up stale IDE entry for port ${port} due to validation failure`);
+          await this.ideManager.cleanupStaleIDEs(port);
+        }
         return false;
       }
     } catch (error) {
       logger.error(`Error during port validation for port ${port}:`, error);
+      // Clean up stale IDE entry when validation throws error
+      if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
+        logger.info(`Cleaning up stale IDE entry for port ${port} due to validation error`);
+        await this.ideManager.cleanupStaleIDEs(port);
+      }
       return false;
     }
   }

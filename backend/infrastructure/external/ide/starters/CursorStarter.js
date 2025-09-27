@@ -13,11 +13,10 @@ class CursorStarter {
   constructor() {
     this.config = {
       name: 'Cursor',
-      executable: 'cursor',
+      executable: '/home/fr4iser/Documents/Git/PIDEA/start_ide_example.sh', // Use your AppImage script
       defaultArgs: [
-        '--remote-debugging-port=',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        'cursor', // IDE type for your script
+        'auto'    // Auto-find free port
       ],
       startupTimeout: 3000,
       portRange: { start: 9222, end: 9231 }
@@ -46,9 +45,8 @@ class CursorStarter {
     }
 
     const args = [
-      `--remote-debugging-port=${port}`,
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor'
+      'cursor', // IDE type for your script
+      'auto'    // Let script find free port automatically
     ];
 
     // Add workspace path if provided
@@ -74,7 +72,7 @@ class CursorStarter {
     }
 
     try {
-      const childProcess = spawn('cursor', args, {
+      const childProcess = spawn(this.config.executable, args, {
         detached: true,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
@@ -175,16 +173,14 @@ class CursorStarter {
    */
   async isInstalled() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('which', ['cursor'], { stdio: 'ignore' });
-      
-      process.on('close', (code) => {
-        resolve(code === 0);
-      });
-      
-      process.on('error', () => {
+      const fs = require('fs');
+      // Check if your AppImage script exists
+      const scriptPath = this.config.executable;
+      if (fs.existsSync(scriptPath)) {
+        resolve(true);
+      } else {
         resolve(false);
-      });
+      }
     });
   }
 
@@ -195,7 +191,8 @@ class CursorStarter {
   async getVersion() {
     return new Promise((resolve) => {
       const { spawn } = require('child_process');
-      const versionProcess = spawn('cursor', ['--version'], { stdio: 'pipe' });
+      // Run your script with --version to get version info
+      const versionProcess = spawn(this.config.executable, ['cursor', '--version'], { stdio: 'pipe' });
       
       let output = '';
       versionProcess.stdout.on('data', (data) => {
@@ -206,12 +203,12 @@ class CursorStarter {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
-          resolve(null);
+          resolve('AppImage Script Available');
         }
       });
       
       versionProcess.on('error', () => {
-        resolve(null);
+        resolve('AppImage Script Available');
       });
     });
   }

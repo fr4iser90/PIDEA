@@ -68,14 +68,7 @@ class CDPWorkspaceDetector {
     try {
       logger.info(`Starting workspace detection for port ${port}`);
       
-      // Check cache first
-      const cachedResult = this.cdpManager.getCachedWorkspaceDetection(port);
-      if (cachedResult) {
-        logger.info(`Using cached workspace detection for port ${port}`);
-        return cachedResult;
-      }
-
-      // Perform new detection
+      // Perform new detection (no cache)
       const workspaceInfo = await this.cdpManager.executeWorkspaceDetection(
         port,
         async (connection) => {
@@ -103,8 +96,7 @@ class CDPWorkspaceDetector {
       workspaceInfo.detectionTime = Date.now();
       workspaceInfo.detectionDuration = Date.now() - startTime;
 
-      // Cache the result
-      this.cdpManager.cacheWorkspaceDetection(port, workspaceInfo, this.options.cacheTimeout);
+      // No caching - always fresh detection
 
       // Record detection history
       this.recordDetectionHistory(port, workspaceInfo);

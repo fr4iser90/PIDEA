@@ -344,7 +344,7 @@ class IDEApplicationService {
         try {
             this.logger.info('IDEApplicationService: Force detecting workspace for IDE', { port, userId });
             
-            const workspace = await this.ideManager.forceDetectWorkspaceForIDE(port);
+            const workspace = await this.ideManager.forceDetectWorkspacePath(port);
             
             return {
                 success: true,

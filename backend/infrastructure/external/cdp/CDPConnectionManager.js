@@ -15,7 +15,7 @@ class CDPConnectionManager {
   constructor(options = {}) {
     this.options = {
       maxConnections: options.maxConnections || 5, // Smaller pool for workspace detection
-      connectionTimeout: options.connectionTimeout || 15000, // 15 seconds timeout
+      connectionTimeout: options.connectionTimeout || 5000, // Reduced timeout for faster failure detection
       healthCheckInterval: options.healthCheckInterval || 60000, // 1 minute - less frequent health checks
       cleanupInterval: options.cleanupInterval || 180000, // 3 minutes - less frequent cleanup
       host: options.host || '127.0.0.1',
