@@ -40,14 +40,13 @@ Create new Plan/Implementation task-review-button-implementation.md in docs/09_r
 #### Files to Modify:
 - [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Add Review button next to Sync button
 - [ ] `frontend/src/css/modal/task-selection-modal.css` - Extend existing modal styles for review functionality
-- [ ] `backend/presentation/api/WorkflowController.js` - Use existing executeWorkflow endpoint with task-review mode
+- [ ] `backend/presentation/api/WorkflowController.js` - Add task-review mode mapping
+- [ ] `frontend/src/application/services/TaskReviewService.jsx` - **UPDATE existing service**
 
 #### Files to Create:
 - [ ] `frontend/src/presentation/components/chat/modal/TaskReviewSelectionModal.jsx` - New modal component for task selection
 - [ ] `frontend/src/css/modal/task-review-selection-modal.css` - CSS styles for review modal
 
-#### Files to Modify:
-- [ ] `frontend/src/application/services/TaskReviewService.jsx` - **EXISTS** - Add review workflow method
 
 #### Files to Delete:
 - [ ] None
@@ -72,16 +71,17 @@ Create new Plan/Implementation task-review-button-implementation.md in docs/09_r
 
 #### Phase 3: Backend Review Workflow (2 hours)
 - [ ] Use existing WorkflowController.executeWorkflow() endpoint
-- [ ] Integrate task-check-state.md workflow via mode parameter
-- [ ] Add multi-task processing logic in workflow
-- [ ] Implement progress tracking and error handling
+- [ ] Add task-review mode mapping in WorkflowController
+- [ ] Implement StepRegistry-based workflow execution
+- [ ] Integrate IDE communication via IDESendMessageStep
+- [ ] Add multi-task processing with workflow execution
 
 #### Phase 4: Service Integration (1 hour)
-- [ ] **UPDATE** TaskReviewService in frontend (service already exists)
-- [ ] Connect frontend to backend review endpoint
-- [ ] Implement workflow execution with progress feedback
-- [ ] Add error handling and user feedback
-- [ ] Test end-to-end workflow
+- [ ] **UPDATE** existing TaskReviewService in frontend (service already exists)
+- [ ] Connect frontend to WorkflowController.executeWorkflow() endpoint
+- [ ] Implement workflow execution with StepRegistry
+- [ ] Add progress feedback and error handling
+- [ ] Test end-to-end workflow with IDE communication
 
 #### Phase 5: Testing & Documentation (1 hour)
 - [ ] Write unit tests for modal component
@@ -251,9 +251,10 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] Select all / individual selection works
 - [ ] Task ordering works (priority, status, date, name)
 - [ ] Task filtering works (category, priority, status)
-- [ ] Review workflow executes task-check-state.md for each selected task
+- [ ] Review workflow executes task-check-state.md for each selected task via StepRegistry
+- [ ] IDE communication through SendMessageHandler + BrowserManager
 - [ ] Queue Manager displays progress and status
-- [ ] Real-time status updates work correctly
+- [ ] Live status updates work correctly
 - [ ] All tests pass (unit, integration, e2e)
 - [ ] Performance requirements met
 - [ ] Security requirements satisfied
@@ -348,17 +349,19 @@ The user wanted to create a **Task Review Button** that:
 4. **Supports task ordering** (by priority, status, date, name)
 5. **Supports task filtering** (by category, priority, status)
 6. **Has Cancel/Start Review buttons**
-7. **Executes sequential workflow** for each selected task:
-   - New Chat → task-check-state.md → Task Update
+7. **Executes sequential workflow** for each selected task via StepRegistry:
+   - WorkflowController.executeWorkflow() → StepRegistry.executeStep('IDESendMessageStep') → SendMessageHandler → BrowserManager → IDE
+   - task-check-state.md is sent as prompt
    - Repeat for next task
 8. **Integrates with Queue Manager** for progress tracking and status display
 
 #### Workflow Understanding:
 - **Sequential Processing**: One task at a time (not parallel)
-- **New Chat per Task**: Each task gets its own chat session
-- **Single Workflow**: task-check-state.md for each task
+- **Step Execution**: StepRegistry.executeStep('IDESendMessageStep') for each task
+- **IDE Communication**: SendMessageHandler + BrowserManager
+- **Single Workflow**: task-check-state.md as prompt for each task
 - **Queue Integration**: Progress tracking via Queue Manager
-- **Status Display**: Real-time status updates in queue panel
+- **Status Display**: Live status updates in queue panel
 
 ### 16. References & Resources
 - **Technical Documentation**: Existing modal patterns in TaskCreationModal, TaskSelectionModal
