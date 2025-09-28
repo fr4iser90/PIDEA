@@ -292,7 +292,71 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] Code follows standards
 - [ ] Documentation updated
 
-### 15. References & Resources
+### 15. Initial Prompt Documentation
+
+#### Original Prompt (Sanitized):
+```markdown
+# Initial Prompt: [Task Name]
+
+## User Request:
+[RUN: sanitizePrompt("[ORIGINAL_PROMPT]")]
+
+## Language Detection:
+- **Original Language**: [RUN: detectLanguage("[ORIGINAL_PROMPT]")]
+- **Translation Status**: ✅ Converted to English
+- **Sanitization Status**: ✅ Credentials and personal data removed
+
+## Prompt Analysis:
+- **Intent**: [Analyze user intent from prompt]
+- **Complexity**: [High/Medium/Low based on requirements]
+- **Scope**: [Specific features/components requested]
+- **Dependencies**: [Any mentioned dependencies]
+
+## Sanitization Applied:
+- [ ] Credentials removed (API keys, passwords, tokens)
+- [ ] Personal information anonymized
+- [ ] Sensitive file paths generalized
+- [ ] Language converted to English
+- [ ] Technical terms preserved
+- [ ] Intent and requirements maintained
+```
+
+#### Sanitization Rules Applied:
+- **Credentials**: Replaced with `[REDACTED]` or `[YOUR_API_KEY]`
+- **Personal Info**: Replaced with `[USER_NAME]` or `[PROJECT_NAME]`
+- **File Paths**: Generalized to `[PROJECT_ROOT]/path/to/file`
+- **Language**: Converted to English while preserving technical accuracy
+- **Sensitive Data**: Replaced with placeholders
+
+#### Original Context Preserved:
+- **Technical Requirements**: ✅ Maintained
+- **Business Logic**: ✅ Preserved  
+- **Architecture Decisions**: ✅ Documented
+- **Success Criteria**: ✅ Included
+
+#### Sanitization Function:
+```javascript
+const sanitizePrompt = (originalPrompt) => {
+  return originalPrompt
+    // Remove credentials
+    .replace(/api[_-]?key[=:]\s*['"]?[a-zA-Z0-9_-]+['"]?/gi, 'api_key=[YOUR_API_KEY]')
+    .replace(/password[=:]\s*['"]?[^'"]+['"]?/gi, 'password=[YOUR_PASSWORD]')
+    .replace(/token[=:]\s*['"]?[a-zA-Z0-9_-]+['"]?/gi, 'token=[YOUR_TOKEN]')
+    
+    // Remove personal info
+    .replace(/\/home\/[^\/\s]+/g, '[USER_HOME]')
+    .replace(/\/Users\/[^\/\s]+/g, '[USER_HOME]')
+    
+    // Generalize file paths
+    .replace(/\/[^\/\s]+\/[^\/\s]+\/[^\/\s]+/g, '[PROJECT_ROOT]/path/to/file')
+    
+    // Convert to English (if needed)
+    .replace(/auf Deutsch/gi, 'in English')
+    .replace(/deutsch/gi, 'English');
+};
+```
+
+### 16. References & Resources
 - **Technical Documentation**: [Links to relevant technical docs]
 - **API References**: [External API documentation]
 - **Design Patterns**: [Patterns to follow in implementation]
@@ -322,6 +386,8 @@ When creating a task, automatically generate a master index file:
 - **Total Estimated Time**: [X hours]
 - **Created**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
 - **Last Updated**: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"] - Reference `@timestamp-utility.md`
+- **Original Language**: [RUN: detectLanguage("[ORIGINAL_PROMPT]")]
+- **Prompt Sanitized**: ✅ Yes
 
 ## 📁 File Structure
 ```
