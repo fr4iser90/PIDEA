@@ -15,13 +15,13 @@ class TaskStatusTransitionService {
     }
 
     /**
-     * Move task from pending to in-progress
+     * Move task from pending to in_progress
      * @param {string} taskId - Task ID
      * @returns {Promise<Object>} Transition result
      */
     async moveTaskToInProgress(taskId) {
         try {
-            this.logger.info('🔄 Moving task to in-progress', { taskId });
+            this.logger.info('🔄 Moving task to in_progress', { taskId });
 
             // 1. Get task from database
             const task = await this.taskRepository.findById(taskId);
@@ -30,19 +30,19 @@ class TaskStatusTransitionService {
             }
 
             // 2. Check if task is already in progress
-            if (task.status.value === 'in-progress') {
+            if (task.status.value === 'in_progress') {
                 this.logger.info('✅ Task already in progress', { taskId });
                 return { success: true, message: 'Task already in progress' };
             }
 
             // 3. Update database status
-            task.updateStatus('in-progress');
+            task.updateStatus('in_progress');
             await this.taskRepository.update(taskId, task);
 
             // 4. Normalize task name for directory path
             const taskName = this.normalizeTaskName(task.title || 'unknown-task');
             
-            // 5. Handle priority directory mapping (high -> high, medium -> medium-priority, etc.)
+            // 5. Handle priority directory mapping (high -> high, medium -> medium, etc.)
             const priorityDir = this.mapPriorityToDirectory(task.priority.value);
             
             // 6. Move files from pending/ to in-progress/
@@ -61,12 +61,12 @@ class TaskStatusTransitionService {
                 this.eventBus.emit('task:status:transition', {
                     taskId,
                     fromStatus: 'pending',
-                    toStatus: 'in-progress',
+                    toStatus: 'in_progress',
                     timestamp: new Date()
                 });
             }
 
-            this.logger.info('✅ Task moved to in-progress successfully', { 
+            this.logger.info('✅ Task moved to in_progress successfully', { 
                 taskId, 
                 oldPath, 
                 newPath 
@@ -76,14 +76,14 @@ class TaskStatusTransitionService {
                 success: true,
                 taskId,
                 fromStatus: 'pending',
-                toStatus: 'in-progress',
+                toStatus: 'in_progress',
                 oldPath,
                 newPath,
-                message: 'Task moved to in-progress successfully'
+                message: 'Task moved to in_progress successfully'
             };
 
         } catch (error) {
-            this.logger.error('❌ Failed to move task to in-progress', { 
+            this.logger.error('❌ Failed to move task to in_progress', { 
                 taskId, 
                 error: error.message 
             });
@@ -156,10 +156,10 @@ class TaskStatusTransitionService {
             const possibleOldPaths = [
                 path.join(projectRoot, `docs/09_roadmap/in-progress/${taskCategory}/${taskName}/`),
                 path.join(projectRoot, `docs/09_roadmap/pending/${priorityDir}/${taskCategory}/${taskName}/`),
-                path.join(projectRoot, `docs/09_roadmap/pending/medium-priority/${taskCategory}/${taskName}/`),
-                path.join(projectRoot, `docs/09_roadmap/pending/high-priority/${taskCategory}/${taskName}/`),
-                path.join(projectRoot, `docs/09_roadmap/pending/low-priority/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/medium/${taskCategory}/${taskName}/`),
                 path.join(projectRoot, `docs/09_roadmap/pending/high/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/low/${taskCategory}/${taskName}/`),
+                path.join(projectRoot, `docs/09_roadmap/pending/critical/${taskCategory}/${taskName}/`),
                 path.join(projectRoot, `docs/09_roadmap/planning/${priorityDir}/${taskCategory}/${taskName}/`)
             ];
 
@@ -257,11 +257,11 @@ class TaskStatusTransitionService {
     mapPriorityToDirectory(priority) {
         const priorityMap = {
             'high': 'high',
-            'medium': 'medium-priority', 
-            'low': 'low-priority',
-            'critical': 'high-priority'
+            'medium': 'medium', 
+            'low': 'low',
+            'critical': 'critical'
         };
-        return priorityMap[priority] || 'medium-priority';
+        return priorityMap[priority] || 'medium';
     }
 
     /**
@@ -346,9 +346,12 @@ class TaskStatusTransitionService {
             this.logger.info('📁 Task files moved successfully', { 
                 taskId, 
                 oldPath, 
-                newPath,
+                newPath, 
                 filesMoved: files.length 
             });
+
+            // Clean up empty parent directories
+            await this.cleanupEmptyDirectories(oldPath);
 
         } catch (error) {
             this.logger.error('❌ Failed to move task files', { 
@@ -358,6 +361,55 @@ class TaskStatusTransitionService {
                 error: error.message 
             });
             throw error;
+        }
+    }
+
+    /**
+     * Clean up empty parent directories after moving files
+     * @param {string} oldPath - The old path that was removed
+     */
+    async cleanupEmptyDirectories(oldPath) {
+        try {
+            const pathParts = oldPath.split('/');
+            
+            // Start from the task directory and work upwards
+            for (let i = pathParts.length - 1; i >= 0; i--) {
+                const currentPath = pathParts.slice(0, i + 1).join('/');
+                
+                // Skip if we've reached the root or docs level
+                if (i <= 2 || currentPath.includes('docs/09_roadmap')) {
+                    try {
+                        const files = await fs.readdir(currentPath);
+                        const actualFiles = files.filter(file => 
+                            !file.startsWith('.') && 
+                            !file.endsWith('.gitkeep') && 
+                            !file.endsWith('.DS_Store')
+                        );
+                        
+                        // If directory is empty, remove it
+                        if (actualFiles.length === 0) {
+                            try {
+                                await fs.rmdir(currentPath);
+                                this.logger.debug('🗑️ Cleaned up empty directory', { path: currentPath });
+                            } catch (rmError) {
+                                // Directory might not be empty or have permission issues
+                                break;
+                            }
+                        } else {
+                            // Directory has files, stop cleaning up
+                            break;
+                        }
+                    } catch (error) {
+                        // Directory doesn't exist or can't be accessed
+                        break;
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.debug('⚠️ Failed to cleanup empty directories', { 
+                oldPath, 
+                error: error.message 
+            });
         }
     }
 
@@ -451,7 +503,7 @@ class TaskStatusTransitionService {
             if (this.eventBus) {
                 this.eventBus.emit('task:status:transition', {
                     taskId,
-                    fromStatus: 'in-progress',
+                    fromStatus: 'in_progress',
                     toStatus: 'blocked',
                     reason,
                     timestamp: new Date()
@@ -461,7 +513,7 @@ class TaskStatusTransitionService {
             return {
                 success: true,
                 taskId,
-                fromStatus: 'in-progress',
+                fromStatus: 'in_progress',
                 toStatus: 'blocked',
                 reason,
                 message: 'Task moved to blocked successfully'
@@ -516,7 +568,7 @@ class TaskStatusTransitionService {
             if (this.eventBus) {
                 this.eventBus.emit('task:status:transition', {
                     taskId,
-                    fromStatus: 'in-progress',
+                    fromStatus: 'in_progress',
                     toStatus: 'cancelled',
                     reason,
                     timestamp: new Date()
@@ -526,7 +578,7 @@ class TaskStatusTransitionService {
             return {
                 success: true,
                 taskId,
-                fromStatus: 'in-progress',
+                fromStatus: 'in_progress',
                 toStatus: 'cancelled',
                 reason,
                 message: 'Task moved to cancelled successfully'

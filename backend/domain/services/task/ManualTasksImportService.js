@@ -83,7 +83,7 @@ class ManualTasksImportService {
                         priority = 'medium'; // Default for completed
                         category = parts[2];
                     } else if (parts[1].includes('-priority')) {
-                        // Handle medium-priority, high-priority, etc.
+                        // Handle legacy medium-priority, high-priority, etc. (convert to simple priority)
                         priority = parts[1].replace('-priority', '');
                         category = parts[2];
                     } else {
@@ -98,7 +98,7 @@ class ManualTasksImportService {
                         priority = parts[1];
                         category = parts[2];
                     } else if (parts[1].includes('-priority')) {
-                        // Handle medium-priority, high-priority, etc.
+                        // Handle legacy medium-priority, high-priority, etc. (convert to simple priority)
                         priority = parts[1].replace('-priority', '');
                         category = parts[2];
                     } else {
@@ -112,11 +112,11 @@ class ManualTasksImportService {
                         priority = parts[1];
                         category = parts[2];
                     } else if (parts[1].includes('-priority')) {
-                        // Handle medium-priority, high-priority, etc.
+                        // Handle legacy medium-priority, high-priority, etc. (convert to simple priority)
                         priority = parts[1].replace('-priority', '');
                         category = parts[2];
                     } else {
-                        priority = 'medium'; // Default for in-progress
+                        priority = 'medium'; // Default for in_progress
                         category = parts[1];
                     }
                 } else if (parts[0] === 'failed') {
@@ -126,7 +126,7 @@ class ManualTasksImportService {
                         priority = parts[1];
                         category = parts[2];
                     } else if (parts[1].includes('-priority')) {
-                        // Handle medium-priority, high-priority, etc.
+                        // Handle legacy medium-priority, high-priority, etc. (convert to simple priority)
                         priority = parts[1].replace('-priority', '');
                         category = parts[2];
                     } else {
@@ -262,13 +262,13 @@ class ManualTasksImportService {
                     let taskStatus = progressInfo.status;
                     if (!taskStatus && content) {
                         // Look for status in content
-                        const statusMatch = content.match(/status[:\s]+(pending|in-progress|completed|blocked|cancelled)/i);
+                        const statusMatch = content.match(/status[:\s]+(pending|in_progress|completed|blocked|cancelled)/i);
                         if (statusMatch) {
                             taskStatus = statusMatch[1].toLowerCase();
                         }
                         // Look for status indicators in content
                         else if (content.includes('**Status**: In Progress') || content.includes('Status: In Progress') || content.includes('🔄 In Progress')) {
-                            taskStatus = 'in-progress';
+                            taskStatus = 'in_progress';
                         } else if (content.includes('**Status**: Completed') || content.includes('Status: Completed') || content.includes('✅ Completed')) {
                             taskStatus = 'completed';
                         } else if (content.includes('**Status**: Pending') || content.includes('Status: Pending') || content.includes('⏳ Pending')) {
@@ -296,7 +296,7 @@ class ManualTasksImportService {
                     if (content) {
                         // Look for status indicators in content (more comprehensive)
                         if (content.includes('🔄 In Progress') || content.includes('**Status**: In Progress') || content.includes('Status: In Progress')) {
-                            taskStatus = 'in-progress';
+                            taskStatus = 'in_progress';
                         } else if (content.includes('✅ Completed') || content.includes('**Status**: Completed') || content.includes('Status: Completed')) {
                             taskStatus = 'completed';
                         } else if (content.includes('⏳ Pending') || content.includes('**Status**: Pending') || content.includes('Status: Pending')) {
@@ -679,7 +679,7 @@ class ManualTasksImportService {
                 /Status.*?([A-Za-z_]+)/,
                 // Pattern 3: Status in different formats (✅ COMPLETED, ✅ Complete, etc.)
                 /Status.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z\s_]+)/,
-                // Pattern 4: Status with dashes (in-progress, in_progress, etc.)
+                // Pattern 4: Status with dashes (in_progress, in_progress, etc.)
                 /Status.*?([A-Za-z\-_\s]+)/,
                 // Pattern 5: Status with emoji and ALL CAPS text (✅ COMPLETED)
                 /Status.*?(✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Z]+)/,
@@ -713,7 +713,7 @@ class ManualTasksImportService {
                     if (statusText.includes('complete') || statusText.includes('done') || statusText.includes('finished') || 
                         statusText === 'COMPLETED' || statusText === 'complete' || statusText === 'Complete') {
                         normalizedStatus = 'completed';
-                    } else if (statusText.includes('in_progress') || statusText.includes('in-progress') || statusText.includes('progress') ||
+                    } else if (statusText.includes('in_progress') || statusText.includes('progress') ||
                                statusText === 'IN_PROGRESS' || statusText === 'in_progress') {
                         normalizedStatus = 'in_progress';
                     } else if (statusText.includes('blocked') || statusText.includes('failed') || statusText.includes('error') ||
@@ -772,15 +772,22 @@ class ManualTasksImportService {
                 progressInfo.actualTime = parseInt(timeMatch[1]);
             }
 
-            // Extract phase breakdown
+            // Extract phase breakdown with improved phase name detection
             const phaseMatches = content.matchAll(/\| (\d+[A-Z]?) \|.*?\| (🟢|🟡|🔴|✅) /g);
             const phases = [];
             for (const match of phaseMatches) {
+                const phaseNumber = match[1];
+                const phaseStatus = match[2] === '🟢' ? 'planning' : 
+                                  match[2] === '🟡' ? 'in_progress' : 
+                                  match[2] === '🔴' ? 'blocked' : 'completed';
+                
+                // Try to extract phase name from content
+                const phaseName = this.extractPhaseName(content, phaseNumber);
+                
                 phases.push({
-                    phase: match[1],
-                    status: match[2] === '🟢' ? 'planning' : 
-                           match[2] === '🟡' ? 'in_progress' : 
-                           match[2] === '🔴' ? 'blocked' : 'completed'
+                    phase: phaseName || phaseNumber, // Use extracted name or fallback to number
+                    status: phaseStatus,
+                    number: phaseNumber
                 });
             }
             progressInfo.phases = phases;
@@ -829,24 +836,34 @@ class ManualTasksImportService {
                 }
             }
             
+            // 🧠 INTELLIGENT STATUS DETECTION: Determine status based on critical vs optional phases
+            const intelligentStatus = this.determineIntelligentStatus(progressInfo.phases, progressInfo.overallProgress);
+            if (intelligentStatus) {
+                progressInfo.status = intelligentStatus;
+                logger.info(`🧠 Intelligent status detection: ${intelligentStatus} (based on critical phases analysis)`);
+            }
+            
             // ✅ CRITICAL FIX: Only set status to completed if progress is actually 100%
             // If we have partial completion but progress < 100%, keep it as in_progress
-            if (hasPartialCompletion && progressInfo.overallProgress < 100) {
+            if (hasPartialCompletion && progressInfo.overallProgress < 100 && !intelligentStatus) {
                 progressInfo.status = 'in_progress';
                 logger.info(`🔄 Partial completion detected but progress is ${progressInfo.overallProgress}% - setting status to in_progress`);
             }
             
-            // ✅ FINAL VALIDATION: Ensure status matches progress
+            // ✅ FINAL VALIDATION: Ensure status matches progress (but respect intelligent detection)
             if (progressInfo.overallProgress >= 100) {
                 progressInfo.status = 'completed';
                 logger.info(`✅ Progress is 100% - final status set to completed`);
             } else if (progressInfo.overallProgress > 0 && progressInfo.overallProgress < 100) {
-                if (progressInfo.status === 'completed') {
+                // Only override if intelligent detection didn't set it to completed
+                if (progressInfo.status === 'completed' && !intelligentStatus) {
                     progressInfo.status = 'in_progress';
                     logger.info(`🔄 Progress is ${progressInfo.overallProgress}% but status was completed - corrected to in_progress`);
+                } else if (intelligentStatus === 'completed') {
+                    logger.info(`🧠 Keeping intelligent status 'completed' despite ${progressInfo.overallProgress}% progress`);
                 }
             } else if (progressInfo.overallProgress === 0) {
-                if (progressInfo.status === 'completed') {
+                if (progressInfo.status === 'completed' && !intelligentStatus) {
                     progressInfo.status = 'planning';
                     logger.info(`🔄 Progress is 0% but status was completed - corrected to planning`);
                 }
@@ -1166,7 +1183,7 @@ class ManualTasksImportService {
 
     /**
      * Generate new status-based path structure
-     * @param {string} status - Task status (pending, in-progress, completed, etc.)
+     * @param {string} status - Task status (pending, in_progress, completed, etc.)
      * @param {string} priority - Task priority (high, medium, low, critical)
      * @param {string} category - Task category
      * @param {string} title - Task title
@@ -1186,7 +1203,7 @@ class ManualTasksImportService {
                 // For completed tasks, use quarter-based organization
                 const quarter = this.getCurrentQuarter();
                 return `docs/09_roadmap/completed/${quarter}/${category}/${taskName}/`;
-            } else if (status === 'in-progress') {
+            } else if (status === 'in_progress') {
                 return `docs/09_roadmap/in-progress/${priority}/${category}/${taskName}/`;
             } else if (status === 'blocked') {
                 return `docs/09_roadmap/blocked/${priority}/${category}/${taskName}/`;
@@ -1218,6 +1235,148 @@ class ManualTasksImportService {
         else quarter = 'q4';
         
         return `${year}-${quarter}`;
+    }
+
+    /**
+     * 🧠 INTELLIGENT STATUS DETECTION
+     * Determine task status based on critical vs optional phases
+     * @param {Array} phases - Array of phase objects
+     * @param {number} overallProgress - Overall progress percentage
+     * @returns {string|null} Intelligent status or null if no override needed
+     */
+    determineIntelligentStatus(phases, overallProgress) {
+        if (!phases || phases.length === 0) {
+            return null; // No phases to analyze
+        }
+
+        // Categorize phases into critical and optional
+        const criticalPhases = phases.filter(phase => this.isCriticalPhase(phase));
+        const optionalPhases = phases.filter(phase => !this.isCriticalPhase(phase));
+
+        logger.info(`🧠 Phase analysis: ${criticalPhases.length} critical, ${optionalPhases.length} optional phases`);
+
+        // Count completed phases
+        const criticalCompleted = criticalPhases.filter(p => p.status === 'completed').length;
+        const criticalTotal = criticalPhases.length;
+        const optionalCompleted = optionalPhases.filter(p => p.status === 'completed').length;
+        const optionalTotal = optionalPhases.length;
+
+        logger.info(`🧠 Critical phases: ${criticalCompleted}/${criticalTotal} completed`);
+        logger.info(`🧠 Optional phases: ${optionalCompleted}/${optionalTotal} completed`);
+
+        // Rule 1: All critical phases completed = COMPLETED (regardless of optional phases)
+        if (criticalTotal > 0 && criticalCompleted === criticalTotal) {
+            logger.info(`🧠 All critical phases completed - marking as COMPLETED`);
+            return 'completed';
+        }
+
+        // Rule 2: At least one critical phase in progress = IN_PROGRESS
+        if (criticalPhases.some(p => p.status === 'in_progress')) {
+            logger.info(`🧠 Critical phases in progress - marking as IN_PROGRESS`);
+            return 'in_progress';
+        }
+
+        // Rule 3: Only optional phases remaining = COMPLETED (with note)
+        if (criticalTotal > 0 && criticalCompleted === criticalTotal && optionalTotal > 0) {
+            logger.info(`🧠 Only optional phases remaining - marking as COMPLETED`);
+            return 'completed';
+        }
+
+        // Rule 4: No critical phases, only optional = use progress-based logic
+        if (criticalTotal === 0 && optionalTotal > 0) {
+            logger.info(`🧠 No critical phases, using progress-based logic`);
+            return overallProgress >= 100 ? 'completed' : 'in_progress';
+        }
+
+        // Rule 5: Fallback to original logic
+        logger.info(`🧠 Using fallback logic`);
+        return null;
+    }
+
+    /**
+     * Determine if a phase is critical (core functionality) or optional (nice-to-have)
+     * @param {Object} phase - Phase object with name and status
+     * @returns {boolean} True if phase is critical
+     */
+    isCriticalPhase(phase) {
+        if (!phase || !phase.phase) {
+            return false;
+        }
+
+        const phaseName = phase.phase.toLowerCase();
+        
+        // Critical phase keywords (core functionality)
+        const criticalKeywords = [
+            'critical', 'core', 'essential', 'main', 'primary',
+            'bug-fix', 'bugfix', 'implementation', 'feature',
+            'data-flow', 'dataflow', 'fix', 'repair', 'resolve',
+            'authentication', 'security', 'database', 'api',
+            'endpoint', 'controller', 'service', 'handler',
+            'validation' // Data flow validation is critical
+        ];
+
+        // Optional phase keywords (nice-to-have) - more specific
+        const optionalKeywords = [
+            'testing', 'test', 'documentation', 'docs',
+            'polish', 'optimization', 'performance', 'ui', 'ux',
+            'refactor', 'cleanup', 'review', 'analysis',
+            'unit-test', 'integration-test', 'e2e-test'
+        ];
+
+        // Check for optional keywords first (more specific)
+        const isOptional = optionalKeywords.some(keyword => 
+            phaseName.includes(keyword)
+        );
+
+        if (isOptional) {
+            return false;
+        }
+
+        // Check for critical keywords
+        const isCritical = criticalKeywords.some(keyword => 
+            phaseName.includes(keyword)
+        );
+
+        return isCritical;
+    }
+
+    /**
+     * Extract phase name from content based on phase number
+     * @param {string} content - File content
+     * @param {string} phaseNumber - Phase number (e.g., "1", "2", "3")
+     * @returns {string|null} Extracted phase name or null
+     */
+    extractPhaseName(content, phaseNumber) {
+        // Look for phase links in markdown table format: | 1 | [Critical Bug Fixes](./git-steps-fix-phase-1.md) |
+        const tableRowPattern = new RegExp(`\\|\\s*${phaseNumber}\\s*\\|\\s*\\[([^\\]]+)\\]\\([^)]*phase-${phaseNumber}[^)]*\\)`, 'i');
+        const tableRowMatch = content.match(tableRowPattern);
+        
+        if (tableRowMatch) {
+            return tableRowMatch[1].trim();
+        }
+        
+        // Look for phase links like [Phase 1](./git-steps-fix-phase-1.md)
+        const phaseLinkPattern = new RegExp(`\\[Phase ${phaseNumber}[^\\]]*\\]\\([^)]*phase-${phaseNumber}[^)]*\\)`, 'i');
+        const phaseLinkMatch = content.match(phaseLinkPattern);
+        
+        if (phaseLinkMatch) {
+            // Extract the text between [ and ]
+            const linkText = phaseLinkMatch[0];
+            const nameMatch = linkText.match(/\[([^\]]+)\]/);
+            if (nameMatch) {
+                return nameMatch[1].replace(`Phase ${phaseNumber}`, '').trim();
+            }
+        }
+        
+        // Look for phase descriptions in the content
+        const phaseDescPattern = new RegExp(`Phase ${phaseNumber}[^\\n]*:?\\s*([^\\n]+)`, 'i');
+        const phaseDescMatch = content.match(phaseDescPattern);
+        
+        if (phaseDescMatch) {
+            return phaseDescMatch[1].trim();
+        }
+        
+        return null;
     }
 }
 

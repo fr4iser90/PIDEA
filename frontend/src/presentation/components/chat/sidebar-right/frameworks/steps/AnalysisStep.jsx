@@ -193,7 +193,7 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
     // Extract recommendations from summary or priorities
     const recommendations = analysis.priorities?.flatMap(p => p.items) || [
       'Review the generated analysis from Cursor IDE',
-      'Implement high-priority tasks first',
+      'Implement high priority tasks first',
       'Focus on areas with low coverage'
     ];
     

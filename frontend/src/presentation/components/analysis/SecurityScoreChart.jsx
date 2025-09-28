@@ -123,7 +123,7 @@ const SecurityScoreChart = ({ score }) => {
             <div className="recommendation-item">
               <span className="recommendation-icon">💡</span>
               <span className="recommendation-text">
-                Review and address high-priority vulnerabilities
+                Review and address high priority vulnerabilities
               </span>
             </div>
           )}

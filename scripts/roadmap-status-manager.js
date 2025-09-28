@@ -138,7 +138,7 @@ class RoadmapStatusManager {
     try {
       // TODO: Implement database lookup for current task path
       // For now, return a placeholder
-      return `docs/09_roadmap/pending/medium-priority/task-${taskId}`;
+      return `docs/09_roadmap/pending/medium/task-${taskId}`;
       
     } catch (error) {
       this.logger.error(`Error getting current path for task ${taskId}:`, error);

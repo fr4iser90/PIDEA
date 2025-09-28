@@ -268,7 +268,7 @@ class AutoRefactorCommand {
     }
     
     if (this.isHighPriority()) {
-      tags.push('high-priority');
+      tags.push('high');
     }
     
     return tags;

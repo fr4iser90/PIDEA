@@ -197,7 +197,7 @@ Create new [Name]-analysis.md in docs/09_roadmap/pending/[priority]/[category]/[
 - [ ] Effort estimates provided for each gap
 - [ ] Action plan created with clear next steps
 - [ ] Stakeholders informed of findings
-- [ ] Database tasks created for high-priority gaps
+- [ ] Database tasks created for high priority gaps
 
 ### 13. Risk Assessment
 
@@ -239,7 +239,7 @@ Create new [Name]-analysis.md in docs/09_roadmap/pending/[priority]/[category]/[
 - [ ] Priority levels assigned
 - [ ] Effort estimates provided
 - [ ] Action plan created
-- [ ] Database tasks generated for high-priority items
+- [ ] Database tasks generated for high priority items
 
 ### 15. References & Resources
 - **Codebase Analysis Tools**: [Tools used for analysis]

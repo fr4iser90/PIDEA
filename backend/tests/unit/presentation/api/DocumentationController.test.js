@@ -623,7 +623,7 @@ describe('DocumentationController', () => {
         taskCount: 2,
         avgCoverage: 68,
         highPriorityCount: 2,
-        message: 'Found 2 documentation tasks. Average coverage: 68%. 2 high-priority areas identified.'
+        message: 'Found 2 documentation tasks. Average coverage: 68%. 2 high priority areas identified.'
       });
     });
 
@@ -634,7 +634,7 @@ describe('DocumentationController', () => {
         taskCount: 0,
         avgCoverage: 0,
         highPriorityCount: 0,
-        message: 'Found 0 documentation tasks. Average coverage: 0%. 0 high-priority areas identified.'
+        message: 'Found 0 documentation tasks. Average coverage: 0%. 0 high priority areas identified.'
       });
     });
   });
