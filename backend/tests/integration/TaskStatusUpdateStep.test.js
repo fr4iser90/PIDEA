@@ -1,329 +1,317 @@
 /**
- * Task Status Update Step Integration Tests
- * Tests for the task status update step integration
- * Created: 2025-09-19T19:22:57.000Z
+ * TaskStatusUpdateStep Integration Tests
+ * Integration tests for TaskStatusUpdateStep with real services
  */
 
-const TaskStatusUpdateStep = require('../../domain/steps/status/TaskStatusUpdateStep');
-const fs = require('fs').promises;
-const path = require('path');
-
-// Mock dependencies
-jest.mock('fs', () => ({
-  promises: {
-    mkdir: jest.fn(),
-    readdir: jest.fn(),
-    copyFile: jest.fn(),
-    rename: jest.fn(),
-    unlink: jest.fn(),
-    rmdir: jest.fn(),
-    access: jest.fn()
-  }
-}));
-
-jest.mock('@logging/Logger', () => {
-  return jest.fn().mockImplementation(() => ({
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn()
-  }));
-});
+const TaskStatusUpdateStep = require('../../domain/steps/categories/task/task_status_update_step');
+const TaskRepository = require('../../domain/repositories/TaskRepository');
+const TaskStatusTransitionService = require('../../domain/services/task/TaskStatusTransitionService');
+const Logger = require('@logging/Logger');
 
 describe('TaskStatusUpdateStep Integration', () => {
   let step;
-  let mockLogger;
+  let taskRepository;
+  let statusTransitionService;
+  let context;
 
-  beforeEach(() => {
-    step = new TaskStatusUpdateStep();
-    mockLogger = step.logger;
+  beforeAll(async () => {
+    // Initialize real services
+    taskRepository = new TaskRepository();
+    statusTransitionService = new TaskStatusTransitionService();
     
-    // Reset mocks
-    jest.clearAllMocks();
+    // Create context with real services
+    context = {
+      getService: (serviceName) => {
+        if (serviceName === 'taskRepository') return taskRepository;
+        if (serviceName === 'statusTransitionService') return statusTransitionService;
+        return null;
+      }
+    };
+    
+    step = new TaskStatusUpdateStep();
   });
 
-  describe('execute', () => {
-    it('should successfully update task status and move files', async () => {
-      const context = {};
+  describe('Real Service Integration', () => {
+    it('should integrate with TaskRepository', async () => {
+      // Create a test task
+      const testTask = {
+        title: 'Integration Test Task',
+        status: 'pending',
+        priority: 'medium',
+        category: 'testing',
+        sourcePath: '/test/path'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      expect(createdTask).toBeDefined();
+      expect(createdTask.id).toBeDefined();
+      
+      // Test status update
       const options = {
-        taskId: 'test-task-123',
+        taskId: createdTask.id,
+        newStatus: 'in-progress',
+        autoMoveFiles: false, // Skip file movement for integration test
+        updateDatabase: true
+      };
+      
+      const result = await step.execute(context, options);
+      
+      expect(result.success).toBe(true);
+      expect(result.taskId).toBe(createdTask.id);
+      expect(result.oldStatus).toBe('pending');
+      expect(result.newStatus).toBe('in-progress');
+      
+      // Verify database update
+      const updatedTask = await taskRepository.findById(createdTask.id);
+      expect(updatedTask.status).toBe('in-progress');
+      
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
+    });
+
+    it('should integrate with TaskStatusTransitionService for file movement', async () => {
+      // Create a test task
+      const testTask = {
+        title: 'File Movement Test Task',
+        status: 'pending',
+        priority: 'high',
+        category: 'testing',
+        sourcePath: '/test/pending/task'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      
+      // Test status update with file movement
+      const options = {
+        taskId: createdTask.id,
         newStatus: 'completed',
-        taskMetadata: {
-          priority: 'high',
-          category: 'backend',
-          completedAt: '2024-03-15'
-        },
+        autoMoveFiles: true,
+        updateDatabase: true,
+        taskMetadata: { reason: 'Integration test completed' }
+      };
+      
+      const result = await step.execute(context, options);
+      
+      expect(result.success).toBe(true);
+      expect(result.filesMoved).toBe(true);
+      expect(result.databaseUpdated).toBe(true);
+      
+      // Verify database update
+      const updatedTask = await taskRepository.findById(createdTask.id);
+      expect(updatedTask.status).toBe('completed');
+      expect(updatedTask.completed_at).toBeDefined();
+      
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
+    });
+
+    it('should handle complex status transitions', async () => {
+      // Create a test task
+      const testTask = {
+        title: 'Complex Transition Test',
+        status: 'pending',
+        priority: 'medium',
+        category: 'testing'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      
+      // Test multiple transitions
+      const transitions = [
+        { from: 'pending', to: 'in-progress' },
+        { from: 'in-progress', to: 'blocked' },
+        { from: 'blocked', to: 'in-progress' },
+        { from: 'in-progress', to: 'completed' }
+      ];
+      
+      for (const transition of transitions) {
+        const options = {
+          taskId: createdTask.id,
+          newStatus: transition.to,
+          autoMoveFiles: false,
+          updateDatabase: true
+        };
+        
+        const result = await step.execute(context, options);
+        
+        expect(result.success).toBe(true);
+        expect(result.oldStatus).toBe(transition.from);
+        expect(result.newStatus).toBe(transition.to);
+        
+        // Verify database state
+        const task = await taskRepository.findById(createdTask.id);
+        expect(task.status).toBe(transition.to);
+      }
+      
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
+    });
+
+    it('should handle error scenarios gracefully', async () => {
+      // Test with non-existent task
+      const options = {
+        taskId: 'non-existent-task-id',
+        newStatus: 'completed'
+      };
+      
+      await expect(step.execute(context, options)).rejects.toThrow('Task non-existent-task-id not found');
+    });
+
+    it('should validate status transitions correctly', async () => {
+      // Create a completed task
+      const testTask = {
+        title: 'Completed Task Test',
+        status: 'completed',
+        priority: 'low',
+        category: 'testing'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      
+      // Try invalid transition
+      const options = {
+        taskId: createdTask.id,
+        newStatus: 'pending'
+      };
+      
+      await expect(step.execute(context, options)).rejects.toThrow('Invalid status transition from completed to pending');
+      
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
+    });
+  });
+
+  describe('Performance Tests', () => {
+    it('should handle multiple concurrent status updates', async () => {
+      // Create multiple test tasks
+      const tasks = [];
+      for (let i = 0; i < 5; i++) {
+        const testTask = {
+          title: `Concurrent Test Task ${i}`,
+          status: 'pending',
+          priority: 'medium',
+          category: 'testing'
+        };
+        const createdTask = await taskRepository.create(testTask);
+        tasks.push(createdTask);
+      }
+      
+      // Execute concurrent updates
+      const updatePromises = tasks.map((task, index) => {
+        const options = {
+          taskId: task.id,
+          newStatus: index % 2 === 0 ? 'in-progress' : 'completed',
+          autoMoveFiles: false,
+          updateDatabase: true
+        };
+        return step.execute(context, options);
+      });
+      
+      const results = await Promise.all(updatePromises);
+      
+      // Verify all updates succeeded
+      results.forEach((result, index) => {
+        expect(result.success).toBe(true);
+        expect(result.taskId).toBe(tasks[index].id);
+      });
+      
+      // Cleanup
+      await Promise.all(tasks.map(task => taskRepository.delete(task.id)));
+    });
+
+    it('should complete status update within reasonable time', async () => {
+      const testTask = {
+        title: 'Performance Test Task',
+        status: 'pending',
+        priority: 'high',
+        category: 'testing'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      
+      const startTime = Date.now();
+      
+      const options = {
+        taskId: createdTask.id,
+        newStatus: 'completed',
+        autoMoveFiles: false,
+        updateDatabase: true
+      };
+      
+      const result = await step.execute(context, options);
+      
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      expect(result.success).toBe(true);
+      expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
+      
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
+    });
+  });
+
+  describe('Error Recovery', () => {
+    it('should handle database errors gracefully', async () => {
+      // Create a task
+      const testTask = {
+        title: 'Error Recovery Test',
+        status: 'pending',
+        priority: 'medium',
+        category: 'testing'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      
+      // Mock a database error
+      const originalUpdate = taskRepository.update;
+      taskRepository.update = jest.fn().mockRejectedValue(new Error('Database connection failed'));
+      
+      const options = {
+        taskId: createdTask.id,
+        newStatus: 'in-progress',
+        autoMoveFiles: false,
+        updateDatabase: true
+      };
+      
+      await expect(step.execute(context, options)).rejects.toThrow('Database connection failed');
+      
+      // Restore original method
+      taskRepository.update = originalUpdate;
+      
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
+    });
+
+    it('should handle file movement errors gracefully', async () => {
+      // Create a task
+      const testTask = {
+        title: 'File Error Test',
+        status: 'pending',
+        priority: 'medium',
+        category: 'testing'
+      };
+      
+      const createdTask = await taskRepository.create(testTask);
+      
+      // Mock a file movement error
+      const originalMoveToInProgress = statusTransitionService.moveTaskToInProgress;
+      statusTransitionService.moveTaskToInProgress = jest.fn().mockRejectedValue(new Error('File system error'));
+      
+      const options = {
+        taskId: createdTask.id,
+        newStatus: 'in-progress',
         autoMoveFiles: true,
         updateDatabase: true
       };
-
-      // Mock getCurrentTaskInfo
-      step.getCurrentTaskInfo = jest.fn().mockResolvedValue({
-        id: 'test-task-123',
-        status: 'in_progress',
-        priority: 'high',
-        category: 'backend',
-        filePath: 'docs/09_roadmap/in-progress/backend/test-task-123',
-        completedAt: null
-      });
-
-      // Mock updateTaskStatus
-      step.updateTaskStatus = jest.fn().mockResolvedValue();
-
-      // Mock moveTaskFiles
-      step.moveTaskFiles = jest.fn().mockResolvedValue();
-
-      // Mock updateFileReferences
-      step.updateFileReferences = jest.fn().mockResolvedValue();
-
-      const result = await step.execute(context, options);
-
-      expect(result.success).toBe(true);
-      expect(result.taskId).toBe('test-task-123');
-      expect(result.oldStatus).toBe('in_progress');
-      expect(result.newStatus).toBe('completed');
-      expect(result.filesMoved).toBe(true);
-      expect(result.databaseUpdated).toBe(true);
-    });
-
-    it('should handle invalid status transitions', async () => {
-      const context = {};
-      const options = {
-        taskId: 'test-task-123',
-        newStatus: 'pending',
-        taskMetadata: {}
-      };
-
-      step.getCurrentTaskInfo = jest.fn().mockResolvedValue({
-        id: 'test-task-123',
-        status: 'completed',
-        priority: 'medium',
-        category: 'frontend',
-        filePath: 'docs/09_roadmap/completed/2024-q1/frontend/test-task-123',
-        completedAt: '2024-01-15'
-      });
-
-      await expect(step.execute(context, options)).rejects.toThrow(
-        'Invalid status transition from completed to pending'
-      );
-    });
-
-    it('should handle missing task ID', async () => {
-      const context = {};
-      const options = {
-        newStatus: 'completed'
-      };
-
-      await expect(step.execute(context, options)).rejects.toThrow(
-        'Task ID and new status are required'
-      );
-    });
-
-    it('should handle missing new status', async () => {
-      const context = {};
-      const options = {
-        taskId: 'test-task-123'
-      };
-
-      await expect(step.execute(context, options)).rejects.toThrow(
-        'Task ID and new status are required'
-      );
-    });
-
-    it('should handle task not found', async () => {
-      const context = {};
-      const options = {
-        taskId: 'non-existent-task',
-        newStatus: 'completed'
-      };
-
-      step.getCurrentTaskInfo = jest.fn().mockResolvedValue(null);
-
-      await expect(step.execute(context, options)).rejects.toThrow(
-        'Task non-existent-task not found'
-      );
-    });
-  });
-
-  describe('validateStatusTransition', () => {
-    it('should validate valid transitions', () => {
-      expect(step.validateStatusTransition('pending', 'in_progress')).toBe(true);
-      expect(step.validateStatusTransition('in_progress', 'completed')).toBe(true);
-      expect(step.validateStatusTransition('blocked', 'pending')).toBe(true);
-      expect(step.validateStatusTransition('failed', 'in_progress')).toBe(true);
-    });
-
-    it('should reject invalid transitions', () => {
-      expect(step.validateStatusTransition('completed', 'pending')).toBe(false);
-      expect(step.validateStatusTransition('cancelled', 'in_progress')).toBe(false);
-      expect(step.validateStatusTransition('pending', 'completed')).toBe(false);
-    });
-
-    it('should handle unknown statuses', () => {
-      expect(step.validateStatusTransition('unknown', 'pending')).toBe(false);
-      expect(step.validateStatusTransition('pending', 'unknown')).toBe(false);
-    });
-  });
-
-  describe('determineNewPath', () => {
-    it('should determine correct path for completed tasks', () => {
-      const taskMetadata = {
-        id: 'test-task-123',
-        priority: 'high',
-        category: 'backend',
-        completedAt: '2024-03-15'
-      };
-
-      const result = step.determineNewPath('completed', taskMetadata);
       
-      expect(result).toBe('docs/09_roadmap/completed/2024-q1/backend/test-task-123/');
-    });
-
-    it('should determine correct path for in-progress tasks', () => {
-      const taskMetadata = {
-        id: 'test-task-123',
-        category: 'frontend'
-      };
-
-      const result = step.determineNewPath('in_progress', taskMetadata);
+      await expect(step.execute(context, options)).rejects.toThrow('File system error');
       
-      expect(result).toBe('docs/09_roadmap/in-progress/frontend/test-task-123/');
-    });
-
-    it('should determine correct path for pending tasks', () => {
-      const taskMetadata = {
-        id: 'test-task-123',
-        priority: 'medium',
-        category: 'security'
-      };
-
-      const result = step.determineNewPath('pending', taskMetadata);
+      // Restore original method
+      statusTransitionService.moveTaskToInProgress = originalMoveToInProgress;
       
-      expect(result).toBe('docs/09_roadmap/pending/medium/security/test-task-123/');
-    });
-
-    it('should determine correct path for blocked tasks', () => {
-      const taskMetadata = {
-        id: 'test-task-123',
-        category: 'database'
-      };
-
-      const result = step.determineNewPath('blocked', taskMetadata);
-      
-      expect(result).toBe('docs/09_roadmap/blocked/database/test-task-123/');
-    });
-
-    it('should determine correct path for cancelled tasks', () => {
-      const taskMetadata = {
-        id: 'test-task-123',
-        category: 'testing'
-      };
-
-      const result = step.determineNewPath('cancelled', taskMetadata);
-      
-      expect(result).toBe('docs/09_roadmap/cancelled/testing/test-task-123/');
-    });
-
-    it('should determine correct path for failed tasks', () => {
-      const taskMetadata = {
-        id: 'test-task-123',
-        category: 'performance'
-      };
-
-      const result = step.determineNewPath('failed', taskMetadata);
-      
-      expect(result).toBe('docs/09_roadmap/failed/performance/test-task-123/');
-    });
-  });
-
-  describe('getCompletionQuarter', () => {
-    it('should return correct quarter for Q1', () => {
-      const result = step.getCompletionQuarter('2024-02-15');
-      expect(result).toBe('2024-q1');
-    });
-
-    it('should return correct quarter for Q2', () => {
-      const result = step.getCompletionQuarter('2024-05-15');
-      expect(result).toBe('2024-q2');
-    });
-
-    it('should return correct quarter for Q3', () => {
-      const result = step.getCompletionQuarter('2024-08-15');
-      expect(result).toBe('2024-q3');
-    });
-
-    it('should return correct quarter for Q4', () => {
-      const result = step.getCompletionQuarter('2024-11-15');
-      expect(result).toBe('2024-q4');
-    });
-
-    it('should use current date when no completion date provided', () => {
-      const result = step.getCompletionQuarter(null);
-      expect(result).toMatch(/^\d{4}-q[1-4]$/);
-    });
-  });
-
-  describe('moveTaskFiles', () => {
-    it('should successfully move task files', async () => {
-      const taskId = 'test-task-123';
-      const currentTask = {
-        id: 'test-task-123',
-        filePath: 'docs/09_roadmap/pending/medium/test-task-123'
-      };
-      const newStatus = 'completed';
-      const taskMetadata = {
-        priority: 'medium',
-        category: 'backend',
-        completedAt: '2024-03-15'
-      };
-
-      // Mock file system operations
-      fs.mkdir.mockResolvedValue();
-      fs.readdir.mockResolvedValue(['task.md', 'index.md']);
-      fs.copyFile.mockResolvedValue();
-      fs.rename.mockResolvedValue();
-      fs.unlink.mockResolvedValue();
-      fs.rmdir.mockResolvedValue();
-
-      await step.moveTaskFiles(taskId, currentTask, newStatus, taskMetadata);
-
-      expect(fs.mkdir).toHaveBeenCalled();
-      expect(fs.readdir).toHaveBeenCalled();
-      expect(fs.copyFile).toHaveBeenCalledTimes(2);
-      expect(fs.rename).toHaveBeenCalledTimes(2);
-      expect(fs.unlink).toHaveBeenCalledTimes(2);
-      expect(fs.rmdir).toHaveBeenCalled();
-    });
-
-    it('should handle file system errors', async () => {
-      const taskId = 'test-task-123';
-      const currentTask = {
-        id: 'test-task-123',
-        filePath: 'docs/09_roadmap/pending/medium/test-task-123'
-      };
-      const newStatus = 'completed';
-      const taskMetadata = {};
-
-      fs.mkdir.mockRejectedValue(new Error('Permission denied'));
-
-      await expect(step.moveTaskFiles(taskId, currentTask, newStatus, taskMetadata))
-        .rejects.toThrow('Permission denied');
-    });
-  });
-
-  describe('getConfiguration', () => {
-    it('should return correct step configuration', () => {
-      const config = step.getConfiguration();
-
-      expect(config.name).toBe('TaskStatusUpdateStep');
-      expect(config.type).toBe('status');
-      expect(config.description).toBe('Updates task status and organizes files accordingly');
-      expect(config.options.taskId.required).toBe(true);
-      expect(config.options.newStatus.required).toBe(true);
-      expect(config.options.newStatus.enum).toEqual([
-        'pending', 'in_progress', 'completed', 'failed', 'blocked', 'cancelled'
-      ]);
-      expect(config.options.autoMoveFiles.default).toBe(true);
-      expect(config.options.updateDatabase.default).toBe(true);
+      // Cleanup
+      await taskRepository.delete(createdTask.id);
     });
   });
 });

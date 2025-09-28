@@ -39,7 +39,7 @@
 ```
 
 ### Task 4.2: Create TaskStatusUpdateStep Class (1 hour)
-- [ ] Create `backend/domain/steps/status/TaskStatusUpdateStep.js`
+- [ ] Create `backend/domain/steps/categories/task/task_status_update_step.js`
 - [ ] Implement status update logic
 - [ ] Implement file movement logic
 - [ ] Add error handling and logging
@@ -93,7 +93,7 @@ class TaskFileOrganizationStep {
 
 ## 📁 Files to Create
 
-### 1. `backend/domain/steps/status/TaskStatusUpdateStep.js`
+### 1. `backend/domain/steps/categories/task/task_status_update_step.js`
 **Purpose**: Handle task status updates and file movement
 **Key Features**:
 - Database status updates

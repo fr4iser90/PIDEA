@@ -20,7 +20,7 @@
 ## 3. File Impact Analysis
 #### Files to Modify:
 - [ ] `backend/domain/services/task/TaskService.js` - Integration TaskFileOrganizationStep
-- [ ] `backend/domain/steps/status/TaskStatusUpdateStep.js` - Integration TaskFileOrganizationStep
+- [ ] `backend/domain/steps/categories/task/TaskStatusUpdateStep.js` - Integration TaskFileOrganizationStep
 - [ ] `backend/domain/steps/categories/analysis/performance/CpuAnalysisStep.js` - Fix createDocumentation()
 - [ ] `backend/domain/steps/categories/analysis/performance/MemoryAnalysisStep.js` - Fix createDocumentation()
 - [ ] `backend/domain/steps/categories/analysis/performance/DatabaseAnalysisStep.js` - Fix createDocumentation()
@@ -238,7 +238,7 @@
   - Currently creates flat directory structures without subdirectories
   - Needs integration with TaskFileOrganizationStep.createDirectoryStructure()
 
-- **TaskStatusUpdateStep.js**: Located at `backend/domain/steps/status/TaskStatusUpdateStep.js`
+- **TaskStatusUpdateStep.js**: Located at `backend/domain/steps/categories/task/TaskStatusUpdateStep.js`
   - Has `determineNewPath()` method for status transitions
   - Has `moveTaskFiles()` method but doesn't create standardized structure
   - Needs integration with TaskFileOrganizationStep.createDirectoryStructure()

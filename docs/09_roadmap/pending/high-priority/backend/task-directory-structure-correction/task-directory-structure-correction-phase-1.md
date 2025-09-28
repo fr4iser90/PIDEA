@@ -12,7 +12,7 @@ Integrate TaskFileOrganizationStep into the core task management system by modif
 
 ## Deliverables
 - File: `backend/domain/services/task/TaskService.js` - Updated with TaskFileOrganizationStep integration
-- File: `backend/domain/steps/status/TaskStatusUpdateStep.js` - Updated with TaskFileOrganizationStep integration
+- File: `backend/domain/steps/categories/task/TaskStatusUpdateStep.js` - Updated with TaskFileOrganizationStep integration
 - Test: `backend/tests/unit/TaskDirectoryStructure.test.js` - Unit tests for new structure
 - Documentation: Updated JSDoc comments for modified methods
 

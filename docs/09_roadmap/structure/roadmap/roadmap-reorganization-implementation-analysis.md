@@ -290,7 +290,7 @@ async loadWorkflowForTask(task) {
 - [ ] `scripts/roadmap-status-migration.js` - New migration script
 - [ ] `scripts/roadmap-status-manager.js` - New status management script
 - [ ] `scripts/update-roadmap-references.js` - New reference update script
-- [ ] `backend/domain/steps/status/TaskStatusUpdateStep.js` - New status step
+- [ ] `backend/domain/steps/categories/task/task_status_update_step.js` - New status step
 - [ ] `backend/domain/steps/organization/TaskFileOrganizationStep.js` - New organization step
 
 ### Database Migration Requirements:

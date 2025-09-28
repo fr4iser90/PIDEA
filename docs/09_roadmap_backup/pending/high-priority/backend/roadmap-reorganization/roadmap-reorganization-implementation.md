@@ -50,7 +50,7 @@
 - [ ] `scripts/roadmap-status-migration.js` - Migration script for all 154 roadmap files
 - [ ] `scripts/roadmap-status-manager.js` - Automated status transition management
 - [ ] `scripts/update-roadmap-references.js` - Update all hardcoded path references
-- [ ] `backend/domain/steps/status/TaskStatusUpdateStep.js` - New status management step
+- [ ] `backend/domain/steps/categories/task/TaskStatusUpdateStep.js` - New status management step
 - [ ] `backend/domain/steps/organization/TaskFileOrganizationStep.js` - New file organization step
 
 ### Files to Move (154 files):

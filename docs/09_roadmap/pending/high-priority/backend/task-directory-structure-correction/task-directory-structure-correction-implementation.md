@@ -15,12 +15,12 @@
 - **Database Changes**: None (file system only)
 - **API Changes**: None
 - **Frontend Changes**: None
-- **Backend Changes**: TaskService.js, TaskStatusUpdateStep.js, 14 Analysis Steps
+- **Backend Changes**: TaskService.js, task_status_update_step.js, 14 Analysis Steps
 
 ## 3. File Impact Analysis
 #### Files to Modify:
 - [ ] `backend/domain/services/task/TaskService.js` - Integration TaskFileOrganizationStep
-- [ ] `backend/domain/steps/status/TaskStatusUpdateStep.js` - Integration TaskFileOrganizationStep
+- [ ] `backend/domain/steps/categories/task/task_status_update_step.js` - Integration TaskFileOrganizationStep
 - [ ] `backend/domain/steps/categories/analysis/performance/CpuAnalysisStep.js` - Fix createDocumentation()
 - [ ] `backend/domain/steps/categories/analysis/performance/MemoryAnalysisStep.js` - Fix createDocumentation()
 - [ ] `backend/domain/steps/categories/analysis/performance/DatabaseAnalysisStep.js` - Fix createDocumentation()
@@ -48,7 +48,7 @@
 #### Phase 1: Core Task Management Integration (3 hours)
 - [ ] Import TaskFileOrganizationStep in TaskService.js
 - [ ] Modify getTaskFilePath() method to use createDirectoryStructure()
-- [ ] Import TaskFileOrganizationStep in TaskStatusUpdateStep.js
+- [ ] Import TaskFileOrganizationStep in task_status_update_step.js
 - [ ] Modify determineNewPath() method to use createDirectoryStructure()
 - [ ] Test core task creation and status updates
 
@@ -224,7 +224,7 @@
   - Currently creates flat directory structures without subdirectories
   - Needs integration with TaskFileOrganizationStep.createDirectoryStructure()
 
-- **TaskStatusUpdateStep.js**: Located at `backend/domain/steps/status/TaskStatusUpdateStep.js`
+- **TaskStatusUpdateStep.js**: Located at `backend/domain/steps/categories/task/TaskStatusUpdateStep.js`
   - Has `determineNewPath()` method for status transitions
   - Has `moveTaskFiles()` method but doesn't create standardized structure
   - Needs integration with TaskFileOrganizationStep.createDirectoryStructure()
@@ -358,7 +358,7 @@ All required files now exist, implementation plan is validated against actual co
   - **CONFIRMED**: TaskFileOrganizationStep is referenced but not imported or initialized
 
 #### TaskStatusUpdateStep.js Analysis
-- **Location**: `backend/domain/steps/status/TaskStatusUpdateStep.js`
+- **Location**: `backend/domain/steps/categories/task/TaskStatusUpdateStep.js`
 - **Status**: ❌ **INCOMPLETE** - Missing key functionality
 - **Issues Found**:
   - Line 217: Calls `this.determineTaskPath()` method that doesn't exist
@@ -440,7 +440,7 @@ All required files now exist, implementation plan is validated against actual co
   - Fix getTaskFilePath() method to use proper integration
 
 #### TaskStatusUpdateStep.js Analysis
-- **Location**: `backend/domain/steps/status/TaskStatusUpdateStep.js`
+- **Location**: `backend/domain/steps/categories/task/TaskStatusUpdateStep.js`
 - **Status**: Partially implemented
 - **Issues Found**:
   - Line 217: Calls `this.determineTaskPath()` method that doesn't exist
@@ -515,7 +515,7 @@ All required files now exist, implementation plan is validated against actual co
   - **CONFIRMED**: TaskFileOrganizationStep is referenced but not imported or initialized
 
 #### TaskStatusUpdateStep.js Analysis
-- **Location**: `backend/domain/steps/status/TaskStatusUpdateStep.js`
+- **Location**: `backend/domain/steps/categories/task/TaskStatusUpdateStep.js`
 - **Status**: ❌ **INCOMPLETE** - Missing key functionality
 - **Issues Found**:
   - Line 217: Calls `this.determineTaskPath()` method that doesn't exist
@@ -1170,7 +1170,7 @@ await fs.mkdir(docsDir, { recursive: true });
 #### 📊 References to Missing Component
 **Files referencing TaskFileOrganizationStep:**
 1. `backend/domain/services/task/TaskService.js` - Lines 94, 139, 148
-2. `backend/domain/steps/status/TaskStatusUpdateStep.js` - Line 216
+2. `backend/domain/steps/categories/task/TaskStatusUpdateStep.js` - Line 216
 3. `backend/framework/workflows/task-creation-workflows.json` - Line 93
 4. `backend/framework/workflows/task-workflows.json` - Line 106
 5. `backend/tests/e2e/RoadmapReorganization.test.js` - Lines 10, 48

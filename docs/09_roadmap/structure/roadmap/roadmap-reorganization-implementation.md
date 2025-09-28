@@ -50,7 +50,7 @@
 - [ ] `scripts/roadmap-status-migration.js` - Migration script for all 154 roadmap files
 - [ ] `scripts/roadmap-status-manager.js` - Automated status transition management
 - [ ] `scripts/update-roadmap-references.js` - Update all hardcoded path references
-- [ ] `backend/domain/steps/status/TaskStatusUpdateStep.js` - New status management step
+- [ ] `backend/domain/steps/categories/task/task_status_update_step.js` - New status management step
 - [ ] `backend/domain/steps/organization/TaskFileOrganizationStep.js` - New file organization step
 
 ### Files to Move (154 files):
@@ -85,7 +85,7 @@
 ### Phase 4: Workflow Integration (3 hours)
 - [ ] Add status management steps to `task-workflows.json`
 - [ ] Add file organization steps to `task-creation-workflows.json`
-- [ ] Create `TaskStatusUpdateStep.js` for workflow integration
+- [ ] Create `task_status_update_step.js` for workflow integration
 - [ ] Create `TaskFileOrganizationStep.js` for workflow integration
 - [ ] Test workflow automation with new steps
 
