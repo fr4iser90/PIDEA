@@ -8,12 +8,13 @@ const logger = new Logger('AuthService');
 
 
 class AuthService {
-  constructor(userRepository, userSessionRepository, jwtSecret, jwtRefreshSecret) {
+  constructor(userRepository, userSessionRepository, jwtSecret, jwtRefreshSecret, sessionActivityService = null) {
     this.userRepository = userRepository;
     this.userSessionRepository = userSessionRepository;
     this.jwtSecret = jwtSecret;
     this.jwtRefreshSecret = jwtRefreshSecret;
     this.tokenValidator = new TokenValidator();
+    this.sessionActivityService = sessionActivityService;
   }
 
   async login(credentials) {
@@ -125,6 +126,15 @@ class AuthService {
 
     await this.userSessionRepository.save(session);
     logger.info('✅ Session saved to database');
+    
+    // Record initial session activity
+    if (this.sessionActivityService) {
+      await this.sessionActivityService.recordActivity(session.id, {
+        type: 'session-created',
+        details: { userAgent: 'web', ipAddress: 'unknown' },
+        duration: 0
+      });
+    }
     
     return session;
   }

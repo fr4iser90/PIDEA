@@ -12,6 +12,7 @@ import AuthWrapper from '@/presentation/components/auth/AuthWrapper.jsx';
 import Header from '@/presentation/components/Header.jsx';
 import Footer from '@/presentation/components/Footer.jsx';
 import NotificationSystem from '@/presentation/components/common/NotificationSystem.jsx';
+import SessionWarningModal from '@/presentation/components/auth/SessionWarningModal.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
@@ -28,7 +29,13 @@ function App() {
 
   const [attachedPrompts, setAttachedPrompts] = useState([]);
   const containerRef = useRef(null);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, extendSession, logout } = useAuthStore();
+  
+  // Session warning modal state
+  const [sessionWarning, setSessionWarning] = useState({
+    isOpen: false,
+    timeUntilExpiry: 0
+  });
   
   // Use IDEStore for port management
   const {
@@ -46,14 +53,51 @@ function App() {
 
   } = useIDEStore();
 
+  // Session warning handlers
+  const handleSessionWarning = (timeUntilExpiry) => {
+    setSessionWarning({
+      isOpen: true,
+      timeUntilExpiry
+    });
+  };
+
+  const handleExtendSession = async () => {
+    try {
+      await extendSession();
+      setSessionWarning({ isOpen: false, timeUntilExpiry: 0 });
+    } catch (error) {
+      logger.error('Failed to extend session:', error);
+    }
+  };
+
+  const handleSessionLogout = async () => {
+    try {
+      await logout();
+      setSessionWarning({ isOpen: false, timeUntilExpiry: 0 });
+    } catch (error) {
+      logger.error('Failed to logout:', error);
+    }
+  };
+
+  const handleCloseSessionWarning = () => {
+    setSessionWarning({ isOpen: false, timeUntilExpiry: 0 });
+  };
+
   useEffect(() => {
     logger.info('🔄 App initializing...');
     setupEventListeners();
     initializeApp();
+    
+    // Setup session warning listener
+    if (eventBus) {
+      eventBus.on('session-warning', handleSessionWarning);
+    }
+    
     return () => {
       // ✅ NEW: Cleanup WebSocket listeners on app unmount
       if (eventBus) {
         cleanupWebSocketListeners(eventBus);
+        eventBus.off('session-warning', handleSessionWarning);
       }
     };
   }, []);
@@ -93,13 +137,11 @@ function App() {
   const initializeApp = () => {
     setIsLoading(true);
     
-    // Simulate app initialization
-    setTimeout(() => {
-      setIsLoading(false);
-      if (eventBus) {
-        eventBus.emit('app-ready');
-      }
-    }, 1000);
+    // Immediate initialization - no artificial delay
+    setIsLoading(false);
+    if (eventBus) {
+      eventBus.emit('app-ready');
+    }
   };
 
   const handleViewChange = (data) => {
@@ -287,6 +329,15 @@ function App() {
 
           {/* Global Notification System */}
           <NotificationSystem />
+          
+          {/* Session Warning Modal */}
+          <SessionWarningModal
+            isOpen={sessionWarning.isOpen}
+            timeUntilExpiry={sessionWarning.timeUntilExpiry}
+            onExtendSession={handleExtendSession}
+            onLogout={handleSessionLogout}
+            onClose={handleCloseSessionWarning}
+          />
         </div>
       </IDEProvider>
     </AuthWrapper>

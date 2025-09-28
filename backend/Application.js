@@ -493,6 +493,14 @@ class Application {
     // Initialize controllers with Application Services
     this.authController = this.serviceRegistry.getService('authController');
     
+    // Initialize Session Controller
+    const SessionController = require('./presentation/api/SessionController');
+    this.sessionController = new SessionController({
+      sessionActivityService: this.serviceRegistry.getService('sessionActivityService'),
+      authService: this.authService,
+      userSessionRepository: this.userSessionRepository
+    });
+    
     const WebChatController = require('./presentation/api/WebChatController');
     this.webChatController = new WebChatController({
         webChatApplicationService: this.serviceRegistry.getService('webChatApplicationService'),
@@ -701,6 +709,17 @@ class Application {
     this.app.put('/api/auth/profile', (req, res) => this.authController.updateProfile(req, res));
     this.app.get('/api/auth/sessions', (req, res) => this.authController.getSessions(req, res));
     this.app.post('/api/auth/logout', this.authMiddleware.authenticate(), (req, res) => this.authController.logout(req, res));
+
+    // Session management routes (protected)
+    this.app.use('/api/session', this.authMiddleware.authenticate());
+    this.app.post('/api/session/extend', (req, res) => this.sessionController.extendSession(req, res));
+    this.app.get('/api/session/status', (req, res) => this.sessionController.getSessionStatus(req, res));
+    this.app.post('/api/session/activity', (req, res) => this.sessionController.recordActivity(req, res));
+    this.app.get('/api/session/analytics', (req, res) => this.sessionController.getSessionAnalytics(req, res));
+    this.app.get('/api/session/monitor', (req, res) => this.sessionController.getMonitoringData(req, res));
+    this.app.post('/api/session/cleanup', (req, res) => this.sessionController.triggerCleanup(req, res));
+    this.app.put('/api/session/config', (req, res) => this.sessionController.updateConfig(req, res));
+    this.app.get('/api/session/health', (req, res) => this.sessionController.healthCheck(req, res));
 
     // Chat routes (protected) - no rate limiting for authenticated users
     this.app.use('/api/chat', this.authMiddleware.authenticate());

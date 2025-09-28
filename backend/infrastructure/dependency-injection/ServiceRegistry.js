@@ -389,11 +389,26 @@ class ServiceRegistry {
             return new WindsurfIDEService(browserManager, ideManager, eventBus);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
+        // Session activity service
+        this.container.register('sessionActivityService', (userSessionRepository, eventBus) => {
+            const SessionActivityService = require('@domain/services/security/SessionActivityService');
+            return new SessionActivityService({
+                userSessionRepository,
+                eventBus,
+                config: {
+                    activityThreshold: 30 * 1000, // 30 seconds
+                    sessionTimeout: 15 * 60 * 1000, // 15 minutes
+                    extensionThreshold: 5 * 60 * 1000, // 5 minutes
+                    maxExtensions: 10
+                }
+            });
+        }, { singleton: true, dependencies: ['userSessionRepository', 'eventBus'] });
+
         // Auth service
-        this.container.register('authService', (userRepository, userSessionRepository) => {
+        this.container.register('authService', (userRepository, userSessionRepository, sessionActivityService) => {
             const AuthService = require('@domain/services/security/AuthService');
-            return new AuthService(userRepository, userSessionRepository, 'simple-jwt-secret', 'simple-refresh-secret');
-        }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
+            return new AuthService(userRepository, userSessionRepository, 'simple-jwt-secret', 'simple-refresh-secret', sessionActivityService);
+        }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository', 'sessionActivityService'] });
 
         // Task service
         this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService, fileSystemService, eventBus) => {
@@ -1554,11 +1569,26 @@ class ServiceRegistry {
                     return new WindsurfIDEService(browserManager, ideManager, eventBus);
                 }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
                 break;
+            case 'sessionActivityService':
+                this.container.register('sessionActivityService', (userSessionRepository, eventBus) => {
+                    const SessionActivityService = require('@domain/services/security/SessionActivityService');
+                    return new SessionActivityService({
+                        userSessionRepository,
+                        eventBus,
+                        config: {
+                            activityThreshold: 30 * 1000, // 30 seconds
+                            sessionTimeout: 15 * 60 * 1000, // 15 minutes
+                            extensionThreshold: 5 * 60 * 1000, // 5 minutes
+                            maxExtensions: 10
+                        }
+                    });
+                }, { singleton: true, dependencies: ['userSessionRepository', 'eventBus'] });
+                break;
             case 'authService':
-                this.container.register('authService', (userRepository, userSessionRepository) => {
+                this.container.register('authService', (userRepository, userSessionRepository, sessionActivityService) => {
                     const AuthService = require('@domain/services/security/AuthService');
-                    return new AuthService(userRepository, userSessionRepository, 'simple-jwt-secret', 'simple-refresh-secret');
-                }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository'] });
+                    return new AuthService(userRepository, userSessionRepository, 'simple-jwt-secret', 'simple-refresh-secret', sessionActivityService);
+                }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository', 'sessionActivityService'] });
                 break;
             case 'taskService':
                 this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService) => {
@@ -1686,7 +1716,8 @@ class ServiceRegistry {
         this.addServiceDefinition('cursorIDEService', ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'], 'domain');
         this.addServiceDefinition('vscodeIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('windsurfIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
-        this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository'], 'domain');
+        this.addServiceDefinition('sessionActivityService', ['userSessionRepository', 'eventBus'], 'domain');
+        this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository', 'sessionActivityService'], 'domain');
                     this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'], 'domain');
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
         this.addServiceDefinition('workflowLoaderService', [], 'domain');

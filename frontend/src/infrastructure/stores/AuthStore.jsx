@@ -3,6 +3,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import useNotificationStore from './NotificationStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import sessionMonitorService from '../services/SessionMonitorService.jsx';
+import activityTrackerService from '../services/ActivityTrackerService.jsx';
+import crossTabSyncService from '../services/CrossTabSyncService.jsx';
 
 const useAuthStore = create(
   persist(
@@ -14,8 +17,13 @@ const useAuthStore = create(
       error: null,
       redirectToLogin: false,
       lastAuthCheck: null,
-      authCheckInterval: 24 * 60 * 60 * 1000, // 24 hours (temporarily disabled auto-validation)
+      authCheckInterval: 5 * 60 * 1000, // 5 minutes - reasonable cache duration
       isValidating: false, // New state for race condition protection
+      
+      // Session management state
+      sessionExpiry: null,
+      sessionWarningShown: false,
+      sessionMonitoringActive: false,
 
       // Actions
       login: async (email, password) => {
@@ -54,8 +62,12 @@ const useAuthStore = create(
             isLoading: false,
             error: null,
             redirectToLogin: false,
-            lastAuthCheck: new Date()
+            lastAuthCheck: new Date(),
+            sessionExpiry: userData.expiresAt || null
           });
+
+          // Start session monitoring services
+          await get().startSessionMonitoring();
 
           logger.info('✅ [AuthStore] Login successful, state updated');
           return { success: true };
@@ -121,6 +133,9 @@ const useAuthStore = create(
 
       logout: async () => {
         try {
+          // Stop session monitoring services
+          await get().stopSessionMonitoring();
+          
           // Call logout endpoint to clear httpOnly cookies
           await apiCall('/api/auth/logout', {
             method: 'POST',
@@ -136,7 +151,10 @@ const useAuthStore = create(
           isLoading: false,
           error: null,
           redirectToLogin: false,
-          lastAuthCheck: null
+          lastAuthCheck: null,
+          sessionExpiry: null,
+          sessionWarningShown: false,
+          sessionMonitoringActive: false
         });
       },
 
@@ -156,7 +174,7 @@ const useAuthStore = create(
 
       // Professional authentication validation with proper caching
       validateToken: async () => {
-        const { lastAuthCheck, authCheckInterval, isValidating, isAuthenticated } = get();
+        const { lastAuthCheck, authCheckInterval, isValidating, isAuthenticated, user } = get();
         
         // Prevent race conditions
         if (isValidating) {
@@ -164,11 +182,16 @@ const useAuthStore = create(
           return true;
         }
         
-        // ALWAYS validate with backend - never trust localStorage
+        // OPTIMIZATION: Skip validation if recently validated and user exists
         const now = new Date();
-        const shouldValidate = !lastAuthCheck || (now - lastAuthCheck) >= authCheckInterval;
+        const recentlyValidated = lastAuthCheck && (now - lastAuthCheck) < (5 * 60 * 1000); // 5 minutes
+        const hasUserData = user && isAuthenticated;
         
-        // Remove the localStorage trust - always validate
+        if (recentlyValidated && hasUserData) {
+          logger.debug('🔍 [AuthStore] Recently validated with user data, skipping validation');
+          return true;
+        }
+        
         logger.info('🔍 [AuthStore] Validating authentication with backend...');
 
         try {
@@ -281,12 +304,219 @@ const useAuthStore = create(
           return false;
         }
       },
+
+      // Session Management Methods
+      
+      /**
+       * Start session monitoring services
+       */
+      startSessionMonitoring: async () => {
+        try {
+          logger.info('🔍 [AuthStore] Starting session monitoring services...');
+          
+          // Start cross-tab synchronization
+          crossTabSyncService.startSync();
+          
+          // Start activity tracking
+          activityTrackerService.startTracking();
+          
+          // Start session monitoring
+          sessionMonitorService.startMonitoring();
+          
+          // Setup event listeners
+          get().setupSessionEventListeners();
+          
+          set({ sessionMonitoringActive: true });
+          
+          logger.info('✅ [AuthStore] Session monitoring services started');
+          
+        } catch (error) {
+          logger.error('❌ [AuthStore] Failed to start session monitoring:', error);
+        }
+      },
+
+      /**
+       * Stop session monitoring services
+       */
+      stopSessionMonitoring: async () => {
+        try {
+          logger.info('🔍 [AuthStore] Stopping session monitoring services...');
+          
+          // Stop all services
+          sessionMonitorService.stopMonitoring();
+          activityTrackerService.stopTracking();
+          crossTabSyncService.stopSync();
+          
+          // Remove event listeners
+          get().removeSessionEventListeners();
+          
+          set({ sessionMonitoringActive: false });
+          
+          logger.info('✅ [AuthStore] Session monitoring services stopped');
+          
+        } catch (error) {
+          logger.error('❌ [AuthStore] Failed to stop session monitoring:', error);
+        }
+      },
+
+      /**
+       * Setup session event listeners
+       */
+      setupSessionEventListeners: () => {
+        // Session monitor events
+        sessionMonitorService.on('session-warning-shown', (data) => {
+          logger.info('🔍 [AuthStore] Session warning shown:', data);
+          set({ sessionWarningShown: true });
+        });
+
+        sessionMonitorService.on('session-extended', (data) => {
+          logger.info('🔍 [AuthStore] Session extended:', data);
+          set({ 
+            sessionExpiry: data.expiresAt,
+            sessionWarningShown: false 
+          });
+        });
+
+        sessionMonitorService.on('session-expired', () => {
+          logger.info('🔍 [AuthStore] Session expired');
+          get().handleAuthFailure('Session expired');
+        });
+
+        // Cross-tab sync events
+        crossTabSyncService.on('session-expired', () => {
+          logger.info('🔍 [AuthStore] Session expired in another tab');
+          get().handleAuthFailure('Session expired in another tab');
+        });
+
+        crossTabSyncService.on('session-extended', (data) => {
+          logger.info('🔍 [AuthStore] Session extended in another tab:', data);
+          set({ sessionExpiry: data.expiresAt });
+        });
+
+        crossTabSyncService.on('logout', () => {
+          logger.info('🔍 [AuthStore] Logout triggered in another tab');
+          get().logout();
+        });
+
+        // Activity tracker events
+        activityTrackerService.on('activity-debounced', async (data) => {
+          if (data.patterns.active) {
+            await get().recordActivity(data);
+          }
+        });
+      },
+
+      /**
+       * Remove session event listeners
+       */
+      removeSessionEventListeners: () => {
+        // Remove all event listeners
+        sessionMonitorService.off('session-warning-shown');
+        sessionMonitorService.off('session-extended');
+        sessionMonitorService.off('session-expired');
+        
+        crossTabSyncService.off('session-expired');
+        crossTabSyncService.off('session-extended');
+        crossTabSyncService.off('logout');
+        
+        activityTrackerService.off('activity-debounced');
+      },
+
+      /**
+       * Record user activity
+       */
+      recordActivity: async (activityData) => {
+        try {
+          const { user } = get();
+          if (!user) return;
+
+          await apiCall('/api/session/activity', {
+            method: 'POST',
+            body: JSON.stringify({
+              type: 'user-interaction',
+              details: {
+                timestamp: activityData.timestamp,
+                patterns: activityData.patterns
+              },
+              duration: activityData.timeSinceLastActivity || 0
+            }),
+            credentials: 'include'
+          });
+
+        } catch (error) {
+          logger.error('❌ [AuthStore] Failed to record activity:', error);
+        }
+      },
+
+      /**
+       * Extend session manually
+       */
+      extendSession: async () => {
+        try {
+          logger.info('🔍 [AuthStore] Extending session...');
+          
+          const data = await apiCall('/api/session/extend', {
+            method: 'POST',
+            credentials: 'include'
+          });
+
+          if (data.success) {
+            set({ 
+              sessionExpiry: data.data.expiresAt,
+              sessionWarningShown: false 
+            });
+            
+            // Broadcast to other tabs
+            crossTabSyncService.broadcastSessionExtended({
+              expiresAt: data.data.expiresAt
+            });
+            
+            logger.info('✅ [AuthStore] Session extended successfully');
+            return true;
+          } else {
+            throw new Error(data.error || 'Failed to extend session');
+          }
+          
+        } catch (error) {
+          logger.error('❌ [AuthStore] Failed to extend session:', error);
+          return false;
+        }
+      },
+
+      /**
+       * Update session expiry time
+       */
+      updateSessionExpiry: (expiresAt) => {
+        set({ sessionExpiry: expiresAt });
+      },
+
+      /**
+       * Get session status
+       */
+      getSessionStatus: async () => {
+        try {
+          const data = await apiCall('/api/session/status', {
+            credentials: 'include'
+          });
+
+          if (data.success) {
+            return data.data;
+          } else {
+            throw new Error(data.error || 'Failed to get session status');
+          }
+          
+        } catch (error) {
+          logger.error('❌ [AuthStore] Failed to get session status:', error);
+          return null;
+        }
+      },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        sessionExpiry: state.sessionExpiry,
       }),
     }
   )
