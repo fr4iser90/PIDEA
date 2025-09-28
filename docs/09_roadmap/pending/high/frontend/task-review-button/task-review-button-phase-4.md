@@ -34,14 +34,18 @@ class TaskReviewService {
       
       const taskIds = selectedTasks.map(task => task.id);
       
-      const response = await this.apiCall(`/api/projects/${projectId}/tasks/review`, {
+      const response = await this.apiCall(`/api/projects/${projectId}/workflow/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          taskIds,
-          projectId
+          mode: 'task-review',
+          tasks: selectedTasks,
+          options: {
+            workflowPrompt: 'task-check-state.md',
+            autoExecute: true
+          }
         })
       });
       

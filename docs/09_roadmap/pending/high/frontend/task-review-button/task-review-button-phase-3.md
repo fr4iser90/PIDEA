@@ -15,40 +15,18 @@ Create backend review workflow endpoint and handler that integrates task-check-s
 
 ## Implementation Details
 
-### TaskController Endpoint
+### WorkflowController Integration
 ```javascript
-// In TaskController.js
-async reviewTasks(req, res) {
-  try {
-    const { taskIds, projectId } = req.body;
-    const userId = req.user?.id || 'system';
-    
-    if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Task IDs array is required'
-      });
-    }
-    
-    const result = await this.taskApplicationService.executeTaskReviewWorkflow(
-      taskIds, 
-      projectId, 
-      userId
-    );
-    
-    res.json({
-      success: true,
-      data: result
-    });
-    
-  } catch (error) {
-    this.logger.error('Task review workflow failed:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-}
+// Use existing WorkflowController.executeWorkflow()
+// Route: POST /api/projects/:projectId/workflow/execute
+// Body: {
+//   mode: 'task-review',
+//   tasks: selectedTasks,
+//   options: {
+//     workflowPrompt: 'task-check-state.md',
+//     autoExecute: true
+//   }
+// }
 ```
 
 ### TaskReviewHandler

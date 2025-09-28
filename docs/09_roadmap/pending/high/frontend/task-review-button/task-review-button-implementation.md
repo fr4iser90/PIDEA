@@ -40,14 +40,11 @@ Create new Plan/Implementation task-review-button-implementation.md in docs/09_r
 #### Files to Modify:
 - [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Add Review button next to Sync button
 - [ ] `frontend/src/css/modal/task-selection-modal.css` - Extend existing modal styles for review functionality
-- [ ] `backend/presentation/api/TaskController.js` - Add review workflow endpoint
-- [ ] `backend/application/services/TaskApplicationService.js` - Add review workflow service method
+- [ ] `backend/presentation/api/WorkflowController.js` - Use existing executeWorkflow endpoint with task-review mode
 
 #### Files to Create:
 - [ ] `frontend/src/presentation/components/chat/modal/TaskReviewSelectionModal.jsx` - New modal component for task selection
 - [ ] `frontend/src/css/modal/task-review-selection-modal.css` - CSS styles for review modal
-- [ ] `backend/application/handlers/TaskReviewHandler.js` - Handler for review workflow execution
-- [ ] `content-library/prompts/task-management/task-check-state.md` - Status checking workflow (already exists)
 
 #### Files to Modify:
 - [ ] `frontend/src/application/services/TaskReviewService.jsx` - **EXISTS** - Add review workflow method
@@ -74,10 +71,9 @@ Create new Plan/Implementation task-review-button-implementation.md in docs/09_r
 - [ ] Add loading states and error handling
 
 #### Phase 3: Backend Review Workflow (2 hours)
-- [ ] Create review workflow endpoint in TaskController
-- [ ] Implement TaskReviewHandler for workflow execution
-- [ ] Integrate task-check-state.md workflow
-- [ ] Add multi-task processing logic
+- [ ] Use existing WorkflowController.executeWorkflow() endpoint
+- [ ] Integrate task-check-state.md workflow via mode parameter
+- [ ] Add multi-task processing logic in workflow
 - [ ] Implement progress tracking and error handling
 
 #### Phase 4: Service Integration (1 hour)
