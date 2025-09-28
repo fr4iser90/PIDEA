@@ -112,12 +112,12 @@ class IDESendMessageStep {
               const ideSelectors = await browserManager.getIDESelectors(ideType);
               const aiTextDetector = new AITextDetector(ideSelectors);
               
-              // Wait for AI response with timeout
+              // Wait for AI response with timeout using improved detection
               const actualTimeout = timeout || 300000; // 5 minutes default
               aiResponse = await aiTextDetector.waitForAIResponse(page, {
                 timeout: actualTimeout,
                 checkInterval: 2000, // Check every 2 seconds
-                requiredStableChecks: 3
+                maxStableChecks: 50 // Much more conservative than old 3!
               });
               
               logger.info('✅ AI response received', {

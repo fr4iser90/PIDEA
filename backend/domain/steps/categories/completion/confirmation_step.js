@@ -111,17 +111,27 @@ class ConfirmationStep {
             throw new Error('Failed to send confirmation question to IDE');
           }
           
-          // Wait a bit for the AI to process the confirmation question
+          // Wait for AI to process the confirmation question using proper AI response detection
           logger.info('⏳ Waiting for AI to process confirmation question...');
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Simple wait for AI processing
           
-          // Try to get the latest AI response
+          // Use proper AI response waiting instead of simple timeout
           let aiResponse = '';
           try {
-            aiResponse = await aiTextDetector.extractLatestAIResponse(page);
-            logger.info(`📝 Extracted AI response (${aiResponse.length} chars)`);
+            const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
+              timeout: 60000, // 1 minute timeout for confirmation
+              checkInterval: 2000, // Check every 2 seconds
+              maxStableChecks: 20 // More conservative for confirmation
+            });
+            
+            if (aiResponseResult.success) {
+              aiResponse = aiResponseResult.response;
+              logger.info(`📝 Extracted AI response (${aiResponse.length} chars) with confidence: ${aiResponseResult.completion?.confidence || 0}`);
+            } else {
+              logger.warn('AI response waiting failed, trying simple extraction');
+              aiResponse = await aiTextDetector.extractLatestAIResponse(page);
+            }
           } catch (error) {
-            logger.warn('Could not extract AI response, continuing with next attempt');
+            logger.warn('Could not extract AI response, continuing with next attempt:', error.message);
             continue;
           }
           

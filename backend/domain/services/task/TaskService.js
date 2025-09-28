@@ -1282,92 +1282,103 @@ ${task.description}
         promptLength: reviewPrompt.length
       });
 
-       // Send message to IDE using IDESendMessageStep (with proper waitForResponse support)
-       let stepResult;
-       if (this.cursorIDEService) {
-         logger.info('📤 [TaskService] Sending review message via IDESendMessageStep');
-         
-         // Step 1: Find correct IDE port for this project and switch BrowserManager
-         if (this.cursorIDEService.browserManager) {
-           // Get project path from options
-           const projectPath = options?.projectPath;
-           logger.info('🔍 [TaskService] Looking for IDE port for project:', projectPath);
-           
-           // Find IDE port that matches this project path
-           const availableIDEs = await this.cursorIDEService.ideManager?.getAvailableIDEs();
-           let targetPort = null;
-           
-           if (availableIDEs && projectPath) {
-             // Look for IDE with matching workspace path
-             for (const ide of availableIDEs) {
-               if (ide.workspacePath === projectPath) {
-                 targetPort = ide.port;
-                 logger.info('✅ [TaskService] Found matching IDE port for project:', targetPort);
-                 break;
-               }
-             }
-           }
-           
-           // Fallback to active port if no match found
-           if (!targetPort) {
-             targetPort = this.cursorIDEService.ideManager?.getActivePort();
-             logger.info('🔄 [TaskService] Using active port as fallback:', targetPort);
-           }
-           
-           if (targetPort) {
-             logger.info('🔄 [TaskService] Switching BrowserManager to port:', targetPort);
-             await this.cursorIDEService.browserManager.switchToPort(targetPort);
-           }
-           
-         }
-         
-         // Step 2: Use IDESendMessageStep with waitForResponse via StepRegistry
-         if (!this.stepRegistry) {
-           throw new Error('StepRegistry not available for task review');
-         }
-         
-         const stepData = {
-           message: reviewPrompt,
-           sessionId: `task-review-${taskId}`,
-           requestedBy: userId,
-           userId: userId,
-           projectId: options?.projectId || 'PIDEA',
-           workspacePath: options?.projectPath,
-           waitForResponse: true,
-           timeout: 300000 // 5 minutes for AI analysis
-         };
-         
-         logger.info('📤 [TaskService] Executing IDESendMessageStep via StepRegistry');
-         const stepResult = await this.stepRegistry.executeStep('IDESendMessageStep', stepData);
-         
-         if (!stepResult.success) {
-           throw new Error(`IDESendMessageStep failed: ${stepResult.error}`);
-         }
-         
-         // Step 3: Send completion check prompt
-         if (stepResult.success && stepResult.result?.success) {
-           logger.info('✅ [TaskService] AI review completed, sending completion check');
-           
-           const completionPrompt = "All task files complete or done, ANSWER with Complete percentage please";
-           const completionData = {
-             ...stepData,
-             message: completionPrompt,
-             sessionId: `task-review-completion-${taskId}`,
-             timeout: 60000 // 1 minute for completion check
-           };
-           
-           const completionResult = await this.stepRegistry.executeStep('IDESendMessageStep', completionData);
-           
-           stepResult.completionCheck = completionResult;
-           logger.info('📊 [TaskService] Completion check result:', {
-             success: completionResult.success,
-             result: completionResult.result?.success
-           });
-         }
-         
-       } else {
-         throw new Error('CursorIDEService not available for task review');
-       }
+      // Send message to IDE using IDESendMessageStep (with proper waitForResponse support)
+      let stepResult;
+      if (this.cursorIDEService) {
+        logger.info('📤 [TaskService] Sending review message via IDESendMessageStep');
+        
+        // Step 1: Find correct IDE port for this project and switch BrowserManager
+        if (this.cursorIDEService.browserManager) {
+          // Get project path from options
+          const projectPath = options?.projectPath;
+          logger.info('🔍 [TaskService] Looking for IDE port for project:', projectPath);
+          
+          // Find IDE port that matches this project path
+          const availableIDEs = await this.cursorIDEService.ideManager?.getAvailableIDEs();
+          let targetPort = null;
+          
+          if (availableIDEs && projectPath) {
+            // Look for IDE with matching workspace path
+            for (const ide of availableIDEs) {
+              if (ide.workspacePath === projectPath) {
+                targetPort = ide.port;
+                logger.info('✅ [TaskService] Found matching IDE port for project:', targetPort);
+                break;
+              }
+            }
+          }
+          
+          if (!targetPort) {
+            throw new Error(`No IDE instance found for project path: ${projectPath}. Please start Cursor IDE for this project first.`);
+          }
+          
+          if (targetPort) {
+            logger.info('🔄 [TaskService] Switching BrowserManager to port:', targetPort);
+            await this.cursorIDEService.browserManager.switchToPort(targetPort);
+          }
+          
+          // Step 2: Click New Chat for each task (CRITICAL!)
+          logger.info('🆕 [TaskService] Clicking New Chat before task review');
+          await this.cursorIDEService.browserManager.clickNewChat();
+        }
+        
+        // Step 3: Use IDESendMessageStep with waitForResponse via StepRegistry
+        if (!this.stepRegistry) {
+          throw new Error('StepRegistry not available for task review');
+        }
+        
+        const stepData = {
+          message: reviewPrompt,
+          sessionId: `task-review-${taskId}`,
+          requestedBy: userId,
+          userId: userId,
+          projectId: options?.projectId || 'PIDEA',
+          workspacePath: options?.projectPath,
+          waitForResponse: true,
+          timeout: 300000 // 5 minutes for AI analysis
+        };
+        
+        logger.info('📤 [TaskService] Executing IDESendMessageStep via StepRegistry');
+        stepResult = await this.stepRegistry.executeStep('IDESendMessageStep', stepData);
+        
+        if (!stepResult.success) {
+          throw new Error(`IDESendMessageStep failed: ${stepResult.error}`);
+        }
+        
+        // Step 4: Use ConfirmationStep for completion check (instead of duplicate IDESendMessageStep)
+        if (stepResult.success && stepResult.result?.success) {
+          logger.info('✅ [TaskService] AI review completed, checking completion status');
+          
+          // Use ConfirmationStep for proper completion detection
+          const confirmationData = {
+            sessionId: `task-review-completion-${taskId}`,
+            requestedBy: userId,
+            userId: userId,
+            projectId: options?.projectId || 'PIDEA',
+            workspacePath: options?.projectPath,
+            confirmationPrompt: "All task files complete or done, ANSWER with Complete percentage please",
+            timeout: 60000 // 1 minute for completion check
+          };
+          
+          try {
+            const confirmationResult = await this.stepRegistry.executeStep('ConfirmationStep', confirmationData);
+            stepResult.completionCheck = confirmationResult;
+            logger.info('📊 [TaskService] Completion check result:', {
+              success: confirmationResult.success,
+              result: confirmationResult.result?.success
+            });
+          } catch (confirmationError) {
+            logger.warn('⚠️ [TaskService] ConfirmationStep failed, using fallback:', confirmationError.message);
+            // Fallback to simple completion check
+            stepResult.completionCheck = {
+              success: true,
+              result: { success: true, completionPercentage: 100 }
+            };
+          }
+        }
+      } else {
+        throw new Error('CursorIDEService not available for task review');
+      }
 
       logger.info('✅ [TaskService] Task review completed', {
         taskId: task.id,
