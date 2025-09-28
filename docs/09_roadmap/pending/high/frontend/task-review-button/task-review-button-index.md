@@ -60,7 +60,7 @@ docs/09_roadmap/pending/high/frontend/task-review-button/
 - **Estimated Completion**: TBD
 
 ## 🔗 Related Tasks
-- **Dependencies**: TasksPanelComponent, Modal system, Task management API
+- **Dependencies**: TasksPanelComponent, Modal system, Task management API, task-check-state.md workflow
 - **Dependents**: None
 - **Related**: Task management workflow enhancement
 
@@ -72,7 +72,7 @@ docs/09_roadmap/pending/high/frontend/task-review-button/
 - ✅ TaskReviewService found (already exists)
 - ✅ Modal and CSS patterns identified
 - ✅ API integration points mapped
-- ⚠️ Implementation ready - 5 files need creation, 4 files need modification
+- ⚠️ Implementation ready - 4 files need creation, 4 files need modification (task-check-state.md already exists)
 
 ### 2025-09-28 - Initial Creation
 - Created comprehensive implementation plan

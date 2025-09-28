@@ -422,23 +422,6 @@ grep -r "deve\|può\|sarà\|avere\|essere\|fare" . --exclude-dir=node_modules
 - **Technical Accuracy**: ✅ Verified
 ```
 
-## Integration with Other Prompts
-
-### With task-review.md
-- `task-review.md` handles codebase analysis and validation
-- `task-check-state.md` handles status updates and progress tracking
-- Use `task-review.md` for initial analysis, `task-check-state.md` for ongoing status updates
-
-### With task-create.md
-- `task-create.md` creates the initial implementation plan
-- `task-check-state.md` tracks progress against that plan
-- Update status based on completion of planned items
-
-### With task-execute.md
-- `task-execute.md` executes the implementation
-- `task-check-state.md` tracks execution progress
-- Update status as phases are completed
-
 ### With Language Processing
 - Detect task language automatically
 - Translate to English for optimal AI processing

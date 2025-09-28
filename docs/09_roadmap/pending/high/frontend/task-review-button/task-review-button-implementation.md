@@ -47,7 +47,7 @@ Create new Plan/Implementation task-review-button-implementation.md in docs/09_r
 - [ ] `frontend/src/presentation/components/chat/modal/TaskReviewSelectionModal.jsx` - New modal component for task selection
 - [ ] `frontend/src/css/modal/task-review-selection-modal.css` - CSS styles for review modal
 - [ ] `backend/application/handlers/TaskReviewHandler.js` - Handler for review workflow execution
-- [ ] `content-library/prompts/task-management/task-review-workflow.md` - Review workflow prompt file
+- [ ] `content-library/prompts/task-management/task-check-state.md` - Status checking workflow (already exists)
 
 #### Files to Modify:
 - [ ] `frontend/src/application/services/TaskReviewService.jsx` - **EXISTS** - Add review workflow method
@@ -255,7 +255,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] Select all / individual selection works
 - [ ] Task ordering works (priority, status, date, name)
 - [ ] Task filtering works (category, priority, status)
-- [ ] Review workflow executes task-check-state.md
+- [ ] Review workflow executes task-check-state.md for each selected task
 - [ ] Queue Manager displays progress and status
 - [ ] Real-time status updates work correctly
 - [ ] All tests pass (unit, integration, e2e)

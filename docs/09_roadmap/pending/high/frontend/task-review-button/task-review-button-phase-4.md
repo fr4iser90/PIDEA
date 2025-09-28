@@ -121,6 +121,7 @@ const handleStartReview = async (selectedTasks) => {
 - Backend review endpoint (Phase 3)
 - TaskReviewSelectionModal (Phase 1)
 - TasksPanelComponent integration (Phase 2)
+- task-check-state.md workflow
 - API call infrastructure
 
 ## Testing

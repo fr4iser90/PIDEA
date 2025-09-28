@@ -95,7 +95,7 @@ The Task Review functionality allows users to review and validate multiple tasks
 - Multi-task selection with checkboxes
 - Select all / individual selection
 - Automatic filtering of completed tasks
-- Integration with task-check-state.md and task-index.md workflows
+- Integration with task-check-state.md workflow
 - Progress tracking and error handling
 
 ## Usage
@@ -107,7 +107,7 @@ The Task Review functionality allows users to review and validate multiple tasks
 ## Technical Details
 - Frontend: React modal component with task selection
 - Backend: Multi-task processing with workflow integration
-- Workflows: task-check-state.md + task-index.md for each selected task
+- Workflows: task-check-state.md for each selected task
 ```
 
 ### Files to Create

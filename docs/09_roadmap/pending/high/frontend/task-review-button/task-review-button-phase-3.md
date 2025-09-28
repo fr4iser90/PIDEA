@@ -1,7 +1,7 @@
 # Phase 3: Backend Review Workflow
 
 ## Goal
-Create backend review workflow endpoint and handler that integrates task-check-state.md + task-index.md workflows for multi-task processing.
+Create backend review workflow endpoint and handler that integrates task-check-state.md workflow for multi-task processing.
 
 ## Estimated Time
 2 hours
