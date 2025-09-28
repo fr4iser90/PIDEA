@@ -278,6 +278,7 @@ class TaskController {
 
     /**
      * POST /api/projects/:projectId/tasks/sync-manual - Sync manual tasks using workspace
+     * Now includes TaskStatusSyncStep integration for validation and status sync
      */
     async syncManualTasks(req, res) {
         try {
@@ -290,6 +291,67 @@ class TaskController {
             const result = await this.taskApplicationService.syncManualTasks(projectId, userId);
 
             this.logger.info('✅ [TaskController] Manual tasks sync completed successfully');
+
+            // 🆕 NEW: Integrate TaskStatusSyncStep for status validation and sync
+            try {
+                const TaskStatusSyncStep = require('@domain/steps/categories/task/task_status_sync_step');
+                const syncStep = new TaskStatusSyncStep();
+
+                // Get all tasks for the project to validate their statuses
+                const allTasks = await this.taskApplicationService.taskRepository.findByProjectId(projectId);
+                
+                if (allTasks && allTasks.length > 0) {
+                    // Extract task IDs
+                    const taskIds = allTasks.map(task => task.id);
+                    
+                    // Create context for TaskStatusSyncStep
+                    const context = {
+                        getService: (serviceName) => {
+                            // Get services from application service
+                            const serviceMap = {
+                                'taskRepository': this.taskApplicationService.taskRepository,
+                                'statusTransitionService': this.taskApplicationService.taskService?.statusTransitionService,
+                                'eventBus': this.eventBus
+                            };
+                            return serviceMap[serviceName];
+                        }
+                    };
+
+                    // Validate all task statuses
+                    const validationResult = await syncStep.execute(context, {
+                        operation: 'validate',
+                        taskIds,
+                        targetStatus: 'pending' // Default validation
+                    });
+
+                    this.logger.info('🔍 [TaskController] Task status validation completed', {
+                        projectId,
+                        totalTasks: validationResult.totalTasks,
+                        validTasks: validationResult.validTasks,
+                        invalidTasks: validationResult.invalidTasks
+                    });
+
+                    // Add validation result to sync result
+                    result.statusValidation = validationResult;
+
+                    // If there are invalid statuses, log them
+                    if (validationResult.invalidTasks > 0) {
+                        const invalidTasks = validationResult.results.filter(r => !r.valid);
+                        this.logger.warn('⚠️ [TaskController] Found invalid task statuses:', {
+                            projectId,
+                            invalidTasks: invalidTasks.map(t => ({
+                                taskId: t.taskId,
+                                currentStatus: t.currentStatus,
+                                targetStatus: t.targetStatus,
+                                error: t.error
+                            }))
+                        });
+                    }
+                }
+            } catch (syncError) {
+                // Don't fail the main sync if status validation fails
+                this.logger.warn('⚠️ [TaskController] Task status validation failed (non-critical):', syncError);
+            }
 
             // Emit WebSocket event to notify frontend about task sync
             if (this.eventBus) {

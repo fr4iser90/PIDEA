@@ -129,6 +129,16 @@ const API_CONFIG = {
     },
     settings: '/api/settings',
     health: '/api/health',
+    tasks: {
+      list: (projectId) => `/api/projects/${projectId}/tasks`,
+      details: (projectId, taskId) => `/api/projects/${projectId}/tasks/${taskId}`,
+      syncManual: (projectId) => `/api/projects/${projectId}/tasks/sync-manual`,
+      cleanManual: (projectId) => `/api/projects/${projectId}/tasks/clean-manual`,
+      // 🆕 NEW: Task Status Sync endpoints
+      syncStatus: (projectId) => `/api/projects/${projectId}/tasks/sync-status`,
+      validateStatus: (projectId) => `/api/projects/${projectId}/tasks/validate-status`,
+      rollbackStatus: (projectId) => `/api/projects/${projectId}/tasks/rollback-status`
+    },
     manualTasks: {
       list: '/api/manual-tasks',
       details: (filename) => `/api/manual-tasks/${filename}`
@@ -1062,6 +1072,31 @@ export default class APIChatRepository extends ChatRepository {
     return await apiCall(`/api/projects/${projectId}/tasks/sync-manual`, {
       method: 'POST'
     });
+  }
+
+  // 🆕 NEW: Task Status Sync methods
+  async syncTaskStatuses(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return await apiCall(API_CONFIG.endpoints.tasks.syncStatus(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  async validateTaskStatuses(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return await apiCall(API_CONFIG.endpoints.tasks.validateStatus(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  async rollbackTaskStatuses(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return await apiCall(API_CONFIG.endpoints.tasks.rollbackStatus(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
   }
 
   async cleanManualTasks() {

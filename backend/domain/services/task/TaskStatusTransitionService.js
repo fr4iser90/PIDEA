@@ -134,11 +134,20 @@ class TaskStatusTransitionService {
             // 4. Find and move files from ANY possible source location
             const quarter = this.getCurrentQuarter();
             
-            // Normalize task name for directory path
-            const taskName = this.normalizeTaskName(task.title || 'unknown-task');
+            // ✅ FIXED: Use task.metadata.taskDirectoryName directly (this is the correct directory name)
+            let taskName;
+            if (task.metadata?.taskDirectoryName) {
+                // Use the taskDirectoryName from metadata (this is the actual directory name)
+                taskName = task.metadata.taskDirectoryName;
+            } else {
+                // Fallback to title normalization (should not happen with new imports)
+                taskName = this.normalizeTaskName(task.title || 'unknown-task');
+            }
             
-            const taskCategory = task.category || 'unknown';
-            const projectRoot = process.cwd();
+            // ✅ FIXED: Use the correct category from metadata, not task.category
+            const taskCategory = task.metadata?.category || task.category || 'unknown';
+            // ✅ FIXED: Use correct project root (parent directory of backend)
+            const projectRoot = path.resolve(process.cwd(), '..');
             const newPath = path.join(projectRoot, `docs/09_roadmap/completed/${quarter}/${taskCategory}/${taskName}/`);
             
             // Try to find the task files in different possible locations
@@ -161,9 +170,26 @@ class TaskStatusTransitionService {
             for (const testPath of possibleOldPaths) {
                 try {
                     await fs.access(testPath);
-                    oldPath = testPath;
-                    this.logger.info(`📁 Found task files at: ${testPath}`, { taskId });
-                    break;
+                    
+                    // ✅ FIXED: Check if directory actually contains files (not just .gitkeep)
+                    const files = await fs.readdir(testPath);
+                    const actualFiles = files.filter(file => 
+                        !file.startsWith('.') && 
+                        !file.endsWith('.gitkeep') && 
+                        !file.endsWith('.DS_Store')
+                    );
+                    
+                    if (actualFiles.length > 0) {
+                        oldPath = testPath;
+                        this.logger.info(`📁 Found task files at: ${testPath}`, { 
+                            taskId, 
+                            fileCount: actualFiles.length,
+                            files: actualFiles 
+                        });
+                        break;
+                    } else {
+                        this.logger.debug(`📁 Directory exists but is empty: ${testPath}`, { taskId });
+                    }
                 } catch (error) {
                     // Path doesn't exist, try next one
                     continue;

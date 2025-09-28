@@ -58,6 +58,7 @@ const IDEMirrorController = require('./presentation/api/IDEMirrorController');
 const ContentLibraryController = require('./presentation/api/ContentLibraryController');
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
+const TaskStatusSyncController = require('./presentation/api/TaskStatusSyncController');
 const WorkflowController = require('./presentation/api/WorkflowController');
 const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
@@ -541,6 +542,14 @@ class Application {
         this.eventBus
     );
 
+    // 🆕 NEW: Initialize TaskStatusSyncController
+    const TaskStatusSyncController = require('./presentation/api/TaskStatusSyncController');
+    this.taskStatusSyncController = new TaskStatusSyncController(
+        this.serviceRegistry.getService('taskRepository'),
+        this.serviceRegistry.getService('taskService')?.statusTransitionService,
+        this.eventBus
+    );
+
     const WorkflowController = require('./presentation/api/WorkflowController');
     this.workflowController = new WorkflowController({
         workflowApplicationService: this.serviceRegistry.getService('workflowApplicationService'),
@@ -838,6 +847,11 @@ class Application {
     this.app.post('/api/projects/:projectId/tasks/sync-manual', (req, res) => this.taskController.syncManualTasks(req, res));
     // NEW: Clean manual tasks route
     this.app.post('/api/projects/:projectId/tasks/clean-manual', (req, res) => this.taskController.cleanManualTasks(req, res));
+    
+    // 🆕 NEW: Task Status Sync routes
+    this.app.post('/api/projects/:projectId/tasks/sync-status', (req, res) => this.taskStatusSyncController.syncTaskStatuses(req, res));
+    this.app.post('/api/projects/:projectId/tasks/validate-status', (req, res) => this.taskStatusSyncController.validateTaskStatuses(req, res));
+    this.app.post('/api/projects/:projectId/tasks/rollback-status', (req, res) => this.taskStatusSyncController.rollbackTaskStatuses(req, res));
 
     // Project Analysis routes (protected) - PROJECT-BASED
     const AnalysisRoutes = require('./presentation/api/routes/analysis');

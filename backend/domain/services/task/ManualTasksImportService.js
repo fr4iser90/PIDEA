@@ -149,6 +149,11 @@ class ManualTasksImportService {
                 
                 // Extract filename and task name
                 const filename = parts[parts.length - 1]; // Last part is always the filename
+                
+                // ✅ FIXED: Extract directory name (task folder name) instead of filename
+                // The task directory is ALWAYS the second-to-last part (before the filename)
+                const taskDirectoryName = parts[parts.length - 2]; // This is the actual folder name (e.g., "status-badge-ui-improvements")
+                
                 let name = filename.replace('.md', '').replace('-index', '').replace('-implementation', '').replace('-phase-', '');
                 
                 // ✅ IMPROVED: Better title formatting
@@ -364,6 +369,7 @@ class ManualTasksImportService {
                         phase,
                         filename,
                         sourcePath: filePath, // ✅ FIXED: Rename to sourcePath to avoid confusion
+                        taskDirectoryName: taskDirectoryName, // ✅ NEW: Store the actual directory name
                         importedAt: new Date(),
                         featureId, // Eindeutige ID für das Feature
                         featureGroup: `${category}/${name}`, // Gruppierungs-Key
@@ -539,6 +545,18 @@ class ManualTasksImportService {
                     const reloadedStatusValue = reloadedTask.status.value || reloadedTask.status;
                     logger.info(`🔍 DEBUG: Reloaded task "${title}" from database - status: ${reloadedStatusValue}, progress: ${reloadedTask.metadata?.progress}`);
                     
+                    // 🆕 NEW: Trigger automatic file movement for completed tasks
+                    if (taskStatus === 'completed' && this.taskService?.statusTransitionService) {
+                        try {
+                            logger.info(`🔄 Triggering automatic file movement for completed task: ${title}`);
+                            await this.taskService.statusTransitionService.moveTaskToCompleted(existingTask.id);
+                            logger.info(`✅ Successfully moved files for completed task: ${title}`);
+                        } catch (moveError) {
+                            logger.warn(`⚠️ Failed to move files for completed task ${title}:`, moveError.message);
+                            // Don't fail the import if file movement fails
+                        }
+                    }
+                    
                     // ✅ NEW: Track completion statistics
                     totalProcessedFiles++;
                     if (taskStatus === 'completed') {
@@ -551,6 +569,9 @@ class ManualTasksImportService {
             // ✅ NEW: Log completion summary
             const completionRate = totalProcessedFiles > 0 ? Math.round((completedCount / totalProcessedFiles) * 100) : 0;
             logger.info(`📊 TASK COMPLETION SUMMARY: ${completedCount}/${totalProcessedFiles} tasks completed (${completionRate}%)`);
+            
+            // ✅ CRITICAL FIX: Commit database transaction
+            logger.info(`💾 Committing database transaction for ${importedTasks.length} tasks`);
             
             return {
                 success: true,

@@ -308,9 +308,27 @@ function TasksPanelComponent({ eventBus, activePort }) {
       });
       
       if (response && response.success) {
+        // 🆕 NEW: Check if status validation was performed
+        if (response.data?.statusValidation) {
+          const validation = response.data.statusValidation;
+          logger.info('🔍 Task status validation completed:', {
+            totalTasks: validation.totalTasks,
+            validTasks: validation.validTasks,
+            invalidTasks: validation.invalidTasks
+          });
+
+          // Show validation results in feedback
+          if (validation.invalidTasks > 0) {
+            setFeedback(`Tasks synced successfully (${response.data?.importedCount || 0} imported). ⚠️ Found ${validation.invalidTasks} invalid status transitions.`);
+          } else {
+            setFeedback(`Tasks synced successfully (${response.data?.importedCount || 0} imported). ✅ All task statuses validated.`);
+          }
+        } else {
+          setFeedback(`Tasks synced successfully (${response.data?.importedCount || 0} imported)`);
+        }
+
         // Reload tasks after sync
         await loadProjectTasks(activeIDE.workspacePath);
-        setFeedback(`Tasks synced successfully (${response.data?.importedCount || 0} imported)`);
         setLastLoadTime(Date.now());
         setIsInitialSyncComplete(true);
         setIsWaitingForSync(false);
