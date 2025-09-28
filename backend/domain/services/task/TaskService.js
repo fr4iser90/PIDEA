@@ -79,7 +79,7 @@ const path = require('path');
  * Enhanced with GitWorkflowManager integration
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null, fileSystemService = null, eventBus = null) {
+  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null, fileSystemService = null, eventBus = null, serviceRegistry = null) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
@@ -89,6 +89,7 @@ class TaskService {
     this.queueTaskExecutionService = queueTaskExecutionService;
     this.fileSystemService = fileSystemService;
     this.eventBus = eventBus;
+    this.serviceRegistry = serviceRegistry;
     
     // Initialize TaskFileOrganizationStep for standardized directory structure
     
@@ -103,8 +104,14 @@ class TaskService {
     
     // Execution engine removed - using WorkflowOrchestrationService instead
 
-        // Initialize Categories-based registries
-        this.stepRegistry = new StepRegistry();
+        // Initialize Categories-based registries with service registry for DI access
+        // Use global StepRegistry instance instead of creating new one
+        const { getStepRegistry } = require('@steps');
+        this.stepRegistry = getStepRegistry();
+        // Update the global StepRegistry with serviceRegistry for DI access
+        if (serviceRegistry) {
+          this.stepRegistry.serviceRegistry = serviceRegistry;
+        }
         this.frameworkRegistry = new FrameworkRegistry();
 
     // Initialize TaskStatusTransitionService for automatic status transitions
@@ -1246,6 +1253,219 @@ ${task.description}
    */
   cancelExecution(executionId) {
     return this.executionEngine.cancelExecution(executionId);
+  }
+
+  /**
+   * Review a task - analyze its current implementation status
+   * @param {string} taskId - Task ID to review
+   * @param {string} userId - User ID
+   * @param {Object} options - Review options
+   * @returns {Promise<Object>} Review result
+   */
+  async reviewTask(taskId, userId, options = {}) {
+    logger.info('🔍 [TaskService] reviewTask called with:', { taskId, userId, options });
+    
+    try {
+      // Get task from repository
+      const task = await this.taskRepository.findById(taskId);
+      if (!task) {
+        throw new Error('Task not found');
+      }
+
+      logger.info('🔍 [TaskService] Found task for review:', task);
+
+      // Build task review prompt
+      const reviewPrompt = await this.buildTaskReviewPrompt(task, options);
+      
+      logger.info('🔍 [TaskService] Built review prompt:', {
+        taskId: task.id,
+        promptLength: reviewPrompt.length
+      });
+
+       // Send message to IDE using IDESendMessageStep (with proper waitForResponse support)
+       let stepResult;
+       if (this.cursorIDEService) {
+         logger.info('📤 [TaskService] Sending review message via IDESendMessageStep');
+         
+         // Step 1: Find correct IDE port for this project and switch BrowserManager
+         if (this.cursorIDEService.browserManager) {
+           // Get project path from options
+           const projectPath = options?.projectPath;
+           logger.info('🔍 [TaskService] Looking for IDE port for project:', projectPath);
+           
+           // Find IDE port that matches this project path
+           const availableIDEs = await this.cursorIDEService.ideManager?.getAvailableIDEs();
+           let targetPort = null;
+           
+           if (availableIDEs && projectPath) {
+             // Look for IDE with matching workspace path
+             for (const ide of availableIDEs) {
+               if (ide.workspacePath === projectPath) {
+                 targetPort = ide.port;
+                 logger.info('✅ [TaskService] Found matching IDE port for project:', targetPort);
+                 break;
+               }
+             }
+           }
+           
+           // Fallback to active port if no match found
+           if (!targetPort) {
+             targetPort = this.cursorIDEService.ideManager?.getActivePort();
+             logger.info('🔄 [TaskService] Using active port as fallback:', targetPort);
+           }
+           
+           if (targetPort) {
+             logger.info('🔄 [TaskService] Switching BrowserManager to port:', targetPort);
+             await this.cursorIDEService.browserManager.switchToPort(targetPort);
+           }
+           
+         }
+         
+         // Step 2: Use IDESendMessageStep with waitForResponse via StepRegistry
+         if (!this.stepRegistry) {
+           throw new Error('StepRegistry not available for task review');
+         }
+         
+         const stepData = {
+           message: reviewPrompt,
+           sessionId: `task-review-${taskId}`,
+           requestedBy: userId,
+           userId: userId,
+           projectId: options?.projectId || 'PIDEA',
+           workspacePath: options?.projectPath,
+           waitForResponse: true,
+           timeout: 300000 // 5 minutes for AI analysis
+         };
+         
+         logger.info('📤 [TaskService] Executing IDESendMessageStep via StepRegistry');
+         const stepResult = await this.stepRegistry.executeStep('IDESendMessageStep', stepData);
+         
+         if (!stepResult.success) {
+           throw new Error(`IDESendMessageStep failed: ${stepResult.error}`);
+         }
+         
+         // Step 3: Send completion check prompt
+         if (stepResult.success && stepResult.result?.success) {
+           logger.info('✅ [TaskService] AI review completed, sending completion check');
+           
+           const completionPrompt = "All task files complete or done, ANSWER with Complete percentage please";
+           const completionData = {
+             ...stepData,
+             message: completionPrompt,
+             sessionId: `task-review-completion-${taskId}`,
+             timeout: 60000 // 1 minute for completion check
+           };
+           
+           const completionResult = await this.stepRegistry.executeStep('IDESendMessageStep', completionData);
+           
+           stepResult.completionCheck = completionResult;
+           logger.info('📊 [TaskService] Completion check result:', {
+             success: completionResult.success,
+             result: completionResult.result?.success
+           });
+         }
+         
+       } else {
+         throw new Error('CursorIDEService not available for task review');
+       }
+
+      logger.info('✅ [TaskService] Task review completed', {
+        taskId: task.id,
+        success: stepResult.success
+      });
+
+      return {
+        success: stepResult.success,
+        taskId: task.id,
+        result: stepResult,
+        reviewPrompt: reviewPrompt
+      };
+
+    } catch (error) {
+      logger.error('❌ [TaskService] Task review failed:', {
+        taskId,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Build task review prompt
+   * @param {Object} task - Task object
+   * @param {Object} options - Review options
+   * @returns {Promise<string>} Review prompt
+   */
+  async buildTaskReviewPrompt(task, options = {}) {
+    try {
+      // Read task-check-state.md content
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Use projectPath from options or task.projectPath
+      const projectPath = options.projectPath || task.projectPath;
+      
+      if (!projectPath) {
+        throw new Error('Project path is required for task review');
+      }
+      
+      const taskCheckStatePath = path.join(projectPath, 'content-library', 'prompts', 'task-management', 'task-check-state.md');
+      
+      let taskCheckStateContent = '';
+      try {
+        taskCheckStateContent = fs.readFileSync(taskCheckStatePath, 'utf8');
+        logger.info('🔍 [TaskService] Loaded task-check-state.md content', {
+          contentLength: taskCheckStateContent.length
+        });
+      } catch (error) {
+        logger.error('❌ [TaskService] Failed to read task-check-state.md', {
+          error: error.message,
+          path: taskCheckStatePath
+        });
+        throw new Error(`Failed to read task-check-state.md: ${error.message}`);
+      }
+      
+      // Read task's index.md content for context
+      let taskIndexContent = '';
+      try {
+        const taskIndexPath = path.join(projectPath, 'docs', '09_roadmap', 'pending', 'high', 'frontend', task.id, `${task.id}-index.md`);
+        if (fs.existsSync(taskIndexPath)) {
+          taskIndexContent = fs.readFileSync(taskIndexPath, 'utf8');
+          logger.info('🔍 [TaskService] Loaded task index content', {
+            taskId: task.id,
+            contentLength: taskIndexContent.length
+          });
+        } else {
+          logger.warn('⚠️ [TaskService] Task index file not found', {
+            taskId: task.id,
+            path: taskIndexPath
+          });
+        }
+      } catch (error) {
+        logger.warn('⚠️ [TaskService] Failed to read task index', {
+          taskId: task.id,
+          error: error.message
+        });
+      }
+      
+      // Combine task-check-state.md with task context
+      const fullPrompt = `${taskCheckStateContent}\n\n## Task Context:\n\n**Task ID:** ${task.id}\n**Task Title:** ${task.title}\n**Task Description:** ${task.description || 'No description available'}\n\n## Task Index Content:\n\n${taskIndexContent}\n\n## Instructions:\n\nPlease analyze this task against the current codebase and provide a comprehensive status review.`;
+      
+      logger.info('🔍 [TaskService] Built task review prompt', {
+        taskId: task.id,
+        promptLength: fullPrompt.length,
+        hasTaskContext: !!taskIndexContent
+      });
+      
+      return fullPrompt;
+      
+    } catch (error) {
+      logger.error('❌ [TaskService] Failed to build task review prompt', {
+        taskId: task.id,
+        error: error.message
+      });
+      throw error;
+    }
   }
 
   /**

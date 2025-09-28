@@ -413,7 +413,7 @@ class ServiceRegistry {
         // Task service
         this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService, fileSystemService, eventBus) => {
             const TaskService = require('@domain/services/task/TaskService');
-            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService, fileSystemService, eventBus); // autoFinishSystem and workflowGitService removed
+            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService, fileSystemService, eventBus, this); // Pass serviceRegistry as last parameter
         }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService', 'fileSystemService', 'eventBus'] });
 
 

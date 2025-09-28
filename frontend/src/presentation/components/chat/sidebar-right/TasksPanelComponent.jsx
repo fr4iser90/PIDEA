@@ -5,6 +5,8 @@ import { useActiveIDE, useProjectTasks, useProjectDataActions } from '@/infrastr
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
 import TaskCreationModal from '../modal/TaskCreationModal.jsx';
+import TaskReviewSelectionModal from '../modal/TaskReviewSelectionModal.jsx';
+import TaskReviewService from '@/application/services/TaskReviewService';
 import { getCategoryDisplay, getAllCategories, getCategoryIcon, getCategoryColor, MAIN_CATEGORIES } from '@/utils/taskTypeUtils';
 import TaskTypeBadge from '@/components/TaskTypeBadge.jsx';
 import TaskCompletionBadge from '@/components/TaskCompletionBadge.jsx';
@@ -203,6 +205,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const [refactoringTasks, setRefactoringTasks] = useState([]);
   const [isAutoRefactoring, setIsAutoRefactoring] = useState(false);
   
+  // Review modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isReviewLoading, setIsReviewLoading] = useState(false);
+  
   // Add state to track if initial sync is complete
   const [isInitialSyncComplete, setIsInitialSyncComplete] = useState(false);
   const [isWaitingForSync, setIsWaitingForSync] = useState(true);
@@ -352,6 +358,44 @@ function TasksPanelComponent({ eventBus, activePort }) {
       setFeedback('Error cleaning tasks');
     } finally {
       setIsLoadingManualTasks(false);
+    }
+  };
+
+  const handleStartReview = async (selectedTasks) => {
+    if (!projectId || !activeIDE?.workspacePath) {
+      setFeedback('No project selected for task review');
+      return;
+    }
+    
+    setIsReviewLoading(true);
+    try {
+      // Use TaskReviewService to execute the workflow
+      const taskReviewService = new TaskReviewService();
+      const result = await taskReviewService.executeTaskReviewWorkflow(
+        selectedTasks, 
+        projectId, 
+        activeIDE.workspacePath
+      );
+      
+      setFeedback(result.message);
+      
+      // Refresh tasks to show updated status
+      await loadTasks(true);
+      
+      // Close the modal
+      setIsReviewModalOpen(false);
+      
+      logger.info('Task review workflow completed:', {
+        taskCount: selectedTasks.length,
+        projectId,
+        result: result.data
+      });
+      
+    } catch (error) {
+      logger.error('Error executing review workflow:', error);
+      setFeedback(`Review failed: ${error.message}`);
+    } finally {
+      setIsReviewLoading(false);
     }
   };
 
@@ -602,6 +646,14 @@ function TasksPanelComponent({ eventBus, activePort }) {
             >
               {isLoadingManualTasks ? 'Syncing...' : '🔄 Sync'}
             </button>
+            <button 
+              className="btn-secondary text-sm"
+              onClick={() => setIsReviewModalOpen(true)}
+              disabled={isReviewLoading || !projectId || manualTasks.length === 0}
+              title={projectId ? "Review selected tasks" : "No project selected"}
+            >
+              📋 Review
+            </button>
           </div>
         </div>
       </div>
@@ -813,6 +865,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
         onClose={handleCloseTaskCreationModal}
         onSubmit={handleTaskSubmit}
         eventBus={eventBus}
+      />
+      <TaskReviewSelectionModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        tasks={manualTasks}
+        onStartReview={handleStartReview}
+        isLoading={isReviewLoading}
       />
       {feedback && <div className="feedback-message">{feedback}</div>}
     </div>

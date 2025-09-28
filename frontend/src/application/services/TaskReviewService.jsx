@@ -517,6 +517,75 @@ Please execute the task according to the review analysis and provide real-time p
       throw new Error('Failed to cancel workflow');
     }
   }
+
+  /**
+   * Execute task review workflow for multiple tasks
+   * @param {Array} selectedTasks - Array of selected tasks
+   * @param {String} projectId - Project identifier
+   * @param {String} projectPath - Project workspace path
+   * @returns {Promise<Object>} Review workflow result
+   */
+  async executeTaskReviewWorkflow(selectedTasks, projectId, projectPath) {
+    try {
+      console.log('TaskReviewService: Starting task review workflow:', {
+        taskCount: selectedTasks.length,
+        projectId,
+        projectPath
+      });
+      
+      // Call WorkflowController.executeWorkflow() endpoint
+      const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          projectPath: projectPath,
+          mode: 'task-review',
+          tasks: selectedTasks,
+          options: {
+            workflowPrompt: 'task-check-state.md',
+            autoExecute: true
+          }
+        })
+      });
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Review workflow failed');
+      }
+      
+      console.log('TaskReviewService: Task review workflow completed:', response.data);
+      
+      // Emit event for task review completion
+      if (window.eventBus) {
+        window.eventBus.emit('task-review-completed', {
+          taskCount: selectedTasks.length,
+          projectId,
+          result: response.data
+        });
+      }
+      
+      return {
+        success: true,
+        data: response.data,
+        message: `Review completed for ${response.data.summary?.completedTasks || selectedTasks.length}/${response.data.summary?.totalTasks || selectedTasks.length} tasks`
+      };
+      
+    } catch (error) {
+      console.error('TaskReviewService: Task review workflow failed:', error);
+      
+      // Emit event for task review failure
+      if (window.eventBus) {
+        window.eventBus.emit('task-review-failed', {
+          taskCount: selectedTasks.length,
+          projectId,
+          error: error.message
+        });
+      }
+      
+      throw new Error(`Review workflow failed: ${error.message}`);
+    }
+  }
 }
 
 export default TaskReviewService; 

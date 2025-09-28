@@ -798,6 +798,120 @@ class WorkflowController {
                         error: `Task creation workflow failed: ${error.message}`
                     });
                 }
+            } else if (mode === 'task-review') {
+                // Execute Task Review Workflow for multiple tasks - SAME AS NORMAL TASK EXECUTION
+                try {
+                    const tasks = req.body.tasks || [];
+                    
+                    this.logger.info('WorkflowController: Starting task review workflow', {
+                        taskCount: tasks.length,
+                        projectId,
+                        userId
+                    });
+                    
+                    if (!tasks || tasks.length === 0) {
+                        throw new Error('No tasks provided for review');
+                    }
+                    
+                    const results = [];
+                    
+                    // Process each task sequentially - EXACTLY LIKE NORMAL TASK EXECUTION
+                    for (let i = 0; i < tasks.length; i++) {
+                        const task = tasks[i];
+                        
+                        try {
+                            this.logger.info(`WorkflowController: Processing task ${i + 1}/${tasks.length}`, {
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                projectId,
+                                userId
+                            });
+                            
+                            // Use TaskService.reviewTask - NEW REVIEW METHOD!
+                            if (this.taskService) {
+                                // Execute task review using TaskService.reviewTask
+                                const reviewResult = await this.taskService.reviewTask(task.id, userId, {
+                                    projectPath: workspacePath,
+                                    projectId
+                                });
+                                
+                                results.push({
+                                    taskId: task.id,
+                                    taskTitle: task.title || task.name,
+                                    success: true,
+                                    result: reviewResult,
+                                    index: i + 1
+                                });
+                                
+                                this.logger.info(`WorkflowController: Task ${i + 1} review completed`, {
+                                    taskId: task.id,
+                                    success: reviewResult.success
+                                });
+                                
+                            } else {
+                                throw new Error('TaskService not available');
+                            }
+                            
+                            // Add delay between tasks to prevent overwhelming the IDE
+                            if (i < tasks.length - 1) {
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                            }
+                            
+                        } catch (error) {
+                            this.logger.error(`WorkflowController: Failed to process task ${i + 1}`, {
+                                taskId: task.id,
+                                error: error.message,
+                                projectId,
+                                userId
+                            });
+                            
+                            results.push({
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                success: false,
+                                error: error.message,
+                                index: i + 1
+                            });
+                        }
+                    }
+                    
+                    const successCount = results.filter(r => r.success).length;
+                    const totalCount = results.length;
+                    
+                    this.logger.info('WorkflowController: Task review workflow completed', {
+                        totalTasks: totalCount,
+                        successfulTasks: successCount,
+                        failedTasks: totalCount - successCount,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(200).json({
+                        success: successCount > 0,
+                        message: `Task review completed: ${successCount}/${totalCount} tasks processed successfully`,
+                        data: {
+                            results,
+                            summary: {
+                                totalTasks: totalCount,
+                                completedTasks: successCount,
+                                failedTasks: totalCount - successCount,
+                                workflowPrompt: 'task-check-state.md'
+                            }
+                        }
+                    });
+                    
+                } catch (error) {
+                    this.logger.error('WorkflowController: Task review workflow failed', {
+                        error: error.message,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(500).json({
+                        success: false,
+                        error: `Task review workflow failed: ${error.message}`
+                    });
+                }
             } else {
 
             }
@@ -1720,8 +1834,6 @@ class WorkflowController {
             };
         }
     }
-
-
 
     /**
      * Health check endpoint
