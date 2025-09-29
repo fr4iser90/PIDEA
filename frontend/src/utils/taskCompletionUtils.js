@@ -11,29 +11,13 @@
 export const isTaskCompleted = (task) => {
   if (!task) return false;
   
-  // ✅ FIXED: Use the same progress detection logic as getTaskProgress
-  let progress = 0;
-  
-  // First check main progress field
-  if (task.progress !== undefined && task.progress !== null) {
-    progress = task.progress;
-  }
-  // Then check metadata.progress
-  else if (task.metadata?.progress !== undefined && task.metadata.progress !== null) {
-    progress = task.metadata.progress;
-  }
-  // Finally check overallProgress in metadata
-  else if (task.metadata?.overallProgress !== undefined && task.metadata.overallProgress !== null) {
-    progress = task.metadata.overallProgress;
-  }
-  
-  // ✅ FIXED: Handle both string status and value object status
+  // ✅ FIXED: Only check status, not progress (backend handles intelligent detection)
   const status = typeof task.status === 'object' && task.status?.value 
     ? task.status.value 
     : task.status;
   
-  // Task is completed if status is 'completed' or progress is 100%
-  return status === 'completed' || progress >= 100;
+  // Task is completed ONLY if status is 'completed'
+  return status === 'completed';
 };
 
 /**

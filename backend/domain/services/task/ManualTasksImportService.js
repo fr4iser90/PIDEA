@@ -495,8 +495,39 @@ class ManualTasksImportService {
                 } else {
                     // ✅ FIXED: Update existing task with current status and progress
                     const existingTask = existing[0] || similarTask;
-                    const taskStatus = progressInfo.status || 'pending';
-                    const taskProgress = progressInfo.overallProgress || 0;
+                    let taskStatus = progressInfo.status || 'pending';
+                    let taskProgress = progressInfo.overallProgress || 0;
+                    
+                    // 🧠 CRITICAL FIX: Parse phases for existing tasks too!
+                    if (!progressInfo.phases || progressInfo.phases.length === 0) {
+                        logger.info(`🧠 Re-parsing phases for existing task "${title}"`);
+                        const content = await this.fileSystemService.readFile(filePath);
+                        const reParsedInfo = this._parseIndexFileContent(content, filePath);
+                        if (reParsedInfo.phases && reParsedInfo.phases.length > 0) {
+                            progressInfo.phases = reParsedInfo.phases;
+                            logger.info(`🧠 Re-parsed ${progressInfo.phases.length} phases for existing task "${title}"`);
+                        }
+                    }
+                    
+                    // 🧠 CRITICAL FIX: Apply intelligent status detection for existing tasks too
+                    if (progressInfo.phases && progressInfo.phases.length > 0) {
+                        const intelligentStatus = this.determineIntelligentStatus(progressInfo.phases, taskProgress);
+                        if (intelligentStatus) {
+                            logger.info(`🧠 Intelligent status detection for existing task "${title}": ${taskStatus} -> ${intelligentStatus}`);
+                            taskStatus = intelligentStatus;
+                            // Update progress to match intelligent status
+                            if (intelligentStatus === 'completed') {
+                                taskProgress = 100;
+                            }
+                        }
+                    }
+                    
+                    // ✅ CRITICAL FIX: Always apply intelligent detection consistently
+                    if (progressInfo.implementationVerified) {
+                        logger.info(`✅ Implementation verified for existing task "${title}": ${taskStatus} -> completed`);
+                        taskStatus = 'completed';
+                        taskProgress = 100;
+                    }
                     
                     // ✅ CRITICAL FIX: Always log the found task details FIRST
                     const currentStatusValue = existingTask.status.value || existingTask.status;
