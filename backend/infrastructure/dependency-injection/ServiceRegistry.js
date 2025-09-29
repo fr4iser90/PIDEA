@@ -418,10 +418,10 @@ class ServiceRegistry {
 
 
         // Manual Tasks Import Service
-        this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
+        this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository, fileSystemService) => {
             const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
-            return new ManualTasksImportService(browserManager, taskService, taskRepository);
-        }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
+            return new ManualTasksImportService(browserManager, taskService, taskRepository, fileSystemService);
+        }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository', 'fileSystemService'] });
 
         // Workflow services
         this.container.register('workflowOrchestrationService', (cursorIDEService, taskRepository, logger, eventBus) => {
@@ -1597,10 +1597,10 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'] });
                 break;
             case 'manualTasksImportService':
-                this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository) => {
+                this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository, fileSystemService) => {
                     const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
-                    return new ManualTasksImportService(browserManager, taskService, taskRepository);
-                }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository'] });
+                    return new ManualTasksImportService(browserManager, taskService, taskRepository, fileSystemService);
+                }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository', 'fileSystemService'] });
                 break;
             case 'workflowLoaderService':
                 this.container.register('workflowLoaderService', () => {

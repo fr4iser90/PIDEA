@@ -8,10 +8,11 @@ const Logger = require('@logging/Logger');
 const logger = new Logger('ImportService');
 
 class ManualTasksImportService {
-    constructor(browserManager, taskService, taskRepository) {
+    constructor(browserManager, taskService, taskRepository, fileSystemService) {
         this.browserManager = browserManager;
         this.taskService = taskService;
         this.taskRepository = taskRepository;
+        this.fileSystemService = fileSystemService;
     }
 
     /**
@@ -271,56 +272,24 @@ class ManualTasksImportService {
                 logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}, Similar: ${similarTask ? 1 : 0}`);
                 
                 if (existing.length === 0 && !similarTask) {
-                    // ✅ FIXED: Extract status and progress from progressInfo for direct task creation
-                    // Auto-detect status from content first, then fallback to file path
-                    let taskStatus = progressInfo.status;
-                    if (!taskStatus && content) {
-                        // Look for status in content
-                        const statusMatch = content.match(/status[:\s]+(pending|in_progress|completed|blocked|cancelled)/i);
-                        if (statusMatch) {
-                            taskStatus = statusMatch[1].toLowerCase();
-                        }
-                        // Look for status indicators in content
-                        else if (content.includes('**Status**: In Progress') || content.includes('Status: In Progress') || content.includes('🔄 In Progress')) {
-                            taskStatus = 'in_progress';
-                        } else if (content.includes('**Status**: Completed') || content.includes('Status: Completed') || content.includes('✅ Completed')) {
-                            taskStatus = 'completed';
-                        } else if (content.includes('**Status**: Pending') || content.includes('Status: Pending') || content.includes('⏳ Pending')) {
-                            taskStatus = 'pending';
-                        } else if (content.includes('**Status**: Blocked') || content.includes('Status: Blocked') || content.includes('🚫 Blocked')) {
-                            taskStatus = 'blocked';
-                        } else if (content.includes('**Status**: Cancelled') || content.includes('Status: Cancelled') || content.includes('❌ Cancelled')) {
-                            taskStatus = 'cancelled';
-                        }
-                    }
-                    if (!taskStatus) {
-                        // ✅ FIXED: Auto-detect from file path structure
-                        if (status === 'completed') {
-                            taskStatus = 'completed';
-                        } else if (status === 'in_progress') {
-                            taskStatus = 'in_progress';
-                        } else if (status === 'failed') {
-                            taskStatus = 'failed';
-                        } else {
-                            taskStatus = 'pending';
-                        }
+                    // ✅ CRITICAL FIX: Verzeichnispfad ist IMMER die Quelle der Wahrheit für Status
+                    // Status wird NUR aus dem Verzeichnispfad bestimmt, NICHT aus dem Dateiinhalt
+                    let taskStatus;
+                    if (status === 'completed') {
+                        taskStatus = 'completed';
+                    } else if (status === 'in_progress') {
+                        taskStatus = 'in_progress';
+                    } else if (status === 'pending') {
+                        taskStatus = 'pending';
+                    } else {
+                        // Fallback für unbekannte Status
+                        taskStatus = 'pending';
                     }
                     
-                    // ✅ FIXED: Override status with content-based detection if found
-                    if (content) {
-                        // Look for status indicators in content (more comprehensive)
-                        if (content.includes('🔄 In Progress') || content.includes('**Status**: In Progress') || content.includes('Status: In Progress')) {
-                            taskStatus = 'in_progress';
-                        } else if (content.includes('✅ Completed') || content.includes('**Status**: Completed') || content.includes('Status: Completed')) {
-                            taskStatus = 'completed';
-                        } else if (content.includes('⏳ Pending') || content.includes('**Status**: Pending') || content.includes('Status: Pending')) {
-                            taskStatus = 'pending';
-                        } else if (content.includes('🚫 Blocked') || content.includes('**Status**: Blocked') || content.includes('Status: Blocked')) {
-                            taskStatus = 'blocked';
-                        } else if (content.includes('❌ Cancelled') || content.includes('**Status**: Cancelled') || content.includes('Status: Cancelled')) {
-                            taskStatus = 'cancelled';
-                        }
-                    }
+                    logger.info(`📁 Status determined from directory path: ${status} → ${taskStatus} for task: ${title}`);
+                    
+                    // ✅ CRITICAL FIX: Status wird NUR aus dem Verzeichnispfad bestimmt
+                    // Dateiinhalt wird NICHT für Status verwendet - nur für Details wie Progress und Phasen
                     
                     // ✅ FIXED: Better priority detection from content
                     let taskPriority = priority;
@@ -493,9 +462,24 @@ class ManualTasksImportService {
                     logger.info(`✅ Created task: "${title}" (${type}) for project "${projectId}" with status: ${taskStatus}, progress: ${taskProgress}%`);
                     importedTasks.push(task);
                 } else {
-                    // ✅ FIXED: Update existing task with current status and progress
+                    // ✅ CRITICAL FIX: Update existing task with current status and progress
                     const existingTask = existing[0] || similarTask;
-                    let taskStatus = progressInfo.status || 'pending';
+                    
+                    // ✅ CRITICAL FIX: Status wird NUR aus dem Verzeichnispfad bestimmt (wie bei neuen Tasks)
+                    let taskStatus;
+                    if (status === 'completed') {
+                        taskStatus = 'completed';
+                    } else if (status === 'in_progress') {
+                        taskStatus = 'in_progress';
+                    } else if (status === 'pending') {
+                        taskStatus = 'pending';
+                    } else {
+                        // Fallback für unbekannte Status
+                        taskStatus = 'pending';
+                    }
+                    
+                    logger.info(`📁 Status determined from directory path: ${status} → ${taskStatus} for existing task: ${title}`);
+                    
                     let taskProgress = progressInfo.overallProgress || 0;
                     
                     // 🧠 CRITICAL FIX: Parse phases for existing tasks too!
@@ -509,23 +493,26 @@ class ManualTasksImportService {
                         }
                     }
                     
-                    // 🧠 CRITICAL FIX: Apply intelligent status detection for existing tasks too
+                    // ✅ CRITICAL FIX: Status wird NUR aus dem Verzeichnispfad bestimmt
+                    // Intelligente Status-Erkennung wird NICHT verwendet - Verzeichnispfad ist die Quelle der Wahrheit
+                    
+                    // Progress kann aus Phasen/Content kommen, aber Status bleibt aus Verzeichnispfad
                     if (progressInfo.phases && progressInfo.phases.length > 0) {
-                        const intelligentStatus = this.determineIntelligentStatus(progressInfo.phases, taskProgress);
-                        if (intelligentStatus) {
-                            logger.info(`🧠 Intelligent status detection for existing task "${title}": ${taskStatus} -> ${intelligentStatus}`);
-                            taskStatus = intelligentStatus;
-                            // Update progress to match intelligent status
-                            if (intelligentStatus === 'completed') {
-                                taskProgress = 100;
-                            }
+                        const completedPhases = progressInfo.phases.filter(phase => 
+                            phase.status === 'completed' || phase.status === 'done' || phase.status === 'finished'
+                        ).length;
+                        const totalPhases = progressInfo.phases.length;
+                        const calculatedProgress = Math.round((completedPhases / totalPhases) * 100);
+                        
+                        if (calculatedProgress > taskProgress) {
+                            taskProgress = calculatedProgress;
+                            logger.info(`🧠 Progress calculated from phases: ${taskProgress}% (${completedPhases}/${totalPhases} phases completed) for existing task "${title}"`);
                         }
                     }
                     
-                    // ✅ CRITICAL FIX: Always apply intelligent detection consistently
+                    // Implementation verification kann Progress auf 100 setzen, aber Status bleibt unverändert
                     if (progressInfo.implementationVerified) {
-                        logger.info(`✅ Implementation verified for existing task "${title}": ${taskStatus} -> completed`);
-                        taskStatus = 'completed';
+                        logger.info(`✅ Implementation verified for existing task "${title}": Progress set to 100%`);
                         taskProgress = 100;
                     }
                     
