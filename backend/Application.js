@@ -55,6 +55,7 @@ const WebChatController = require('./presentation/api/WebChatController');
 const IDEController = require('./presentation/api/IDEController');
 const IDEFeatureController = require('./presentation/api/ide/IDEFeatureController');
 const IDEMirrorController = require('./presentation/api/IDEMirrorController');
+const IDEConfigurationController = require('./presentation/api/ide/IDEConfigurationController');
 const ContentLibraryController = require('./presentation/api/ContentLibraryController');
 const AuthController = require('./presentation/api/AuthController');
 const TaskController = require('./presentation/api/TaskController');
@@ -530,6 +531,9 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
+    // Initialize IDE Configuration Controller
+    this.ideConfigurationController = new IDEConfigurationController();
+
     const ContentLibraryController = require('./presentation/api/ContentLibraryController');
     this.ContentLibraryController = new ContentLibraryController({
         contentLibraryApplicationService: this.serviceRegistry.getService('contentLibraryApplicationService'),
@@ -761,6 +765,12 @@ class Application {
     this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
     this.app.post('/api/ide/detect-workspace-paths', (req, res) => this.ideController.detectWorkspacePaths(req, res));
     this.app.post('/api/ide/new-chat/:port', (req, res) => this.ideController.clickNewChat(req, res));
+
+    // IDE Configuration routes
+    this.app.get('/api/ide/configurations/download-links', (req, res) => this.ideConfigurationController.getDownloadLinks(req, res));
+    this.app.get('/api/ide/configurations/executable-paths', (req, res) => this.ideConfigurationController.getExecutablePaths(req, res));
+    this.app.post('/api/ide/configurations/executable-paths', (req, res) => this.ideConfigurationController.saveExecutablePaths(req, res));
+    this.app.post('/api/ide/configurations/validate-path', (req, res) => this.ideConfigurationController.validatePath(req, res));
 
     // VSCode-specific routes (protected)
     this.app.post('/api/ide/start-vscode', (req, res) => this.ideController.startVSCode(req, res));
@@ -1013,6 +1023,16 @@ class Application {
           this.webSocketManager.broadcastToAll('activeIDEChanged', data);
         } else {
           this.logger.warn('No WebSocket manager available for broadcasting activeIDEChanged');
+        }
+      });
+
+      this.eventBus.subscribe('ideListUpdated', (data) => {
+        this.logger.info('IDE list updated event:', '[REDACTED_IDE_DATA]');
+        if (this.webSocketManager) {
+          this.logger.info('Broadcasting ideListUpdated to all clients');
+          this.webSocketManager.broadcastToAll('ideListUpdated', data);
+        } else {
+          this.logger.warn('No WebSocket manager available for broadcasting ideListUpdated');
         }
       });
 

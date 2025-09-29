@@ -7,13 +7,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
+import IDERequirementService from '@/infrastructure/services/IDERequirementService.jsx';
 import '@/css/components/ide/ide-start-modal.css';
 
 const IDEStartModal = ({ 
   isOpen, 
   onClose, 
   onSuccess,
-  className = '' 
+  className = '',
+  showRequirementMessage = false
 }) => {
   const { refresh } = useIDEStore();
   const [formData, setFormData] = useState({
@@ -26,6 +28,10 @@ const IDEStartModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [availablePorts, setAvailablePorts] = useState([]);
+  const [downloadLinks, setDownloadLinks] = useState({});
+  const [executablePaths, setExecutablePaths] = useState({});
+  const [isValidatingPath, setIsValidatingPath] = useState(false);
+  const [pathValidation, setPathValidation] = useState(null);
 
   // IDE type options
   const ideTypes = [
@@ -47,6 +53,23 @@ const IDEStartModal = ({
       loadAvailablePorts();
     }
   }, [isOpen, formData.ideType]);
+
+  // Load download links and executable paths when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadDownloadLinks();
+      loadExecutablePaths();
+    }
+  }, [isOpen]);
+
+  // Validate executable path when it changes
+  useEffect(() => {
+    if (formData.executablePath && formData.executablePath.trim()) {
+      validateExecutablePath(formData.executablePath);
+    } else {
+      setPathValidation(null);
+    }
+  }, [formData.executablePath]);
 
 
   // Load available ports
@@ -71,6 +94,64 @@ const IDEStartModal = ({
     }
   }, [formData.ideType]);
 
+  // Load download links
+  const loadDownloadLinks = useCallback(async () => {
+    try {
+      const links = await IDERequirementService.getDownloadLinks();
+      setDownloadLinks(links);
+    } catch (error) {
+      logger.error('Error loading download links:', error);
+    }
+  }, []);
+
+  // Load executable paths
+  const loadExecutablePaths = useCallback(async () => {
+    try {
+      const paths = await IDERequirementService.getExecutablePaths();
+      setExecutablePaths(paths);
+    } catch (error) {
+      logger.error('Error loading executable paths:', error);
+    }
+  }, []);
+
+  // Validate executable path
+  const validateExecutablePath = useCallback(async (path) => {
+    if (!path || !path.trim()) {
+      setPathValidation(null);
+      return;
+    }
+
+    setIsValidatingPath(true);
+    try {
+      const validation = await IDERequirementService.validateExecutablePath(path);
+      setPathValidation(validation);
+    } catch (error) {
+      logger.error('Error validating executable path:', error);
+      setPathValidation({ valid: false, error: 'Failed to validate path' });
+    } finally {
+      setIsValidatingPath(false);
+    }
+  }, []);
+
+  // Handle download link click
+  const handleDownloadClick = useCallback((ideType) => {
+    const links = downloadLinks[ideType];
+    if (links) {
+      // Detect platform and open appropriate download link
+      const platform = navigator.platform.toLowerCase();
+      let downloadUrl = links.linux; // default
+      
+      if (platform.includes('win')) {
+        downloadUrl = links.windows;
+      } else if (platform.includes('mac')) {
+        downloadUrl = links.macos;
+      }
+      
+      if (downloadUrl) {
+        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+      }
+    }
+  }, [downloadLinks]);
 
   // Handle form input changes
   const handleInputChange = useCallback((field, value) => {
@@ -84,6 +165,27 @@ const IDEStartModal = ({
       setError(null);
     }
   }, [error]);
+
+  // Handle script execution
+  const handleRunScript = useCallback((ideType) => {
+    const platform = navigator.platform.toLowerCase();
+    let scriptCommand = '';
+    
+    if (platform.includes('win')) {
+      // Windows - use PowerShell script
+      scriptCommand = `powershell -File start_ide_example.ps1 ${ideType}`;
+    } else {
+      // Linux/Mac - use bash script
+      scriptCommand = `./start_ide_example.sh ${ideType}`;
+    }
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(scriptCommand).then(() => {
+      logger.info('Script command copied to clipboard:', scriptCommand);
+    }).catch((error) => {
+      logger.error('Failed to copy to clipboard:', error);
+    });
+  }, []);
 
   // Handle IDE type change
   const handleIDETypeChange = useCallback((ideType) => {
@@ -122,9 +224,23 @@ const IDEStartModal = ({
         return false;
       }
     }
+
+    // Validate executable path if provided
+    if (formData.executablePath && formData.executablePath.trim()) {
+      if (pathValidation && !pathValidation.valid) {
+        setError(`Invalid executable path: ${pathValidation.error}`);
+        return false;
+      }
+      
+      // If still validating, wait
+      if (isValidatingPath) {
+        setError('Please wait while validating executable path...');
+        return false;
+      }
+    }
     
     return true;
-  }, [formData]);
+  }, [formData, pathValidation, isValidatingPath]);
 
   // Handle form submission
   const handleSubmit = useCallback(async (e) => {
@@ -213,7 +329,9 @@ const IDEStartModal = ({
     <div className={`ide-start-modal-overlay ${className}`}>
       <div className="ide-start-modal">
         <div className="modal-header">
-          <h2 className="modal-title">Start New IDE</h2>
+          <h2 className="modal-title">
+            {showRequirementMessage ? 'IDE Required' : 'Start New IDE'}
+          </h2>
           <button 
             className="modal-close-btn"
             onClick={handleClose}
@@ -222,6 +340,16 @@ const IDEStartModal = ({
             ✕
           </button>
         </div>
+        
+        {showRequirementMessage && (
+          <div className="requirement-message">
+            <div className="requirement-icon">⚠️</div>
+            <div className="requirement-text">
+              <h3>No IDE Running</h3>
+              <p>You need to start an IDE before you can use PIDEA. Please configure and start an IDE below.</p>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-section">
@@ -244,6 +372,26 @@ const IDEStartModal = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+            
+            {/* Download Links Section */}
+            <div className="form-group download-section">
+              <label className="form-label">Don't have this IDE?</label>
+              <div className="download-links">
+                <button
+                  type="button"
+                  className="download-btn"
+                  onClick={() => handleDownloadClick(formData.ideType)}
+                  disabled={!downloadLinks[formData.ideType]}
+                >
+                  <span className="download-icon">⬇️</span>
+                  <span className="download-text">Download {ideTypes.find(ide => ide.value === formData.ideType)?.label}</span>
+                  <span className="download-external">↗</span>
+                </button>
+                <p className="download-note">
+                  Opens official download page in a new tab
+                </p>
               </div>
             </div>
             
@@ -310,13 +458,45 @@ const IDEStartModal = ({
             {/* Executable Path */}
             <div className="form-group">
               <label className="form-label">Executable Path (optional)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Path to IDE executable"
-                value={formData.executablePath}
-                onChange={(e) => handleInputChange('executablePath', e.target.value)}
-              />
+              <div className="executable-path-section">
+                <div className="path-input-group">
+                  <input
+                    type="text"
+                    className={`form-input ${pathValidation ? (pathValidation.valid ? 'valid' : 'invalid') : ''}`}
+                    placeholder="Path to IDE executable (only if not using startup scripts)"
+                    value={formData.executablePath}
+                    onChange={(e) => handleInputChange('executablePath', e.target.value)}
+                  />
+                </div>
+                
+                {/* Path validation feedback */}
+                {isValidatingPath && (
+                  <div className="path-validation validating">
+                    <span className="validation-icon">⏳</span>
+                    <span className="validation-text">Validating executable path...</span>
+                  </div>
+                )}
+                
+                {pathValidation && !isValidatingPath && (
+                  <div className={`path-validation ${pathValidation.valid ? 'valid' : 'invalid'}`}>
+                    <span className="validation-icon">
+                      {pathValidation.valid ? '✅' : '❌'}
+                    </span>
+                    <span className="validation-text">
+                      {pathValidation.valid 
+                        ? `Valid executable${pathValidation.version ? ` (version ${pathValidation.version})` : ''}`
+                        : pathValidation.error
+                      }
+                    </span>
+                  </div>
+                )}
+                
+                {!formData.executablePath && (
+                  <p className="path-help">
+                    Leave empty to use startup scripts, or specify a custom path to your IDE executable
+                  </p>
+                )}
+              </div>
             </div>
             
             {/* Additional Flags */}

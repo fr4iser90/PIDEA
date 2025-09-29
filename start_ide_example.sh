@@ -2,11 +2,41 @@
 
 cd "$HOME/Documents" || exit 1
 
-# IDE Konfigurationen
-declare -A IDES=(
-  ["cursor"]="./Cursor-1.5.7-x86_64.AppImage"
-  ["vscode"]="code"
-)
+# IDE Konfigurationen - werden vom Backend geladen
+declare -A IDES
+
+# Pfade vom Backend laden
+load_ide_paths() {
+  echo "📡 Lade IDE-Pfade vom Backend..."
+  
+  # Backend API aufrufen
+  local response=$(curl -s http://localhost:3000/api/ide/configurations/executable-paths 2>/dev/null)
+  
+  if [[ $? -eq 0 && -n "$response" ]]; then
+    # JSON parsen und in IDES Array laden
+    local cursor_path=$(echo "$response" | jq -r '.data.cursor // empty' 2>/dev/null)
+    local vscode_path=$(echo "$response" | jq -r '.data.vscode // empty' 2>/dev/null)
+    
+    if [[ -n "$cursor_path" ]]; then
+      IDES["cursor"]="$cursor_path"
+    else
+      IDES["cursor"]="./Cursor-1.5.7-x86_64.AppImage"  # Fallback
+    fi
+    
+    if [[ -n "$vscode_path" ]]; then
+      IDES["vscode"]="$vscode_path"
+    else
+      IDES["vscode"]="code"  # Fallback
+    fi
+    
+    echo "✅ IDE-Pfade geladen"
+  else
+    echo "⚠️  Backend nicht erreichbar, verwende Fallback-Pfade"
+    # Fallback zu hardcoded Pfaden
+    IDES["cursor"]="./Cursor-1.5.7-x86_64.AppImage"
+    IDES["vscode"]="code"
+  fi
+}
 
 # Port Ranges für verschiedene IDEs
 declare -A PORT_RANGES=(
@@ -221,6 +251,9 @@ start_ide() {
 }
 
 # Hauptlogik
+# IDE-Pfade vom Backend laden
+load_ide_paths
+
 if [[ "$1" == "menu" ]]; then
   show_menu
 elif [[ "$1" == "help" || "$1" == "-h" || "$1" == "--help" ]]; then

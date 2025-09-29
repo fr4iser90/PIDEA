@@ -289,6 +289,17 @@ class IDEManager {
       this.activePort = availablePort;
     }
     
+    // Emit event for IDE list update
+    if (this.eventBus) {
+      this.eventBus.emit('ideListUpdated', {
+        port: availablePort,
+        ideType: ideType,
+        workspacePath: workspacePath,
+        status: 'running',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
           logger.info('New', ideType, 'IDE started on port', availablePort);
     return ideInfo;
   }

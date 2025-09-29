@@ -132,11 +132,12 @@ class SessionMonitorService {
    */
   getTimeUntilExpiry() {
     const authStore = useAuthStore.getState();
-    if (!authStore.user || !authStore.user.sessionExpiry) {
+    // ✅ FIX: Use correct path for sessionExpiry
+    if (!authStore.sessionExpiry) {
       return 0;
     }
     
-    const expiryTime = new Date(authStore.user.sessionExpiry).getTime();
+    const expiryTime = new Date(authStore.sessionExpiry).getTime();
     const currentTime = Date.now();
     
     return expiryTime - currentTime;

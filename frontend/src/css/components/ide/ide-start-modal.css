@@ -354,6 +354,15 @@
     align-items: stretch;
   }
   
+  .path-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .download-btn {
+    justify-content: center;
+  }
+  
   .form-actions {
     flex-direction: column;
   }
@@ -395,6 +404,188 @@
   }
 }
 
+/* Requirement Message */
+.requirement-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(var(--accent-yellow-rgb), 0.1);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.requirement-icon {
+  font-size: 1.5em;
+  flex-shrink: 0;
+}
+
+.requirement-text h3 {
+  margin: 0 0 4px 0;
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.requirement-text p {
+  margin: 0;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Download Section */
+.download-section {
+  margin-top: 16px;
+}
+
+.download-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: var(--hover-bg);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.download-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.download-icon {
+  font-size: 1.1em;
+}
+
+.download-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.download-external {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.download-note {
+  margin: 0;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Executable Path Section */
+.executable-path-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.path-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.path-input-group .form-input {
+  flex: 1;
+}
+
+.default-path-btn {
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1em;
+  min-width: 40px;
+}
+
+.default-path-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--primary-color);
+}
+
+/* Path Validation */
+.path-validation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.path-validation.valid {
+  background: rgba(var(--accent-green-rgb), 0.1);
+  border: 1px solid var(--accent-green);
+  color: var(--accent-green);
+}
+
+.path-validation.invalid {
+  background: rgba(var(--accent-red-rgb), 0.1);
+  border: 1px solid var(--accent-red);
+  color: var(--accent-red);
+}
+
+.path-validation.validating {
+  background: rgba(var(--accent-blue-rgb), 0.1);
+  border: 1px solid var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.validation-icon {
+  font-size: 1em;
+}
+
+.validation-text {
+  flex: 1;
+}
+
+.path-help {
+  margin: 0;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Form Input Validation States */
+.form-input.valid {
+  border-color: var(--accent-green);
+}
+
+.form-input.invalid {
+  border-color: var(--accent-red);
+}
+
+.form-input.valid:focus {
+  box-shadow: 0 0 0 2px rgba(var(--accent-green-rgb), 0.2);
+}
+
+.form-input.invalid:focus {
+  box-shadow: 0 0 0 2px rgba(var(--accent-red-rgb), 0.2);
+}
+
 /* High contrast mode */
 @media (prefers-contrast: high) {
   .ide-start-modal {
@@ -408,6 +599,19 @@
   
   .form-input,
   .form-select {
+    border-width: 2px;
+  }
+  
+  .download-btn,
+  .default-path-btn {
+    border-width: 2px;
+  }
+  
+  .path-validation {
+    border-width: 2px;
+  }
+  
+  .requirement-message {
     border-width: 2px;
   }
 }

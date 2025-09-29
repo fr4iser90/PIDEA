@@ -2,6 +2,8 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
+import IDERequirementService from '@/infrastructure/services/IDERequirementService.jsx';
+import IDEStartModal from '@/presentation/components/ide/IDEStartModal.jsx';
 import LoginComponent from './LoginComponent.jsx';
 import RegisterComponent from './RegisterComponent.jsx';
 
@@ -16,8 +18,52 @@ const AuthWrapper = ({ children }) => {
   const [authMode, setAuthMode] = useState('login');
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState(null);
+  const [showIDERequirementModal, setShowIDERequirementModal] = useState(false);
+  const [isCheckingIDERequirement, setIsCheckingIDERequirement] = useState(false);
 
   // No validation on mount - just use the AuthStore state directly
+
+  // Check IDE requirement when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && !isCheckingIDERequirement) {
+      checkIDERequirement();
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Check if IDE requirement modal should be shown
+  const checkIDERequirement = async () => {
+    setIsCheckingIDERequirement(true);
+    try {
+      logger.info('Starting IDE requirement check...');
+      const shouldShow = await IDERequirementService.shouldShowRequirementModal();
+      if (shouldShow) {
+        logger.info('IDE requirement modal should be shown');
+        setShowIDERequirementModal(true);
+      } else {
+        logger.info('IDE requirement modal not needed');
+      }
+    } catch (error) {
+      logger.error('Error checking IDE requirement:', error);
+    } finally {
+      setIsCheckingIDERequirement(false);
+    }
+  };
+
+  // Handle IDE requirement modal close
+  const handleIDERequirementClose = () => {
+    setShowIDERequirementModal(false);
+    // Re-check after modal is closed
+    setTimeout(() => {
+      checkIDERequirement();
+    }, 1000);
+  };
+
+  // Handle successful IDE start
+  const handleIDEStartSuccess = (ideData) => {
+    logger.info('IDE started successfully:', ideData);
+    setShowIDERequirementModal(false);
+    showInfo('IDE started successfully!', 'Success');
+  };
 
   // Handle redirect to login - removed since we don't force redirects anymore
   // useEffect(() => {
@@ -38,17 +84,6 @@ const AuthWrapper = ({ children }) => {
     setValidationError(null);
   };
 
-  // Show loading only if AuthStore is loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Show auth forms if not authenticated
   if (!isAuthenticated) {
@@ -76,7 +111,19 @@ const AuthWrapper = ({ children }) => {
   }
 
   // Show main app if authenticated
-  return children;
+  return (
+    <>
+      {children}
+      
+      {/* IDE Requirement Modal */}
+      <IDEStartModal
+        isOpen={showIDERequirementModal}
+        onClose={handleIDERequirementClose}
+        onSuccess={handleIDEStartSuccess}
+        showRequirementMessage={true}
+      />
+    </>
+  );
 };
 
 export default AuthWrapper; 

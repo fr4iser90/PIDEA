@@ -50,6 +50,12 @@ const API_CONFIG = {
       },
       newChat: (port) => `/api/ide/new-chat/${port}`
     },
+    ideRequirements: {
+      getDownloadLinks: '/api/ide/configurations/download-links',
+      getExecutablePaths: '/api/ide/configurations/executable-paths',
+      saveExecutablePaths: '/api/ide/configurations/executable-paths',
+      validatePath: '/api/ide/configurations/validate-path'
+    },
     projects: {
       list: '/api/projects',
       byId: (id) => `/api/projects/${id}`,
@@ -97,7 +103,13 @@ const API_CONFIG = {
       },
       autoRefactor: {
         execute: (projectId) => `/api/projects/${projectId}/workflow/execute`
-      }
+      },
+      // 🆕 NEW: Task Status Sync endpoints
+      syncManual: (projectId) => `/api/projects/${projectId}/tasks/sync-manual`,
+      cleanManual: (projectId) => `/api/projects/${projectId}/tasks/clean-manual`,
+      syncStatus: (projectId) => `/api/projects/${projectId}/tasks/sync-status`,
+      validateStatus: (projectId) => `/api/projects/${projectId}/tasks/validate-status`,
+      rollbackStatus: (projectId) => `/api/projects/${projectId}/tasks/rollback-status`
     },
     analysis: {
       history: (projectId) => `/api/projects/${projectId}/analysis/history`,
@@ -129,16 +141,6 @@ const API_CONFIG = {
     },
     settings: '/api/settings',
     health: '/api/health',
-    tasks: {
-      list: (projectId) => `/api/projects/${projectId}/tasks`,
-      details: (projectId, taskId) => `/api/projects/${projectId}/tasks/${taskId}`,
-      syncManual: (projectId) => `/api/projects/${projectId}/tasks/sync-manual`,
-      cleanManual: (projectId) => `/api/projects/${projectId}/tasks/clean-manual`,
-      // 🆕 NEW: Task Status Sync endpoints
-      syncStatus: (projectId) => `/api/projects/${projectId}/tasks/sync-status`,
-      validateStatus: (projectId) => `/api/projects/${projectId}/tasks/validate-status`,
-      rollbackStatus: (projectId) => `/api/projects/${projectId}/tasks/rollback-status`
-    },
     manualTasks: {
       list: '/api/manual-tasks',
       details: (filename) => `/api/manual-tasks/${filename}`

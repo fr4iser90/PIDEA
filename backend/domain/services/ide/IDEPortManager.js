@@ -419,11 +419,20 @@ class IDEPortManager {
     // Prevent multiple simultaneous initializations
     if (this.initializing) {
       logger.info('Initialization already in progress, waiting...');
-      // Wait for current initialization to complete
-      while (this.initializing) {
+      // Wait for current initialization to complete with timeout
+      let waitTime = 0;
+      const maxWaitTime = 5000; // 5 seconds timeout
+      while (this.initializing && waitTime < maxWaitTime) {
         await new Promise(resolve => setTimeout(resolve, 100));
+        waitTime += 100;
       }
-      return;
+      
+      if (waitTime >= maxWaitTime) {
+        logger.warn('Initialization timeout reached, proceeding anyway');
+        this.initializing = false;
+      } else {
+        return;
+      }
     }
 
     // Check if already initialized
@@ -436,10 +445,17 @@ class IDEPortManager {
     logger.info('Initializing...');
     
     try {
-      // Select initial active port
-      const initialPort = await this.selectActivePort();
+      // Select initial active port with timeout
+      const initialPort = await Promise.race([
+        this.selectActivePort(),
+        new Promise((resolve) => setTimeout(() => resolve(null), 3000)) // 3 second timeout
+      ]);
+      
       if (initialPort) {
         await this.setActivePort(initialPort);
+        logger.info('Active port set:', initialPort);
+      } else {
+        logger.info('No active port selected - no IDEs available');
       }
       
       this.initialized = true;
