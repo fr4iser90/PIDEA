@@ -144,7 +144,7 @@ if "%slot%"=="" (
         echo ❌ Kein freier Port in Range %port_range% verfügbar
         exit /b 1
     )
-    set "dir=%USERPROFILE%\.%ide%_%port%"
+    set "dir=%USERPROFILE%\.pidea\.%ide%_%port%"
 ) else if "%slot%"=="auto" (
     REM Automatisch freien Port finden
     for /f %%p in ('call :find_free_port "%port_range%"') do set "port=%%p"
@@ -152,7 +152,7 @@ if "%slot%"=="" (
         echo ❌ Kein freier Port in Range %port_range% verfügbar
         exit /b 1
     )
-    set "dir=%USERPROFILE%\.%ide%_%port%"
+    set "dir=%USERPROFILE%\.pidea\.%ide%_%port%"
 ) else (
     REM Spezifischer Slot
     for /f "tokens=1,2 delims=:" %%a in ("%port_range%") do (
@@ -173,8 +173,12 @@ if "%slot%"=="" (
         exit /b 1
     )
     
-    set "dir=%USERPROFILE%\.%ide%_%port%"
+    set "dir=%USERPROFILE%\.pidea\.%ide%_%port%"
 )
+
+REM Verzeichnis erstellen falls nicht vorhanden
+if not exist "%USERPROFILE%\.pidea" mkdir "%USERPROFILE%\.pidea"
+if not exist "%dir%" mkdir "%dir%"
 
 REM IDE starten
 echo 🚀 Starte %ide% auf Port %port%...

@@ -163,10 +163,8 @@ class ManualTasksImportService {
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                     .join(' ');
                 
-                // Handle special cases - avoid double "Master Index"
-                if (filename.includes('-index') && !name.includes('Master Index')) {
-                    name += ' Master Index';
-                }
+                // ✅ FIXED: Don't add "Master Index" here - it will be added later in title creation
+                // This prevents double "Master Index" entries
                 // Typ und Phase anhand des Dateinamens bestimmen
                 let type = null, phase = null;
                 if (filename.endsWith('-index.md')) {
@@ -228,16 +226,32 @@ class ManualTasksImportService {
                     progressInfo = this._parseIndexFileContent(content);
                 }
                 
-                // Titel: name + ggf. Phase oder Index
+                // Titel: name + ggf. Phase (OHNE Master Index!)
                 let title;
-                if (structure === 'index') {
-                    title = `${name} - Master Index`;
-                } else if (structure === 'phase') {
+                if (structure === 'phase') {
                     title = `${name} Phase ${phase}`;
                 } else {
-                    title = name;
+                    title = name; // Kein "Master Index" mehr!
                 }
                 title = title.replace(/-/g, ' ');
+                
+                const redundantSuffixes = [
+                    { pattern: /\s+Master\s+Index\s*/g, name: 'Master Index' },
+                    { pattern: /\s+Index\s*/g, name: 'Index' },
+                    { pattern: /\s+Task\s*/g, name: 'Task' },
+                    { pattern: /\s+Implementation\s*/g, name: 'Implementation' },
+                    { pattern: /\s+Plan\s*/g, name: 'Plan' },
+                    { pattern: /\s+Phase\s+\d+\s*/g, name: 'Phase X' }
+                ];
+                
+                for (const suffix of redundantSuffixes) {
+                    const originalTitle = title;
+                    title = title.replace(suffix.pattern, ' ');
+                    title = title.replace(/\s+/g, ' ').trim(); // Clean up multiple spaces
+                    if (title !== originalTitle) {
+                        logger.info(`🧹 Removed "${suffix.name}" from title: "${title}"`);
+                    }
+                }
                 
                 // ✅ IMPROVED: Better duplicate checking with normalized title
                 const normalizedTitle = title.toLowerCase().trim();

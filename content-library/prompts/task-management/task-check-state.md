@@ -1,17 +1,42 @@
 # Prompt: Automated Task State Checker & Translation Optimizer
 
 ## Goal
-Automatically check current implementation status, update progress indicators, track completion, detect and translate non-English content, and ensure optimal language for AI processing. Execute all updates automatically without user input or confirmation.
+**Only check and update existing files** - do not create new code or scripts!
+
+Check current implementation status against codebase, update progress indicators, track completion, detect and translate non-English content:
+
+### Strict Rules - Never Violate:
+- ❌ **Never create new scripts or code**
+- ❌ **Never create new project files**
+- ❌ **Never implement new features**
+- ✅ **Only check existing implementation files**
+- ✅ **Only update existing roadmap files**
+- ✅ **Only create missing index.md files if required**
+
+### ✅ Allowed Actions:
+- Update existing [Name]-implementation.md files with current status
+- Create missing [Name]-index.md files if needed
+- Check file existence against codebase
+- Update progress percentages and status indicators
+- Detect and translate non-English content
+- Generate status reports
+
+### ❌ Forbidden Actions:
+- Creating new scripts (task-state-checker.js etc.)
+- Implementing new functionality
+- Creating new project structures
+- Building automation systems
+- Any development work beyond status checking
 
 ## Phase
 Check current state against codebase, collect all data needed!
-Update existing Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pending/[priority]/[category]/[name]/ with current status, progress, and translation updates.
+Update existing [Name]-index.md and [Name]-implementation.md files in docs/09_roadmap/pending/[priority]/[category]/[name]/ with current status, progress, and translation updates.
 **Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Implementation files
 
 ## Core Principles
 - **Zero User Input Required**: Execute all status checks and updates automatically
 - **Automatic Translation**: Detect and translate non-English content to English
-- **File Updates**: Automatically update implementation files with current status
+- **File Updates**: Automatically update index.md and implementation files with current status
 - **Language Optimization**: Ensure all content is optimized for AI processing
 - **Progress Tracking**: Update all progress indicators and metrics
 - **Status Validation**: Verify accuracy of all status updates
@@ -350,8 +375,7 @@ grep -r "deve\|può\|sarà\|avere\|essere\|fare" . --exclude-dir=node_modules
 > - **Phase**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md  
 > - **Translation**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-translation-[language].md
 
-## Example Usage
-> Check current state of user authentication implementation. Automatically detect and translate any non-English content, update the auth-implementation.md file with current status indicators, progress percentages, identify any blockers, and ensure all content is optimized for AI processing. Execute all updates automatically without user input.
+**Remember**: This prompt is only for checking and updating, never for creating new systems!
 
 **Note**: Use `@timestamp-utility.md` for timestamp generation.
 

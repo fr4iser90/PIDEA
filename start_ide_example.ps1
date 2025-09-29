@@ -155,7 +155,7 @@ function Start-IDE {
             Write-Host "❌ Kein freier Port in Range $($portRange[0])-$($portRange[-1]) verfügbar" -ForegroundColor Red
             exit 1
         }
-        $dir = "$env:USERPROFILE\.${IDE}_$port"
+        $dir = "$env:USERPROFILE\.pidea\.${IDE}_$port"
     }
     elseif ($Slot -eq "auto") {
         # Automatisch freien Port finden
@@ -164,7 +164,7 @@ function Start-IDE {
             Write-Host "❌ Kein freier Port in Range $($portRange[0])-$($portRange[-1]) verfügbar" -ForegroundColor Red
             exit 1
         }
-        $dir = "$env:USERPROFILE\.${IDE}_$port"
+        $dir = "$env:USERPROFILE\.pidea\.${IDE}_$port"
     }
     elseif ($Slot -match '^\d+$') {
         # Spezifischer Slot
@@ -181,11 +181,20 @@ function Start-IDE {
             exit 1
         }
         
-        $dir = "$env:USERPROFILE\.${IDE}_$port"
+        $dir = "$env:USERPROFILE\.pidea\.${IDE}_$port"
     }
     else {
         Write-Host "❌ Ungültiger Slot: $Slot" -ForegroundColor Red
         exit 1
+    }
+    
+    # Verzeichnis erstellen falls nicht vorhanden
+    $pideaDir = "$env:USERPROFILE\.pidea"
+    if (-not (Test-Path $pideaDir)) {
+        New-Item -ItemType Directory -Path $pideaDir -Force | Out-Null
+    }
+    if (-not (Test-Path $dir)) {
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }
     
     # IDE starten

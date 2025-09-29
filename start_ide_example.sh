@@ -167,7 +167,7 @@ start_ide() {
       echo "❌ Kein freier Port in Range $port_range verfügbar"
       exit 1
     fi
-    dir="$HOME/.${ide}_${port}"
+    dir="$HOME/.pidea/${ide}_${port}"
   elif [[ "$slot" == "auto" ]]; then
     # Automatisch freien Port finden
     port=$(find_free_port "$port_range")
@@ -175,7 +175,7 @@ start_ide() {
       echo "❌ Kein freier Port in Range $port_range verfügbar"
       exit 1
     fi
-    dir="$HOME/.${ide}_${port}"
+    dir="$HOME/.pidea/${ide}_${port}"
   elif [[ "$slot" =~ ^[0-9]+$ ]]; then
     # Spezifischer Slot
     local start_port=$(echo $port_range | cut -d: -f1)
@@ -192,11 +192,14 @@ start_ide() {
       exit 1
     fi
     
-    dir="$HOME/.${ide}_${port}"
+    dir="$HOME/.pidea/${ide}_${port}"
   else
     echo "❌ Ungültiger Slot: $slot"
     exit 1
   fi
+  
+  # Verzeichnis erstellen falls nicht vorhanden
+  mkdir -p "$dir"
   
   # IDE starten
   echo "🚀 Starte $ide auf Port $port..."
