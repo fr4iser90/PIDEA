@@ -102,8 +102,6 @@ CREATE TABLE IF NOT EXISTS ide_configurations (
 - [ ] `backend/infrastructure/external/ide/IDEConfigManager.js` - Add database integration
 
 #### Files to Create:
-- [ ] `frontend/src/presentation/components/ide/IDERequirementModal.jsx` - New modal component for IDE requirement
-- [ ] `frontend/src/css/components/ide/ide-requirement-modal.css` - Styles for IDE requirement modal
 - [ ] `frontend/src/infrastructure/services/IDERequirementService.jsx` - Service for IDE requirement logic
 - [ ] `backend/infrastructure/database/migrations/add-ide-configurations-table.sql` - Database migration for IDE configurations
 - [ ] `backend/domain/entities/IDEConfiguration.js` - IDE configuration entity

@@ -1,23 +1,23 @@
 # Phase 2: IDE Requirement Modal Integration
 
 ## Overview
-Create the IDE requirement modal component and integrate it with the authentication flow to show when no IDE is running after login.
+Integrate the enhanced IDEStartModal into the authentication flow and implement backend services for IDE configuration management.
 
 ## Tasks
 
-### 2.1 Create IDERequirementModal Component (1.5 hours)
-- [ ] Create new modal component based on existing modal pattern
-- [ ] Implement IDE availability checking logic
-- [ ] Add modal state management
-- [ ] Implement modal close and action handlers
-- [ ] Add proper error handling
-
-### 2.2 Integrate with Authentication Flow (1 hour)
+### 2.1 Integrate Enhanced IDEStartModal into AuthWrapper (1.5 hours)
 - [ ] Modify AuthWrapper to check IDE availability after login
-- [ ] Add IDE requirement check logic
-- [ ] Implement modal trigger mechanism
-- [ ] Handle modal dismissal and retry logic
-- [ ] Add proper loading states
+- [ ] Show enhanced IDEStartModal when no IDE is running
+- [ ] Add IDE availability checking logic
+- [ ] Implement modal state management
+- [ ] Use existing IDEStartModal component
+
+### 2.2 Implement Database Migration and Backend Services (1 hour)
+- [ ] Create database migration for IDE configurations table
+- [ ] Implement IDEConfigurationService
+- [ ] Add API endpoints for IDE configuration management
+- [ ] Create IDEConfigurationController
+- [ ] Add validation for executable paths
 
 ### 2.3 Implement Database Migration and Backend Services (1.5 hours)
 - [ ] Create database migration for IDE configurations table
