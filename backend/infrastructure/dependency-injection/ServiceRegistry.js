@@ -371,11 +371,6 @@ class ServiceRegistry {
             throw new Error('Failed to create IDE service: ' + result.error);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
 
-                // Legacy Cursor IDE service (for backward compatibility)
-        this.container.register('cursorIDEService', (browserManager, ideManager, eventBus) => {
-          const CursorIDEService = require('@domain/services/ide/CursorIDEService');
-          return new CursorIDEService(browserManager, ideManager, eventBus);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
 
         // VSCode IDE service
         this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {

@@ -59,7 +59,10 @@ class CursorIDEService {
       }
     }
     
-    return await this.chatHistoryExtractor.extractChatHistory();
+    // TODO: Version detection needed for chat history extraction
+    // For now, skip chat history extraction until version is available
+    logger.warn('Chat history extraction skipped - version parameter required');
+    return [];
   }
 
   async isConnected() {

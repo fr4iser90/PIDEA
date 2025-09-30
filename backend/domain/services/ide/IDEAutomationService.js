@@ -81,8 +81,10 @@ class IDEAutomationService {
     const ideType = this.ideManager.getIDEType(activePort) || IDETypes.CURSOR;
     const workspacePath = this.ideManager.getWorkspacePath(activePort);
     
-    // Get version-specific selectors
-    const selectors = await this.selectorManager.getSelectors(ideType);
+    // Get version-specific selectors (requires version)
+    // Note: This method needs to be updated to require a version parameter
+    // For now, we'll skip selectors until version is available
+    const selectors = null; // TODO: Update to require version parameter
     
     return {
       port: activePort,

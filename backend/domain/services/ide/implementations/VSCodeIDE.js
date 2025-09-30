@@ -18,7 +18,8 @@ class VSCodeIDE extends BaseIDE {
     const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, IDETypes.VSCODE);
     logger.info('ChatHistoryExtractor created with IDE type:', this.chatHistoryExtractor.ideType);
-    logger.info('ChatHistoryExtractor selectors:', this.chatHistoryExtractor.selectors);
+    // Note: selectors are now loaded dynamically based on version
+    logger.info('ChatHistoryExtractor initialized for VSCode');
     
     // VSCode-specific properties
     this.vscodeFeatures = [

@@ -7,16 +7,18 @@ const fs = require('fs').promises;
 const path = require('path');
 const Logger = require('@logging/Logger');
 const logger = new Logger('IDETypesUpdater');
+const JSONSelectorManager = require('./JSONSelectorManager');
 
 class IDETypesUpdater {
   constructor(options = {}) {
     this.ideTypesPath = options.ideTypesPath || path.join(__dirname, 'IDETypes.js');
     this.backupPath = options.backupPath || path.join(__dirname, 'IDETypes.js.backup');
+    this.jsonSelectorManager = new JSONSelectorManager(options);
     this.logger = options.logger || logger;
   }
 
   /**
-   * Update IDETypes.js with new version and selectors
+   * Update selectors for new version (now uses JSON files)
    * @param {string} ideType - IDE type (cursor, vscode, windsurf)
    * @param {string} version - IDE version
    * @param {Object} selectors - Selectors to add
@@ -24,45 +26,28 @@ class IDETypesUpdater {
    */
   async updateVersion(ideType, version, selectors) {
     try {
-      this.logger.info(`Updating IDETypes.js with ${ideType} version ${version}`);
+      this.logger.info(`Updating selectors for ${ideType} version ${version}`);
 
       // Validate input
       if (!ideType || !version || !selectors) {
         throw new Error('Invalid input: ideType, version, and selectors are required');
       }
 
-      // Read current IDETypes.js file
-      const currentContent = await fs.readFile(this.ideTypesPath, 'utf8');
-      
-      // Create backup
-      await this.createBackup(currentContent);
+      // Use JSONSelectorManager to save selectors
+      const result = await this.jsonSelectorManager.saveSelectors(ideType, version, selectors);
 
-      // Parse and update the content
-      const updatedContent = await this.addVersionToIDETypes(currentContent, ideType, version, selectors);
-
-      // Write updated content
-      await fs.writeFile(this.ideTypesPath, updatedContent, 'utf8');
-
-      this.logger.info(`Successfully updated IDETypes.js with ${ideType} version ${version}`);
+      this.logger.info(`Successfully updated selectors for ${ideType} version ${version}`);
       
       return {
         success: true,
-        message: `IDETypes.js updated with ${ideType} version ${version}`,
+        message: `Selectors updated for ${ideType} version ${version}`,
         version,
-        selectorsCount: Object.values(selectors).reduce((sum, cat) => sum + Object.keys(cat).length, 0)
+        selectorsCount: result.selectorsCount,
+        path: result.path
       };
 
     } catch (error) {
-      this.logger.error(`Failed to update IDETypes.js with ${ideType} version ${version}:`, error.message);
-      
-      // Try to restore from backup
-      try {
-        await this.restoreFromBackup();
-        this.logger.info('Restored IDETypes.js from backup after failed update');
-      } catch (restoreError) {
-        this.logger.error('Failed to restore from backup:', restoreError.message);
-      }
-
+      this.logger.error(`Failed to update selectors for ${ideType} version ${version}:`, error.message);
       throw error;
     }
   }

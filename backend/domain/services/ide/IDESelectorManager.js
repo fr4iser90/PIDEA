@@ -5,12 +5,14 @@
 
 const IDETypes = require('./IDETypes');
 const SelectorVersionManager = require('./SelectorVersionManager');
+const JSONSelectorManager = require('./JSONSelectorManager');
 const Logger = require('@logging/Logger');
 const logger = new Logger('IDESelectorManager');
 
 class IDESelectorManager {
   constructor(dependencies = {}) {
     this.versionManager = new SelectorVersionManager(dependencies);
+    this.jsonSelectorManager = new JSONSelectorManager(dependencies);
     this.logger = dependencies.logger || logger;
     this.selectorCollectionBot = dependencies.selectorCollectionBot;
   }
@@ -23,8 +25,13 @@ class IDESelectorManager {
    * @throws {Error} If version not found - NO FALLBACKS!
    */
   async getSelectors(ideType, version = null) {
+    if (!version) {
+      throw new Error(`Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`);
+    }
+
     try {
-      return await this.versionManager.getSelectors(ideType, version);
+      // Try JSON files first (new system)
+      return await this.jsonSelectorManager.getSelectors(ideType, version);
     } catch (error) {
       this.logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
       throw error; // Re-throw - NO FALLBACKS!
@@ -45,6 +52,8 @@ class IDESelectorManager {
         throw new Error(`Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`);
       }
 
+      // For static access, we still use IDETypes for now (backward compatibility)
+      // In the future, this could be refactored to use JSON files directly
       const selectors = IDETypes.getSelectorsForVersion(ideType, version);
       logger.info(`Retrieved selectors for ${ideType} version ${version}`);
       return selectors;
@@ -114,6 +123,21 @@ class IDESelectorManager {
 
   /**
    * Get available versions for IDE type
+   * @param {string} ideType - IDE type
+   * @returns {Promise<Array<string>>} Available versions
+   */
+  async getAvailableVersions(ideType) {
+    try {
+      return await this.jsonSelectorManager.getAvailableVersions(ideType);
+    } catch (error) {
+      this.logger.error(`Error getting available versions for ${ideType}:`, error.message);
+      // Fallback to IDETypes for backward compatibility
+      return IDETypes.getAvailableVersions(ideType);
+    }
+  }
+
+  /**
+   * Get available versions for IDE type (static version)
    * @param {string} ideType - IDE type
    * @returns {Array<string>} Available versions
    */
@@ -193,9 +217,12 @@ class IDESelectorManager {
    * @param {string} elementType - The element type (input, sendButton, etc.)
    * @returns {string|null} The selector or null if not found
    */
-  static getSelector(ideType, elementType) {
+  static getSelector(ideType, elementType, version = null) {
     try {
-      const selectors = this.getSelectors(ideType);
+      if (!version) {
+        throw new Error(`Version is required for ${ideType}. No fallbacks allowed.`);
+      }
+      const selectors = this.getSelectors(ideType, version);
       return selectors[elementType] || null;
     } catch (error) {
       logger.error(`Error getting selector for ${elementType} in ${ideType}:`, error.message);

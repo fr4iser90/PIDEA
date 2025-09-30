@@ -1,4 +1,5 @@
 const IDETypes = require('../ide/IDETypes');
+const JSONSelectorManager = require('../ide/JSONSelectorManager');
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 
@@ -7,11 +8,11 @@ class ChatHistoryExtractor {
   constructor(browserManager, ideType = IDETypes.CURSOR) {
     this.browserManager = browserManager;
     this.ideType = ideType;
-    this.selectors = IDETypes.getChatSelectors(ideType);
+    this.jsonSelectorManager = new JSONSelectorManager();
+    this.selectors = null; // Will be loaded when needed with version
     
-    if (!this.selectors) {
-      logger.warn(`No chat selectors found for IDE type: ${ideType}`);
-    }
+    // Note: Selectors are now loaded dynamically with version
+    // Use this.getSelectors(version) to get selectors for specific version
 
     // Context tracking properties
     this.conversationContext = {
@@ -24,20 +25,46 @@ class ChatHistoryExtractor {
   }
 
   /**
+   * Get selectors for specific version
+   * @param {string} version - IDE version
+   * @returns {Promise<Object>} Selectors object
+   */
+  async getSelectors(version) {
+    if (!version) {
+      throw new Error(`Version is required for ${this.ideType}. No fallbacks allowed.`);
+    }
+    
+    try {
+      return await this.jsonSelectorManager.getSelectors(this.ideType, version);
+    } catch (error) {
+      logger.error(`Error loading selectors for ${this.ideType} version ${version}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Extract chat history from the current IDE
+   * @param {string} version - IDE version (required)
    * @returns {Promise<Array>} Array of chat messages
    */
-  async extractChatHistory() {
+  async extractChatHistory(version) {
+    if (!version) {
+      throw new Error(`Version is required for chat extraction. No fallbacks allowed.`);
+    }
+
     try {
       const startTime = Date.now();
-      logger.info('ChatHistoryExtractor: Starting chat extraction');
+      logger.info(`ChatHistoryExtractor: Starting chat extraction for ${this.ideType} version ${version}`);
+      
+      // Load selectors for the specific version
+      const selectors = await this.getSelectors(version);
       
       const page = await this.browserManager.getPage();
       
       // ✅ OPTIMIZATION: Reduce timeout from 1000ms to 100ms for faster response
       await page.waitForTimeout(100); // Reduced from 1000ms
       
-      const allMessages = await this.extractMessagesByIDEType(page);
+      const allMessages = await this.extractMessagesByIDEType(page, selectors);
       
       const duration = Date.now() - startTime;
       logger.info(`ChatHistoryExtractor: Extraction completed in ${duration}ms`, {
@@ -102,32 +129,34 @@ class ChatHistoryExtractor {
   /**
    * Extract messages using IDE-specific logic
    * @param {Page} page - Playwright page object
+   * @param {Object} selectors - Selectors for the specific version
    * @returns {Promise<Array>} Array of messages
    */
-  async extractMessagesByIDEType(page) {
+  async extractMessagesByIDEType(page, selectors) {
     switch (this.ideType) {
       case IDETypes.CURSOR:
-        return await this.extractCursorMessages(page);
+        return await this.extractCursorMessages(page, selectors);
       case IDETypes.VSCODE:
-        return await this.extractVSCodeMessages(page);
+        return await this.extractVSCodeMessages(page, selectors);
       case IDETypes.WINDSURF:
-        return await this.extractWindsurfMessages(page);
+        return await this.extractWindsurfMessages(page, selectors);
       default:
-        return await this.extractGenericMessages(page);
+        return await this.extractGenericMessages(page, selectors);
     }
   }
 
   /**
    * Extract messages from Cursor IDE
    * @param {Page} page - Playwright page object
+   * @param {Object} selectors - Selectors for the specific version
    * @returns {Promise<Array>} Array of messages
    */
-  async extractCursorMessages(page) {
+  async extractCursorMessages(page, selectors) {
     return await page.evaluate((selectors) => {
       const messages = [];
       
       // Find all User messages
-      const userElements = document.querySelectorAll(selectors.userMessages);
+      const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
       userElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -142,7 +171,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI normal messages (text only)
-      const aiElements = document.querySelectorAll(selectors.aiMessages);
+      const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
       aiElements.forEach((element, index) => {
         const content = element.innerText || element.textContent || '';
         if (content.trim()) {
@@ -157,7 +186,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI code blocks as SEPARATE messages
-      const codeBlockElements = document.querySelectorAll(selectors.codeBlocks);
+      const codeBlockElements = document.querySelectorAll(selectors.chatSelectors.codeBlocks);
       codeBlockElements.forEach((element, index) => {
         const content = element.innerText || element.textContent || '';
         if (content.trim()) {
@@ -183,7 +212,7 @@ class ChatHistoryExtractor {
         type: msg.type,
         content: msg.content
       }));
-    }, this.selectors);
+    }, selectors);
   }
 
   /**
@@ -268,7 +297,7 @@ class ChatHistoryExtractor {
         });
         
         return { debug, messages };
-      }, this.selectors);
+      }, selectors);
     } catch (error) {
       logger.error('[VSCode] page.evaluate error:', error);
       result = { debug: { error: error.message }, messages: [] };
@@ -287,7 +316,7 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Find all User messages
-      const userElements = document.querySelectorAll(selectors.userMessages);
+      const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
       userElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -302,7 +331,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI messages
-      const aiElements = document.querySelectorAll(selectors.aiMessages);
+      const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
       aiElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -328,7 +357,7 @@ class ChatHistoryExtractor {
         type: msg.type,
         content: msg.content
       }));
-    }, this.selectors);
+    }, selectors);
   }
 
   /**
@@ -341,8 +370,8 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Try to find user messages
-      if (selectors.userMessages) {
-        const userElements = document.querySelectorAll(selectors.userMessages);
+      if (selectors.chatSelectors.userMessages) {
+        const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
         userElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -358,8 +387,8 @@ class ChatHistoryExtractor {
       }
       
       // Try to find AI messages
-      if (selectors.aiMessages) {
-        const aiElements = document.querySelectorAll(selectors.aiMessages);
+      if (selectors.chatSelectors.aiMessages) {
+        const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
         aiElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -386,7 +415,7 @@ class ChatHistoryExtractor {
         type: msg.type,
         content: msg.content
       }));
-    }, this.selectors);
+    }, selectors);
   }
 
   /**

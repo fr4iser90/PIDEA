@@ -1,0 +1,15 @@
+{
+  "chatSelectors": {
+    "input": "textarea[data-testid=\"chat-input\"], textarea[placeholder*=\"Copilot\"], .chat-input-textarea",
+    "inputContainer": ".chat-input-container, .chat-editor-container",
+    "userMessages": ".interactive-item-container.interactive-request .value .rendered-markdown",
+    "aiMessages": ".interactive-item-container.interactive-response .value .rendered-markdown",
+    "messagesContainer": ".monaco-list-rows",
+    "chatContainer": ".chat-container, .interactive-session",
+    "isActive": ".chat-container, .interactive-session",
+    "isInputReady": "textarea[data-testid=\"chat-input\"]:not([disabled])",
+    "messageRows": ".monaco-list-row",
+    "userMessageRow": ".monaco-list-row .interactive-request",
+    "aiMessageRow": ".monaco-list-row .interactive-response"
+  }
+}

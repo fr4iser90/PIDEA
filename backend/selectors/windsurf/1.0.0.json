@@ -1,0 +1,12 @@
+{
+  "chatSelectors": {
+    "input": "[data-testid=\"chat-input\"]",
+    "inputContainer": "[data-testid=\"chat-container\"]",
+    "userMessages": "[data-testid=\"user-message\"]",
+    "aiMessages": "[data-testid=\"ai-message\"]",
+    "messagesContainer": "[data-testid=\"chat-messages\"]",
+    "chatContainer": "[data-testid=\"chat-panel\"]",
+    "isActive": "[data-testid=\"chat-panel\"]",
+    "isInputReady": "[data-testid=\"chat-input\"]:not([disabled])"
+  }
+}
