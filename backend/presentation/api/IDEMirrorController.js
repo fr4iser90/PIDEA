@@ -532,7 +532,10 @@ class IDEMirrorController {
         
         const newState = result.data.newState;
         this.broadcastToClients('ide-state-updated', newState);
-        logger.info(`📸 Screenshot updated after batch: "${text.substring(0, 20)}..."`);
+        logger.info('Screenshot updated after batch', {
+            textLength: text.length,
+            batchSize: result.data.batchSize
+        });
     }
 
     isEndOfWord(text) {

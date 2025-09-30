@@ -124,7 +124,11 @@ class IDEMirrorApplicationService {
 
     async typeText(text, selector, userId) {
         try {
-            this.logger.info('IDEMirrorApplicationService: Typing text', { text: text?.substring(0, 50), selector, userId });
+            this.logger.info('IDEMirrorApplicationService: Typing text', { 
+                textLength: text?.length || 0, 
+                selector, 
+                userId 
+            });
             
             if (!this.ideMirrorService.isIDEConnected()) {
                 await this.ideMirrorService.connectToIDE();
@@ -145,7 +149,12 @@ class IDEMirrorApplicationService {
 
     async focusAndType(selector, text, clearFirst, userId) {
         try {
-            this.logger.info('IDEMirrorApplicationService: Focus and type', { selector, text: text?.substring(0, 50), clearFirst, userId });
+            this.logger.info('IDEMirrorApplicationService: Focus and type', { 
+                selector, 
+                textLength: text?.length || 0, 
+                clearFirst, 
+                userId 
+            });
             
             if (!this.ideMirrorService.isIDEConnected()) {
                 await this.ideMirrorService.connectToIDE();
@@ -166,7 +175,10 @@ class IDEMirrorApplicationService {
 
     async sendChatMessage(message, userId) {
         try {
-            this.logger.info('IDEMirrorApplicationService: Sending chat message', { message: message?.substring(0, 50), userId });
+            this.logger.info('IDEMirrorApplicationService: Sending chat message', { 
+                messageLength: message?.length || 0, 
+                userId 
+            });
             
             if (!this.ideMirrorService.isIDEConnected()) {
                 await this.ideMirrorService.connectToIDE();
@@ -187,7 +199,12 @@ class IDEMirrorApplicationService {
 
     async typeTextAdvanced(text, selector, key, modifiers, userId) {
         try {
-            this.logger.info('IDEMirrorApplicationService: Typing text advanced', { text: text?.substring(0, 50), selector, key, userId });
+            this.logger.info('IDEMirrorApplicationService: Typing text advanced', { 
+                textLength: text?.length || 0, 
+                selector, 
+                key, 
+                userId 
+            });
             
             if (!this.ideMirrorService.isIDEConnected()) {
                 await this.ideMirrorService.connectToIDE();

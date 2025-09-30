@@ -78,7 +78,10 @@ class WindsurfIDEService {
    */
   async postToWindsurf(prompt) {
     try {
-      this.logger.info('Sending prompt to Windsurf IDE:', prompt.substring(0, 100) + '...');
+      this.logger.info('Sending prompt to Windsurf IDE', {
+        promptLength: prompt.length,
+        promptType: 'windsurf_ide'
+      });
       
       // Use BrowserManager directly to avoid infinite loops
       this.logger.info('postToWindsurf() - Using BrowserManager directly');

@@ -235,7 +235,7 @@ class TaskService {
       const taskExecutePath = this.getPromptPath('task-execute');
       const fullPath = path.join(process.cwd(), taskExecutePath);
       taskExecutePrompt = fs.readFileSync(fullPath, 'utf8');
-      logger.info('✅ [TaskService] Successfully loaded task-execute.md, length:', taskExecutePrompt.length);
+      logger.info('✅ [TaskService] Successfully loaded task-execute.md');
     } catch (error) {
       logger.error('❌ [TaskService] Error reading task-execute.md from file:', error);
       taskExecutePrompt = 'Execute the following task:\n\n';
@@ -249,7 +249,7 @@ class TaskService {
         
         // Kombiniere: task-execute.md + Task-Inhalt
         const finalPrompt = `${taskExecutePrompt}\n\n${markdownContent}`;
-        logger.info('✅ [TaskService] Final prompt for doc task (first 500 chars):', finalPrompt.substring(0, 500));
+        logger.info('✅ [TaskService] Final prompt for doc task generated');
         return finalPrompt;
       } catch (error) {
         logger.error('❌ [TaskService] Error reading task file:', error);
@@ -261,7 +261,11 @@ class TaskService {
     
     // Für normale Tasks: Verwende task-execute.md + Task-Details
     const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-    logger.info('✅ [TaskService] Final prompt for normal task (first 500 chars):', finalPrompt.substring(0, 500));
+    logger.info('✅ [TaskService] Final prompt for normal task generated', {
+      taskId: task.id,
+      taskTitle: task.title,
+      promptLength: finalPrompt.length
+    });
     return finalPrompt;
   }
 

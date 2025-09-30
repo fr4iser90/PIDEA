@@ -78,7 +78,10 @@ class VSCodeIDEService {
    */
   async postToVSCode(prompt) {
     try {
-      logger.info('Sending prompt to VSCode IDE:', prompt.substring(0, 100) + '...');
+      logger.info('Sending prompt to VSCode IDE', {
+        promptLength: prompt.length,
+        promptType: 'vscode_ide'
+      });
       
       // Use BrowserManager directly to avoid infinite loops
       logger.info('postToVSCode() - Using BrowserManager directly');

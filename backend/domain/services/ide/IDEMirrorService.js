@@ -348,7 +348,10 @@ class IDEMirrorService {
             
             // Regular text input - try direct DOM insertion first
             if (text) {
-                logger.info(`⌨️ Typing "${text.substring(0, 50)}..." ${selector ? `in ${selector}` : 'at cursor'}`);
+                logger.info('Typing text in IDE', {
+                    textLength: text.length,
+                    selector: selector || 'cursor position'
+                });
                 
                 // Always focus for chat elements to ensure proper input target
                 const needsFocus = selector && (
@@ -369,7 +372,10 @@ class IDEMirrorService {
                 logger.info(`⌨️ Using real keyboard events for Cursor compatibility`);
                 await page.keyboard.type(text, { delay: 30 });
                 
-                logger.info(`✅ Typed text: ${text.substring(0, 50)}...`);
+                logger.info('Text typed successfully', {
+                    textLength: text.length,
+                    method: 'keyboard.type'
+                });
                 return true;
             }
             
@@ -536,7 +542,10 @@ class IDEMirrorService {
             throw new Error('No IDE connection available');
         }
 
-        logger.info(`🎯 Focus and type in ${selector}: "${text.substring(0, 50)}..."`);
+        logger.info('Focus and type in IDE', {
+            selector,
+            textLength: text.length
+        });
 
         try {
             // Click to focus the element
@@ -569,7 +578,10 @@ class IDEMirrorService {
             throw new Error('No IDE connection available');
         }
 
-        logger.info(`💬 Sending chat message: "${message.substring(0, 50)}..."`);
+        logger.info('Sending chat message', {
+            messageLength: message.length,
+            selector: 'chat input'
+        });
 
         try {
             // Common chat input selectors in Cursor

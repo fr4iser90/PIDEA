@@ -149,10 +149,7 @@ class TaskPromptGenerationStep {
         options
       );
 
-      logger.info('Task prompt generated successfully', {
-        promptLength: finalPrompt.length,
-        hasProjectAnalysis: projectAnalysis.length > 0
-      });
+      logger.info('Task prompt generated successfully');
 
       return {
         success: true,
@@ -197,7 +194,7 @@ class TaskPromptGenerationStep {
         try {
           const content = await contentLibraryService.loadContent(promptPath);
           if (content) {
-            logger.info(`Loaded prompt template via ContentLibraryService: ${promptPath}`);
+            logger.info(`Loaded prompt template via ContentLibraryService`);
             return content;
           }
         } catch (error) {
@@ -209,7 +206,7 @@ class TaskPromptGenerationStep {
       const fullPath = path.resolve(process.cwd(), promptPath);
       const content = await fs.readFile(fullPath, 'utf8');
       
-      logger.info(`Loaded prompt template from file system: ${promptPath}`);
+      logger.info(`Loaded prompt template from file system`);
       return content;
 
     } catch (error) {

@@ -81,7 +81,10 @@ class CursorIDEService {
    */
   async postToCursor(prompt) {
     try {
-      logger.info('Sending prompt to Cursor IDE:', prompt.substring(0, 100) + '...');
+      logger.info('Sending prompt to Cursor IDE', {
+        promptLength: prompt.length,
+        promptType: 'cursor_ide'
+      });
       
       // Use BrowserManager directly to avoid infinite loops
       logger.info('postToCursor() - Using BrowserManager directly');

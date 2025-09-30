@@ -360,7 +360,11 @@ class IDEApplicationService {
 
     async executeTerminalCommand(port, command, userId) {
         try {
-            this.logger.info('IDEApplicationService: Executing terminal command', { port, command: command?.substring(0, 50), userId });
+            this.logger.info('IDEApplicationService: Executing terminal command', { 
+                port, 
+                commandLength: command?.length || 0, 
+                userId 
+            });
             
             const result = await this.ideManager.executeTerminalCommand(port, command);
             
@@ -376,7 +380,11 @@ class IDEApplicationService {
 
     async executeTerminalCommandWithCapture(port, command, userId) {
         try {
-            this.logger.info('IDEApplicationService: Executing terminal command with capture', { port, command: command?.substring(0, 50), userId });
+            this.logger.info('IDEApplicationService: Executing terminal command with capture', { 
+                port, 
+                commandLength: command?.length || 0, 
+                userId 
+            });
             
             // Initialize capture if not already done
             await this.terminalLogCaptureService.initialize();
@@ -648,7 +656,12 @@ class IDEApplicationService {
 
     async sendMessageToVSCode(message, extensionType = 'githubCopilot', port, userId) {
         try {
-            this.logger.info('IDEApplicationService: Sending message to VSCode', { message: message?.substring(0, 50), extensionType, port, userId });
+            this.logger.info('IDEApplicationService: Sending message to VSCode', { 
+                messageLength: message?.length || 0, 
+                extensionType, 
+                port, 
+                userId 
+            });
             
             if (!this.cursorIDEService) {
                 throw new Error('VSCode service not available');

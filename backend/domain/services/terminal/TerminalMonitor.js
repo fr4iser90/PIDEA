@@ -140,12 +140,10 @@ class TerminalMonitor {
 
       // Only log if content changed and is not empty
       if (terminalOutput && terminalOutput !== this.lastTerminalContent) {
-        logger.info('Terminal content changed, length:', terminalOutput.length);
-        
-        // Show what we actually got
-        if (terminalOutput && terminalOutput.length > 0) {
-          logger.info('Content preview:', terminalOutput.substring(0, 200) + '...');
-        }
+        logger.info('Terminal content changed', {
+          contentLength: terminalOutput.length,
+          hasContent: terminalOutput.length > 0
+        });
         
         this.lastTerminalContent = terminalOutput;
         

@@ -526,8 +526,10 @@ class BrowserManager {
         return { content, log };
       }, editorSelectors);
       
-      logger.info('getCurrentFileContent: LOG:', result.log);
-      logger.info('getCurrentFileContent: Content length:', result.content ? result.content.length : 0);
+      logger.info('getCurrentFileContent: Content retrieved', {
+        contentLength: result.content ? result.content.length : 0,
+        hasContent: !!result.content
+      });
       return result.content;
     } catch (error) {
       logger.error('Error reading file content:', error.message);
@@ -655,8 +657,8 @@ class BrowserManager {
       logger.info('Clicking New Chat button...');
 
       // Get IDE-specific selectors
-      const newChatSelectorsData = await this.getAllSelectors();
-      const newChatSelectors = newChatSelectorsData.newChatSelectors;
+      const selectorsData = await this.getAllSelectors();
+      const newChatSelectors = selectorsData.newChatSelectors;
       if (!newChatSelectors) {
         throw new Error('No new chat selectors found');
       }
@@ -999,7 +1001,8 @@ class BrowserManager {
       logger.info(`Detected IDE type: ${ideType} version: ${version} on port ${currentPort}`);
 
       // Get IDE-specific selectors using IDESelectorManager with version
-      const chatSelectors = await this.getIDESelectors(ideType, version);
+      const selectorsData = await this.getIDESelectors(ideType, version);
+      const chatSelectors = selectorsData.chatSelectors;
       
       if (!chatSelectors) {
         throw new Error(`No chat selectors found for IDE type: ${ideType}`);
@@ -1072,7 +1075,7 @@ class BrowserManager {
       await chatInput.fill('');
       logger.info(`Cleared chat input`);
       await chatInput.fill(message);
-      logger.info(`Message set: ${message}`);
+      logger.info(`Message set successfully`);
 
       if (send) {
         logger.info(`Looking for send button...`);
@@ -1081,7 +1084,7 @@ class BrowserManager {
         if (ideType === 'cursor') {
           // Cursor uses Enter key to send
           await chatInput.press('Enter');
-          logger.info(`Message sent via Enter key (Cursor): ${message}`);
+          logger.info(`Message sent via Enter key (Cursor)`);
         } else if (ideType === 'vscode') {
           // VSCode might have a send button
           const sendButtonSelectors = allSelectors.sendButtonSelectors;
@@ -1116,17 +1119,17 @@ class BrowserManager {
             } else {
               // Fallback: Press Enter to send
               await chatInput.press('Enter');
-              logger.info(`Message sent via Enter key (VSCode fallback): ${message}`);
+              logger.info(`Message sent via Enter key (VSCode fallback)`);
             }
           } else {
             // Fallback: Press Enter to send
             await chatInput.press('Enter');
-            logger.info(`Message sent via Enter key (VSCode fallback): ${message}`);
+            logger.info(`Message sent via Enter key (VSCode fallback)`);
           }
         } else {
           // Generic fallback for other IDEs
           await chatInput.press('Enter');
-          logger.info(`Message sent via Enter key (${ideType}): ${message}`);
+          logger.info(`Message sent via Enter key (${ideType})`);
         }
       }
 
