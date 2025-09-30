@@ -64,8 +64,8 @@ class BranchStrategyRegistry {
     
     this.strategies.set(name, strategy);
     this.logger.info(`Registered branch strategy: ${name}`, {
-      strategyType: strategy.getStrategyType(),
-      priority: strategy.getPriority()
+      strategyType: strategy.getStrategyType ? strategy.getStrategyType() : strategy.strategyType || strategy.type || 'unknown',
+      priority: strategy.getPriority ? strategy.getPriority() : 1
     });
   }
 

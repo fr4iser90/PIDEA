@@ -7,6 +7,7 @@ const GitWorkflowException = require('../exceptions/GitWorkflowException');
 class ReleaseBranchStrategy {
   constructor(config = {}) {
     this.type = 'release';
+    this.strategyType = 'ReleaseBranchStrategy';
     this.prefix = config.prefix || 'release';
     this.separator = config.separator || '/';
     this.maxLength = config.maxLength || 50;
@@ -50,6 +51,22 @@ class ReleaseBranchStrategy {
       date: /^\d{4}-\d{2}-\d{2}$/,
       custom: config.customVersionPattern
     };
+  }
+
+  /**
+   * Get strategy type
+   * @returns {string} Strategy type
+   */
+  getStrategyType() {
+    return this.strategyType;
+  }
+
+  /**
+   * Get strategy priority
+   * @returns {number} Priority
+   */
+  getPriority() {
+    return 3; // Lower priority for releases
   }
 
   /**

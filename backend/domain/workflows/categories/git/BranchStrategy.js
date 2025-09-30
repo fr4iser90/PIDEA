@@ -256,7 +256,7 @@ class BranchStrategy {
       
       // Add strategy information to validation result
       validation.strategy = strategyName;
-      validation.strategyType = strategy.type;
+      validation.strategyType = strategy.strategyType || strategy.type || 'unknown';
       
       this.logger.info(`Validation result:`, validation);
       

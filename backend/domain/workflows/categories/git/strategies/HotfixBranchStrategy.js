@@ -19,6 +19,23 @@ class HotfixBranchStrategy {
     };
     
     this.logger = config.logger || console;
+    this.strategyType = 'HotfixBranchStrategy';
+  }
+
+  /**
+   * Get strategy type
+   * @returns {string} Strategy type
+   */
+  getStrategyType() {
+    return this.strategyType;
+  }
+
+  /**
+   * Get strategy priority
+   * @returns {number} Priority
+   */
+  getPriority() {
+    return 2; // Higher priority for hotfixes
   }
 
   /**

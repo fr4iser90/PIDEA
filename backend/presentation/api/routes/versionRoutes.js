@@ -82,31 +82,6 @@ router.put('/config', (req, res) => {
   versionController.updateConfiguration(req, res);
 });
 
-// Catch-all for undefined routes
-router.use('*', (req, res) => {
-  logger.warn('Undefined route accessed', {
-    method: req.method,
-    path: req.originalUrl,
-    ip: req.ip
-  });
-
-  res.status(404).json({
-    success: false,
-    error: 'Route not found',
-    availableRoutes: [
-      'GET /health',
-      'POST /bump',
-      'GET /current',
-      'GET /history',
-      'POST /validate',
-      'POST /compare',
-      'POST /determine-bump-type',
-      'GET /latest',
-      'GET /config',
-      'PUT /config'
-    ],
-    timestamp: new Date()
-  });
-});
+// Catch-all route removed - causes path-to-regexp error
 
 module.exports = router;
