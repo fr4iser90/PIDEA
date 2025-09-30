@@ -19,6 +19,7 @@ const useAuthStore = create(
       lastAuthCheck: null,
       authCheckInterval: 5 * 60 * 1000, // 5 minutes - reasonable cache duration
       isValidating: false, // New state for race condition protection
+      isInitialized: false, // Track if store has been initialized
       
       // Session management state
       sessionExpiry: null,
@@ -26,6 +27,63 @@ const useAuthStore = create(
       sessionMonitoringActive: false,
 
       // Actions
+      
+      // Initialize store with automatic validation
+      initialize: async () => {
+        const { isInitialized, isAuthenticated, isValidating } = get();
+        
+        // Prevent multiple initializations
+        if (isInitialized || isValidating) {
+          logger.debug('🔍 [AuthStore] Already initialized or validation in progress');
+          return;
+        }
+        
+        logger.info('🔍 [AuthStore] Initializing with automatic validation...');
+        set({ isValidating: true });
+        
+        try {
+          // If we have authentication state from localStorage, validate it
+          if (isAuthenticated) {
+            logger.info('🔍 [AuthStore] Found authentication state, validating with backend...');
+            const isValid = await get().validateToken();
+            
+            if (!isValid) {
+              logger.info('❌ [AuthStore] Authentication validation failed, clearing state');
+              set({ 
+                isAuthenticated: false, 
+                user: null,
+                isValidating: false,
+                isInitialized: true,
+                error: null
+              });
+              return;
+            }
+            
+            logger.info('✅ [AuthStore] Authentication validated successfully');
+          } else {
+            logger.info('🔍 [AuthStore] No authentication state found');
+          }
+          
+          set({ 
+            isValidating: false,
+            isInitialized: true,
+            error: null
+          });
+          
+          logger.info('✅ [AuthStore] Initialization complete');
+          
+        } catch (error) {
+          logger.error('❌ [AuthStore] Initialization failed:', error);
+          set({ 
+            isAuthenticated: false, 
+            user: null,
+            isValidating: false,
+            isInitialized: true,
+            error: error.message
+          });
+        }
+      },
+      
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         
@@ -517,6 +575,7 @@ const useAuthStore = create(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         sessionExpiry: state.sessionExpiry,
+        lastAuthCheck: state.lastAuthCheck,
       }),
     }
   )

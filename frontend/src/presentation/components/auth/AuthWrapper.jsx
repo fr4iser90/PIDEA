@@ -10,25 +10,34 @@ import RegisterComponent from './RegisterComponent.jsx';
 const AuthWrapper = ({ children }) => {
   const { 
     isAuthenticated, 
-    isLoading
+    isLoading,
+    isValidating,
+    isInitialized,
+    initialize
   } = useAuthStore();
   
   const { showInfo, showWarning } = useNotificationStore();
   
   const [authMode, setAuthMode] = useState('login');
-  const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState(null);
   const [showIDERequirementModal, setShowIDERequirementModal] = useState(false);
   const [isCheckingIDERequirement, setIsCheckingIDERequirement] = useState(false);
 
-  // No validation on mount - just use the AuthStore state directly
-
-  // Check IDE requirement when user becomes authenticated
+  // Initialize AuthStore on mount
   useEffect(() => {
-    if (isAuthenticated && !isLoading && !isCheckingIDERequirement) {
+    if (!isInitialized) {
+      logger.info('🔍 [AuthWrapper] Initializing AuthStore...');
+      initialize();
+    }
+  }, [isInitialized, initialize]);
+
+  // Check IDE requirement when user becomes authenticated AND validation is complete
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && !isLoading && !isValidating && !isCheckingIDERequirement) {
+      logger.info('🔍 [AuthWrapper] User authenticated and validation complete, checking IDE requirement...');
       checkIDERequirement();
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isInitialized, isAuthenticated, isLoading, isValidating]);
 
   // Check if IDE requirement modal should be shown
   const checkIDERequirement = async () => {
@@ -84,6 +93,18 @@ const AuthWrapper = ({ children }) => {
     setValidationError(null);
   };
 
+
+  // Show loading state while initializing or validating
+  if (!isInitialized || isValidating) {
+    return (
+      <div className="auth-container">
+        <div className="auth-loading">
+          <div className="loading-spinner"></div>
+          <p>{!isInitialized ? 'Initializing...' : 'Validating authentication...'}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show auth forms if not authenticated
   if (!isAuthenticated) {
