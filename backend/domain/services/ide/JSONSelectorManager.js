@@ -10,7 +10,7 @@ const logger = new Logger('JSONSelectorManager');
 
 class JSONSelectorManager {
   constructor(options = {}) {
-    this.selectorsPath = options.selectorsPath || path.join(__dirname, '../../selectors');
+    this.selectorsPath = options.selectorsPath || path.join(__dirname, '../../../selectors');
     this.logger = options.logger || logger;
   }
 
@@ -38,7 +38,10 @@ class JSONSelectorManager {
 
       // Read and parse JSON file
       const content = await fs.readFile(selectorPath, 'utf8');
-      const selectors = JSON.parse(content);
+      const selectorsData = JSON.parse(content);
+
+      // Extract selectors from the structure (chatSelectors, etc.)
+      const selectors = selectorsData.chatSelectors || selectorsData;
 
       this.logger.info(`Loaded selectors for ${ideType} version ${version} from ${selectorPath}`);
       return selectors;

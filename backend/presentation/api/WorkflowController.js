@@ -275,7 +275,7 @@ class WorkflowController {
                             
                             this.logger.info('WorkflowController: Creating new chat with timeout');
                             // Add timeout to prevent hanging
-                            const clickPromise = createChatHandler.handle(createChatCommand);
+                            const clickPromise = createChatHandler.handle(createChatCommand, {}, activeIDE.port);
                             const timeoutPromise = new Promise((_, reject) => 
                                 setTimeout(() => reject(new Error('New Chat creation timeout')), 10000)
                             );
@@ -1354,6 +1354,20 @@ class WorkflowController {
         const startTime = Date.now();
         const workflowId = `workflow_${projectId}_${Date.now()}`;
 
+        // Get active IDE for workflow context
+        let activeIDE = null;
+        if (this.ideManager) {
+            try {
+                activeIDE = await this.ideManager.getActiveIDE();
+                this.logger.info('WorkflowController: Active IDE detected for workflow', { 
+                    port: activeIDE?.port,
+                    type: activeIDE?.type 
+                });
+            } catch (error) {
+                this.logger.warn('WorkflowController: Failed to get active IDE for workflow:', error.message);
+            }
+        }
+
         try {
             this.logger.info('WorkflowController: Starting workflow execution', {
                 workflowName: workflow.name,
@@ -1441,7 +1455,7 @@ class WorkflowController {
                         });
                     }
 
-                    const stepResult = await this.executeStep(step, taskData, projectId, userId, workspacePath, options);
+                    const stepResult = await this.executeStep(step, taskData, projectId, userId, workspacePath, options, activeIDE);
                     
                     const stepDuration = Date.now() - stepStartTime;
                     const stepProgress = {
@@ -1626,7 +1640,7 @@ class WorkflowController {
     /**
      * Execute individual workflow step using existing StepRegistry
      */
-    async executeStep(step, taskData, projectId, userId, workspacePath, options) {
+    async executeStep(step, taskData, projectId, userId, workspacePath, options, activeIDE = null) {
         try {
             // Get StepRegistry
             const { getStepRegistry } = require('@steps');
@@ -1646,6 +1660,7 @@ class WorkflowController {
                 projectId,
                 userId,
                 taskData,
+                activeIDE, // Add activeIDE to step context
                 ...step.options,
                 ...options
             };

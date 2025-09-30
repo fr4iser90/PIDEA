@@ -49,7 +49,7 @@ class CreateChatStep {
       // Validate context
       this.validateContext(context);
       
-      const { userId, title, metadata = {}, ideType } = context;
+      const { userId, title, metadata = {}, ideType, activeIDE } = context;
       
       logger.info(`📝 Creating chat session for user ${userId} with title: ${title}`);
       
@@ -69,7 +69,11 @@ class CreateChatStep {
       
       // ✅ Handler macht BEIDES: Business Logic + Browser Automation
       logger.info('📝 Executing CreateChatHandler (Business Logic + Browser Automation)...');
-      const result = await createChatHandler.handle(command);
+      const port = activeIDE?.port;
+      if (!port) {
+        throw new Error('No active IDE port available in context');
+      }
+      const result = await createChatHandler.handle(command, {}, port);
       
       logger.info(`✅ Chat session created successfully via Handler`, {
         sessionId: result.session.id

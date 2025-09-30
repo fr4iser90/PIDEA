@@ -45,17 +45,14 @@ class CreateChatHandler {
 
   /**
    * Get BrowserManager with correct port set
+   * @param {number} port - The IDE port to connect to
    * @returns {BrowserManager} BrowserManager instance
    */
-  async getBrowserManager() {
-    const activePort = this.ideManager.getActivePort();
-    this.logger.info(`Active port: ${activePort}`);
+  async getBrowserManager(port) {
+    this.logger.info(`Using port: ${port}`);
     
     // Ensure BrowserManager is connected to the correct port
-    if (this.browserManager.getCurrentPort() !== activePort) {
-      this.logger.info(`Switching BrowserManager to port ${activePort}`);
-      await this.browserManager.switchToPort(activePort);
-    }
+    await this.browserManager.switchToPort(port);
     
     return this.browserManager;
   }
@@ -64,9 +61,10 @@ class CreateChatHandler {
    * Handle CreateChatCommand
    * @param {CreateChatCommand} command - Chat creation command
    * @param {Object} options - Execution options
+   * @param {number} port - The IDE port to connect to
    * @returns {Promise<Object>} Creation result
    */
-  async handle(command, options = {}) {
+  async handle(command, options = {}, port) {
     try {
       // Validate command
       const validationResult = await this.validateCommand(command);
@@ -91,7 +89,7 @@ class CreateChatHandler {
 
       // First, click New Chat button in the IDE using BrowserManager
       this.logger.info('Clicking New Chat button in IDE...');
-      const browserManager = await this.getBrowserManager();
+      const browserManager = await this.getBrowserManager(port);
       await browserManager.clickNewChat(); // This now throws on error instead of returning false
       
       this.logger.info('New Chat button clicked successfully');

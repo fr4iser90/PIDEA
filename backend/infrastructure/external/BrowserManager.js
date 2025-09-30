@@ -199,8 +199,18 @@ class BrowserManager {
     await this.connect(port);
   }
 
-  getCurrentPort() {
-    return this.currentPort;
+  /**
+   * Get all IDE selectors for current port
+   * @returns {Promise<Object>} All IDE selectors
+   */
+  async getAllSelectors() {
+    const currentPort = this.currentPort;
+    if (!currentPort) {
+      throw new Error('No active port set in BrowserManager');
+    }
+    const ideType = await this.detectIDEType(currentPort);
+    const version = await this.detectIDEVersion(currentPort);
+    return await this.getIDESelectors(ideType, version);
   }
 
   // File Explorer Methods
@@ -211,16 +221,22 @@ class BrowserManager {
         throw new Error('No connection to Cursor IDE');
       }
 
+      // Get IDE-specific selectors
+      const selectors = await this.getAllSelectors();
+      const fileExplorerSelectors = selectors.fileExplorerSelectors;
+      if (!fileExplorerSelectors) {
+        throw new Error(`No file explorer selectors found`);
+      }
+
       // Try multiple selectors for the explorer
-      const selectors = [
-        '.explorer-folders-view',
-        '.monaco-list.list_id_2',
-        '[data-keybinding-context="16"]',
-        '.monaco-list[role="tree"]'
+      const explorerSelectors = [
+        fileExplorerSelectors.container,
+        fileExplorerSelectors.list,
+        fileExplorerSelectors.tree
       ];
 
       let explorerFound = false;
-      for (const selector of selectors) {
+      for (const selector of explorerSelectors) {
         try {
           await page.waitForSelector(selector, { timeout: 2000 });
           explorerFound = true;
@@ -230,15 +246,14 @@ class BrowserManager {
       if (!explorerFound) return [];
 
       // Extract the file tree structure as a flat list
-      const flatFiles = await page.evaluate(() => {
-        const selectors = [
-          '.explorer-folders-view .monaco-list-row',
-          '.monaco-list.list_id_2 .monaco-list-row',
-          '[data-keybinding-context="16"] .monaco-list-row',
-          '.monaco-list[role="tree"] .monaco-list-row'
+      const flatFiles = await page.evaluate((selectors) => {
+        const rowSelectors = [
+          selectors.container + ' ' + selectors.rows,
+          selectors.list + ' ' + selectors.rows,
+          selectors.tree + ' ' + selectors.rows
         ];
         let treeItems = [];
-        for (const selector of selectors) {
+        for (const selector of rowSelectors) {
           const items = document.querySelectorAll(selector);
           if (items.length > 0) {
             treeItems = Array.from(items);
@@ -246,14 +261,14 @@ class BrowserManager {
           }
         }
         return treeItems.map(item => {
-          const labelElement = item.querySelector('.label-name');
+          const labelElement = item.querySelector(selectors.labelName);
           if (!labelElement) return null;
           const name = labelElement.textContent.trim();
           const ariaLabel = item.getAttribute('aria-label');
           const ariaLevel = parseInt(item.getAttribute('aria-level') || '1');
           const ariaExpanded = item.getAttribute('aria-expanded') === 'true';
           const isSelected = item.classList.contains('selected');
-          const isDirectory = item.querySelector('.codicon-tree-item-expanded') !== null;
+          const isDirectory = item.querySelector(selectors.treeItemExpanded) !== null;
           let path = '';
           if (ariaLabel) {
             const pathMatch = ariaLabel.match(/~\/Documents\/Git\/PIDEA\/(.+)/);
@@ -264,11 +279,9 @@ class BrowserManager {
           // Fallback: Wenn path leer ist und Root-Ordner, setze ihn auf den Namen
           if (!path && isDirectory && ariaLevel === 1) {
             path = name;
-            logger.warn('WARN: Root-Ordner ohne Pfad, setze path auf name:', name);
           }
           if (!path) {
             path = name;
-            logger.warn('WARN: Leerer Pfad für', name, ariaLabel);
           }
           return {
             name,
@@ -279,7 +292,7 @@ class BrowserManager {
             selected: isSelected
           };
         }).filter(Boolean);
-      });
+      }, fileExplorerSelectors);
 
       // Build tree from flat list
       function buildTree(flatList) {
@@ -314,9 +327,19 @@ class BrowserManager {
         throw new Error('No connection to Cursor IDE');
       }
       
+      // Get IDE-specific selectors
+      const selectors = await this.getAllSelectors();
+      const fileExplorerSelectors = selectors.fileExplorerSelectors;
+      const tabSelectors = selectors.tabSelectors;
+      const editorSelectors = selectors.editorSelectors;
+      
+      if (!fileExplorerSelectors || !tabSelectors || !editorSelectors) {
+        throw new Error(`Missing selectors`);
+      }
+      
       // Debug: Log all available files in explorer
-      const debugInfo = await page.evaluate(() => {
-        const rows = document.querySelectorAll('.explorer-folders-view .monaco-list-row');
+      const debugInfo = await page.evaluate((selectors) => {
+        const rows = document.querySelectorAll(selectors.container + ' ' + selectors.rows);
         const files = [];
         rows.forEach(row => {
           const ariaLabel = row.getAttribute('aria-label');
@@ -325,7 +348,7 @@ class BrowserManager {
           files.push({ ariaLabel, title, textContent });
         });
         return files;
-      });
+      }, fileExplorerSelectors);
       logger.debug('Available files in explorer:', debugInfo);
       
       // Find the file in the explorer and click it
@@ -333,7 +356,7 @@ class BrowserManager {
       logger.info('Looking for file name:', fileName);
       
       // Try multiple selector strategies
-      const rows = await page.$$('.explorer-folders-view .monaco-list-row');
+      const rows = await page.$$(fileExplorerSelectors.container + ' ' + fileExplorerSelectors.rows);
       let found = false;
       
       for (const row of rows) {
@@ -360,7 +383,7 @@ class BrowserManager {
       }
       
       // Wait for the editor tab with the file name to be active
-      const tabSelector = `.tab[aria-label*="${fileName}"]`;
+      const tabSelector = tabSelectors.tabByLabel.replace('{fileName}', fileName);
       try {
         await page.waitForSelector(tabSelector, { timeout: 5000 });
         logger.info('Editor-Tab gefunden für:', filePath);
@@ -369,7 +392,7 @@ class BrowserManager {
       }
       
       // Wait for the file to open in the editor
-      await page.waitForSelector('.monaco-editor', { timeout: 5000 });
+      await page.waitForSelector(editorSelectors.monacoEditor, { timeout: 5000 });
       logger.info(`Opened file: ${filePath}`);
       return true;
     } catch (error) {
@@ -384,11 +407,15 @@ class BrowserManager {
       if (!page) {
         throw new Error('No connection to Cursor IDE');
       }
-      await page.waitForSelector('.monaco-editor', { timeout: 5000 });
+      const selectors = await this.getAllSelectors();
+      const editorSelectors = selectors.editorSelectors;
+      if (editorSelectors) {
+        await page.waitForSelector(editorSelectors.monacoEditor, { timeout: 5000 });
+      }
       
-      const result = await page.evaluate(() => {
+      const result = await page.evaluate((selectors) => {
         // Find the active tab and get its file name
-        const activeTab = document.querySelector('.tab.active, .tab.active-modified');
+        const activeTab = document.querySelector(selectors.activeTab);
         let fileName = '';
         if (activeTab) {
           fileName = activeTab.getAttribute('aria-label') || '';
@@ -452,12 +479,12 @@ class BrowserManager {
         
         // Fallback: Try to get content from DOM if Monaco API fails
         if (!content) {
-          const editors = document.querySelectorAll('.monaco-editor');
+          const editors = document.querySelectorAll(selectors.monacoEditor);
           log += ` Fallback: ${editors.length} .monaco-editor instances gefunden.`;
           
           // Try contenteditable elements
           for (const editor of editors) {
-            const contentEditable = editor.querySelector('[contenteditable="true"]');
+            const contentEditable = editor.querySelector(selectors.contentEditable);
             if (contentEditable && contentEditable.textContent) {
               content = contentEditable.textContent;
               log += ' Inhalt aus contenteditable geholt (nur sichtbare Zeilen).';
@@ -468,7 +495,7 @@ class BrowserManager {
           // Try textarea elements
           if (!content) {
             for (const editor of editors) {
-              const textarea = editor.querySelector('textarea');
+              const textarea = editor.querySelector(selectors.textarea);
               if (textarea && textarea.value) {
                 content = textarea.value;
                 log += ' Inhalt aus textarea geholt.';
@@ -480,7 +507,7 @@ class BrowserManager {
           // Last resort: Try view-line elements (only visible lines)
           if (!content) {
             for (const editor of editors) {
-              const textElements = editor.querySelectorAll('.view-line');
+              const textElements = editor.querySelectorAll(selectors.viewLine);
               if (textElements.length > 0) {
                 content = Array.from(textElements)
                   .map(el => el.textContent || '')
@@ -497,7 +524,7 @@ class BrowserManager {
         }
         
         return { content, log };
-      });
+      }, editorSelectors);
       
       logger.info('getCurrentFileContent: LOG:', result.log);
       logger.info('getCurrentFileContent: Content length:', result.content ? result.content.length : 0);
@@ -540,11 +567,17 @@ class BrowserManager {
       }
 
       // Get the current file tab information
-      const fileInfo = await page.evaluate(() => {
-        const activeTab = document.querySelector('.tab.active, .tab.active-modified');
+      const selectors = await this.getAllSelectors();
+      const tabSelectors = selectors.tabSelectors;
+      if (!tabSelectors) {
+        return null;
+      }
+
+      const fileInfo = await page.evaluate((selectors) => {
+        const activeTab = document.querySelector(selectors.activeTab);
         if (!activeTab) return null;
 
-        const tabTitle = activeTab.querySelector('.tab-title')?.textContent?.trim();
+        const tabTitle = activeTab.querySelector(selectors.tabTitle)?.textContent?.trim();
         const tabPath = activeTab.getAttribute('data-resource-uri');
         
         return {
@@ -552,7 +585,7 @@ class BrowserManager {
           path: tabPath,
           isModified: activeTab.classList.contains('active-modified')
         };
-      });
+      }, tabSelectors);
 
       return fileInfo;
 
@@ -570,11 +603,15 @@ class BrowserManager {
       }
 
       // Click the refresh button in the explorer
-      const refreshButton = await page.$('.explorer-folders-view .codicon-refresh');
-      if (refreshButton) {
-        await refreshButton.click();
-        logger.info('Refreshed file explorer');
-        return true;
+      const selectors = await this.getAllSelectors();
+      const fileExplorerSelectors = selectors.fileExplorerSelectors;
+      if (fileExplorerSelectors && fileExplorerSelectors.refreshButton) {
+        const refreshButton = await page.$(fileExplorerSelectors.refreshButton);
+        if (refreshButton) {
+          await refreshButton.click();
+          logger.info('Refreshed file explorer');
+          return true;
+        }
       }
 
       return false;
@@ -617,33 +654,38 @@ class BrowserManager {
 
       logger.info('Clicking New Chat button...');
 
+      // Get IDE-specific selectors
+      const newChatSelectorsData = await this.getAllSelectors();
+      const newChatSelectors = newChatSelectorsData.newChatSelectors;
+      if (!newChatSelectors) {
+        throw new Error('No new chat selectors found');
+      }
+
       // Try multiple selectors for the New Chat button
-      const selectors = [
-        // New Cursor selector with data-command-id
-        '[data-command-id="composer.createNewComposerTab"]',
-        'li[data-command-id="composer.createNewComposerTab"] a',
-        'li[data-command-id="composer.createNewComposerTab"] .action-label',
-        // Original selectors
-        'a.action-label.codicon.codicon-add-two[aria-label*="New Chat"]',
-        'a.action-label.codicon.codicon-add-two[aria-label*="New Tab"]',
-        'a.action-label.codicon.codicon-add-two[role="button"]',
-        '.action-label.codicon.codicon-add-two[role="button"]',
-        '[aria-label*="New Chat"]',
-        '[aria-label*="New Tab"]',
-        '.codicon-add-two',
-        '.action-label[aria-label*="New"]',
-        'button[aria-label*="New Chat"]',
-        'a[aria-label*="New Chat"]',
-        '.new-chat-button',
-        '[data-testid*="new-chat"]',
-        '.codicon-add',
-        '[aria-label*="Add"]',
-        'button[title*="New"]',
-        'a[title*="New"]'
+      const buttonSelectors = [
+        newChatSelectors.newChatButton,
+        newChatSelectors.newChatButtonLink,
+        newChatSelectors.newChatButtonLabel,
+        newChatSelectors.addTwoButton,
+        newChatSelectors.addTwoButtonTab,
+        newChatSelectors.addTwoButtonRole,
+        newChatSelectors.addTwoButtonClass,
+        newChatSelectors.newChatAria,
+        newChatSelectors.newTabAria,
+        newChatSelectors.codiconAddTwo,
+        newChatSelectors.actionLabelNew,
+        newChatSelectors.buttonNewChat,
+        newChatSelectors.linkNewChat,
+        newChatSelectors.newChatButtonClass,
+        newChatSelectors.newChatTestId,
+        newChatSelectors.codiconAdd,
+        newChatSelectors.ariaLabelAdd,
+        newChatSelectors.buttonTitleNew,
+        newChatSelectors.linkTitleNew
       ];
 
       let buttonFound = false;
-      for (const selector of selectors) {
+      for (const selector of buttonSelectors) {
         try {
           const button = await page.$(selector);
           if (button) {
@@ -658,35 +700,39 @@ class BrowserManager {
       }
 
       if (!buttonFound) {
-        // Fallback: Try to find by text content
-        const allButtons = await page.$$('a.action-label, .action-label, button, a[role="button"]');
-        for (const button of allButtons) {
-          try {
-            const ariaLabel = await button.getAttribute('aria-label');
-            const title = await button.getAttribute('title');
-            const textContent = await button.evaluate(el => el.textContent?.trim());
-            const className = await button.getAttribute('class');
-            
-            // Check if this is the add-two button (New Chat/Tab)
-            if (className && className.includes('codicon-add-two')) {
-              logger.info(`Found add-two button with aria-label: ${ariaLabel}`);
-              await button.click();
-              buttonFound = true;
-              break;
+        // Fallback: Try to find by text content using generic selectors
+        const fallbackSelectors = ['a.action-label', '.action-label', 'button', 'a[role="button"]'];
+        for (const fallbackSelector of fallbackSelectors) {
+          const allButtons = await page.$$(fallbackSelector);
+          for (const button of allButtons) {
+            try {
+              const ariaLabel = await button.getAttribute('aria-label');
+              const title = await button.getAttribute('title');
+              const textContent = await button.evaluate(el => el.textContent?.trim());
+              const className = await button.getAttribute('class');
+              
+              // Check if this is the add-two button (New Chat/Tab)
+              if (className && className.includes('codicon-add-two')) {
+                logger.info(`Found add-two button with aria-label: ${ariaLabel}`);
+                await button.click();
+                buttonFound = true;
+                break;
+              }
+              
+              // Also check by text content
+              if (ariaLabel && (ariaLabel.includes('New Chat') || ariaLabel.includes('New Tab')) ||
+                  title && (title.includes('New Chat') || title.includes('New Tab')) ||
+                  textContent && (textContent.includes('New Chat') || textContent.includes('New Tab'))) {
+                logger.info(`Found New Chat button by text: ${ariaLabel || title || textContent}`);
+                await button.click();
+                buttonFound = true;
+                break;
+              }
+            } catch (e) {
+              // Continue to next button
             }
-            
-            // Also check by text content
-            if (ariaLabel && (ariaLabel.includes('New Chat') || ariaLabel.includes('New Tab')) ||
-                title && (title.includes('New Chat') || title.includes('New Tab')) ||
-                textContent && (textContent.includes('New Chat') || textContent.includes('New Tab'))) {
-              logger.info(`Found New Chat button by text: ${ariaLabel || title || textContent}`);
-              await button.click();
-              buttonFound = true;
-              break;
-            }
-          } catch (e) {
-            // Continue to next button
           }
+          if (buttonFound) break;
         }
       }
 
@@ -698,11 +744,17 @@ class BrowserManager {
       await page.waitForTimeout(300);
       
       // Optimized: Only handle modal if it exists
-      const modal = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
-      if (modal) {
-        await this.handleNewChatModal(page, modal);
+      const modalSelectorsData = await this.getAllSelectors();
+      const modalSelectors = modalSelectorsData.modalSelectors;
+      if (modalSelectors) {
+        const modal = await page.$(modalSelectors.modal);
+        if (modal) {
+          await this.handleNewChatModal(page, modal, modalSelectors);
+        } else {
+          logger.info('No New Chat modal detected, continuing immediately.');
+        }
       } else {
-        logger.info('No New Chat modal detected, continuing immediately.');
+        logger.info('No modal selectors found, skipping modal handling.');
       }
       
       logger.info('Successfully clicked New Chat button and handled modal');
@@ -718,8 +770,9 @@ class BrowserManager {
    * Handle the New Chat modal that appears after clicking New Chat button
    * @param {Page} page - Playwright page object
    * @param {ElementHandle} modal - The modal element (if found)
+   * @param {Object} modalSelectors - Modal selectors from JSON
    */
-  async handleNewChatModal(page, modal) {
+  async handleNewChatModal(page, modal, modalSelectors) {
     try {
       logger.info('Handling New Chat modal...');
       
@@ -728,35 +781,20 @@ class BrowserManager {
       const maxAttempts = 3;
       
       // Look for buttons in the New Chat modal only
-      const modalSelectors = [
-        // Common modal buttons
-        'button[role="button"]',
-        '.monaco-button',
-        '.action-label',
-        '.codicon',
-        '[aria-label*="button"]',
-        // Specific New Chat modal buttons
-        'button:has-text("OK")',
-        'button:has-text("Continue")',
-        'button:has-text("Start")',
-        'button:has-text("Create")',
-        'button:has-text("Begin")',
-        'button:has-text("Yes")',
-        'button:has-text("No")',
-        'button:has-text("Cancel")',
-        // Aria-label based
-        '[aria-label*="OK"]',
-        '[aria-label*="Continue"]',
-        '[aria-label*="Start"]',
-        '[aria-label*="Create"]',
-        '[aria-label*="Begin"]',
-        '[aria-label*="Yes"]',
-        '[aria-label*="No"]',
-        '[aria-label*="Cancel"]'
+      const modalButtonSelectors = [
+        modalSelectors.button,
+        modalSelectors.okButton,
+        modalSelectors.continueButton,
+        modalSelectors.startButton,
+        modalSelectors.createButton,
+        modalSelectors.beginButton,
+        modalSelectors.yesButton,
+        modalSelectors.noButton,
+        modalSelectors.cancelButton
       ];
 
       // First try: Look for action buttons (prefer OK, Continue, Start)
-      for (const selector of modalSelectors) {
+      for (const selector of modalButtonSelectors) {
         try {
           const element = await modal.$(selector);
           if (element) {
@@ -778,7 +816,7 @@ class BrowserManager {
               attempts++;
               
               // Check if modal is gone
-              const modalStillExists = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
+              const modalStillExists = await page.$(modalSelectors.modal);
               if (!modalStillExists) {
                 logger.info('Modal closed successfully');
                 return;
@@ -792,7 +830,7 @@ class BrowserManager {
       
       // Second try: Any button if modal still exists
       if (attempts < maxAttempts) {
-        for (const selector of modalSelectors) {
+        for (const selector of modalButtonSelectors) {
           try {
             const element = await modal.$(selector);
             if (element) {
@@ -804,7 +842,7 @@ class BrowserManager {
               attempts++;
               
               // Check if modal is gone
-              const modalStillExists = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
+              const modalStillExists = await page.$(modalSelectors.modal);
               if (!modalStillExists) {
                 logger.info('Modal closed successfully');
                 return;
@@ -833,6 +871,82 @@ class BrowserManager {
   }
 
   /**
+   * Detect IDE version using CDP /json/version endpoint
+   * @param {number} port - IDE port
+   * @returns {Promise<string>} Detected version
+   */
+  async detectIDEVersion(port) {
+    try {
+      logger.info(`Detecting version on port ${port} using CDP /json/version endpoint`);
+      
+      // Use direct HTTP request to CDP endpoint
+      const response = await fetch(`http://127.0.0.1:${port}/json/version`);
+      if (!response.ok) {
+        throw new Error(`CDP version endpoint failed: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      logger.info(`CDP version response:`, data);
+
+      // Try to extract IDE version from User-Agent string first
+      if (data['User-Agent']) {
+        const userAgent = data['User-Agent'];
+        // Look for IDE-specific version patterns
+        const ideVersionPatterns = [
+          /Cursor\/(\d+\.\d+\.\d+)/,  // Cursor/1.5.7
+          /VSCode\/(\d+\.\d+\.\d+)/,  // VSCode/1.85.0
+          /Windsurf\/(\d+\.\d+\.\d+)/ // Windsurf/1.0.0
+        ];
+        
+        for (const pattern of ideVersionPatterns) {
+          const match = userAgent.match(pattern);
+          if (match) {
+            logger.info(`✅ IDE version detected via CDP /json/version User-Agent: ${match[1]}`);
+            return match[1];
+          }
+        }
+      }
+
+      // Fallback: Try different possible version fields
+      const possibleVersionFields = [
+        'Browser', 'Version', 'User-Agent', 'browser', 'version', 'user-agent',
+        'Product', 'product', 'Release', 'release'
+      ];
+
+      for (const field of possibleVersionFields) {
+        if (data[field]) {
+          const versionMatch = data[field].match(/(\d+\.\d+\.\d+)/);
+          if (versionMatch) {
+            logger.info(`✅ Version detected via CDP /json/version field '${field}': ${versionMatch[1]}`);
+            return versionMatch[1];
+          }
+        }
+      }
+
+      // If no version found in fields, try to extract from any string value
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          const versionMatch = value.match(/(\d+\.\d+\.\d+)/);
+          if (versionMatch) {
+            logger.info(`✅ Version detected via CDP /json/version field '${key}': ${versionMatch[1]}`);
+            return versionMatch[1];
+          }
+        }
+      }
+
+      // Fallback: Use cached version if available
+      logger.warn(`No version found in CDP response, using fallback version 1.5.7`);
+      return '1.5.7';
+      
+    } catch (error) {
+      logger.error(`Version detection failed for port ${port}:`, error.message);
+      // Fallback to default version
+      logger.warn(`Using fallback version 1.5.7 due to detection failure`);
+      return '1.5.7';
+    }
+  }
+
+  /**
    * Detect IDE type based on port number
    * @param {number} port - The port number
    * @returns {string} The detected IDE type
@@ -847,11 +961,16 @@ class BrowserManager {
   /**
    * Get IDE-specific selectors using IDESelectorManager
    * @param {string} ideType - The IDE type
+   * @param {string} version - The IDE version (REQUIRED)
    * @returns {Object} IDE-specific selectors
    */
-  async getIDESelectors(ideType) {
+  async getIDESelectors(ideType, version) {
+    if (!version) {
+      throw new Error(`Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`);
+    }
+    
     const IDESelectorManager = require('@services/ide/IDESelectorManager');
-    return IDESelectorManager.getSelectors(ideType);
+    return IDESelectorManager.getSelectors(ideType, version);
   }
 
   /**
@@ -869,14 +988,18 @@ class BrowserManager {
 
       logger.info(`Typing message: ${message}`);
 
-      // Determine IDE type based on current port
-      const currentPort = this.getCurrentPort();
-      const ideType = await this.detectIDEType(currentPort);
+      // Determine IDE type and version based on current port
+            const currentPort = this.currentPort;
+            if (!currentPort) {
+              throw new Error('No active port set in BrowserManager');
+            }
+            const ideType = await this.detectIDEType(currentPort);
+            const version = await this.detectIDEVersion(currentPort);
       
-      logger.info(`Detected IDE type: ${ideType} on port ${currentPort}`);
+      logger.info(`Detected IDE type: ${ideType} version: ${version} on port ${currentPort}`);
 
-      // Get IDE-specific selectors using IDESelectorManager
-      const chatSelectors = await this.getIDESelectors(ideType);
+      // Get IDE-specific selectors using IDESelectorManager with version
+      const chatSelectors = await this.getIDESelectors(ideType, version);
       
       if (!chatSelectors) {
         throw new Error(`No chat selectors found for IDE type: ${ideType}`);
@@ -886,29 +1009,33 @@ class BrowserManager {
       await page.waitForTimeout(1000);
       
       // Check if there's a modal and close it if needed (but be more careful)
-      const modal = await page.$('.monaco-dialog, [role="dialog"], .modal-dialog');
-      if (modal) {
-        // Check if modal is actually visible and blocking
-        const isVisible = await modal.isVisible();
-        if (isVisible) {
-          logger.info('Visible modal detected, attempting to close it...');
-          try {
-            // Try to find and click a close button
-            const closeButton = await page.$('.monaco-dialog .codicon-close, [role="dialog"] .codicon-close, .modal-dialog .close');
-            if (closeButton) {
-              await closeButton.click();
-              logger.info('Modal closed via close button');
-            } else {
-              // Fallback: Press Escape
-              await page.keyboard.press('Escape');
-              logger.info('Modal closed via Escape key');
+      const allSelectors = await this.getAllSelectors();
+      const modalSelectors = allSelectors.modalSelectors;
+      if (modalSelectors) {
+        const modal = await page.$(modalSelectors.modal);
+        if (modal) {
+          // Check if modal is actually visible and blocking
+          const isVisible = await modal.isVisible();
+          if (isVisible) {
+            logger.info('Visible modal detected, attempting to close it...');
+            try {
+              // Try to find and click a close button
+              const closeButton = await page.$(modalSelectors.closeButton);
+              if (closeButton) {
+                await closeButton.click();
+                logger.info('Modal closed via close button');
+              } else {
+                // Fallback: Press Escape
+                await page.keyboard.press('Escape');
+                logger.info('Modal closed via Escape key');
+              }
+              await page.waitForTimeout(500);
+            } catch (e) {
+              logger.warn('Failed to close modal:', e.message);
             }
-            await page.waitForTimeout(500);
-          } catch (e) {
-            logger.warn('Failed to close modal:', e.message);
+          } else {
+            logger.info('Modal detected but not visible, ignoring');
           }
-        } else {
-          logger.info('Modal detected but not visible, ignoring');
         }
       }
 
@@ -957,33 +1084,40 @@ class BrowserManager {
           logger.info(`Message sent via Enter key (Cursor): ${message}`);
         } else if (ideType === 'vscode') {
           // VSCode might have a send button
-          const sendSelectors = [
-            '.codicon-send',
-            '.action-label[aria-label*="Send"]',
-            '.chat-execute-toolbar .codicon-send',
-            '.monaco-action-bar .codicon-send',
-            'button[aria-label*="Send"]',
-            '.send-button',
-            'button[title*="Send"]',
-            '[data-testid="send-button"]'
-          ];
+          const sendButtonSelectors = allSelectors.sendButtonSelectors;
+          if (sendButtonSelectors) {
+            const sendSelectors = [
+              sendButtonSelectors.codiconSend,
+              sendButtonSelectors.actionLabelSend,
+              sendButtonSelectors.chatExecuteToolbar,
+              sendButtonSelectors.monacoActionBar,
+              sendButtonSelectors.buttonSend,
+              sendButtonSelectors.sendButtonClass,
+              sendButtonSelectors.buttonTitleSend,
+              sendButtonSelectors.sendButtonTestId
+            ];
 
-          let sendButton = null;
-          for (const selector of sendSelectors) {
-            try {
-              sendButton = await page.$(selector);
-              if (sendButton) {
-                logger.info(`Found VSCode send button with selector: ${selector}`);
-                break;
+            let sendButton = null;
+            for (const selector of sendSelectors) {
+              try {
+                sendButton = await page.$(selector);
+                if (sendButton) {
+                  logger.info(`Found VSCode send button with selector: ${selector}`);
+                  break;
+                }
+              } catch (e) {
+                // Continue to next selector
               }
-            } catch (e) {
-              // Continue to next selector
             }
-          }
 
-          if (sendButton) {
-            await sendButton.click();
-            logger.info(`Message sent via VSCode send button: ${message}`);
+            if (sendButton) {
+              await sendButton.click();
+              logger.info(`Message sent via VSCode send button: ${message}`);
+            } else {
+              // Fallback: Press Enter to send
+              await chatInput.press('Enter');
+              logger.info(`Message sent via Enter key (VSCode fallback): ${message}`);
+            }
           } else {
             // Fallback: Press Enter to send
             await chatInput.press('Enter');

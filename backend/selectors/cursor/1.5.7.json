@@ -25,5 +25,70 @@
       "comment": ".mtk14",
       "function": ".mtk18"
     }
+  },
+  "fileExplorerSelectors": {
+    "container": ".explorer-folders-view",
+    "list": ".monaco-list.list_id_2",
+    "tree": ".monaco-list[role=\"tree\"]",
+    "rows": ".monaco-list-row",
+    "labelName": ".label-name",
+    "treeItemExpanded": ".codicon-tree-item-expanded",
+    "refreshButton": ".codicon-refresh"
+  },
+  "tabSelectors": {
+    "activeTab": ".tab.active, .tab.active-modified",
+    "tabTitle": ".tab-title",
+    "tabByLabel": ".tab[aria-label*=\"{fileName}\"]"
+  },
+  "modalSelectors": {
+    "modal": ".monaco-dialog, [role=\"dialog\"], .modal-dialog",
+    "closeButton": ".monaco-dialog .codicon-close, [role=\"dialog\"] .codicon-close, .modal-dialog .close",
+    "button": ".monaco-button, .action-label, .codicon",
+    "okButton": "button:has-text(\"OK\")",
+    "continueButton": "button:has-text(\"Continue\")",
+    "startButton": "button:has-text(\"Start\")",
+    "createButton": "button:has-text(\"Create\")",
+    "beginButton": "button:has-text(\"Begin\")",
+    "yesButton": "button:has-text(\"Yes\")",
+    "noButton": "button:has-text(\"No\")",
+    "cancelButton": "button:has-text(\"Cancel\")"
+  },
+  "newChatSelectors": {
+    "newChatButton": "[data-command-id=\"composer.createNewComposerTab\"]",
+    "newChatButtonLink": "li[data-command-id=\"composer.createNewComposerTab\"] a",
+    "newChatButtonLabel": "li[data-command-id=\"composer.createNewComposerTab\"] .action-label",
+    "addTwoButton": "a.action-label.codicon.codicon-add-two[aria-label*=\"New Chat\"]",
+    "addTwoButtonTab": "a.action-label.codicon.codicon-add-two[aria-label*=\"New Tab\"]",
+    "addTwoButtonRole": "a.action-label.codicon.codicon-add-two[role=\"button\"]",
+    "addTwoButtonClass": ".action-label.codicon.codicon-add-two[role=\"button\"]",
+    "newChatAria": "[aria-label*=\"New Chat\"]",
+    "newTabAria": "[aria-label*=\"New Tab\"]",
+    "codiconAddTwo": ".codicon-add-two",
+    "actionLabelNew": ".action-label[aria-label*=\"New\"]",
+    "buttonNewChat": "button[aria-label*=\"New Chat\"]",
+    "linkNewChat": "a[aria-label*=\"New Chat\"]",
+    "newChatButtonClass": ".new-chat-button",
+    "newChatTestId": "[data-testid*=\"new-chat\"]",
+    "codiconAdd": ".codicon-add",
+    "ariaLabelAdd": "[aria-label*=\"Add\"]",
+    "buttonTitleNew": "button[title*=\"New\"]",
+    "linkTitleNew": "a[title*=\"New\"]"
+  },
+  "sendButtonSelectors": {
+    "codiconSend": ".codicon-send",
+    "actionLabelSend": ".action-label[aria-label*=\"Send\"]",
+    "chatExecuteToolbar": ".chat-execute-toolbar .codicon-send",
+    "monacoActionBar": ".monaco-action-bar .codicon-send",
+    "buttonSend": "button[aria-label*=\"Send\"]",
+    "sendButtonClass": ".send-button",
+    "buttonTitleSend": "button[title*=\"Send\"]",
+    "sendButtonTestId": "[data-testid=\"send-button\"]"
+  },
+  "editorSelectors": {
+    "monacoEditor": ".monaco-editor",
+    "contentEditable": "[contenteditable=\"true\"]",
+    "textarea": "textarea",
+    "viewLine": ".view-line",
+    "viewLines": ".view-lines .view-line"
   }
 }

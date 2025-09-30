@@ -31,7 +31,12 @@ class IDESelectorManager {
 
     try {
       // Try JSON files first (new system)
-      return await this.jsonSelectorManager.getSelectors(ideType, version);
+      const selectorsData = await this.jsonSelectorManager.getSelectors(ideType, version);
+      
+      // Extract selectors from the structure (chatSelectors, etc.)
+      const selectors = selectorsData.chatSelectors || selectorsData;
+      
+      return selectors;
     } catch (error) {
       this.logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
       throw error; // Re-throw - NO FALLBACKS!
@@ -52,10 +57,27 @@ class IDESelectorManager {
         throw new Error(`Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`);
       }
 
-      // For static access, we still use IDETypes for now (backward compatibility)
-      // In the future, this could be refactored to use JSON files directly
-      const selectors = IDETypes.getSelectorsForVersion(ideType, version);
-      logger.info(`Retrieved selectors for ${ideType} version ${version}`);
+      // Use JSON files directly (no more IDETypes fallback)
+      const JSONSelectorManager = require('./JSONSelectorManager');
+      const jsonManager = new JSONSelectorManager();
+      
+      // Since this is static, we need to use synchronous file reading
+      const fs = require('fs');
+      const path = require('path');
+      
+      const selectorPath = path.join(__dirname, '../../../selectors', ideType, `${version}.json`);
+      
+      if (!fs.existsSync(selectorPath)) {
+        throw new Error(`Version ${version} not found for IDE type ${ideType}. File not found: ${selectorPath}`);
+      }
+      
+      const content = fs.readFileSync(selectorPath, 'utf8');
+      const selectorsData = JSON.parse(content);
+      
+      // Extract selectors from the structure (chatSelectors, etc.)
+      const selectors = selectorsData.chatSelectors || selectorsData;
+      
+      logger.info(`Retrieved selectors for ${ideType} version ${version} from JSON file`);
       return selectors;
     } catch (error) {
       logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);

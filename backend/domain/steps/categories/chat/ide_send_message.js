@@ -50,7 +50,7 @@ class IDESendMessageStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = null } = context;
+      const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = null, activeIDE } = context;
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
@@ -92,7 +92,11 @@ class IDESendMessageStep {
       
       // ✅ Handler macht BEIDES: Business Logic + Browser Automation
       logger.info('📝 Executing SendMessageHandler (Business Logic + Browser Automation)...');
-      const result = await sendMessageHandler.handle(command);
+      const port = activeIDE?.port;
+      if (!port) {
+        throw new Error('No active IDE port available in context');
+      }
+      const result = await sendMessageHandler.handle(command, port);
       
       // ✅ AI RESPONSE WAITING (nur wenn gewünscht)
       let aiResponse = null;

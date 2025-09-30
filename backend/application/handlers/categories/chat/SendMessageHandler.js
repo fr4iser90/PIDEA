@@ -40,17 +40,14 @@ class SendMessageHandler {
 
   /**
    * Get the BrowserManager instance
+   * @param {number} port - The IDE port to connect to
    * @returns {Object} The BrowserManager instance
    */
-  async getBrowserManager() {
-    const activePort = this.ideManager.getActivePort();
-    logger.info(`Active port: ${activePort}`);
+  async getBrowserManager(port) {
+    logger.info(`Using port: ${port}`);
     
     // Ensure BrowserManager is connected to the correct port
-    if (this.browserManager.getCurrentPort() !== activePort) {
-      logger.info(`Switching BrowserManager to port ${activePort}`);
-      await this.browserManager.switchToPort(activePort);
-    }
+    await this.browserManager.switchToPort(port);
     
     return this.browserManager;
   }
@@ -66,9 +63,10 @@ class SendMessageHandler {
   /**
    * Handle SendMessageCommand
    * @param {SendMessageCommand} command - Messaging command
+   * @param {number} port - The IDE port to connect to
    * @returns {Promise<Object>} Messaging result
    */
-  async handle(command) {
+  async handle(command, port) {
     // Validate command
     const validationResult = await this.validateCommand(command);
     if (!validationResult.isValid) {
@@ -87,7 +85,7 @@ class SendMessageHandler {
         timestamp: new Date()
       });
       // Use BrowserManager for message sending (replaces deprecated IDE service sendMessage)
-      const browserManager = await this.getBrowserManager();
+      const browserManager = await this.getBrowserManager(port);
       this.logger.info('Sending message via BrowserManager:', command.message);
       await browserManager.typeMessage(command.message, true); // This now throws on error instead of returning false
       await this.eventBus.publish('message.sent', {
