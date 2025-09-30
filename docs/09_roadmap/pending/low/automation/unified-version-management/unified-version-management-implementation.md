@@ -9,6 +9,8 @@
 - **Dependencies**: Git workflow system, task execution system, database schema
 - **Related Issues**: Version management fragmentation, inconsistent branch naming
 - **Created**: 2024-12-19T10:30:00.000Z
+- **Last Updated**: 2025-09-30T22:40:00.000Z
+- **Previous Attempt**: 2025-09-30T22:29:42.000Z - Discarded due to architectural issues
 
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, JavaScript, SQLite, Git, Winston Logger
@@ -17,6 +19,23 @@
 - **API Changes**: New endpoints for version management, release automation, changelog generation
 - **Frontend Changes**: Version management dashboard, release management UI
 - **Backend Changes**: Unified branch strategy service, version management handlers, workflow validation
+
+## 2.1. Lessons Learned from Previous Attempt
+- **❌ Problem**: Created standalone CLI scripts instead of integrating with existing Step system
+- **❌ Problem**: Used incorrect file paths (scripts/ instead of proper backend structure)
+- **❌ Problem**: Module alias issues with @ imports
+- **✅ Solution**: Integrate as Steps in existing workflow system
+- **✅ Solution**: Use proper backend architecture (domain/services, application/handlers, etc.)
+- **✅ Solution**: Leverage existing module-alias/register system
+
+## 2.2. Codebase Analysis Results (2024-12-19)
+- **✅ Database Schema**: Migration `001_unified_version_management.sql` already exists with complete schema
+- **✅ Branch Strategies**: All three strategy classes exist and are functional
+- **✅ Step System**: Comprehensive step system with proper categories and naming conventions
+- **✅ Git Workflow**: GitWorkflowManager exists and integrates with BranchStrategy
+- **⚠️ File Path Corrections**: Need to use existing `git/` category instead of creating new `version/` category
+- **⚠️ Naming Convention**: Should follow existing `git_*` pattern instead of `version_*` pattern
+- **⚠️ Package Versions**: All package.json files already have version `1.0.1`
 
 ## 3. File Impact Analysis
 
@@ -39,37 +58,21 @@
 - [ ] `backend/domain/services/version/BranchStrategyRegistry.js` - Strategy registry
 - [ ] `backend/domain/services/version/VersionManagementService.js` - Version management core
 - [ ] `backend/domain/services/version/SemanticVersioningService.js` - Semantic versioning
-- [ ] `backend/domain/services/changelog/ChangelogGeneratorService.js` - Changelog generation
-- [ ] `backend/domain/services/changelog/CommitAnalyzerService.js` - Commit analysis
-- [ ] `backend/domain/services/workflow/validation/WorkflowValidationService.js` - Workflow validation
-- [ ] `backend/domain/services/workflow/validation/TaskCompletionDetector.js` - Completion detection
-- [ ] `backend/domain/services/workflow/validation/QualityAssessmentService.js` - Quality assessment
+- [ ] `backend/domain/steps/categories/git/git_version_bump_step.js` - **CORRECTED**: Auto version bump step (git category)
+- [ ] `backend/domain/steps/categories/git/git_version_analysis_step.js` - **CORRECTED**: Version analysis step (git category)
+- [ ] `backend/domain/steps/categories/git/git_changelog_generation_step.js` - **CORRECTED**: Changelog step (git category)
+- [ ] `backend/domain/steps/categories/git/git_release_tag_step.js` - **CORRECTED**: Release tagging step (git category)
 - [ ] `backend/application/handlers/categories/version/VersionManagementHandler.js` - Version handler
-- [ ] `backend/application/handlers/categories/changelog/ChangelogGenerationHandler.js` - Changelog handler
 - [ ] `backend/application/commands/categories/version/VersionManagementCommand.js` - Version commands
-- [ ] `backend/application/commands/categories/release/ReleaseManagementCommand.js` - Release commands
 - [ ] `backend/infrastructure/database/repositories/VersionRepository.js` - Version persistence
 - [ ] `backend/infrastructure/database/repositories/ReleaseRepository.js` - Release persistence
 - [ ] `backend/presentation/api/controllers/VersionController.js` - Version API
 - [ ] `backend/presentation/api/controllers/ReleaseController.js` - Release API
-- [ ] `backend/domain/steps/categories/version/VersionBumpStep.js` - Version bumping step
-- [ ] `backend/domain/steps/categories/version/ChangelogGenerationStep.js` - Changelog step
-- [ ] `backend/domain/steps/categories/version/ReleaseTagStep.js` - Release tagging step
-- [ ] `backend/domain/steps/categories/validation/WorkflowValidationStep.js` - Validation step
-- [ ] `backend/domain/steps/categories/validation/TaskCompletionStep.js` - Completion step
-- [ ] `backend/domain/steps/categories/validation/QualityAssessmentStep.js` - Quality step
-- [ ] `backend/framework/version_management/framework.json` - Version framework
-- [ ] `backend/framework/release_management/framework.json` - Release framework
-- [ ] `backend/framework/version_management/steps/` - Version management steps
-- [ ] `backend/framework/release_management/steps/` - Release management steps
-- [ ] `docs/CHANGELOG.md` - Main changelog
-- [ ] `docs/RELEASE_NOTES.md` - Release notes template
-- [ ] `scripts/version-bump.js` - Version bumping script
-- [ ] `scripts/generate-changelog.js` - Changelog generation script
-- [ ] `scripts/create-release.js` - Release creation script
+- [ ] `backend/presentation/api/routes/versionRoutes.js` - Version routes
+- [ ] `backend/config/unified-version-management.json` - Configuration
+- [ ] ~~`backend/database/migrations/001_unified_version_management.sql`~~ - **ALREADY EXISTS**: Database schema
 - [ ] `backend/tests/unit/services/version/UnifiedBranchStrategy.test.js` - Strategy tests
 - [ ] `backend/tests/unit/services/version/VersionManagementService.test.js` - Version tests
-- [ ] `backend/tests/unit/services/changelog/ChangelogGeneratorService.test.js` - Changelog tests
 - [ ] `backend/tests/integration/version-management-git-workflow.test.js` - Integration tests
 - [ ] `backend/tests/e2e/release-process.test.js` - E2E tests
 
@@ -81,23 +84,25 @@
 
 ## 4. Implementation Phases
 
-### Phase 1: Foundation Setup (6 hours)
-- [ ] Create base strategy architecture
-- [ ] Set up unified configuration system
-- [ ] Configure environment variables
-- [ ] Create initial database schema
+### Phase 1: Step-Based Architecture (6 hours)
+- [ ] Create `git_version_bump_step.js` as core step (git category naming)
+- [ ] Create `git_version_analysis_step.js` for change detection (git category naming)
+- [ ] Integrate with existing StepRegistry system
+- [ ] Set up proper module imports (@ aliases)
+- [ ] ~~Create initial database schema~~ - **ALREADY EXISTS**: Use existing migration
 - [ ] Set up logging and monitoring
 
-### Phase 2: Core Implementation (8 hours)
+### Phase 2: Core Services (8 hours)
 - [ ] Implement UnifiedBranchStrategy
 - [ ] Create BranchStrategyRegistry
 - [ ] Implement VersionManagementService
 - [ ] Add SemanticVersioningService
 - [ ] Implement validation and error handling
+- [ ] Create proper repository classes
 
-### Phase 3: Integration (6 hours)
-- [ ] Connect with existing Git workflow system
-- [ ] Update workflow configurations
+### Phase 3: Workflow Integration (6 hours)
+- [ ] Connect Steps with existing Git workflow system
+- [ ] Update workflow configurations to use Steps
 - [ ] Integrate with task execution system
 - [ ] Add API endpoints
 - [ ] Test integration points
@@ -288,41 +293,109 @@ Create a comprehensive migration plan to unify the three existing version manage
 
 ### Core Components:
 
-#### 1. UnifiedBranchStrategy (Main Strategy)
+#### 1. VersionBumpStep (Main Step) - CORRECT NAMING
 ```javascript
-class UnifiedBranchStrategy {
-  constructor(config = {}) {
-    this.config = this.mergeConfigurations(config);
-    this.registry = new BranchStrategyRegistry();
-    this.validator = new BranchNameValidator();
-    this.logger = new Logger('UnifiedBranchStrategy');
+/**
+ * Version Bump Step
+ * Automatically bumps version based on changes
+ */
+
+const StepBuilder = require('@steps/StepBuilder');
+const Logger = require('@logging/Logger');
+const logger = new Logger('VersionBumpStep');
+
+const config = {
+  name: 'VersionBumpStep',
+  type: 'version',
+  category: 'version',
+  description: 'Automatically bumps version based on changes',
+  version: '1.0.0',
+  dependencies: ['versionManagementService', 'gitService'],
+  settings: {
+    timeout: 30000
+  },
+  validation: {
+    required: ['projectPath'],
+    optional: ['taskId', 'bumpType']
+  }
+};
+
+class VersionBumpStep {
+  constructor() {
+    this.name = config.name;
+    this.type = config.type;
+    this.category = config.category;
+    this.description = config.description;
+    this.version = config.version;
+    this.dependencies = config.dependencies;
+    this.settings = config.settings;
+    this.validation = config.validation;
   }
 
-  generateBranchName(task, context) {
-    // Single source of truth for branch naming
-    const strategy = this.determineStrategy(task, context);
-    const branchName = strategy.generateBranchName(task, context);
-    return this.validateAndSanitize(branchName);
+  async execute(context) {
+    // Analyze changes and bump version
+    const result = await this.bumpVersion(context);
+    return { success: true, newVersion: result.version };
   }
 }
+
+module.exports = VersionBumpStep;
 ```
 
-#### 2. BranchStrategyRegistry (Strategy Management)
+#### 2. VersionAnalysisStep (Change Detection) - CORRECT NAMING
 ```javascript
-class BranchStrategyRegistry {
+/**
+ * Version Analysis Step
+ * Analyzes changes to determine version bump type
+ */
+
+const StepBuilder = require('@steps/StepBuilder');
+const Logger = require('@logging/Logger');
+const logger = new Logger('VersionAnalysisStep');
+
+const config = {
+  name: 'VersionAnalysisStep',
+  type: 'version',
+  category: 'version',
+  description: 'Analyzes changes to determine version bump type',
+  version: '1.0.0',
+  dependencies: ['gitService', 'fileSystemService'],
+  settings: {
+    timeout: 30000
+  },
+  validation: {
+    required: ['projectPath'],
+    optional: ['sinceCommit', 'includePatterns']
+  }
+};
+
+class VersionAnalysisStep {
   constructor() {
-    this.strategies = new Map();
-    this.loadDefaultStrategies();
+    this.name = config.name;
+    this.type = config.type;
+    this.category = config.category;
+    this.description = config.description;
+    this.version = config.version;
+    this.dependencies = config.dependencies;
+    this.settings = config.settings;
+    this.validation = config.validation;
   }
 
-  registerStrategy(name, strategyClass) {
-    this.strategies.set(name, strategyClass);
-  }
-
-  getStrategy(name) {
-    return this.strategies.get(name) || this.strategies.get('default');
+  async execute(context) {
+    // Analyze git changes and file modifications
+    const changes = await this.analyzeChanges(context);
+    const impact = this.calculateImpact(changes);
+    
+    return { 
+      success: true, 
+      changes: changes, 
+      impact: impact,
+      suggestedBumpType: this.suggestBumpType(impact)
+    };
   }
 }
+
+module.exports = VersionAnalysisStep;
 ```
 
 #### 3. VersionManagementService (Version Control)
@@ -346,14 +419,15 @@ class VersionManagementService {
 
 ### Migration Strategy:
 
-#### Phase 1: Create Unified System
-1. **Create base architecture** without breaking existing systems
-2. **Implement new services** alongside existing ones
-3. **Add comprehensive testing** for new system
+#### Phase 1: Create Step-Based System
+1. **Create AutomaticVersionBumpStep** as main entry point
+2. **Create VersionAnalysisStep** for change detection
+3. **Integrate with StepRegistry** for automatic execution
+4. **Add comprehensive testing** for new Steps
 
-#### Phase 2: Gradual Migration
-1. **Update workflow configurations** to use unified system
-2. **Migrate strategy classes** to new base classes
+#### Phase 2: Gradual Integration
+1. **Update workflow configurations** to include version Steps
+2. **Migrate existing strategies** to new base classes
 3. **Update service integrations** to use unified system
 
 #### Phase 3: Legacy Cleanup
@@ -361,93 +435,132 @@ class VersionManagementService {
 2. **Delete old strategy classes** after migration
 3. **Clean up unused configurations**
 
-### Configuration Unification:
+### Step Integration Example:
 
-#### Before (3 Different Systems):
+#### Before (Manual Version Management):
 ```javascript
-// JSON Configuration
-"branchName": "task/${task.id}"
-
-// Strategy Class
-class FeatureBranchStrategy {
-  generateBranchName(task, context) {
-    return `${this.config.prefix}/${task.id}`;
-  }
-}
-
-// Legacy Service
-generateBranchName(task, strategy) {
-  return `${strategy.prefix}/${cleanTitle}-${taskId}-${timestamp}`;
-}
+// Manual version bumping
+const version = "1.0.0";
+const newVersion = "1.0.1";
+// Manual package.json update
 ```
 
-#### After (Unified System):
+#### After (Automatic Step-Based):
 ```javascript
-// Unified Configuration
-const unifiedConfig = {
-  strategies: {
-    task: {
-      prefix: 'task',
-      includeTaskId: true,
-      includeTimestamp: true,
-      maxLength: 50
-    },
-    feature: {
-      prefix: 'feature',
-      includeTaskId: true,
-      sanitizeTitle: true,
-      maxLength: 50
-    },
-    release: {
-      prefix: 'release',
-      requireVersion: true,
-      includeCodename: false,
-      maxLength: 50
-    }
-  }
-};
-
-// Unified Strategy
-class UnifiedBranchStrategy {
-  generateBranchName(task, context) {
-    const strategyConfig = this.getStrategyConfig(task.type);
-    return this.buildBranchName(task, context, strategyConfig);
-  }
-}
+// Automatic version bumping via Steps
+const stepRegistry = new StepRegistry();
+await stepRegistry.executeStep('AutomaticVersionBumpStep', {
+  task: currentTask,
+  projectPath: '/path/to/project'
+});
+// Automatically analyzes changes and bumps version
 ```
 
-### Benefits of Unified System:
+### Benefits of Step-Based System:
 
-#### 1. Single Source of Truth
-- **Before**: 3 different systems with different logic
-- **After**: One unified system with consistent behavior
+#### 1. Automatic Execution
+- **Before**: Manual version management
+- **After**: Automatic version bumping via Steps
 
-#### 2. Type Safety and Validation
-- **Before**: String-based configuration prone to errors
-- **After**: Type-safe configuration with validation
+#### 2. Workflow Integration
+- **Before**: Standalone scripts
+- **After**: Integrated with existing workflow system
 
-#### 3. Better Testability
-- **Before**: Hard to test JSON configurations
-- **After**: Individual strategy classes easily testable
+#### 3. Change Detection
+- **Before**: No automatic change analysis
+- **After**: Automatic analysis of git changes and file modifications
 
-#### 4. Easy Extensibility
-- **Before**: Adding new strategies requires changes in multiple places
-- **After**: New strategies can be added through registry
+#### 4. Smart Version Bumping
+- **Before**: Manual version type selection
+- **After**: Automatic bump type determination based on changes
 
-#### 5. Centralized Configuration
-- **Before**: Configuration scattered across multiple files
-- **After**: Centralized configuration with inheritance
+#### 5. Consistent Architecture
+- **Before**: Mixed approaches (CLI, scripts, services)
+- **After**: Unified Step-based architecture
 
-#### 6. Consistent Logging and Monitoring
-- **Before**: Different logging approaches
-- **After**: Unified logging and monitoring
+#### 6. Easy Testing
+- **Before**: Hard to test manual processes
+- **After**: Steps are easily testable units
 
-#### 7. Performance Optimization
-- **Before**: No caching or optimization
-- **After**: Built-in caching and performance optimization
+#### 7. Extensibility
+- **Before**: Adding features requires new scripts
+- **After**: New Steps can be added to existing workflows
 
-#### 8. Security Features
-- **Before**: No input validation
-- **After**: Built-in validation and sanitization
+#### 8. Monitoring and Logging
+- **Before**: Limited logging capabilities
+- **After**: Built-in Step execution monitoring and logging
 
-This unified system will provide a robust, maintainable, and extensible foundation for version management in PIDEA, eliminating the current fragmentation and providing a single source of truth for all version management operations.
+This step-based system will provide automatic, intelligent version management in PIDEA, integrating seamlessly with existing workflows and providing automatic change detection and version bumping capabilities.
+
+## 18. Implementation Notes
+
+### Key Changes from Previous Attempt:
+1. **Step-Based Architecture**: Instead of standalone CLI scripts, use Steps integrated with StepRegistry
+2. **CORRECTED NAMING CONVENTIONS**: 
+   - File names: `git_*_step.js` (e.g., `git_version_bump_step.js`) - follows existing git category pattern
+   - Class names: `PascalCase` (e.g., `GitVersionBumpStep`)
+   - Step names: `PascalCase` (e.g., `GitVersionBumpStep`)
+   - Categories: `git` (use existing category instead of creating new `version` category)
+3. **Database Schema**: Migration already exists at `backend/database/migrations/001_unified_version_management.sql`
+4. **Package Versions**: All package.json files already have version `1.0.1`
+5. **Automatic Change Detection**: Analyze git changes and file modifications automatically
+6. **Smart Version Bumping**: Determine bump type based on change analysis
+7. **Workflow Integration**: Integrate with existing task execution workflows
+8. **Proper Module Imports**: Use existing @ alias system correctly
+9. **Step Configuration**: Follow existing StepBuilder pattern with config object
+
+### Execution Flow:
+1. **Task Completion** → Triggers `GitVersionBumpStep`
+2. **GitVersionAnalysisStep** → Analyzes changes and determines impact
+3. **VersionManagementService** → Executes appropriate version bump
+4. **Git Integration** → Creates tags and commits version changes
+5. **Database Storage** → Records version history and metadata (using existing schema)
+
+### Success Criteria:
+- [ ] Steps execute automatically on task completion
+- [ ] Change analysis works correctly
+- [ ] Version bumping is intelligent and accurate
+- [ ] Integration with existing workflows is seamless
+- [ ] **CORRECTED NAMING CONVENTIONS** followed throughout (git category pattern)
+- [ ] All tests pass
+- [ ] Documentation is complete
+- [ ] Database integration uses existing migration
+
+## 19. Task Splitting Recommendations
+
+### Current Task Analysis
+- **Total Estimated Time**: 24 hours (exceeds 8-hour limit)
+- **Files to Modify**: 11 files (exceeds 10-file limit)
+- **Files to Create**: 34 files (exceeds 10-file limit)
+- **Complexity**: High - requires architectural changes and integration
+
+### Recommended Subtask Breakdown
+
+#### Subtask 1: Git Integration & Step Implementation (8 hours)
+**Files**: 12 files to create/modify
+- Create git version management steps (`git_version_bump_step.js`, `git_version_analysis_step.js`, etc.)
+- Integrate with existing StepRegistry system
+- Update GitWorkflowManager to use unified system
+- Update workflow configurations
+- Basic testing setup
+
+#### Subtask 2: Service Layer & API Implementation (8 hours)
+**Files**: 12 files to create/modify
+- Implement UnifiedBranchStrategy and related services
+- Create VersionManagementService and SemanticVersioningService
+- Implement API endpoints and controllers
+- Create repository classes for database integration
+- Integration testing
+
+#### Subtask 3: Testing & Documentation (8 hours)
+**Files**: 10 files to create/modify
+- Comprehensive unit tests (90% coverage requirement)
+- Integration tests for git workflow
+- E2E tests for release process
+- Complete documentation and migration guide
+- Legacy cleanup and final validation
+
+### Subtask Dependencies
+- **Subtask 1** → **Subtask 2**: Service layer depends on step implementation
+- **Subtask 2** → **Subtask 3**: Testing depends on completed service layer
+- **All Subtasks**: Can be developed in parallel after Subtask 1 foundation
