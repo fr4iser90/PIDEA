@@ -81,11 +81,14 @@ class IDEAutomationService {
     const ideType = this.ideManager.getIDEType(activePort) || IDETypes.CURSOR;
     const workspacePath = this.ideManager.getWorkspacePath(activePort);
     
+    // Get version-specific selectors
+    const selectors = await this.selectorManager.getSelectors(ideType);
+    
     return {
       port: activePort,
       ideType: ideType,
       workspacePath: workspacePath,
-      selectors: IDETypes.getSelectors(ideType)
+      selectors: selectors
     };
   }
 

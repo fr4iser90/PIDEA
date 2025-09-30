@@ -96,19 +96,63 @@ class WindsurfIDE extends BaseIDE {
 
       // Try to extract version from DOM
       const version = await page.evaluate(() => {
-        // Look for version in various places
+        // Method 1: Look for version in UI elements
         const versionElement = document.querySelector('[data-windsurf-version]') ||
                              document.querySelector('.windsurf-version') ||
-                             document.querySelector('meta[name="windsurf-version"]');
+                             document.querySelector('[title*="version"]');
         
-        return versionElement ? versionElement.textContent || versionElement.content : 'unknown';
+        if (versionElement) {
+          return versionElement.textContent.trim() || versionElement.getAttribute('data-windsurf-version');
+        }
+        
+        // Method 2: Look in meta tags
+        const metaVersion = document.querySelector('meta[name="windsurf-version"]');
+        if (metaVersion) {
+          return metaVersion.content;
+        }
+        
+        // Method 3: Look in window object
+        if (window.windsurf && window.windsurf.version) {
+          return window.windsurf.version;
+        }
+        
+        return 'unknown';
       });
 
-      return { version: version || 'unknown' };
+      const normalizedVersion = this.normalizeVersion(version || 'unknown');
+      return { version: normalizedVersion };
     } catch (error) {
       logger.error('Error getting version:', error);
       return { version: 'unknown', error: error.message };
     }
+  }
+
+  /**
+   * Normalize version format
+   * @param {string} version - Raw version string
+   * @returns {string} Normalized version
+   */
+  normalizeVersion(version) {
+    if (!version || version === 'unknown') {
+      return 'unknown';
+    }
+    
+    // Remove any non-version characters
+    const cleaned = version.replace(/[^0-9.]/g, '');
+    
+    // Ensure it's a valid semantic version
+    const versionRegex = /^(\d+)\.(\d+)\.(\d+)$/;
+    if (versionRegex.test(cleaned)) {
+      return cleaned;
+    }
+    
+    // Try to extract version from string
+    const match = version.match(/(\d+\.\d+\.\d+)/);
+    if (match) {
+      return match[1];
+    }
+    
+    return 'unknown';
   }
 
   /**

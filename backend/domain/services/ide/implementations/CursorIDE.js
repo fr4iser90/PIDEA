@@ -114,19 +114,63 @@ class CursorIDE extends BaseIDE {
       
       // Try to get version from Cursor's UI
       const version = await page.evaluate(() => {
-        // Look for version information in Cursor's UI
+        // Method 1: Look for version in UI elements
         const versionElement = document.querySelector('[data-testid="version"]') ||
                              document.querySelector('.version') ||
-                             document.querySelector('[title*="version"]');
+                             document.querySelector('[title*="version"]') ||
+                             document.querySelector('.status-bar-item[title*="version"]');
         
-        return versionElement ? versionElement.textContent : 'unknown';
+        if (versionElement) {
+          return versionElement.textContent.trim();
+        }
+        
+        // Method 2: Look in meta tags
+        const metaVersion = document.querySelector('meta[name="cursor-version"]');
+        if (metaVersion) {
+          return metaVersion.content;
+        }
+        
+        // Method 3: Look in window object
+        if (window.cursor && window.cursor.version) {
+          return window.cursor.version;
+        }
+        
+        return 'unknown';
       });
       
-      return version || 'unknown';
+      return this.normalizeVersion(version) || 'unknown';
     } catch (error) {
       this.handleError(error, 'getVersion');
       return 'unknown';
     }
+  }
+
+  /**
+   * Normalize version format
+   * @param {string} version - Raw version string
+   * @returns {string} Normalized version
+   */
+  normalizeVersion(version) {
+    if (!version || version === 'unknown') {
+      return 'unknown';
+    }
+    
+    // Remove any non-version characters
+    const cleaned = version.replace(/[^0-9.]/g, '');
+    
+    // Ensure it's a valid semantic version
+    const versionRegex = /^(\d+)\.(\d+)\.(\d+)$/;
+    if (versionRegex.test(cleaned)) {
+      return cleaned;
+    }
+    
+    // Try to extract version from string
+    const match = version.match(/(\d+\.\d+\.\d+)/);
+    if (match) {
+      return match[1];
+    }
+    
+    return 'unknown';
   }
 
   /**

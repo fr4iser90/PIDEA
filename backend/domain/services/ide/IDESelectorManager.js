@@ -4,25 +4,56 @@
  */
 
 const IDETypes = require('./IDETypes');
+const SelectorVersionManager = require('./SelectorVersionManager');
 const Logger = require('@logging/Logger');
 const logger = new Logger('IDESelectorManager');
 
 class IDESelectorManager {
+  constructor(dependencies = {}) {
+    this.versionManager = new SelectorVersionManager(dependencies);
+    this.logger = dependencies.logger || logger;
+  }
+
   /**
-   * Get selectors for a specific IDE type
+   * Get selectors for a specific IDE type and version
+   * @param {string} ideType - The IDE type (cursor, vscode, windsurf)
+   * @param {string} version - The IDE version (optional)
+   * @returns {Promise<Object>} IDE-specific selectors
+   */
+  async getSelectors(ideType, version = null) {
+    try {
+      return await this.versionManager.getSelectors(ideType, version);
+    } catch (error) {
+      this.logger.error(`Error getting selectors for ${ideType}:`, error.message);
+      return this.versionManager.getFallbackSelectors();
+    }
+  }
+
+  /**
+   * Get selectors for a specific IDE type (synchronous version for backward compatibility)
    * @param {string} ideType - The IDE type (cursor, vscode, windsurf)
    * @returns {Object} IDE-specific selectors
    */
   static getSelectors(ideType) {
     try {
-      const metadata = IDETypes.getMetadata(ideType);
-      const selectors = metadata?.chatSelectors;
+      // For backward compatibility, use the fallback version
+      const fallbackVersion = IDETypes.getFallbackVersion(ideType);
+      const selectors = IDETypes.getSelectorsForVersion(ideType, fallbackVersion);
       
       if (selectors) {
-        logger.info(`Retrieved selectors for ${ideType} IDE`);
+        logger.info(`Retrieved selectors for ${ideType} IDE fallback version ${fallbackVersion}`);
         return selectors;
+      }
+      
+      // Fallback to old structure
+      const metadata = IDETypes.getMetadata(ideType);
+      const fallbackSelectors = metadata?.chatSelectors;
+      
+      if (fallbackSelectors) {
+        logger.warn(`Using fallback selectors for ${ideType} IDE`);
+        return fallbackSelectors;
       } else {
-        logger.warn(`No selectors found for ${ideType} IDE, using fallback`);
+        logger.warn(`No selectors found for ${ideType} IDE, using generic fallback`);
         return this.getFallbackSelectors();
       }
     } catch (error) {
@@ -73,8 +104,8 @@ class IDESelectorManager {
    */
   static hasSelectors(ideType) {
     try {
-      const metadata = IDETypes.getMetadata(ideType);
-      return !!metadata?.chatSelectors;
+      const fallbackVersion = IDETypes.getFallbackVersion(ideType);
+      return IDETypes.hasVersion(ideType, fallbackVersion);
     } catch (error) {
       return false;
     }
@@ -87,6 +118,24 @@ class IDESelectorManager {
   static getSupportedIDETypes() {
     const allTypes = IDETypes.getAllTypes();
     return allTypes.filter(type => this.hasSelectors(type));
+  }
+
+  /**
+   * Get available versions for IDE type
+   * @param {string} ideType - IDE type
+   * @returns {Array<string>} Available versions
+   */
+  static getAvailableVersions(ideType) {
+    return IDETypes.getAvailableVersions(ideType);
+  }
+
+  /**
+   * Get fallback version for IDE type
+   * @param {string} ideType - IDE type
+   * @returns {string|null} Fallback version
+   */
+  static getFallbackVersion(ideType) {
+    return IDETypes.getFallbackVersion(ideType);
   }
 
   /**

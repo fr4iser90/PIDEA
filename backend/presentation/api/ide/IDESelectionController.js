@@ -153,13 +153,22 @@ class IDESelectionController {
       const availableIDEs = await this.ideManager.getAvailableIDEs();
       const activePort = this.ideManager.getActivePort();
       
-      // Enhance IDE data with selection information
-      const enhancedIDEs = availableIDEs.map(ide => ({
-        ...ide,
-        isSelected: ide.port === activePort,
-        canSelect: ide.status === 'running',
-        selectionPriority: this.getSelectionPriority(ide)
-      }));
+      // Enhance IDE data with selection information and version logging
+      const enhancedIDEs = availableIDEs.map(ide => {
+        // Log version information
+        if (ide.version) {
+          this.logger.info(`[IDESelectionController] IDE ${ide.ideType} on port ${ide.port}: version ${ide.version}`);
+        } else {
+          this.logger.warn(`[IDESelectionController] IDE ${ide.ideType} on port ${ide.port}: version detection failed`);
+        }
+        
+        return {
+          ...ide,
+          isSelected: ide.port === activePort,
+          canSelect: ide.status === 'running',
+          selectionPriority: this.getSelectionPriority(ide)
+        };
+      });
 
       // Sort by selection priority (active first, then by port)
       enhancedIDEs.sort((a, b) => {

@@ -20,7 +20,48 @@ class IDETypes {
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'cursor',
       detectionPatterns: ['cursor', 'Cursor'],
-      // Cursor-specific chat selectors
+      versionDetection: {
+        method: 'cdp',
+        fallback: '1.5.7'
+      },
+      versions: {
+        '1.5.7': {
+          chatSelectors: {
+            input: '.aislash-editor-input[contenteditable="true"]',
+            inputContainer: '.aislash-editor-container',
+            userMessages: 'div.aislash-editor-input-readonly[contenteditable="false"][data-lexical-editor="true"]',
+            aiMessages: 'span.anysphere-markdown-container-root',
+            messagesContainer: 'div[style*="display: flex; flex-direction: column"]',
+            chatContainer: '.aislash-container',
+            isActive: '.aislash-container',
+            isInputReady: '.aislash-editor-input[contenteditable="true"]',
+            
+            // Enhanced code block detection selectors
+            codeBlocks: '.composer-code-block-container',
+            codeBlockContent: '.composer-code-block-content',
+            codeBlockHeader: '.composer-code-block-header',
+            codeBlockFilename: '.composer-code-block-filename',
+            codeBlockLanguage: '.composer-code-block-file-info .javascript-lang-file-icon',
+            monacoEditor: '.monaco-editor',
+            codeLines: '.view-line, .view-lines .view-line, span[class*="mtk"]',
+            syntaxTokens: '.mtk1, .mtk4, .mtk14, .mtk18',
+            codeBlockApplyButton: '.anysphere-text-button',
+            
+            // Inline code detection
+            inlineCode: 'code:not(pre code)',
+            codeSpans: 'span[class*="code"]',
+            
+            // Syntax highlighting classes
+            syntaxClasses: {
+              keyword: '.mtk1',
+              string: '.mtk4',
+              comment: '.mtk14',
+              function: '.mtk18'
+            }
+          }
+        }
+      },
+      // Backward compatibility - keep old structure
       chatSelectors: {
         input: '.aislash-editor-input[contenteditable="true"]',
         inputContainer: '.aislash-editor-container',
@@ -63,7 +104,29 @@ class IDETypes {
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'code',
       detectionPatterns: ['vscode', 'VSCode', 'code'],
-      // VSCode-specific chat selectors (Copilot)
+      versionDetection: {
+        method: 'cdp',
+        fallback: '1.85.0'
+      },
+      versions: {
+        '1.85.0': {
+          chatSelectors: {
+            input: 'textarea[data-testid="chat-input"], textarea[placeholder*="Copilot"], .chat-input-textarea',
+            inputContainer: '.chat-input-container, .chat-editor-container',
+            userMessages: '.interactive-item-container.interactive-request .value .rendered-markdown',
+            aiMessages: '.interactive-item-container.interactive-response .value .rendered-markdown',
+            messagesContainer: '.monaco-list-rows',
+            chatContainer: '.chat-container, .interactive-session',
+            isActive: '.chat-container, .interactive-session',
+            isInputReady: 'textarea[data-testid="chat-input"]:not([disabled])',
+            // VSCode-specific message rows
+            messageRows: '.monaco-list-row',
+            userMessageRow: '.monaco-list-row .interactive-request',
+            aiMessageRow: '.monaco-list-row .interactive-response'
+          }
+        }
+      },
+      // Backward compatibility - keep old structure
       chatSelectors: {
         input: 'textarea[data-testid="chat-input"], textarea[placeholder*="Copilot"], .chat-input-textarea',
         inputContainer: '.chat-input-container, .chat-editor-container',
@@ -87,7 +150,25 @@ class IDETypes {
       fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
       startupCommand: 'windsurf',
       detectionPatterns: ['windsurf', 'Windsurf'],
-      // Windsurf-specific chat selectors
+      versionDetection: {
+        method: 'cdp',
+        fallback: '1.0.0'
+      },
+      versions: {
+        '1.0.0': {
+          chatSelectors: {
+            input: '[data-testid="chat-input"]',
+            inputContainer: '[data-testid="chat-container"]',
+            userMessages: '[data-testid="user-message"]',
+            aiMessages: '[data-testid="ai-message"]',
+            messagesContainer: '[data-testid="chat-messages"]',
+            chatContainer: '[data-testid="chat-panel"]',
+            isActive: '[data-testid="chat-panel"]',
+            isInputReady: '[data-testid="chat-input"]:not([disabled])'
+          }
+        }
+      },
+      // Backward compatibility - keep old structure
       chatSelectors: {
         input: '[data-testid="chat-input"]',
         inputContainer: '[data-testid="chat-container"]',
@@ -267,6 +348,66 @@ class IDETypes {
   static hasChatSupport(type) {
     const features = IDETypes.getSupportedFeatures(type);
     return features.includes('chat');
+  }
+
+  /**
+   * Get selectors for specific IDE type and version
+   * @param {string} type - IDE type
+   * @param {string} version - IDE version
+   * @returns {Object|null} Version-specific selectors
+   */
+  static getSelectorsForVersion(type, version) {
+    const metadata = IDETypes.getMetadata(type);
+    if (!metadata || !metadata.versions) {
+      return null;
+    }
+    
+    // Try to get specific version
+    if (metadata.versions[version]) {
+      return metadata.versions[version];
+    }
+    
+    // Fallback to fallback version
+    if (metadata.versionDetection?.fallback && metadata.versions[metadata.versionDetection.fallback]) {
+      return metadata.versions[metadata.versionDetection.fallback];
+    }
+    
+    return null;
+  }
+
+  /**
+   * Get fallback version for IDE type
+   * @param {string} type - IDE type
+   * @returns {string|null} Fallback version
+   */
+  static getFallbackVersion(type) {
+    const metadata = IDETypes.getMetadata(type);
+    return metadata?.versionDetection?.fallback || null;
+  }
+
+  /**
+   * Get all available versions for IDE type
+   * @param {string} type - IDE type
+   * @returns {Array<string>} Available versions
+   */
+  static getAvailableVersions(type) {
+    const metadata = IDETypes.getMetadata(type);
+    if (!metadata || !metadata.versions) {
+      return [];
+    }
+    
+    return Object.keys(metadata.versions).sort();
+  }
+
+  /**
+   * Check if version exists for IDE type
+   * @param {string} type - IDE type
+   * @param {string} version - IDE version
+   * @returns {boolean} True if version exists
+   */
+  static hasVersion(type, version) {
+    const metadata = IDETypes.getMetadata(type);
+    return metadata && metadata.versions && metadata.versions[version];
   }
 }
 

@@ -13,6 +13,7 @@ const IDEPortManager = require('@domain/services/ide/IDEPortManager');
 const path = require('path');
 const CDPConnectionManager = require('../cdp/CDPConnectionManager');
 const CDPWorkspaceDetector = require('@services/workspace/CDPWorkspaceDetector');
+const SelectorVersionManager = require('@domain/services/ide/SelectorVersionManager');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('IDEManager');
 
@@ -28,6 +29,9 @@ class IDEManager {
     
     // Initialize port manager
     this.portManager = new IDEPortManager(this, eventBus);
+    
+    // Initialize version manager
+    this.versionManager = new SelectorVersionManager();
     
     // Initialize workspace detection (only if browserManager is provided)
     this.cdpConnectionManager = null;
@@ -204,26 +208,95 @@ class IDEManager {
       });
     });
 
-    // Detect workspace paths for all IDEs
-    const idesWithWorkspaces = await Promise.all(
+    // Detect workspace paths and versions for all IDEs
+    const idesWithWorkspacesAndVersions = await Promise.all(
       Array.from(allIDEs.values()).map(async (ide) => {
         try {
           const workspacePath = await this.detectWorkspacePath(ide.port);
+          
+          // Detect IDE version
+          let version = null;
+          try {
+            version = await this.detectIDEVersion(ide.port, ide.ideType);
+            logger.info(`Detected version for ${ide.ideType} on port ${ide.port}: ${version}`);
+          } catch (versionError) {
+            logger.warn(`Failed to detect version for port ${ide.port}:`, versionError.message);
+          }
+          
           return {
             ...ide,
-            workspacePath: workspacePath
+            workspacePath: workspacePath,
+            version: version
           };
         } catch (error) {
           logger.warn(`Failed to detect workspace for port ${ide.port}:`, error.message);
           return {
             ...ide,
-            workspacePath: null
+            workspacePath: null,
+            version: null
           };
         }
       })
     );
 
-    return idesWithWorkspaces;
+    return idesWithWorkspacesAndVersions;
+  }
+
+  /**
+   * Detect IDE version via CDP /json/version endpoint
+   * @param {number} port - IDE port
+   * @param {string} ideType - IDE type
+   * @returns {Promise<string>} Detected version
+   */
+  async detectIDEVersion(port, ideType) {
+    try {
+      logger.info(`Detecting IDE version for port ${port} using CDP /json/version endpoint`);
+      const http = require('http');
+      
+      const versionData = await new Promise((resolve, reject) => {
+        const req = http.get(`http://127.0.0.1:${port}/json/version`, (res) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            try {
+              const json = JSON.parse(data);
+              resolve(json);
+            } catch (parseError) {
+              reject(new Error(`Failed to parse version JSON: ${parseError.message}`));
+            }
+          });
+        });
+        req.on('error', reject);
+        req.setTimeout(3000, () => {
+          req.destroy();
+          reject(new Error('Version request timeout'));
+        });
+      });
+
+      if (versionData && versionData['User-Agent']) {
+        const userAgent = versionData['User-Agent'];
+        logger.info(`CDP /json/version User-Agent: ${userAgent}`);
+        
+        // Extract version from User-Agent
+        const match = userAgent.match(/(?:Cursor|VSCode|Windsurf)\/([\d\.]+)/i);
+        if (match) {
+          const version = match[1];
+          logger.info(`✅ Version detected via CDP /json/version: ${version}`);
+          return version;
+        } else {
+          logger.warn(`❌ No version found in User-Agent: ${userAgent}`);
+        }
+      } else {
+        logger.warn(`❌ No User-Agent in CDP /json/version response`);
+      }
+
+      // No version detected
+      logger.warn(`Version detection failed for port ${port} - no version found in User-Agent`);
+      return null;
+    } catch (error) {
+      logger.error(`Version detection failed for port ${port}:`, error.message);
+      return null;
+    }
   }
 
   /**
@@ -367,17 +440,17 @@ class IDEManager {
     logger.info(`Successfully switched to IDE on port ${port}`);
     
     // ✅ NEW: Automatically detect workspace for the switched IDE
-    logger.info(`[IDEManager] Detecting workspace for port ${port}`);
+    logger.info(`Detecting workspace for port ${port}`);
     let workspacePath = null;
     try {
       workspacePath = await this.detectWorkspacePath(port);
       if (workspacePath) {
-        logger.info(`[IDEManager] ✅ Workspace detected for port ${port}: ${workspacePath}`);
+        logger.info(`✅ Workspace detected for port ${port}: ${workspacePath}`);
       } else {
-        logger.warn(`[IDEManager] ⚠️ No workspace detected for port ${port}`);
+        logger.warn(`⚠️ No workspace detected for port ${port}`);
       }
     } catch (error) {
-      logger.error(`[IDEManager] ❌ Workspace detection failed for port ${port}:`, error.message);
+      logger.error(`❌ Workspace detection failed for port ${port}:`, error.message);
     }
     
     return {
