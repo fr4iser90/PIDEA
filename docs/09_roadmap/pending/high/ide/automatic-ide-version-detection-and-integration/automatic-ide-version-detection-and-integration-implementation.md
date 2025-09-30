@@ -13,7 +13,7 @@
 ## 2. Technical Requirements
 - **Tech Stack**: Node.js, CDP (Chrome DevTools Protocol), Playwright
 - **Architecture Pattern**: Service-Oriented Architecture with Event-Driven Updates
-- **Database Changes**: None - use existing IDETypes.js structure
+- **Codebase Changes**: Update IDETypes.js with new versions and selectors
 - **API Changes**: None - internal service only
 - **Frontend Changes**: None - backend automation only
 - **Backend Changes**: Enhanced IDEManager, new VersionDetectionService, SelectorCollectionBot
@@ -70,10 +70,12 @@ if (currentVersion !== knownVersion) {
 ## 3. File Impact Analysis
 
 ### Existing Infrastructure (Already Available):
-- ✅ `backend/infrastructure/external/ide/IDEManager.js` - Has CDP integration and version detection
-- ✅ `backend/domain/services/ide/IDETypes.js` - Has version structure and metadata
-- ✅ `backend/domain/services/ide/IDESelectorManager.js` - Has selector management
-- ✅ `backend/domain/services/ide/SelectorVersionManager.js` - Has version-based selector loading
+- ✅ `backend/infrastructure/external/ide/IDEManager.js` - Has CDP integration and version detection via `/json/version` endpoint
+- ✅ `backend/domain/services/ide/IDETypes.js` - Has version structure and metadata with version-specific selectors
+- ✅ `backend/domain/services/ide/IDESelectorManager.js` - Has selector management with version fallback
+- ✅ `backend/domain/services/ide/SelectorVersionManager.js` - Has version-based selector loading with caching
+- ✅ `backend/infrastructure/external/cdp/CDPConnectionManager.js` - Has connection pooling and workspace detection
+- ✅ `scripts/ide/auto-dom-collector.js` - Has automated DOM collection for all IDE types
 - ✅ `scripts/cursor/auto-dom-collector.js` - Has automated DOM collection
 - ✅ `scripts/cursor/selector-generator.js` - Has selector generation
 - ✅ `scripts/cursor/dom-analyzer.js` - Has DOM analysis
@@ -81,12 +83,14 @@ if (currentVersion !== knownVersion) {
 - ✅ `scripts/cursor/coverage-validator.js` - Has coverage validation
 - ✅ `scripts/vscode/auto-dom-collector.js` - Has VSCode DOM collection
 - ✅ `scripts/vscode/selector-generator.js` - Has VSCode selector generation
+- ✅ `backend/application/services/IDEApplicationService.js` - Has IDE orchestration capabilities
+- ✅ `backend/presentation/api/ide/IDEController.js` - Has unified IDE API endpoints
 
 #### Files to Modify:
-- [ ] `backend/infrastructure/external/ide/IDEManager.js` - Add automatic version comparison and new version detection
-- [ ] `backend/domain/services/ide/IDETypes.js` - Add automatic version detection types
+- [ ] `backend/infrastructure/external/ide/IDEManager.js` - Enhance existing `detectIDEVersion()` method with automatic comparison and new version detection
+- [ ] `backend/domain/services/ide/IDETypes.js` - Add automatic version detection types and enhance version metadata structure
 - [ ] `backend/domain/services/ide/IDESelectorManager.js` - Add automatic selector collection integration
-- [ ] `backend/domain/services/ide/SelectorVersionManager.js` - Add version validation and comparison
+- [ ] `backend/domain/services/ide/SelectorVersionManager.js` - Enhance existing version detection with validation and comparison
 
 #### Files to Create:
 - [ ] `backend/domain/services/ide/VersionDetectionService.js` - Core version detection and comparison logic
@@ -111,20 +115,20 @@ if (currentVersion !== knownVersion) {
 ## 4. Implementation Phases
 
 #### Phase 1: Enhanced Version Detection Service (2 hours)
-- [ ] Create VersionDetectionService with CDP integration (build upon existing IDEManager)
+- [ ] Create VersionDetectionService with CDP integration (build upon existing IDEManager.detectIDEVersion())
 - [ ] Implement automatic version comparison and new version detection
 - [ ] Add version validation and comparison logic
-- [ ] Create VersionDetector infrastructure component (enhance existing CDP integration)
-- [ ] Add automatic version detection to IDEManager
+- [ ] Create VersionDetector infrastructure component (enhance existing CDPConnectionManager)
+- [ ] Enhance IDEManager.detectIDEVersion() with automatic comparison
 - [ ] Write unit tests for version detection
 
 #### Phase 2: Selector Collection Bot Integration (3 hours)
 - [ ] Create SelectorCollectionBot with integrated DOM collection functionality
-- [ ] Integrate DOM collection logic from auto-dom-collector.js into backend
-- [ ] Integrate selector generation logic from selector-generator.js into backend
+- [ ] Integrate DOM collection logic from scripts/ide/auto-dom-collector.js into backend
+- [ ] Integrate selector generation logic from scripts/cursor/selector-generator.js into backend
 - [ ] Add automatic selector collection for new versions
 - [ ] Create SelectorCollector infrastructure component with integrated script functionality
-- [ ] Integrate with SelectorVersionManager for automatic updates
+- [ ] Integrate with existing SelectorVersionManager for automatic updates
 - [ ] Write unit tests for selector collection integration
 
 #### Phase 3: Intelligent Selector Testing and Validation (2 hours)
@@ -164,7 +168,7 @@ if (currentVersion !== knownVersion) {
 - **Response Time**: < 500ms for version detection
 - **Throughput**: 10 version detections per second
 - **Memory Usage**: < 50MB for version detection service
-- **Database Queries**: Optimized version lookups with indexing
+- **Codebase Updates**: Optimized IDETypes.js updates with version management
 - **Caching Strategy**: Cache version data for 1 hour, selector data for 24 hours
 
 ## 8. Testing Strategy
@@ -269,7 +273,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] Performance benchmarks met
 
 #### Deployment:
-- [ ] Database migrations (if applicable)
+- [ ] Codebase updates (IDETypes.js)
 - [ ] Environment variables configured
 - [ ] Configuration updates applied
 - [ ] Service restarts if needed
@@ -282,13 +286,13 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] User feedback collection enabled
 
 ## 11. Rollback Plan
-- [ ] Database rollback script prepared
+- [ ] Codebase rollback procedure prepared
 - [ ] Configuration rollback procedure
 - [ ] Service rollback procedure documented
 - [ ] Communication plan for stakeholders
 
 ## 12. Success Criteria
-- [ ] Automatic version detection works for all supported IDEs
+- [ ] Automatic version detection works for all supported IDEs (Cursor, VSCode, Windsurf)
 - [ ] Intelligent selector testing validates existing selectors before collection
 - [ ] Selector collection bot successfully collects selectors for new versions
 - [ ] IDETypes.js automatically updated with new versions and selectors
@@ -301,7 +305,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] DOM collection and selector generation integrated into backend
 - [ ] Automation orchestrator coordinates complete workflow
 - [ ] All tests pass (unit, integration, end-to-end)
-- [ ] Performance requirements met
+- [ ] Performance requirements met (< 500ms version detection)
 - [ ] Security requirements satisfied
 - [ ] Documentation complete and accurate
 
@@ -313,7 +317,7 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 
 #### Medium Risk:
 - [ ] Selector collection performance - Mitigation: Implement caching and optimization
-- [ ] Database migration issues - Mitigation: Thorough testing and rollback procedures
+- [ ] Codebase update issues - Mitigation: Thorough testing and rollback procedures
 
 #### Low Risk:
 - [ ] API endpoint compatibility - Mitigation: Versioned API design
@@ -350,62 +354,55 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] Code follows standards
 - [ ] Documentation updated
 
-## 15. Initial Prompt Documentation
+## 15. Validation Results - 2025-01-27
 
-#### Original Prompt (Sanitized):
-```markdown
-# Initial Prompt: Automatic IDE Version Detection and Integration
+### ✅ File Structure Validation
+- [x] Index: `docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration/automatic-ide-version-detection-and-integration-index.md` - Status: Found
+- [x] Implementation: `docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration/automatic-ide-version-detection-and-integration-implementation.md` - Status: Found
+- [x] Phase 1: `docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration/automatic-ide-version-detection-and-integration-phase-1.md` - Status: Found
+- [x] Phase 2: `docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration/automatic-ide-version-detection-and-integration-phase-2.md` - Status: Found
+- [x] Phase 3: `docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration/automatic-ide-version-detection-and-integration-phase-3.md` - Status: Found
 
-## User Request:
-Nun brauche ich den task für den bot der das alles automatisiert, ich muss gleich noch mit 2 Versioenn die Selectoren Prüfen / validieren bzw sogar neue version machen für selectors wenn nötig ## Automatische IDE-Versionserkennung und -Integration
+### ✅ Existing Infrastructure Analysis
+- [x] IDEManager.js - Has CDP integration and version detection via `/json/version` endpoint
+- [x] SelectorVersionManager.js - Has version-based selector loading with caching
+- [x] IDETypes.js - Has version structure and metadata with version-specific selectors
+- [x] CDPConnectionManager.js - Has connection pooling and workspace detection
+- [x] Scripts - Comprehensive DOM collection and selector generation functionality
+- [x] Application Services - IDE orchestration capabilities
 
-### Was du brauchst
-Ein separater Plan, der den IDE Bot erweitert, um:
-1. IDE-Versionen automatisch zu erkennen
-2. Neue Versionen in die CODEBASE zu schreiben (IDETypes.js)
-3. Selectors für neue Versionen zu sammeln
-4. Das System selbst zu aktualisieren
+### ⚠️ Missing Components (To Be Created)
+- [ ] VersionDetectionService - Core version detection and comparison logic
+- [ ] SelectorCollectionBot - Automated selector collection (integrated from scripts)
+- [ ] SelectorValidationService - Intelligent selector testing and validation
+- [ ] VersionValidationService - Version validation and comparison
+- [ ] IDETypesUpdater - Automatic IDETypes.js updates with new versions/selectors
+- [ ] VersionDetector - Enhanced CDP-based version detection
+- [ ] SelectorCollector - DOM collection and selector generation (integrated from scripts)
+- [ ] VersionManagementService - Orchestrates complete automation workflow
+- [ ] AutomationOrchestrator - Main automation orchestrator
+- [ ] VersionController - API endpoints for version management
 
-### Warum separat?
-- **Selector Versioning System** = statische Struktur für bekannte Versionen
-- **IDE Bot Enhancement** = dynamische Erkennung und Sammlung neuer Versionen
+### 📊 Task Splitting Assessment
+- **Current Task Size**: 8 hours (within 8-hour limit)
+- **File Count**: 9 new files (within 10-file limit)
+- **Phase Count**: 3 phases (within 5-phase limit)
+- **Recommendation**: ✅ No splitting required - task is appropriately sized
 
-### Empfohlene Reihenfolge
-1. **Zuerst:** Selector Versioning System (4h)
-   - Grundstruktur aufbauen
-   - Manuelle Versionen hinzufügen
-   - System testen
+### 🔧 Implementation Enhancements Made
+- Updated file paths to match actual codebase structure
+- Enhanced existing infrastructure references
+- Added specific method references (e.g., `IDEManager.detectIDEVersion()`)
+- Improved technical specifications based on codebase analysis
+- Added performance requirements (< 500ms version detection)
+- Enhanced success criteria with specific IDE types
 
-2. **Danach:** IDE Bot Enhancement (6–8h)
-   - Automatische Versionserkennung
-   - Selector-Sammlung für neue Versionen
-   - Automatische Codebase-Updates
-
-### Was der IDE Bot Enhancement Plan machen würde
-```javascript
-// Automatische Versionserkennung
-async detectAndAddNewVersion(ideType) {
-  const version = await this.detectVersion(ideType);
-  const selectors = await this.collectSelectors(ideType, version);
-  await this.updateIDETypes(ideType, version, selectors);
-}
-
-// Automatische Selector-Sammlung
-async collectSelectors(ideType, version) {
-  // Bot startet IDE in neuer Version
-  // Sammelt alle Selectors automatisch
-  // Speichert sie in der Codebase (IDETypes.js)
-}
-```
-
-### Vorteile dieser Trennung
-- Klare Verantwortlichkeiten
-- Schrittweises Vorgehen
-- Testbarkeit
-- Wartbarkeit
-
-**Fazit:** Zuerst das Selector Versioning System, danach den IDE Bot Enhancement Plan.
-```
+### 🚀 Next Steps
+1. Begin Phase 1: Enhanced Version Detection Service
+2. Build upon existing `IDEManager.detectIDEVersion()` method
+3. Integrate with existing `CDPConnectionManager` infrastructure
+4. Leverage existing script functionality for DOM collection
+5. Follow established patterns from existing IDE services
 
 ## Language Detection:
 - **Original Language**: German
@@ -455,7 +452,7 @@ INSERT INTO tasks (
   'markdown_doc', -- Source type
   'docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration/automatic-ide-version-detection-and-integration-implementation.md', -- Main implementation file
   '[Full markdown content]', -- For reference
-  '{"tech_stack": ["Node.js", "CDP", "SQLite/PostgreSQL", "Playwright"], "architecture": "Service-Oriented Architecture", "database_changes": "New tables for version tracking", "api_changes": "New endpoints for version detection", "frontend_changes": "Version management dashboard", "backend_changes": "Enhanced IDEManager, new VersionDetectionService"}', -- All technical details
+  '{"tech_stack": ["Node.js", "CDP", "Playwright"], "architecture": "Service-Oriented Architecture", "codebase_changes": "Update IDETypes.js with new versions and selectors", "api_changes": "New endpoints for version detection", "frontend_changes": "Version management dashboard", "backend_changes": "Enhanced IDEManager, new VersionDetectionService"}', -- All technical details
   8 -- From section 1
 );
 ```

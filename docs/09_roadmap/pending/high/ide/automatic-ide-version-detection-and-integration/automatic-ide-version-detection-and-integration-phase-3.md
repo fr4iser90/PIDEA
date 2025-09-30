@@ -1,31 +1,31 @@
-# Phase 3: Database Integration and API
+# Phase 3: Codebase Integration and API
 
 ## 📋 Phase Overview
 - **Phase**: 3
-- **Name**: Database Integration and API
+- **Name**: Codebase Integration and API
 - **Estimated Time**: 2 hours
 - **Status**: Planning
 - **Progress**: 0%
 - **Dependencies**: Phase 2 (Selector Collection Bot)
 
 ## 🎯 Objectives
-1. Create version tracking database tables
-2. Implement VersionController API endpoints
-3. Add version management to IDEApplicationService
-4. Create version management dashboard
+1. Create VersionManagementService for workflow orchestration
+2. Create AutomationOrchestrator for complete automation
+3. Implement VersionController API endpoints
+4. Update IDETypes.js with new versions and selectors
 5. Write integration tests
-6. Update documentation
+6. Test complete system with real IDE
 
 ## 📝 Detailed Tasks
 
-### Task 3.1: Create Database Tables (30 minutes)
-- [ ] Create version tracking table
-- [ ] Create selector collection log table
-- [ ] Create version validation table
-- [ ] Add database indexes for performance
-- [ ] Create database migration scripts
-- [ ] Add database constraints and validations
-- [ ] Test database schema
+### Task 3.1: Create VersionManagementService (30 minutes)
+- [ ] Create `backend/application/services/VersionManagementService.js`
+- [ ] Implement workflow orchestration logic
+- [ ] Add version detection coordination
+- [ ] Add selector collection coordination
+- [ ] Add IDETypes.js update logic
+- [ ] Add error handling and fallback mechanisms
+- [ ] Add comprehensive logging
 
 ### Task 3.2: Create VersionController API (30 minutes)
 - [ ] Create `backend/presentation/api/ide/VersionController.js`
@@ -36,94 +36,76 @@
 - [ ] Add request validation and error handling
 - [ ] Add JSDoc documentation
 
-### Task 3.3: Enhance IDEApplicationService (20 minutes)
-- [ ] Modify `backend/application/services/IDEApplicationService.js`
-- [ ] Add version management methods
-- [ ] Add selector collection methods
-- [ ] Add version validation methods
-- [ ] Add database integration
-- [ ] Add error handling and logging
+### Task 3.3: Create AutomationOrchestrator (20 minutes)
+- [ ] Create `backend/application/services/AutomationOrchestrator.js`
+- [ ] Implement automatic detection scheduling
+- [ ] Add workflow coordination
+- [ ] Add error handling and recovery
+- [ ] Add status monitoring
+- [ ] Add task scheduling capabilities
 
-### Task 3.4: Create Version Management Dashboard (20 minutes)
-- [ ] Create frontend components for version management
-- [ ] Add version detection status display
-- [ ] Add selector collection progress
-- [ ] Add version comparison view
-- [ ] Add version validation results
-- [ ] Add error handling and user feedback
+### Task 3.4: Update IDETypes.js Integration (20 minutes)
+- [ ] Create IDETypesUpdater service
+- [ ] Implement automatic IDETypes.js updates
+- [ ] Add version and selector management
+- [ ] Add validation before updates
+- [ ] Add rollback mechanisms
+- [ ] Add comprehensive error handling
 
 ### Task 3.5: Write Integration Tests (20 minutes)
 - [ ] Create `backend/tests/integration/ide/VersionIntegration.test.js`
 - [ ] Test end-to-end version detection
 - [ ] Test selector collection workflow
 - [ ] Test API endpoints
-- [ ] Test database integration
+- [ ] Test IDETypes.js updates
 - [ ] Test error scenarios
 - [ ] Achieve 80% test coverage
 
 ## 🔧 Technical Implementation
 
-### Database Schema
-```sql
--- Version tracking table
-CREATE TABLE ide_versions (
-  id UUID PRIMARY KEY,
-  ide_type VARCHAR(50) NOT NULL,
-  version VARCHAR(50) NOT NULL,
-  detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  is_validated BOOLEAN DEFAULT FALSE,
-  validation_status VARCHAR(20) DEFAULT 'pending',
-  metadata JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Selector collection log table
-CREATE TABLE selector_collections (
-  id UUID PRIMARY KEY,
-  version_id UUID REFERENCES ide_versions(id),
-  collection_status VARCHAR(20) NOT NULL,
-  selectors_count INTEGER DEFAULT 0,
-  collection_started_at TIMESTAMP,
-  collection_completed_at TIMESTAMP,
-  error_message TEXT,
-  metadata JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Version validation table
-CREATE TABLE version_validations (
-  id UUID PRIMARY KEY,
-  version_id UUID REFERENCES ide_versions(id),
-  validation_type VARCHAR(50) NOT NULL,
-  validation_result BOOLEAN NOT NULL,
-  validation_details JSONB,
-  validated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### VersionController Structure
+### VersionManagementService Structure
 ```javascript
-class VersionController {
+class VersionManagementService {
   constructor(dependencies = {}) {
-    this.ideApplicationService = dependencies.ideApplicationService;
+    this.versionDetectionService = dependencies.versionDetectionService;
+    this.selectorCollectionBot = dependencies.selectorCollectionBot;
+    this.ideTypesUpdater = dependencies.ideTypesUpdater;
     this.logger = dependencies.logger;
   }
 
-  async getVersions(req, res) {
-    // Implementation details
+  async detectAndUpdateVersion(ideType) {
+    // Complete workflow orchestration
   }
 
-  async detectVersion(req, res) {
-    // Implementation details
+  async updateIDETypes(ideType, version, selectors) {
+    // Update IDETypes.js with new data
   }
 
-  async collectSelectors(req, res) {
-    // Implementation details
+  async validateAndSave(ideType, version, selectors) {
+    // Validate and save to codebase
+  }
+}
+```
+
+### AutomationOrchestrator Structure
+```javascript
+class AutomationOrchestrator {
+  constructor(dependencies = {}) {
+    this.versionManagementService = dependencies.versionManagementService;
+    this.logger = dependencies.logger;
+    this.scheduler = dependencies.scheduler;
   }
 
-  async getVersionSelectors(req, res) {
-    // Implementation details
+  async startAutomaticDetection() {
+    // Start automatic version detection
+  }
+
+  async scheduleDetection(ideType, interval) {
+    // Schedule periodic detection
+  }
+
+  async handleDetectionResult(result) {
+    // Handle detection results
   }
 }
 ```
@@ -137,30 +119,31 @@ class VersionController {
   - End-to-end version detection workflow
   - Selector collection workflow
   - API endpoint functionality
-  - Database integration
+  - IDETypes.js updates
   - Error handling scenarios
   - Version validation
   - Selector management
 
 ### Mock Requirements
-- Database mock
-- IDEApplicationService mock
+- VersionManagementService mock
+- SelectorCollectionBot mock
+- IDETypesUpdater mock
 - Logger mock
 - HTTP request/response mock
 
 ## 📊 Success Criteria
-- [ ] Database tables created and functional
+- [ ] VersionManagementService created and functional
+- [ ] AutomationOrchestrator created and functional
 - [ ] VersionController API endpoints working
-- [ ] IDEApplicationService enhanced with version management
-- [ ] Version management dashboard functional
+- [ ] IDETypes.js updates working
 - [ ] Integration tests passing with 80% coverage
 - [ ] API documentation complete
-- [ ] Database migration scripts working
+- [ ] Codebase update mechanisms working
 - [ ] Error handling comprehensive
 - [ ] Performance requirements met
 
 ## 🚨 Risk Mitigation
-- **Database Performance**: Implement proper indexing and optimization
+- **Codebase Update Performance**: Implement proper validation and optimization
 - **API Reliability**: Comprehensive error handling and validation
 - **Integration Issues**: Thorough testing and validation
 - **Performance Issues**: Implement caching and optimization
@@ -181,7 +164,7 @@ class VersionController {
 
 ## 📝 Notes
 - This phase completes the automatic IDE version detection and integration system
-- Database integration is critical for data persistence
+- Codebase integration is critical for IDETypes.js updates
 - API endpoints provide external access to functionality
 - Integration tests ensure system reliability
 - Documentation ensures maintainability

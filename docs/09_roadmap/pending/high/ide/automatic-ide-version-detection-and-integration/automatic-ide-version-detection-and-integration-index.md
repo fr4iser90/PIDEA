@@ -7,7 +7,7 @@
 - **Status**: Planning
 - **Total Estimated Time**: 8 hours
 - **Created**: 2025-09-30T10:36:57.000Z
-- **Last Updated**: 2025-09-30T10:36:57.000Z
+- **Last Updated**: 2025-09-30T12:08:41.000Z
 - **Original Language**: English
 - **Prompt Sanitized**: ✅ Yes
 
@@ -35,7 +35,7 @@ docs/09_roadmap/pending/high/ide/automatic-ide-version-detection-and-integration
 ### Active Subtasks
 - [ ] Enhanced Version Detection Service - Planning - 0%
 - [ ] Selector Collection Bot - Planning - 0%
-- [ ] Database Integration - Planning - 0%
+- [ ] Codebase Integration - Planning - 0%
 
 ### Completed Subtasks
 - None yet
