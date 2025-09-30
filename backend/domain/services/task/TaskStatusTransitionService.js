@@ -423,16 +423,37 @@ class TaskStatusTransitionService {
         try {
             // Update task source_path in database
             const task = await this.taskRepository.findById(taskId);
-            if (task && task.sourcePath) {
-                const updatedSourcePath = task.sourcePath.replace(oldPath, newPath);
-                task.sourcePath = updatedSourcePath;
+            if (task) {
+                // Extract task directory name from new path
+                const taskDirectoryName = path.basename(newPath);
+                
+                // Update sourcePath if it exists
+                if (task.sourcePath) {
+                    const updatedSourcePath = task.sourcePath.replace(oldPath, newPath);
+                    task.sourcePath = updatedSourcePath;
+                }
+                
+                // ✅ CRITICAL FIX: Update metadata with new directory name and path
+                if (!task.metadata) {
+                    task.metadata = {};
+                }
+                
+                task.metadata.taskDirectoryName = taskDirectoryName;
+                task.metadata.currentPath = newPath;
+                task.metadata.lastMovedAt = new Date().toISOString();
+                
+                // Update the task in database
                 await this.taskRepository.update(taskId, task);
                 
-                this.logger.debug('📝 Updated task source path', { 
+                this.logger.info('📝 Updated task file references in database', { 
                     taskId, 
-                    oldPath: task.sourcePath, 
-                    newPath: updatedSourcePath 
+                    oldPath, 
+                    newPath,
+                    taskDirectoryName,
+                    updatedSourcePath: task.sourcePath
                 });
+            } else {
+                this.logger.warn('⚠️ Task not found for file reference update', { taskId });
             }
 
         } catch (error) {

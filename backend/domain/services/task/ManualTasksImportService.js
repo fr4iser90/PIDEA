@@ -48,7 +48,7 @@ class ManualTasksImportService {
             
             // Updated to scan the new status-based structure
             const roadmapDir = path.join(workspacePath, 'docs/09_roadmap');
-            // Hilfsfunktion: rekursiv alle .md-Dateien finden
+            // Hilfsfunktion: rekursiv alle .md-Dateien finden (EXCLUDING completed directories)
             async function getAllMarkdownFiles(dir) {
                 let results = [];
                 const list = await fs.readdir(dir);
@@ -56,6 +56,11 @@ class ManualTasksImportService {
                     const filePath = path.join(dir, file);
                     const stat = await fs.stat(filePath);
                     if (stat.isDirectory()) {
+                        // ✅ CRITICAL FIX: Skip completed directories to avoid re-processing completed tasks
+                        if (file === 'completed') {
+                            logger.debug(`⏭️ Skipping completed directory: ${filePath}`);
+                            continue;
+                        }
                         results = results.concat(await getAllMarkdownFiles(filePath));
                     } else if (file.endsWith('.md')) {
                         results.push(filePath);
@@ -453,6 +458,18 @@ class ManualTasksImportService {
                     await this.taskRepository.update(task.id, task);
                     logger.debug(`💾 Saved updated task to database`);
                     
+                    // 🆕 NEW: Trigger automatic file movement for completed tasks (NEW TASKS)
+                    if (taskStatus === 'completed' && this.taskService?.statusTransitionService) {
+                        try {
+                            logger.info(`🔄 Triggering automatic file movement for new completed task: ${title}`);
+                            await this.taskService.statusTransitionService.moveTaskToCompleted(task.id);
+                            logger.info(`✅ Successfully moved files for new completed task: ${title}`);
+                        } catch (moveError) {
+                            logger.warn(`⚠️ Failed to move files for new completed task ${title}:`, moveError.message);
+                            // Don't fail the import if file movement fails
+                        }
+                    }
+                    
                     // ✅ NEW: Track completion statistics
                     totalProcessedFiles++;
                     if (taskStatus === 'completed') {
@@ -472,7 +489,13 @@ class ManualTasksImportService {
                     } else if (status === 'in_progress') {
                         taskStatus = 'in_progress';
                     } else if (status === 'pending') {
-                        taskStatus = 'pending';
+                        // ✅ CRITICAL FIX: Check if task is actually completed based on content
+                        if (progressInfo.overallProgress >= 100 || progressInfo.status === 'completed') {
+                            taskStatus = 'completed';
+                            logger.info(`🔄 Task in pending directory but marked as completed in content - setting status to completed: ${title}`);
+                        } else {
+                            taskStatus = 'pending';
+                        }
                     } else {
                         // Fallback für unbekannte Status
                         taskStatus = 'pending';
@@ -560,16 +583,18 @@ class ManualTasksImportService {
                         logger.info(`📅 Updated task completion date from markdown: ${progressInfo.completionDate}`);
                     }
 
-                    // Save the updated task - only update timestamps, preserve existing entity
+                    // ✅ CRITICAL FIX: Save the updated task with status and progress changes
                     const finalStatusValue = existingTask.status.value || existingTask.status;
                     logger.info(`💾 DEBUG: About to save task "${title}" with status: ${finalStatusValue}, progress: ${existingTask.metadata?.progress}`);
                     
-                    // Only update if we have timestamp changes
+                    // ✅ CRITICAL FIX: Always save the task entity to persist status and progress changes
+                    await this.taskRepository.update(existingTask.id, existingTask);
+                    logger.info(`💾 DEBUG: Successfully updated task entity for "${title}"`);
+                    
+                    // Also update timestamps if available
                     if (Object.keys(timestampUpdates).length > 0) {
                         await this.taskRepository.update(existingTask.id, timestampUpdates);
                         logger.info(`💾 DEBUG: Successfully updated timestamps for task "${title}"`);
-                    } else {
-                        logger.info(`💾 DEBUG: No timestamp updates needed for task "${title}"`);
                     }
                     
                     // ✅ NEW: Verify the save worked by reloading the task
