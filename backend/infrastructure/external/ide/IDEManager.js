@@ -14,6 +14,8 @@ const path = require('path');
 const CDPConnectionManager = require('../cdp/CDPConnectionManager');
 const CDPWorkspaceDetector = require('@services/workspace/CDPWorkspaceDetector');
 const SelectorVersionManager = require('@domain/services/ide/SelectorVersionManager');
+const VersionDetectionService = require('@domain/services/ide/VersionDetectionService');
+const VersionDetector = require('./VersionDetector');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('IDEManager');
 
@@ -32,6 +34,18 @@ class IDEManager {
     
     // Initialize version manager
     this.versionManager = new SelectorVersionManager();
+    
+    // Initialize version detection service
+    this.versionDetector = new VersionDetector({
+      timeout: 5000,
+      retries: 3,
+      retryDelay: 1000
+    });
+    
+    this.versionDetectionService = new VersionDetectionService({
+      versionDetector: this.versionDetector,
+      logger: logger
+    });
     
     // Initialize workspace detection (only if browserManager is provided)
     this.cdpConnectionManager = null;
@@ -250,7 +264,41 @@ class IDEManager {
    */
   async detectIDEVersion(port, ideType) {
     try {
-      logger.info(`Detecting IDE version for port ${port} using CDP /json/version endpoint`);
+      logger.info(`Detecting IDE version for port ${port} using enhanced version detection service`);
+      
+      // Use the enhanced version detection service
+      const result = await this.versionDetectionService.detectVersion(port, ideType);
+      
+      if (result && result.currentVersion) {
+        logger.info(`✅ Version detected: ${result.currentVersion} (new: ${result.isNewVersion})`);
+        return result.currentVersion;
+      }
+      
+      // Fallback to original method if enhanced service fails
+      logger.warn(`Enhanced version detection failed, falling back to original method`);
+      return await this.detectIDEVersionLegacy(port, ideType);
+      
+    } catch (error) {
+      logger.error(`Version detection failed for port ${port}:`, error.message);
+      // Try legacy method as fallback
+      try {
+        return await this.detectIDEVersionLegacy(port, ideType);
+      } catch (legacyError) {
+        logger.error(`Legacy version detection also failed:`, legacyError.message);
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Legacy version detection method (original implementation)
+   * @param {number} port - IDE port
+   * @param {string} ideType - IDE type
+   * @returns {Promise<string>} Detected version
+   */
+  async detectIDEVersionLegacy(port, ideType) {
+    try {
+      logger.info(`Detecting IDE version for port ${port} using legacy CDP /json/version endpoint`);
       const http = require('http');
       
       const versionData = await new Promise((resolve, reject) => {
@@ -294,7 +342,7 @@ class IDEManager {
       logger.warn(`Version detection failed for port ${port} - no version found in User-Agent`);
       return null;
     } catch (error) {
-      logger.error(`Version detection failed for port ${port}:`, error.message);
+      logger.error(`Legacy version detection failed for port ${port}:`, error.message);
       return null;
     }
   }

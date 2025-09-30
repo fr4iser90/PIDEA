@@ -22,7 +22,9 @@ class IDETypes {
       detectionPatterns: ['cursor', 'Cursor'],
       versionDetection: {
         method: 'cdp',
-        fallback: '1.5.7'
+        automaticDetection: true,
+        comparisonEnabled: true,
+        validationEnabled: true
       },
       versions: {
         '1.5.7': {
@@ -152,7 +154,9 @@ class IDETypes {
       detectionPatterns: ['windsurf', 'Windsurf'],
       versionDetection: {
         method: 'cdp',
-        fallback: '1.0.0'
+        automaticDetection: true,
+        comparisonEnabled: true,
+        validationEnabled: true
       },
       versions: {
         '1.0.0': {
@@ -355,11 +359,12 @@ class IDETypes {
    * @param {string} type - IDE type
    * @param {string} version - IDE version
    * @returns {Object|null} Version-specific selectors
+   * @throws {Error} If version not found - NO FALLBACKS!
    */
   static getSelectorsForVersion(type, version) {
     const metadata = IDETypes.getMetadata(type);
     if (!metadata || !metadata.versions) {
-      return null;
+      throw new Error(`No metadata or versions found for IDE type: ${type}`);
     }
     
     // Try to get specific version
@@ -367,18 +372,16 @@ class IDETypes {
       return metadata.versions[version];
     }
     
-    // Fallback to fallback version
-    if (metadata.versionDetection?.fallback && metadata.versions[metadata.versionDetection.fallback]) {
-      return metadata.versions[metadata.versionDetection.fallback];
-    }
-    
-    return null;
+    // Throw error if version not found
+    const availableVersions = Object.keys(metadata.versions).join(', ');
+    throw new Error(`Version ${version} not found for IDE type ${type}. Available versions: ${availableVersions}`);
   }
 
   /**
    * Get fallback version for IDE type
    * @param {string} type - IDE type
    * @returns {string|null} Fallback version
+   * @deprecated NO FALLBACKS ALLOWED - This method is deprecated and will be removed
    */
   static getFallbackVersion(type) {
     const metadata = IDETypes.getMetadata(type);

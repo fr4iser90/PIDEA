@@ -12,53 +12,45 @@ class IDESelectorManager {
   constructor(dependencies = {}) {
     this.versionManager = new SelectorVersionManager(dependencies);
     this.logger = dependencies.logger || logger;
+    this.selectorCollectionBot = dependencies.selectorCollectionBot;
   }
 
   /**
    * Get selectors for a specific IDE type and version
    * @param {string} ideType - The IDE type (cursor, vscode, windsurf)
-   * @param {string} version - The IDE version (optional)
+   * @param {string} version - The IDE version (REQUIRED - no fallbacks!)
    * @returns {Promise<Object>} IDE-specific selectors
+   * @throws {Error} If version not found - NO FALLBACKS!
    */
   async getSelectors(ideType, version = null) {
     try {
       return await this.versionManager.getSelectors(ideType, version);
     } catch (error) {
-      this.logger.error(`Error getting selectors for ${ideType}:`, error.message);
-      return this.versionManager.getFallbackSelectors();
+      this.logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
+      throw error; // Re-throw - NO FALLBACKS!
     }
   }
 
   /**
-   * Get selectors for a specific IDE type (synchronous version for backward compatibility)
+   * Get selectors for a specific IDE type and version (synchronous version)
    * @param {string} ideType - The IDE type (cursor, vscode, windsurf)
+   * @param {string} version - The IDE version (REQUIRED - no fallbacks!)
    * @returns {Object} IDE-specific selectors
+   * @throws {Error} If version not found - NO FALLBACKS!
    */
-  static getSelectors(ideType) {
+  static getSelectors(ideType, version) {
     try {
-      // For backward compatibility, use the fallback version
-      const fallbackVersion = IDETypes.getFallbackVersion(ideType);
-      const selectors = IDETypes.getSelectorsForVersion(ideType, fallbackVersion);
-      
-      if (selectors) {
-        logger.info(`Retrieved selectors for ${ideType} IDE fallback version ${fallbackVersion}`);
-        return selectors;
+      // Version is REQUIRED - no fallbacks allowed
+      if (!version) {
+        throw new Error(`Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`);
       }
-      
-      // Fallback to old structure
-      const metadata = IDETypes.getMetadata(ideType);
-      const fallbackSelectors = metadata?.chatSelectors;
-      
-      if (fallbackSelectors) {
-        logger.warn(`Using fallback selectors for ${ideType} IDE`);
-        return fallbackSelectors;
-      } else {
-        logger.warn(`No selectors found for ${ideType} IDE, using generic fallback`);
-        return this.getFallbackSelectors();
-      }
+
+      const selectors = IDETypes.getSelectorsForVersion(ideType, version);
+      logger.info(`Retrieved selectors for ${ideType} version ${version}`);
+      return selectors;
     } catch (error) {
-      logger.error(`Error getting selectors for ${ideType}:`, error.message);
-      return this.getFallbackSelectors();
+      logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
+      throw error; // Re-throw - NO FALLBACKS!
     }
   }
 
@@ -136,6 +128,63 @@ class IDESelectorManager {
    */
   static getFallbackVersion(ideType) {
     return IDETypes.getFallbackVersion(ideType);
+  }
+
+  /**
+   * Collect selectors for new IDE version
+   * @param {string} ideType - IDE type
+   * @param {string} version - IDE version
+   * @param {number} port - IDE port
+   * @returns {Promise<Object>} Collection result
+   */
+  async collectSelectorsForVersion(ideType, version, port) {
+    try {
+      this.logger.info(`Collecting selectors for ${ideType} version ${version} on port ${port}`);
+      
+      if (!this.selectorCollectionBot) {
+        throw new Error('SelectorCollectionBot not available');
+      }
+
+      // Use the version manager's collection method
+      const result = await this.versionManager.collectSelectorsForVersion(ideType, version, port);
+      
+      if (result.success) {
+        this.logger.info(`Successfully collected selectors for ${ideType} version ${version}`);
+      } else {
+        this.logger.error(`Selector collection failed for ${ideType} version ${version}: ${result.error}`);
+      }
+
+      return result;
+
+    } catch (error) {
+      this.logger.error(`Error collecting selectors for ${ideType} version ${version}:`, error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Test selectors for IDE version
+   * @param {string} ideType - IDE type
+   * @param {string} version - IDE version
+   * @param {Object} selectors - Selectors to test
+   * @param {number} port - IDE port
+   * @returns {Promise<Object>} Test results
+   */
+  async testSelectorsForVersion(ideType, version, selectors, port) {
+    try {
+      if (!this.selectorCollectionBot) {
+        throw new Error('SelectorCollectionBot not available');
+      }
+
+      return await this.selectorCollectionBot.testSelectors(ideType, version, selectors, port);
+
+    } catch (error) {
+      this.logger.error(`Error testing selectors for ${ideType} version ${version}:`, error.message);
+      throw error;
+    }
   }
 
   /**
