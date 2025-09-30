@@ -600,6 +600,12 @@ class TaskValidationService {
     async validateUpdateConstraints(task, updates, validationResult) {
         // Check if status change is valid
         if (updates.status) {
+            // Allow keeping the same status (no change)
+            if (task.status.value === updates.status) {
+                // No validation error for keeping the same status
+                return;
+            }
+            
             const validTransitions = this.getValidStatusTransitions(task.status.value);
             if (!validTransitions.includes(updates.status)) {
                 validationResult.errors.push(`Invalid status transition from ${task.status.value} to ${updates.status}`);
@@ -711,7 +717,23 @@ class TaskValidationService {
     async findConflictingTasks(task) { return []; }
     async findBlockingTasks(task) { return []; }
     async analyzeProjectState(projectPath) { return { hasUncommittedChanges: false, hasMergeConflicts: false, isInBuildState: false }; }
-    getValidStatusTransitions(currentStatus) { return [TaskStatus.PENDING, TaskStatus.RUNNING, TaskStatus.COMPLETED, TaskStatus.CANCELLED]; }
+    getValidStatusTransitions(currentStatus) {
+        // Allow keeping the same status (no change)
+        if (currentStatus === currentStatus) {
+            return true;
+        }
+
+        const validTransitions = {
+            'pending': ['in-progress', 'cancelled', 'blocked'],
+            'in-progress': ['completed', 'failed', 'blocked', 'cancelled'],
+            'blocked': ['pending', 'in-progress', 'cancelled'],
+            'completed': [], // No transitions from completed
+            'failed': ['pending', 'in-progress'],
+            'cancelled': [] // No transitions from cancelled
+        };
+
+        return validTransitions[currentStatus] || [];
+    }
     async analyzePriorityChangeImpact(task, newPriority) { return { hasConflicts: false }; }
     async findDependentTasks(taskId) { return []; }
     analyzeUpdateImpact(task, updates, depTask) { return { hasIssues: false }; }

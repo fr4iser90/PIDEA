@@ -10,8 +10,9 @@ class AuthMiddleware {
     this.tokenValidator = new TokenValidator();
     this.failedAttempts = new Map();
     this.blockedIPs = new Map();
-    this.maxFailedAttempts = 5;
-    this.blockDuration = 15 * 60 * 1000; // 15 minutes
+    this.maxFailedAttempts = 10; // Increased for legitimate validation attempts
+    this.blockDuration = 5 * 60 * 1000; // Reduced to 5 minutes
+    this.validationAttempts = new Map(); // Track validation attempts separately
     
     // Add authentication caching
     this.authCache = new Map();
@@ -90,10 +91,24 @@ class AuthMiddleware {
     if (Date.now() - blockTime > this.blockDuration) {
       this.blockedIPs.delete(ip);
       this.failedAttempts.delete(ip);
+      this.validationAttempts.delete(ip);
       return false;
     }
 
     return true;
+  }
+
+  // Check if IP is making legitimate validation attempts
+  isLegitimateValidation(ip, userAgent) {
+    const attempts = this.validationAttempts.get(ip) || [];
+    const now = Date.now();
+    
+    // Clean old attempts
+    const recentAttempts = attempts.filter(time => now - time < 60000); // Last minute
+    this.validationAttempts.set(ip, recentAttempts);
+    
+    // If less than 3 validation attempts in last minute, consider legitimate
+    return recentAttempts.length < 3;
   }
 
   getRetryAfter(ip) {
@@ -113,7 +128,7 @@ class AuthMiddleware {
       try {
         const clientIp = req.ip || req.connection.remoteAddress;
         
-        // Check brute force protection
+        // Check brute force protection with smart detection
         if (this.isBlocked(clientIp)) {
           const retryAfter = this.getRetryAfter(clientIp);
           logger.warn(`❌ IP ${clientIp} is blocked due to brute force attempts`);
@@ -123,6 +138,14 @@ class AuthMiddleware {
             code: 'BRUTE_FORCE_BLOCKED',
             retryAfter: retryAfter
           });
+        }
+
+        // Track validation attempts for legitimate requests
+        const userAgent = req.get('User-Agent') || '';
+        if (this.isLegitimateValidation(clientIp, userAgent)) {
+          const attempts = this.validationAttempts.get(clientIp) || [];
+          attempts.push(Date.now());
+          this.validationAttempts.set(clientIp, attempts);
         }
         
         const token = this.extractToken(req);

@@ -165,6 +165,11 @@ class TaskStatusUpdateStep {
    * @returns {boolean} Whether transition is valid
    */
   validateStatusTransition(currentStatus, newStatus) {
+    // Allow keeping the same status (no change)
+    if (currentStatus === newStatus) {
+      return true;
+    }
+
     const validTransitions = {
       'pending': ['in-progress', 'cancelled', 'blocked'],
       'in-progress': ['completed', 'failed', 'blocked', 'cancelled'],
