@@ -23,6 +23,8 @@
 - [ ] Implement core version detection logic
 - [ ] Add CDP integration for version detection
 - [ ] Add support for Cursor, VSCode, Windsurf
+- [ ] Implement automatic version comparison (new vs known)
+- [ ] Add version validation and comparison logic
 - [ ] Implement error handling and logging
 - [ ] Add JSDoc documentation
 

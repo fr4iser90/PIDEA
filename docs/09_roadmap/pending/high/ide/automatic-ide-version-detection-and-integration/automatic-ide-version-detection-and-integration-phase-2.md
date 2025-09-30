@@ -24,6 +24,7 @@
 - [ ] Add CDP-based selector discovery
 - [ ] Implement selector validation and filtering
 - [ ] Add selector categorization
+- [ ] Integrate with existing scripts (auto-dom-collector.js, selector-generator.js)
 - [ ] Add error handling and logging
 - [ ] Add JSDoc documentation
 
@@ -36,7 +37,14 @@
 - [ ] Add connection management
 - [ ] Add comprehensive error handling
 
-### Task 2.3: Enhance SelectorVersionManager (30 minutes)
+### Task 2.3: Integrate Script Functionality (30 minutes)
+- [ ] Integrate DOM collection logic from auto-dom-collector.js into SelectorCollector
+- [ ] Integrate selector generation logic from selector-generator.js into SelectorCollector
+- [ ] Add DOM analysis and selector generation functionality
+- [ ] Add error handling for collection failures
+- [ ] Add JSDoc documentation
+
+### Task 2.4: Enhance SelectorVersionManager (30 minutes)
 - [ ] Modify `backend/domain/services/ide/SelectorVersionManager.js`
 - [ ] Add integration with SelectorCollectionBot
 - [ ] Add automatic selector collection for new versions
@@ -44,7 +52,7 @@
 - [ ] Add selector database updates
 - [ ] Add version-specific selector management
 
-### Task 2.4: Enhance IDESelectorManager (30 minutes)
+### Task 2.5: Enhance IDESelectorManager (30 minutes)
 - [ ] Modify `backend/domain/services/ide/IDESelectorManager.js`
 - [ ] Add automatic selector collection
 - [ ] Add selector validation
@@ -52,7 +60,7 @@
 - [ ] Add selector caching
 - [ ] Add selector fallback mechanisms
 
-### Task 2.5: Write Unit Tests (45 minutes)
+### Task 2.6: Write Unit Tests (45 minutes)
 - [ ] Create `backend/tests/unit/ide/SelectorCollectionBot.test.js`
 - [ ] Test selector collection for all IDE types
 - [ ] Test selector validation and filtering
@@ -103,15 +111,23 @@ class SelectorCollector {
   }
 
   async collectSelectors(port) {
-    // CDP-based collection
+    // CDP-based collection with integrated DOM analysis
   }
 
   async discoverSelectors(page) {
-    // Selector discovery
+    // Selector discovery (integrated from scripts)
   }
 
   async validateSelector(selector) {
     // Selector validation
+  }
+
+  async analyzeDOM(page) {
+    // DOM analysis (integrated from auto-dom-collector.js)
+  }
+
+  async generateSelectors(domData) {
+    // Selector generation (integrated from selector-generator.js)
   }
 }
 ```
@@ -147,6 +163,7 @@ class SelectorCollector {
 - [ ] CDP-based selector discovery working
 - [ ] Selector validation and filtering implemented
 - [ ] Selector categorization working
+- [ ] DOM collection and selector generation integrated into backend
 - [ ] Integration with existing selector system
 - [ ] Unit tests passing with 90% coverage
 - [ ] JSDoc documentation complete
@@ -175,5 +192,6 @@ class SelectorCollector {
 - This phase focuses on automated selector collection
 - CDP integration is critical for selector discovery
 - Selector validation ensures quality
+- DOM collection and selector generation functionality is integrated from scripts into backend
 - Integration with existing selector system is important
 - Comprehensive testing ensures reliability

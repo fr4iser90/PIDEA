@@ -17,7 +17,7 @@
 - **API Changes**: None - internal service only
 - **Frontend Changes**: None - backend automation only
 - **Backend Changes**: Enhanced IDEManager, new VersionDetectionService, SelectorCollectionBot
-- **Script Integration**: Leverage existing scripts in `/scripts/cursor/` and `/scripts/vscode/` folders
+- **Script Integration**: Integrate existing script functionality from `/scripts/cursor/` and `/scripts/vscode/` into backend services
 - **Existing Infrastructure**: Build upon IDEManager, SelectorVersionManager, and CDP integration
 
 ## 2.1. Automatic Workflow Overview
@@ -62,6 +62,10 @@ if (currentVersion !== knownVersion) {
 - **Codebase Updates**: Automatically updates IDETypes.js with new versions and selectors
 - **Validation**: Tests selectors before committing to codebase
 - **No Manual Intervention**: Fully automated process
+- **Backend Integration**: Integrates existing script functionality into backend services
+- **Version Comparison**: Compares detected vs known versions
+- **Selector Validation**: Tests selectors before codebase updates
+- **Automatic IDETypes.js Updates**: Updates codebase with new versions/selectors
 
 ## 3. File Impact Analysis
 
@@ -86,15 +90,18 @@ if (currentVersion !== knownVersion) {
 
 #### Files to Create:
 - [ ] `backend/domain/services/ide/VersionDetectionService.js` - Core version detection and comparison logic
-- [ ] `backend/domain/services/ide/SelectorCollectionBot.js` - Automated selector collection using existing scripts
+- [ ] `backend/domain/services/ide/SelectorCollectionBot.js` - Automated selector collection (integrated from scripts)
 - [ ] `backend/domain/services/ide/SelectorValidationService.js` - Intelligent selector testing and validation
 - [ ] `backend/domain/services/ide/VersionValidationService.js` - Version validation and comparison
+- [ ] `backend/domain/services/ide/IDETypesUpdater.js` - Automatic IDETypes.js updates with new versions/selectors
 - [ ] `backend/infrastructure/external/ide/VersionDetector.js` - Enhanced CDP-based version detection
-- [ ] `backend/infrastructure/external/ide/SelectorCollector.js` - Integration with existing script infrastructure
+- [ ] `backend/infrastructure/external/ide/SelectorCollector.js` - DOM collection and selector generation (integrated from scripts)
 - [ ] `backend/application/services/VersionManagementService.js` - Orchestrates complete automation workflow
+- [ ] `backend/application/services/AutomationOrchestrator.js` - Main automation orchestrator
 - [ ] `backend/tests/unit/ide/VersionDetectionService.test.js` - Unit tests
 - [ ] `backend/tests/unit/ide/SelectorCollectionBot.test.js` - Unit tests
 - [ ] `backend/tests/unit/ide/SelectorValidationService.test.js` - Unit tests
+- [ ] `backend/tests/unit/ide/IDETypesUpdater.test.js` - Unit tests
 - [ ] `backend/tests/integration/ide/VersionIntegration.test.js` - Integration tests
 - [ ] `backend/tests/integration/ide/AutomationWorkflow.test.js` - End-to-end automation tests
 
@@ -112,10 +119,11 @@ if (currentVersion !== knownVersion) {
 - [ ] Write unit tests for version detection
 
 #### Phase 2: Selector Collection Bot Integration (3 hours)
-- [ ] Create SelectorCollectionBot that leverages existing scripts
-- [ ] Integrate with existing auto-dom-collector.js and selector-generator.js
+- [ ] Create SelectorCollectionBot with integrated DOM collection functionality
+- [ ] Integrate DOM collection logic from auto-dom-collector.js into backend
+- [ ] Integrate selector generation logic from selector-generator.js into backend
 - [ ] Add automatic selector collection for new versions
-- [ ] Create SelectorCollector infrastructure component (wrapper around existing scripts)
+- [ ] Create SelectorCollector infrastructure component with integrated script functionality
 - [ ] Integrate with SelectorVersionManager for automatic updates
 - [ ] Write unit tests for selector collection integration
 
@@ -123,12 +131,13 @@ if (currentVersion !== knownVersion) {
 - [ ] Create SelectorValidationService for testing existing selectors
 - [ ] Implement automatic selector testing before collection
 - [ ] Add fallback logic for when existing selectors fail
-- [ ] Create automatic IDETypes.js updates for new versions
+- [ ] Create IDETypesUpdater for automatic IDETypes.js updates
 - [ ] Add automatic selector file generation and updates
 - [ ] Write integration tests for validation workflow
 
 #### Phase 4: Complete Automation and Error Handling (1 hour)
 - [ ] Create VersionManagementService to orchestrate the complete process
+- [ ] Create AutomationOrchestrator as main automation coordinator
 - [ ] Add automatic version detection scheduling
 - [ ] Add robust error handling and logging
 - [ ] Add automatic codebase updates with validation
@@ -285,7 +294,12 @@ const resolveTestPath = (category, componentName, componentType = 'service') => 
 - [ ] IDETypes.js automatically updated with new versions and selectors
 - [ ] Robust fallback mechanisms handle selector collection failures
 - [ ] Complete automation workflow requires no manual intervention
-- [ ] Existing scripts integrated with backend system
+- [ ] Existing script functionality integrated into backend services
+- [ ] Version comparison logic detects new vs known versions
+- [ ] Selector validation tests selectors before codebase updates
+- [ ] Automatic IDETypes.js updates with new versions/selectors
+- [ ] DOM collection and selector generation integrated into backend
+- [ ] Automation orchestrator coordinates complete workflow
 - [ ] All tests pass (unit, integration, end-to-end)
 - [ ] Performance requirements met
 - [ ] Security requirements satisfied
@@ -391,44 +405,6 @@ async collectSelectors(ideType, version) {
 - Wartbarkeit
 
 **Fazit:** Zuerst das Selector Versioning System, danach den IDE Bot Enhancement Plan.
-```
-
-#### Updated Analysis (Based on Current Codebase):
-```markdown
-# Updated Analysis: Automatic IDE Version Detection and Integration
-
-## Current State Analysis:
-✅ **Selector Versioning System** - COMPLETED (2025-09-30T09:43:35.000Z)
-✅ **IDEManager** - Has CDP integration and version detection
-✅ **SelectorVersionManager** - Has version-based selector loading
-✅ **IDETypes** - Has version structure and metadata
-✅ **Scripts Infrastructure** - Complete DOM collection and selector generation
-
-## What's Missing:
-❌ **Automatic Version Detection** - No automatic comparison of new vs known versions
-❌ **Automatic Selector Collection** - No integration of existing scripts with backend
-❌ **Codebase Updates** - No automatic IDETypes.js updates for new versions
-❌ **Script Integration** - No backend integration of existing script infrastructure
-
-## Implementation Strategy:
-1. **Leverage Existing Infrastructure** - Build upon IDEManager, SelectorVersionManager, and existing scripts
-2. **Script Integration** - Integrate existing auto-dom-collector.js and selector-generator.js
-3. **Backend Services** - Create services that orchestrate the existing components
-4. **Codebase Updates** - Automatically update IDETypes.js with new versions and selectors
-5. **No Database/Frontend** - Pure backend automation, no database or frontend needed
-
-## Key Insight:
-The existing script infrastructure in `/scripts/cursor/` and `/scripts/vscode/` is already complete and functional. The main task is to integrate these scripts with the backend system and add automatic version detection and comparison. The goal is to automatically update the codebase (IDETypes.js) when new IDE versions are detected.
-
-## Complete Automation Workflow:
-1. **Version Detection**: Automatically detects new IDE versions
-2. **Selector Testing**: Tests existing selectors first (intelligent approach)
-3. **Success Path**: If existing selectors work, mark as "latest compatible"
-4. **Failure Path**: If existing selectors fail, collect new selectors automatically
-5. **Validation**: Test new selectors before committing to codebase
-6. **Codebase Update**: Automatically update IDETypes.js with new versions/selectors
-7. **Error Handling**: Robust fallback mechanisms for all failure scenarios
-8. **No Manual Intervention**: Fully automated process from detection to codebase update
 ```
 
 ## Language Detection:
