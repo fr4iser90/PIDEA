@@ -8,5 +8,69 @@
     "chatContainer": "[data-testid=\"chat-panel\"]",
     "isActive": "[data-testid=\"chat-panel\"]",
     "isInputReady": "[data-testid=\"chat-input\"]:not([disabled])"
+  },
+  "chatControls": {
+    "newChatButton": "[aria-label*=\"New Chat\"], [data-testid*=\"new-chat\"], button[title*=\"New Chat\"], .new-chat-button",
+    "sendButton": "[aria-label*=\"Send\"], [data-testid*=\"send\"], button[title*=\"Send\"], .send-button",
+    "deleteChatButton": "[aria-label*=\"Delete\"], [data-testid*=\"delete\"], button[title*=\"Delete\"], .delete-chat-button",
+    "renameChatButton": "[aria-label*=\"Rename\"], [data-testid*=\"rename\"], button[title*=\"Rename\"], .rename-chat-button"
+  },
+  "chatHistory": {
+    "chatHistory": "[class*=\"chat-history\"], [data-testid*=\"chat-history\"], .chat-history",
+    "chatHistoryItem": "[class*=\"chat-history-item\"], [data-testid*=\"chat-history-item\"], .chat-history-item",
+    "chatHistoryTitle": "[class*=\"chat-title\"], [data-testid*=\"chat-title\"], .chat-title"
+  },
+  "chatStatus": {
+    "connectionStatus": "[class*=\"connection-status\"], [data-testid*=\"connection-status\"], .connection-status",
+    "loadingIndicator": "[class*=\"loading\"], [data-testid*=\"loading\"], .loading-indicator, .spinner",
+    "thinkingIndicator": "[class*=\"thinking\"], [data-testid*=\"thinking\"], .thinking-indicator"
+  },
+  "chatSettings": {
+    "settingsButton": "[aria-label*=\"Settings\"], [data-testid*=\"settings\"], button[title*=\"Settings\"], .settings-button",
+    "modelSelector": "[aria-label*=\"Model\"], [data-testid*=\"model\"], select[name*=\"model\"], .model-selector",
+    "webSearchToggle": "[aria-label*=\"Web Search\"], [data-testid*=\"web-search\"], input[type=\"checkbox\"][name*=\"web\"], .web-search-toggle"
+  },
+  "chatContext": {
+    "contextButton": "[aria-label*=\"Context\"], [data-testid*=\"context\"], button[title*=\"Context\"], .context-button",
+    "attachFileButton": "[aria-label*=\"Attach\"], [data-testid*=\"attach\"], button[title*=\"Attach\"], .attach-file-button",
+    "helpButton": "[aria-label*=\"Help\"], [data-testid*=\"help\"], button[title*=\"Help\"], .help-button",
+    "premiumPill": "[class*=\"premium\"], [data-testid*=\"premium\"], .premium-pill",
+    "atSignButton": "[aria-label*=\"@\"], [data-testid*=\"at-sign\"], button[title*=\"@\"], .at-sign-button"
+  },
+  "chatMessages": {
+    "messageTimestamp": "[class*=\"timestamp\"], [data-testid*=\"timestamp\"], .message-timestamp",
+    "messageActions": "[class*=\"message-actions\"], [data-testid*=\"message-actions\"], .message-actions",
+    "messageCopyButton": "[aria-label*=\"Copy\"], [data-testid*=\"copy\"], button[title*=\"Copy\"], .copy-button"
+  },
+  "chatCodeBlocks": {
+    "codeBlockRejectButton": "[aria-label*=\"Reject\"], [data-testid*=\"reject\"], button[title*=\"Reject\"], .reject-button",
+    "codeBlockCopyButton": "[aria-label*=\"Copy Code\"], [data-testid*=\"copy-code\"], button[title*=\"Copy Code\"], .copy-code-button",
+    "codeBlockDownloadButton": "[aria-label*=\"Download\"], [data-testid*=\"download\"], button[title*=\"Download\"], .download-button"
+  },
+  "chatModals": {
+    "chatSettingsModal": "[class*=\"settings-modal\"], [data-testid*=\"settings-modal\"], .settings-modal",
+    "chatHistoryModal": "[class*=\"history-modal\"], [data-testid*=\"history-modal\"], .history-modal",
+    "chatExportModal": "[class*=\"export-modal\"], [data-testid*=\"export-modal\"], .export-modal"
+  },
+  "chatErrors": {
+    "errorMessage": "[class*=\"error\"], [data-testid*=\"error\"], .error-message",
+    "retryButton": "[aria-label*=\"Retry\"], [data-testid*=\"retry\"], button[title*=\"Retry\"], .retry-button",
+    "connectionError": "[class*=\"connection-error\"], [data-testid*=\"connection-error\"], .connection-error"
+  },
+  "chatUI": {
+    "userAvatar": "[class*=\"avatar\"], [data-testid*=\"avatar\"], .user-avatar",
+    "userName": "[class*=\"username\"], [data-testid*=\"username\"], .user-name",
+    "themeToggle": "[aria-label*=\"Theme\"], [data-testid*=\"theme\"], button[title*=\"Theme\"], .theme-toggle",
+    "agentAutoButton": "[aria-label*=\"Agent\"], [data-testid*=\"agent\"], button[title*=\"Agent\"], .agent-auto-button",
+    "contextPercentage": "[class*=\"context-percentage\"], [data-testid*=\"context-percentage\"], .context-percentage"
+  },
+  "agentControls": {
+    "agentModeSelector": "[aria-label*=\"Agent Mode\"], [data-testid*=\"agent-mode\"], select[name*=\"agent-mode\"], .agent-mode-selector",
+    "agentModeDropdown": "[class*=\"agent-mode-dropdown\"], [data-testid*=\"agent-mode-dropdown\"], .agent-mode-dropdown",
+    "askModeButton": "[aria-label*=\"Ask Mode\"], [data-testid*=\"ask-mode\"], button[title*=\"Ask Mode\"], .ask-mode-button",
+    "agentModeButton": "[aria-label*=\"Agent Mode\"], [data-testid*=\"agent-mode\"], button[title*=\"Agent Mode\"], .agent-mode-button",
+    "modelDropdown": "[class*=\"model-dropdown\"], [data-testid*=\"model-dropdown\"], .model-dropdown",
+    "autoModelToggle": "[aria-label*=\"Auto Model\"], [data-testid*=\"auto-model\"], input[type=\"checkbox\"][name*=\"auto\"], .auto-model-toggle",
+    "modelOptions": "[class*=\"model-option\"], [data-testid*=\"model-option\"], .model-option"
   }
 }

@@ -146,7 +146,18 @@ class SelectorCollectionBot {
   async categorizeSelectors(selectors) {
     try {
       const categories = {
-        chat: {},
+        chatSelectors: {},
+        chatControls: {},
+        chatHistory: {},
+        chatStatus: {},
+        chatSettings: {},
+        chatContext: {},
+        chatMessages: {},
+        chatCodeBlocks: {},
+        chatModals: {},
+        chatErrors: {},
+        chatUI: {},
+        agentControls: {},
         editor: {},
         explorer: {},
         terminal: {},
@@ -157,9 +168,49 @@ class SelectorCollectionBot {
         other: {}
       };
 
-      // Categorization rules based on selector patterns
+      // Enhanced categorization rules with comprehensive chat groups
       const categoryRules = {
-        chat: ['chat', 'message', 'conversation', 'ai', 'assistant', 'aislash'],
+        'chatModals': [
+          'chatsettingsmodal', 'chathistorymodal', 'chatexportmodal'
+        ],
+        'chatCodeBlocks': [
+          'codeblockrejectbutton', 'codeblockcopybutton', 'codeblockdownloadbutton'
+        ],
+        'chatMessages': [
+          'messagetimestamp', 'messageactions', 'messagecopybutton'
+        ],
+        'chatContext': [
+          'contextbutton', 'attachfilebutton', 'helpbutton', 'premiumpill', 'atsignbutton'
+        ],
+        'chatSettings': [
+          'settingsbutton', 'modelselector', 'websearchtoggle'
+        ],
+        'chatStatus': [
+          'connectionstatus', 'loadingindicator', 'thinkingindicator'
+        ],
+        'chatHistory': [
+          'chathistory', 'chathistoryitem', 'chathistorytitle'
+        ],
+        'chatControls': [
+          'newchatbutton', 'sendbutton', 'deletechatbutton', 'renamechatbutton'
+        ],
+        'agentControls': [
+          'agentmodeselector', 'agentmodedropdown', 'askmodebutton', 'agentmodebutton',
+          'modeldropdown', 'automodeltoggle', 'modeloptions'
+        ],
+        'chatUI': [
+          'useravatar', 'username', 'themetoggle', 'agentautobutton', 'contextpercentage'
+        ],
+        'chatErrors': [
+          'errormessage', 'retrybutton', 'connectionerror'
+        ],
+        'chatSelectors': [
+          'input', 'inputcontainer', 'usermessages', 'aimessages', 'messagescontainer',
+          'chatcontainer', 'isactive', 'isinputready', 'codeblocks', 'codeblockcontent',
+          'codeblockheader', 'codeblockfilename', 'codeblocklanguage', 'monacoeditor',
+          'codelines', 'syntaxtokens', 'codeblockapplybutton', 'inlinecode', 'codespans',
+          'syntaxclasses', 'messagerows', 'usermessagerow', 'aimessagerow'
+        ],
         editor: ['editor', 'monaco', 'view-line', 'code'],
         explorer: ['explorer', 'file', 'tree', 'pane'],
         terminal: ['terminal', 'xterm', 'console'],
@@ -170,6 +221,11 @@ class SelectorCollectionBot {
       };
 
       for (const [key, value] of Object.entries(selectors)) {
+        // Skip chat state metadata
+        if (key === '_chatState') {
+          continue;
+        }
+
         let categorized = false;
 
         // Try to categorize based on rules
@@ -200,6 +256,149 @@ class SelectorCollectionBot {
 
     } catch (error) {
       this.logger.error('Selector categorization failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Collect comprehensive chat selectors
+   * @param {string} ideType - IDE type
+   * @param {string} version - IDE version
+   * @param {number} port - IDE port
+   * @returns {Promise<Object>} Chat selectors
+   */
+  async collectChatSelectors(ideType, version, port) {
+    try {
+      this.logger.info(`Collecting comprehensive chat selectors for ${ideType} version ${version}`);
+
+      // Use SelectorCollector to get chat selectors
+      const allSelectors = await this.selectorCollector.collectSelectors(port);
+      const chatSelectors = {};
+      
+      // Extract chat-related selectors from all selectors
+      const chatKeys = Object.keys(allSelectors).filter(key => 
+        key.includes('chat') || key.includes('message') || key.includes('ai') || 
+        key.includes('assistant') || key.includes('send') || key.includes('new') ||
+        key.includes('delete') || key.includes('rename') || key.includes('settings') ||
+        key.includes('model') || key.includes('context') || key.includes('premium') ||
+        key.includes('agent') || key.includes('error') || key.includes('loading') ||
+        key === '_chatState'
+      );
+      
+      chatKeys.forEach(key => {
+        chatSelectors[key] = allSelectors[key];
+      });
+
+      // Validate chat selectors
+      const validatedChatSelectors = await this.validateChatSelectors(chatSelectors);
+
+      this.logger.info(`Successfully collected ${Object.keys(validatedChatSelectors).length} chat selectors`);
+      return validatedChatSelectors;
+
+    } catch (error) {
+      this.logger.error(`Chat selector collection failed for ${ideType} version ${version}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate chat selectors specifically
+   * @param {Object} chatSelectors - Chat selectors to validate
+   * @returns {Promise<Object>} Validated chat selectors
+   */
+  async validateChatSelectors(chatSelectors) {
+    try {
+      const validated = {};
+      const chatRequiredSelectors = [
+        'newChatButton', 'sendButton', 'chatInput', 'chatContainer',
+        'userMessages', 'aiMessages', 'settingsButton'
+      ];
+
+      for (const [key, value] of Object.entries(chatSelectors)) {
+        // Skip chat state metadata
+        if (key === '_chatState') {
+          validated[key] = value;
+          continue;
+        }
+
+        // Validate selector syntax
+        if (this.isValidSelector(value)) {
+          validated[key] = value;
+        } else {
+          this.logger.warn(`Invalid chat selector syntax for ${key}: ${value}`);
+        }
+      }
+
+      // Check for required chat selectors
+      const missingRequired = chatRequiredSelectors.filter(selector => !validated[selector]);
+      if (missingRequired.length > 0) {
+        this.logger.warn(`Missing required chat selectors: ${missingRequired.join(', ')}`);
+      }
+
+      this.logger.info(`Validated ${Object.keys(validated).length} chat selectors`);
+      return validated;
+
+    } catch (error) {
+      this.logger.error('Chat selector validation failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Test chat selectors specifically
+   * @param {string} ideType - IDE type
+   * @param {string} version - IDE version
+   * @param {Object} chatSelectors - Chat selectors to test
+   * @param {number} port - IDE port
+   * @returns {Promise<Object>} Test results
+   */
+  async testChatSelectors(ideType, version, chatSelectors, port) {
+    try {
+      this.logger.info(`Testing chat selectors for ${ideType} version ${version}`);
+
+      const results = {
+        ideType,
+        version,
+        port,
+        tested: 0,
+        passed: 0,
+        failed: 0,
+        chatState: chatSelectors._chatState || {},
+        details: {}
+      };
+
+      // Test each chat selector
+      for (const [key, selector] of Object.entries(chatSelectors)) {
+        if (key === '_chatState') {
+          continue;
+        }
+
+        results.tested++;
+        
+        // Validate selector format
+        const isValid = this.isValidSelector(selector);
+        
+        if (isValid) {
+          results.passed++;
+          results.details[key] = {
+            selector,
+            status: 'passed'
+          };
+        } else {
+          results.failed++;
+          results.details[key] = {
+            selector,
+            status: 'failed',
+            error: 'Invalid selector format'
+          };
+        }
+      }
+
+      this.logger.info(`Chat selector testing completed: ${results.passed}/${results.tested} passed`);
+      return results;
+
+    } catch (error) {
+      this.logger.error(`Chat selector testing failed for ${ideType} version ${version}:`, error.message);
       throw error;
     }
   }
