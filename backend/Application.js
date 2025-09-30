@@ -919,6 +919,11 @@ class Application {
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
 
+    // Version Management routes (protected)
+    const versionRoutes = require('./presentation/api/routes/versionRoutes');
+    this.app.use('/api/versions', this.authMiddleware.authenticate());
+    this.app.use('/api/versions', versionRoutes);
+
     // Workflow routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/workflow/execute', (req, res) => this.workflowController.executeWorkflow(req, res));

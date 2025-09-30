@@ -1,0 +1,281 @@
+# Changelog
+
+## [1.0.3] - 2025-09-30
+
+### 🎉 Version 1.0.3 - Automated Release
+- **Commits:** 262 new changes since v1.0.2
+- **Previous Version:** v1.0.2
+- **Generated:** 2025-09-30T23:09:36.317Z
+
+### 📋 Changes
+- 45d8251 Remove obsolete documentation for Version Management System
+- ca4e196 Implement Comprehensive Chat Selector Collection and Validation
+- a277216 Refactor Logging in IDE Services to Include Length Metrics
+- b24d43f Refactor Chat Handlers to Support IDE Port Management and Selector Integration
+- 78ef172 Extend SelectorCollectionBot for Comprehensive Chat Selector Collection
+- d3b3a80 Remove obsolete documentation for Automatic IDE Version Detection and Selector Versioning System
+- 66aa823 Enhance Selector Management and Version Handling
+- 0bdfefb Refactor Chat History Extraction to Support Dynamic Selectors
+- 3e7a1e5 Implement Enhanced IDE Version Detection and Selector Management
+- 11d77ff Enhance Automatic IDE Version Detection and Codebase Integration
+- 55143d2 Enhance Automatic IDE Version Detection and Selector Collection Integration
+- 9a50cbd Implement Automatic IDE Version Detection and Selector Collection Integration
+- ce1722c Refactor IDE Automation Services for Improved Selector Management
+- 3650775 Implement Selector Versioning System for IDEs
+- 7983179 Remove outdated framework documentation files related to the missing steps completion project. This includes the deletion of implementation, phase, and index documents that are no longer relevant, streamlining the repository for better organization and clarity.
+- 1517a86 Remove outdated documentation files related to frontend orchestrators integration and task management cleanup. This includes the deletion of multiple phase and implementation documents that are no longer relevant, streamlining the repository for better organization and clarity.
+- adf0708 Enhance ManualTasksImportService and TaskStatusTransitionService
+- 22e0ec3 Enhance AuthStore Initialization and Validation Logic
+- 130ef7a Implement IDE Configuration Management and Enhance IDE Requirement Modal
+- e2afa9d Integrate Enhanced IDEStartModal into Authentication Flow and Backend Services
+- 546d679 Enhance ManualTasksImportService with FileSystemService Integration
+- 919e575 Add IDE Requirement Modal Implementation and Index
+- 3e156da Enhance ManualTasksImportService and Task Completion Logic
+- 34a4b12 removed _backup /// removed Master Index from title in db //
+- e637581 Refactor and Clean Up Analysis Components
+- ccebdcb Refactor Task Management and Clean Up Documentation
+- 51558af Remove TaskStatusUpdateStep Implementation
+- e83d958 Complete Implementation of Analysis Orchestrators and Frontend Integration
+- 5d35eba Refactor AI Text Detection and Introduce ResponseProcessor
+- 4231b18 Implement Task Review Workflow and UI Enhancements
+- ca0e3fe Enhance Task Review Button Implementation
+- 628d21e Refactor Task Review Workflow Integration
+- 1fb6801 Remove Integration Sections from Task Management Prompts
+- c31d9fe Enhance Task Creation Documentation with Initial Prompt and Sanitization Details
+- ac9fa75 Remove Deprecated Enhanced Chat System and Performance Bottleneck Documentation
+- 6447e6b Implement Session Management Enhancements
+- 1066f2c Refactor IDE Management for Enhanced Cleanup and Detection
+- dfbe16d Enhance IDE Management and Cleanup Processes
+- f7f29c0 Implement IDE Status Badge and Workspace Path Detection
+- 60972f9 Update AI and Documentation Frameworks with New Step Files and Enhanced Logging
+- 006e235 Merge branch 'task/task_PIDEA_1758447875311_rhsis7eqc' into pidea-agent
+- c63d46b Add missing step files and update framework configurations for AI and documentation frameworks
+- ca8937f Refactor TaskService and WorkflowOrchestrationService for Improved Dependency Management
+- 7c6ebda Refactor TaskService Integration in WorkflowOrchestrationService
+- 3b71723 Refactor Chat and Task Handlers for Improved BrowserManager Integration
+- 312a8b0 Refactor Framework Initialization and User Check Logic
+- 336ef86 Enhance Analysis Documentation and Update Date Formats
+- 295e25e Update Analysis Dates Across Multiple Documentation Files
+- 4e97ea2 Refactor Analysis Services and Update Package Dependencies
+- fbd6e7e Remove outdated analysis and documentation files for 2024 Q4 roadmap
+- 5ad5f93 Refactor Task Status Transition Logic for Enhanced Accuracy and Maintainability
+- de2cb2a Refactor Task Status Transition Logic and File Synchronization
+- b435c0c Enhance Task Status Transition Logic and File Synchronization
+- 9a1f7d0 refactoring pathes
+- 8a5e407 Refactor Git Management Components for Improved Logging and Performance
+- 716858d changed structure
+- f3e6a4c Refactor Git Management Components for Enhanced Performance and Usability
+- a5a4326 Refactor Connection Pool Cleanup Logic for Improved Stability
+- 7028b6a Enhance Logging and Workspace Detection in Git Management
+- e344af4 Enhance Git Status Management with Real-Time Updates and Auto-Refresh
+- 2bca225 Remove Legacy File-Based Workspace Detection and Terminal Handler
+- 605f3d5 Refactor Logging in Analysis, Auth, and Queue Controllers
+- 0bae50a Update IDE Cursor Version and Refactor Queue Management Statistics
+- c8bfe1f Enhance Analysis Services with Improved Error Handling and Data Integrity
+- b912a30 Refactor Analysis Services and Standardize Data Handling
+- 440be11 Refactor Project Management and Database Handling
+- be3659a Implement Category-Based Analysis Structure and Update Frontend Components
+- 61e413b Refactor Frontend Orchestrators Integration for Enhanced Category Management
+- 68e39d3 Update Frontend Orchestrators Integration Phases and Enhance Task Management
+- d39d3bb Update Analysis Dates for Various Steps to Reflect New Schedule
+- 6571941 Refactor Analysis Services to Implement Orchestrators and Enhance API Structure
+- 11f4a2e Enhance Analysis Services and Introduce Category-Based Recommendations
+- 22cadb6 Refactor Git Status Handling for Enhanced User Interaction
+- 2aa2ae6 Refactor Analysis Steps to Use Orchestrators for Enhanced Clarity
+- d65bf8f Enhance Git Status Refresh Mechanism for Improved User Experience
+- 2f6ed9b Implement Auto-Refresh for Git Status on Tab Visibility and Focus
+- 2cbd899 Enhance Workflow Analysis Services and Update Documentation
+- 9b3f2a3 Refactor Task Management Documentation and Remove Index Manager
+- 669dfa4 Refactor Task Review System for Enhanced File Management and Validation
+- 854895c Enhance Task Review & Validation System with Auto-Creation of Missing Files
+- 6bbd754 Update Project ID Handling to Preserve Original Case
+- 6fa2707 Implement Git Event Handling and Refresh Functionality
+- 52b4475 Update Security Hardening Implementation with Advanced Tools Integration
+- 88b0fb4 Enhance AI Response Handling and Integrate Analysis Repository
+- 6ba38d4 Implement Queue-Based Task Execution and Update API Responses
+- 0688429 Refactor Queue Architecture Implementation for Direct Execution and Event Unification
+- 6aba2e5 Refactor Queue Management System for Enhanced Performance and Usability
+- 359d009 Implement Queue History and Workflow Type Detection Features
+- 94709f1 Enhance Queue Management System with Improved Event Handling and Documentation
+- a374164 Refactor IDEMirrorApplicationService Dependency Injection
+- 2a004e3 Implement Queue Management System and Enhance Workflow Integration
+- acf053c Update Task Queue Management Documentation with Validation Results and Next Steps
+- 6c98e2e Enhance Task Management with Timestamp Handling and Compatibility Improvements
+- f080fee Enhance ManualTasksImportService and Update Task Management Documentation
+- a06b5ea Fix task creation timestamp handling in ManualTasksImportService and update TasksPanelComponent for consistency
+- 2f1511a Enhance Manual Tasks Import Service and Task Panel UI
+- 47826ff Refactor Task Panel for Project-Specific Functionality
+- 3e738c4 Update Task Panel Project-Specific Implementation and Validation Results
+- 39bebab Enhance Task Management Prompts with Timestamp Utility Integration
+- c6b4928 Update Task Management Prompts for Enhanced Clarity and Functionality
+- ccb8799 Enhance Testing Strategy with Intelligent Test Path Resolution
+- 0790b94 Refactor IDEApplicationService and Cache Management for Improved Performance
+- a796cd0 Optimize IDEApplicationService and RequestQueuingService for Enhanced Performance
+- 3178028 Integrate Request Queuing Service and Enhance IDE Application Performance
+- 728cb26 Enhance Request Deduplication Implementation and Performance Metrics
+- c7d2ba8 Improve IDE Switching Logic and Optimize Performance
+- 799b5c5 Refactor IDE Switching Logic and Enhance Performance
+- 476747c Add Babel Configuration and Update Jest Settings for Enhanced Testing
+- a2b9a02 Refactor Chat Message Handling and Improve Sending Logic
+- 8e5c7e0 Add Chat Message Management and Enhance Message Sending Logic
+- d5cbf53 Enhance IDE Switching Functionality and Performance Logging
+- 497b1fd Implement Browser Connection Pooling Strategy and Task Validation
+- b88a77c Fix IDEStore Logic for Loading IDEs and Project Data
+- 155872d Enhance Chat History Retrieval with Caching Mechanism
+- 92a970c Refactor Project Data Loading to Utilize Global State Management
+- 2d47599 Enhance IDEStore and Project Selectors for Chat Data Management
+- c2bb1dc Refactor Project ID Generation and Enhance Global State Management
+- b375913 Extend IDEStore for Project Data Management
+- 5d93580 Implement Global State Management for Multiple IDEs
+- 78d7f12 Complete Frontend Global State Management Implementation
+- 5e2e6a7 Remove Global State Management Documentation and Phase Files
+- 1865a1a Enhance Global State Management Implementation and Documentation
+- f3d10c8 Refactor Naming Conventions and Enhance Documentation for Consistency
+- 99dd76f Add Simple Refactor Script for Active to Selected Naming Convention
+- 31e81c3 Refactor Naming Conventions from 'Active' to 'Selected' Across Backend and Frontend
+- c10c5d4 Refactor ChatHistoryHandler and Update WebChatApplicationService for Enhanced Message Retrieval
+- 4ab919a Remove deprecated cookies.txt file and refactor GetChatHistoryHandler for improved message retrieval. Enhanced logging for better traceability and streamlined chat history handling by combining database and live messages. Updated WebChatApplicationService to utilize the new handler pattern for fetching chat history, ensuring efficient data retrieval. Adjusted ChatCacheService to return empty arrays instead of null for cache misses, preventing cascading failures.
+- d532b52 Refactor GitApplicationService and APIChatRepository for Direct Command Execution
+- 0cd30d3 Enhance Step Registry and Analysis API with Parallel Execution and Direct Data Fetching
+- a6aaca7 Update Step Registry Documentation with Validation Results and Task Analysis
+- c41d10d Enhance GitApplicationService with Request Deduplication and Combined Info Retrieval
+- 4f3bbc9 Implement In-Memory Caching and Optimize Chat History Extraction
+- 3c2e3c2 Enhance Backend Performance with In-Memory Caching and Extraction Optimization
+- 589dd43 Refactor ChatSessionService and GetChatHistoryStep for Improved Message Retrieval
+- 42e22c2 Refactor GitApplicationService to Enforce Dependency Injection
+- ce88bbe Implement Memory Management Enhancements in AnalysisApplicationService
+- eeb1590 Refactor Analysis and Task Management Components
+- e1c306c Implement session cleanup in AuthService to enhance security
+- 0c3dcff Update APIChatRepository to Modify Manual Tasks API Endpoint
+- 8d2d620 Refactor PostgreSQL Task Repository SQL Queries
+- 96286e6 Enhance Token Management and Security Features
+- 7985dfd Update Test Cases to Use Dummy JWT Tokens
+- f85d652 Refactor Database Connection and Configuration
+- e3309a1 Enhance Task Workflow and Git Integration
+- be6adc7 Refactor Workflow Branch Strategies and Documentation
+- d334b04 Enhance Token Validation and Session Management
+- d7de209 Refactor Authentication Validation Logic in AuthStore
+- 9492035 Implement Task Sync Notification and UI Enhancements
+- 0a00e57 Enhance Database and Authentication Logic
+- e1ea8da Enhance Authentication and User Management
+- bb97c10 Refactor Git Branch Creation and Workflow Integration
+- 109e77e Enhance Git Branch Creation Logic
+- 2f99e17 Register CreateChatHandler and Update Task Workflow Steps
+- 0f4d0fb Refactor Task Prompt Generation and Update Task Type Mappings
+- 6303c10 Enhance Session Management and Cleanup Logic
+- 6087449 Update Task Execution Logic in TasksPanelComponent
+- 5c93f29 Enhance Task Execution and Creation Logic in TasksPanelComponent and ManualTaskDetailsModal
+- ac5c88c Refactor TasksPanelComponent to Improve Task Handling and Logging
+- e310955 Update Analysis Toolbase Gap Implementation Documentation
+- 32cad47 Refactor AnalysisDataViewer to Improve Event Listener Setup
+- c926252 Refactor AnalysisDataViewer to Setup Event Listeners without Auto-Loading Data
+- b49c855 Add Authentication Caching to AuthMiddleware
+- 76c1ef7 Update Task Filtering Logic in TasksPanelComponent
+- 9e9fb0b Implement New Layout Structure for Tasks Panel Component
+- c3f6bc3 Update Jest and Vite Configurations to Include Utils Path Mapping
+- 02c6d3c Fix ManualTaskDetailsModal to Handle Value Objects for Priority, Status, and Category
+- ee2c2ea Refactor Task Categories and Enhance Implementation Plan
+- cc7d5e8 Enhance PostgreSQL and SQLite Database Schema and Scripts
+- 3720ce4 Add Task Management Tables and Indexes to Database Initialization
+- b93ddf8 Merge branch 'task/task_pidea_1753259168364_i5cwld7r0-1753270599630' into pidea-agent
+- 69305f0 Implement Secure Token System with Hashing and Validation
+- 55b04bc Implement Database Type Configuration and Refactor User Session Management
+- 6845900 Refactor Documentation Tasks to Manual Tasks
+- 1f44429 Enhance Git Service Error Handling and Logging
+- ca3c79a Fix Git Branch Handling and Improve Logging
+- 5717d05 Refactor Git Steps for Data Flow Fix
+- 0beff4d Remove Logging Statements for Improved Code Clarity
+- 35a9d1d Refactor Git Step Classes for Consistency
+- 26fdddf Refactor Command and Handler Registries for Lazy Loading
+- 08f7fa2 Add Git Command and Handler Integration with Layer Violation Analysis
+- 38514a2 Refactor IDE and Project Controllers for Enhanced Service Integration
+- 79671e5 Add User Session Management to AuthApplicationService and Update AuthController
+- 7a5ca42 Refactor ConfirmationStep for Enhanced AI Interaction and Context Validation
+- d1ef3b7 Remove Deprecated Files and Refactor Chat Handlers
+- 0a94e7e Refactor Timeout Handling to Centralized Configuration
+- 16cdddc Enhance Module Path Aliases and Refactor TerminalService Logging
+- a261013 Refactor Timeout Handling and Enhance AI Response Mechanism
+- d57865b Enhance IDE Message Handling with AI Response Support
+- 9b698b7 Enhance AITextDetector Initialization in ConfirmationStep
+- 3299e01 Add configuration retrieval and context validation to ConfirmationStep
+- 2ab96b5 Enhance ConfirmationStep with AI Response Detection and Scoring
+- 8f16831 Refactor CreateChatStep to Remove BrowserManager Dependency
+- 1095a63 Enhance New Chat Modal Handling in BrowserManager
+- 722a737 Refactor WorkflowLoaderService Paths and Initialize New Properties
+- 0dc81fe Implement Phase-Based Structure for Backend Duplicate Execution Fix
+- 4a76dd6 Refactor Service Imports and Enhance Directory Structure
+- ea1941d Document validation results and outline next steps for backend duplicate execution fix
+- b3f3e95 Enhance WorkflowLoaderService and Task Creation Features
+- 4654767 Refactor WorkflowLoaderService Integration and Task Creation Enhancements
+- 0e2cf34 Implement WorkflowLoaderService and Task Creation Workflow
+- 22a9d57 Add Phase-Based Organization Guidance to Roadmap
+- 9add39e Enhance TaskService and ConfirmationStep Logic
+- 40767c7 Refactor Project Repository Access and Enhance TaskService Context
+- e282aca Enhance TaskService and Refactor Project Repository Imports
+- 2883f9d Refactor Workflow Steps and Enhance IDE Messaging
+- d3ba78b Enhance Workflow Execution and Task Management
+- 6f602c5 Update API Authentication and Enhance Content Library Functionality
+- 051439f Enhance WorkflowController for Recommendations and Analysis
+- 0e56010 Enhance Analysis and Exclusion Pattern Management
+- 8b5ebc6 Refactor Exclusion Patterns for Analysis and Refactoring Processes
+- 4c24bfc Implement IDE Caching and Update Component Logic
+- 6d23659 Implement AnalysisController and Enhance AnalysisApplicationService
+- 6cda361 Implement Access Token Validation and Refresh Logic
+- d00a7f7 Refactor Task and Priority Handling Across Components
+- ee0ea5e Enhance Authentication and Task Management Functionality
+- 57800fc Refactor Documentation and Task Management Integration
+- f49d872 Refactor Git Management for Enhanced Responsiveness and Clarity
+- af2171b Refactor Git Components for Improved Clarity and Functionality
+- 805ad1d Enhance Git Functionality and Logging
+- c44f52a Refactor Git Steps to Use execAsync for Command Execution
+- 6130862 Refactor GitService Step Names for Consistency
+- b4dfa1b Fix Export Patterns in Git Steps for Consistency
+- 2b61ead Enhance Authentication Flow and Improve Logging
+- dbbc303 Refactor Git Steps and Update Auth Handling
+- d6b3bf7 Refactor TerminalService and ServiceRegistry for Dependency Updates
+- 56dc6f4 Add config export to RepositoryTypeAnalysisStep module
+- 25f589e Remove obsolete files and refactor authentication handling
+- 1ed113f Refactor ServiceRegistry to Integrate RepositoryTypeAnalysisStep and Replace Legacy Strategies
+- 9b8ad7c Simplify Analysis Data Caching Implementation
+- ad810b4 Update Startup Performance Optimization Status and Progress Tracking
+- 405e023 Refactor IDESendMessageStep and BrowserManager for Improved Message Handling and Efficiency
+- 03fbd5e Refactor IDE Services to Eliminate Chat Functionality and Prevent Infinite Loops
+- 8a614c6 Enhance BrowserManager Simplification and Address Critical Infinite Loop Issues
+- 729531e Refactor IDESendMessageStep and BrowserManager for Enhanced Message Handling
+- ecec773 Refactor IDESendMessageStep to Use CursorIDEService for Message Sending
+- 5f91f81 Refactor WebChatApplicationService and IDESendMessageStep for Improved Project ID Retrieval and Message Handling
+- 4998537 Refactor WebChat and Cursor IDE Services for Enhanced Message Handling
+- e0cc5da Enhance Chat History Retrieval and IDE Message Handling
+- cac7afe Refactor IDE and WebChat Services for Enhanced Functionality
+- 866dc0b Refactor Authentication Services and Remove ChatMessageHandler
+- 7cb8df3 Enhance Category Definitions and Workflow Steps
+- 37d121e Enhance Workflow Execution and Logging in WorkflowController
+- ec593ee Implement JSON Workflow Execution in WorkflowController
+- 1a95ccf Refactor Application Controllers to Utilize Application Services
+- 5de02ce Update Application Structure and Introduce WebChatController
+- 2fcee46 Refactor Application to Transition from AutoFinishSystem to Workflow Steps
+- 395b140 Refactor Analysis Services to Integrate AnalysisOrchestrator
+- a30ca61 Remove Legacy Analyzer References and Update Import Paths
+- 19b5a96 Refactor Application Infrastructure and Enhance Step Management
+- c370651 Enhance Dependency Injection and Service Management in Application
+- fd3d139 Refactor Dependency Injection System and Update Service Registries
+- 8c92070 Refactor Completion Steps to Integrate TerminalService and Enhance Functionality
+- ef5f789 Refactor Completion Steps and Enhance Configuration
+- 4283b1b Refactor Middleware and Security Enhancements
+- 5ba1d6d Enhance Application Security and Middleware Functionality
+- 8aadd0e Refactor Analysis Step to Modularize Workflow and Enhance Functionality
+- 03b2ff4 Refactor Task Execution System and Integrate Workflow Controller
+- 618fa9a Implement Framework Modularization Phase 2 Enhancements and Update Documentation
+- 8956bb1 Implement Framework Modularization Phase 2 and Update Documentation
+- f6d705e Refine Framework Modularization Documentation
+- 40cbd70 Enhance README.md with IDE Starter Scripts and Port Management Details
+- b1f6019 Refactor IDE Starter Script for Enhanced Usability and Functionality
+
+### 🔧 Technical Details
+- **Version Management:** PIDEA Unified Version Management System
+- **Branch Strategy:** Unified Branch Strategy
+- **Git Integration:** Automated changelog generation since last version
+- **Release Type:** Patch (Bug fixes and minor improvements)
+
+---
+*This changelog was automatically generated by PIDEA Unified Version Management System*

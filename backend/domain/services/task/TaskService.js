@@ -558,7 +558,10 @@ class TaskService {
         steps: []
       }),
       getType: () => task.type?.value || 'generic',
-      getVersion: () => '1.0.0',
+      getVersion: () => {
+        const VersionService = require('../version/VersionService');
+        return new VersionService().getVersion();
+      },
       getDependencies: () => [],
       getSteps: () => [],
       execute: async (context) => {
@@ -589,7 +592,10 @@ class TaskService {
     return new WorkflowContext(
       task.id,
       task.type?.value || 'generic',
-      '1.0.0',
+      (() => {
+        const VersionService = require('../version/VersionService');
+        return new VersionService().getVersion();
+      })(), // Dynamic version from central version file
       new WorkflowState('initialized'),
       new WorkflowMetadata({
         taskId: task.id,

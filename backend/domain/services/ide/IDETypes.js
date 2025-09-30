@@ -60,7 +60,10 @@ class IDETypes {
         comparisonEnabled: true,
         validationEnabled: true
       },
-      availableVersions: ['1.0.0'] // This will be updated dynamically
+      availableVersions: (() => {
+        const VersionService = require('../version/VersionService');
+        return [new VersionService().getVersion()];
+      })() // Dynamic version from central version file
     },
     [IDETypes.JETBRAINS]: {
       name: 'JetBrains IDEs',

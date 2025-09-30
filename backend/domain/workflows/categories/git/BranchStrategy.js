@@ -5,6 +5,8 @@
 const FeatureBranchStrategy = require('./strategies/FeatureBranchStrategy');
 const HotfixBranchStrategy = require('./strategies/HotfixBranchStrategy');
 const ReleaseBranchStrategy = require('./strategies/ReleaseBranchStrategy');
+const UnifiedBranchStrategy = require('@domain/services/version/UnifiedBranchStrategy');
+const BranchStrategyRegistry = require('@domain/services/version/BranchStrategyRegistry');
 const GitWorkflowException = require('./exceptions/GitWorkflowException');
 const Logger = require('@logging/Logger');
 const logger = new Logger('GitBranchStrategy');
@@ -12,8 +14,11 @@ const logger = new Logger('GitBranchStrategy');
 class BranchStrategy {
   constructor(config = {}) {
     this.strategies = new Map();
-    this.defaultStrategy = config.defaultStrategy || 'feature';
+    this.defaultStrategy = config.defaultStrategy || 'unified';
     this.logger = config.logger || console;
+    
+    // Initialize unified strategy registry
+    this.strategyRegistry = new BranchStrategyRegistry();
     
     // Initialize strategies
     this.initializeStrategies(config);
@@ -95,27 +100,43 @@ class BranchStrategy {
    */
   initializeStrategies(config) {
     if (this._alreadyLogged) return;
-    // Create feature branch strategy
+    
+    // Initialize unified strategy (primary)
+    const unifiedStrategy = new UnifiedBranchStrategy({
+      ...config.unified,
+      logger: this.logger
+    });
+    this.strategies.set('unified', unifiedStrategy);
+    this.strategyRegistry.registerStrategy('unified', unifiedStrategy);
+    
+    // Create legacy strategies (for backward compatibility)
     this.strategies.set('feature', new FeatureBranchStrategy({
       ...config.feature,
       logger: this.logger
     }));
 
-    // Create hotfix branch strategy
     this.strategies.set('hotfix', new HotfixBranchStrategy({
       ...config.hotfix,
       logger: this.logger
     }));
 
-    // Create release branch strategy
     this.strategies.set('release', new ReleaseBranchStrategy({
       ...config.release,
       logger: this.logger
     }));
+    
+    // Register legacy strategies in registry
+    this.strategyRegistry.registerStrategy('feature', this.strategies.get('feature'));
+    this.strategyRegistry.registerStrategy('hotfix', this.strategies.get('hotfix'));
+    this.strategyRegistry.registerStrategy('release', this.strategies.get('release'));
 
     // Only log once per instance
     if (!this._alreadyLogged) {
-      this.logger.info('Initialized branch strategies:', Array.from(this.strategies.keys()));
+      this.logger.info('Initialized branch strategies:', {
+        strategies: Array.from(this.strategies.keys()),
+        defaultStrategy: this.defaultStrategy,
+        unifiedEnabled: true
+      });
       this._alreadyLogged = true;
     }
   }
@@ -146,39 +167,16 @@ class BranchStrategy {
    */
   determineStrategy(task, context = {}) {
     try {
-      // Check explicit strategy in context
-      const explicitStrategy = context.get('branchStrategy');
-      if (explicitStrategy && this.strategies.has(explicitStrategy)) {
-        this.logger.info(`Using explicit strategy: ${explicitStrategy}`);
-        return explicitStrategy;
-      }
-
-      // Check task type mapping
-      const taskType = task.type?.value || task.type;
-      if (taskType && this.strategyMappings.taskTypeMappings[taskType]) {
-        const strategy = this.strategyMappings.taskTypeMappings[taskType];
-        this.logger.info(`Using task type strategy: ${strategy} (task type: ${taskType})`);
-        return strategy;
-      }
-
-      // Check priority mapping
-      const priority = task.priority?.value || task.priority;
-      if (priority && this.strategyMappings.priorityMappings[priority]) {
-        const strategy = this.strategyMappings.priorityMappings[priority];
-        this.logger.info(`Using priority strategy: ${strategy} (priority: ${priority})`);
-        return strategy;
-      }
-
-      // Check keyword analysis
-      const keywordStrategy = this.analyzeKeywords(task);
-      if (keywordStrategy) {
-        this.logger.info(`Using keyword strategy: ${keywordStrategy}`);
-        return keywordStrategy;
-      }
-
-      // Use default strategy
-      this.logger.info(`Using default strategy: ${this.defaultStrategy}`);
-      return this.defaultStrategy;
+      // Use unified strategy registry for determination
+      const strategyName = this.strategyRegistry.determineStrategy(task, context);
+      
+      this.logger.info(`Determined strategy: ${strategyName}`, {
+        taskId: task.id,
+        taskType: task.type?.value || task.type,
+        priority: task.priority?.value || task.priority
+      });
+      
+      return strategyName;
 
     } catch (error) {
       this.logger.error(`Error determining strategy: ${error.message}`);

@@ -520,7 +520,10 @@ class TaskAnalysisService {
    */
   async _generateMetadata(analysis) {
     return {
-      analysisVersion: '1.0.0',
+      analysisVersion: (() => {
+        const VersionService = require('../version/VersionService');
+        return new VersionService().getVersion();
+      })(),
       timestamp: analysis.timestamp,
       duration: Date.now() - analysis.timestamp.getTime(),
       totalIssues: this._countIssues(analysis),

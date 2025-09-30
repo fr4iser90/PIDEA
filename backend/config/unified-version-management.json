@@ -1,0 +1,221 @@
+{
+  "versionManagement": {
+    "enabled": true,
+    "autoBump": true,
+    "semanticVersioning": true,
+    "createGitTags": true,
+    "autoCommit": true,
+    "analyzeGitChanges": true,
+    "packageFiles": [
+      "package.json",
+      "backend/package.json",
+      "frontend/package.json"
+    ],
+    "bumpTypes": {
+      "major": {
+        "triggers": ["breaking", "incompatible", "deprecate"],
+        "description": "Breaking changes that are not backward compatible"
+      },
+      "minor": {
+        "triggers": ["feature", "enhancement", "new functionality"],
+        "description": "New features that are backward compatible"
+      },
+      "patch": {
+        "triggers": ["bug", "fix", "hotfix", "documentation", "chore"],
+        "description": "Bug fixes and minor changes"
+      }
+    },
+    "defaultBumpType": "patch",
+    "commitMessageTemplate": "chore: bump version to {version}",
+    "tagTemplate": "v{version}",
+    "maxBranchNameLength": 50,
+    "includeTaskIdInBranch": true,
+    "includeTimestampInBranch": true,
+    "sanitizeBranchNames": true
+  },
+  "changelog": {
+    "enabled": true,
+    "conventionalCommits": true,
+    "formats": ["markdown", "json", "html"],
+    "groupByType": true,
+    "includeUnreleased": true,
+    "categories": {
+      "feature": {
+        "title": "Features",
+        "description": "New features and enhancements"
+      },
+      "fix": {
+        "title": "Bug Fixes",
+        "description": "Bug fixes and patches"
+      },
+      "breaking": {
+        "title": "Breaking Changes",
+        "description": "Breaking changes that may affect existing functionality"
+      },
+      "docs": {
+        "title": "Documentation",
+        "description": "Documentation updates"
+      },
+      "style": {
+        "title": "Style Changes",
+        "description": "Code style and formatting changes"
+      },
+      "refactor": {
+        "title": "Refactoring",
+        "description": "Code refactoring and restructuring"
+      },
+      "test": {
+        "title": "Tests",
+        "description": "Test additions and improvements"
+      },
+      "chore": {
+        "title": "Chores",
+        "description": "Maintenance tasks and chores"
+      }
+    },
+    "outputPath": "CHANGELOG.md",
+    "includeTaskInfo": true,
+    "includeCommitHashes": true,
+    "includeAuthors": true
+  },
+  "release": {
+    "enabled": true,
+    "autoCreate": true,
+    "defaultStatus": "draft",
+    "requireReview": false,
+    "autoPublish": false,
+    "includeChangelog": true,
+    "includeMetadata": true,
+    "gitIntegration": {
+      "createTags": true,
+      "pushTags": true,
+      "tagPrefix": "v",
+      "annotated": true
+    },
+    "notifications": {
+      "enabled": false,
+      "channels": ["email", "slack"],
+      "events": ["created", "published", "archived"]
+    }
+  },
+  "workflow": {
+    "enabled": true,
+    "autoValidation": true,
+    "qualityThreshold": 0.8,
+    "completionDetection": true,
+    "maxAttempts": 3,
+    "timeout": 300000,
+    "steps": {
+      "versionAnalysis": {
+        "enabled": true,
+        "timeout": 30000,
+        "analyzeCommitMessages": true,
+        "analyzeFileChanges": true,
+        "analyzeTaskContent": true
+      },
+      "versionBump": {
+        "enabled": true,
+        "timeout": 60000,
+        "autoCommit": true,
+        "createGitTags": true,
+        "analyzeGitChanges": true
+      },
+      "changelogGeneration": {
+        "enabled": true,
+        "timeout": 30000,
+        "conventionalCommits": true,
+        "groupByType": true,
+        "includeUnreleased": true
+      },
+      "releaseTag": {
+        "enabled": true,
+        "timeout": 30000,
+        "annotated": true,
+        "pushTags": true,
+        "includeMetadata": true
+      }
+    }
+  },
+  "security": {
+    "enabled": true,
+    "validateVersions": true,
+    "sanitizeInputs": true,
+    "rateLimit": {
+      "enabled": true,
+      "maxRequests": 100,
+      "windowMs": 60000
+    },
+    "auditLogging": true,
+    "allowedBumpTypes": ["major", "minor", "patch"],
+    "restrictedVersions": ["0.0.0", "1.0.0"]
+  },
+  "performance": {
+    "enabled": true,
+    "caching": {
+      "enabled": true,
+      "ttl": 300000,
+      "maxSize": 1000
+    },
+    "optimization": {
+      "batchOperations": true,
+      "parallelProcessing": true,
+      "maxConcurrency": 5
+    },
+    "monitoring": {
+      "enabled": true,
+      "metrics": ["responseTime", "throughput", "errorRate"],
+      "thresholds": {
+        "responseTime": 1000,
+        "errorRate": 0.05
+      }
+    }
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "includeMetadata": true,
+    "excludeSensitiveData": true,
+    "outputs": ["console", "file"],
+    "file": {
+      "path": "logs/version-management.log",
+      "maxSize": "10MB",
+      "maxFiles": 5
+    }
+  },
+  "database": {
+    "migrations": {
+      "enabled": true,
+      "autoRun": true,
+      "backup": true
+    },
+    "indexes": {
+      "enabled": true,
+      "autoCreate": true
+    },
+    "cleanup": {
+      "enabled": true,
+      "retentionDays": 365,
+      "autoCleanup": true
+    }
+  },
+  "integration": {
+    "git": {
+      "enabled": true,
+      "service": "GitService",
+      "timeout": 30000,
+      "retries": 3
+    },
+    "fileSystem": {
+      "enabled": true,
+      "service": "FileSystemService",
+      "timeout": 10000,
+      "retries": 2
+    },
+    "database": {
+      "enabled": true,
+      "service": "DatabaseService",
+      "timeout": 5000,
+      "retries": 3
+    }
+  }
+}

@@ -228,7 +228,10 @@ class FileSystemService {
         return {
             handlerId: this.handlerId,
             type: 'FileSystemService',
-            version: '1.0.0',
+            version: (() => {
+              const VersionService = require('../version/VersionService');
+              return new VersionService().getVersion();
+            })(),
             capabilities: [
                 'file_operations',
                 'directory_operations',
