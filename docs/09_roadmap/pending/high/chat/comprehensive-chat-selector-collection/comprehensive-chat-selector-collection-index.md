@@ -7,9 +7,10 @@
 - **Status**: Planning
 - **Total Estimated Time**: 6 hours
 - **Created**: 2025-01-27T10:30:00.000Z
-- **Last Updated**: 2025-01-27T10:30:00.000Z
+- **Last Updated**: 2025-01-27T12:45:00.000Z
 - **Original Language**: German
 - **Prompt Sanitized**: ✅ Yes
+- **Architecture**: Backend extension of existing SelectorCollectionBot
 
 ## 📁 File Structure
 ```
@@ -39,20 +40,20 @@ docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/
 - [x] [Chat AI Detection Analysis](./chat-ai-detection-analysis.md) - ✅ Done
 
 ### Pending Subtasks
-- [ ] [Enhanced DOM Collection](./comprehensive-chat-selector-collection-phase-1.md) - ⏳ Waiting
-- [ ] [Element Testing Automation](./comprehensive-chat-selector-collection-phase-2.md) - ⏳ Waiting
-- [ ] [Selector Generation & Validation](./comprehensive-chat-selector-collection-phase-3.md) - ⏳ Waiting
+- [ ] [Extend SelectorCollector for Chat Selectors](./comprehensive-chat-selector-collection-phase-1.md) - ⏳ Waiting
+- [ ] [Enhance SelectorCollectionBot](./comprehensive-chat-selector-collection-phase-2.md) - ⏳ Waiting
+- [ ] [Update Selector Files & Validation](./comprehensive-chat-selector-collection-phase-3.md) - ⏳ Waiting
 
 ## 📈 Progress Tracking
 - **Overall Progress**: 20% Complete
 - **Current Phase**: Analysis Complete
-- **Next Milestone**: Implement comprehensive selector collection
+- **Next Milestone**: Extend existing SelectorCollectionBot with chat selectors
 - **Estimated Completion**: 2025-01-28
 
 ## 🔗 Related Tasks
-- **Dependencies**: Chat AI Detection Analysis
+- **Dependencies**: Chat AI Detection Analysis, existing SelectorCollectionBot
 - **Dependents**: Chat automation improvements, selector validation
-- **Related**: Terminal detection improvements, thinking detection enhancements
+- **Related**: Automatic IDE Version Detection and Integration, Selector Versioning System
 
 ## 📝 Notes & Updates
 ### 2025-01-27 - Implementation Plan Created
@@ -60,6 +61,13 @@ docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/
 - Identified 30+ missing chat selectors
 - Designed script-based collection system
 - Next: Implement enhanced DOM collection
+
+### 2025-01-27 - Architecture Updated
+- **Changed approach**: From script-based to backend extension
+- **Rationale**: Avoid redundancy with existing SelectorCollectionBot
+- **New plan**: Extend SelectorCollector.js and SelectorCollectionBot.js
+- **Benefits**: Automatic integration with version detection workflow
+- **Next**: Extend existing backend services instead of creating new scripts
 
 ## 🚀 Quick Actions
 - [View Implementation Plan](./comprehensive-chat-selector-collection-implementation.md)

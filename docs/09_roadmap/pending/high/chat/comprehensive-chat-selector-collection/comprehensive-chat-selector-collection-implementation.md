@@ -11,25 +11,26 @@
 - **Created**: 2025-01-27T10:30:00.000Z
 
 ## Technical Requirements
-- **Tech Stack**: Node.js, Playwright, CDP, existing cursor scripts
-- **Architecture Pattern**: Script-based automation using existing infrastructure
+- **Tech Stack**: Node.js, Playwright, CDP, existing backend infrastructure
+- **Architecture Pattern**: Backend service extension using existing SelectorCollectionBot
 - **Database Changes**: None
 - **API Changes**: None
 - **Frontend Changes**: None
-- **Backend Changes**: None
+- **Backend Changes**: Extend existing SelectorCollectionBot and SelectorCollector
 
 ## File Impact Analysis
 #### Files to Modify:
-- [ ] `scripts/cursor/enhanced-chat-analyzer.js` - Add comprehensive element testing
-- [ ] `scripts/cursor/enhanced-dom-collector.js` - Add chat-specific state collection
-- [ ] `scripts/cursor/selector-generator.js` - Add missing selector generation
+- [ ] `backend/infrastructure/external/ide/SelectorCollector.js` - Extend DOM analysis with comprehensive chat selectors
+- [ ] `backend/domain/services/ide/SelectorCollectionBot.js` - Add chat-specific collection methods
+- [ ] `backend/domain/services/ide/SelectorVersionManager.js` - Integrate chat selector validation
 - [ ] `backend/selectors/cursor/1.5.7.json` - Update with collected selectors
+- [ ] `backend/selectors/vscode/1.85.0.json` - Update with collected selectors
+- [ ] `backend/selectors/windsurf/1.0.0.json` - Update with collected selectors
 
 #### Files to Create:
-- [ ] `scripts/cursor/comprehensive-chat-selector-collector.js` - Main collection script
-- [ ] `scripts/cursor/chat-element-tester.js` - Element testing automation
-- [ ] `scripts/cursor/chat-selector-validator.js` - Selector validation
-- [ ] `output/chat-selector-collection/collected-selectors.json` - Collected results
+- [ ] `backend/tests/unit/ide/ChatSelectorCollection.test.js` - Unit tests for chat selector collection
+- [ ] `backend/tests/integration/ide/ChatSelectorIntegration.test.js` - Integration tests
+- [ ] `output/chat-selector-collection/validation-report.json` - Collection validation results
 
 ## Missing Chat Selectors to Collect
 
@@ -103,35 +104,65 @@
 - [ ] `autoModelToggle` - Auto model toggle selector
 - [ ] `modelOptions` - Model options selector
 
+## Validation Results - 2025-01-27
+
+### ✅ File Structure Validation Complete
+- [x] Index: `docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/comprehensive-chat-selector-collection-index.md` - Status: Found
+- [x] Implementation: `docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/comprehensive-chat-selector-collection-implementation.md` - Status: Found
+- [x] Phase 1: `docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/comprehensive-chat-selector-collection-phase-1.md` - Status: Found
+- [x] Phase 2: `docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/comprehensive-chat-selector-collection-phase-2.md` - Status: Found
+- [x] Phase 3: `docs/09_roadmap/pending/high/chat/comprehensive-chat-selector-collection/comprehensive-chat-selector-collection-phase-3.md` - Status: Found
+
+### ✅ Codebase Analysis Complete
+- [x] SelectorCollectionBot exists: `backend/domain/services/ide/SelectorCollectionBot.js` - Status: Found
+- [x] SelectorCollector exists: `backend/infrastructure/external/ide/SelectorCollector.js` - Status: Found
+- [x] SelectorVersionManager exists: `backend/domain/services/ide/SelectorVersionManager.js` - Status: Found
+- [x] Selector JSON files exist: All 3 IDE selector files found
+- [x] Test files exist: 5 test files found for selector components
+
+### ⚠️ Gap Analysis Results
+- [ ] **Current DOM Analysis**: Only basic chat elements detected (chatInput, chatContainer, userMessages, aiMessages)
+- [ ] **Missing Chat Selectors**: 30+ critical chat selectors not collected
+- [ ] **Limited Chat Categorization**: Current categorization only includes basic chat patterns
+- [ ] **No Chat-Specific Validation**: No specialized chat selector validation methods
+- [ ] **Missing Chat Tests**: No dedicated chat selector collection tests
+
+### 🔧 Implementation Enhancements Required
+- [ ] **Extend DOM Analysis**: Add comprehensive chat element detection in SelectorCollector.js
+- [ ] **Enhance Categorization**: Add chat-specific categorization rules in SelectorCollectionBot.js
+- [ ] **Add Chat Validation**: Implement chat-specific selector validation methods
+- [ ] **Create Chat Tests**: Add dedicated chat selector collection tests
+- [ ] **Update Selector Files**: Merge new chat selectors into existing JSON files
+
 #### Files to Delete:
 - None
 
 ## Implementation Phases
 
-#### Phase 1: Enhanced DOM Collection (2 hours)
-- [ ] Extend enhanced-dom-collector.js for chat-specific states
-- [ ] Add chat element collection methods
-- [ ] Implement comprehensive chat state detection
-- [ ] Test DOM collection with real Cursor chat
+#### Phase 1: Extend SelectorCollector for Chat Selectors (2 hours)
+- [ ] **Extend DOM Analysis**: Add comprehensive chat element detection in `analyzeDOM()` method
+- [ ] **Add Chat Element Detection**: Implement detection for all 30+ missing chat selectors
+- [ ] **Implement Chat State Detection**: Add detection for active, premium, agent modes
+- [ ] **Test Enhanced Collection**: Validate with real IDE instances (Cursor, VSCode, Windsurf)
 
-#### Phase 2: Element Testing Automation (2 hours)
-- [ ] Create chat-element-tester.js for automated testing
-- [ ] Implement "New Chat" button automation
-- [ ] Add element prompt generation for all chat elements
-- [ ] Test element detection and selector collection
+#### Phase 2: Enhance SelectorCollectionBot (2 hours)
+- [ ] **Add Chat Collection Methods**: Implement `collectChatSelectors()`, `validateChatSelectors()` methods
+- [ ] **Enhance Categorization**: Add chat-specific categorization rules to `categorizeSelectors()`
+- [ ] **Implement Chat Validation**: Add chat-specific selector validation and testing
+- [ ] **Integrate Workflow**: Seamlessly integrate with existing version management workflow
 
-#### Phase 3: Selector Generation & Validation (2 hours)
-- [ ] Extend selector-generator.js for chat selectors
-- [ ] Implement selector validation and comparison
-- [ ] Generate updated selector JSON files
-- [ ] Validate collected selectors against existing ones
+#### Phase 3: Update Selector Files & Validation (2 hours)
+- [ ] **Update JSON Files**: Merge new chat selectors into all 3 IDE selector files
+- [ ] **Implement Validation**: Add comprehensive selector validation and accuracy metrics
+- [ ] **Generate Reports**: Create validation reports and collection summaries
+- [ ] **Test Integration**: Validate selector collection with all supported IDEs
 
 ## Code Standards & Patterns
-- **Coding Style**: Follow existing script patterns in cursor/ folder
+- **Coding Style**: Follow existing backend patterns and ESLint rules
 - **Naming Conventions**: camelCase for variables/functions, PascalCase for classes
 - **Error Handling**: Try-catch with specific error types, proper error logging
 - **Logging**: Use existing Logger from @logging/Logger
-- **Testing**: Manual testing with real Cursor IDE
+- **Testing**: Jest framework with unit and integration tests
 - **Documentation**: JSDoc for all public methods
 
 ## Security Considerations
@@ -141,25 +172,25 @@
 - [ ] Audit logging for all collection actions
 
 ## Performance Requirements
-- **Response Time**: <10 seconds per collection cycle
-- **Throughput**: 1 complete collection per minute
-- **Memory Usage**: <200MB for collection session
-- **Database Queries**: None (file-based)
-- **Caching Strategy**: Cache collected data for 1 hour
+- **Response Time**: <500ms for chat selector collection (aligned with existing SelectorCollectionBot)
+- **Throughput**: Integrated with existing version detection workflow
+- **Memory Usage**: <50MB additional memory for chat selectors
+- **Database Queries**: None (file-based JSON selectors)
+- **Caching Strategy**: Leverage existing SelectorCollectionBot cache (30 minutes)
 
 ## Testing Strategy
 
-#### Manual Testing:
-- [ ] Test with real Cursor IDE running
-- [ ] Verify "New Chat" button detection
-- [ ] Test element prompt generation
-- [ ] Validate selector collection accuracy
+#### Unit Testing:
+- [ ] Test SelectorCollector chat selector collection methods
+- [ ] Test SelectorCollectionBot chat-specific functionality
+- [ ] Test chat selector validation and categorization
+- [ ] Test selector file updates and JSON structure
 
 #### Integration Testing:
-- [ ] Test with existing cursor scripts
-- [ ] Verify compatibility with enhanced-dom-collector
-- [ ] Test selector generation output
-- [ ] Validate JSON file updates
+- [ ] Test with existing SelectorCollectionBot workflow
+- [ ] Verify compatibility with VersionManagementService
+- [ ] Test selector collection with all supported IDEs
+- [ ] Validate automatic selector updates in JSON files
 
 ## Documentation Requirements
 
@@ -194,23 +225,27 @@
 - [ ] Validate JSON file updates
 
 ## Success Criteria
-- [ ] Comprehensive chat selector collection system functional
-- [ ] All 30+ missing selectors collected and validated
-- [ ] Updated selector JSON files generated
-- [ ] Collection accuracy >95%
-- [ ] Integration with existing scripts working
-- [ ] Documentation complete and accurate
+- [ ] **SelectorCollector Extended**: Comprehensive chat selectors added to DOM analysis
+- [ ] **Chat Selectors Collected**: All 30+ missing chat selectors collected and validated
+- [ ] **JSON Files Updated**: All 3 IDE selector files updated with new chat selectors
+- [ ] **Collection Accuracy**: >95% accuracy with existing SelectorCollectionBot workflow
+- [ ] **Workflow Integration**: Seamless integration with existing version detection
+- [ ] **Automatic Updates**: New IDE versions automatically get chat selectors
+- [ ] **Documentation Complete**: All implementation details documented and accurate
+- [ ] **Tests Passing**: All existing tests pass, new chat tests added
 
 ## Risk Assessment
 
 #### High Risk:
-- [ ] **Risk**: Cursor IDE changes breaking selectors - Mitigation: Regular collection updates
+- [ ] **Risk**: IDE changes breaking chat selectors - **Mitigation**: Automatic collection with version detection workflow
+- [ ] **Risk**: Backend integration complexity - **Mitigation**: Leverage existing SelectorCollectionBot patterns and architecture
 
 #### Medium Risk:
-- [ ] **Risk**: Collection performance issues - Mitigation: Optimize collection algorithms
+- [ ] **Risk**: Performance impact on existing workflow - **Mitigation**: Optimize chat selector collection, use existing caching
+- [ ] **Risk**: Chat selector validation accuracy - **Mitigation**: Implement comprehensive testing and validation
 
 #### Low Risk:
-- [ ] **Risk**: Script compatibility issues - Mitigation: Test with existing infrastructure
+- [ ] **Risk**: Test compatibility issues - **Mitigation**: Follow existing test patterns and frameworks
 
 ## AI Auto-Implementation Instructions
 
@@ -228,7 +263,7 @@
 ```json
 {
   "requires_new_chat": true,
-  "git_branch_name": "feature/comprehensive-chat-selector-collection",
+  "git_branch_name": "feature/extend-selector-collector-chat-selectors",
   "confirmation_keywords": ["fertig", "done", "complete"],
   "fallback_detection": true,
   "max_confirmation_attempts": 3,
@@ -238,9 +273,11 @@
 
 #### Success Indicators:
 - [ ] All checkboxes in phases completed
-- [ ] Scripts functional and tested
+- [ ] SelectorCollector extended with chat selectors
+- [ ] Backend integration working
 - [ ] No build errors
-- [ ] Code follows standards
+- [ ] Code follows backend standards
+- [ ] Tests passing
 - [ ] Documentation updated
 
 ## Initial Prompt Documentation
@@ -250,7 +287,7 @@
 # Initial Prompt: Comprehensive Chat Selector Collection
 
 ## User Request:
-Create a comprehensive chat selector collection system using existing cursor scripts to automatically collect all missing chat selectors including premium features, agent controls, and context buttons.
+Extend existing SelectorCollectionBot to comprehensively collect all missing chat selectors including premium features, agent controls, and context buttons, integrating with the existing version detection workflow.
 
 ## Language Detection:
 - **Original Language**: German
@@ -258,10 +295,10 @@ Create a comprehensive chat selector collection system using existing cursor scr
 - **Sanitization Status**: ✅ Technical terms preserved
 
 ## Prompt Analysis:
-- **Intent**: Build comprehensive selector collection using existing infrastructure
-- **Complexity**: Medium - leverages existing scripts with enhancements
-- **Scope**: Complete chat selector collection, validation, and generation
-- **Dependencies**: Existing cursor scripts, CDP integration
+- **Intent**: Extend existing SelectorCollectionBot with comprehensive chat selector collection
+- **Complexity**: Medium - leverages existing backend infrastructure with enhancements
+- **Scope**: Complete chat selector collection, validation, and integration with version detection
+- **Dependencies**: Existing SelectorCollectionBot, SelectorCollector, CDP integration
 
 ## Sanitization Applied:
 - [x] Language converted to English
@@ -272,8 +309,16 @@ Create a comprehensive chat selector collection system using existing cursor scr
 ```
 
 ## References & Resources
-- **Technical Documentation**: Existing cursor scripts, CDP integration guide
+- **Technical Documentation**: 
+  - SelectorCollectionBot: `backend/domain/services/ide/SelectorCollectionBot.js`
+  - SelectorCollector: `backend/infrastructure/external/ide/SelectorCollector.js`
+  - SelectorVersionManager: `backend/domain/services/ide/SelectorVersionManager.js`
 - **API References**: Playwright documentation, CDP protocol
-- **Design Patterns**: Script-based automation, existing infrastructure
-- **Best Practices**: Selector collection, DOM analysis
-- **Similar Implementations**: Existing cursor scripts in scripts/cursor/ folder
+- **Design Patterns**: Backend service extension, existing infrastructure patterns
+- **Best Practices**: Selector collection, DOM analysis, version management
+- **Similar Implementations**: Existing SelectorCollectionBot workflow and architecture
+- **Test Examples**: `backend/tests/unit/ide/SelectorCollectionBot.test.js`
+- **Current Selector Files**: 
+  - Cursor: `backend/selectors/cursor/1.5.7.json`
+  - VSCode: `backend/selectors/vscode/1.85.0.json`
+  - Windsurf: `backend/selectors/windsurf/1.0.0.json`

@@ -1,110 +1,101 @@
-# Phase 2: Element Testing Automation
+# Phase 2: Enhance SelectorCollectionBot
 
 ## Phase Overview
-- **Phase Name**: Element Testing Automation
+- **Phase Name**: Enhance SelectorCollectionBot
 - **Duration**: 2 hours
 - **Priority**: High
 - **Status**: Planning
-- **Dependencies**: Phase 1 completion, CDP integration
+- **Dependencies**: Phase 1 completion, existing SelectorCollectionBot
 
 ## Objectives
-- Create chat-element-tester.js for automated testing
-- Implement "New Chat" button automation
-- Add element prompt generation for all chat elements
-- Test element detection and selector collection
+- Add chat-specific collection methods to SelectorCollectionBot
+- Implement chat selector validation and testing
+- Add chat element categorization and optimization
+- Integrate with existing version management workflow
 
 ## Tasks
 
-### Task 2.1: Create Chat Element Tester (60 minutes)
-- [ ] **Create chat-element-tester.js**
-  - Set up class structure
-  - Implement browser connection
-  - Add error handling and logging
-  - Create output directory structure
+### Task 2.1: Extend SelectorCollectionBot Methods (60 minutes)
+- [ ] **Add chat-specific collection methods**
+  - `collectChatSelectors()` method
+  - `validateChatSelectors()` method
+  - `categorizeChatSelectors()` method
+  - `optimizeChatSelectors()` method
 
-- [ ] **Implement element testing framework**
-  - `testChatControls()` method
-  - `testChatHistory()` method
-  - `testChatStatus()` method
-  - `testChatSettings()` method
-  - `testChatContext()` method
-  - `testChatMessages()` method
-  - `testChatCodeBlocks()` method
-  - `testChatModals()` method
-  - `testChatErrorStates()` method
-  - `testChatUI()` method
-  - `testPremiumFeatures()` method
-  - `testAgentControls()` method
+- [ ] **Implement chat selector validation**
+  - Test chat selectors against real DOM
+  - Validate selector accuracy and uniqueness
+  - Check selector performance and reliability
+  - Implement fallback selector testing
 
-- [ ] **Add element detection logic**
-  - CSS selector testing
-  - XPath selector testing
-  - Attribute-based testing
-  - Class-based testing
-  - Multiple selector fallbacks
+- [ ] **Add chat element categorization**
+  - Group selectors by chat functionality
+  - Categorize by chat states (active, premium, agent modes)
+  - Organize by chat components (controls, history, status, etc.)
+  - Create selector hierarchy and relationships
 
-### Task 2.2: Implement New Chat Automation (30 minutes)
-- [ ] **Create new chat automation**
-  - `initializeNewChat()` method
-  - `clickNewChatButton()` method
-  - `handleNewChatModal()` method
-  - `waitForChatReady()` method
+### Task 2.2: Integrate with Version Management (30 minutes)
+- [ ] **Extend existing workflow integration**
+  - Integrate chat selector collection with `collectSelectors()` method
+  - Add chat selector validation to existing validation workflow
+  - Extend selector categorization with chat-specific categories
+  - Integrate with existing caching mechanism
 
-- [ ] **Add modal handling**
-  - Detect new chat modals
-  - Handle different modal types
-  - Click appropriate buttons
-  - Wait for chat to be ready
+- [ ] **Add chat selector testing**
+  - Test chat selectors during version detection
+  - Validate chat selectors before saving
+  - Implement chat selector fallback mechanisms
+  - Add chat selector performance monitoring
 
-- [ ] **Implement chat state validation**
-  - Verify chat is active
-  - Check chat input is ready
-  - Validate chat container is visible
-  - Test chat functionality
+- [ ] **Enhance selector optimization**
+  - Optimize chat selector performance
+  - Remove duplicate chat selectors
+  - Implement chat selector prioritization
+  - Add chat selector reliability scoring
 
-### Task 2.3: Add Element Prompt Generation (30 minutes)
-- [ ] **Create element prompt generator**
-  - `generateElementPrompts()` method
-  - `generateChatControlPrompts()` method
-  - `generatePremiumFeaturePrompts()` method
-  - `generateAgentControlPrompts()` method
+### Task 2.3: Add Chat Selector Testing (30 minutes)
+- [ ] **Implement comprehensive chat selector testing**
+  - Test all collected chat selectors
+  - Validate selector accuracy and reliability
+  - Test selector performance and speed
+  - Implement selector fallback testing
 
-- [ ] **Implement prompt templates**
-  - Chat control prompts
-  - Premium feature prompts
-  - Agent control prompts
-  - Context button prompts
-  - Status indicator prompts
+- [ ] **Add chat selector validation**
+  - Validate selector syntax and structure
+  - Check selector uniqueness and specificity
+  - Test selector compatibility across IDEs
+  - Implement selector error handling
 
-- [ ] **Add prompt execution**
-  - Send prompts to chat
-  - Wait for AI response
-  - Detect element appearance
-  - Collect selector information
+- [ ] **Create chat selector reports**
+  - Generate collection accuracy reports
+  - Create selector validation summaries
+  - Document selector performance metrics
+  - Generate recommendations for improvements
 
 ## Deliverables
-- [ ] chat-element-tester.js with complete testing framework
-- [ ] New chat automation implemented
-- [ ] Element prompt generation system
+- [ ] Enhanced SelectorCollectionBot with chat-specific methods
+- [ ] Chat selector validation and testing implemented
+- [ ] Chat element categorization and optimization
+- [ ] Integration with existing version management workflow
 - [ ] Test results and validation report
 
 ## Success Criteria
-- [ ] All chat elements are tested automatically
-- [ ] New chat automation works reliably
-- [ ] Element prompts generate correctly
-- [ ] Selector collection is accurate
-- [ ] No errors in testing process
+- [ ] All chat selectors are collected and validated
+- [ ] Chat selector testing works reliably
+- [ ] Integration with existing workflow is seamless
+- [ ] Selector collection accuracy >95%
+- [ ] No errors in collection and validation process
 
 ## Risk Assessment
-- **High Risk**: Chat automation failures
-- **Medium Risk**: Element detection accuracy
-- **Low Risk**: Prompt generation issues
+- **High Risk**: Backend integration complexity
+- **Medium Risk**: Chat selector validation accuracy
+- **Low Risk**: Performance impact on existing workflow
 
 ## Dependencies
 - Phase 1 completion
-- CDP integration
-- BrowserManager
-- Cursor IDE running
+- Existing SelectorCollectionBot
+- SelectorCollector
+- VersionManagementService
 
 ## Next Phase
-- Phase 3: Selector Generation & Validation
+- Phase 3: Update Selector Files & Validation
