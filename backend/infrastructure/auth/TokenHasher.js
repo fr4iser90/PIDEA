@@ -12,10 +12,7 @@ class TokenHasher {
     this._salt = salt || process.env.TOKEN_SALT_SECRET || 'default-salt';
     this._prefixLength = parseInt(process.env.TOKEN_PREFIX_LENGTH) || 20;
     
-    logger.info('🔐 TokenHasher initialized', {
-      saltLength: this._salt.length,
-      prefixLength: this._prefixLength
-    });
+    // TokenHasher initialization logs removed for cleaner output
   }
 
   // Core hashing operations

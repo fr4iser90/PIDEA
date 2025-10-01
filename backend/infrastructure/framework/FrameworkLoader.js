@@ -138,7 +138,7 @@ class FrameworkLoader {
 
       logger.debug(`✅ Loaded framework "${frameworkName}" successfully`);
     } catch (error) {
-      logger.error(`❌ Failed to load framework config "${frameworkName}":`, error.message);
+      logger.debug(`❌ Failed to load framework config "${frameworkName}":`, error.message);
       // Store failed framework for debugging
       this.loadedFrameworks.set(frameworkName, {
         name: frameworkName,

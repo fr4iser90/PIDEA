@@ -12,10 +12,7 @@ class TokenValidator {
   constructor(tokenHasher = null) {
     this._tokenHasher = tokenHasher || new TokenHasher();
     
-    logger.info('🔐 TokenValidator initialized', {
-      saltLength: this._tokenHasher.salt.length,
-      prefixLength: this._tokenHasher.prefixLength
-    });
+    // TokenValidator initialization logs removed for cleaner output
   }
 
   // Core validation operations

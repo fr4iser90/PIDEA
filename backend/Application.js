@@ -210,8 +210,6 @@ class Application {
     this.migrationService = new DatabaseMigrationService(this.databaseConnection);
     await this.migrationService.initialize();
     
-    // Default user check is handled in server.js - no need to check again here
-    this.logger.info('ℹ️ Skipping redundant user check - already handled in server.js');
   }
 
 
@@ -222,7 +220,7 @@ class Application {
     const { initializeSteps } = require('./domain/steps');
     await initializeSteps();
     this.stepRegistry = require('./domain/steps').getStepRegistry();
-    this.logger.info('Step Registry initialized');
+    // this.logger.info('Step Registry initialized');
 
     // Initialize DI system
     const { getServiceRegistry } = require('./infrastructure/dependency-injection/ServiceRegistry');

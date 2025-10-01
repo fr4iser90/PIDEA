@@ -23,11 +23,11 @@ class TaskController {
         this.logger = logger;
         
         // DEBUG: Check what methods taskApplicationService has
-        this.logger.info('🔍 [TaskController] taskApplicationService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.taskApplicationService)));
-        this.logger.info('🔍 [TaskController] syncManualTasks exists:', typeof this.taskApplicationService.syncManualTasks);
-        this.logger.info('🔍 [TaskController] taskApplicationService type:', typeof this.taskApplicationService);
-        this.logger.info('🔍 [TaskController] taskApplicationService constructor:', this.taskApplicationService.constructor.name);
-        this.logger.info('🔍 [TaskController] taskApplicationService keys:', Object.keys(this.taskApplicationService));
+        this.logger.debug('🔍 [TaskController] taskApplicationService methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.taskApplicationService)));
+        this.logger.debug('🔍 [TaskController] syncManualTasks exists:', typeof this.taskApplicationService.syncManualTasks);
+        this.logger.debug('🔍 [TaskController] taskApplicationService type:', typeof this.taskApplicationService);
+        this.logger.debug('🔍 [TaskController] taskApplicationService constructor:', this.taskApplicationService.constructor.name);
+        this.logger.debug('🔍 [TaskController] taskApplicationService keys:', Object.keys(this.taskApplicationService));
     }
 
     /**

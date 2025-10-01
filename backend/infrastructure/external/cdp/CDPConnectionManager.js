@@ -36,7 +36,7 @@ class CDPConnectionManager {
     this.detectionTimeouts = new Map(); // port -> timeout reference
     this.isInitialized = false;
 
-    logger.info('CDPConnectionManager initialized for workspace detection', {
+    logger.debug('CDPConnectionManager initialized for workspace detection', {
       maxConnections: this.options.maxConnections,
       connectionTimeout: this.options.connectionTimeout
     });
@@ -53,13 +53,13 @@ class CDPConnectionManager {
     }
 
     try {
-      logger.info('Initializing CDPConnectionManager...');
+      logger.debug('Initializing CDPConnectionManager...');
       
       // Test connection to ensure CDP is available
       await this.testCDPAvailability();
       
       this.isInitialized = true;
-      logger.info('CDPConnectionManager initialized successfully');
+      logger.debug('CDPConnectionManager initialized successfully');
       
     } catch (error) {
       logger.error('Failed to initialize CDPConnectionManager:', error.message);
@@ -84,7 +84,7 @@ class CDPConnectionManager {
           
           // If we can connect, CDP is available
           await browser.close();
-          logger.info(`CDP availability test passed on port ${port}`);
+          logger.debug(`CDP availability test passed on port ${port}`);
           return true;
           
         } catch (portError) {

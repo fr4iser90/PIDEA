@@ -92,8 +92,7 @@ class ConnectionPool {
         }
       }
       
-      // Create new connection
-      logger.info(`Creating new connection for port ${port}`);
+      // Connection creation logs removed for cleaner output
       const result = await this.createConnection(port);
       const duration = Date.now() - startTime;
       this.trackPerformance('new_connection', duration);
@@ -141,7 +140,7 @@ class ConnectionPool {
     this.connections.set(port, connection);
 
     try {
-      logger.info(`Connecting to Chrome DevTools on port ${port}...`);
+      // Connection attempt logs removed for cleaner output
       
       // Use shorter timeout for initial connection to fail fast
       const initialTimeout = Math.min(this.connectionTimeout, 3000); // Max 3 seconds for initial connection
@@ -156,7 +155,7 @@ class ConnectionPool {
           browser = await chromium.connectOverCDP(`http://${this.host}:${port}`, {
             timeout: initialTimeout
           });
-          logger.info(`Successfully connected to port ${port} on attempt ${retryCount + 1}`);
+          // Connection success logs removed for cleaner output
         } catch (connectError) {
           retryCount++;
           logger.warn(`Connection attempt ${retryCount} failed for port ${port}: ${connectError.message}`);
@@ -195,7 +194,7 @@ class ConnectionPool {
       connection.health = 'healthy';
       connection.isConnecting = false;
 
-      logger.info(`Successfully connected to port ${port}`);
+      // Final connection success logs removed for cleaner output
       return connection;
 
     } catch (error) {

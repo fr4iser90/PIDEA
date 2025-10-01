@@ -31,7 +31,6 @@ class ServiceRegistry {
      * Register core infrastructure services
      */
     registerInfrastructureServices() {
-        this.logger.info('Registering infrastructure services...');
 
         // Database services
         this.container.register('databaseConnection', () => {
@@ -126,7 +125,6 @@ class ServiceRegistry {
      * Register domain services
      */
     registerDomainServices() {
-        this.logger.info('Registering domain services...');
 
         // IDEMirrorService - FIXED: Use DI instead of new IDEManager()
         this.container.register('ideMirrorService', (ideManager, browserManager) => {
@@ -461,7 +459,6 @@ class ServiceRegistry {
      * Register application services (Application Layer)
      */
     registerApplicationServices() {
-        this.logger.info('Registering application services...');
 
         // Analysis Application Service - coordinates analysis use cases
         this.container.register('analysisApplicationService', (analysisOutputService, analysisRepository, projectRepository, logger) => {
@@ -810,7 +807,6 @@ class ServiceRegistry {
      * Register external services
      */
     registerExternalServices() {
-        this.logger.info('Registering external services...');
 
         // AI service
         this.container.register('aiService', () => {
@@ -970,7 +966,6 @@ class ServiceRegistry {
      * Register strategy services
      */
     registerStrategyServices() {
-        this.logger.info('Registering strategy services...');
 
         // REPLACED: Monorepo strategy with RepositoryTypeAnalysisStep
         this.container.register('monorepoStrategy', (logger, eventBus, fileSystemService) => {
@@ -1015,7 +1010,6 @@ class ServiceRegistry {
      * Register repository services
      */
     registerRepositoryServices() {
-        this.logger.info('Registering repository services...');
 
         // Chat repository
         this.container.register('chatRepository', () => {
@@ -1072,7 +1066,6 @@ class ServiceRegistry {
      * NOTE: Handlers are now managed by HandlerRegistry with ServiceRegistry injection
      */
     registerApplicationHandlers() {
-        this.logger.info('Registering application handlers...');
         // Handlers are now managed by HandlerRegistry with ServiceRegistry injection
         // No direct registration here to avoid redundancy
         this.registeredServices.add('handlers');
@@ -1640,7 +1633,6 @@ class ServiceRegistry {
      * Collect all service definitions for automatic dependency resolution
      */
     collectServiceDefinitions() {
-        this.logger.info('🔍 Collecting service definitions for automatic dependency resolution...');
         
         // Infrastructure services
         this.addServiceDefinition('databaseConnection', [], 'infrastructure');
@@ -1738,7 +1730,7 @@ class ServiceRegistry {
         // Handler services are now managed by HandlerRegistry with ServiceRegistry injection
         // No direct service definitions here to avoid redundancy
 
-        this.logger.info('✅ Service definitions collected for automatic dependency resolution');
+        // Service definitions collected for automatic dependency resolution
     }
 
     /**
@@ -1770,7 +1762,7 @@ class ServiceRegistry {
      * Register all services using automatic dependency resolution
      */
     registerAllServices() {
-        this.logger.info('🔧 Registering all services with automatic dependency resolution...');
+        this.logger.info('🔧 Registering all services...');
 
         try {
             // Collect all service definitions first
@@ -1806,8 +1798,7 @@ class ServiceRegistry {
             this.logger.warn('Project context initialization failed:', error.message);
         }
         
-            this.logger.info('✅ All services registered successfully with category-based ordering');
-            this.logger.info('Registered services:', Array.from(this.registeredServices));
+            this.logger.info('✅ All services registered successfully');
 
         } catch (error) {
             this.logger.error('❌ Failed to register services:', error.message);

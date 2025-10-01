@@ -27,8 +27,6 @@ class VersionDetector {
    */
   async detectVersion(port) {
     try {
-      this.logger.info(`Detecting version on port ${port} using CDP /json/version endpoint`);
-      
       // Try CDP endpoint first
       const version = await this.detectVersionCDP(port);
       if (version) {
@@ -65,7 +63,7 @@ class VersionDetector {
           const match = userAgent.match(/(?:Cursor|VSCode|Windsurf)\/([\d\.]+)/i);
           if (match) {
             const version = match[1];
-            this.logger.info(`✅ Version detected via CDP /json/version: ${version}`);
+            this.logger.debug(`✅ Version detected via CDP /json/version: ${version}`);
             return version;
           } else {
             this.logger.warn(`❌ No version found in User-Agent: ${userAgent}`);

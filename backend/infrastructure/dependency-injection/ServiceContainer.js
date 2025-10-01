@@ -69,7 +69,7 @@ class ServiceContainer {
      */
     registerSingleton(name, instance) {
         this.singletons.set(name, instance);
-        logger.info(`Registered singleton: ${name}`);
+        // Singleton registration logs removed for cleaner output
     }
 
     /**

@@ -83,7 +83,7 @@ class BrowserManager {
       this.browser = connection.browser;
       this.page = connection.page;
       
-      logger.info(`Successfully connected to IDE on port ${this.currentPort} using connection pool`);
+      // Connection success logs removed for cleaner output
       return this.page;
 
     } catch (error) {
@@ -185,7 +185,7 @@ class BrowserManager {
       this.browser = connection.browser;
       this.page = connection.page;
       
-      logger.info(`Successfully connected to port ${port} for detection`);
+      // Detection connection logs removed for cleaner output
       
     } catch (error) {
       logger.error(`Failed to connect to port ${port} for detection:`, error.message);

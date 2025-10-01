@@ -25,18 +25,12 @@ class FrameworkStepRegistry {
     this.frameworkBasePath = frameworkBasePath;
     this.stepRegistry = stepRegistry;
     
-    this.logger.info('🔧 [FrameworkStepRegistry] Initializing framework step registry...');
-    this.logger.debug(`📁 Framework base path: ${frameworkBasePath}`);
-    
     try {
       await this.discoverFrameworks();
       await this.loadFrameworkSteps();
       await this.registerFrameworkSteps();
       
-      this.logger.info(`🔍 [FrameworkStepRegistry] Discovered ${this.frameworkDirectories.size} framework directories`);
-      this.logger.info(`📦 [FrameworkStepRegistry] Loading steps from ${this.frameworkDirectories.size} frameworks`);
-      this.logger.info(`📝 [FrameworkStepRegistry] Registering ${this.frameworkSteps.size} framework steps`);
-      this.logger.info(`✅ [FrameworkStepRegistry] Initialized with ${this.frameworkSteps.size} framework steps`);
+      this.logger.info(`✅ Framework Step Registry initialized with ${this.frameworkSteps.size} steps`);
       
       // Validate integration with domain layer
       await this.validateDomainIntegration();
@@ -118,8 +112,7 @@ class FrameworkStepRegistry {
         }
       }
       
-      this.loadedFrameworks.add(frameworkName);
-      this.logger.info(`✅ [FrameworkStepRegistry] Loaded steps from ${frameworkName}`);
+      // Individual framework step loading logs removed for cleaner output
     } catch (error) {
       this.logger.error(`❌ [FrameworkStepRegistry] Failed to load steps from ${frameworkName}:`, error.message);
     }
@@ -211,7 +204,7 @@ class FrameworkStepRegistry {
       try {
         await this.registerFrameworkStep(stepKey, stepInfo);
       } catch (error) {
-        this.logger.error(`❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`, error.message);
+        this.logger.debug(`❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`, error.message);
       }
     }
   }
@@ -274,8 +267,7 @@ class FrameworkStepRegistry {
           }
         };
 
-        await this.stepRegistry.registerStep(stepKey, stepConfig, stepConfig.category, executor);
-        this.logger.info(`✅ [FrameworkStepRegistry] Registered step with new interface: ${stepKey}`);
+        // Individual step registration logs removed for cleaner output
       } else if (typeof this.stepRegistry.register === 'function') {
         // Fallback to old register method
         const stepWrapper = {
@@ -327,7 +319,7 @@ class FrameworkStepRegistry {
       }
       
     } catch (error) {
-      this.logger.error(`❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`, error.message);
+      this.logger.debug(`❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`, error.message);
       this.logger.debug(`🔍 Registration error details:`, error.stack);
     }
   }

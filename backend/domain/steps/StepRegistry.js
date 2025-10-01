@@ -113,6 +113,12 @@ class StepRegistry {
       this.logger.debug(`✅ Registered step "${name}" in category "${finalCategory}"`);
       return true;
     } catch (error) {
+      // Only log critical errors, skip configuration issues
+      if (error.message.includes('Invalid category') || error.message.includes('type" property')) {
+        // Move configuration issues to debug level instead of error
+        this.logger.debug(`⚠️ Skipped step registration "${name}" due to configuration issue: ${error.message}`);
+        throw error; // Re-throw to skip logging
+      }
       this.logger.error(`❌ Failed to register step "${name}":`, error.message);
       throw error;
     }
@@ -168,14 +174,6 @@ class StepRegistry {
 
       this.logger.info(`📦 Loaded ${this.steps.size} steps from categories`);
       
-      // Log step summary in debug mode
-      if (process.env.DEBUG_STEPS === 'true') {
-        const categories = this.getCategories();
-        for (const category of categories) {
-          const steps = this.getStepsByCategory(category);
-          this.logger.info(`  📁 ${category}: ${steps.length} steps`);
-        }
-      }
     } catch (error) {
       this.logger.error('❌ Failed to load steps from categories:', error.message);
       throw error;
@@ -205,13 +203,18 @@ class StepRegistry {
           await this.registerStep(stepName, config, category, executor);
           loadedCount++;
         } catch (error) {
+          // Only log critical errors, skip configuration issues
+          if (error.message.includes('Invalid category') || error.message.includes('type" property')) {
+            // Skip logging known configuration issues - move to debug level
+            this.logger.debug(`⚠️ Skipped step "${file}" due to configuration issue: ${error.message}`);
+            continue;
+          }
           this.logger.error(`❌ Failed to load step "${file}" from category "${category}": ${error.message}`);
           this.logger.error(`❌ Full error stack: ${error.stack}`);
         }
       }
       
-      // Log summary instead of individual steps
-      this.logger.info(`📦 Loaded ${loadedCount} steps from category "${category}"`);
+      // Individual category logs removed for cleaner output
     } catch (error) {
       this.logger.error(`❌ Failed to load category "${category}":`, error.message);
     }

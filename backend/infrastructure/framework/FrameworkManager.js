@@ -26,14 +26,11 @@ class FrameworkManager {
    */
   async initialize() {
     try {
+  
       logger.info('🚀 Initializing Framework Manager...');
       
-      // Initialize components
-      await this.loader.initialize();
-      await this.validator.initialize();
-      await this.config.initialize();
-      
-      // Load auto-load frameworks
+      // Components are already initialized by initializeFrameworkInfrastructure
+      // Only load auto-load frameworks
       await this.loadAutoLoadFrameworks();
       
       this.isInitialized = true;

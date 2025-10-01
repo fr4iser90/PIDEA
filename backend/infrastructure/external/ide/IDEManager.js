@@ -54,7 +54,7 @@ class IDEManager {
     this.eventBus = eventBus;
     this.gitService = gitService;
     if (gitService) {
-      logger.info('IDEManager: gitService injected and available');
+      logger.debug('IDEManager: gitService injected and available');
     } else {
       logger.warn('IDEManager: gitService NOT available');
     }
@@ -75,7 +75,7 @@ class IDEManager {
           enableFallback: true
         });
         
-        logger.info('IDEManager: CDP-based workspace detection initialized');
+        logger.debug('IDEManager: CDP-based workspace detection initialized');
         
       } catch (error) {
         logger.warn('Could not initialize workspace detectors:', error.message);

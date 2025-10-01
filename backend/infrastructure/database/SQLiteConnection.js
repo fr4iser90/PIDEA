@@ -12,8 +12,6 @@ class SQLiteConnection {
   }
 
   async connect() {
-    logger.info('💾 Connecting to SQLite...');
-    
     const dbPath = this.config.database;
     const dbDir = path.dirname(dbPath);
     
@@ -31,7 +29,7 @@ class SQLiteConnection {
           db.run('PRAGMA foreign_keys = ON');
           try {
             await this.initializeDatabase();
-            logger.info('✅ SQLite connected and initialized successfully');
+            logger.info('✅ SQLite database initialized');
             resolve();
           } catch (error) {
             reject(error);
@@ -42,8 +40,6 @@ class SQLiteConnection {
   }
 
   async initializeDatabase() {
-    logger.info('🔄 Initializing SQLite database...');
-    
     // Use absolute path resolution for better reliability
     const projectRoot = path.resolve(__dirname, '../../../');
     const initSqlPath = path.join(projectRoot, 'database', 'init-sqlite.sql');
@@ -51,23 +47,17 @@ class SQLiteConnection {
     // Enhanced error handling and validation
     if (!fs.existsSync(initSqlPath)) {
       logger.error(`❌ SQL file not found: ${initSqlPath}`);
-      logger.error(`❌ Current directory: ${__dirname}`);
-      logger.error(`❌ Project root: ${projectRoot}`);
       throw new Error(`SQL initialization file not found: ${initSqlPath}`);
     }
     
-    logger.info(`📄 Using ${path.basename(initSqlPath)} for database initialization...`);
     const sql = fs.readFileSync(initSqlPath, 'utf8');
     
     try {
       await this.executeSQLFile(sql);
-      logger.info(`✅ Database initialized from ${path.basename(initSqlPath)}`);
-      
       // Verify tables were created successfully
       await this.verifyTablesCreated();
     } catch (error) {
       logger.error('❌ Database initialization failed:', error.message);
-      logger.error('❌ Error details:', error);
       throw error;
     }
   }
@@ -87,13 +77,7 @@ class SQLiteConnection {
       !stmt.toUpperCase().includes('CREATE TABLE') && !stmt.toUpperCase().includes('CREATE INDEX')
     );
     
-    logger.info(`📊 Found ${statements.length} total statements`);
-    logger.info(`📊 CREATE TABLE statements: ${createTableStatements.length}`);
-    logger.info(`📊 CREATE INDEX statements: ${createIndexStatements.length}`);
-    logger.info(`📊 Other statements: ${otherStatements.length}`);
-    
     // Execute CREATE TABLE statements first
-    logger.info(`📝 Executing ${createTableStatements.length} CREATE TABLE statements first...`);
     for (let i = 0; i < createTableStatements.length; i++) {
       const statement = createTableStatements[i];
       if (statement.trim()) {
@@ -118,7 +102,6 @@ class SQLiteConnection {
     }
     
     // Execute CREATE INDEX statements last
-    logger.info(`📝 Executing ${createIndexStatements.length} CREATE INDEX statements...`);
     for (let i = 0; i < createIndexStatements.length; i++) {
       const statement = createIndexStatements[i];
       if (statement.trim()) {
@@ -168,8 +151,6 @@ class SQLiteConnection {
   }
 
   async verifyTablesCreated() {
-    logger.info('🔍 Verifying tables were created successfully...');
-    
     const requiredTables = [
       'users',
       'user_sessions', 
@@ -192,12 +173,8 @@ class SQLiteConnection {
       
       if (missingTables.length > 0) {
         logger.error(`❌ Missing tables: ${missingTables.join(', ')}`);
-        logger.error(`❌ Existing tables: ${existingTables.join(', ')}`);
         throw new Error(`Database initialization incomplete. Missing tables: ${missingTables.join(', ')}`);
       }
-      
-      logger.info(`✅ All ${requiredTables.length} required tables verified successfully`);
-      logger.info(`📊 Database contains ${existingTables.length} tables total`);
     } catch (error) {
       logger.error('❌ Table verification failed:', error.message);
       throw error;

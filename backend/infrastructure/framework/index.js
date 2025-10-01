@@ -39,7 +39,6 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
     try {
       await frameworkConfig.initialize();
       initializationResults.config = true;
-      logger.info('✅ Framework Config initialized');
     } catch (error) {
       logger.warn('⚠️ Framework Config initialization failed:', error.message);
     }
@@ -47,7 +46,6 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
     try {
       await frameworkValidator.initialize();
       initializationResults.validator = true;
-      logger.info('✅ Framework Validator initialized');
     } catch (error) {
       logger.warn('⚠️ Framework Validator initialization failed:', error.message);
     }
@@ -55,7 +53,6 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
     try {
       await frameworkLoader.initialize();
       initializationResults.loader = true;
-      logger.info('✅ Framework Loader initialized');
     } catch (error) {
       logger.warn('⚠️ Framework Loader initialization failed:', error.message);
     }
@@ -63,7 +60,6 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
     try {
       await frameworkManager.initialize();
       initializationResults.manager = true;
-      logger.info('✅ Framework Manager initialized');
     } catch (error) {
       logger.warn('⚠️ Framework Manager initialization failed:', error.message);
     }
@@ -74,7 +70,6 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
         const frameworkBasePath = path.join(__dirname, '../../framework');
         await frameworkStepRegistry.initialize(frameworkBasePath, stepRegistry);
         initializationResults.stepRegistry = true;
-        logger.info('✅ Framework Step Registry initialized');
       } catch (error) {
         logger.warn('⚠️ Framework Step Registry initialization failed:', error.message);
       }
@@ -89,7 +84,6 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
     }
     
     logger.info('✅ Framework Infrastructure initialized successfully');
-    logger.info('📊 Initialization results:', initializationResults);
     
     return {
       loader: frameworkLoader,
