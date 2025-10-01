@@ -1,6 +1,5 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import useNotificationStore from './NotificationStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import sessionMonitorService from '../services/SessionMonitorService.jsx';
@@ -8,7 +7,6 @@ import activityTrackerService from '../services/ActivityTrackerService.jsx';
 import crossTabSyncService from '../services/CrossTabSyncService.jsx';
 
 const useAuthStore = create(
-  persist(
     (set, get) => ({
       // State
       user: null,
@@ -28,9 +26,9 @@ const useAuthStore = create(
 
       // Actions
       
-      // Initialize store with automatic validation
+      // Initialize store with cookie-only authentication
       initialize: async () => {
-        const { isInitialized, isAuthenticated, isValidating } = get();
+        const { isInitialized, isValidating } = get();
         
         // Prevent multiple initializations
         if (isInitialized || isValidating) {
@@ -38,31 +36,44 @@ const useAuthStore = create(
           return;
         }
         
-        logger.info('🔍 [AuthStore] Initializing with automatic validation...');
+        logger.info('🔍 [AuthStore] Initializing with cookie-only authentication...');
         set({ isValidating: true });
         
         try {
-          // If we have authentication state from localStorage, validate it
-          if (isAuthenticated) {
-            logger.info('🔍 [AuthStore] Found authentication state, validating with backend...');
-            const isValid = await get().validateToken();
-            
-            if (!isValid) {
-              logger.info('❌ [AuthStore] Authentication validation failed, clearing state');
-              set({ 
-                isAuthenticated: false, 
-                user: null,
-                isValidating: false,
-                isInitialized: true,
-                error: null
-              });
-              return;
-            }
-            
-            logger.info('✅ [AuthStore] Authentication validated successfully');
-          } else {
-            logger.info('🔍 [AuthStore] No authentication state found');
+          // Check for cookies - if no cookies, user is not authenticated
+          const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
+          
+          if (!hasCookies) {
+            logger.info('❌ [AuthStore] No authentication cookies found');
+            set({ 
+              isAuthenticated: false, 
+              user: null,
+              isValidating: false,
+              isInitialized: true,
+              error: null,
+              redirectToLogin: true
+            });
+            return;
           }
+          
+          // Validate cookies with backend
+          logger.info('🔍 [AuthStore] Found cookies, validating with backend...');
+          const isValid = await get().validateToken();
+          
+          if (!isValid) {
+            logger.info('❌ [AuthStore] Cookie validation failed');
+            set({ 
+              isAuthenticated: false, 
+              user: null,
+              isValidating: false,
+              isInitialized: true,
+              error: null,
+              redirectToLogin: true
+            });
+            return;
+          }
+          
+          logger.info('✅ [AuthStore] Cookie validation successful');
           
           set({ 
             isValidating: false,
@@ -79,7 +90,8 @@ const useAuthStore = create(
             user: null,
             isValidating: false,
             isInitialized: true,
-            error: error.message
+            error: error.message,
+            redirectToLogin: true
           });
         }
       },
@@ -568,17 +580,7 @@ const useAuthStore = create(
           return null;
         }
       },
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-        sessionExpiry: state.sessionExpiry,
-        lastAuthCheck: state.lastAuthCheck,
-      }),
-    }
-  )
+    })
 );
 
 export default useAuthStore; 

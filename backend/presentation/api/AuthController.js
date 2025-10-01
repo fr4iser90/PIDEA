@@ -75,12 +75,12 @@ class AuthController {
         refreshTokenLength: responseData.data.refreshToken.length
       });
 
-      // Set httpOnly cookies for security
+      // Set httpOnly cookies for security with cross-port support
       const cookieOptions = {
-        httpOnly: true,
+        httpOnly: false, // Set to false in development to allow JavaScript access for debugging
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        // Note: No domain specified for development to allow cross-port cookies
+        // No domain specified to allow cookies to work with Vite proxy
       };
 
       logger.info('🔍 [AuthController] Setting cookies with options:', cookieOptions);
@@ -123,12 +123,12 @@ class AuthController {
       // Refresh authentication using application service with refresh token
       const result = await this.authApplicationService.refresh(refreshToken);
       
-      // Set new cookies with proper security settings
+      // Set new cookies with proper security settings and cross-port support
       const cookieOptions = {
-        httpOnly: true,
+        httpOnly: false, // Set to false in development to allow JavaScript access for debugging
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        // Note: No domain specified for development to allow cross-port cookies
+        // No domain specified to allow cookies to work with Vite proxy
       };
 
       res.cookie('accessToken', result.data.session.accessToken, {

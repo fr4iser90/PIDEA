@@ -32,10 +32,18 @@ const AuthWrapper = ({ children }) => {
   }, [isInitialized, initialize]);
 
   // Check IDE requirement when user becomes authenticated AND validation is complete
+  // BUT ONLY if we have cookies - prevent unnecessary API calls
   useEffect(() => {
     if (isInitialized && isAuthenticated && !isLoading && !isValidating && !isCheckingIDERequirement) {
-      logger.info('🔍 [AuthWrapper] User authenticated and validation complete, checking IDE requirement...');
-      checkIDERequirement();
+      // FAST CHECK: Only proceed if we have authentication cookies
+      const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
+      
+      if (hasCookies) {
+        logger.info('🔍 [AuthWrapper] User authenticated and validation complete, checking IDE requirement...');
+        checkIDERequirement();
+      } else {
+        logger.info('🔍 [AuthWrapper] No cookies found, skipping IDE requirement check');
+      }
     }
   }, [isInitialized, isAuthenticated, isLoading, isValidating]);
 

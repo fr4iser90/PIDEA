@@ -34,28 +34,35 @@ export const IDEProvider = ({ children, eventBus }) => {
     loadActivePort();
   }, [loadActivePort]);
 
-  // Load available IDEs on mount ONLY if authenticated
+  // Load available IDEs on mount ONLY if authenticated AND has cookies
   useEffect(() => {
     if (isAuthenticated) {
-      logger.debug('🔍 [IDEContext] User authenticated, loading IDE data...');
+      // FAST CHECK: Only proceed if we have authentication cookies
+      const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
       
-      // OPTIMIZATION: Load IDE data immediately without waiting for validation
-      // The authentication state is already set from login, so we can trust it
-      const loadIDEData = async () => {
-        try {
-          logger.debug('🔍 [IDEContext] Loading IDE data in parallel...');
-          
-          // Load IDE data immediately - no need to validate again after login
-          stableLoadAvailableIDEs();
-          stableLoadActivePort();
-          
-          logger.debug('🔍 [IDEContext] IDE data loading initiated');
-        } catch (error) {
-          logger.error('🔍 [IDEContext] IDE data loading error:', error);
-        }
-      };
-      
-      loadIDEData();
+      if (hasCookies) {
+        logger.debug('🔍 [IDEContext] User authenticated, loading IDE data...');
+        
+        // OPTIMIZATION: Load IDE data immediately without waiting for validation
+        // The authentication state is already set from login, so we can trust it
+        const loadIDEData = async () => {
+          try {
+            logger.debug('🔍 [IDEContext] Loading IDE data in parallel...');
+            
+            // Load IDE data immediately - no need to validate again after login
+            stableLoadAvailableIDEs();
+            stableLoadActivePort();
+            
+            logger.debug('🔍 [IDEContext] IDE data loading initiated');
+          } catch (error) {
+            logger.error('🔍 [IDEContext] IDE data loading error:', error);
+          }
+        };
+        
+        loadIDEData();
+      } else {
+        logger.debug('🔍 [IDEContext] No cookies found, skipping IDE loading');
+      }
     } else {
       logger.debug('🔍 [IDEContext] User not authenticated, skipping IDE loading');
     }

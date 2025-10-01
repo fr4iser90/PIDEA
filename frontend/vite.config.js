@@ -38,6 +38,17 @@ export default defineConfig(({ mode }) => {
           target: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.DOMAIN}`,
         changeOrigin: true,
         secure: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Ensure cookies are properly forwarded
+            if (proxyRes.headers['set-cookie']) {
+              proxyRes.headers['set-cookie'] = proxyRes.headers['set-cookie'].map(cookie => {
+                // Remove domain restriction for localhost development
+                return cookie.replace(/domain=localhost;?/gi, '');
+              });
+            }
+          });
+        }
       },
       '/ws': {
           target: process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : `wss://${process.env.DOMAIN}`,

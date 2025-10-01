@@ -704,6 +704,15 @@ class Application {
     }));
 
     this.app.use('/framework', require('express').static(path.join(__dirname, '../framework')));
+
+    // Serve frontend build files in development
+    if (process.env.NODE_ENV === 'development') {
+      const frontendDistPath = path.join(__dirname, '../frontend/dist');
+      if (fs.existsSync(frontendDistPath)) {
+        this.app.use(express.static(frontendDistPath));
+        logger.info('📁 Serving frontend from:', frontendDistPath);
+      }
+    }
   }
 
   setupRoutes() {
@@ -711,7 +720,16 @@ class Application {
 
     // Serve the main page
     this.app.get('/', (req, res) => {
-      res.sendFile(path.join(__dirname, '../frontend/index.html'));
+      if (process.env.NODE_ENV === 'development') {
+        const frontendDistPath = path.join(__dirname, '../frontend/dist');
+        if (fs.existsSync(frontendDistPath)) {
+          res.sendFile(path.join(frontendDistPath, 'index.html'));
+        } else {
+          res.sendFile(path.join(__dirname, '../frontend/index.html'));
+        }
+      } else {
+        res.sendFile(path.join(__dirname, '../frontend/index.html'));
+      }
     });
 
     // Health check (public)
