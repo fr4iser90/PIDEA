@@ -4,6 +4,7 @@ import '@/css/main/git.css';
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
 import { useGitStatus, useGitBranches, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useRefreshService } from '@/hooks/useRefreshService';
 
 // Initialize API repository
 const apiRepository = new APIChatRepository();
@@ -26,6 +27,23 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const gitBranches = useGitBranches();
   const activeIDE = useActiveIDE();
   const { refreshGitStatus } = useProjectDataActions();
+
+  // ✅ NEW: Integrate with RefreshService
+  const { forceRefresh, getStats } = useRefreshService('git', {
+    fetchData: async () => {
+      if (activeIDE.workspacePath) {
+        const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
+        return await apiRepository.getGitStatus(projectId);
+      }
+      return null;
+    },
+    updateData: (data) => {
+      // Update global state with new data
+      if (data) {
+        refreshGitStatus();
+      }
+    }
+  });
 
   
   // Local state for UI interactions
@@ -116,49 +134,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     };
   }, [activeIDE.workspacePath, refreshGitStatus]);
 
-  // ✅ NEW: Periodic refresh every 15 seconds when git view is active
-  useEffect(() => {
-    if (!activeIDE.workspacePath) return;
-
-    const REFRESH_INTERVAL = 15000; // 15 seconds
-    let intervalId = null;
-
-    // Only start periodic refresh when git view is active
-    const startPeriodicRefresh = () => {
-      if (intervalId) return; // Already running
-      
-      logger.info('Starting periodic git status refresh (15s interval)');
-      intervalId = setInterval(() => {
-        // Only log periodic refresh occasionally to avoid spam
-        const now = Date.now();
-        const lastLogTime = window.lastGitRefreshLogTime || 0;
-        const shouldLog = (now - lastLogTime) > 300000; // Log max every 5 minutes
-        
-        if (shouldLog) {
-          logger.info('Periodic git status refresh');
-          window.lastGitRefreshLogTime = now;
-        }
-        
-        refreshGitStatus();
-      }, REFRESH_INTERVAL);
-    };
-
-    const stopPeriodicRefresh = () => {
-      if (intervalId) {
-        logger.info('Stopping periodic git status refresh');
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-    };
-
-    // Start periodic refresh when component mounts
-    startPeriodicRefresh();
-
-    // Cleanup on unmount
-    return () => {
-      stopPeriodicRefresh();
-    };
-  }, [activeIDE.workspacePath, refreshGitStatus]);
+  // ✅ REMOVED: Old periodic refresh - now handled by RefreshService
 
   // ✅ REFACTORED: Use global state instead of local state
   const currentBranch = gitStatus.currentBranch;

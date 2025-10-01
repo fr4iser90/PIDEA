@@ -132,7 +132,7 @@ class BranchStrategy {
 
     // Only log once per instance
     if (!this._alreadyLogged) {
-      this.logger.info('Initialized branch strategies:', {
+      this.logger.debug('Initialized branch strategies:', {
         strategies: Array.from(this.strategies.keys()),
         defaultStrategy: this.defaultStrategy,
         unifiedEnabled: true

@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import webSocketService from '@/infrastructure/services/WebSocketService';
 import { StreamingService } from '@/application/services/StreamingService';
+import { useRefreshService } from '@/hooks/useRefreshService';
 import CanvasRenderer from './CanvasRenderer';
 import StreamingControls from './StreamingControls';
 import '@/css/main/mirror.css';
@@ -28,6 +29,27 @@ function IDEMirrorComponent({ eventBus }) {
 
     // Refs
     const containerRef = useRef(null);
+
+    // ✅ NEW: Integrate with RefreshService
+    const { forceRefresh, getStats } = useRefreshService('ide', {
+        fetchData: async () => {
+            try {
+                // Get IDE state from streaming service
+                const state = await streamingService.getCurrentState(currentPort);
+                return state;
+            } catch (error) {
+                logger.error('Failed to fetch IDE state:', error);
+                throw error;
+            }
+        },
+        updateData: (data) => {
+            if (data) {
+                setCurrentState(data);
+                setIsLoading(false);
+                setError(null);
+            }
+        }
+    });
     const predictiveIndicator = useRef(null);
     const typingBuffer = useRef('');
     const typingTimeout = useRef(null);

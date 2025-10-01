@@ -101,7 +101,7 @@ class CDPWorkspaceDetector {
       // Record detection history
       this.recordDetectionHistory(port, workspaceInfo);
 
-      logger.info(`Workspace detection completed for port ${port}:`, {
+      logger.debug(`Workspace detection completed for port ${port}:`, {
         workspacePath: workspaceInfo.workspacePath,
         workspaceName: workspaceInfo.workspaceName,
         ideType: workspaceInfo.ideType,

@@ -1,5 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
+import { useRefreshService } from '@/hooks/useRefreshService';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PortConfigInput from './PortConfigInput.jsx';
 import ProjectCommandButtons from './ProjectCommandButtons.jsx';
@@ -7,6 +8,33 @@ import { usePortConfiguration } from '@/hooks/usePortConfiguration.js';
 import '@/css/main/preview.css';
 
 function PreviewComponent({ eventBus, activePort, projectId = null }) {
+  // ✅ NEW: Integrate with RefreshService
+  const { forceRefresh, getStats } = useRefreshService('preview', {
+    fetchData: async () => {
+      try {
+        const result = await apiRepository.getUserAppUrl();
+        return result;
+      } catch (error) {
+        logger.error('Failed to fetch preview data:', error);
+        throw error;
+      }
+    },
+    updateData: (data) => {
+      if (data && data.success && data.data) {
+        const previewData = {
+          url: data.data.url,
+          title: `Preview - User App${data.data.port ? ` (IDE: ${data.data.port})` : ''}`,
+          timestamp: new Date().toISOString(),
+          port: data.data.port,
+          workspacePath: data.data.workspacePath
+        };
+        setPreviewData(previewData);
+        setIsLoading(false);
+        setError(null);
+      }
+    }
+  });
+
   const [previewData, setPreviewData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -212,22 +240,13 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   };
 
   const startAutoRefresh = (interval = 5000) => {
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-    }
-    
-    const newInterval = setInterval(() => {
-      handleRefresh();
-    }, interval);
-    
-    setRefreshInterval(newInterval);
+    // ✅ REMOVED: Old setInterval - now handled by RefreshService
+    logger.info('Auto-refresh now handled by RefreshService');
   };
 
   const stopAutoRefresh = () => {
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-      setRefreshInterval(null);
-    }
+    // ✅ REMOVED: Old clearInterval - now handled by RefreshService
+    logger.info('Auto-refresh now handled by RefreshService');
   };
 
   // Port configuration handlers

@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
+import { useRefreshService } from '@/hooks/useRefreshService';
 import { 
   useActiveIDE, 
   useProjectDataActions,
@@ -23,6 +24,27 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   const activeIDE = useActiveIDE();
   const { loadCategoryAnalysisData } = useProjectDataActions();
   const categoryLoading = useCategoryAnalysisLoading();
+  
+  // ✅ NEW: Integrate with RefreshService
+  const { forceRefresh, getStats } = useRefreshService('analysis', {
+    fetchData: async () => {
+      if (activeIDE.projectId) {
+        try {
+          await loadCategoryAnalysisData(activeIDE.projectId);
+          return { success: true };
+        } catch (error) {
+          logger.error('Failed to fetch analysis data:', error);
+          throw error;
+        }
+      }
+      return null;
+    },
+    updateData: (data) => {
+      if (data && data.success) {
+        logger.info('Analysis data refreshed via RefreshService');
+      }
+    }
+  });
   
   // Category data selectors
   const securityAnalysis = useSecurityAnalysis();

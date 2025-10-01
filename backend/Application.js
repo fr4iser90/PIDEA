@@ -137,8 +137,30 @@ class Application {
       this.webSocketManager = new WebSocketManager(this.server, this.eventBus, this.authMiddleware);
       this.webSocketManager.initialize();
 
-      // Register WebSocket manager in service registry
-      this.serviceRegistry.getContainer().registerSingleton('webSocketManager', this.webSocketManager);
+      // Initialize EventEmissionService for refresh coordination
+      try {
+        const EventEmissionService = require('./infrastructure/services/EventEmissionService');
+        this.eventEmissionService = new EventEmissionService({
+          eventBus: this.eventBus,
+          webSocketManager: this.webSocketManager,
+          ideManager: this.ideManager,
+          taskRepository: this.taskRepository,
+          analysisRepository: this.analysisRepository
+        });
+        await this.eventEmissionService.initialize();
+        
+        // Register WebSocket manager in service registry
+        this.serviceRegistry.getContainer().registerSingleton('webSocketManager', this.webSocketManager);
+        this.serviceRegistry.getContainer().registerSingleton('eventEmissionService', this.eventEmissionService);
+        
+        logger.info('✅ EventEmissionService initialized successfully');
+      } catch (error) {
+        logger.warn('⚠️ EventEmissionService initialization failed, continuing without it:', error?.message || error || 'Unknown error');
+        this.eventEmissionService = null;
+        
+        // Register WebSocket manager in service registry
+        this.serviceRegistry.getContainer().registerSingleton('webSocketManager', this.webSocketManager);
+      }
 
       // Connect IDE Mirror Controller to WebSocket Manager
       this.webSocketManager.setIDEMirrorController(this.ideMirrorController);

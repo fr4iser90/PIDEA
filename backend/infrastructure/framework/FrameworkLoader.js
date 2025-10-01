@@ -72,7 +72,7 @@ class FrameworkLoader {
         if (entry.isDirectory()) {
           const frameworkPath = path.join(frameworkRoot, entry.name);
           this.frameworkPaths.set(entry.name, frameworkPath);
-          logger.info(`📁 Discovered framework: ${entry.name}`);
+          logger.debug(`📁 Discovered framework: ${entry.name}`);
         }
       }
 
@@ -136,7 +136,7 @@ class FrameworkLoader {
         domainRegistered: true
       });
 
-      logger.info(`✅ Loaded framework "${frameworkName}" successfully`);
+      logger.debug(`✅ Loaded framework "${frameworkName}" successfully`);
     } catch (error) {
       logger.error(`❌ Failed to load framework config "${frameworkName}":`, error.message);
       // Store failed framework for debugging

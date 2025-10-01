@@ -1,5 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
+import { useRefreshService } from '@/hooks/useRefreshService';
 import './TerminalLogDisplay.css';
 
 /**
@@ -9,6 +10,26 @@ import './TerminalLogDisplay.css';
  * and export capabilities. Integrates with the terminal log capture API.
  */
 const TerminalLogDisplay = ({ port, onClose }) => {
+  // ✅ NEW: Integrate with RefreshService
+  const { forceRefresh, getStats } = useRefreshService('terminal', {
+    fetchData: async () => {
+      try {
+        const response = await fetch(`${API_BASE}/terminal-logs/${port}?lines=${lines}`);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        logger.error('Failed to fetch terminal logs:', error);
+        throw error;
+      }
+    },
+    updateData: (data) => {
+      if (data && data.success) {
+        setLogs(data.logs || []);
+        setLoading(false);
+        setError(null);
+      }
+    }
+  });
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -262,21 +283,7 @@ const TerminalLogDisplay = ({ port, onClose }) => {
     }
   };
 
-  // Set up auto-refresh
-  useEffect(() => {
-    if (autoRefresh && refreshInterval > 0) {
-      refreshIntervalRef.current = setInterval(() => {
-        fetchLogs();
-        fetchCaptureStatus();
-      }, refreshInterval);
-    }
-
-    return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-      }
-    };
-  }, [autoRefresh, refreshInterval, port, lines]);
+  // ✅ REMOVED: Old auto-refresh - now handled by RefreshService
 
   // Initial load
   useEffect(() => {

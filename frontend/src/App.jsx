@@ -17,6 +17,7 @@ import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
+import refreshService from '@/infrastructure/services/RefreshService';
 
 function App() {
   const [eventBus] = useState(() => new EventBus());
@@ -85,6 +86,18 @@ function App() {
 
   useEffect(() => {
     logger.info('🔄 App initializing...');
+    
+    // Initialize RefreshService
+    const initializeRefreshService = async () => {
+      try {
+        await refreshService.initialize();
+        logger.info('✅ RefreshService initialized');
+      } catch (error) {
+        logger.error('❌ Failed to initialize RefreshService:', error);
+      }
+    };
+    
+    initializeRefreshService();
     setupEventListeners();
     initializeApp();
     
@@ -99,6 +112,8 @@ function App() {
         cleanupWebSocketListeners(eventBus);
         eventBus.off('session-warning', handleSessionWarning);
       }
+      // Cleanup RefreshService
+      refreshService.destroy();
     };
   }, []);
 

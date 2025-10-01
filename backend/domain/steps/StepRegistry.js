@@ -110,7 +110,7 @@ class StepRegistry {
         this.executors.set(name, executor);
       }
 
-      this.logger.info(`✅ Registered step "${name}" in category "${finalCategory}"`);
+      this.logger.debug(`✅ Registered step "${name}" in category "${finalCategory}"`);
       return true;
     } catch (error) {
       this.logger.error(`❌ Failed to register step "${name}":`, error.message);

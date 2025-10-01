@@ -8,6 +8,7 @@ import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useRefreshService } from '@/hooks/useRefreshService';
 import ActiveTaskItem from './ActiveTaskItem.jsx';
 import QueueItem from './QueueItem.jsx';
 import QueueControls from './QueueControls.jsx';
@@ -26,6 +27,26 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
     const queueRepository = new QueueRepository();
     const webSocketService = WebSocketService; // Use the singleton instance
+
+    // ✅ NEW: Integrate with RefreshService
+    const { forceRefresh, getStats } = useRefreshService('queue', {
+        fetchData: async () => {
+            try {
+                const status = await queueRepository.getQueueStatus();
+                return status;
+            } catch (error) {
+                logger.error('Failed to fetch queue data:', error);
+                throw error;
+            }
+        },
+        updateData: (data) => {
+            if (data) {
+                setQueueStatus(data);
+                setLoading(false);
+                setError(null);
+            }
+        }
+    });
 
 
     const { projectId } = useActiveIDE();

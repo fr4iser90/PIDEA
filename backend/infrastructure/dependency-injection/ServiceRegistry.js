@@ -1782,7 +1782,7 @@ class ServiceRegistry {
             for (const category of categoryOrder) {
                 const services = this.getServicesByCategory(category);
                 if (services.length > 0) {
-                    this.logger.info(`📦 Registering ${services.length} services in category: ${category}`);
+                    this.logger.debug(`📦 Registering ${services.length} services in category: ${category}`);
                     
                     for (const serviceName of services) {
                         try {

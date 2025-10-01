@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { analysisDataCache } from '@/infrastructure/cache/AnalysisDataCache';
+import refreshService from '@/infrastructure/services/RefreshService';
 import { logger } from '@/infrastructure/logging/Logger';
 
 /**
- * Custom hook for managing analysis data caching
+ * ✅ MIGRATED: Custom hook now uses the unified CacheManager from RefreshService
  * Provides efficient caching with TTL support and automatic cleanup
  */
 export const useAnalysisCache = () => {
@@ -29,19 +29,20 @@ export const useAnalysisCache = () => {
   }, [isInitialized]);
 
   /**
-   * Update cache statistics
+   * Update cache statistics from RefreshService
    */
   const updateCacheStats = useCallback(() => {
     try {
-      const stats = analysisDataCache.getStats();
-      setCacheStats(stats);
+      const refreshStats = refreshService.getStats();
+      const cacheStats = refreshStats.cacheStats || {};
+      setCacheStats(cacheStats);
     } catch (error) {
       logger.error('Failed to update cache stats:', error);
     }
   }, []);
 
   /**
-   * Get cached data for project and data type
+   * Get cached data for project and data type using RefreshService CacheManager
    * @param {string} projectId - Project identifier
    * @param {string} dataType - Type of data (metrics, status, etc.)
    * @param {Object} filters - Optional filters
@@ -49,8 +50,8 @@ export const useAnalysisCache = () => {
    */
   const getCachedData = useCallback((projectId, dataType, filters = {}) => {
     try {
-      const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
-      const data = analysisDataCache.get(cacheKey);
+      const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
+      const data = refreshService.cacheManager.get(cacheKey);
       
       if (data) {
         logger.info(`Cache hit for ${dataType}:`, { projectId, filters });
@@ -66,7 +67,7 @@ export const useAnalysisCache = () => {
   }, []);
 
   /**
-   * Set data in cache
+   * Set data in cache using RefreshService CacheManager
    * @param {string} projectId - Project identifier
    * @param {string} dataType - Type of data
    * @param {any} data - Data to cache
@@ -74,10 +75,22 @@ export const useAnalysisCache = () => {
    */
   const setCachedData = useCallback((projectId, dataType, data, filters = {}) => {
     try {
-      const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
-      const ttl = analysisDataCache.getTTL(dataType);
+      const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
       
-      const success = analysisDataCache.set(cacheKey, data, ttl);
+      // Use appropriate TTL based on data type
+      const ttlMap = {
+        metrics: 30 * 60 * 1000,      // 30 minutes
+        status: 5 * 60 * 1000,       // 5 minutes
+        history: 60 * 60 * 1000,     // 1 hour
+        issues: 60 * 60 * 1000,      // 1 hour
+        techStack: 120 * 60 * 1000,  // 2 hours
+        architecture: 180 * 60 * 1000, // 3 hours
+        recommendations: 60 * 60 * 1000 // 1 hour
+      };
+      
+      const ttl = ttlMap[dataType] || 60 * 60 * 1000; // Default 1 hour
+      
+      const success = refreshService.cacheManager.set(cacheKey, data, ttl);
       
       if (success) {
         logger.info(`Cached ${dataType}:`, { 
@@ -112,8 +125,8 @@ export const useAnalysisCache = () => {
    */
   const hasCachedData = useCallback((projectId, dataType, filters = {}) => {
     try {
-      const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
-      return analysisDataCache.has(cacheKey);
+      const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
+      return refreshService.cacheManager.has(cacheKey);
     } catch (error) {
       logger.error('Failed to check cached data:', error);
       return false;
@@ -128,8 +141,8 @@ export const useAnalysisCache = () => {
    */
   const removeCachedData = useCallback((projectId, dataType, filters = {}) => {
     try {
-      const cacheKey = analysisDataCache.getCacheKey(projectId, dataType, filters);
-      analysisDataCache.delete(cacheKey);
+      const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
+      refreshService.cacheManager.delete(cacheKey);
       
       logger.info(`Removed ${dataType} from cache:`, { projectId, filters });
       updateCacheStats();
@@ -148,14 +161,14 @@ export const useAnalysisCache = () => {
         // Remove all data types for specific project
         const dataTypes = ['metrics', 'status', 'history', 'issues', 'techStack', 'architecture', 'recommendations'];
         dataTypes.forEach(dataType => {
-          const cacheKey = analysisDataCache.getCacheKey(projectId, dataType);
-          analysisDataCache.delete(cacheKey);
+          const cacheKey = `analysis:${projectId}:${dataType}`;
+          refreshService.cacheManager.delete(cacheKey);
         });
         
         logger.info(`Cleared cache for project:`, { projectId });
       } else {
         // Clear all cache
-        analysisDataCache.clear();
+        refreshService.cacheManager.clear();
         logger.info('Cleared all cache');
       }
       
@@ -170,7 +183,7 @@ export const useAnalysisCache = () => {
    */
   const clearAllCache = useCallback(() => {
     try {
-      analysisDataCache.clear();
+      refreshService.cacheManager.clear();
       logger.info('Cleared all cache');
       updateCacheStats();
     } catch (error) {
@@ -184,12 +197,10 @@ export const useAnalysisCache = () => {
    */
   const cleanupExpired = useCallback(() => {
     try {
-      const cleanedCount = analysisDataCache.cleanup();
-      if (cleanedCount > 0) {
-        logger.info(`Cleaned up ${cleanedCount} expired entries`);
-        updateCacheStats();
-      }
-      return cleanedCount;
+      refreshService.cacheManager.cleanupExpiredEntries();
+      logger.info('Cleaned up expired entries');
+      updateCacheStats();
+      return 1; // CacheManager doesn't return count, so we return 1 to indicate success
     } catch (error) {
       logger.error('Failed to cleanup expired entries:', error);
       return 0;
@@ -197,24 +208,19 @@ export const useAnalysisCache = () => {
   }, [updateCacheStats]);
 
   /**
-   * Get cache configuration
+   * Get cache configuration from RefreshService
    * @returns {Object} Current cache configuration
    */
   const getCacheConfig = useCallback(() => {
-    return analysisDataCache.getConfig();
+    return refreshService.cacheManager.cacheConfig || {};
   }, []);
 
   /**
-   * Update cache configuration
+   * Update cache configuration (not supported in unified system)
    * @param {Object} config - New configuration
    */
   const updateCacheConfig = useCallback((config) => {
-    try {
-      analysisDataCache.setConfig(config);
-      logger.info('Updated cache configuration:', config);
-    } catch (error) {
-      logger.error('Failed to update cache configuration:', error);
-    }
+    logger.warn('Cache configuration updates not supported in unified RefreshService system');
   }, []);
 
   return {

@@ -507,6 +507,63 @@ class WebSocketManager {
     }
   }
 
+  // Refresh event methods
+  broadcastRefreshEvent(eventType, data, userId = null) {
+    const refreshData = {
+      type: eventType,
+      data,
+      timestamp: Date.now(),
+      source: 'backend'
+    };
+
+    if (userId) {
+      this.broadcastToUser(userId, eventType, refreshData);
+    } else {
+      this.broadcastToAll(eventType, refreshData);
+    }
+
+    logger.debug(`📤 Broadcasted refresh event: ${eventType}`, refreshData);
+  }
+
+  broadcastDataChange(componentType, data, userId = null) {
+    const eventType = `data:${componentType}:changed`;
+    this.broadcastRefreshEvent(eventType, data, userId);
+  }
+
+  broadcastCacheInvalidation(componentType = null, reason = 'manual', userId = null) {
+    const invalidationData = {
+      componentType,
+      reason,
+      timestamp: Date.now()
+    };
+
+    this.broadcastRefreshEvent('cache:invalidate', invalidationData, userId);
+  }
+
+  broadcastForceRefresh(componentType = null, reason = 'manual', userId = null) {
+    const refreshData = {
+      componentType,
+      reason,
+      timestamp: Date.now()
+    };
+
+    this.broadcastRefreshEvent('cache:refresh', refreshData, userId);
+  }
+
+  broadcastSystemEvent(eventType, data, userId = null) {
+    this.broadcastRefreshEvent(eventType, data, userId);
+  }
+
+  // Connection management
+  getConnectionCount() {
+    return this.wss ? this.wss.clients.size : 0;
+  }
+
+  getUserConnectionCount(userId) {
+    const userConnections = this.clients.get(userId);
+    return userConnections ? userConnections.size : 0;
+  }
+
   // Health monitoring
   startHeartbeat() {
     setInterval(() => {

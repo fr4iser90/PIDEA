@@ -36,7 +36,7 @@ class WorkflowLoaderService {
                     // Load workflows
                     for (const [workflowId, workflow] of Object.entries(workflowsConfig.workflows)) {
                         this.workflows.set(workflowId, workflow);
-                        this.logger.info(`Loaded workflow: ${workflowId} - ${workflow.name} from ${path.basename(workflowPath)}`);
+                        this.logger.debug(`Loaded workflow: ${workflowId} - ${workflow.name} from ${path.basename(workflowPath)}`);
                     }
                     
                     // Merge task type mappings

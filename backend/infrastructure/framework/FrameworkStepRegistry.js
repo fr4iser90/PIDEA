@@ -71,7 +71,7 @@ class FrameworkStepRegistry {
               stepsPath: path.join(frameworkPath, 'steps')
             });
             
-            this.logger.info(`📁 [FrameworkStepRegistry] Discovered framework: ${dir}`);
+            this.logger.debug(`📁 [FrameworkStepRegistry] Discovered framework: ${dir}`);
           } catch (error) {
             this.logger.warn(`⚠️ [FrameworkStepRegistry] Invalid framework config in ${dir}:`, error.message);
           }

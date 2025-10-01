@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
+import { useRefreshService } from '@/hooks/useRefreshService';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import '@/css/components/ide/ide-status-indicator.css';
 
@@ -92,6 +93,26 @@ const IDEStatusIndicator = ({
     }
   }, [showHistory, showMetrics, onStatusChange]);
 
+  // ✅ NEW: Integrate with RefreshService
+  const { forceRefresh, getStats } = useRefreshService('ide-status', {
+    fetchData: async () => {
+      try {
+        detectStatus();
+        return { status: statusRef.current };
+      } catch (error) {
+        logger.error('Failed to detect IDE status:', error);
+        throw error;
+      }
+    },
+    updateData: (data) => {
+      if (data && data.status) {
+        setStatus(data.status);
+        setIsLoading(false);
+        setError(null);
+      }
+    }
+  });
+
   // Calculate uptime
   const calculateUptime = useCallback(() => {
     if (!showMetrics || status !== 'running') return 0;
@@ -165,19 +186,10 @@ const IDEStatusIndicator = ({
     }
   }, [status]);
 
-  // Auto-refresh setup
+  // ✅ REMOVED: Old auto-refresh - now handled by RefreshService
   useEffect(() => {
-    if (autoRefresh && refreshInterval > 0) {
-      intervalRef.current = setInterval(() => {
-        detectStatus();
-      }, refreshInterval);
-      
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-      };
-    }
+    // Auto-refresh now handled by RefreshService
+    logger.info('IDE status refresh now handled by RefreshService');
   }, [autoRefresh, refreshInterval, detectStatus]);
 
   // Initial status detection

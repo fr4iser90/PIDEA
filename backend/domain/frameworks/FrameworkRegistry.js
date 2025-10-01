@@ -57,7 +57,7 @@ class FrameworkRegistry {
       }
       this.categories.get(finalCategory).add(name);
 
-      logger.info(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
+      logger.debug(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
       return true;
     } catch (error) {
       logger.error(`❌ Failed to register framework "${name}":`, error.message);
