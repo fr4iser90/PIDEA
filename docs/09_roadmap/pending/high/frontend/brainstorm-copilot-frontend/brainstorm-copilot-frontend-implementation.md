@@ -37,23 +37,22 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pendi
 
 ### 3. File Impact Analysis
 #### Files to Modify:
-- [ ] `frontend/src/presentation/components/Header.jsx` - Add brainstorm navigation button
-- [ ] `frontend/src/presentation/components/SidebarRight.jsx` - Add brainstorm tab
-- [ ] `frontend/src/presentation/components/chat/main/ChatComponent.jsx` - Add brainstorm mode support
-- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Add brainstorm state management
-- [ ] `frontend/src/App.jsx` - Add brainstorm view routing
+- [ ] `frontend/src/presentation/components/Header.jsx` - Add brainstorm navigation button to existing mode-btn pattern
+- [ ] `frontend/src/presentation/components/SidebarRight.jsx` - Add brainstorm tab to existing tab structure
+- [ ] `frontend/src/App.jsx` - Add brainstorm view to existing renderView() pattern
+- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Add brainstorm state to existing store pattern
 
 #### Files to Create:
-- [ ] `frontend/src/presentation/components/brainstorm/BrainstormCopilot.jsx` - Main brainstorm interface
-- [ ] `frontend/src/presentation/components/brainstorm/BrainstormSettings.jsx` - Settings panel
-- [ ] `frontend/src/presentation/components/brainstorm/BrainstormHistory.jsx` - Session history
-- [ ] `frontend/src/presentation/components/brainstorm/BrainstormContext.jsx` - Context display
-- [ ] `frontend/src/presentation/components/brainstorm/BrainstormControls.jsx` - Control buttons
-- [ ] `frontend/src/css/brainstorm/brainstorm-copilot.css` - Main styles
-- [ ] `frontend/src/css/brainstorm/brainstorm-settings.css` - Settings styles
-- [ ] `frontend/src/css/brainstorm/brainstorm-history.css` - History styles
-- [ ] `frontend/src/hooks/useBrainstorm.js` - Custom hook for brainstorm functionality
-- [ ] `frontend/src/services/BrainstormService.js` - Frontend service layer
+- [ ] `frontend/src/presentation/components/brainstorm/BrainstormCopilot.jsx` - Main brainstorm interface (follows ChatComponent pattern)
+- [ ] `frontend/src/presentation/components/brainstorm/BrainstormSettings.jsx` - Settings panel (follows existing panel pattern)
+- [ ] `frontend/src/presentation/components/brainstorm/BrainstormHistory.jsx` - Session history (follows ChatPanelComponent pattern)
+- [ ] `frontend/src/presentation/components/brainstorm/BrainstormContext.jsx` - Context display component
+- [ ] `frontend/src/presentation/components/brainstorm/BrainstormControls.jsx` - Control buttons (follows existing button patterns)
+- [ ] `frontend/src/css/brainstorm/brainstorm-copilot.css` - Main styles (uses existing CSS variables)
+- [ ] `frontend/src/css/brainstorm/brainstorm-settings.css` - Settings styles (follows existing panel styles)
+- [ ] `frontend/src/css/brainstorm/brainstorm-history.css` - History styles (follows existing chat styles)
+- [ ] `frontend/src/hooks/useBrainstorm.js` - Custom hook (follows existing hook patterns)
+- [ ] `frontend/src/infrastructure/repositories/BrainstormRepository.js` - Repository layer (follows APIChatRepository pattern)
 
 #### Files to Delete:
 - [ ] None identified
@@ -61,25 +60,25 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pendi
 ### 4. Implementation Phases
 
 #### Phase 1: UI Components & Navigation (1.5 hours)
-- [ ] Create BrainstormCopilot.jsx main component
-- [ ] Add brainstorm button to Header.jsx navigation
-- [ ] Add brainstorm tab to SidebarRight.jsx
-- [ ] Create basic CSS styling for brainstorm interface
-- [ ] Implement basic routing and view switching
+- [ ] Create BrainstormCopilot.jsx main component (follows ChatComponent pattern)
+- [ ] Add brainstorm button to Header.jsx navigation (follows existing mode-btn pattern)
+- [ ] Add brainstorm tab to SidebarRight.jsx (follows existing tab structure)
+- [ ] Create basic CSS styling using existing CSS variables and patterns
+- [ ] Implement brainstorm view in App.jsx renderView() pattern
 
 #### Phase 2: Settings & Configuration (1 hour)
-- [ ] Create BrainstormSettings.jsx component
-- [ ] Implement settings panel in right sidebar
-- [ ] Add configuration options for brainstorm features
-- [ ] Create settings persistence and state management
-- [ ] Add settings validation and error handling
+- [ ] Create BrainstormSettings.jsx component (follows existing panel patterns)
+- [ ] Implement settings panel in right sidebar (integrates with existing tab system)
+- [ ] Add configuration options using existing state management patterns
+- [ ] Create settings persistence using existing store patterns
+- [ ] Add settings validation following existing error handling patterns
 
 #### Phase 3: Integration & Polish (0.5 hours)
-- [ ] Integrate with existing chat system
-- [ ] Add WebSocket support for brainstorm sessions
-- [ ] Implement error handling and loading states
-- [ ] Add responsive design and accessibility
-- [ ] Test integration with backend services
+- [ ] Integrate with existing chat system using EventBus patterns
+- [ ] Add WebSocket support using existing WebSocketService
+- [ ] Implement error handling following existing patterns
+- [ ] Add responsive design using existing CSS architecture
+- [ ] Test integration with backend services using existing API patterns
 
 ### 5. Code Standards & Patterns
 - **Coding Style**: ESLint with existing project rules, Prettier formatting

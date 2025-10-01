@@ -29,28 +29,27 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pendi
 
 ### 2. Technical Requirements
 - **Tech Stack**: Node.js, Express, WebSocket, SQLite/PostgreSQL, Markdown processing
-- **Architecture Pattern**: Workflow-based, Event-driven, Service-oriented
-- **Database Changes**: Add 'brainstorm' session type to chat_sessions table
-- **API Changes**: New endpoint `/api/chat/brainstorm` for copilot sessions
+- **Architecture Pattern**: Service-oriented, Workflow-based, Event-driven (follows existing patterns)
+- **Database Changes**: Utilize existing 'brainstorm' session_type in chat_sessions table
+- **API Changes**: New endpoint `/api/chat/brainstorm` following existing WebChatController pattern
 - **Frontend Changes**: None (handled by separate frontend task)
-- **Backend Changes**: Workflow orchestration, memory services, context summarization
+- **Backend Changes**: Service integration, workflow orchestration, context summarization
 
 ### 3. File Impact Analysis
 #### Files to Modify:
-- [ ] `database/init-postgres.sql` - Add brainstorm session type
-- [ ] `database/init-sqlite.sql` - Add brainstorm session type
-- [ ] `backend/domain/entities/ChatSession.js` - Add brainstorm session support
-- [ ] `backend/presentation/api/WebChatController.js` - Add brainstorm endpoint
+- [ ] `backend/domain/entities/ChatSession.js` - Add brainstorm session support (utilize existing session_type)
+- [ ] `backend/presentation/api/WebChatController.js` - Add brainstorm endpoint following existing pattern
 - [ ] `backend/domain/services/chat/ChatService.js` - Add brainstorm session handling
+- [ ] `backend/application/handlers/HandlerRegistry.js` - Register BrainstormCopilotHandler
 
 #### Files to Create:
-- [ ] `backend/domain/workflows/BrainstormCopilotWorkflow.js` - Main workflow orchestration
-- [ ] `backend/domain/services/brainstorm/MemoryReaderService.js` - Read markdown files
+- [ ] `backend/domain/services/brainstorm/MemoryReaderService.js` - Read markdown files (follows existing service patterns)
 - [ ] `backend/domain/services/brainstorm/ContextSummarizerService.js` - Generate project summaries
-- [ ] `backend/application/handlers/categories/chat/BrainstormCopilotHandler.js` - Handle brainstorm sessions
-- [ ] `content-library/prompts/brainstorm/brainstorm-copilot-prompt.md` - AI prompt template
 - [ ] `backend/domain/services/brainstorm/ProjectContextService.js` - Project context analysis
 - [ ] `backend/domain/services/brainstorm/ChatHistoryService.js` - Chat history analysis
+- [ ] `backend/application/handlers/categories/chat/BrainstormCopilotHandler.js` - Handle brainstorm sessions (follows HandlerRegistry pattern)
+- [ ] `backend/domain/workflows/BrainstormCopilotWorkflow.js` - Main workflow (uses WorkflowBuilder pattern)
+- [ ] `content-library/prompts/brainstorm/brainstorm-copilot-prompt.md` - AI prompt template
 
 #### Files to Delete:
 - [ ] None identified
@@ -58,25 +57,24 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pendi
 ### 4. Implementation Phases
 
 #### Phase 1: Database & Entity Setup (1 hour)
-- [ ] Update database schemas for brainstorm sessions
-- [ ] Modify ChatSession entity for brainstorm support
-- [ ] Create database migration scripts
-- [ ] Add brainstorm session validation
+- [ ] Update ChatSession entity to support brainstorm sessions (utilize existing session_type field)
+- [ ] Add brainstorm session validation following existing entity patterns
+- [ ] Test session creation and validation
 
 #### Phase 2: Core Services Implementation (2 hours)
-- [ ] Implement MemoryReaderService.js
-- [ ] Implement ContextSummarizerService.js
-- [ ] Implement ProjectContextService.js
-- [ ] Implement ChatHistoryService.js
-- [ ] Add markdown file scanning and parsing
+- [ ] Implement MemoryReaderService.js (follows existing service patterns)
+- [ ] Implement ContextSummarizerService.js (integrates with existing AI services)
+- [ ] Implement ProjectContextService.js (uses existing project analysis patterns)
+- [ ] Implement ChatHistoryService.js (follows existing chat service patterns)
+- [ ] Add markdown file scanning using existing FileSystemService
 - [ ] Implement context generation logic
 
 #### Phase 3: Workflow & API Integration (1 hour)
-- [ ] Create BrainstormCopilotWorkflow.js
-- [ ] Implement BrainstormCopilotHandler.js
-- [ ] Add brainstorm endpoint to WebChatController
-- [ ] Integrate with existing chat system
-- [ ] Add WebSocket support for brainstorm sessions
+- [ ] Create BrainstormCopilotWorkflow.js using WorkflowBuilder pattern
+- [ ] Implement BrainstormCopilotHandler.js following HandlerRegistry pattern
+- [ ] Add brainstorm endpoint to WebChatController following existing patterns
+- [ ] Integrate with existing chat system using ServiceRegistry
+- [ ] Add WebSocket support using existing WebSocketManager
 
 ### 5. Code Standards & Patterns
 - **Coding Style**: ESLint with existing project rules, Prettier formatting
