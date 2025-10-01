@@ -5,15 +5,15 @@
 - **Duration**: 8 hours
 - **Status**: Planning
 - **Dependencies**: None
-- **Deliverables**: Core service infrastructure, smart cache manager, event bus
+- **Deliverables**: Core service infrastructure, cache manager, event bus
 
 ## 🎯 Objectives
-Establish the foundational infrastructure for the unified event-driven refresh system, including core services, smart caching, and event coordination.
+Establish the foundational infrastructure for the event-driven refresh system, including core services, caching, and event coordination.
 
 ## 📝 Tasks
 
-### 1. Create UnifiedRefreshService Base Structure (1.5 hours)
-- [ ] Create `frontend/src/infrastructure/services/UnifiedRefreshService.jsx`
+### 1. Create RefreshService Base Structure (1.5 hours)
+- [ ] Create `frontend/src/infrastructure/services/RefreshService.jsx`
 - [ ] Implement base class with event handling capabilities
 - [ ] Add configuration management for refresh strategies
 - [ ] Create refresh operation queue system
@@ -22,7 +22,7 @@ Establish the foundational infrastructure for the unified event-driven refresh s
 
 **Code Structure:**
 ```javascript
-class UnifiedRefreshService {
+class RefreshService {
   constructor(options = {}) {
     this.refreshQueue = new Map();
     this.strategies = new Map();
@@ -39,8 +39,8 @@ class UnifiedRefreshService {
 }
 ```
 
-### 2. Implement SmartCacheManager with Multi-Layer Caching (2 hours)
-- [ ] Create `frontend/src/infrastructure/cache/SmartCacheManager.jsx`
+### 2. Implement CacheManager with Multi-Layer Caching (2 hours)
+- [ ] Create `frontend/src/infrastructure/cache/CacheManager.jsx`
 - [ ] Implement memory cache layer (fastest access)
 - [ ] Add IndexedDB persistent cache layer
 - [ ] Create server fallback cache layer
@@ -50,7 +50,7 @@ class UnifiedRefreshService {
 
 **Cache Architecture:**
 ```javascript
-class SmartCacheManager {
+class CacheManager {
   constructor() {
     this.memoryCache = new Map(); // Layer 1: Memory
     this.persistentCache = null;   // Layer 2: IndexedDB
@@ -173,10 +173,10 @@ class ComponentRefreshCoordinator {
 }
 
 ### 7. Create Initial Unit Tests for Core Services (1 hour)
-- [ ] Create test file: `frontend/tests/unit/UnifiedRefreshService.test.jsx`
-- [ ] Test UnifiedRefreshService basic functionality
-- [ ] Create test file: `frontend/tests/unit/SmartCacheManager.test.jsx`
-- [ ] Test SmartCacheManager cache operations
+- [ ] Create test file: `frontend/tests/unit/RefreshService.test.jsx`
+- [ ] Test RefreshService basic functionality
+- [ ] Create test file: `frontend/tests/unit/CacheManager.test.jsx`
+- [ ] Test CacheManager cache operations
 - [ ] Create test file: `frontend/tests/unit/RefreshEventBus.test.jsx`
 - [ ] Test RefreshEventBus event handling
 - [ ] Create test file: `frontend/tests/unit/UserActivityTracker.test.jsx`
@@ -189,13 +189,13 @@ class ComponentRefreshCoordinator {
 ## 🧪 Testing Requirements
 
 ### Unit Tests Coverage:
-- **UnifiedRefreshService**: 90% coverage
+- **RefreshService**: 90% coverage
   - Constructor and configuration
   - Strategy registration and execution
   - Refresh queue management
   - Error handling and retries
   
-- **SmartCacheManager**: 90% coverage
+- **CacheManager**: 90% coverage
   - Multi-layer cache operations
   - TTL expiration handling
   - Cache invalidation
@@ -220,8 +220,8 @@ class ComponentRefreshCoordinator {
   - Refresh scheduling
 
 ## 📋 Deliverables Checklist
-- [ ] UnifiedRefreshService.jsx created and tested
-- [ ] SmartCacheManager.jsx created and tested
+- [ ] RefreshService.jsx created and tested
+- [ ] CacheManager.jsx created and tested
 - [ ] RefreshEventBus.jsx created and tested
 - [ ] UserActivityTracker.jsx created and tested
 - [ ] ComponentRefreshCoordinator.jsx created and tested
@@ -249,7 +249,7 @@ class ComponentRefreshCoordinator {
 - Services ready for WebSocket integration
 - Event bus prepared for backend event handling
 - Cache system ready for component integration
-- Activity tracking ready for smart refresh control
+- Activity tracking ready for refresh control
 - Network monitoring ready for connection-aware refresh
 
 ---

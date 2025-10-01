@@ -1,7 +1,7 @@
-# Unified Event-Driven Refresh System Implementation
+# Event-Driven Refresh System Implementation
 
 ## Project Overview
-- **Feature/Component Name**: Unified Event-Driven Refresh System with Smart Caching
+- **Feature/Component Name**: Event-Driven Refresh System with Caching
 - **Priority**: High
 - **Category**: frontend
 - **Status**: pending
@@ -15,23 +15,23 @@
 - **Architecture Pattern**: Event-Driven Architecture with CQRS patterns
 - **Database Changes**: None (frontend-only implementation)
 - **API Changes**: Enhanced WebSocket events for real-time updates
-- **Frontend Changes**: New unified refresh service, smart cache manager, event-driven components
+- **Frontend Changes**: New refresh service, cache manager, event-driven components
 - **Backend Changes**: Enhanced event emission for version/git changes
 
 ## File Impact Analysis
 
 ### Files to Modify:
-- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Add unified refresh event handlers
-- [ ] `frontend/src/infrastructure/stores/AuthStore.jsx` - Integrate authentication refresh with unified service
+- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Add refresh event handlers
+- [ ] `frontend/src/infrastructure/stores/AuthStore.jsx` - Integrate authentication refresh with service
 - [ ] `frontend/src/presentation/components/Footer.jsx` - Implement dynamic version updates
 - [ ] `frontend/src/presentation/components/git/main/GitManagementComponent.jsx` - Replace polling with event-driven updates
-- [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Integrate with unified refresh service
-- [ ] `frontend/src/presentation/components/queue/QueueManagementPanel.jsx` - Replace WebSocket polling with unified refresh
-- [ ] `frontend/src/presentation/components/queue/QueueControls.jsx` - Integrate with unified refresh service
-- [ ] `frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx` - Replace manual refresh with unified service
+- [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Integrate with refresh service
+- [ ] `frontend/src/presentation/components/queue/QueueManagementPanel.jsx` - Replace WebSocket polling with refresh
+- [ ] `frontend/src/presentation/components/queue/QueueControls.jsx` - Integrate with refresh service
+- [ ] `frontend/src/presentation/components/analysis/AnalysisDataViewer.jsx` - Replace manual refresh with service
 - [ ] `frontend/src/presentation/components/analysis/AnalysisModal.jsx` - Integrate refresh functionality
 - [ ] `frontend/src/presentation/components/analysis/AggregatedAnalysisDashboard.jsx` - Integrate retry/refresh functionality
-- [ ] `frontend/src/presentation/components/ide/IDEFeatures.jsx` - Replace auto-refresh timer with unified service
+- [ ] `frontend/src/presentation/components/ide/IDEFeatures.jsx` - Replace auto-refresh timer with service
 - [ ] `frontend/src/presentation/components/ide/IDEStatusIndicator.jsx` - Integrate status monitoring
 - [ ] `frontend/src/presentation/components/ide/IDEMirror.jsx` - Integrate IDE mirror refresh
 - [ ] `frontend/src/presentation/components/terminal/TerminalLogDisplay.jsx` - Integrate terminal log refresh
@@ -42,20 +42,20 @@
 - [ ] `backend/Application.js` - Add new event handlers for refresh system
 
 ### Files to Create:
-- [ ] `frontend/src/infrastructure/services/UnifiedRefreshService.jsx` - Central refresh coordination service
-- [ ] `frontend/src/infrastructure/cache/SmartCacheManager.jsx` - Multi-layer cache management
+- [ ] `frontend/src/infrastructure/services/RefreshService.jsx` - Central refresh coordination service
+- [ ] `frontend/src/infrastructure/cache/CacheManager.jsx` - Multi-layer cache management
 - [ ] `frontend/src/infrastructure/services/RefreshEventBus.jsx` - Event-driven refresh coordination
-- [ ] `frontend/src/hooks/useSmartRefresh.jsx` - Custom hook for smart refresh functionality
+- [ ] `frontend/src/hooks/useRefresh.jsx` - Custom hook for refresh functionality
 - [ ] `frontend/src/hooks/useVersionUpdates.jsx` - Custom hook for version-specific updates
 - [ ] `frontend/src/hooks/useQueueUpdates.jsx` - Custom hook for queue-specific updates
 - [ ] `frontend/src/hooks/useAnalysisUpdates.jsx` - Custom hook for analysis-specific updates
 - [ ] `frontend/src/hooks/useIDEUpdates.jsx` - Custom hook for IDE-specific updates
 - [ ] `frontend/src/presentation/components/version/VersionStatusComponent.jsx` - Real-time version display
-- [ ] `frontend/src/presentation/components/refresh/GlobalRefreshButton.jsx` - Unified refresh button
+- [ ] `frontend/src/presentation/components/refresh/GlobalRefreshButton.jsx` - refresh button
 - [ ] `frontend/src/presentation/components/refresh/RefreshStatusIndicator.jsx` - Global refresh status display
 - [ ] `frontend/src/infrastructure/services/UserActivityTracker.jsx` - User activity monitoring
 - [ ] `frontend/src/infrastructure/services/NetworkStatusMonitor.jsx` - Network-aware refresh control
-- [ ] `frontend/src/infrastructure/services/ComponentRefreshCoordinator.jsx` - Component-specific refresh coordination
+- [ ] `frontend/src/infrastructure/services/RefreshCoordinator.jsx` - Component-specific refresh coordination
 - [ ] `backend/presentation/websocket/RefreshWebSocket.js` - Backend WebSocket handlers for refresh events
 - [ ] `backend/presentation/websocket/QueueWebSocket.js` - Backend WebSocket handlers for queue events
 - [ ] `backend/presentation/websocket/AnalysisWebSocket.js` - Backend WebSocket handlers for analysis events
@@ -66,10 +66,10 @@
 ## Implementation Phases
 
 ### Phase 1: Foundation Setup (8 hours)
-- [ ] Create UnifiedRefreshService base structure
-- [ ] Implement SmartCacheManager with multi-layer caching
+- [ ] Create RefreshService base structure
+- [ ] Implement CacheManager with multi-layer caching
 - [ ] Set up RefreshEventBus for event coordination
-- [ ] Create UserActivityTracker for smart refresh control
+- [ ] Create UserActivityTracker for refresh control
 - [ ] Add NetworkStatusMonitor for network-aware refresh
 - [ ] Create ComponentRefreshCoordinator for component-specific coordination
 - [ ] Create initial unit tests for core services
@@ -87,25 +87,25 @@
 - [ ] Test WebSocket event flow
 
 ### Phase 3: Frontend Integration (12 hours)
-- [ ] Implement useSmartRefresh custom hook
+- [ ] Implement useRefresh custom hook
 - [ ] Create useVersionUpdates hook for version management
 - [ ] Create useQueueUpdates hook for queue management
 - [ ] Create useAnalysisUpdates hook for analysis management
 - [ ] Create useIDEUpdates hook for IDE management
-- [ ] Update IDEStore with unified refresh event handlers
-- [ ] Update AuthStore with unified refresh integration
+- [ ] Update IDEStore with refresh event handlers
+- [ ] Update AuthStore with refresh integration
 - [ ] Replace GitManagementComponent polling with event-driven updates
 - [ ] Replace QueueManagementPanel polling with event-driven updates
-- [ ] Replace AnalysisDataViewer manual refresh with unified service
-- [ ] Replace IDEFeatures auto-refresh timer with unified service
+- [ ] Replace AnalysisDataViewer manual refresh with service
+- [ ] Replace IDEFeatures auto-refresh timer with service
 - [ ] Add dynamic version updates to Footer component
 - [ ] Create VersionStatusComponent for real-time version display
-- [ ] Implement GlobalRefreshButton for unified refresh control
+- [ ] Implement GlobalRefreshButton for refresh control
 - [ ] Create RefreshStatusIndicator for global status display
-- [ ] Update PreviewComponent to use unified refresh service
-- [ ] Update TerminalLogDisplay to use unified refresh service
+- [ ] Update PreviewComponent to use refresh service
+- [ ] Update TerminalLogDisplay to use refresh service
 
-### Phase 4: Smart Refresh Features (8 hours)
+### Phase 4: Advanced Refresh Features (8 hours)
 - [ ] Implement optimistic updates for git operations
 - [ ] Implement optimistic updates for queue operations
 - [ ] Implement optimistic updates for analysis operations
@@ -145,13 +145,13 @@
 - **Response Time**: < 100ms for cached data, < 500ms for fresh data
 - **Throughput**: Support 100+ concurrent refresh operations
 - **Memory Usage**: < 50MB for cache storage
-- **Database Queries**: Minimize API calls through smart caching
+- **Database Queries**: Minimize API calls through caching
 - **Caching Strategy**: Multi-layer with TTL-based expiration and event-driven invalidation
 
 ## Testing Strategy
 
 ### Unit Tests:
-- [ ] Test file: `frontend/tests/unit/UnifiedRefreshService.test.jsx`
+- [ ] Test file: `frontend/tests/unit/RefreshService.test.jsx`
 - [ ] Test cases: Event handling, cache management, user activity tracking, network status monitoring
 - [ ] Mock requirements: WebSocket service, IndexedDB, network APIs
 
@@ -168,7 +168,7 @@
 ## Documentation Requirements
 
 ### Code Documentation:
-- [ ] JSDoc comments for all UnifiedRefreshService methods
+- [ ] JSDoc comments for all RefreshService methods
 - [ ] README updates with new refresh system architecture
 - [ ] API documentation for WebSocket events
 - [ ] Architecture diagrams for event-driven refresh flow
@@ -209,7 +209,7 @@
 
 ## Success Criteria
 - [ ] All refresh operations use event-driven architecture across ALL frontend components
-- [ ] Smart caching reduces API calls by 70% across all components
+- [ ] Caching reduces API calls by 70% across all components
 - [ ] User activity-based refresh improves battery life
 - [ ] Real-time updates work for all components (Git, Queue, Analysis, IDE, Terminal, Auth)
 - [ ] All polling mechanisms replaced with event-driven updates
@@ -248,7 +248,7 @@
 ```json
 {
   "requires_new_chat": true,
-  "git_branch_name": "feature/unified-event-driven-refresh-system",
+  "git_branch_name": "feature/event-driven-refresh-system",
   "confirmation_keywords": ["fertig", "done", "complete"],
   "fallback_detection": true,
   "max_confirmation_attempts": 3,
@@ -267,10 +267,10 @@
 
 ### Original Prompt (Sanitized):
 ```markdown
-# Initial Prompt: Unified Event-Driven Refresh System
+# Initial Prompt: Event-Driven Refresh System
 
 ## User Request:
-Create a comprehensive development plan for implementing a unified event-driven refresh system with smart caching to replace the current fragmented refresh patterns across frontend components.
+Create a comprehensive development plan for implementing an event-driven refresh system with caching to replace the current fragmented refresh patterns across frontend components.
 
 ## Language Detection:
 - **Original Language**: German/English mixed
@@ -278,9 +278,9 @@ Create a comprehensive development plan for implementing a unified event-driven 
 - **Sanitization Status**: ✅ Technical requirements preserved
 
 ## Prompt Analysis:
-- **Intent**: Replace multiple refresh patterns with unified event-driven system
+- **Intent**: Replace multiple refresh patterns with event-driven system
 - **Complexity**: High - requires architectural changes across frontend and backend
-- **Scope**: Frontend refresh system, WebSocket events, smart caching
+- **Scope**: Frontend refresh system, WebSocket events, caching
 - **Dependencies**: Existing WebSocket service, IDEStore, cache services
 
 ## Sanitization Applied:
@@ -299,4 +299,4 @@ Create a comprehensive development plan for implementing a unified event-driven 
 
 ---
 
-**Note**: This implementation plan addresses the gaps identified in the frontend git version management analysis by creating a unified, event-driven refresh system that eliminates polling, implements smart caching, and provides real-time updates across all components.
+**Note**: This implementation plan addresses the gaps identified in the frontend git version management analysis by creating an event-driven refresh system that eliminates polling, implements caching, and provides real-time updates across all components.

@@ -1,7 +1,7 @@
-# Unified Event-Driven Refresh System - Master Index
+# Event-Driven Refresh System - Master Index
 
 ## 📋 Task Overview
-- **Name**: Unified Event-Driven Refresh System with Smart Caching
+- **Name**: Event-Driven Refresh System with Caching
 - **Category**: frontend
 - **Priority**: High
 - **Status**: Planning
@@ -24,7 +24,7 @@ docs/09_roadmap/pending/high/frontend/unified-event-driven-refresh-system/
 ```
 
 ## 🎯 Main Implementation
-- **[Unified Event-Driven Refresh System Implementation](./unified-event-driven-refresh-system-implementation.md)** - Complete implementation plan and specifications
+- **[Event-Driven Refresh System Implementation](./unified-event-driven-refresh-system-implementation.md)** - Complete implementation plan and specifications
 
 ## 📊 Phase Breakdown
 | Phase | File | Status | Time | Progress |
@@ -32,13 +32,13 @@ docs/09_roadmap/pending/high/frontend/unified-event-driven-refresh-system/
 | 1 | [Phase 1: Foundation Setup](./unified-event-driven-refresh-system-phase-1.md) | Planning | 8h | 0% |
 | 2 | [Phase 2: Event-Driven Backend Integration](./unified-event-driven-refresh-system-phase-2.md) | Planning | 6h | 0% |
 | 3 | [Phase 3: Frontend Integration](./unified-event-driven-refresh-system-phase-3.md) | Planning | 12h | 0% |
-| 4 | [Phase 4: Smart Refresh Features](./unified-event-driven-refresh-system-phase-4.md) | Planning | 8h | 0% |
+| 4 | [Phase 4: Advanced Refresh Features](./unified-event-driven-refresh-system-phase-4.md) | Planning | 8h | 0% |
 | 5 | [Phase 5: Testing & Optimization](./unified-event-driven-refresh-system-phase-5.md) | Planning | 6h | 0% |
 
 ## 🔄 Subtask Management
 ### Active Subtasks
-- [ ] UnifiedRefreshService Implementation - Planning - 0%
-- [ ] SmartCacheManager Implementation - Planning - 0%
+- [ ] RefreshService Implementation - Planning - 0%
+- [ ] CacheManager Implementation - Planning - 0%
 - [ ] WebSocket Event Integration - Planning - 0%
 - [ ] Frontend Component Migration - Planning - 0%
 - [ ] Queue Management Integration - Planning - 0%
@@ -80,7 +80,7 @@ docs/09_roadmap/pending/high/frontend/unified-event-driven-refresh-system/
 
 ### 2025-01-27 - Architecture Design
 - Event-driven architecture designed
-- Smart caching strategy defined
+- Caching strategy defined
 - Multi-layer cache system planned
 - User activity tracking integrated
 
@@ -92,21 +92,21 @@ docs/09_roadmap/pending/high/frontend/unified-event-driven-refresh-system/
 
 ## 🎯 Key Features
 - **Event-Driven Architecture**: Real-time updates via WebSocket events across ALL components
-- **Smart Caching**: Multi-layer cache with TTL and invalidation for all data types
+- **Caching**: Multi-layer cache with TTL and invalidation for all data types
 - **User Activity Tracking**: Pause refresh during inactivity across all components
 - **Network Awareness**: Adapt refresh frequency based on connection quality
 - **Optimistic Updates**: Immediate UI updates with background sync for all operations
 - **Request Deduplication**: Prevent duplicate API calls across all components
 - **Tab Visibility Control**: Refresh only when tab is visible
 - **Component-Specific Strategies**: Tailored refresh strategies for Git, Queue, Analysis, IDE, Terminal, Auth
-- **Comprehensive Coverage**: All frontend components use unified refresh system
+- **Comprehensive Coverage**: All frontend components use event-driven refresh system
 
 ## 🔧 Technical Stack
 - **Frontend**: React, Zustand, WebSocket, IndexedDB
 - **Backend**: Node.js, WebSocket, Event Bus
 - **Caching**: Memory + IndexedDB + Server fallback
 - **Testing**: Jest, React Testing Library
-- **Performance**: Service Workers, Smart refresh algorithms
+- **Performance**: Service Workers, Advanced refresh algorithms
 
 ## 📊 Success Metrics
 - **Performance**: < 100ms cached data, < 500ms fresh data across all components
@@ -114,5 +114,5 @@ docs/09_roadmap/pending/high/frontend/unified-event-driven-refresh-system/
 - **User Experience**: Real-time updates across ALL frontend components (Git, Queue, Analysis, IDE, Terminal, Auth)
 - **Battery Life**: Improved through activity-based refresh across all components
 - **Reliability**: Fallback mechanisms for WebSocket failures
-- **Coverage**: 100% of frontend components using unified refresh system
+- **Coverage**: 100% of frontend components using event-driven refresh system
 - **Consistency**: Uniform refresh behavior across all components

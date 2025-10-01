@@ -5,15 +5,15 @@
 - **Duration**: 12 hours
 - **Status**: Planning
 - **Dependencies**: Phase 1 (Foundation Setup), Phase 2 (Backend Integration)
-- **Deliverables**: Frontend event handling, component integration, unified refresh system
+- **Deliverables**: Frontend event handling, component integration, event-driven refresh system
 
 ## 🎯 Objectives
-Integrate the unified refresh system with existing frontend components, replacing polling with event-driven updates and implementing smart refresh functionality.
+Integrate the event-driven refresh system with existing frontend components, replacing polling with event-driven updates and implementing advanced refresh functionality.
 
 ## 📝 Tasks
 
-### 1. Implement useSmartRefresh Custom Hook (1.5 hours)
-- [ ] Create `frontend/src/hooks/useSmartRefresh.jsx`
+### 1. Implement useRefresh Custom Hook (1.5 hours)
+- [ ] Create `frontend/src/hooks/useRefresh.jsx`
 - [ ] Implement smart refresh logic with activity tracking
 - [ ] Add network-aware refresh control
 - [ ] Create tab visibility-based refresh
@@ -23,12 +23,12 @@ Integrate the unified refresh system with existing frontend components, replacin
 **Hook Implementation:**
 ```javascript
 import { useState, useEffect, useCallback } from 'react';
-import { useUnifiedRefreshService } from '@/infrastructure/services/UnifiedRefreshService';
+import { useRefreshService } from '@/infrastructure/services/RefreshService';
 import { useUserActivityTracker } from '@/infrastructure/services/UserActivityTracker';
 import { useNetworkStatusMonitor } from '@/infrastructure/services/NetworkStatusMonitor';
 
-export const useSmartRefresh = (options = {}) => {
-  const refreshService = useUnifiedRefreshService();
+export const useRefresh = (options = {}) => {
+  const refreshService = useRefreshService();
   const activityTracker = useUserActivityTracker();
   const networkMonitor = useNetworkStatusMonitor();
   
@@ -98,7 +98,7 @@ export const useSmartRefresh = (options = {}) => {
 
 ### 5. Update IDEStore with Unified Refresh Event Handlers (1.5 hours)
 - [ ] Modify `frontend/src/infrastructure/stores/IDEStore.jsx`
-- [ ] Replace existing refresh logic with unified service
+- [ ] Replace existing refresh logic with event-driven service
 - [ ] Add event handlers for WebSocket events
 - [ ] Implement optimistic updates for IDE operations
 - [ ] Add cache integration for IDE data
@@ -106,7 +106,7 @@ export const useSmartRefresh = (options = {}) => {
 
 ### 6. Update AuthStore with Unified Refresh Integration (1 hour)
 - [ ] Modify `frontend/src/infrastructure/stores/AuthStore.jsx`
-- [ ] Replace authentication refresh logic with unified service
+- [ ] Replace authentication refresh logic with event-driven service
 - [ ] Add event handlers for auth events
 - [ ] Implement session monitoring integration
 - [ ] Add cache integration for auth data
@@ -118,11 +118,11 @@ export const useSmartRefresh = (options = {}) => {
 ```javascript
 import { useState, useEffect, useCallback } from 'react';
 import { useWebSocketService } from '@/infrastructure/services/WebSocketService';
-import { useSmartCacheManager } from '@/infrastructure/cache/SmartCacheManager';
+import { useCacheManager } from '@/infrastructure/cache/CacheManager';
 
 export const useVersionUpdates = (workspacePath) => {
   const webSocketService = useWebSocketService();
-  const cacheManager = useSmartCacheManager();
+  const cacheManager = useCacheManager();
   
   const [versionData, setVersionData] = useState({
     currentVersion: null,
@@ -197,7 +197,7 @@ export const useVersionUpdates = (workspacePath) => {
 
 ### 3. Update IDEStore with Unified Refresh Event Handlers (1.5 hours)
 - [ ] Modify `frontend/src/infrastructure/stores/IDEStore.jsx`
-- [ ] Replace existing refresh logic with unified service
+- [ ] Replace existing refresh logic with event-driven service
 - [ ] Add event handlers for WebSocket events
 - [ ] Implement optimistic updates for IDE operations
 - [ ] Add cache integration for IDE data
@@ -206,16 +206,16 @@ export const useVersionUpdates = (workspacePath) => {
 **IDEStore Integration:**
 ```javascript
 // In IDEStore.jsx
-import { useUnifiedRefreshService } from '@/infrastructure/services/UnifiedRefreshService';
-import { useSmartCacheManager } from '@/infrastructure/cache/SmartCacheManager';
+import { useRefreshService } from '@/infrastructure/services/RefreshService';
+import { useCacheManager } from '@/infrastructure/cache/CacheManager';
 
 const useIDEStore = create((set, get) => ({
   // Existing state...
   
   // NEW: Unified refresh integration
   setupUnifiedRefresh: () => {
-    const refreshService = useUnifiedRefreshService();
-    const cacheManager = useSmartCacheManager();
+    const refreshService = useRefreshService();
+    const cacheManager = useCacheManager();
     
     // Register refresh strategies
     refreshService.registerStrategy('ide-switch', {
@@ -268,7 +268,7 @@ const useIDEStore = create((set, get) => ({
   
   // Updated refresh method
   refresh: async () => {
-    const refreshService = useUnifiedRefreshService();
+    const refreshService = useRefreshService();
     await refreshService.executeRefresh('ide-refresh', {
       currentPort: get().activePort
     });
@@ -287,11 +287,11 @@ const useIDEStore = create((set, get) => ({
 **GitManagementComponent Updates:**
 ```javascript
 // In GitManagementComponent.jsx
-import { useSmartRefresh } from '@/hooks/useSmartRefresh';
+import { useRefresh } from '@/hooks/useRefresh';
 import { useWebSocketService } from '@/infrastructure/services/WebSocketService';
 
 const GitManagementComponent = () => {
-  const { refreshState, executeRefresh } = useSmartRefresh();
+  const { refreshState, executeRefresh } = useRefresh();
   const webSocketService = useWebSocketService();
   
   // Remove old polling useEffect
@@ -430,11 +430,11 @@ const Footer = () => {
 ```javascript
 import React, { useState } from 'react';
 import { useVersionUpdates } from '@/hooks/useVersionUpdates';
-import { useSmartRefresh } from '@/hooks/useSmartRefresh';
+import { useRefresh } from '@/hooks/useRefresh';
 
 const VersionStatusComponent = ({ workspacePath }) => {
   const { versionData, refreshVersion } = useVersionUpdates(workspacePath);
-  const { refreshState } = useSmartRefresh();
+  const { refreshState } = useRefresh();
   const [showHistory, setShowHistory] = useState(false);
   
   return (
@@ -515,12 +515,12 @@ const VersionStatusComponent = ({ workspacePath }) => {
 **GlobalRefreshButton Implementation:**
 ```javascript
 import React, { useState } from 'react';
-import { useSmartRefresh } from '@/hooks/useSmartRefresh';
-import { useUnifiedRefreshService } from '@/infrastructure/services/UnifiedRefreshService';
+import { useRefresh } from '@/hooks/useRefresh';
+import { useRefreshService } from '@/infrastructure/services/RefreshService';
 
 const GlobalRefreshButton = () => {
-  const { refreshState, executeRefresh, pauseRefresh, resumeRefresh } = useSmartRefresh();
-  const refreshService = useUnifiedRefreshService();
+  const { refreshState, executeRefresh, pauseRefresh, resumeRefresh } = useRefresh();
+  const refreshService = useRefreshService();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshHistory, setRefreshHistory] = useState([]);
   
@@ -609,7 +609,7 @@ const GlobalRefreshButton = () => {
 
 ### 8. Update PreviewComponent to Use Unified Refresh Service (1 hour)
 - [ ] Modify `frontend/src/presentation/components/chat/main/PreviewComponent.jsx`
-- [ ] Replace individual refresh logic with unified service
+- [ ] Replace individual refresh logic with event-driven service
 - [ ] Add WebSocket event handling for preview updates
 - [ ] Implement cache integration for preview data
 - [ ] Update error handling for refresh operations
@@ -618,14 +618,14 @@ const GlobalRefreshButton = () => {
 **PreviewComponent Updates:**
 ```javascript
 // In PreviewComponent.jsx
-import { useSmartRefresh } from '@/hooks/useSmartRefresh';
+import { useRefresh } from '@/hooks/useRefresh';
 import { useWebSocketService } from '@/infrastructure/services/WebSocketService';
 
 const PreviewComponent = () => {
-  const { refreshState, executeRefresh } = useSmartRefresh();
+  const { refreshState, executeRefresh } = useRefresh();
   const webSocketService = useWebSocketService();
   
-  // Replace individual refresh with unified service
+  // Replace individual refresh with event-driven service
   const handleRefresh = async () => {
     await executeRefresh('preview-refresh', {
       port: customPort || activePort,
@@ -656,7 +656,7 @@ const PreviewComponent = () => {
 ## 🧪 Testing Requirements
 
 ### Integration Tests Coverage:
-- **useSmartRefresh Hook**: 90% coverage
+- **useRefresh Hook**: 90% coverage
   - Smart refresh logic
   - Activity tracking integration
   - Network awareness
@@ -701,7 +701,7 @@ const PreviewComponent = () => {
   - Error handling
 
 ## 📋 Deliverables Checklist
-- [ ] useSmartRefresh hook created and tested
+- [ ] useRefresh hook created and tested
 - [ ] useVersionUpdates hook created and tested
 - [ ] IDEStore updated with unified refresh integration
 - [ ] GitManagementComponent migrated to event-driven updates
@@ -738,4 +738,4 @@ const PreviewComponent = () => {
 
 ---
 
-**Phase 3 completes the frontend integration of the unified refresh system. Phase 4 will add advanced smart refresh features and optimizations.**
+**Phase 3 completes the frontend integration of the event-driven refresh system. Phase 4 will add advanced smart refresh features and optimizations.**
