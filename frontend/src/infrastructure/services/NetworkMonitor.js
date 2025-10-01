@@ -18,7 +18,7 @@ export class NetworkMonitor {
       good: 500,        // > 500 Kbps
       fair: 100,        // > 100 Kbps
       poor: 50,          // > 50 Kbps
-      very-poor: 0      // < 50 Kbps
+      'very-poor': 0      // < 50 Kbps
     };
     
     // Network statistics
