@@ -56,11 +56,7 @@ class ManualTasksImportService {
                     const filePath = path.join(dir, file);
                     const stat = await fs.stat(filePath);
                     if (stat.isDirectory()) {
-                        // ✅ CRITICAL FIX: Skip completed directories to avoid re-processing completed tasks
-                        if (file === 'completed') {
-                            logger.debug(`⏭️ Skipping completed directory: ${filePath}`);
-                            continue;
-                        }
+                        // ✅ FIXED: Process completed directories but only import new tasks
                         results = results.concat(await getAllMarkdownFiles(filePath));
                     } else if (file.endsWith('.md')) {
                         results.push(filePath);
@@ -479,148 +475,9 @@ class ManualTasksImportService {
                     logger.info(`✅ Created task: "${title}" (${type}) for project "${projectId}" with status: ${taskStatus}, progress: ${taskProgress}%`);
                     importedTasks.push(task);
                 } else {
-                    // ✅ CRITICAL FIX: Update existing task with current status and progress
-                    const existingTask = existing[0] || similarTask;
-                    
-                    // ✅ CRITICAL FIX: Status wird NUR aus dem Verzeichnispfad bestimmt (wie bei neuen Tasks)
-                    let taskStatus;
-                    if (status === 'completed') {
-                        taskStatus = 'completed';
-                    } else if (status === 'in_progress') {
-                        taskStatus = 'in_progress';
-                    } else if (status === 'pending') {
-                        // ✅ CRITICAL FIX: Check if task is actually completed based on content
-                        if (progressInfo.overallProgress >= 100 || progressInfo.status === 'completed') {
-                            taskStatus = 'completed';
-                            logger.info(`🔄 Task in pending directory but marked as completed in content - setting status to completed: ${title}`);
-                        } else {
-                            taskStatus = 'pending';
-                        }
-                    } else {
-                        // Fallback für unbekannte Status
-                        taskStatus = 'pending';
-                    }
-                    
-                    logger.info(`📁 Status determined from directory path: ${status} → ${taskStatus} for existing task: ${title}`);
-                    
-                    let taskProgress = progressInfo.overallProgress || 0;
-                    
-                    // 🧠 CRITICAL FIX: Parse phases for existing tasks too!
-                    if (!progressInfo.phases || progressInfo.phases.length === 0) {
-                        logger.info(`🧠 Re-parsing phases for existing task "${title}"`);
-                        const content = await this.fileSystemService.readFile(filePath);
-                        const reParsedInfo = this._parseIndexFileContent(content, filePath);
-                        if (reParsedInfo.phases && reParsedInfo.phases.length > 0) {
-                            progressInfo.phases = reParsedInfo.phases;
-                            logger.info(`🧠 Re-parsed ${progressInfo.phases.length} phases for existing task "${title}"`);
-                        }
-                    }
-                    
-                    // ✅ CRITICAL FIX: Status wird NUR aus dem Verzeichnispfad bestimmt
-                    // Intelligente Status-Erkennung wird NICHT verwendet - Verzeichnispfad ist die Quelle der Wahrheit
-                    
-                    // Progress kann aus Phasen/Content kommen, aber Status bleibt aus Verzeichnispfad
-                    if (progressInfo.phases && progressInfo.phases.length > 0) {
-                        const completedPhases = progressInfo.phases.filter(phase => 
-                            phase.status === 'completed' || phase.status === 'done' || phase.status === 'finished'
-                        ).length;
-                        const totalPhases = progressInfo.phases.length;
-                        const calculatedProgress = Math.round((completedPhases / totalPhases) * 100);
-                        
-                        if (calculatedProgress > taskProgress) {
-                            taskProgress = calculatedProgress;
-                            logger.info(`🧠 Progress calculated from phases: ${taskProgress}% (${completedPhases}/${totalPhases} phases completed) for existing task "${title}"`);
-                        }
-                    }
-                    
-                    // Implementation verification kann Progress auf 100 setzen, aber Status bleibt unverändert
-                    if (progressInfo.implementationVerified) {
-                        logger.info(`✅ Implementation verified for existing task "${title}": Progress set to 100%`);
-                        taskProgress = 100;
-                    }
-                    
-                    // ✅ CRITICAL FIX: Always log the found task details FIRST
-                    const currentStatusValue = existingTask.status.value || existingTask.status;
-                    logger.info(`🔄 DEBUG: Found existing task: "${title}" with current status: ${currentStatusValue}, new status: ${taskStatus}, progress: ${taskProgress}%`);
-                    
-                    // ✅ CRITICAL FIX: Always log the condition check
-                    logger.info(`🔍 DEBUG: Status update condition check - taskStatus: "${taskStatus}", existingStatus: "${currentStatusValue}", condition: ${taskStatus !== 'pending' && currentStatusValue !== taskStatus}`);
-                    
-                    // Update task status if different
-                    if (taskStatus !== 'pending' && currentStatusValue !== taskStatus) {
-                        logger.info(`🔧 DEBUG: Updating status from ${currentStatusValue} to ${taskStatus}`);
-                        existingTask.updateStatus(taskStatus);
-                        logger.info(`🔧 Updated existing task status to: ${taskStatus}`);
-                    } else {
-                        logger.info(`⏭️ DEBUG: Skipping status update - taskStatus: ${taskStatus}, existingStatus: ${currentStatusValue}`);
-                    }
-                    
-                    // Update task progress if different
-                    logger.info(`🔍 DEBUG: Progress update check - current progress: ${existingTask.metadata?.progress || 0}, new progress: ${taskProgress}`);
-                    if (existingTask.metadata?.progress !== taskProgress) {
-                        logger.info(`🔧 DEBUG: Updating progress from ${existingTask.metadata?.progress || 0} to ${taskProgress}%`);
-                        existingTask.setMetadata('progress', taskProgress);
-                        logger.info(`🔧 Updated existing task progress to: ${taskProgress}%`);
-                    } else {
-                        logger.info(`⏭️ DEBUG: Skipping progress update - progress unchanged: ${taskProgress}`);
-                    }
-                    
-                    // ✅ FIXED: Update timestamps from markdown file if available
-                    const timestampUpdates = {};
-                    
-                    if (progressInfo.createdDate) {
-                        timestampUpdates.createdAt = new Date(progressInfo.createdDate);
-                        logger.info(`📅 Updated task created date from markdown: ${progressInfo.createdDate}`);
-                    }
-                    
-                    if (progressInfo.lastUpdatedDate) {
-                        timestampUpdates.updatedAt = new Date(progressInfo.lastUpdatedDate);
-                        logger.info(`📅 Updated task last updated date from markdown: ${progressInfo.lastUpdatedDate}`);
-                    }
-
-                    if (progressInfo.completionDate && taskStatus === 'completed') {
-                        timestampUpdates.completedAt = new Date(progressInfo.completionDate);
-                        logger.info(`📅 Updated task completion date from markdown: ${progressInfo.completionDate}`);
-                    }
-
-                    // ✅ CRITICAL FIX: Save the updated task with status and progress changes
-                    const finalStatusValue = existingTask.status.value || existingTask.status;
-                    logger.info(`💾 DEBUG: About to save task "${title}" with status: ${finalStatusValue}, progress: ${existingTask.metadata?.progress}`);
-                    
-                    // ✅ CRITICAL FIX: Always save the task entity to persist status and progress changes
-                    await this.taskRepository.update(existingTask.id, existingTask);
-                    logger.info(`💾 DEBUG: Successfully updated task entity for "${title}"`);
-                    
-                    // Also update timestamps if available
-                    if (Object.keys(timestampUpdates).length > 0) {
-                        await this.taskRepository.update(existingTask.id, timestampUpdates);
-                        logger.info(`💾 DEBUG: Successfully updated timestamps for task "${title}"`);
-                    }
-                    
-                    // ✅ NEW: Verify the save worked by reloading the task
-                    const reloadedTask = await this.taskRepository.findById(existingTask.id);
-                    const reloadedStatusValue = reloadedTask.status.value || reloadedTask.status;
-                    logger.info(`🔍 DEBUG: Reloaded task "${title}" from database - status: ${reloadedStatusValue}, progress: ${reloadedTask.metadata?.progress}`);
-                    
-                    // 🆕 NEW: Trigger automatic file movement for completed tasks
-                    if (taskStatus === 'completed' && this.taskService?.statusTransitionService) {
-                        try {
-                            logger.info(`🔄 Triggering automatic file movement for completed task: ${title}`);
-                            await this.taskService.statusTransitionService.moveTaskToCompleted(existingTask.id);
-                            logger.info(`✅ Successfully moved files for completed task: ${title}`);
-                        } catch (moveError) {
-                            logger.warn(`⚠️ Failed to move files for completed task ${title}:`, moveError.message);
-                            // Don't fail the import if file movement fails
-                        }
-                    }
-                    
-                    // ✅ NEW: Track completion statistics
-                    totalProcessedFiles++;
-                    if (taskStatus === 'completed') {
-                        completedCount++;
-                    }
-                    
-                    importedTasks.push(existingTask);
+                    // ✅ FIXED: Skip existing tasks to avoid re-processing
+                    logger.debug(`⏭️ Skipping existing task to avoid re-processing: "${title}"`);
+                    continue;
                 }
             }
             // ✅ NEW: Log completion summary
