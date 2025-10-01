@@ -9,7 +9,7 @@ const logger = new Logger('get_chat_history_step');
 
 // Step configuration
 const config = {
-  name: 'GetChatHistoryStep',
+  name: 'get_chat_history_step',
   type: 'ide',
   category: 'ide',
   description: 'Retrieve chat history with pagination and filtering',

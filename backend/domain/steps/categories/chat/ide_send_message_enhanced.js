@@ -10,12 +10,12 @@ const logger = new Logger('ide_send_message_enhanced');
 
 // Enhanced Step configuration with feature flags
 const config = {
-  name: 'IDESendMessageStepEnhanced',
+  name: 'ide_send_message_enhanced',
   type: 'ide',
   category: 'ide',
   description: 'Send message to any IDE with intelligent features and confidence checks',
   version: '2.0.0',
-  dependencies: ['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'chatSessionService', 'eventBus'],
+  dependencies: ['sendMessageHandler', 'chatSessionService', 'eventBus'],
   settings: {
     includeTimeout: true,
     includeRetry: true,
@@ -321,9 +321,9 @@ class IDESendMessageStepEnhanced {
     const services = {};
 
     // Required services
-    services.ideService = context.getService('cursorIDEService');
-    if (!services.ideService) {
-      throw new Error('cursorIDEService not available in context');
+    services.sendMessageHandler = context.getService('sendMessageHandler');
+    if (!services.sendMessageHandler) {
+      throw new Error('sendMessageHandler not available in context');
     }
 
     services.chatService = context.getService('chatSessionService');
@@ -430,18 +430,38 @@ class IDESendMessageStepEnhanced {
   }
 
   /**
-   * Send message to IDE
+   * Send message to IDE using handler
    */
   async sendMessageToIDE(services, message, context, features) {
-    const { projectId, workspacePath, ideType } = context;
+    const { projectId, workspacePath, ideType, sessionId, requestedBy, activeIDE } = context;
     
-    return await services.ideService.sendMessage(message, {
+    // Use the sendMessageHandler instead of deprecated IDE service
+    const sendMessageHandler = services.sendMessageHandler;
+    if (!sendMessageHandler) {
+      throw new Error('SendMessageHandler not available');
+    }
+    
+    // Create command for the handler
+    const SendMessageCommand = require('@categories/chat/SendMessageCommand');
+    const command = new SendMessageCommand(message, sessionId);
+    command.message = message;
+    command.requestedBy = requestedBy || 'unknown';
+    command.options = {
       projectId,
       workspacePath,
       ideType,
       features,
       timeout: config.settings.timeout
-    });
+    };
+    
+    // Get the port from activeIDE or context
+    const port = activeIDE?.port || context.port;
+    if (!port) {
+      throw new Error('No IDE port available for sending message');
+    }
+    
+    // Execute the handler with port
+    return await sendMessageHandler.handle(command, port);
   }
 
   /**

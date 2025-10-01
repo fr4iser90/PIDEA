@@ -10,7 +10,7 @@ const logger = new Logger('list_chats_step');
 
 // Step configuration
 const config = {
-  name: 'ListChatsStep',
+  name: 'list_chats_step',
   type: 'ide',
   category: 'ide',
   description: 'List chat sessions with IDE integration',

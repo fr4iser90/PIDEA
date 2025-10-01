@@ -622,6 +622,9 @@ class IDEManager {
           if (workspaceInfo && workspaceInfo.workspacePath) {
             logger.debug(`CDP-based detected workspace path for port ${port}: ${workspaceInfo.workspacePath}`);
             
+            // Store workspace path in ideWorkspaces Map
+            this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
+            
             // AUTOMATISCH Projekt in der DB erstellen
             await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
             

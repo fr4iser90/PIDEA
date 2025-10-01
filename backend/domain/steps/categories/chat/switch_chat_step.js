@@ -10,7 +10,7 @@ const logger = new Logger('switch_chat_step');
 
 // Step configuration
 const config = {
-  name: 'SwitchChatStep',
+  name: 'switch_chat_step',
   type: 'ide',
   category: 'ide',
   description: 'Switch to different chat session with IDE integration',

@@ -75,9 +75,21 @@ class WebChatApplicationService {
       const activePort = this.cursorIDEService?.ideManager?.getActivePort?.();
       let projectId = null;
       
+      this.logger.info('🔍 Debugging projectId retrieval:', { 
+        activePort,
+        hasIDEManager: !!this.cursorIDEService?.ideManager,
+        hasGetActivePort: !!this.cursorIDEService?.ideManager?.getActivePort
+      });
+      
       if (activePort) {
         // Get workspace path from IDE Manager
         const workspacePath = this.cursorIDEService?.ideManager?.getWorkspacePath?.(activePort);
+        
+        this.logger.info('🔍 Workspace path detection:', { 
+          activePort,
+          workspacePath,
+          hasGetWorkspacePath: !!this.cursorIDEService?.ideManager?.getWorkspacePath
+        });
         
         if (workspacePath) {
           // Get project repository from DI container
@@ -85,20 +97,75 @@ class WebChatApplicationService {
           const container = getServiceContainer();
           const projectRepository = container?.resolve('projectRepository');
           
+          this.logger.info('🔍 Project repository access:', { 
+            hasContainer: !!container,
+            hasProjectRepository: !!projectRepository
+          });
+          
           if (projectRepository) {
-            const project = await projectRepository.findByWorkspacePath(workspacePath);
-            if (project) {
-              projectId = project.id;
+            try {
+              const project = await projectRepository.findByWorkspacePath(workspacePath);
+              if (project) {
+                projectId = project.id;
+                this.logger.info('✅ Project found:', { projectId, workspacePath });
+              } else {
+                this.logger.warn('⚠️ No project found for workspace path:', workspacePath);
+              }
+            } catch (error) {
+              this.logger.error('❌ Error finding project:', error.message);
+            }
+          } else {
+            this.logger.warn('⚠️ Project repository not available');
+          }
+        } else {
+          this.logger.warn('⚠️ No workspace path found for active port:', activePort);
+        }
+      } else {
+        this.logger.warn('⚠️ No active port found');
+      }
+      
+      // Fallback: try to get project ID from active IDE directly
+      if (!projectId && this.cursorIDEService?.ideManager) {
+        try {
+          const activeIDE = await this.cursorIDEService.ideManager.getActiveIDE();
+          if (activeIDE && activeIDE.workspacePath) {
+            const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
+            const container = getServiceContainer();
+            const projectRepository = container?.resolve('projectRepository');
+            
+            if (projectRepository) {
+              const project = await projectRepository.findByWorkspacePath(activeIDE.workspacePath);
+              if (project) {
+                projectId = project.id;
+                this.logger.info('✅ Project found via fallback:', { projectId, workspacePath: activeIDE.workspacePath });
+              }
             }
           }
+        } catch (error) {
+          this.logger.error('❌ Fallback project retrieval failed:', error.message);
         }
       }
       
+      this.logger.info('🔍 Final projectId:', { projectId });
+      
+      // If no projectId found, provide a more helpful error
+      if (!projectId) {
+        this.logger.error('❌ No project ID found. This might be due to:');
+        this.logger.error('  - No active IDE detected');
+        this.logger.error('  - IDE workspace path not detected');
+        this.logger.error('  - Project not found in database for workspace path');
+        this.logger.error('  - Project repository not available');
+        throw new Error('Project ID is required but could not be determined. Please ensure an IDE is active and the project is properly registered.');
+      }
+      
       // Execute send message step
-      const step = this.stepRegistry.getStep('IDESendMessageStepEnhanced');
+      const step = this.stepRegistry.getStep('ide_send_message_enhanced');
       if (!step) {
         throw new Error('Send message step not found');
       }
+      
+      // Get active IDE information
+      const activeIDE = await this.cursorIDEService?.ideManager?.getActiveIDE?.();
       
       const stepData = {
         message: message,
@@ -107,6 +174,7 @@ class WebChatApplicationService {
         userId: userContext.userId,
         port: port,
         projectId: projectId,
+        activeIDE: activeIDE,
         metadata: {
           ...metadata,
           timestamp: new Date(),
@@ -114,7 +182,7 @@ class WebChatApplicationService {
         }
       };
       
-      const result = await this.stepRegistry.executeStep('IDESendMessageStep', stepData);
+      const result = await this.stepRegistry.executeStep('ide_send_message_enhanced', stepData);
       
       // Check if step execution was successful
       if (!result.success) {
@@ -152,7 +220,7 @@ class WebChatApplicationService {
       };
       
       // ✅ FIX: Only ONE step execution (no duplicate)
-      const result = await this.stepRegistry.executeStep('GetChatHistoryStep', stepData);
+      const result = await this.stepRegistry.executeStep('get_chat_history_step', stepData);
       
       // Check if step execution was successful
       if (!result.success) {
@@ -236,7 +304,7 @@ class WebChatApplicationService {
       });
       
       // Execute list chats step
-      const step = this.stepRegistry.getStep('ListChatsStep');
+      const step = this.stepRegistry.getStep('list_chats_step');
       if (!step) {
         throw new Error('List chats step not found');
       }
@@ -247,7 +315,7 @@ class WebChatApplicationService {
         userId: userContext.userId
       };
       
-      const result = await this.stepRegistry.executeStep('ListChatsStep', stepData);
+      const result = await this.stepRegistry.executeStep('list_chats_step', stepData);
       
       // Check if step execution was successful
       if (!result.success) {
@@ -279,7 +347,7 @@ class WebChatApplicationService {
       });
       
       // Execute create chat step
-      const step = this.stepRegistry.getStep('CreateChatStep');
+      const step = this.stepRegistry.getStep('create_chat_step');
       if (!step) {
         throw new Error('Create chat step not found');
       }
@@ -292,7 +360,7 @@ class WebChatApplicationService {
         }
       };
       
-      const result = await this.stepRegistry.executeStep('CreateChatStep', stepData);
+      const result = await this.stepRegistry.executeStep('create_chat_step', stepData);
       
       // Check if step execution was successful
       if (!result.success) {
@@ -322,7 +390,7 @@ class WebChatApplicationService {
       });
       
       // Execute close chat step
-      const step = this.stepRegistry.getStep('CloseChatStep');
+      const step = this.stepRegistry.getStep('close_chat_step');
       if (!step) {
         throw new Error('Close chat step not found');
       }
@@ -332,7 +400,7 @@ class WebChatApplicationService {
         userId: userContext.userId
       };
       
-      const result = await this.stepRegistry.executeStep('CloseChatStep', stepData);
+      const result = await this.stepRegistry.executeStep('close_chat_step', stepData);
       
       // Check if step execution was successful
       if (!result.success) {

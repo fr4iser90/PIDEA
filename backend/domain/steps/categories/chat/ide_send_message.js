@@ -11,7 +11,7 @@ const logger = new Logger('ide_send_message');
 
 // Step configuration
 const config = {
-  name: 'IDESendMessageStep',
+  name: 'ide_send_message',
   type: 'ide',
   category: 'ide',
   description: 'Send message to any IDE',

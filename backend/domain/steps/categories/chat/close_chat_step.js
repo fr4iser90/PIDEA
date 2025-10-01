@@ -10,7 +10,7 @@ const logger = new Logger('close_chat_step');
 
 // Step configuration
 const config = {
-  name: 'CloseChatStep',
+  name: 'close_chat_step',
   type: 'ide',
   category: 'ide',
   description: 'Close chat session with IDE integration',
