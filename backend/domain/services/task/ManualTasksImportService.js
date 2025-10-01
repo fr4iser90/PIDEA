@@ -5,14 +5,24 @@
 const fs = require('fs').promises;
 const path = require('path');
 const Logger = require('@logging/Logger');
+const TaskContentHashService = require('@domain/services/task/TaskContentHashService');
+const TaskFileLocationService = require('@domain/services/task/TaskFileLocationService');
+const TaskEventStore = require('@domain/services/task/TaskEventStore');
 const logger = new Logger('ImportService');
 
 class ManualTasksImportService {
-    constructor(browserManager, taskService, taskRepository, fileSystemService) {
+    constructor(browserManager, taskService, taskRepository, fileSystemService, contentHashService = null, fileLocationService = null, eventStore = null) {
         this.browserManager = browserManager;
         this.taskService = taskService;
         this.taskRepository = taskRepository;
         this.fileSystemService = fileSystemService;
+        
+        // Initialize new services
+        this.contentHashService = contentHashService || new TaskContentHashService(fileSystemService);
+        this.fileLocationService = fileLocationService || new TaskFileLocationService(fileSystemService);
+        this.eventStore = eventStore;
+        
+        this.logger = new Logger('ManualTasksImportService');
     }
 
     /**
@@ -273,24 +283,22 @@ class ManualTasksImportService {
                 logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}, Similar: ${similarTask ? 1 : 0}`);
                 
                 if (existing.length === 0 && !similarTask) {
-                    // ✅ CRITICAL FIX: Verzeichnispfad ist IMMER die Quelle der Wahrheit für Status
-                    // Status wird NUR aus dem Verzeichnispfad bestimmt, NICHT aus dem Dateiinhalt
+                    // ✅ CRITICAL FIX: Markdown content is the SINGLE source of truth for status
+                    // Status is determined ONLY from markdown content, NOT from directory path
                     let taskStatus;
-                    if (status === 'completed') {
-                        taskStatus = 'completed';
-                    } else if (status === 'in_progress') {
-                        taskStatus = 'in_progress';
-                    } else if (status === 'pending') {
-                        taskStatus = 'pending';
+                    
+                    if (content) {
+                        // Extract status from markdown content using content hash service
+                        taskStatus = await this.contentHashService.extractStatusFromContent(content);
+                        logger.info(`📄 Status determined from markdown content: ${taskStatus} for task: ${title}`);
                     } else {
-                        // Fallback für unbekannte Status
+                        // Fallback to pending if no content available
                         taskStatus = 'pending';
+                        logger.warn(`⚠️ No content available, defaulting to pending for task: ${title}`);
                     }
                     
-                    logger.info(`📁 Status determined from directory path: ${status} → ${taskStatus} for task: ${title}`);
-                    
-                    // ✅ CRITICAL FIX: Status wird NUR aus dem Verzeichnispfad bestimmt
-                    // Dateiinhalt wird NICHT für Status verwendet - nur für Details wie Progress und Phasen
+                    // ✅ CRITICAL FIX: Status is determined ONLY from markdown content
+                    // Directory path is used ONLY for file location metadata, NOT for status determination
                     
                     // ✅ FIXED: Better priority detection from content
                     let taskPriority = priority;
@@ -394,6 +402,10 @@ class ManualTasksImportService {
                         category: taskCategory,
                         projectId: projectId,
                         createdBy: 'me',
+                        // ✅ NEW: Add content hash and file path for content addressable storage
+                        contentHash: content ? await this.contentHashService.generateContentHash(content) : null,
+                        filePath: filePath, // Store current file path for metadata tracking
+                        lastSyncedAt: new Date().toISOString(),
                         metadata: {
                             ...taskMetadata,
                             ...taskDetails.metadata,
@@ -453,6 +465,27 @@ class ManualTasksImportService {
                     // ✅ FIXED: Save the updated task
                     await this.taskRepository.update(task.id, task);
                     logger.debug(`💾 Saved updated task to database`);
+                    
+                    // ✅ NEW: Record import event if event store is available
+                    if (this.eventStore) {
+                        try {
+                            await this.eventStore.recordStatusChangeEvent(
+                                task.id,
+                                'pending', // Initial status for new tasks
+                                taskStatus,
+                                {
+                                    importMethod: 'manual_import',
+                                    sourceFile: filename,
+                                    sourcePath: filePath,
+                                    contentHash: taskData.contentHash
+                                },
+                                'system'
+                            );
+                            logger.debug(`📝 Recorded import event for task: ${task.id}`);
+                        } catch (eventError) {
+                            logger.warn(`⚠️ Failed to record import event for task ${task.id}:`, eventError.message);
+                        }
+                    }
                     
                     // 🆕 NEW: Trigger automatic file movement for completed tasks (NEW TASKS)
                     if (taskStatus === 'completed' && this.taskService?.statusTransitionService) {

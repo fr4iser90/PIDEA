@@ -1,5 +1,5 @@
 require('module-alias/register');
-const Logger = require('@logging/Logger');
+const { getLogger } = require('@logging/Logger');
 
 /**
  * ServiceLogger - A wrapper for service-specific logging
@@ -15,8 +15,8 @@ class ServiceLogger {
             ...options
         };
         
-        // Create logger with service name - this will handle service tagging
-        this.logger = new Logger(serviceName);
+        // Use singleton logger - nur EINE Logger-Instanz für alle Services!
+        this.logger = getLogger(serviceName);
     }
 
     /**

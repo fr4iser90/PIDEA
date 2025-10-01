@@ -26,8 +26,8 @@ Deploy the new task status management system to production and validate that all
   - Test service dependency resolution
 - [ ] **Dependencies**: Phase 4 testing completion
 
-### 5.2 Perform Comprehensive Testing with DI Services (0.5 hours)
-- [ ] **Task**: Execute comprehensive testing with existing task data using DI services
+### 5.2 Perform Testing with DI Services (0.5 hours)
+- [ ] **Task**: Execute testing with existing task data using DI services
 - [ ] **Location**: Staging environment
 - [ ] **Purpose**: Validate system works with real production data and DI integration
 - [ ] **Key Tests**:
@@ -126,11 +126,11 @@ npm run monitoring:enable
 npm run test:production:smoke
 ```
 
-### Validation Scripts
+### Validation Tests
 
-#### Status Consistency Validation
+#### Status Consistency Validation Tests
 ```javascript
-// scripts/validate-status-consistency.js
+// backend/tests/integration/TaskStatusConsistency.test.js
 const TaskStatusValidator = require('../backend/domain/services/task/TaskStatusValidator');
 const TaskRepository = require('../backend/infrastructure/database/PostgreSQLTaskRepository');
 
@@ -139,7 +139,7 @@ async function validateAllTaskStatusConsistency() {
   const taskStatusValidator = new TaskStatusValidator(
     taskRepository,
     taskContentHashService,
-    unifiedStatusExtractor
+    statusExtractor
   );
 
   const allTasks = await taskRepository.findAll();
@@ -186,9 +186,9 @@ validateAllTaskStatusConsistency()
   });
 ```
 
-#### File Movement Validation
+#### File Movement Validation Tests
 ```javascript
-// scripts/validate-file-movement.js
+// backend/tests/integration/TaskFileLocationService.test.js
 const TaskStatusTransitionService = require('../backend/domain/services/task/TaskStatusTransitionService');
 const TaskFileLocationService = require('../backend/domain/services/task/TaskFileLocationService');
 
@@ -251,9 +251,9 @@ validateFileMovementOperations()
   });
 ```
 
-#### Performance Validation
+#### Performance Validation Tests
 ```javascript
-// scripts/validate-performance.js
+// backend/tests/integration/TaskContentHashService.test.js
 const TaskContentHashService = require('../backend/domain/services/task/TaskContentHashService');
 const TaskStatusValidator = require('../backend/domain/services/task/TaskStatusValidator');
 
@@ -262,7 +262,7 @@ async function validatePerformance() {
   const taskStatusValidator = new TaskStatusValidator(
     taskRepository,
     taskContentHashService,
-    unifiedStatusExtractor
+    statusExtractor
   );
 
   const testContent = 'Test content for performance validation';
@@ -374,7 +374,7 @@ async function checkDIContainer() {
       'taskStatusValidator',
       'taskFileLocationService',
       'taskStatusTransitionService',
-      'unifiedStatusExtractor'
+      'statusExtractor'
     ];
     
     const resolvedServices = {};
@@ -527,19 +527,19 @@ async function checkTaskStatusTransitionService() {
 - **Enables**: System ready for ongoing maintenance and enhancement
 
 ## 📝 Phase Notes
-This final phase ensures the system is successfully deployed to production and all critical issues have been resolved. The comprehensive validation confirms that the modern architecture approach has eliminated the previous system's flaws while providing a robust, scalable foundation for task management.
+This final phase ensures the system is successfully deployed to production and all critical issues have been resolved. The validation confirms that the architecture approach has eliminated the previous system's flaws while providing a scalable foundation for task management.
 
 ## 🎉 Project Completion with DI Integration
 Upon successful completion of this phase, the Task Status Management System Critical Issues project will be complete, with:
-- Modern event-driven architecture implemented
+- Event-driven architecture implemented
 - Content addressable storage providing data integrity
 - Single source of truth established from markdown content
 - Reliable file movement operations
-- Comprehensive testing and documentation
+- Testing and documentation
 - Production deployment with monitoring
 - **Full DI Integration**: All services managed through dependency injection
 - **Service Registry**: Centralized service management and resolution
 - **Automatic Dependencies**: No manual service instantiation
 - **Health Monitoring**: DI container health checks and validation
 
-The system will be ready for ongoing maintenance and future enhancements with a robust, scalable DI-based architecture.
+The system will be ready for ongoing maintenance and future enhancements with a scalable DI-based architecture.

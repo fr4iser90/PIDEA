@@ -1,16 +1,21 @@
 const Logger = require('@logging/Logger');
 const fs = require('fs').promises;
 const path = require('path');
+const TaskFileLocationService = require('@domain/services/task/TaskFileLocationService');
+const TaskEventStore = require('@domain/services/task/TaskEventStore');
 
 /**
  * TaskStatusTransitionService - Handles automatic task status transitions
  * Automatically moves tasks between status directories and updates database
+ * Uses TaskFileLocationService for consistent path management
  */
 class TaskStatusTransitionService {
-    constructor(taskRepository, fileSystemService, eventBus = null) {
+    constructor(taskRepository, fileSystemService, eventBus = null, fileLocationService = null, eventStore = null) {
         this.taskRepository = taskRepository;
         this.fileSystemService = fileSystemService;
         this.eventBus = eventBus;
+        this.fileLocationService = fileLocationService || new TaskFileLocationService(fileSystemService);
+        this.eventStore = eventStore;
         this.logger = new Logger('TaskStatusTransitionService');
     }
 
@@ -39,22 +44,33 @@ class TaskStatusTransitionService {
             task.updateStatus('in_progress');
             await this.taskRepository.update(taskId, task);
 
-            // 4. Normalize task name for directory path
-            const taskName = this.normalizeTaskName(task.title || 'unknown-task');
-            
-            // 5. Handle priority directory mapping (high -> high, medium -> medium, etc.)
-            const priorityDir = this.mapPriorityToDirectory(task.priority.value);
-            
-            // 6. Move files from pending/ to in-progress/
-            // Note: pending has priority subdirs, in-progress goes directly to category
-            const projectRoot = process.cwd();
-            const oldPath = path.join(projectRoot, `docs/09_roadmap/pending/${priorityDir}/${task.category}/${taskName}/`);
-            const newPath = path.join(projectRoot, `docs/09_roadmap/in-progress/${task.category}/${taskName}/`);
+            // 4. Use file location service for consistent path management
+            const oldPath = await this.fileLocationService.findExistingTaskFile(task);
+            const newPath = this.fileLocationService.getTaskFilePathForStatus(task, 'in_progress');
 
-            await this.moveTaskFiles(oldPath, newPath, taskId);
+            if (oldPath) {
+                // 5. Move files using file location service
+                const moveResult = await this.fileLocationService.moveTaskFiles(oldPath, newPath);
+                
+                // 6. Update file path in database
+                await this.taskRepository.update(taskId, {
+                    filePath: newPath,
+                    lastSyncedAt: new Date().toISOString()
+                });
 
-            // 5. Update file references in database
-            await this.updateFileReferences(taskId, oldPath, newPath);
+                // 7. Record file movement event
+                if (this.eventStore) {
+                    await this.eventStore.recordFileMovementEvent(
+                        taskId,
+                        oldPath,
+                        newPath,
+                        { reason: 'Status transition to in_progress' },
+                        'system'
+                    );
+                }
+            } else {
+                this.logger.warn('⚠️ No existing task files found, skipping file movement', { taskId });
+            }
 
             // 6. Emit event
             if (this.eventBus) {

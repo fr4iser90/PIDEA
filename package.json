@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "setup": "node setup.js",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently --prefix none \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run start --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:postgres": "docker-compose -f docker-compose.dev.yml up -d",

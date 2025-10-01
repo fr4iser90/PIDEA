@@ -13,6 +13,16 @@ const LOG_LEVELS = {
     FAILURE: 'failure'
 };
 
+// Log Level Abbreviations
+const LOG_LEVEL_ABBREV = {
+    [LOG_LEVELS.ERROR]: '[E]',
+    [LOG_LEVELS.WARN]: '[W]',
+    [LOG_LEVELS.INFO]: '[I]',
+    [LOG_LEVELS.DEBUG]: '[D]',
+    [LOG_LEVELS.SUCCESS]: '[S]',
+    [LOG_LEVELS.FAILURE]: '[F]'
+};
+
 // Log Level Priorities (higher number = higher priority)
 const LOG_LEVEL_PRIORITIES = {
     [LOG_LEVELS.ERROR]: 5,
@@ -51,6 +61,15 @@ const LOG_FORMATS = {
     FILE: 'file',
     JSON: 'json',
     SIMPLE: 'simple'
+};
+
+// Time Format Patterns
+const TIME_FORMATS = {
+    CONSOLE: 'HH:mm:ss',           // 14:30:25 (8 chars)
+    FILE: 'YYYY-MM-DD HH:mm:ss',   // Full timestamp for files
+    COMPACT: 'HH:mm',              // 14:30 (5 chars)
+    VERBOSE: 'YYYY-MM-DD HH:mm:ss.SSS', // With milliseconds
+    RELATIVE: 'relative'           // Relative time format
 };
 
 // Emoji Mappings
@@ -162,11 +181,13 @@ const LOG_ROTATION = {
 // Export all constants
 module.exports = {
     LOG_LEVELS,
+    LOG_LEVEL_ABBREV,
     LOG_LEVEL_PRIORITIES,
     DEFAULT_LOG_LEVELS,
     LOG_FILES,
     LOG_DIRECTORIES,
     LOG_FORMATS,
+    TIME_FORMATS,
     LOG_EMOJIS,
     SENSITIVE_PATTERNS,
     SENSITIVE_KEYS,

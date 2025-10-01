@@ -94,16 +94,9 @@ class Application {
   }
 
   setupLogger() {
-    return {
-      info: (message, ...args) => logger.info(message, ...args),
-      error: (message, ...args) => logger.error(message, ...args),
-      debug: (message, ...args) => {
-        if (!this.autoSecurityManager.isProduction()) {
-          logger.debug(message, ...args);
-        }
-      },
-      warn: (message, ...args) => logger.warn(message, ...args)
-    };
+    // Use singleton logger - nur EINE Logger-Instanz für die ganze Anwendung!
+    const { getLogger } = require('@logging/Logger');
+    return getLogger('Application');
   }
 
   async initialize() {
@@ -243,6 +236,9 @@ class Application {
     
     // Register the logger service with the actual logger instance
     this.serviceRegistry.getContainer().registerSingleton('logger', this.logger);
+    
+    // Use the DI logger instead of the local logger
+    this.logger = this.serviceRegistry.getService('logger');
     
     // Replace the DI container's database connection with the properly configured one
     this.serviceRegistry.getContainer().registerSingleton('databaseConnection', this.databaseConnection);

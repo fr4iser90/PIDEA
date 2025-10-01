@@ -29,7 +29,8 @@ class SQLTranslator {
       throw new Error('Invalid SQL query provided to translator');
     }
 
-    logger.debug(`🔄 Translating SQL: ${postgresSQL.substring(0, 100)}...`);
+    // Reduced logging - only log in debug mode
+    logger.debug(`🔄 Translating SQL statement`);
 
     // Check cache first
     const cacheKey = this._generateCacheKey(postgresSQL, params);
@@ -60,7 +61,7 @@ class SQLTranslator {
         this.translationCache.delete(firstKey);
       }
 
-      logger.debug(`🔄 SQL Translation result: ${postgresSQL.substring(0, 100)}... → ${translatedSQL.substring(0, 100)}...`);
+      logger.debug(`🔄 SQL Translation completed`);
       
       // Debug: Check if TIMESTAMP WITH TIME ZONE was converted
       if (postgresSQL.includes('TIMESTAMP WITH TIME ZONE') && !translatedSQL.includes('TIMESTAMP WITH TIME ZONE')) {

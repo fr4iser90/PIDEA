@@ -9,7 +9,7 @@
 - **Dependencies**: Phase 1 completion
 
 ## 🎯 Phase Objectives
-Implement the core status management logic with unified markdown parsing, status validation, and content hash integration.
+Implement the core status management logic with markdown parsing, status validation, and content hash integration.
 
 ## 📋 Phase Tasks
 
@@ -19,12 +19,12 @@ Implement the core status management logic with unified markdown parsing, status
 - [ ] **Purpose**: Establish single source of truth for task status from markdown content
 - [ ] **Key Changes**:
   - Remove directory path status detection (lines 276-290)
-  - Implement unified status extraction from markdown content
-  - Replace 12+ regex patterns with single, robust pattern
+  - Implement status extraction from markdown content
+  - Replace 12+ regex patterns with single pattern
   - Integrate content hash generation via DI
   - Remove conflicting status sources
   - Update constructor to use DI services
-- [ ] **Dependencies**: TaskContentHashService, UnifiedStatusExtractor from DI
+- [ ] **Dependencies**: TaskContentHashService, StatusExtractor from DI
 
 ### 2.2 Create TaskStatusValidator Service (2 hours)
 - [ ] **Task**: Implement status consistency validation service with DI
@@ -36,12 +36,12 @@ Implement the core status management logic with unified markdown parsing, status
   - Status synchronization
   - Validation reporting
   - DI-based constructor with automatic dependency injection
-- [ ] **Dependencies**: TaskContentHashService, TaskRepository, UnifiedStatusExtractor from DI
+- [ ] **Dependencies**: TaskContentHashService, TaskRepository, StatusExtractor from DI
 
-### 2.3 Implement Unified Status Extraction (2 hours)
-- [ ] **Task**: Create single, robust status extraction from markdown content
-- [ ] **Location**: `backend/domain/services/task/UnifiedStatusExtractor.js`
-- [ ] **Purpose**: Replace complex regex patterns with unified approach
+### 2.3 Implement Status Extraction (2 hours)
+- [ ] **Task**: Create single status extraction from markdown content
+- [ ] **Location**: `backend/domain/services/task/StatusExtractor.js`
+- [ ] **Purpose**: Replace complex regex patterns with single approach
 - [ ] **Key Features**:
   - Single regex pattern for status detection
   - Support for all status formats (pending, in_progress, completed, etc.)
@@ -73,16 +73,16 @@ registerDomainServices() {
     // ... existing services from Phase 1 ...
 
     // TaskStatusValidator - Status consistency validation
-    this.container.register('taskStatusValidator', (taskRepository, taskContentHashService, unifiedStatusExtractor) => {
+    this.container.register('taskStatusValidator', (taskRepository, taskContentHashService, statusExtractor) => {
         const TaskStatusValidator = require('@domain/services/task/TaskStatusValidator');
-        return new TaskStatusValidator(taskRepository, taskContentHashService, unifiedStatusExtractor);
-    }, { singleton: true, dependencies: ['taskRepository', 'taskContentHashService', 'unifiedStatusExtractor'] });
+        return new TaskStatusValidator(taskRepository, taskContentHashService, statusExtractor);
+    }, { singleton: true, dependencies: ['taskRepository', 'taskContentHashService', 'statusExtractor'] });
 
     // Update ManualTasksImportService with new dependencies
-    this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository, fileSystemService, taskContentHashService, unifiedStatusExtractor) => {
+    this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository, fileSystemService, taskContentHashService, statusExtractor) => {
         const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
-        return new ManualTasksImportService(browserManager, taskService, taskRepository, fileSystemService, taskContentHashService, unifiedStatusExtractor);
-    }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository', 'fileSystemService', 'taskContentHashService', 'unifiedStatusExtractor'] });
+        return new ManualTasksImportService(browserManager, taskService, taskRepository, fileSystemService, taskContentHashService, statusExtractor);
+    }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository', 'fileSystemService', 'taskContentHashService', 'statusExtractor'] });
 
     // Update TaskService with new dependencies
     this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService, fileSystemService, eventBus, taskContentHashService, taskStatusValidator) => {
@@ -92,13 +92,13 @@ registerDomainServices() {
 }
 ```
 
-### UnifiedStatusExtractor Implementation
+### StatusExtractor Implementation
 ```javascript
-class UnifiedStatusExtractor {
+class StatusExtractor {
   constructor() {
-    this.logger = new Logger('UnifiedStatusExtractor');
+    this.logger = new Logger('StatusExtractor');
     
-    // Single, robust regex pattern for all status formats
+    // Single regex pattern for all status formats
     this.statusPattern = /(?:Status|status|\*\*Status\*\*).*?(?:✅|❌|⏳|🔄|🚫|🎉)?\s*([A-Za-z_\-]+)/i;
     
     // Status mapping for normalization
@@ -140,10 +140,10 @@ class UnifiedStatusExtractor {
 ```javascript
 // Key changes to ManualTasksImportService.js
 class ManualTasksImportService {
-  constructor(browserManager, taskService, taskRepository, fileSystemService, taskContentHashService, unifiedStatusExtractor) {
+  constructor(browserManager, taskService, taskRepository, fileSystemService, taskContentHashService, statusExtractor) {
     // ... existing constructor code ...
     this.taskContentHashService = taskContentHashService;
-    this.unifiedStatusExtractor = unifiedStatusExtractor;
+    this.statusExtractor = statusExtractor;
   }
 
   async _importFromWorkspace(workspacePath, projectId) {
@@ -151,7 +151,7 @@ class ManualTasksImportService {
 
     // ✅ CRITICAL FIX: Single source of truth - markdown content only
     // Remove directory-based status detection completely
-    const taskStatus = this.unifiedStatusExtractor.extractStatusFromContent(content);
+    const taskStatus = this.statusExtractor.extractStatusFromContent(content);
     
     // Generate content hash for data integrity
     const contentHash = await this.taskContentHashService.generateContentHash(content);
@@ -162,12 +162,12 @@ class ManualTasksImportService {
     // ... rest of the method with contentHash integration ...
   }
 
-  // Remove the old status detection method and replace with unified approach
+  // Remove the old status detection method and replace with single approach
   async extractTaskDetailsFromMarkdown(content, filename) {
     // ... existing code ...
     
-    // Use unified status extraction
-    const status = this.unifiedStatusExtractor.extractStatusFromContent(content);
+    // Use status extraction
+    const status = this.statusExtractor.extractStatusFromContent(content);
     
     // ... rest of the method ...
   }
@@ -177,10 +177,10 @@ class ManualTasksImportService {
 ### TaskStatusValidator Implementation
 ```javascript
 class TaskStatusValidator {
-  constructor(taskRepository, taskContentHashService, unifiedStatusExtractor) {
+  constructor(taskRepository, taskContentHashService, statusExtractor) {
     this.taskRepository = taskRepository;
     this.taskContentHashService = taskContentHashService;
-    this.unifiedStatusExtractor = unifiedStatusExtractor;
+    this.statusExtractor = statusExtractor;
     this.logger = new Logger('TaskStatusValidator');
   }
 
@@ -193,7 +193,7 @@ class TaskStatusValidator {
 
       // Get current file content
       const fileContent = await this.fileSystemService.readFile(task.filePath);
-      const fileStatus = this.unifiedStatusExtractor.extractStatusFromContent(fileContent);
+      const fileStatus = this.statusExtractor.extractStatusFromContent(fileContent);
       
       // Compare with database status
       const isConsistent = task.status === fileStatus;
@@ -245,7 +245,7 @@ class TaskStatusValidator {
 ## 🧪 Testing Strategy
 
 ### Unit Tests with DI Integration
-- [ ] **UnifiedStatusExtractor**: Test status extraction from various markdown formats
+- [ ] **StatusExtractor**: Test status extraction from various markdown formats
 - [ ] **TaskStatusValidator**: Test consistency validation and synchronization with DI services
 - [ ] **ManualTasksImportService**: Test refactored status detection logic with DI
 - [ ] **Mock Requirements**: DI container mocking, service resolution testing
@@ -263,19 +263,19 @@ describe('TaskStatusValidator with DI', () => {
   let mockContainer;
   let mockTaskRepository;
   let mockTaskContentHashService;
-  let mockUnifiedStatusExtractor;
+  let mockStatusExtractor;
 
   beforeEach(() => {
     mockTaskRepository = { findById: jest.fn(), update: jest.fn() };
     mockTaskContentHashService = { generateContentHash: jest.fn() };
-    mockUnifiedStatusExtractor = { extractStatusFromContent: jest.fn() };
+    mockStatusExtractor = { extractStatusFromContent: jest.fn() };
     
     mockContainer = {
       resolve: jest.fn((serviceName) => {
         const services = {
           'taskRepository': mockTaskRepository,
           'taskContentHashService': mockTaskContentHashService,
-          'unifiedStatusExtractor': mockUnifiedStatusExtractor
+          'statusExtractor': mockStatusExtractor
         };
         return services[serviceName];
       })
@@ -287,7 +287,7 @@ describe('TaskStatusValidator with DI', () => {
     expect(validator).toBeDefined();
     expect(mockContainer.resolve).toHaveBeenCalledWith('taskRepository');
     expect(mockContainer.resolve).toHaveBeenCalledWith('taskContentHashService');
-    expect(mockContainer.resolve).toHaveBeenCalledWith('unifiedStatusExtractor');
+    expect(mockContainer.resolve).toHaveBeenCalledWith('statusExtractor');
   });
 });
 ```
@@ -295,7 +295,7 @@ describe('TaskStatusValidator with DI', () => {
 ## 📊 Success Criteria
 - [ ] ManualTasksImportService refactored to use markdown-only status detection
 - [ ] TaskStatusValidator service implemented with consistency checks
-- [ ] UnifiedStatusExtractor implemented with single regex pattern
+- [ ] StatusExtractor implemented with single regex pattern
 - [ ] **DI Integration**: All services registered in ServiceRegistry with proper dependencies
 - [ ] **Service Resolution**: Automatic dependency resolution working for all services
 - [ ] Content hash validation integrated into task operations
@@ -313,7 +313,7 @@ describe('TaskStatusValidator with DI', () => {
 - **Enables**: Integration and file movement fixes in Phase 3
 
 ## 📝 Phase Notes
-This phase eliminates the critical architectural flaw of conflicting status sources by establishing markdown content as the single source of truth. The unified status extraction replaces the complex, conflicting regex patterns with a single, robust approach.
+This phase eliminates the critical architectural flaw of conflicting status sources by establishing markdown content as the single source of truth. The status extraction replaces the complex, conflicting regex patterns with a single approach.
 
 ## 🚀 Next Phase Preview
 Phase 3 will integrate these core services with the existing system and fix the file movement logic in TaskStatusTransitionService.

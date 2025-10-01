@@ -4,11 +4,14 @@
  */
 
 const path = require('path');
+const Logger = require('@logging/Logger');
 const FrameworkLoader = require('./FrameworkLoader');
 const FrameworkManager = require('./FrameworkManager');
 const FrameworkValidator = require('./FrameworkValidator');
 const FrameworkConfig = require('./FrameworkConfig');
 const FrameworkStepRegistry = require('./FrameworkStepRegistry');
+
+const logger = new Logger('FrameworkInfrastructure');
 
 // Create singleton instances
 const frameworkLoader = new FrameworkLoader();
@@ -22,7 +25,7 @@ const frameworkStepRegistry = new FrameworkStepRegistry();
  */
 async function initializeFrameworkInfrastructure(stepRegistry = null) {
   try {
-    console.log('🚀 Initializing Framework Infrastructure...');
+    logger.info('🚀 Initializing Framework Infrastructure...');
     
     const initializationResults = {
       config: false,
@@ -36,33 +39,33 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
     try {
       await frameworkConfig.initialize();
       initializationResults.config = true;
-      console.log('✅ Framework Config initialized');
+      logger.info('✅ Framework Config initialized');
     } catch (error) {
-      console.warn('⚠️ Framework Config initialization failed:', error.message);
+      logger.warn('⚠️ Framework Config initialization failed:', error.message);
     }
     
     try {
       await frameworkValidator.initialize();
       initializationResults.validator = true;
-      console.log('✅ Framework Validator initialized');
+      logger.info('✅ Framework Validator initialized');
     } catch (error) {
-      console.warn('⚠️ Framework Validator initialization failed:', error.message);
+      logger.warn('⚠️ Framework Validator initialization failed:', error.message);
     }
     
     try {
       await frameworkLoader.initialize();
       initializationResults.loader = true;
-      console.log('✅ Framework Loader initialized');
+      logger.info('✅ Framework Loader initialized');
     } catch (error) {
-      console.warn('⚠️ Framework Loader initialization failed:', error.message);
+      logger.warn('⚠️ Framework Loader initialization failed:', error.message);
     }
     
     try {
       await frameworkManager.initialize();
       initializationResults.manager = true;
-      console.log('✅ Framework Manager initialized');
+      logger.info('✅ Framework Manager initialized');
     } catch (error) {
-      console.warn('⚠️ Framework Manager initialization failed:', error.message);
+      logger.warn('⚠️ Framework Manager initialization failed:', error.message);
     }
     
     // Initialize framework step registry if step registry is provided
@@ -71,9 +74,9 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
         const frameworkBasePath = path.join(__dirname, '../../framework');
         await frameworkStepRegistry.initialize(frameworkBasePath, stepRegistry);
         initializationResults.stepRegistry = true;
-        console.log('✅ Framework Step Registry initialized');
+        logger.info('✅ Framework Step Registry initialized');
       } catch (error) {
-        console.warn('⚠️ Framework Step Registry initialization failed:', error.message);
+        logger.warn('⚠️ Framework Step Registry initialization failed:', error.message);
       }
     }
     
@@ -85,8 +88,8 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
       throw new Error(`Critical framework components failed to initialize: ${criticalComponents.filter(c => !initializationResults[c]).join(', ')}`);
     }
     
-    console.log('✅ Framework Infrastructure initialized successfully');
-    console.log('📊 Initialization results:', initializationResults);
+    logger.info('✅ Framework Infrastructure initialized successfully');
+    logger.info('📊 Initialization results:', initializationResults);
     
     return {
       loader: frameworkLoader,
@@ -97,7 +100,7 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
       initializationResults
     };
   } catch (error) {
-    console.error('❌ Failed to initialize Framework Infrastructure:', error.message);
+    logger.error('❌ Failed to initialize Framework Infrastructure:', error.message);
     throw error;
   }
 }

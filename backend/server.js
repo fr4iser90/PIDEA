@@ -2,8 +2,8 @@
 require('module-alias/register');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const Application = require('./Application');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('Server');
+const { getLogger } = require('@logging/Logger');
+const logger = getLogger('Server');
 
 function getParam(n, dbType) {
   return dbType === 'postgresql' ? `$${n}` : '?';

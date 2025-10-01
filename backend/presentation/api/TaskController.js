@@ -475,6 +475,141 @@ class TaskController {
             });
         }
     }
+    /**
+     * POST /api/tasks/sync-status - Synchronize task status between markdown and database
+     */
+    async syncTaskStatus(req, res) {
+        try {
+            const { taskId } = req.body;
+            
+            if (!taskId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Task ID is required'
+                });
+            }
+
+            this.logger.info(`Syncing task status for task: ${taskId}`);
+
+            // Use Application Service for status synchronization
+            const result = await this.taskApplicationService.syncTaskStatus(taskId);
+
+            res.json({
+                success: true,
+                data: result,
+                message: 'Task status synchronized successfully'
+            });
+
+        } catch (error) {
+            this.logger.error('❌ Failed to sync task status:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to sync task status',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * POST /api/tasks/validate-consistency - Validate task status consistency
+     */
+    async validateTaskConsistency(req, res) {
+        try {
+            const { taskId, autoFix = false } = req.body;
+            
+            if (!taskId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Task ID is required'
+                });
+            }
+
+            this.logger.info(`Validating task consistency for task: ${taskId}`);
+
+            // Use Application Service for consistency validation
+            const result = await this.taskApplicationService.validateTaskConsistency(taskId, { autoFix });
+
+            res.json({
+                success: true,
+                data: result,
+                message: 'Task consistency validation completed'
+            });
+
+        } catch (error) {
+            this.logger.error('❌ Failed to validate task consistency:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to validate task consistency',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * GET /api/tasks/validation-statistics - Get validation statistics for all tasks
+     */
+    async getValidationStatistics(req, res) {
+        try {
+            const { projectId, category } = req.query;
+
+            this.logger.info('Getting validation statistics');
+
+            // Use Application Service for validation statistics
+            const stats = await this.taskApplicationService.getValidationStatistics({
+                projectId,
+                category
+            });
+
+            res.json({
+                success: true,
+                data: stats,
+                message: 'Validation statistics retrieved successfully'
+            });
+
+        } catch (error) {
+            this.logger.error('❌ Failed to get validation statistics:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get validation statistics',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * POST /api/tasks/batch-sync - Synchronize multiple tasks
+     */
+    async batchSyncTasks(req, res) {
+        try {
+            const { taskIds, autoFix = false } = req.body;
+            
+            if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Task IDs array is required'
+                });
+            }
+
+            this.logger.info(`Batch syncing ${taskIds.length} tasks`);
+
+            // Use Application Service for batch synchronization
+            const result = await this.taskApplicationService.batchSyncTasks(taskIds, { autoFix });
+
+            res.json({
+                success: true,
+                data: result,
+                message: `Batch synchronization completed for ${taskIds.length} tasks`
+            });
+
+        } catch (error) {
+            this.logger.error('❌ Failed to batch sync tasks:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to batch sync tasks',
+                message: error.message
+            });
+        }
+    }
 }
 
-module.exports = TaskController; 
+module.exports = TaskController;

@@ -9,18 +9,18 @@
 - **Dependencies**: Phase 3 completion
 
 ## 🎯 Phase Objectives
-Ensure comprehensive testing coverage and complete documentation for the new task status management system.
+Ensure testing coverage and complete documentation for the new task status management system.
 
 ## 📋 Phase Tasks
 
-### 4.1 Write Comprehensive Unit Tests with DI Integration (1.5 hours)
+### 4.1 Write Unit Tests with DI Integration (1.5 hours)
 - [ ] **Task**: Create unit tests for all new and modified services with DI mocking
 - [ ] **Location**: 
   - `backend/tests/unit/TaskContentHashService.test.js`
   - `backend/tests/unit/TaskEventStore.test.js`
   - `backend/tests/unit/TaskStatusValidator.test.js`
   - `backend/tests/unit/TaskFileLocationService.test.js`
-  - `backend/tests/unit/UnifiedStatusExtractor.test.js`
+  - `backend/tests/unit/StatusExtractor.test.js`
 - [ ] **Purpose**: Ensure 90%+ test coverage for all new services with DI integration
 - [ ] **Key Features**:
   - Test all public methods with DI service mocking
@@ -69,7 +69,7 @@ describe('TaskStatusValidator with DI Integration', () => {
   let mockContainer;
   let mockTaskRepository;
   let mockTaskContentHashService;
-  let mockUnifiedStatusExtractor;
+  let mockStatusExtractor;
 
   beforeEach(() => {
     mockTaskRepository = {
@@ -81,7 +81,7 @@ describe('TaskStatusValidator with DI Integration', () => {
       generateContentHash: jest.fn().mockResolvedValue('test-hash-123')
     };
     
-    mockUnifiedStatusExtractor = {
+    mockStatusExtractor = {
       extractStatusFromContent: jest.fn()
     };
     
@@ -91,7 +91,7 @@ describe('TaskStatusValidator with DI Integration', () => {
         const services = {
           'taskRepository': mockTaskRepository,
           'taskContentHashService': mockTaskContentHashService,
-          'unifiedStatusExtractor': mockUnifiedStatusExtractor
+          'statusExtractor': mockStatusExtractor
         };
         return services[serviceName];
       })
@@ -103,7 +103,7 @@ describe('TaskStatusValidator with DI Integration', () => {
     expect(validator).toBeDefined();
     expect(mockContainer.resolve).toHaveBeenCalledWith('taskRepository');
     expect(mockContainer.resolve).toHaveBeenCalledWith('taskContentHashService');
-    expect(mockContainer.resolve).toHaveBeenCalledWith('unifiedStatusExtractor');
+    expect(mockContainer.resolve).toHaveBeenCalledWith('statusExtractor');
   });
 
   it('should validate task status consistency with DI services', async () => {
@@ -112,14 +112,14 @@ describe('TaskStatusValidator with DI Integration', () => {
     const fileContent = 'Status: pending';
     
     mockTaskRepository.findById.mockResolvedValue(task);
-    mockUnifiedStatusExtractor.extractStatusFromContent.mockReturnValue('pending');
+    mockStatusExtractor.extractStatusFromContent.mockReturnValue('pending');
     
     const validator = mockContainer.resolve('taskStatusValidator');
     const result = await validator.validateTaskStatusConsistency(taskId);
     
     expect(result.isConsistent).toBe(true);
     expect(mockTaskRepository.findById).toHaveBeenCalledWith(taskId);
-    expect(mockUnifiedStatusExtractor.extractStatusFromContent).toHaveBeenCalledWith(fileContent);
+    expect(mockStatusExtractor.extractStatusFromContent).toHaveBeenCalledWith(fileContent);
   });
 });
 ```
@@ -168,7 +168,7 @@ describe('TaskStatusValidator', () => {
   let service;
   let mockTaskRepository;
   let mockTaskContentHashService;
-  let mockUnifiedStatusExtractor;
+  let mockStatusExtractor;
   let mockFileSystemService;
 
   beforeEach(() => {
@@ -181,7 +181,7 @@ describe('TaskStatusValidator', () => {
       generateContentHash: jest.fn().mockResolvedValue('test-hash-123')
     };
     
-    mockUnifiedStatusExtractor = {
+    mockStatusExtractor = {
       extractStatusFromContent: jest.fn()
     };
     
@@ -204,7 +204,7 @@ describe('TaskStatusValidator', () => {
       
       mockTaskRepository.findById.mockResolvedValue(task);
       mockFileSystemService.readFile.mockResolvedValue(fileContent);
-      mockUnifiedStatusExtractor.extractStatusFromContent.mockReturnValue('pending');
+      mockStatusExtractor.extractStatusFromContent.mockReturnValue('pending');
       
       const result = await service.validateTaskStatusConsistency(taskId);
       
@@ -220,7 +220,7 @@ describe('TaskStatusValidator', () => {
       
       mockTaskRepository.findById.mockResolvedValue(task);
       mockFileSystemService.readFile.mockResolvedValue(fileContent);
-      mockUnifiedStatusExtractor.extractStatusFromContent.mockReturnValue('completed');
+      mockStatusExtractor.extractStatusFromContent.mockReturnValue('completed');
       
       const result = await service.validateTaskStatusConsistency(taskId);
       
@@ -245,7 +245,7 @@ describe('TaskStatusValidator', () => {
       
       mockTaskRepository.findById.mockResolvedValue(task);
       mockFileSystemService.readFile.mockResolvedValue(fileContent);
-      mockUnifiedStatusExtractor.extractStatusFromContent.mockReturnValue('completed');
+      mockStatusExtractor.extractStatusFromContent.mockReturnValue('completed');
       mockTaskRepository.update.mockResolvedValue();
       
       const result = await service.synchronizeTaskStatus(taskId, true);
@@ -262,13 +262,13 @@ describe('TaskStatusValidator', () => {
 });
 ```
 
-#### UnifiedStatusExtractor Tests
+#### StatusExtractor Tests
 ```javascript
-describe('UnifiedStatusExtractor', () => {
+describe('StatusExtractor', () => {
   let service;
 
   beforeEach(() => {
-    service = new UnifiedStatusExtractor();
+    service = new StatusExtractor();
   });
 
   describe('extractStatusFromContent', () => {
@@ -347,7 +347,7 @@ describe('TaskStatusConsistency Integration', () => {
     taskStatusValidator = new TaskStatusValidator(
       taskRepository,
       taskContentHashService,
-      new UnifiedStatusExtractor()
+      new StatusExtractor()
     );
   });
 
@@ -417,7 +417,7 @@ This is a test task for integration testing.
 # Task Status Management System with DI Integration
 
 ## Overview
-The Task Status Management System provides a robust, event-driven approach to managing task status with content addressable storage, single source of truth from markdown files, and full dependency injection integration.
+The Task Status Management System provides an event-driven approach to managing task status with content addressable storage, single source of truth from markdown files, and full dependency injection integration.
 
 ## Architecture with DI Integration
 
@@ -426,7 +426,7 @@ The Task Status Management System provides a robust, event-driven approach to ma
 - **TaskEventStore**: Event sourcing for all task status changes
 - **TaskStatusValidator**: Consistency validation between markdown and database
 - **TaskFileLocationService**: Reliable path resolution and file management
-- **UnifiedStatusExtractor**: Single regex pattern for status extraction
+- **StatusExtractor**: Single regex pattern for status extraction
 - **TaskStatusTransitionService**: File movement and status transitions
 
 ### DI Service Registration
@@ -445,7 +445,7 @@ this.container.register('taskContentHashService', (fileSystemService) => {
 - **Content Addressable Storage**: Files identified by content hash, not path
 - **Event Sourcing**: Complete audit trail of all status changes
 - **Consistency Validation**: Automatic detection and resolution of status conflicts
-- **Reliable File Movement**: Robust path resolution and file operations
+- **Reliable File Movement**: Path resolution and file operations
 - **Dependency Injection**: Automatic service resolution and lifecycle management
 
 ## API Endpoints
@@ -540,7 +540,7 @@ const taskStatusValidator = serviceRegistry.getService('taskStatusValidator');
 - **Enables**: Production deployment in Phase 5
 
 ## 📝 Phase Notes
-This phase ensures the system is robust, well-tested, and properly documented. Comprehensive testing validates all functionality, while documentation enables smooth adoption and maintenance.
+This phase ensures the system is well-tested and properly documented. Testing validates all functionality, while documentation enables smooth adoption and maintenance.
 
 ## 🚀 Next Phase Preview
 Phase 5 will focus on production deployment and validation to ensure the system works correctly in the live environment.

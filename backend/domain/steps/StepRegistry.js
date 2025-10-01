@@ -205,8 +205,8 @@ class StepRegistry {
           await this.registerStep(stepName, config, category, executor);
           loadedCount++;
         } catch (error) {
-          this.logger.error(`❌ Failed to load step "${file}" from category "${category}":`, error.message);
-          this.logger.error(`❌ Full error stack:`, error.stack);
+          this.logger.error(`❌ Failed to load step "${file}" from category "${category}": ${error.message}`);
+          this.logger.error(`❌ Full error stack: ${error.stack}`);
         }
       }
       

@@ -92,7 +92,7 @@ class DatabaseMigrationService {
     async getAppliedMigrations() {
         try {
             const result = await this.databaseConnection.query(
-                'SELECT migration_name FROM migrations WHERE status = $1 ORDER BY applied_at',
+                'SELECT migration_name FROM migrations WHERE status = ? ORDER BY applied_at',
                 ['applied']
             );
             
@@ -124,16 +124,7 @@ class DatabaseMigrationService {
                     const statement = statements[i];
                     if (statement.trim()) {
                         try {
-                            this.logger.info(`🔄 Processing statement ${i + 1} (${statement.length} chars)`);
                             const translation = this.databaseConnection.sqlTranslator.translate(statement);
-                            this.logger.info(`🔄 Translated statement ${i + 1} (${translation.sql.length} chars)`);
-                            this.logger.info(`🔄 Full translated SQL: ${translation.sql}`);
-                            
-                            // Check if table already exists before creating
-                            if (translation.sql.toUpperCase().includes('CREATE TABLE IF NOT EXISTS')) {
-                                this.logger.info(`🔄 Using IF NOT EXISTS - table creation should be safe`);
-                            }
-                            
                             await this.databaseConnection.dbConnection.execute(translation.sql, translation.params);
                         } catch (error) {
                             this.logger.warn(`⚠️ Statement ${i + 1} failed: ${error.message}`);
@@ -205,12 +196,8 @@ class DatabaseMigrationService {
             .filter(stmt => stmt.length > 0)
             .map(stmt => stmt.endsWith(')') ? stmt + ';' : stmt);
         
-        // Log the first few statements for debugging
-        statements.forEach((stmt, index) => {
-            if (index < 3) {
-                this.logger.info(`📝 Statement ${index + 1} (${stmt.length} chars): ${stmt.substring(0, 200)}...`);
-            }
-        });
+        // Log only the count of statements
+        this.logger.debug(`📝 Parsed ${statements.length} SQL statements`);
         
         return statements;
     }

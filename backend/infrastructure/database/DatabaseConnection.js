@@ -129,7 +129,7 @@ class DatabaseConnection {
     // If using SQLite, translate PostgreSQL syntax to SQLite
     if (this.type === 'sqlite' && this.sqlTranslator.canTranslate(sql)) {
       const translation = this.sqlTranslator.translate(sql, params);
-      logger.debug(`Executing translated SQL: ${translation.sql.substring(0, 100)}...`);
+      logger.debug(`Executing translated SQL`);
       return await this.dbConnection.execute(translation.sql, translation.params);
     }
 
