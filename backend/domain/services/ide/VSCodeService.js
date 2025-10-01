@@ -3,6 +3,9 @@ const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
 const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
 const VSCodeExtensionManager = require('@external/VSCodeExtensionManager');
+const VersionDetector = require('@infrastructure/external/ide/VersionDetector');
+const Logger = require('@logging/Logger');
+const logger = new Logger('VSCodeIDEService');
 
 
 class VSCodeIDEService {
@@ -17,6 +20,7 @@ class VSCodeIDEService {
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, 'vscode');
     this.extensionManager = new VSCodeExtensionManager();
+    this.versionDetector = new VersionDetector();
     
     // Listen for IDE changes
     if (this.eventBus) {
@@ -42,24 +46,42 @@ class VSCodeIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    logger.info('extractChatHistory() - Active port:', activePort);
+    logger.info(`extractChatHistory() - Active port: ${activePort}`);
     
-    if (activePort) {
-      try {
-        // Switch browser to active port if needed
-        const currentBrowserPort = this.browserManager.getCurrentPort();
-        logger.info('extractChatHistory() - Current browser port:', currentBrowserPort);
-        
-        if (currentBrowserPort !== activePort) {
-          logger.info('extractChatHistory() - Switching browser to active port:', activePort);
-          await this.browserManager.switchToPort(activePort);
-        }
-      } catch (error) {
-        logger.error('extractChatHistory() - Failed to switch browser port:', error.message);
-      }
+    if (!activePort) {
+      logger.warn('extractChatHistory() - No active port available');
+      return [];
     }
     
-    return await this.chatHistoryExtractor.extractChatHistory();
+    try {
+      // Switch browser to active port if needed
+      const currentBrowserPort = this.browserManager.currentPort;
+      logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
+      
+      if (currentBrowserPort !== activePort) {
+        logger.info('extractChatHistory() - Switching browser to active port:', activePort);
+        await this.browserManager.switchToPort(activePort);
+      }
+      
+      // ✅ FIX: Detect version and pass it to ChatHistoryExtractor
+      logger.info(`extractChatHistory() - Detecting version for port ${activePort}...`);
+      const version = await this.versionDetector.detectVersion(activePort);
+      
+      if (!version) {
+        logger.warn(`extractChatHistory() - No version detected for port ${activePort}, using fallback`);
+        // Use fallback version for VSCode
+        const fallbackVersion = '1.85.0';
+        logger.info(`extractChatHistory() - Using fallback version: ${fallbackVersion}`);
+        return await this.chatHistoryExtractor.extractChatHistory(fallbackVersion);
+      }
+      
+      logger.info(`extractChatHistory() - Version detected: ${version}`);
+      return await this.chatHistoryExtractor.extractChatHistory(version);
+      
+    } catch (error) {
+      logger.error('extractChatHistory() - Failed to extract chat history:', error.message);
+      return [];
+    }
   }
 
   async isConnected() {

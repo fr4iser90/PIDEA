@@ -21,33 +21,49 @@ class JSONSelectorManager {
    * @returns {Promise<Object>} Selectors object
    */
   async getSelectors(ideType, version) {
+    this.logger.info(`JSONSelectorManager.getSelectors() - Called with ideType: ${ideType}, version: ${version}`);
+    
     if (!ideType || !version) {
+      this.logger.error(`JSONSelectorManager.getSelectors() - Missing parameters: ideType=${ideType}, version=${version}`);
       throw new Error(`IDE type and version are required. Got: ideType=${ideType}, version=${version}`);
     }
 
     try {
       const selectorPath = path.join(this.selectorsPath, ideType, `${version}.json`);
+      this.logger.info(`JSONSelectorManager: Looking for selectors at: ${selectorPath}`);
       
       // Check if file exists
       try {
         await fs.access(selectorPath);
+        this.logger.info(`JSONSelectorManager: File exists: ${selectorPath}`);
       } catch (error) {
         const availableVersions = await this.getAvailableVersions(ideType);
+        this.logger.error(`JSONSelectorManager: File not found: ${selectorPath}`);
+        this.logger.error(`JSONSelectorManager: Available versions: ${availableVersions.join(', ')}`);
         throw new Error(`Version ${version} not found for IDE type ${ideType}. Available versions: ${availableVersions.join(', ')}`);
       }
 
       // Read and parse JSON file
+      this.logger.info(`JSONSelectorManager: Reading file: ${selectorPath}`);
       const content = await fs.readFile(selectorPath, 'utf8');
+      this.logger.info(`JSONSelectorManager: File content length: ${content.length}`);
+      
       const selectorsData = JSON.parse(content);
+      this.logger.info(`JSONSelectorManager: Parsed JSON data keys: ${Object.keys(selectorsData).join(', ')}`);
 
       // Extract selectors from the structure (chatSelectors, etc.)
       const selectors = selectorsData.chatSelectors || selectorsData;
+      this.logger.info(`JSONSelectorManager: Final selectors keys: ${Object.keys(selectors).join(', ')}`);
+      this.logger.info(`JSONSelectorManager: Final selectors type: ${typeof selectors}`);
+      this.logger.info(`JSONSelectorManager: Final selectors userMessages: ${selectors.userMessages || 'NOT_FOUND'}`);
 
-      this.logger.info(`Loaded selectors for ${ideType} version ${version} from ${selectorPath}`);
+      this.logger.info(`JSONSelectorManager: Successfully loaded selectors for ${ideType} version ${version} from ${selectorPath}`);
       return selectors;
 
     } catch (error) {
-      this.logger.error(`Error loading selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(`JSONSelectorManager: Error loading selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(`JSONSelectorManager: Error stack:`, error.stack);
+      this.logger.error(`JSONSelectorManager: Full error:`, error);
       throw error;
     }
   }

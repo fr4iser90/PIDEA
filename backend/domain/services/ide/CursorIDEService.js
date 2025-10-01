@@ -2,6 +2,7 @@ const TerminalMonitor = require('../terminal/TerminalMonitor');
 const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
 const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
+const VersionDetector = require('@infrastructure/external/ide/VersionDetector');
 const Logger = require('@logging/Logger');
 const logger = new Logger('CursorIDEService');
 
@@ -16,6 +17,7 @@ class CursorIDEService {
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager);
+    this.versionDetector = new VersionDetector();
     
     // Listen for IDE changes to reset package.json cache (optional, if you cache results)
     if (this.eventBus) {
@@ -42,27 +44,44 @@ class CursorIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    // logger.info(`extractChatHistory() - Active port: ${activePort}`);
+    logger.info(`extractChatHistory() - Active port: ${activePort}`);
     
-    if (activePort) {
-      try {
-        // Switch browser to active port if needed
-        const currentBrowserPort = this.browserManager.getCurrentPort();
-        // logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
-        
-        if (currentBrowserPort !== activePort) {
-          logger.info('extractChatHistory() - Switching browser to active port:', activePort);
-          await this.browserManager.switchToPort(activePort);
-        }
-      } catch (error) {
-        logger.error('extractChatHistory() - Failed to switch browser port:', error.message);
-      }
+    if (!activePort) {
+      logger.warn('extractChatHistory() - No active port available');
+      return [];
     }
     
-    // TODO: Version detection needed for chat history extraction
-    // For now, skip chat history extraction until version is available
-    logger.warn('Chat history extraction skipped - version parameter required');
-    return [];
+    try {
+      // Switch browser to active port if needed
+      const currentBrowserPort = this.browserManager.currentPort;
+      logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
+      
+      if (currentBrowserPort !== activePort) {
+        logger.info('extractChatHistory() - Switching browser to active port:', activePort);
+        await this.browserManager.switchToPort(activePort);
+      }
+      
+      // ✅ FIX: Detect version and pass it to ChatHistoryExtractor
+      logger.info(`extractChatHistory() - Detecting version for port ${activePort}...`);
+      const version = await this.versionDetector.detectVersion(activePort);
+      
+      if (!version) {
+        logger.warn(`extractChatHistory() - No version detected for port ${activePort}, using fallback`);
+        // Use fallback version for Cursor
+        const fallbackVersion = '0.42.0';
+        logger.info(`extractChatHistory() - Using fallback version: ${fallbackVersion}`);
+        return await this.chatHistoryExtractor.extractChatHistory(fallbackVersion);
+      }
+      
+      logger.info(`extractChatHistory() - Version detected: ${version}`);
+      return await this.chatHistoryExtractor.extractChatHistory(version);
+      
+    } catch (error) {
+      logger.error('extractChatHistory() - Failed to extract chat history:', error.message);
+      logger.error('extractChatHistory() - Error stack:', error.stack);
+      logger.error('extractChatHistory() - Full error:', error);
+      return [];
+    }
   }
 
   async isConnected() {

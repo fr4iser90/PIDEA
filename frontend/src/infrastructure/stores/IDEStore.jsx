@@ -260,6 +260,19 @@ const useIDEStore = create(
               }
             }
             
+            // ✅ FIX: Also set active port if we have IDEs but no active port is set
+            if (idesWithActiveStatus.length > 0 && !get().activePort) {
+              const firstIDE = idesWithActiveStatus[0];
+              logger.info('Setting active port to first available IDE:', firstIDE.port);
+              set({ activePort: firstIDE.port });
+              
+              // Load project data for the selected IDE
+              if (firstIDE.workspacePath) {
+                logger.info('Loading project data for selected IDE:', firstIDE.workspacePath);
+                await get().loadProjectData(firstIDE.workspacePath);
+              }
+            }
+            
             return idesWithActiveStatus;
           } else {
             throw new Error(result.error || 'Failed to load IDEs');

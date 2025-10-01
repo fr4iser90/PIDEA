@@ -1557,6 +1557,12 @@ class ServiceRegistry {
                     return new WindsurfIDEService(browserManager, ideManager, eventBus);
                 }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
                 break;
+            case 'getChatHistoryHandler':
+                this.container.register('getChatHistoryHandler', (chatRepository, ideManager, serviceRegistry, chatCacheService) => {
+                    const GetChatHistoryHandler = require('@application/handlers/categories/chat/GetChatHistoryHandler');
+                    return new GetChatHistoryHandler(chatRepository, ideManager, serviceRegistry, chatCacheService);
+                }, { singleton: true, dependencies: ['chatRepository', 'ideManager', 'serviceRegistry', 'chatCacheService'] });
+                break;
             case 'sessionActivityService':
                 this.container.register('sessionActivityService', (userSessionRepository, eventBus) => {
                     const SessionActivityService = require('@domain/services/security/SessionActivityService');
@@ -1651,6 +1657,7 @@ class ServiceRegistry {
 
         // Repository services
         this.addServiceDefinition('chatRepository', [], 'repositories');
+        this.addServiceDefinition('getChatHistoryHandler', ['chatRepository', 'ideManager', 'serviceRegistry', 'chatCacheService'], 'handlers');
         this.addServiceDefinition('taskRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('taskExecutionRepository', [], 'repositories');
         this.addServiceDefinition('analysisRepository', ['databaseConnection'], 'repositories');

@@ -2,6 +2,7 @@ const TerminalMonitor = require('../terminal/TerminalMonitor');
 const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
 const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
 const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
+const VersionDetector = require('@infrastructure/external/ide/VersionDetector');
 const ServiceLogger = require('@logging/ServiceLogger');
 
 
@@ -17,6 +18,7 @@ class WindsurfIDEService {
     this.packageJsonAnalyzer = new PackageJsonAnalyzer(eventBus);
     this.workspacePathDetector = new WorkspacePathDetector(browserManager, ideManager);
     this.chatHistoryExtractor = new ChatHistoryExtractor(browserManager, 'windsurf');
+    this.versionDetector = new VersionDetector();
     
     // Listen for IDE changes
     if (this.eventBus) {
@@ -42,24 +44,42 @@ class WindsurfIDEService {
   async extractChatHistory() {
     // Ensure browser is connected to the active IDE port
     const activePort = this.getActivePort();
-    this.logger.info('extractChatHistory() - Active port:', activePort);
+    this.logger.info(`extractChatHistory() - Active port: ${activePort}`);
     
-    if (activePort) {
-      try {
-        // Switch browser to active port if needed
-        const currentBrowserPort = this.browserManager.getCurrentPort();
-        this.logger.info('extractChatHistory() - Current browser port:', currentBrowserPort);
-        
-        if (currentBrowserPort !== activePort) {
-          this.logger.info('extractChatHistory() - Switching browser to active port:', activePort);
-          await this.browserManager.switchToPort(activePort);
-        }
-      } catch (error) {
-        this.logger.error('extractChatHistory() - Failed to switch browser port:', error.message);
-      }
+    if (!activePort) {
+      this.logger.warn('extractChatHistory() - No active port available');
+      return [];
     }
     
-    return await this.chatHistoryExtractor.extractChatHistory();
+    try {
+      // Switch browser to active port if needed
+      const currentBrowserPort = this.browserManager.currentPort;
+      this.logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
+      
+      if (currentBrowserPort !== activePort) {
+        this.logger.info('extractChatHistory() - Switching browser to active port:', activePort);
+        await this.browserManager.switchToPort(activePort);
+      }
+      
+      // ✅ FIX: Detect version and pass it to ChatHistoryExtractor
+      this.logger.info(`extractChatHistory() - Detecting version for port ${activePort}...`);
+      const version = await this.versionDetector.detectVersion(activePort);
+      
+      if (!version) {
+        this.logger.warn(`extractChatHistory() - No version detected for port ${activePort}, using fallback`);
+        // Use fallback version for Windsurf
+        const fallbackVersion = '0.9.0';
+        this.logger.info(`extractChatHistory() - Using fallback version: ${fallbackVersion}`);
+        return await this.chatHistoryExtractor.extractChatHistory(fallbackVersion);
+      }
+      
+      this.logger.info(`extractChatHistory() - Version detected: ${version}`);
+      return await this.chatHistoryExtractor.extractChatHistory(version);
+      
+    } catch (error) {
+      this.logger.error('extractChatHistory() - Failed to extract chat history:', error.message);
+      return [];
+    }
   }
 
   async isConnected() {

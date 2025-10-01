@@ -1,14 +1,17 @@
 const IDETypes = require('../ide/IDETypes');
 const JSONSelectorManager = require('../ide/JSONSelectorManager');
 const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const logger = new Logger('ChatHistoryExtractor');
 
 
 class ChatHistoryExtractor {
   constructor(browserManager, ideType = IDETypes.CURSOR) {
+    logger.info(`ChatHistoryExtractor: Constructor called with ideType: ${ideType}`);
     this.browserManager = browserManager;
     this.ideType = ideType;
+    logger.info(`ChatHistoryExtractor: Creating JSONSelectorManager...`);
     this.jsonSelectorManager = new JSONSelectorManager();
+    logger.info(`ChatHistoryExtractor: JSONSelectorManager created: ${this.jsonSelectorManager ? 'SUCCESS' : 'NULL'}`);
     this.selectors = null; // Will be loaded when needed with version
     
     // Note: Selectors are now loaded dynamically with version
@@ -22,6 +25,7 @@ class ChatHistoryExtractor {
       lastUserIntent: null,
       conversationFlow: []
     };
+    logger.info(`ChatHistoryExtractor: Constructor completed successfully`);
   }
 
   /**
@@ -30,14 +34,36 @@ class ChatHistoryExtractor {
    * @returns {Promise<Object>} Selectors object
    */
   async getSelectors(version) {
+    logger.info(`ChatHistoryExtractor.getSelectors() - Called with version: ${version}`);
+    logger.info(`ChatHistoryExtractor.getSelectors() - IDE type: ${this.ideType}`);
+    logger.info(`ChatHistoryExtractor.getSelectors() - jsonSelectorManager: ${this.jsonSelectorManager ? 'EXISTS' : 'NULL'}`);
+    
     if (!version) {
+      logger.error(`ChatHistoryExtractor.getSelectors() - Version is required for ${this.ideType}. No fallbacks allowed.`);
       throw new Error(`Version is required for ${this.ideType}. No fallbacks allowed.`);
     }
     
+    if (!this.jsonSelectorManager) {
+      logger.error(`ChatHistoryExtractor.getSelectors() - jsonSelectorManager is NULL!`);
+      throw new Error(`jsonSelectorManager is not initialized!`);
+    }
+    
     try {
-      return await this.jsonSelectorManager.getSelectors(this.ideType, version);
+      logger.info(`ChatHistoryExtractor.getSelectors() - Calling jsonSelectorManager.getSelectors(${this.ideType}, ${version})`);
+      const result = await this.jsonSelectorManager.getSelectors(this.ideType, version);
+      logger.info(`ChatHistoryExtractor.getSelectors() - Result: ${result ? 'SUCCESS' : 'NULL'}`);
+      if (result) {
+        logger.info(`ChatHistoryExtractor.getSelectors() - Result keys: ${Object.keys(result).join(', ')}`);
+        logger.info(`ChatHistoryExtractor.getSelectors() - Result type: ${typeof result}`);
+        logger.info(`ChatHistoryExtractor.getSelectors() - Result userMessages: ${result.userMessages || 'NOT_FOUND'}`);
+      } else {
+        logger.error(`ChatHistoryExtractor.getSelectors() - Result is NULL!`);
+      }
+      return result;
     } catch (error) {
-      logger.error(`Error loading selectors for ${this.ideType} version ${version}:`, error.message);
+      logger.error(`ChatHistoryExtractor.getSelectors() - Error loading selectors for ${this.ideType} version ${version}:`, error.message);
+      logger.error(`ChatHistoryExtractor.getSelectors() - Error stack:`, error.stack);
+      logger.error(`ChatHistoryExtractor.getSelectors() - Full error:`, error);
       throw error;
     }
   }
@@ -48,7 +74,12 @@ class ChatHistoryExtractor {
    * @returns {Promise<Array>} Array of chat messages
    */
   async extractChatHistory(version) {
+    logger.info(`ChatHistoryExtractor.extractChatHistory() - Called with version: ${version}`);
+    logger.info(`ChatHistoryExtractor.extractChatHistory() - IDE type: ${this.ideType}`);
+    logger.info(`ChatHistoryExtractor.extractChatHistory() - jsonSelectorManager: ${this.jsonSelectorManager ? 'EXISTS' : 'NULL'}`);
+    
     if (!version) {
+      logger.error(`ChatHistoryExtractor.extractChatHistory() - Version is required for chat extraction. No fallbacks allowed.`);
       throw new Error(`Version is required for chat extraction. No fallbacks allowed.`);
     }
 
@@ -57,7 +88,23 @@ class ChatHistoryExtractor {
       logger.info(`ChatHistoryExtractor: Starting chat extraction for ${this.ideType} version ${version}`);
       
       // Load selectors for the specific version
-      const selectors = await this.getSelectors(version);
+      logger.info(`ChatHistoryExtractor: Loading selectors for ${this.ideType} version ${version}`);
+      logger.info(`ChatHistoryExtractor: this.getSelectors type: ${typeof this.getSelectors}`);
+      logger.info(`ChatHistoryExtractor: this.getSelectors is function: ${typeof this.getSelectors === 'function'}`);
+      let selectors;
+      try {
+        logger.info(`ChatHistoryExtractor: Calling this.getSelectors(${version})...`);
+        selectors = await this.getSelectors(version);
+        logger.info(`ChatHistoryExtractor: Selectors loaded: ${selectors ? 'SUCCESS' : 'NULL'}`);
+        if (selectors) {
+          logger.info(`ChatHistoryExtractor: Selectors keys: ${Object.keys(selectors).join(', ')}`);
+        }
+      } catch (error) {
+        logger.error(`ChatHistoryExtractor: Error loading selectors:`, error.message);
+        logger.error(`ChatHistoryExtractor: Error stack:`, error.stack);
+        logger.error(`ChatHistoryExtractor: Full error:`, error);
+        throw error;
+      }
       
       const page = await this.browserManager.getPage();
       
@@ -74,7 +121,9 @@ class ChatHistoryExtractor {
       
       return allMessages;
     } catch (error) {
-      logger.error('ChatHistoryExtractor: Failed to extract chat history:', error);
+      logger.error('ChatHistoryExtractor: Failed to extract chat history:', error.message);
+      logger.error('ChatHistoryExtractor: Error stack:', error.stack);
+      logger.error('ChatHistoryExtractor: Full error:', error);
       throw error;
     }
   }
@@ -156,7 +205,7 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Find all User messages
-      const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
+      const userElements = document.querySelectorAll(selectors.userMessages);
       userElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -171,7 +220,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI normal messages (text only)
-      const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
+      const aiElements = document.querySelectorAll(selectors.aiMessages);
       aiElements.forEach((element, index) => {
         const content = element.innerText || element.textContent || '';
         if (content.trim()) {
@@ -186,7 +235,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI code blocks as SEPARATE messages
-      const codeBlockElements = document.querySelectorAll(selectors.chatSelectors.codeBlocks);
+      const codeBlockElements = document.querySelectorAll(selectors.codeBlocks);
       codeBlockElements.forEach((element, index) => {
         const content = element.innerText || element.textContent || '';
         if (content.trim()) {
@@ -316,7 +365,7 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Find all User messages
-      const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
+      const userElements = document.querySelectorAll(selectors.userMessages);
       userElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -331,7 +380,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI messages
-      const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
+      const aiElements = document.querySelectorAll(selectors.aiMessages);
       aiElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -370,8 +419,8 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Try to find user messages
-      if (selectors.chatSelectors.userMessages) {
-        const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
+      if (selectors.userMessages) {
+        const userElements = document.querySelectorAll(selectors.userMessages);
         userElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -387,8 +436,8 @@ class ChatHistoryExtractor {
       }
       
       // Try to find AI messages
-      if (selectors.chatSelectors.aiMessages) {
-        const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
+      if (selectors.aiMessages) {
+        const aiElements = document.querySelectorAll(selectors.aiMessages);
         aiElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -430,7 +479,7 @@ class ChatHistoryExtractor {
    * Get current selectors
    * @returns {Object} Current selectors
    */
-  getSelectors() {
+  getCurrentSelectors() {
     return this.selectors;
   }
 
