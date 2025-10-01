@@ -1175,6 +1175,14 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Get the current active port
+   * @returns {number|null} Current port number
+   */
+  getCurrentPort() {
+    return this.currentPort;
+  }
+
   isConnected() {
     return this.currentPort !== null && this.browser !== null && this.page !== null;
   }

@@ -26,8 +26,8 @@ class VersionDetectionService {
       
       ideTypes.forEach(ideType => {
         const metadata = IDETypes.getMetadata(ideType);
-        if (metadata && metadata.versions) {
-          const versions = new Set(Object.keys(metadata.versions));
+        if (metadata && metadata.availableVersions) {
+          const versions = new Set(metadata.availableVersions);
           this.knownVersions.set(ideType, versions);
           this.logger.info(`Initialized known versions for ${ideType}: ${Array.from(versions).join(', ')}`);
         }
