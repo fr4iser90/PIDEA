@@ -14,19 +14,20 @@ Integrate the core status management services with existing system and fix the f
 ## 📋 Phase Tasks
 
 ### 3.1 Fix TaskStatusTransitionService File Movement Logic (2 hours)
-- [ ] **Task**: Fix path resolution and file movement logic
+- [ ] **Task**: Fix path resolution and file movement logic with DI integration
 - [ ] **Location**: `backend/domain/services/task/TaskStatusTransitionService.js`
 - [ ] **Purpose**: Resolve file movement failures due to incorrect path assumptions
 - [ ] **Key Changes**:
   - Fix path resolution logic (lines 153-197)
   - Implement proper file location detection
   - Add robust error handling and recovery
-  - Integrate with TaskFileLocationService
+  - Integrate with TaskFileLocationService via DI
   - Remove unreliable fallback logic
-- [ ] **Dependencies**: TaskFileLocationService, TaskContentHashService
+  - Update constructor to use DI services
+- [ ] **Dependencies**: TaskFileLocationService, TaskContentHashService, TaskEventStore from DI
 
 ### 3.2 Create TaskFileLocationService (2 hours)
-- [ ] **Task**: Implement consistent task file location management
+- [ ] **Task**: Implement consistent task file location management with DI
 - [ ] **Location**: `backend/domain/services/task/TaskFileLocationService.js`
 - [ ] **Purpose**: Provide consistent path resolution across all services
 - [ ] **Key Features**:
@@ -34,29 +35,60 @@ Integrate the core status management services with existing system and fix the f
   - File location caching
   - Path validation and sanitization
   - Error recovery for missing files
-- [ ] **Dependencies**: File system service, task repository
+  - DI-compatible constructor
+- [ ] **Dependencies**: File system service, task repository from DI
 
 ### 3.3 Integrate Content Hash Validation with Task Operations (1 hour)
-- [ ] **Task**: Add content hash validation to existing task operations
+- [ ] **Task**: Add content hash validation to existing task operations via DI
 - [ ] **Location**: `backend/domain/services/task/TaskService.js`
 - [ ] **Purpose**: Ensure data integrity through content hashing
 - [ ] **Key Features**:
   - Content hash validation before status updates
   - Hash-based change detection
   - Content integrity verification
-- [ ] **Dependencies**: TaskContentHashService, TaskStatusValidator
+  - DI-based service integration
+- [ ] **Dependencies**: TaskContentHashService, TaskStatusValidator from DI
 
 ### 3.4 Connect Event Sourcing with Task Status Changes (1 hour)
-- [ ] **Task**: Integrate event sourcing with task status transitions
+- [ ] **Task**: Integrate event sourcing with task status transitions via DI
 - [ ] **Location**: `backend/domain/services/task/TaskStatusTransitionService.js`
 - [ ] **Purpose**: Track all status changes as events for audit and replay
 - [ ] **Key Features**:
   - Event emission for status changes
   - Event data serialization
   - Event versioning
-- [ ] **Dependencies**: TaskEventStore from Phase 1
+  - DI-based TaskEventStore integration
+- [ ] **Dependencies**: TaskEventStore from DI
 
 ## 🔧 Technical Implementation Details
+
+### ServiceRegistry Updates for Phase 3
+```javascript
+// In ServiceRegistry.js - registerDomainServices() method
+registerDomainServices() {
+    this.logger.info('Registering domain services...');
+    
+    // ... existing services from Phase 1 & 2 ...
+
+    // TaskFileLocationService - Consistent path resolution
+    this.container.register('taskFileLocationService', (fileSystemService, taskRepository) => {
+        const TaskFileLocationService = require('@domain/services/task/TaskFileLocationService');
+        return new TaskFileLocationService(fileSystemService, taskRepository);
+    }, { singleton: true, dependencies: ['fileSystemService', 'taskRepository'] });
+
+    // Update TaskStatusTransitionService with new dependencies
+    this.container.register('taskStatusTransitionService', (taskRepository, fileSystemService, eventBus, taskFileLocationService, taskEventStore, taskContentHashService) => {
+        const TaskStatusTransitionService = require('@domain/services/task/TaskStatusTransitionService');
+        return new TaskStatusTransitionService(taskRepository, fileSystemService, eventBus, taskFileLocationService, taskEventStore, taskContentHashService);
+    }, { singleton: true, dependencies: ['taskRepository', 'fileSystemService', 'eventBus', 'taskFileLocationService', 'taskEventStore', 'taskContentHashService'] });
+
+    // Update TaskService with additional dependencies
+    this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService, fileSystemService, eventBus, taskContentHashService, taskStatusValidator, taskStatusTransitionService) => {
+        const TaskService = require('@domain/services/task/TaskService');
+        return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService, fileSystemService, eventBus, this, taskContentHashService, taskStatusValidator, taskStatusTransitionService);
+    }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService', 'fileSystemService', 'eventBus', 'taskContentHashService', 'taskStatusValidator', 'taskStatusTransitionService'] });
+}
+```
 
 ### TaskFileLocationService Implementation
 ```javascript
@@ -66,50 +98,6 @@ class TaskFileLocationService {
     this.taskRepository = taskRepository;
     this.logger = new Logger('TaskFileLocationService');
     this.pathCache = new Map(); // Cache for resolved paths
-  }
-
-  async resolveTaskFilePath(taskId) {
-    try {
-      // Check cache first
-      if (this.pathCache.has(taskId)) {
-        const cachedPath = this.pathCache.get(taskId);
-        if (await this.fileSystemService.exists(cachedPath)) {
-          return cachedPath;
-        }
-        this.pathCache.delete(taskId); // Remove invalid cache entry
-      }
-
-      const task = await this.taskRepository.findById(taskId);
-      if (!task) {
-        throw new Error(`Task ${taskId} not found`);
-      }
-
-      // Try multiple path resolution strategies
-      const possiblePaths = this.generatePossiblePaths(task);
-      
-      for (const path of possiblePaths) {
-        if (await this.fileSystemService.exists(path)) {
-          // Verify it's not just an empty directory
-          const files = await this.fileSystemService.readdir(path);
-          const actualFiles = files.filter(file => 
-            !file.startsWith('.') && 
-            !file.endsWith('.gitkeep') && 
-            !file.endsWith('.DS_Store')
-          );
-          
-          if (actualFiles.length > 0) {
-            this.pathCache.set(taskId, path);
-            this.logger.debug(`Resolved task ${taskId} path: ${path}`);
-            return path;
-          }
-        }
-      }
-
-      throw new Error(`No valid file path found for task ${taskId}`);
-    } catch (error) {
-      this.logger.error(`Error resolving file path for task ${taskId}:`, error);
-      throw error;
-    }
   }
 
   generatePossiblePaths(task) {

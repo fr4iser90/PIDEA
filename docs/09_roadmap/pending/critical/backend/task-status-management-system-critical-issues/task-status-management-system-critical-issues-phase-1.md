@@ -46,7 +46,19 @@ Establish the foundational services and infrastructure needed for modern task st
   - Create `task_file_events` table for event sourcing
 - [ ] **Dependencies**: Database connection, migration system
 
-### 1.4 Create Base Test Structure (1 hour)
+### 1.4 Register Services in DI System (1 hour)
+- [ ] **Task**: Register all new services in ServiceRegistry for dependency injection
+- [ ] **Location**: `backend/infrastructure/dependency-injection/ServiceRegistry.js`
+- [ ] **Purpose**: Integrate new services with PIDEA's DI system for automatic dependency resolution
+- [ ] **Key Features**:
+  - Register TaskContentHashService with fileSystemService dependency
+  - Register TaskEventStore with databaseConnection dependency
+  - Register UnifiedStatusExtractor as singleton
+  - Define proper service categories and dependencies
+  - Update service order resolution
+- [ ] **Dependencies**: ServiceRegistry, ServiceContainer
+
+### 1.5 Create Base Test Structure (0.5 hours)
 - [ ] **Task**: Set up test infrastructure for new services
 - [ ] **Location**: 
   - `backend/tests/unit/TaskContentHashService.test.js`
@@ -54,13 +66,43 @@ Establish the foundational services and infrastructure needed for modern task st
   - `backend/tests/integration/TaskContentHashService.test.js`
 - [ ] **Purpose**: Establish testing framework for new services
 - [ ] **Key Features**:
-  - Unit test structure
+  - Unit test structure with DI mocking
   - Integration test structure
-  - Mock setup
+  - Mock setup for DI services
   - Test data fixtures
 - [ ] **Dependencies**: Jest framework, test utilities
 
 ## 🔧 Technical Implementation Details
+
+### ServiceRegistry Integration Implementation
+```javascript
+// In ServiceRegistry.js - registerDomainServices() method
+registerDomainServices() {
+    this.logger.info('Registering domain services...');
+    
+    // ... existing services ...
+
+    // TaskContentHashService - Content addressable storage
+    this.container.register('taskContentHashService', (fileSystemService) => {
+        const TaskContentHashService = require('@domain/services/task/TaskContentHashService');
+        return new TaskContentHashService(fileSystemService);
+    }, { singleton: true, dependencies: ['fileSystemService'] });
+
+    // TaskEventStore - Event sourcing for task status changes
+    this.container.register('taskEventStore', (databaseConnection) => {
+        const TaskEventStore = require('@domain/services/task/TaskEventStore');
+        return new TaskEventStore(databaseConnection);
+    }, { singleton: true, dependencies: ['databaseConnection'] });
+
+    // UnifiedStatusExtractor - Single regex pattern for status extraction
+    this.container.register('unifiedStatusExtractor', () => {
+        const UnifiedStatusExtractor = require('@domain/services/task/UnifiedStatusExtractor');
+        return new UnifiedStatusExtractor();
+    }, { singleton: true });
+
+    // ... rest of existing services ...
+}
+```
 
 ### TaskContentHashService Implementation
 ```javascript
@@ -160,24 +202,58 @@ CREATE INDEX IF NOT EXISTS idx_task_file_events_type ON task_file_events(type);
 
 ## 🧪 Testing Strategy
 
-### Unit Tests
-- [ ] **TaskContentHashService**: Test hash generation, content storage, validation
-- [ ] **TaskEventStore**: Test event storage, retrieval, querying
-- [ ] **Mock Requirements**: File system operations, database connections
+### Unit Tests with DI Mocking
+- [ ] **TaskContentHashService**: Test hash generation, content storage, validation with mocked fileSystemService
+- [ ] **TaskEventStore**: Test event storage, retrieval, querying with mocked databaseConnection
+- [ ] **Mock Requirements**: DI container mocking, service resolution testing
 
 ### Integration Tests
 - [ ] **Database Migration**: Test migration execution and rollback
 - [ ] **Content Hash Integration**: Test with real database operations
 - [ ] **Event Store Integration**: Test event storage and retrieval with database
+- [ ] **DI Service Resolution**: Test automatic dependency resolution
+
+### DI Testing Examples
+```javascript
+// Example test with DI mocking
+describe('TaskContentHashService with DI', () => {
+  let mockContainer;
+  let mockFileSystemService;
+
+  beforeEach(() => {
+    mockFileSystemService = {
+      readFile: jest.fn(),
+      writeFile: jest.fn(),
+      exists: jest.fn()
+    };
+    
+    mockContainer = {
+      resolve: jest.fn((serviceName) => {
+        if (serviceName === 'fileSystemService') return mockFileSystemService;
+        throw new Error(`Unknown service: ${serviceName}`);
+      })
+    };
+  });
+
+  it('should resolve dependencies through DI', () => {
+    const service = mockContainer.resolve('taskContentHashService');
+    expect(service).toBeDefined();
+    expect(mockContainer.resolve).toHaveBeenCalledWith('fileSystemService');
+  });
+});
+```
 
 ## 📊 Success Criteria
 - [ ] TaskContentHashService implemented with all required methods
 - [ ] TaskEventStore implemented with event storage and retrieval
 - [ ] Database migration created and tested
-- [ ] Test infrastructure established
-- [ ] All unit tests passing
+- [ ] **DI Integration**: All services registered in ServiceRegistry
+- [ ] **Service Resolution**: Automatic dependency resolution working
+- [ ] Test infrastructure established with DI mocking
+- [ ] All unit tests passing with DI integration
 - [ ] Integration tests passing
 - [ ] Code coverage > 90% for new services
+- [ ] **DI Validation**: Service container resolves all dependencies correctly
 
 ## 🔄 Phase Dependencies
 - **Input**: Analysis completion ✅
