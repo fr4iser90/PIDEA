@@ -708,9 +708,44 @@ class Application {
     // Serve frontend build files in development
     if (process.env.NODE_ENV === 'development') {
       const frontendDistPath = path.join(__dirname, '../frontend/dist');
+      const frontendPath = path.join(__dirname, '../frontend');
+      
+      if (!fs.existsSync(frontendDistPath)) {
+        logger.info('🔨 Frontend dist not found, building automatically...');
+        try {
+          const { execSync } = require('child_process');
+          
+          // Check if frontend package.json exists
+          if (fs.existsSync(path.join(frontendPath, 'package.json'))) {
+            logger.info('📦 Installing frontend dependencies...');
+            execSync('npm install', { 
+              cwd: frontendPath, 
+              stdio: 'inherit',
+              timeout: 120000 // 2 minutes timeout
+            });
+            
+            logger.info('🔨 Building frontend...');
+            execSync('npm run build', { 
+              cwd: frontendPath, 
+              stdio: 'inherit',
+              timeout: 180000 // 3 minutes timeout
+            });
+            
+            logger.info('✅ Frontend built successfully!');
+          } else {
+            logger.warn('⚠️ Frontend package.json not found, skipping auto-build');
+          }
+        } catch (error) {
+          logger.error('❌ Failed to build frontend automatically:', error.message);
+          logger.info('💡 Please run: cd frontend && npm install && npm run build');
+        }
+      }
+      
       if (fs.existsSync(frontendDistPath)) {
         this.app.use(express.static(frontendDistPath));
         logger.info('📁 Serving frontend from:', frontendDistPath);
+      } else {
+        logger.warn('⚠️ Frontend dist still not found, serving fallback');
       }
     }
   }
