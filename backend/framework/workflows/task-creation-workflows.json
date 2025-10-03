@@ -21,7 +21,7 @@
           "name": "create-chat",
           "type": "ide",
           "description": "Create new chat session for task creation",
-          "step": "CreateChatStep",
+          "step": "create_chat_step",
           "options": {
             "title": "Task Creation Session",
             "metadata": {
@@ -36,7 +36,7 @@
           "name": "send-to-ide",
           "type": "ide_send_message",
           "description": "Send generated prompt to IDE",
-          "step": "IDESendMessageStep",
+          "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
             "waitForResponse": true,

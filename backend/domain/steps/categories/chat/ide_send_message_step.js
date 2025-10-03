@@ -7,11 +7,11 @@
 const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
 const AITextDetector = require('@services/chat/AITextDetector');
-const logger = new Logger('ide_send_message');
+const logger = new Logger('ide_send_message_step');
 
 // Step configuration
 const config = {
-  name: 'ide_send_message',
+  name: 'ide_send_message_step',
   type: 'ide',
   category: 'ide',
   description: 'Send message to any IDE',
