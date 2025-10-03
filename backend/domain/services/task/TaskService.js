@@ -1297,15 +1297,16 @@ ${task.description}
       if (this.cursorIDEService) {
         logger.info('📤 [TaskService] Sending review message via IDESendMessageStep');
         
+        // Get project path from options
+        const projectPath = options?.projectPath;
+        let targetPort = null;
+        
         // Step 1: Find correct IDE port for this project and switch BrowserManager
         if (this.cursorIDEService.browserManager) {
-          // Get project path from options
-          const projectPath = options?.projectPath;
           logger.info('🔍 [TaskService] Looking for IDE port for project:', projectPath);
           
           // Find IDE port that matches this project path
           const availableIDEs = await this.cursorIDEService.ideManager?.getAvailableIDEs();
-          let targetPort = null;
           
           if (availableIDEs && projectPath) {
             // Look for IDE with matching workspace path
@@ -1337,6 +1338,10 @@ ${task.description}
           throw new Error('StepRegistry not available for task review');
         }
         
+        // Get active IDE information for context
+        const activeIDE = await this.cursorIDEService?.ideManager?.getActiveIDE?.();
+        const port = targetPort || activeIDE?.port;
+        
         const stepData = {
           message: reviewPrompt,
           sessionId: `task-review-${taskId}`,
@@ -1344,12 +1349,14 @@ ${task.description}
           userId: userId,
           projectId: options?.projectId || 'PIDEA',
           workspacePath: options?.projectPath,
+          port: port,
+          activeIDE: activeIDE,
           waitForResponse: true,
           timeout: 300000 // 5 minutes for AI analysis
         };
         
         logger.info('📤 [TaskService] Executing IDESendMessageStep via StepRegistry');
-        stepResult = await this.stepRegistry.executeStep('ide_send_message_enhanced', stepData);
+        stepResult = await this.stepRegistry.executeStep('ide_send_message', stepData);
         
         if (!stepResult.success) {
           throw new Error(`IDESendMessageStep failed: ${stepResult.error}`);
@@ -1364,7 +1371,7 @@ ${task.description}
             sessionId: `task-review-completion-${taskId}`,
             requestedBy: userId,
             userId: userId,
-            projectId: options?.projectId || 'PIDEA',
+            projectId: options?.projectId,
             workspacePath: options?.projectPath,
             confirmationPrompt: "All task files complete or done, ANSWER with Complete percentage please",
             timeout: 60000 // 1 minute for completion check

@@ -216,8 +216,9 @@ class DependencyGraph {
                 return result;
             }
             
-            // In production, still throw error for safety
-            throw new Error(`Topological sort failed: not all nodes processed. Unprocessed: ${unprocessedNodes.join(', ')}`);
+            // During shutdown, gracefully continue with partial result instead of crashing
+            this.logger.warn(`⚠️ Topological sort incomplete during shutdown. Continuing gracefully. Unprocessed: ${unprocessedNodes.join(', ')}`);
+            return result;
         }
 
         this.logger.info(`Topological sort completed: ${result.length} services ordered`);

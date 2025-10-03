@@ -87,7 +87,8 @@ class ConfirmationStep {
 
       // Initialize AITextDetector for proper response waiting with IDE-specific selectors
       const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
-      const ideSelectors = await browserManager.getIDESelectors(ideType);
+      const ideVersion = await browserManager.detectIDEVersion(browserManager.getCurrentPort());
+      const ideSelectors = await browserManager.getIDESelectors(ideType, ideVersion);
       const aiTextDetector = new AITextDetector(ideSelectors);
       const page = await browserManager.getPage();
       

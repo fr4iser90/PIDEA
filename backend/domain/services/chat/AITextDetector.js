@@ -11,7 +11,8 @@ class AITextDetector {
   constructor(selectors) {
     this.selectors = selectors;
     this.logger = new ServiceLogger('AITextDetector');
-    this.responseProcessor = new ResponseProcessor(selectors);
+    // ResponseProcessor expects direct chatSelectors, not the full object
+    this.responseProcessor = new ResponseProcessor(selectors.chatSelectors);
   }
 
   /**

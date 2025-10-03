@@ -113,7 +113,8 @@ class IDESendMessageStep {
             if (page) {
               // Initialize AITextDetector for AI response waiting
               const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
-              const ideSelectors = await browserManager.getIDESelectors(ideType);
+              const ideVersion = await browserManager.detectIDEVersion(browserManager.getCurrentPort());
+              const ideSelectors = await browserManager.getIDESelectors(ideType, ideVersion);
               const aiTextDetector = new AITextDetector(ideSelectors);
               
               // Wait for AI response with timeout using improved detection
@@ -133,6 +134,7 @@ class IDESendMessageStep {
             }
           } catch (error) {
             logger.error('❌ AI response waiting failed:', error.message);
+            logger.error('❌ AI response waiting failed stack:', error.stack);
             aiResponse = {
               success: false,
               error: error.message,

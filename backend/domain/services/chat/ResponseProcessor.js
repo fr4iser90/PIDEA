@@ -19,26 +19,13 @@ class ResponseProcessor {
    */
   async detectAITyping(page) {
     try {
-      // Check for the specific "Generating" indicator
-      const generatingElements = await page.$$('span:has-text("Generating")');
-      if (generatingElements.length > 0) {
-        return true;
-      }
+      // Check for generating indicator using JSON selector
       
-      // Check for various typing indicators (more specific)
-      const typingSelectors = [
-        '.typing-indicator',
-        '.ai-typing',
-        '.generating',
-        '.thinking',
-        '[data-typing="true"]'
-      ];
-      
-      for (const selector of typingSelectors) {
+      // Check for typing indicators using JSON selectors
+      if (this.selectors && this.selectors.loadingIndicator) {
         try {
-          const elements = await page.$$(selector);
+          const elements = await page.$$(this.selectors.loadingIndicator);
           if (elements.length > 0) {
-            // Double-check that the element is actually visible and contains typing text
             for (const element of elements) {
               const text = await element.textContent();
               const isVisible = await element.isVisible();
@@ -48,44 +35,31 @@ class ResponseProcessor {
             }
           }
         } catch (error) {
-          // Skip invalid selectors
-          continue;
+          // Skip if selector fails
         }
       }
       
-      // Check for cursor blinking in response areas (only if visible)
-      const cursorBlinkSelectors = [
-        '.cursor-blink',
-        '.typing-cursor',
-        '.response-cursor'
-      ];
-      
-      for (const selector of cursorBlinkSelectors) {
+      // Check for typing indicators using thinkingIndicator from JSON
+      if (this.selectors && this.selectors.thinkingIndicator) {
         try {
-          const elements = await page.$$(selector);
+          const elements = await page.$$(this.selectors.thinkingIndicator);
           if (elements.length > 0) {
             return true;
           }
         } catch (error) {
-          continue;
+          // Skip if selector fails
         }
       }
       
-      // Check for streaming text indicators (only if visible)
-      const streamingSelectors = [
-        '.streaming-text',
-        '.live-response',
-        '.real-time-response'
-      ];
-      
-      for (const selector of streamingSelectors) {
+      // Additional check using alternative selectors from JSON
+      if (this.selectors && this.selectors.chatStatus && this.selectors.chatStatus.loadingIndicator) {
         try {
-          const elements = await page.$$(selector);
+          const elements = await page.$$(this.selectors.chatStatus.loadingIndicator);
           if (elements.length > 0) {
             return true;
           }
         } catch (error) {
-          continue;
+          // Skip if selector fails
         }
       }
       
@@ -111,81 +85,39 @@ class ResponseProcessor {
           const messages = await page.$$(this.selectors.aiMessages);
           if (messages.length > 0) {
             const lastMessage = messages[messages.length - 1];
-            return await lastMessage.textContent();
+            const text = await lastMessage.textContent();
+            return text; // Let main loop validate
           }
           return null;
         },
         
-        // Strategy 2: Look for markdown containers
+        // Strategy 2: Look for markdown containers using JSON selector
         async () => {
-          const markdownSelectors = [
-            'span.anysphere-markdown-container-root',
-            '.markdown-content',
-            '.response-markdown',
-            '[data-markdown="true"]'
-          ];
-          
-          for (const selector of markdownSelectors) {
-            const elements = await page.$$(selector);
+          // Use the aiMessages selector as it points to the markdown container
+          if (this.selectors.aiMessages) {
+            const elements = await page.$$(this.selectors.aiMessages);
             if (elements.length > 0) {
               const lastElement = elements[elements.length - 1];
-              return await lastElement.textContent();
+              const text = await lastElement.textContent();
+              return text; // Let main loop validate
             }
           }
           return null;
         },
         
-        // Strategy 3: Look for any response-like content
+        // Strategy 3: Look for content using messagesContainer from JSON  
         async () => {
-          const responseSelectors = [
-            '.ai-response',
-            '.assistant-message',
-            '.response-message',
-            '.message.assistant',
-            '.chat-response'
-          ];
-          
-          for (const selector of responseSelectors) {
-            const elements = await page.$$(selector);
+          if (this.selectors.messagesContainer) {
+            const elements = await page.$$(this.selectors.messagesContainer);
             if (elements.length > 0) {
               const lastElement = elements[elements.length - 1];
-              return await lastElement.textContent();
+              const text = await lastElement.textContent();
+              return text; // Let main loop validate
             }
           }
           return null;
         },
         
-        // Strategy 4: Look for content in the last message container
-        async () => {
-          const messageContainers = await page.$$(this.selectors.messagesContainer);
-          if (messageContainers.length > 0) {
-            const lastContainer = messageContainers[messageContainers.length - 1];
-            return await lastContainer.textContent();
-          }
-          return null;
-        },
-        
-        // Strategy 5: Look for any substantial text content that's not user input
-        async () => {
-          const allTextElements = await page.$$('p, div, span');
-          let bestCandidate = null;
-          let maxLength = 0;
-          
-          for (const element of allTextElements) {
-            const text = await element.textContent();
-            if (text && text.length > 200 && text.length > maxLength) {
-              // Check if it looks like an AI response (not user input)
-              const lowerText = text.toLowerCase();
-              if (!lowerText.includes('user:') && !lowerText.includes('me:') && 
-                  !lowerText.includes('input:') && !lowerText.includes('prompt:')) {
-                bestCandidate = text;
-                maxLength = text.length;
-              }
-            }
-          }
-          
-          return bestCandidate;
-        }
       ];
       
       // Try each strategy until we find a response
@@ -193,7 +125,13 @@ class ResponseProcessor {
         try {
           const response = await strategy();
           if (response && response.trim().length > 0) {
-            return response.trim();
+            // Additional validation: check if it's a valid AI response
+            if (this.isValidAIResponse(response)) {
+              this.logger.info(`✅ Valid AI response found: ${response.length} chars`);
+              return response.trim();
+            } else {
+              this.logger.info(`🚫 Invalid response filtered out: ${response.substring(0, 50)}...`);
+            }
           }
         } catch (error) {
           continue;
@@ -209,6 +147,46 @@ class ResponseProcessor {
   }
 
   /**
+   * Check if extracted text is a valid AI response (not error messages)
+   * @param {string} text - Text to validate
+   * @returns {boolean} True if valid AI response
+   */
+  isValidAIResponse(text) {
+    if (!text || text.trim().length === 0) {
+      return false;
+    }
+
+    const trimmed = text.trim().toLowerCase();
+    
+    // Filter out common error messages and system messages
+    const errorPatterns = [
+      'extension host unresponsive',
+      'extension host has stopped responding',
+      'reload window',
+      'error',
+      'failed',
+      'timeout',
+      'connection error',
+      'network error'
+    ];
+    
+    // If text contains error patterns, it's not a valid AI response
+    for (const pattern of errorPatterns) {
+      if (trimmed.includes(pattern)) {
+        this.logger.info(`🚫 Filtered out error message: ${pattern}`);
+        return false;
+      }
+    }
+    
+    // Valid AI responses should be longer and contain actual content
+    if (trimmed.length < 20) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
    * Detect if AI response is complete
    * @param {Object} page - Playwright page object
    * @param {string} currentText - Current response text
@@ -217,88 +195,77 @@ class ResponseProcessor {
    */
   async detectResponseComplete(page, currentText, lastLength) {
     try {
-      // Check for "X files edited" completion indicator
-      const fileEditSelectors = [
-        'span:has-text("file edited")',
-        'span:has-text("files edited")',
-        'div:has-text("file edited")',
-        'div:has-text("files edited")'
-      ];
+      // Check if AI is still typing/working - if yes, not complete
+      const isTyping = await this.detectAITyping(page);
+      if (isTyping) {
+        this.logger.info('⌨️ AI still typing - not complete');
+        return false;
+      }
       
-      for (const selector of fileEditSelectors) {
-        const elements = await page.$$(selector);
-        if (elements.length > 0) {
-          for (const element of elements) {
-            const isVisible = await element.isVisible();
-            if (isVisible) {
-              const text = await element.textContent();
-              if (text && (text.includes('file edited') || text.includes('files edited'))) {
-                this.logger.info(`🔍 Detected file edit completion: "${text}"`);
-                return true;
+      // Check for loading indicators - if visible, not complete
+      if (this.selectors && this.selectors.loadingIndicator) {
+        try {
+          const elements = await page.$$(this.selectors.loadingIndicator);
+          if (elements.length > 0) {
+            for (const element of elements) {
+              const isVisible = await element.isVisible();
+              if (isVisible) {
+                this.logger.info('⏳ Loading indicator visible - not complete');
+                return false;
               }
             }
           }
+        } catch (error) {
+          // Skip if selector fails
         }
       }
       
-      // Check for "Running terminal command" - means AI is still working
-      const runningSelectors = [
-        'span:has-text("Running terminal command")',
-        'div:has-text("Running terminal command")',
-        'span:has-text("Generating")',
-        'div:has-text("Generating")'
-      ];
-      
-      for (const selector of runningSelectors) {
-        const elements = await page.$$(selector);
-        if (elements.length > 0) {
-          for (const element of elements) {
-            const isVisible = await element.isVisible();
-            if (isVisible) {
-              const text = await element.textContent();
-              if (text && (text.includes('Running terminal command') || text.includes('Generating'))) {
-                this.logger.info(`🔍 AI still working: "${text}"`);
-                return false; // Not complete yet
+      // Check for thinking indicators - if visible, not complete
+      if (this.selectors && this.selectors.thinkingIndicator) {
+        try {
+          const elements = await page.$$(this.selectors.thinkingIndicator);
+          if (elements.length > 0) {
+            for (const element of elements) {
+              const isVisible = await element.isVisible();
+              if (isVisible) {
+                this.logger.info('🤔 Thinking indicator visible - not complete');
+                return false;
               }
             }
           }
-        }
-      }
-      
-      // Check for completion indicators
-      const completionSelectors = [
-        '.response-complete',
-        '[data-complete="true"]',
-        '.finished-response',
-        '.response-done'
-      ];
-      
-      for (const selector of completionSelectors) {
-        const elements = await page.$$(selector);
-        if (elements.length > 0) {
-          return true;
+        } catch (error) {
+          // Skip if selector fails
         }
       }
       
       // Check if text has stopped growing and is substantial
       if (currentText && currentText.length > 100 && currentText.length === lastLength) {
-        // Additional check: look for common response endings
-        const responseEndings = [
-          '```',
-          '**Summary:**',
-          '**Next Steps:**',
-          '**Status:**',
-          'completed',
-          'finished',
-          'done'
+        // First check if this is an error message - don't consider error messages as complete responses
+        const trimmed = currentText.trim().toLowerCase();
+        const errorPatterns = [
+          'extension host unresponsive',
+          'extension host has stopped responding',
+          'reload window',
+          'failed',
+          'timeout',
+          'connection error',
+          'network error',
+          'error occurred',
+          'an error',
+          'error:',
+          'error -'
         ];
         
-        const lowerText = currentText.toLowerCase();
-        for (const ending of responseEndings) {
-          if (lowerText.includes(ending.toLowerCase())) {
-            return true;
+        // If text contains error patterns, it's not a valid AI response
+        for (const pattern of errorPatterns) {
+          if (trimmed.includes(pattern)) {
+            this.logger.info(`🚫 Filtered out error message: ${pattern}`);
+            return false; // Don't consider error messages as complete
           }
         }
+        
+        this.logger.info('📝 Text stable and substantial - appears complete');
+        return true; // Consider complete if substantial and stable
       }
       
       return false;
@@ -306,6 +273,369 @@ class ResponseProcessor {
     } catch (error) {
       this.logger.error(`⚠️ Error detecting response completion: ${error.message}`);
       return false;
+    }
+  }
+
+  /**
+   * Extract code blocks from AI response using selectors
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Array>} Array of code blocks
+   */
+  async extractCodeBlocks(page) {
+    try {
+      if (!this.selectors?.codeBlocks) {
+        return [];
+      }
+
+      const codeBlocks = await page.$$(this.selectors.codeBlocks);
+      const blocks = [];
+
+      for (const block of codeBlocks) {
+        try {
+          // Extract code content
+          let codeText = '';
+          if (this.selectors.codeBlockContent) {
+            const contentElements = await block.$$(this.selectors.codeBlockContent);
+            if (contentElements.length > 0) {
+              codeText = await contentElements[0].textContent();
+            } else {
+              codeText = await block.textContent();
+            }
+          } else {
+            codeText = await block.textContent();
+          }
+
+          // Extract language if available
+          let language = null;
+          if (this.selectors.codeBlockLanguage) {
+            try {
+              const langElements = await block.$$(this.selectors.codeBlockLanguage);
+              if (langElements.length > 0) {
+                const langElement = langElements[0];
+                const className = await langElement.getAttribute('class');
+                language = className ? className.match(/javascript|python|java|typescript|json|html|css|sql|bash|sh/i)?.[0] : null;
+              }
+            } catch (error) {
+              // Skip language detection if it fails
+            }
+          }
+
+          if (codeText && codeText.trim()) {
+            blocks.push({
+              content: codeText.trim(),
+              language: language || 'text',
+              type: 'codeBlock'
+            });
+          }
+        } catch (error) {
+          // Skip individual block if it fails
+          continue;
+        }
+      }
+
+      return blocks;
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting code blocks: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Extract terminal/command blocks from AI response
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Array>} Array of terminal blocks
+   */
+  async extractTerminalBlocks(page) {
+    try {
+      const selectors = [
+        this.selectors?.terminalBlocks,
+        'pre[class*="bash"]',
+        'pre[class*="shell"]',
+        'pre[class*="terminal"]'
+      ].filter(Boolean);
+
+      const terminalBlocks = [];
+      
+      for (const selector of selectors) {
+        try {
+          const elements = await page.$$(selector);
+          for (const element of elements) {
+            const content = await element.textContent();
+            if (content && content.trim()) {
+              terminalBlocks.push({
+                content: content.trim(),
+                type: 'terminal'
+              });
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      return terminalBlocks;
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting terminal blocks: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Extract file references from AI response
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Array>} Array of file references
+   */
+  async extractFileReferences(page) {
+    try {
+      const selectors = [
+        this.selectors?.fileReferences,
+        'span[title*="."]',
+        'a[href*="."]'
+      ].filter(Boolean);
+
+      const fileRefs = [];
+      
+      for (const selector of selectors) {
+        try {
+          const elements = await page.$$(selector);
+          for (const element of elements) {
+            const content = await element.textContent();
+            const title = await element.getAttribute('title');
+            const href = await element.getAttribute('href');
+            
+            if (content && content.includes('.')) {
+              fileRefs.push({
+                content: content.trim(),
+                title: title || '',
+                href: href || '',
+                type: 'file'
+              });
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      return fileRefs;
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting file references: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Extract URLs from AI response
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Array>} Array of URLs
+   */
+  async extractUrls(page) {
+    try {
+      const selectors = [
+        this.selectors?.urls,
+        'a[href^="http"]',
+        'a[href^="https"]',
+        'a[href^="ftp"]'
+      ].filter(Boolean);
+
+      const urls = [];
+      
+      for (const selector of selectors) {
+        try {
+          const elements = await page.$$(selector);
+          for (const element of elements) {
+            const href = await element.getAttribute('href');
+            const text = await element.textContent();
+            
+            if (href && (href.startsWith('http') || href.startsWith('ftp'))) {
+              urls.push({
+                url: href,
+                text: text || href,
+                type: 'url'
+              });
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      return urls;
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting URLs: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Extract structured data blocks (JSON, CSS, SQL, etc.)
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Object>} Object with different data types
+   */
+  async extractStructuredData(page) {
+    try {
+      const dataTypes = {
+        json: [],
+        css: [],
+        sql: [],
+        yaml: [],
+        dockerfile: [],
+        env: []
+      };
+
+      const typeSelectors = {
+        json: [this.selectors?.jsonBlocks, 'pre[class*="json"]', 'code[class*="json"]'],
+        css: [this.selectors?.cssBlocks, 'pre[class*="css"]', 'code[class*="css"]'],
+        sql: [this.selectors?.sqlBlocks, 'pre[class*="sql"]', 'code[class*="sql"]'],
+        yaml: [this.selectors?.yamlBlocks, 'pre[class*="yaml"]', 'code[class*="yaml"]'],
+        dockerfile: [this.selectors?.dockerBlocks, 'pre[class*="dockerfile"]', 'code[class*="dockerfile"]'],
+        env: [this.selectors?.envBlocks, 'pre[class*="env"]', 'code[class*="env"]']
+      };
+
+      for (const [type, selectors] of Object.entries(typeSelectors)) {
+        const filteredSelectors = selectors.filter(Boolean);
+        
+        for (const selector of filteredSelectors) {
+          try {
+            const elements = await page.$$(selector);
+            for (const element of elements) {
+              const content = await element.textContent();
+              if (content && content.trim()) {
+                dataTypes[type].push({
+                  content: content.trim(),
+                  type: type
+                });
+              }
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+      }
+
+      return dataTypes;
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting structured data: ${error.message}`);
+      return { json: [], css: [], sql: [], yaml: [], dockerfile: [], env: [] };
+    }
+  }
+
+  /**
+   * Extract lists and tables from AI response
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Object>} Object with lists and tables
+   */
+  async extractListsAndTables(page) {
+    try {
+      const lists = [];
+      const tables = [];
+
+      // Extract lists
+      const listSelectors = [
+        this.selectors?.lists,
+        'ul', 'ol', 'li'
+      ].filter(Boolean);
+
+      for (const selector of listSelectors) {
+        try {
+          const elements = await page.$$(selector);
+          for (const element of elements) {
+            const content = await element.textContent();
+            if (content && content.trim()) {
+              lists.push({
+                content: content.trim(),
+                tagName: await element.evaluate(el => el.tagName),
+                type: 'list'
+              });
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // Extract tables
+      const tableSelectors = [
+        this.selectors?.tables,
+        'table', 'tr', 'td', 'th'
+      ].filter(Boolean);
+
+      for (const selector of tableSelectors) {
+        try {
+          const elements = await page.$$(selector);
+          for (const element of elements) {
+            const content = await element.textContent();
+            if (content && content.trim()) {
+              tables.push({
+                content: content.trim(),
+                tagName: await element.evaluate(el => el.tagName),
+                type: 'table'
+              });
+            }
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      return { lists, tables };
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting lists and tables: ${error.message}`);
+      return { lists: [], tables: [] };
+    }
+  }
+
+  /**
+   * Extract inline code from AI response using selectors
+   * @param {Object} page - Playwright page object
+   * @returns {Promise<Array>} Array of inline code elements
+   */
+  async extractInlineCode(page) {
+    try {
+      const selectors = [
+        this.selectors?.inlineCode,
+        this.selectors?.codeSpans
+      ].filter(Boolean);
+
+      if (selectors.length === 0) {
+        return [];
+      }
+
+      const inlineCodeBlocks = [];
+      
+      for (const selector of selectors) {
+        try {
+          const elements = await page.$$(selector);
+          
+          for (const element of elements) {
+            try {
+              const codeText = await element.textContent();
+              if (codeText && codeText.trim()) {
+                inlineCodeBlocks.push({
+                  content: codeText.trim(),
+                  type: 'inlineCode'
+                });
+              }
+            } catch (error) {
+              // Skip individual element if it fails
+              continue;
+            }
+          }
+        } catch (error) {
+          // Skip selector if it fails
+          continue;
+        }
+      }
+
+      // Remove duplicates based on content
+      const uniqueInlineCode = inlineCodeBlocks.filter((item, index, array) => 
+        array.findIndex(other => other.content === item.content) === index
+      );
+
+      return uniqueInlineCode;
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting inline code: ${error.message}`);
+      return [];
     }
   }
 
@@ -322,7 +652,7 @@ class ResponseProcessor {
       maxStableChecks = 50 // Much more conservative than old 3!
     } = options;
     
-    this.logger.info('⏳ [ResponseProcessor] Waiting for AI response to start...');
+    this.logger.info('⏳ Waiting for AI response to start...');
     
     let stableCheckCount = 0;
     const startTime = Date.now();
@@ -343,14 +673,14 @@ class ResponseProcessor {
           responseText = currentText;
           lastLength = currentText.length;
           stableCheckCount = 0; // Reset stable count when text grows
-          this.logger.info(`📝 [ResponseProcessor] Response growing: ${currentText.length} characters`);
+          this.logger.info(`📝 Response growing: ${currentText.length} characters`);
         } else if (currentText && currentText.length === lastLength && currentText.length > 0) {
           stableCheckCount++;
-          this.logger.info(`⏸️ [ResponseProcessor] Response stable (${stableCheckCount}/${maxStableChecks})`);
+          this.logger.info(`⏸️ Response stable (${stableCheckCount}/${maxStableChecks})`);
           
           // Force continue after max stable checks
           if (stableCheckCount >= maxStableChecks) {
-            this.logger.info(`⏰ [ResponseProcessor] Max stable checks reached (${maxStableChecks}), forcing continuation`);
+            this.logger.info(`⏰ Max stable checks reached (${maxStableChecks}), forcing continuation`);
             break;
           }
         } else if (!currentText) {
@@ -362,7 +692,7 @@ class ResponseProcessor {
         
         // Break if completion is detected (files edited, etc.)
         if (isComplete) {
-          this.logger.info('✅ [ResponseProcessor] Response appears to be complete');
+          this.logger.info('✅ Response appears to be complete');
           break;
         }
         
@@ -370,7 +700,7 @@ class ResponseProcessor {
         const isTyping = await this.detectAITyping(page);
         
         if (isTyping) {
-          this.logger.info('⌨️ [ResponseProcessor] AI is actively typing...');
+          this.logger.info('⌨️ AI is actively typing...');
           stableCheckCount = 0; // Reset stable count when typing
           await page.waitForTimeout(2000);
           continue;
@@ -379,22 +709,131 @@ class ResponseProcessor {
         await page.waitForTimeout(checkInterval);
         
       } catch (error) {
-        this.logger.error(`⚠️ [ResponseProcessor] Error while waiting for response: ${error.message}`);
+        this.logger.error(`⚠️ Error while waiting for response: ${error.message}`);
         await page.waitForTimeout(2000);
       }
     }
     
     if (responseText.length === 0) {
-      this.logger.warn('⚠️ [ResponseProcessor] No response received');
+      this.logger.warn('⚠️ No response received');
+      return {
+        success: false,
+        response: '',
+        duration: Date.now() - startTime,
+        stable: false,
+        codeBlocks: [],
+        inlineCode: []
+      };
     } else {
-      this.logger.info(`📥 [ResponseProcessor] Received response (${responseText.length} characters)`);
+      this.logger.info(`📥 Received response (${responseText.length} characters)`);
+    }
+
+    // Extract and log ALL elements
+    let codeBlocks = [];
+    let inlineCode = [];
+    let terminalBlocks = [];
+    let fileReferences = [];
+    let urls = [];
+    let structuredData = {};
+    let listsAndTables = {};
+    
+    try {
+      // Extract code blocks
+      codeBlocks = await this.extractCodeBlocks(page);
+      if (codeBlocks.length > 0) {
+        this.logger.info(`📝 Found ${codeBlocks.length} code blocks:`);
+        codeBlocks.forEach((block, index) => {
+          this.logger.info(`📦 Code Block ${index + 1} (${block.language}):`);
+          this.logger.info(`📄 ${block.content.substring(0, 100)}${block.content.length > 100 ? '...' : ''}`);
+        });
+      } else {
+        this.logger.info('⚪ No code blocks found');
+      }
+
+      // Extract inline code
+      inlineCode = await this.extractInlineCode(page);
+      if (inlineCode.length > 0) {
+        this.logger.info(`💬 Found ${inlineCode.length} inline code elements:`);
+        inlineCode.forEach((code, index) => {
+          this.logger.info(`📄 Inline Code ${index + 1}: \`${code.content}\``);
+        });
+      } else {
+        this.logger.info('⚪ No inline code found');
+      }
+
+      // Extract terminal blocks
+      terminalBlocks = await this.extractTerminalBlocks(page);
+      if (terminalBlocks.length > 0) {
+        this.logger.info(`🖥️ Found ${terminalBlocks.length} terminal blocks:`);
+        terminalBlocks.forEach((block, index) => {
+          this.logger.info(`💻 Terminal ${index + 1}: ${block.content.substring(0, 100)}${block.content.length > 100 ? '...' : ''}`);
+        });
+      } else {
+        this.logger.info('⚪ No terminal blocks found');
+      }
+
+      // Extract file references
+      fileReferences = await this.extractFileReferences(page);
+      if (fileReferences.length > 0) {
+        this.logger.info(`📁 Found ${fileReferences.length} file references:`);
+        fileReferences.forEach((file, index) => {
+          this.logger.info(`📄 File ${index + 1}: ${file.content}`);
+        });
+      } else {
+        this.logger.info('⚪ No file references found');
+      }
+
+      // Extract URLs
+      urls = await this.extractUrls(page);
+      if (urls.length > 0) {
+        this.logger.info(`🔗 Found ${urls.length} URLs:`);
+        urls.forEach((url, index) => {
+          this.logger.info(`🌐 URL ${index + 1}: ${url.url}`);
+        });
+      } else {
+        this.logger.info('⚪ No URLs found');
+      }
+
+      // Extract structured data
+      structuredData = await this.extractStructuredData(page);
+      const totalStructured = Object.values(structuredData).flat().length;
+      if (totalStructured > 0) {
+        this.logger.info(`📊 Found ${totalStructured} structured data blocks:`);
+        Object.entries(structuredData).forEach(([type, blocks]) => {
+          if (blocks.length > 0) {
+            this.logger.info(`📋 ${type.toUpperCase()}: ${blocks.length} blocks`);
+          }
+        });
+      } else {
+        this.logger.info('⚪ No structured data found');
+      }
+
+      // Extract lists and tables
+      listsAndTables = await this.extractListsAndTables(page);
+      const totalLists = listsAndTables.lists.length;
+      const totalTables = listsAndTables.tables.length;
+      if (totalLists > 0 || totalTables > 0) {
+        this.logger.info(`📋 Found ${totalLists} lists and ${totalTables} tables`);
+      } else {
+        this.logger.info('⚪ No lists or tables found');
+      }
+
+    } catch (error) {
+      this.logger.error(`⚠️ Error extracting elements: ${error.message}`);
     }
     
     return {
       success: responseText.length > 0,
       response: responseText,
       duration: Date.now() - startTime,
-      stable: stableCheckCount >= maxStableChecks
+      stable: stableCheckCount >= maxStableChecks,
+      codeBlocks: codeBlocks,
+      inlineCode: inlineCode,
+      terminalBlocks: terminalBlocks,
+      fileReferences: fileReferences,
+      urls: urls,
+      structuredData: structuredData,
+      listsAndTables: listsAndTables
     };
   }
 }

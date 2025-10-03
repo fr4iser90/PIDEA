@@ -1,4 +1,8 @@
 /**
+ * @deprecated Use ide_send_message instead
+ * @since 2025-01-03
+ * This step contains unused/broken analysis features
+ * 
  * Enhanced IDE Send Message Step
  * Sends message to any IDE with intelligent features and confidence checks
  */
@@ -8,13 +12,16 @@ const Logger = require('@logging/Logger');
 const AITextDetector = require('@services/chat/AITextDetector');
 const logger = new Logger('ide_send_message_enhanced');
 
-// Enhanced Step configuration with feature flags
+// Enhanced Step configuration with feature flags - DEPRECATED
 const config = {
   name: 'ide_send_message_enhanced',
+  deprecated: true,
+  deprecatedSince: '2025-01-03',
+  deprecatedReason: 'Features not working, use ide_send_message instead',
   type: 'ide',
   category: 'ide',
-  description: 'Send message to any IDE with intelligent features and confidence checks',
-  version: '2.0.0',
+  description: 'Send message to any IDE with intelligent features and confidence checks (DEPRECATED)',
+  version: '2.0.0-DEPRECATED',
   dependencies: ['sendMessageHandler', 'chatSessionService', 'eventBus'],
   settings: {
     includeTimeout: true,

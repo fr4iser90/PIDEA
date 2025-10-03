@@ -336,30 +336,30 @@ INSERT INTO tasks (
 
 ## Implementation Summary
 
-**Current State**: Das Backend hat bereits eine grundlegende Queue-Infrastruktur (`ExecutionQueue.js`, `RequestQueuingService.js`) und Progress-Tracking (`TaskProgressTracker.js`), aber es fehlt eine Frontend-Integration für die Queue-Verwaltung mit Step-Progress.
+**Current State**: The backend already has basic queue infrastructure (`ExecutionQueue.js`, `RequestQueuingService.js`) and progress tracking (`TaskProgressTracker.js`), but lacks frontend integration for queue management with step progress.
 
-**Queue-Strategie: EINE zentrale Queue für ALLE Workflow-Typen**
-- ✅ **Tasks** → Standard Task Workflow (alle manuellen Tasks)
+**Queue Strategy: ONE central queue for ALL workflow types**
+- ✅ **Tasks** → Standard Task Workflow (all manual tasks)
 - ✅ **Analysis** → Analysis Workflow (Architecture, Code Quality, etc.)
 - ✅ **Framework** → Framework Workflows (DDD Refactoring, etc.)
-- ✅ **Alle** → Gehen durch StepRegistry (sequentielle Ausführung)
+- ✅ **All** → Go through StepRegistry (sequential execution)
 
-**Warum EINE Queue am besten ist:**
-1. **Einheitliche Verwaltung** - Alle sequentiellen Tasks in einem System
-2. **Priorisierung** - Tasks können priorisiert werden (Tasks > Analysis > Framework)
-3. **Ressourcen-Management** - Nur ein System zu verwalten
-4. **Übersichtlichkeit** - Benutzer sehen alle laufenden Prozesse
-5. **Konsistente UI** - Ein Queue-Panel für alles
+**Why ONE queue is best:**
+1. **Unified Management** - All sequential tasks in one system
+2. **Prioritization** - Tasks can be prioritized (Tasks > Analysis > Framework)
+3. **Resource Management** - Only one system to manage
+4. **Overview** - Users see all running processes
+5. **Consistent UI** - One queue panel for everything
 
-**Hauptproblem**: Keine visuelle Möglichkeit, die Queue zu überwachen, Tasks zu priorisieren, laufende Tasks zu stoppen oder detaillierte Step-Progress zu verfolgen.
+**Main Problem**: No visual way to monitor the queue, prioritize tasks, stop running tasks, or track detailed step progress.
 
-**Lösung**: Implementierung einer umfassenden Queue-Management-UI mit Step-Progress-Tracking:
-1. **QueueManagementPanel** - Hauptinterface für Queue-Überwachung
-2. **ActiveTaskItem** - Detaillierte Step-Progress-Anzeige für aktive Tasks
-3. **StepTimeline** - Visuelle Step-Timeline mit Progress-Indikatoren
-4. **Real-time Updates** - WebSocket-Integration für Live-Status und Step-Updates
-5. **Task Control** - Möglichkeit zum Stoppen/Neustarten von Tasks und Steps
-6. **Queue API** - Backend-Endpoints für Queue-Management mit Step-Integration
+**Solution**: Implementation of comprehensive queue management UI with step progress tracking:
+1. **QueueManagementPanel** - Main interface for queue monitoring
+2. **ActiveTaskItem** - Detailed step progress display for active tasks
+3. **StepTimeline** - Visual step timeline with progress indicators
+4. **Real-time Updates** - WebSocket integration for live status and step updates
+5. **Task Control** - Ability to stop/restart tasks and steps
+6. **Queue API** - Backend endpoints for queue management with step integration
 
-**Zeitaufwand**: 26-30 Stunden für vollständige Implementierung mit Step-Progress
-**Priorität**: Hoch - Verbessert erheblich die Benutzererfahrung bei der Task-Verwaltung und Workflow-Abarbeitung 
+**Time Investment**: 26-30 hours for complete implementation with step progress
+**Priority**: High - Significantly improves user experience in task management and workflow processing 
