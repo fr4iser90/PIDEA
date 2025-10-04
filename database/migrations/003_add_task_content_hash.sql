@@ -10,7 +10,7 @@ ALTER TABLE tasks ADD COLUMN content_hash TEXT;
 ALTER TABLE tasks ADD COLUMN file_path TEXT;
 
 -- Add last synced timestamp for consistency tracking
-ALTER TABLE tasks ADD COLUMN last_synced_at TEXT;
+ALTER TABLE tasks ADD COLUMN last_synced_at TIMESTAMP WITH TIME ZONE;
 
 -- Create task_file_events table for event sourcing
 CREATE TABLE IF NOT EXISTS task_file_events (
@@ -22,11 +22,11 @@ CREATE TABLE IF NOT EXISTS task_file_events (
     from_path TEXT,
     to_path TEXT,
     content_hash TEXT,
-    is_valid INTEGER,
-    metadata TEXT, -- JSON for extended data
+    is_valid BOOLEAN,
+    metadata JSONB, -- JSON for extended data
     user_id TEXT NOT NULL DEFAULT 'system',
-    event_timestamp TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    event_timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     FOREIGN KEY (task_id) REFERENCES tasks (id)
 );
 
@@ -53,11 +53,11 @@ UPDATE tasks
 SET 
     content_hash = NULL,
     file_path = NULL,
-    last_synced_at = CURRENT_TIMESTAMP
+    last_synced_at = NOW()
 WHERE content_hash IS NULL;
 
 -- Create view for task status consistency monitoring
-CREATE VIEW IF NOT EXISTS task_status_consistency AS
+CREATE OR REPLACE VIEW task_status_consistency AS
 SELECT 
     t.id,
     t.title,

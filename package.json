@@ -12,7 +12,7 @@
     "dev": "concurrently --prefix none \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run start --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
-    "dev:postgres": "docker-compose -f docker-compose.dev.yml up -d",
+    "dev:postgres": "docker-compose -f docker-compose.dev.yml up -d && sleep 5 && concurrently --prefix none \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:postgres:rebuild": "docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.dev.yml build --no-cache pidea-db && docker-compose -f docker-compose.dev.yml up -d",
     "dev:postgres:clean": "docker-compose -f docker-compose.dev.yml down -v && docker-compose -f docker-compose.dev.yml build --no-cache pidea-db && docker-compose -f docker-compose.dev.yml up -d",
     "db:reset": "docker-compose -f docker-compose.dev.yml down && docker volume rm pidea_pidea-db-dev-data && docker-compose -f docker-compose.dev.yml build --no-cache && docker-compose -f docker-compose.dev.yml up",

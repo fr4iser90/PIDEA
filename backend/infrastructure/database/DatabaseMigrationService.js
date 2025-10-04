@@ -22,17 +22,33 @@ class DatabaseMigrationService {
     }
 
     async createMigrationsTable() {
-        const createTableSQL = `
-            CREATE TABLE IF NOT EXISTS migrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                migration_name TEXT UNIQUE NOT NULL,
-                applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status TEXT DEFAULT 'applied',
-                execution_time_ms INTEGER
-            );
-        `;
+        let createTableSQL;
         
-        // Use the SQLite connection directly to avoid SQL translation issues
+        if (this.databaseConnection.getType() === 'postgresql') {
+            // PostgreSQL-Syntax
+            createTableSQL = `
+                CREATE TABLE IF NOT EXISTS migrations (
+                    id SERIAL PRIMARY KEY,
+                    migration_name VARCHAR(255) UNIQUE NOT NULL,
+                    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    status VARCHAR(50) DEFAULT 'applied',
+                    execution_time_ms INTEGER
+                );
+            `;
+        } else {
+            // SQLite-Syntax
+            createTableSQL = `
+                CREATE TABLE IF NOT EXISTS migrations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    migration_name TEXT UNIQUE NOT NULL,
+                    applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    status TEXT DEFAULT 'applied',
+                    execution_time_ms INTEGER
+                );
+            `;
+        }
+        
+        // Execute with appropriate connection
         if (this.databaseConnection.getType() === 'sqlite') {
             await this.databaseConnection.dbConnection.execute(createTableSQL);
         } else {
@@ -91,10 +107,17 @@ class DatabaseMigrationService {
 
     async getAppliedMigrations() {
         try {
-            const result = await this.databaseConnection.query(
-                'SELECT migration_name FROM migrations WHERE status = ? ORDER BY applied_at',
-                ['applied']
-            );
+            let query, params;
+            
+            if (this.databaseConnection.getType() === 'postgresql') {
+                query = 'SELECT migration_name FROM migrations WHERE status = $1 ORDER BY applied_at';
+                params = ['applied'];
+            } else {
+                query = 'SELECT migration_name FROM migrations WHERE status = ? ORDER BY applied_at';
+                params = ['applied'];
+            }
+            
+            const result = await this.databaseConnection.query(query, params);
             
             return result.map(row => row.migration_name);
         } catch (error) {
@@ -157,10 +180,17 @@ class DatabaseMigrationService {
 
     async recordMigration(migrationName, status, executionTime) {
         try {
-            await this.databaseConnection.execute(
-                'INSERT INTO migrations (migration_name, status, execution_time_ms) VALUES ($1, $2, $3)',
-                [migrationName, status, executionTime]
-            );
+            let query, params;
+            
+            if (this.databaseConnection.getType() === 'postgresql') {
+                query = 'INSERT INTO migrations (migration_name, status, execution_time_ms) VALUES ($1, $2, $3)';
+                params = [migrationName, status, executionTime];
+            } else {
+                query = 'INSERT INTO migrations (migration_name, status, execution_time_ms) VALUES (?, ?, ?)';
+                params = [migrationName, status, executionTime];
+            }
+            
+            await this.databaseConnection.execute(query, params);
         } catch (error) {
             this.logger.error('❌ Error recording migration:', error);
         }
