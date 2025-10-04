@@ -40,11 +40,11 @@ export default defineConfig(({ mode }) => {
         secure: false,
         configure: (proxy, options) => {
           proxy.on('proxyRes', (proxyRes, req, res) => {
-            // Ensure cookies are properly forwarded
+            // Ensure cookies are properly forwarded with domain preserved
             if (proxyRes.headers['set-cookie']) {
               proxyRes.headers['set-cookie'] = proxyRes.headers['set-cookie'].map(cookie => {
-                // Remove domain restriction for localhost development
-                return cookie.replace(/domain=localhost;?/gi, '');
+                // Keep domain for localhost to ensure cookie persistence
+                return cookie;
               });
             }
           });

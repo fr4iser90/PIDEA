@@ -80,7 +80,7 @@ class AuthController {
         httpOnly: false, // Set to false in development to allow JavaScript access for debugging
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        // No domain specified to allow cookies to work with Vite proxy
+        // No domain in development - allows JavaScript to read cookies and cross-port sharing
       };
 
       logger.info('🔍 [AuthController] Setting cookies with options:', cookieOptions);

@@ -379,6 +379,34 @@ function TasksPanelComponent({ eventBus, activePort }) {
     }
   };
 
+  const handleOpenReviewModal = async () => {
+    if (!projectId || !activeIDE?.workspacePath) {
+      setFeedback('No project selected for task review');
+      return;
+    }
+    
+    setIsReviewLoading(true);
+    try {
+      // ✅ CRITICAL FIX: Sync tasks BEFORE opening review modal
+      logger.info('🔄 Syncing tasks before opening review modal to ensure latest status...');
+      await handleSyncTasks();
+      
+      // Wait a moment for sync to complete and data to refresh
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Now open the modal with fresh data
+      setIsReviewModalOpen(true);
+      
+      logger.info('Review modal opened with synced data');
+      
+    } catch (error) {
+      logger.error('Error syncing before review modal:', error);
+      setFeedback(`Failed to sync tasks: ${error.message}`);
+    } finally {
+      setIsReviewLoading(false);
+    }
+  };
+
   const handleStartReview = async (selectedTasks) => {
     if (!projectId || !activeIDE?.workspacePath) {
       setFeedback('No project selected for task review');
@@ -387,7 +415,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
     
     setIsReviewLoading(true);
     try {
-      // Use TaskReviewService to execute the workflow
+      // Use TaskReviewService to execute the workflow (sync already done in handleOpenReviewModal)
       const taskReviewService = new TaskReviewService();
       const result = await taskReviewService.executeTaskReviewWorkflow(
         selectedTasks, 
@@ -666,7 +694,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
             </button>
             <button 
               className="btn-secondary text-sm"
-              onClick={() => setIsReviewModalOpen(true)}
+              onClick={handleOpenReviewModal}
               disabled={isReviewLoading || !projectId || manualTasks.length === 0}
               title={projectId ? "Review selected tasks" : "No project selected"}
             >

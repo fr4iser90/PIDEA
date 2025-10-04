@@ -519,6 +519,50 @@ Please execute the task according to the review analysis and provide real-time p
   }
 
   /**
+   * Validate task status before review
+   * @param {Array} tasks - Tasks to validate
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Validation result
+   */
+  async validateTaskStatus(tasks, projectId) {
+    try {
+      console.log('TaskReviewService: Validating task statuses:', {
+        taskCount: tasks.length,
+        projectId
+      });
+      
+      // Filter out completed tasks
+      const validTasks = tasks.filter(task => {
+        const status = task.status?.value || task.status;
+        return status !== 'completed';
+      });
+      
+      const completedTasks = tasks.filter(task => {
+        const status = task.status?.value || task.status;
+        return status === 'completed';
+      });
+      
+      console.log('TaskReviewService: Status validation completed:', {
+        totalTasks: tasks.length,
+        validTasks: validTasks.length,
+        completedTasks: completedTasks.length
+      });
+      
+      return {
+        success: true,
+        validTasks,
+        completedTasks,
+        totalTasks: tasks.length,
+        message: `Found ${validTasks.length} reviewable tasks (${completedTasks.length} completed tasks excluded)`
+      };
+      
+    } catch (error) {
+      console.error('TaskReviewService: Task status validation failed:', error);
+      throw new Error(`Status validation failed: ${error.message}`);
+    }
+  }
+
+  /**
    * Execute task review workflow for multiple tasks
    * @param {Array} selectedTasks - Array of selected tasks
    * @param {String} projectId - Project identifier

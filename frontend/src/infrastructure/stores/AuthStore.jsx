@@ -41,7 +41,10 @@ const useAuthStore = create(
         
         try {
           // Check for cookies - if no cookies, user is not authenticated
+          // Debug: Log all cookies to see what's available
+          logger.info('🔍 [AuthStore] All cookies:', document.cookie);
           const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
+          logger.info('🔍 [AuthStore] Has cookies:', hasCookies);
           
           if (!hasCookies) {
             logger.info('❌ [AuthStore] No authentication cookies found');
@@ -78,6 +81,7 @@ const useAuthStore = create(
           set({ 
             isValidating: false,
             isInitialized: true,
+            isAuthenticated: true, // CRITICAL: Set authentication state after successful validation!
             error: null
           });
           
