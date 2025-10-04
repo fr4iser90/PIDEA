@@ -61,10 +61,7 @@ const useAuthStore = create(
           
           // Validate cookies with backend
           logger.info('🔍 [AuthStore] Found cookies, validating with backend...');
-          const isValid = await Promise.race([
-            get().validateToken(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Validation timeout')), 5000))
-          ]);
+          const isValid = await get().validateToken();
           
           if (!isValid) {
             logger.info('❌ [AuthStore] Cookie validation failed');

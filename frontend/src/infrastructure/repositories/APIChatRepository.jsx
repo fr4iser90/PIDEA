@@ -189,7 +189,16 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
   });
 
   try {
-    const response = await fetch(url, config);
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    
+    const response = await fetch(url, {
+      ...config,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
     
     logger.info('🔍 [APIChatRepository] Response status:', response.status);
     
