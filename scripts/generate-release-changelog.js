@@ -82,20 +82,18 @@ class CompactReleaseGenerator {
    */
   async getCommitsBetween(fromVersion, toVersion) {
     try {
-      // Check if tags exist, otherwise use HEAD
+      // Check if tags exist, otherwise use HEAD (silently)
       let toRef = `v${toVersion}`;
       try {
-        execSync(`git rev-parse v${toVersion}`, { cwd: this.projectRoot });
+        execSync(`git rev-parse v${toVersion}`, { cwd: this.projectRoot, stdio: 'ignore' });
       } catch (error) {
-        console.log(colors.yellow(`⚠️  Tag v${toVersion} not found, using HEAD`));
         toRef = 'HEAD';
       }
       
       let fromRef = `v${fromVersion}`;
       try {
-        execSync(`git rev-parse v${fromVersion}`, { cwd: this.projectRoot });
+        execSync(`git rev-parse v${fromVersion}`, { cwd: this.projectRoot, stdio: 'ignore' });
       } catch (error) {
-        console.log(colors.yellow(`⚠️  Tag v${fromVersion} not found, using last 30 days`));
         fromRef = '--since="30 days ago"';
       }
       
