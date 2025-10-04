@@ -239,9 +239,9 @@ class IDEManager {
           const workspacePromise = this.detectWorkspacePath(ide.port);
           const versionPromise = this.detectIDEVersion(ide.port, ide.ideType);
           
-          // Add timeout protection (max 2 seconds per IDE)
+          // Add timeout protection (max 10 seconds per IDE)
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('IDE detection timeout')), 2000)
+            setTimeout(() => reject(new Error('IDE detection timeout')), 10000)
           );
           
           const [workspacePath, version] = await Promise.race([

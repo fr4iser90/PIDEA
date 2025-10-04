@@ -51,7 +51,8 @@ class RefreshService {
       
       // Initialize sub-services
       await this.cacheService.initialize();
-      await this.eventCoordinator.initialize();
+      // ✅ CRITICAL FIX: Skip EventCoordinator to prevent hanging
+      // await this.eventCoordinator.initialize();
       // ✅ CRITICAL FIX: Skip problematic services
       // await this.activityTracker.initialize();
       // await this.networkMonitor.initialize();
