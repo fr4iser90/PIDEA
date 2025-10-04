@@ -3,6 +3,25 @@
 ## Goal
 Centralized reference for all task management patterns, file structures, database fields, and AI execution contexts. This file serves as the single source of truth for all task management standards.
 
+## Language Requirements - MANDATORY
+
+### FORBIDDEN TERMS (Never Use):
+- unified, comprehensive, advanced, intelligent, smart, enhanced, optimized, streamlined, consolidated, sophisticated, robust, scalable, efficient, dynamic, flexible, modular, extensible, maintainable, performant
+
+### REQUIRED TERMS (Always Use):
+- one, single, main, basic, simple, direct, clear, standard, normal, regular
+
+### EXAMPLES:
+- ❌ "UnifiedCacheService" → ✅ "CacheService"
+- ❌ "Comprehensive Analysis" → ✅ "Analysis"
+- ❌ "Advanced Integration" → ✅ "Integration"
+- ❌ "Smart Detection" → ✅ "Detection"
+- ❌ "Enhanced Performance" → ✅ "Performance"
+- ❌ "Optimized Configuration" → ✅ "Configuration"
+
+### VALIDATION RULE:
+Before saving any content, scan for forbidden terms and replace with simple alternatives.
+
 ## Core File Patterns
 
 ### File Path Structure

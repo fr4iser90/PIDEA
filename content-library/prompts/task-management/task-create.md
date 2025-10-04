@@ -8,6 +8,25 @@ Check Plan against codebase, collect all data u need!
 Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pending/[priority]/[category]/[name]/ with the following structure:
 **Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Implementation files
 
+## Language Requirements - MANDATORY
+
+### FORBIDDEN TERMS (Never Use):
+- unified, comprehensive, advanced, intelligent, smart, enhanced, optimized, streamlined, consolidated, sophisticated, robust, scalable, efficient, dynamic, flexible, modular, extensible, maintainable, performant
+
+### REQUIRED TERMS (Always Use):
+- one, single, main, basic, simple, direct, clear, standard, normal, regular
+
+### EXAMPLES:
+- ❌ "UnifiedCacheService" → ✅ "CacheService"
+- ❌ "Comprehensive Analysis" → ✅ "Analysis"
+- ❌ "Advanced Integration" → ✅ "Integration"
+- ❌ "Smart Detection" → ✅ "Detection"
+- ❌ "Enhanced Performance" → ✅ "Performance"
+- ❌ "Optimized Configuration" → ✅ "Configuration"
+
+### VALIDATION RULE:
+Before saving any content, scan for forbidden terms and replace with simple alternatives.
+
 ## Template Structure
 
 > **File Pattern Requirement:**  

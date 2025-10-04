@@ -11,6 +11,25 @@ Analyze existing tasks to determine their current completion status, identify ou
 > - **Progress Tracking**: Accurate progress percentages and milestone status
 > - **Status Migration**: Move completed tasks to appropriate status folders
 
+## Language Requirements - MANDATORY
+
+### FORBIDDEN TERMS (Never Use):
+- unified, comprehensive, advanced, intelligent, smart, enhanced, optimized, streamlined, consolidated, sophisticated, robust, scalable, efficient, dynamic, flexible, modular, extensible, maintainable, performant
+
+### REQUIRED TERMS (Always Use):
+- one, single, main, basic, simple, direct, clear, standard, normal, regular
+
+### EXAMPLES:
+- ❌ "UnifiedCacheService" → ✅ "CacheService"
+- ❌ "Comprehensive Analysis" → ✅ "Analysis"
+- ❌ "Advanced Integration" → ✅ "Integration"
+- ❌ "Smart Detection" → ✅ "Detection"
+- ❌ "Enhanced Performance" → ✅ "Performance"
+- ❌ "Optimized Configuration" → ✅ "Configuration"
+
+### VALIDATION RULE:
+Before saving any content, scan for forbidden terms and replace with simple alternatives.
+
 ## Core Analysis Process
 - **Status Evaluation**: Check actual implementation against planned tasks
 - **Progress Assessment**: Determine completion percentage and remaining work

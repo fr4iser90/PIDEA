@@ -33,6 +33,25 @@ Check current state against codebase, collect all data needed!
 Update existing [Name]-index.md and [Name]-implementation.md files in docs/09_roadmap/pending/[priority]/[category]/[name]/ with current status, progress, and translation updates.
 **Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Implementation files
 
+## Language Requirements - MANDATORY
+
+### FORBIDDEN TERMS (Never Use):
+- unified, comprehensive, advanced, intelligent, smart, enhanced, optimized, streamlined, consolidated, sophisticated, robust, scalable, efficient, dynamic, flexible, modular, extensible, maintainable, performant
+
+### REQUIRED TERMS (Always Use):
+- one, single, main, basic, simple, direct, clear, standard, normal, regular
+
+### EXAMPLES:
+- ❌ "UnifiedCacheService" → ✅ "CacheService"
+- ❌ "Comprehensive Analysis" → ✅ "Analysis"
+- ❌ "Advanced Integration" → ✅ "Integration"
+- ❌ "Smart Detection" → ✅ "Detection"
+- ❌ "Enhanced Performance" → ✅ "Performance"
+- ❌ "Optimized Configuration" → ✅ "Configuration"
+
+### VALIDATION RULE:
+Before saving any content, scan for forbidden terms and replace with simple alternatives.
+
 ## Core Principles
 - **Zero User Input Required**: Execute all status checks and updates automatically
 - **Automatic Translation**: Detect and translate non-English content to English

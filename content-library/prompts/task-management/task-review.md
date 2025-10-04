@@ -10,6 +10,25 @@ Review, validate, and analyze development tasks against the actual codebase. Ana
 > - **Phase**: docs/09_roadmap/pending/[priority]/[category]/[name]/[name]-phase-[number].md  
 > If ANY file is missing, it MUST be created automatically. This pattern is required for orchestration and grouping in the system.
 
+## Language Requirements - MANDATORY
+
+### FORBIDDEN TERMS (Never Use):
+- unified, comprehensive, advanced, intelligent, smart, enhanced, optimized, streamlined, consolidated, sophisticated, robust, scalable, efficient, dynamic, flexible, modular, extensible, maintainable, performant
+
+### REQUIRED TERMS (Always Use):
+- one, single, main, basic, simple, direct, clear, standard, normal, regular
+
+### EXAMPLES:
+- ❌ "UnifiedCacheService" → ✅ "CacheService"
+- ❌ "Comprehensive Analysis" → ✅ "Analysis"
+- ❌ "Advanced Integration" → ✅ "Integration"
+- ❌ "Smart Detection" → ✅ "Detection"
+- ❌ "Enhanced Performance" → ✅ "Performance"
+- ❌ "Optimized Configuration" → ✅ "Configuration"
+
+### VALIDATION RULE:
+Before saving any content, scan for forbidden terms and replace with simple alternatives.
+
 ## Core Review Process
 - **File Structure Validation**: Check if all required files exist, create missing ones
 - **Analyze Codebase**: Check Plan against codebase, collect all data u need.
