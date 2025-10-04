@@ -84,7 +84,7 @@ describe('IDERequirementService', () => {
       const configData = {
         ideType: 'cursor',
         executablePath: '/usr/bin/cursor',
-        version: '1.0.0'
+        version: '1.0.3''
       };
 
       const createdConfig = {
@@ -123,7 +123,7 @@ describe('IDERequirementService', () => {
     it('should validate executable path', async () => {
       const validationResult = {
         valid: true,
-        version: '1.0.0'
+        version: '1.0.3''
       };
 
       apiCall.mockResolvedValueOnce({

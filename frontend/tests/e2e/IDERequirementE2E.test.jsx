@@ -139,7 +139,7 @@ test.describe('IDE Requirement Modal E2E', () => {
             success: true,
             data: {
               valid: true,
-              version: '1.0.0'
+              version: '1.0.3''
             }
           })
         });
@@ -166,7 +166,7 @@ test.describe('IDE Requirement Modal E2E', () => {
     await pathInput.fill('/usr/bin/cursor');
 
     // Wait for validation
-    await expect(page.locator('text=Valid executable (version 1.0.0)')).toBeVisible();
+    await expect(page.locator('text=Valid executable (version: '1.0.3')')).toBeVisible();
 
     // Enter invalid path
     await pathInput.fill('/invalid/path');

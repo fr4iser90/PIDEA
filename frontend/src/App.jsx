@@ -350,7 +350,7 @@ function App() {
           <Footer 
             eventBus={eventBus}
             activePort={activePort}
-            version="1.0.0"
+            version: '1.0.3'"
             message="Welcome to PIDEA! Your AI development assistant is ready to help."
           />
 

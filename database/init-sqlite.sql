@@ -211,7 +211,7 @@ CREATE TABLE IF NOT EXISTS workflow_executions (
     execution_id TEXT UNIQUE NOT NULL,
     workflow_id TEXT NOT NULL,
     workflow_name TEXT,
-    workflow_version TEXT DEFAULT '1.0.0',
+    workflow_version: '1.0.3'',
     project_id TEXT,
     task_id TEXT,
     user_id TEXT NOT NULL DEFAULT 'me',
@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS task_templates (
     variables TEXT, -- JSON array of template variables
     metadata TEXT, -- JSON for template metadata
     is_active BOOLEAN NOT NULL DEFAULT true,
-    version TEXT DEFAULT '1.0.0',
+    version: '1.0.3'',
     created_by TEXT NOT NULL DEFAULT 'me',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

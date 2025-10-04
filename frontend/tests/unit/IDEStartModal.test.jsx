@@ -182,7 +182,7 @@ describe('IDEStartModal', () => {
     it('should validate executable path', async () => {
       const validationResult = {
         valid: true,
-        version: '1.0.0'
+        version: '1.0.3''
       };
 
       mockIDERequirementService.validateExecutablePath.mockResolvedValueOnce(validationResult);
@@ -203,7 +203,7 @@ describe('IDEStartModal', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Valid executable (version 1.0.0)')).toBeInTheDocument();
+        expect(screen.getByText('Valid executable (version: '1.0.3')')).toBeInTheDocument();
       });
     });
 

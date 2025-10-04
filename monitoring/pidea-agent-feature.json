@@ -1,6 +1,6 @@
 {
   "feature": "pidea-agent-branch",
-  "version": "1.0.0",
+  "version: '1.0.3'",
   "deployment_date": "2024-12-19T10:00:00Z",
   "environment": "staging",
   "description": "PIDEA Agent Branch Management Feature Monitoring Configuration",

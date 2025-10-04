@@ -240,19 +240,19 @@ class IDEStartService {
         displayName: 'Cursor',
         description: 'AI-powered code editor',
         icon: '🎯',
-        version: '1.0.0'
+        version: '1.0.3''
       },
       vscode: {
         displayName: 'VS Code',
         description: 'Microsoft Visual Studio Code',
         icon: '📝',
-        version: '1.0.0'
+        version: '1.0.3''
       },
       windsurf: {
         displayName: 'Windsurf',
         description: 'AI-powered development environment',
         icon: '🌊',
-        version: '1.0.0'
+        version: '1.0.3''
       }
     };
 
