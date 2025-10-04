@@ -5,6 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 class CentralVersionManager {
   constructor() {
@@ -158,6 +159,99 @@ class CentralVersionManager {
    */
   getChangelogInfo() {
     return this.versionData.changelog;
+  }
+
+  /**
+   * Sync commit count with Git reality
+   * Updates only the commit count in version.json without changing the version
+   */
+  syncCommitCount() {
+    try {
+      const projectRoot = path.join(__dirname, '../../..');
+      const sinceVersion = this.versionData.changelog.sinceVersion;
+      
+      console.log(`🔍 Syncing commit count since ${sinceVersion}...`);
+      
+      // Get actual commit count from Git
+      const gitCommand = `git log --oneline ${sinceVersion}..HEAD | wc -l`;
+      const actualCommits = parseInt(execSync(gitCommand, { 
+        cwd: projectRoot, 
+        encoding: 'utf8' 
+      }).trim());
+      
+      const storedCommits = this.versionData.changelog.commits;
+      
+      console.log(`📊 Git reality: ${actualCommits} commits`);
+      console.log(`📄 Stored in version.json: ${storedCommits} commits`);
+      
+      if (actualCommits !== storedCommits) {
+        console.log(`⚠️  Discrepancy detected! Updating commit count...`);
+        
+        // Update only the commit count and generation timestamp
+        this.versionData.changelog.commits = actualCommits;
+        this.versionData.changelog.generated = new Date().toISOString();
+        
+        // Save updated version.json
+        fs.writeFileSync(this.versionFilePath, JSON.stringify(this.versionData, null, 2));
+        
+        // Update CHANGELOG.md to match the new commit count
+        this.updateChangelogFile(actualCommits);
+        
+        console.log(`✅ Updated version.json: ${storedCommits} → ${actualCommits} commits`);
+        console.log(`✅ Updated CHANGELOG.md: ${storedCommits} → ${actualCommits} commits`);
+        console.log(`📅 Generated: ${this.versionData.changelog.generated}`);
+        
+        return {
+          success: true,
+          previousCommits: storedCommits,
+          actualCommits: actualCommits,
+          discrepancy: actualCommits - storedCommits,
+          updated: true
+        };
+      } else {
+        console.log(`✅ Commit count is already in sync!`);
+        return {
+          success: true,
+          previousCommits: storedCommits,
+          actualCommits: actualCommits,
+          discrepancy: 0,
+          updated: false
+        };
+      }
+      
+    } catch (error) {
+      console.error(`❌ Error syncing commit count:`, error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Update CHANGELOG.md with correct commit count
+   */
+  updateChangelogFile(actualCommits) {
+    try {
+      const changelogPath = path.join(__dirname, '../../../CHANGELOG.md');
+      
+      if (fs.existsSync(changelogPath)) {
+        let content = fs.readFileSync(changelogPath, 'utf8');
+        
+        // Replace the commit count in the changelog
+        content = content.replace(
+          /- \*\*Commits:\*\* \d+ new changes since/,
+          `- **Commits:** ${actualCommits} new changes since`
+        );
+        
+        fs.writeFileSync(changelogPath, content);
+        console.log(`📝 Updated CHANGELOG.md commit count: ${actualCommits}`);
+      } else {
+        console.warn('⚠️  CHANGELOG.md not found, skipping update');
+      }
+    } catch (error) {
+      console.warn('⚠️  Failed to update CHANGELOG.md:', error.message);
+    }
   }
 }
 

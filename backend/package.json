@@ -16,6 +16,7 @@
     "test:legacy-scan": "node scripts/test-management/legacy-detector.js ./tests",
     "test:status-track": "node scripts/test-management/test-status-tracker.js track jest-results.json",
     "test:version": "node scripts/test-management/test-versioner.js version",
+    "version:sync-commits": "node -e \"const CentralVersionManager = require('./config/version/CentralVersionManager'); const manager = new CentralVersionManager(); manager.syncCommitCount();\"",
     "test:report": "node scripts/test-management/test-reporter.js report --format markdown --output test-report.md",
     "test:report:full": "node scripts/test-management/test-reporter.js report --format markdown --output test-report-full.md --full-output",
     "test:health": "node scripts/test-management/test-reporter.js health",
