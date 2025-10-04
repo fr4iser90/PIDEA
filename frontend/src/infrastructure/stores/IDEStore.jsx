@@ -241,11 +241,11 @@ const useIDEStore = create(
             logger.info('❌ Cache MISS - no cached data found');
             logger.info(`🔍 Cache key: ${key}`);
             logger.info(`📊 Cache stats: ${JSON.stringify(cacheService.getStats())}`);
-          }
-      
-          const apiStart = performance.now();
-          const result = await apiCall('/api/ide/available');
-          const apiDuration = performance.now() - apiStart;
+            
+            // ✅ FIX: Only make API call on cache miss
+            const apiStart = performance.now();
+            const result = await apiCall('/api/ide/available');
+            const apiDuration = performance.now() - apiStart;
           
           if (result.success) {
             const cacheSetStart = performance.now();
@@ -276,6 +276,7 @@ const useIDEStore = create(
               error: result.error 
             });
           }
+          } // ✅ FIX: Close the else block for cache miss
         } catch (error) {
           logger.error('Error loading available IDEs:', error);
           set({ error: error.message, isLoading: false, loadingLock: false });
@@ -649,7 +650,7 @@ const useIDEStore = create(
         }
       },
 
-      // NEW: Task Loading Action
+      // NEW: Task Loading Action with Cache Integration
       loadProjectTasks: async (workspacePath) => {
         if (!workspacePath) return;
         
@@ -657,7 +658,49 @@ const useIDEStore = create(
           const projectId = getProjectIdFromWorkspace(workspacePath);
           if (!projectId) return;
           
-          logger.info('Loading project tasks for workspace:', workspacePath, 'projectId:', projectId);
+          const { activePort } = get();
+          if (!activePort) {
+            logger.warn('No active port available for task loading');
+            return;
+          }
+          
+          logger.info('Loading project tasks for workspace:', workspacePath, 'projectId:', projectId, 'port:', activePort);
+          
+          // ✅ CRITICAL FIX: Check cache first using hierarchical key
+          const cacheKey = cacheService.generateHierarchicalKey('tasks', activePort, projectId, 'data');
+          const cachedTasks = cacheService.get(cacheKey);
+          
+          if (cachedTasks) {
+            // ✅ CRITICAL FIX: Only use cache if it has real tasks
+            const taskCount = cachedTasks.tasks?.length || 0;
+            if (taskCount > 0) {
+              logger.info('✅ Using cached tasks data:', { 
+                workspacePath, 
+                projectId, 
+                port: activePort, 
+                taskCount: taskCount 
+              });
+              
+              // Update state with cached data
+              set(state => ({
+                projectData: {
+                  ...state.projectData,
+                  tasks: {
+                    ...state.projectData.tasks,
+                    [workspacePath]: cachedTasks
+                  },
+                  lastUpdate: new Date().toISOString()
+                }
+              }));
+              
+              return cachedTasks;
+            } else {
+              logger.warn('⚠️ Cached tasks are empty, clearing cache and loading fresh data');
+              cacheService.delete(cacheKey);
+            }
+          }
+          
+          logger.info('Cache miss for tasks, loading from API:', { workspacePath, projectId, port: activePort });
           
           // Load tasks from API
           const response = await apiCall(`/api/projects/${projectId}/tasks`);
@@ -666,6 +709,19 @@ const useIDEStore = create(
             tasks: response && response.success ? (Array.isArray(response.data) ? response.data : []) : [],
             lastUpdate: new Date().toISOString()
           };
+          
+          // ✅ CRITICAL FIX: Only cache if we have real tasks
+          if (taskData.tasks.length > 0) {
+            cacheService.set(cacheKey, taskData, 'tasks', 'tasks');
+            logger.info('💾 Cached tasks data:', { 
+              workspacePath, 
+              projectId, 
+              port: activePort, 
+              taskCount: taskData.tasks.length 
+            });
+          } else {
+            logger.warn('⚠️ No tasks to cache, skipping cache storage');
+          }
           
           set(state => ({
             projectData: {
@@ -679,8 +735,11 @@ const useIDEStore = create(
           }));
           
           logger.info('Project tasks loaded for workspace:', workspacePath, 'taskCount:', taskData.tasks.length);
+          return taskData;
+          
         } catch (error) {
           logger.error('Failed to load project tasks:', error);
+          return null;
         }
       },
 
@@ -1242,6 +1301,35 @@ const useIDEStore = create(
           if (result.success) {
             // Cache is handled by CacheService
             // No need to manually cache here
+            
+            // ✅ NEW: Trigger cache warming after successful IDE switch
+            try {
+              const { availableIDEs } = get();
+              const switchedIDE = availableIDEs.find(ide => ide.port === port);
+              
+              if (switchedIDE?.workspacePath) {
+                const projectId = getProjectIdFromWorkspace(switchedIDE.workspacePath);
+                
+                if (projectId) {
+                  logger.info('🔥 Triggering cache warming after IDE switch:', { port, projectId });
+                  
+                  // Import cache warming service dynamically to avoid circular dependencies
+                  const { cacheWarmingService } = await import('@/infrastructure/services/CacheWarmingService');
+                  
+                  // Warm cache for IDE switch trigger
+                  cacheWarmingService.warmForTrigger('ide:switch', port, projectId)
+                    .then(results => {
+                      logger.info('🔥 Cache warming completed:', results);
+                    })
+                    .catch(error => {
+                      logger.error('🔥 Cache warming failed:', error);
+                    });
+                }
+              }
+            } catch (warmingError) {
+              logger.error('Cache warming integration failed:', warmingError);
+              // Don't fail the IDE switch if warming fails
+            }
             
             logger.info('Successfully switched to IDE:', port);
             optimizationStore.completeSwitch(true, Date.now() - startTime);

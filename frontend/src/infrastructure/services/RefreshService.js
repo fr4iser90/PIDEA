@@ -52,17 +52,16 @@ class RefreshService {
       // Initialize sub-services
       await this.cacheService.initialize();
       await this.eventCoordinator.initialize();
-      await this.activityTracker.initialize();
-      await this.networkMonitor.initialize();
+      // ✅ CRITICAL FIX: Skip problematic services
+      // await this.activityTracker.initialize();
+      // await this.networkMonitor.initialize();
       
       // Set up event listeners
       this.setupEventListeners();
       
-      // Set up activity tracking
-      this.setupActivityTracking();
-      
-      // Set up network monitoring
-      this.setupNetworkMonitoring();
+      // ✅ CRITICAL FIX: Skip problematic setup methods
+      // this.setupActivityTracking();
+      // this.setupNetworkMonitoring();
       
       this.isInitialized = true;
       logger.info('✅ RefreshService initialized successfully');

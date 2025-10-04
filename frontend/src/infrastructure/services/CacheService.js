@@ -31,7 +31,11 @@ export class CacheService {
       selectiveInvalidations: 0,
       totalSize: 0,
       hitRate: 0,
-      averageResponseTime: 0
+      averageResponseTime: 0,
+      memorySize: 0,
+      memoryEntries: 0,
+      namespaces: 0,
+      isInitialized: false
     };
     
     // Event coordinator for selective invalidation
@@ -42,6 +46,9 @@ export class CacheService {
     this.namespaces = new Map();
     
     this.isInitialized = false;
+    
+    // ✅ CRITICAL FIX: Don't auto-initialize - let RefreshService handle it
+    // this.initialize(); // Disabled to prevent double initialization
     
     logger.info('CacheService initialized with centralized configuration', {
       maxMemorySize: this.maxMemorySize,
@@ -57,20 +64,78 @@ export class CacheService {
     if (this.isInitialized) return;
     
     try {
-      // Initialize IndexedDB if available
+      logger.info('🔄 Initializing CacheService...');
+      
+      // ✅ CRITICAL FIX: Initialize IndexedDB first
+      await this.initializeIndexedDB();
+      
+      // Load existing data from IndexedDB to memory
+      await this.loadFromIndexedDBToMemory();
+      
+      // Start cleanup intervals
+      this.setupCleanupIntervals();
+      
+      this.isInitialized = true;
+      this.stats.isInitialized = true;
+      logger.info('✅ CacheService initialization complete');
+      
+    } catch (error) {
+      logger.error('❌ CacheService initialization failed:', error);
+      this.isInitialized = true;
+      this.stats.isInitialized = true;
+      logger.warn('⚠️ CacheService initialized with errors');
+    }
+  }
+
+  /**
+   * Synchronous initialization for immediate cache access
+   * Used when cache is accessed before async initialization completes
+   */
+  initializeSync() {
+    if (this.isInitialized) return;
+    
+    try {
+      logger.info('🔄 Synchronous CacheService initialization...');
+      
+      // ✅ CRITICAL FIX: Try to load from IndexedDB synchronously if available
       if (typeof window !== 'undefined' && 'indexedDB' in window) {
-        await this.initializeIndexedDB();
+        try {
+          // Try to open IndexedDB synchronously (this might fail)
+          const request = indexedDB.open('PIDEA_Cache', 1);
+          request.onsuccess = () => {
+            this.indexedDBCache = request.result;
+            logger.info('✅ IndexedDB opened synchronously');
+            // Load data asynchronously but immediately
+            this.loadFromIndexedDBToMemory().then(() => {
+              logger.info('✅ Synchronous IndexedDB data load complete');
+            }).catch(error => {
+              logger.warn('⚠️ Synchronous IndexedDB load failed:', error);
+            });
+          };
+          request.onerror = () => {
+            logger.warn('⚠️ Synchronous IndexedDB open failed');
+          };
+        } catch (error) {
+          logger.warn('⚠️ Synchronous IndexedDB access failed:', error);
+        }
       }
       
       // Start cleanup intervals
       this.setupCleanupIntervals();
       
       this.isInitialized = true;
-      logger.info('CacheService initialization complete');
+      this.stats.isInitialized = true;
+      logger.info('✅ CacheService synchronous initialization complete');
+      
+      // Start async initialization in background for full setup
+      this.initialize().catch(error => {
+        logger.error('❌ Background initialization failed:', error);
+      });
       
     } catch (error) {
-      logger.error('CacheService initialization failed:', error);
-      throw error;
+      logger.error('❌ Synchronous initialization failed:', error);
+      this.isInitialized = true;
+      this.stats.isInitialized = true;
     }
   }
 
@@ -78,27 +143,111 @@ export class CacheService {
    * Initialize IndexedDB for persistent caching
    */
   async initializeIndexedDB() {
+    // ✅ CRITICAL FIX: Enable IndexedDB for persistent cache
+    if (typeof window === 'undefined' || !('indexedDB' in window)) {
+      logger.warn('IndexedDB not available, using memory-only cache');
+      return Promise.resolve();
+    }
+
     return new Promise((resolve, reject) => {
       const request = indexedDB.open('PIDEA_Cache', 1);
       
+      // ✅ CRITICAL FIX: Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        logger.warn('IndexedDB initialization timeout, using memory-only cache');
+        resolve();
+      }, 5000); // 5 second timeout
+      
       request.onerror = () => {
-        logger.warn('IndexedDB not available, using memory-only cache');
+        clearTimeout(timeout);
+        logger.warn('IndexedDB failed, using memory-only cache');
         resolve();
       };
       
       request.onsuccess = () => {
+        clearTimeout(timeout);
         this.indexedDBCache = request.result;
-        logger.info('IndexedDB cache initialized');
+        logger.info('✅ IndexedDB cache initialized for persistent storage');
         resolve();
       };
       
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
         if (!db.objectStoreNames.contains('cache')) {
-          db.createObjectStore('cache', { keyPath: 'key' });
+          const store = db.createObjectStore('cache', { keyPath: 'key' });
+          store.createIndex('namespace', 'namespace', { unique: false });
+          store.createIndex('timestamp', 'timestamp', { unique: false });
         }
       };
     });
+  }
+
+  /**
+   * Load all data from IndexedDB into memory cache
+   */
+  async loadFromIndexedDBToMemory() {
+    if (!this.indexedDBCache) {
+      logger.warn('⚠️ IndexedDB not available for loading');
+      return Promise.resolve();
+    }
+    
+    try {
+      logger.info('🔄 Starting IndexedDB to memory load...');
+      const transaction = this.indexedDBCache.transaction(['cache'], 'readonly');
+      const store = transaction.objectStore('cache');
+      const request = store.getAll();
+      
+      return new Promise((resolve, reject) => {
+        // ✅ CRITICAL FIX: Add timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          logger.warn('⚠️ IndexedDB load timeout, continuing without cache');
+          resolve();
+        }, 5000); // 5 second timeout
+        
+        request.onsuccess = () => {
+          clearTimeout(timeout);
+          const results = request.result || [];
+          let loadedCount = 0;
+          let expiredCount = 0;
+          
+          logger.info(`📊 Found ${results.length} entries in IndexedDB`);
+          
+          results.forEach(item => {
+            logger.info(`🔍 Loading cache entry: ${item.key}`);
+            // Check if not expired
+            if (Date.now() <= item.expires) {
+              this.memoryCache.set(item.key, item);
+              this.currentMemorySize += item.size;
+              loadedCount++;
+              logger.info(`✅ Loaded: ${item.key}`);
+            } else {
+              expiredCount++;
+              logger.info(`⏰ Expired: ${item.key}`);
+            }
+          });
+          
+          logger.info(`✅ Loaded ${loadedCount} cache entries from IndexedDB to memory (${expiredCount} expired)`);
+          resolve();
+        };
+        
+        request.onerror = (error) => {
+          clearTimeout(timeout);
+          logger.error('❌ Failed to load cache from IndexedDB:', error);
+          resolve(); // ✅ CRITICAL FIX: Resolve instead of reject to prevent hanging
+        };
+        
+        // ✅ CRITICAL FIX: Add transaction error handler
+        transaction.onerror = (error) => {
+          clearTimeout(timeout);
+          logger.error('❌ IndexedDB transaction error:', error);
+          resolve(); // Resolve to prevent hanging
+        };
+      });
+      
+    } catch (error) {
+      logger.error('❌ Error loading cache from IndexedDB:', error);
+      return Promise.resolve(); // ✅ CRITICAL FIX: Always return resolved promise
+    }
   }
 
   /**
@@ -169,7 +318,7 @@ export class CacheService {
       this.memoryCache.set(key, cacheItem);
       this.currentMemorySize += dataSize;
       
-      // Store in IndexedDB if available
+      // Store in IndexedDB for persistence
       if (this.indexedDBCache) {
         this.setInIndexedDB(key, cacheItem);
       }
@@ -200,15 +349,56 @@ export class CacheService {
     const startTime = performance.now();
     
     try {
+      // ✅ CRITICAL FIX: Ensure cache is initialized before any get operation
+      if (!this.isInitialized) {
+        logger.warn('⚠️ Cache not initialized, initializing synchronously...');
+        this.initializeSync();
+        
+        // ✅ CRITICAL FIX: Load ALL data from IndexedDB immediately
+        if (this.indexedDBCache) {
+          try {
+            const transaction = this.indexedDBCache.transaction(['cache'], 'readonly');
+            const store = transaction.objectStore('cache');
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+              const results = request.result || [];
+              let loadedCount = 0;
+              
+              results.forEach(item => {
+                if (Date.now() <= item.expires) {
+                  this.memoryCache.set(item.key, item);
+                  loadedCount++;
+                }
+              });
+              
+              if (loadedCount > 0) {
+                logger.info(`✅ Loaded ${loadedCount} entries from IndexedDB during get operation`);
+                
+                // ✅ CRITICAL FIX: Check if the requested key is now available
+                const cacheItem = this.memoryCache.get(key);
+                if (cacheItem) {
+                  logger.info(`✅ Found ${key} in IndexedDB, returning cached data`);
+                  this.stats.hits++;
+                  this.updateHitRate();
+                  this.updateResponseTime(performance.now() - startTime);
+                  return cacheItem.data;
+                }
+              }
+            };
+          } catch (error) {
+            logger.warn('⚠️ Failed to load from IndexedDB during get:', error);
+          }
+        }
+      }
+      
       const cacheItem = this.memoryCache.get(key);
       
       if (!cacheItem) {
-        // Try IndexedDB if available
-        if (this.indexedDBCache) {
-          return this.getFromIndexedDB(key);
-        }
-        
+        // Try to load from IndexedDB synchronously (if already loaded)
+        // This is a fallback - main loading happens at startup
         this.stats.misses++;
+        this.updateHitRate();
         this.updateResponseTime(performance.now() - startTime);
         return null;
       }
@@ -234,6 +424,80 @@ export class CacheService {
     } catch (error) {
       logger.error('Failed to get cache data:', error);
       this.stats.misses++;
+      return null;
+    }
+  }
+
+  /**
+   * Get data from cache (async - includes IndexedDB fallback)
+   * @param {string} key - Cache key
+   * @returns {Promise<any>} Cached data or null
+   */
+  async getAsync(key) {
+    const startTime = performance.now();
+    
+    try {
+      // First try memory cache (fast)
+      const cacheItem = this.memoryCache.get(key);
+      
+      if (cacheItem) {
+        // Check if expired
+        if (Date.now() > cacheItem.expires) {
+          this.delete(key);
+          this.stats.misses++;
+          this.updateHitRate();
+          this.updateResponseTime(performance.now() - startTime);
+          return null;
+        }
+        
+        // Update access time for LRU
+        cacheItem.lastAccess = Date.now();
+        
+        this.stats.hits++;
+        this.updateHitRate();
+        this.updateResponseTime(performance.now() - startTime);
+        logger.debug(`✅ Cache hit (memory): ${key}, type: ${cacheItem.dataType}`);
+        return cacheItem.data;
+      }
+      
+      // Try IndexedDB if available
+      if (this.indexedDBCache) {
+        const indexedData = await this.getFromIndexedDB(key);
+        if (indexedData) {
+          // Load back into memory cache for faster access
+          const dataSize = this.calculateSize(indexedData);
+          const config = this.config.default || { ttl: 300000 }; // 5 min default
+          const cacheItem = {
+            data: indexedData,
+            timestamp: Date.now(),
+            expires: Date.now() + config.ttl,
+            size: dataSize,
+            dataType: 'default',
+            namespace: 'global',
+            lastAccess: Date.now()
+          };
+          
+          this.memoryCache.set(key, cacheItem);
+          this.currentMemorySize += dataSize;
+          
+          this.stats.hits++;
+          this.updateHitRate();
+          this.updateResponseTime(performance.now() - startTime);
+          logger.debug(`✅ Cache hit (IndexedDB): ${key}`);
+          return indexedData;
+        }
+      }
+      
+      this.stats.misses++;
+      this.updateHitRate();
+      this.updateResponseTime(performance.now() - startTime);
+      return null;
+      
+    } catch (error) {
+      logger.error('Cache getAsync error:', error);
+      this.stats.misses++;
+      this.updateHitRate();
+      this.updateResponseTime(performance.now() - startTime);
       return null;
     }
   }
@@ -269,6 +533,176 @@ export class CacheService {
     } catch (error) {
       logger.error('Failed to delete cache data:', error);
       return false;
+    }
+  }
+
+  /**
+   * Generate hierarchical cache key
+   * @param {string} namespace - Cache namespace
+   * @param {string} port - IDE port
+   * @param {string} projectId - Project identifier
+   * @param {string} dataType - Type of data
+   * @returns {string} Hierarchical cache key
+   */
+  generateHierarchicalKey(namespace, port, projectId, dataType) {
+    const key = `${namespace}:${port}:${projectId}:${dataType}`;
+    logger.debug(`Generated hierarchical key: ${key}`);
+    return key;
+  }
+
+  /**
+   * Cache bundle of related data together
+   * @param {string} bundleKey - Bundle identifier
+   * @param {Object} bundleData - Object containing multiple data types
+   * @param {string} port - IDE port
+   * @param {string} projectId - Project identifier
+   * @returns {boolean} Success status
+   */
+  cacheBundle(bundleKey, bundleData, port, projectId) {
+    const startTime = performance.now();
+    
+    try {
+      const bundleCacheKey = this.generateHierarchicalKey('analysisBundle', port, projectId, bundleKey);
+      const bundleSize = this.calculateSize(bundleData);
+      
+      // Cache the bundle
+      const success = this.set(bundleCacheKey, bundleData, 'analysisBundle', 'analysisBundle');
+      
+      if (success) {
+        logger.info(`📦 Cached bundle: ${bundleKey}, size: ${bundleSize} bytes, port: ${port}, project: ${projectId}`);
+        
+        // Also cache individual components for selective access
+        Object.entries(bundleData).forEach(([dataType, data]) => {
+          const individualKey = this.generateHierarchicalKey(dataType, port, projectId, 'data');
+          this.set(individualKey, data, dataType, dataType);
+        });
+        
+        this.updateResponseTime(performance.now() - startTime);
+        return true;
+      }
+      
+      return false;
+      
+    } catch (error) {
+      logger.error('Failed to cache bundle:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get bundle of related data
+   * @param {string} bundleKey - Bundle identifier
+   * @param {string} port - IDE port
+   * @param {string} projectId - Project identifier
+   * @returns {Object|null} Bundle data or null if not found
+   */
+  getBundle(bundleKey, port, projectId) {
+    const bundleCacheKey = this.generateHierarchicalKey('analysisBundle', port, projectId, bundleKey);
+    const bundleData = this.get(bundleCacheKey);
+    
+    if (bundleData) {
+      logger.info(`📦 Bundle cache hit: ${bundleKey}, port: ${port}, project: ${projectId}`);
+      return bundleData;
+    }
+    
+    logger.info(`📦 Bundle cache miss: ${bundleKey}, port: ${port}, project: ${projectId}`);
+    return null;
+  }
+
+  /**
+   * Warm cache with predictive loading
+   * @param {Array} patterns - Array of cache patterns to warm
+   * @param {string} port - IDE port
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Object>} Warming results
+   */
+  async warmCache(patterns, port, projectId) {
+    const startTime = performance.now();
+    const results = {
+      warmed: [],
+      failed: [],
+      totalTime: 0
+    };
+    
+    try {
+      logger.info(`🔥 Starting cache warming for port: ${port}, project: ${projectId}`);
+      
+      // Warm each pattern
+      for (const pattern of patterns) {
+        try {
+          const key = this.generateHierarchicalKey(pattern.namespace, port, projectId, pattern.dataType);
+          
+          // Check if already cached
+          if (this.get(key)) {
+            results.warmed.push({ pattern, status: 'already_cached' });
+            continue;
+          }
+          
+          // Load data based on pattern
+          const data = await this.loadDataForPattern(pattern, port, projectId);
+          
+          if (data) {
+            this.set(key, data, pattern.dataType, pattern.namespace);
+            results.warmed.push({ pattern, status: 'warmed', dataSize: this.calculateSize(data) });
+          } else {
+            results.failed.push({ pattern, status: 'no_data' });
+          }
+          
+        } catch (error) {
+          logger.error(`Failed to warm cache for pattern ${pattern.namespace}:${pattern.dataType}:`, error);
+          results.failed.push({ pattern, status: 'error', error: error.message });
+        }
+      }
+      
+      results.totalTime = performance.now() - startTime;
+      logger.info(`🔥 Cache warming completed in ${results.totalTime.toFixed(2)}ms`, results);
+      
+      return results;
+      
+    } catch (error) {
+      logger.error('Cache warming failed:', error);
+      results.totalTime = performance.now() - startTime;
+      return results;
+    }
+  }
+
+  /**
+   * Load data for cache warming pattern
+   * @param {Object} pattern - Warming pattern
+   * @param {string} port - IDE port
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<any>} Loaded data
+   */
+  async loadDataForPattern(pattern, port, projectId) {
+    try {
+      // Import apiCall dynamically to avoid circular dependencies
+      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+      
+      switch (pattern.dataType) {
+        case 'tasks':
+          const tasksResponse = await apiCall(`/api/projects/${projectId}/tasks`);
+          return tasksResponse?.success ? tasksResponse.data : null;
+          
+        case 'git':
+          const gitResponse = await apiCall(`/api/projects/${projectId}/git/status`);
+          return gitResponse?.success ? gitResponse.data : null;
+          
+        case 'analysis':
+          const analysisResponse = await apiCall(`/api/projects/${projectId}/analysis`);
+          return analysisResponse?.success ? analysisResponse.data : null;
+          
+        case 'ide':
+          const ideResponse = await apiCall(`/api/ide/status?port=${port}`);
+          return ideResponse?.success ? ideResponse.data : null;
+          
+        default:
+          logger.warn(`Unknown data type for warming: ${pattern.dataType}`);
+          return null;
+      }
+      
+    } catch (error) {
+      logger.error(`Failed to load data for pattern ${pattern.dataType}:`, error);
+      return null;
     }
   }
 

@@ -311,7 +311,10 @@ export class ActivityTracker {
       this.setActive();
     }
     
-    logger.debug(`👆 Activity recorded: ${eventType}`);
+    // Only log non-mousemove activities to reduce spam
+    if (eventType !== 'mousemove') {
+      logger.debug(`👆 Activity recorded: ${eventType}`);
+    }
   }
 
   /**

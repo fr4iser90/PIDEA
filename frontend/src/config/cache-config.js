@@ -51,9 +51,24 @@ const cacheConfig = {
     
     // Frontend-specific data types
     ide: { 
-      ttl: 5 * 60 * 1000, // 5 minutes
+      ttl: 30 * 60 * 1000, // 30 minutes (increased from 5 minutes)
       priority: 'medium',
       description: 'IDE switching data - frequent updates'
+    },
+    tasks: { 
+      ttl: 30 * 60 * 1000, // 30 minutes
+      priority: 'high',
+      description: 'Project tasks data - critical for performance'
+    },
+    git: { 
+      ttl: 15 * 60 * 1000, // 15 minutes
+      priority: 'medium',
+      description: 'Git status and branch information'
+    },
+    analysisBundle: { 
+      ttl: 30 * 60 * 1000, // 30 minutes
+      priority: 'high',
+      description: 'Bundled analysis data (tasks + analysis + git)'
     },
     chat: { 
       ttl: 5 * 60 * 1000, // 5 minutes
@@ -112,6 +127,9 @@ const cacheConfig = {
   // Namespace configuration for selective invalidation
   namespaces: {
     ide: ['ide:switch', 'ide:data', 'ide:port'],
+    tasks: ['tasks:port', 'tasks:project', 'tasks:bundle'],
+    git: ['git:status', 'git:branch', 'git:port'],
+    analysisBundle: ['analysisBundle:port', 'analysisBundle:project'],
     project: ['project:analysis', 'project:structure', 'project:dependencies'],
     analysis: ['analysis:codeQuality', 'analysis:security', 'analysis:performance'],
     chat: ['chat:history', 'chat:messages', 'chat:port'],
@@ -121,6 +139,9 @@ const cacheConfig = {
   // Event-driven invalidation rules
   invalidationRules: {
     'ide:switch': { namespace: 'ide', pattern: 'ide:*' },
+    'tasks:update': { namespace: 'tasks', pattern: 'tasks:*' },
+    'git:change': { namespace: 'git', pattern: 'git:*' },
+    'analysisBundle:update': { namespace: 'analysisBundle', pattern: 'analysisBundle:*' },
     'project:change': { namespace: 'project', pattern: 'project:*' },
     'analysis:complete': { namespace: 'analysis', pattern: 'analysis:*' },
     'chat:new': { namespace: 'chat', pattern: 'chat:*' },

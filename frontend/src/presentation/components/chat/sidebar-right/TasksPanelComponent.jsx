@@ -216,7 +216,8 @@ function TasksPanelComponent({ eventBus, activePort }) {
   // ✅ NEW: Load tasks on component mount and when project changes
   useEffect(() => {
     if (projectId && activeIDE?.workspacePath) {
-      loadTasks();
+      // ✅ CRITICAL FIX: Always load tasks when component mounts or project changes
+      loadTasks(true); // Force load
       
       // Wait a bit for backend sync to complete before showing "no tasks"
       const initialDelay = setTimeout(() => {
@@ -270,17 +271,27 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
     setIsLoadingManualTasks(true);
     try {
-      // ✅ FIXED: Use project-specific task loading
-      await loadProjectTasks(activeIDE.workspacePath);
+      // ✅ CRITICAL FIX: Force load tasks and wait for completion
+      logger.info('🔄 Loading tasks for workspace:', activeIDE.workspacePath);
+      const taskData = await loadProjectTasks(activeIDE.workspacePath);
       setLastLoadTime(now);
       
+      logger.info('✅ Tasks loaded, checking result:', { 
+        taskData: taskData ? 'exists' : 'null',
+        taskCount: taskData?.tasks?.length || 0,
+        projectId 
+      });
+      
       // If we found tasks, mark sync as complete
-      if (manualTasks.length > 0) {
+      if (taskData?.tasks?.length > 0) {
         setIsInitialSyncComplete(true);
         setIsWaitingForSync(false);
+        logger.info('✅ Tasks found, sync complete');
+      } else {
+        logger.warn('⚠️ No tasks found in loaded data');
       }
       
-      logger.debug('Tasks loaded successfully:', { taskCount: manualTasks.length, projectId });
+      logger.debug('Tasks loaded successfully:', { taskCount: taskData?.tasks?.length || 0, projectId });
     } catch (error) {
       logger.error('Error loading manual tasks:', error);
       // Don't immediately show "no tasks" on first load

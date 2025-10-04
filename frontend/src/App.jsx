@@ -22,7 +22,7 @@ import refreshService from '@/infrastructure/services/RefreshService';
 function App() {
   const [eventBus] = useState(() => new EventBus());
   const [currentView, setCurrentView] = useState('chat');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // ✅ CRITICAL FIX: Start with loading true
   const [error, setError] = useState(null);
   const [isSplitView, setIsSplitView] = useState(false);
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true);
@@ -87,19 +87,31 @@ function App() {
   useEffect(() => {
     logger.info('🔄 App initializing...');
     
-    // Initialize RefreshService
+    // Initialize RefreshService and wait for completion
     const initializeRefreshService = async () => {
       try {
         await refreshService.initialize();
         logger.info('✅ RefreshService initialized');
+        
+        // ✅ CRITICAL FIX: Only initialize app after RefreshService is ready
+        setupEventListeners();
+        initializeApp();
+        
+        // ✅ CRITICAL FIX: Set loading to false after everything is initialized
+        setIsLoading(false);
+        
       } catch (error) {
         logger.error('❌ Failed to initialize RefreshService:', error);
+        // Still initialize app even if RefreshService fails
+        setupEventListeners();
+        initializeApp();
+        
+        // Set loading to false even if RefreshService failed
+        setIsLoading(false);
       }
     };
     
     initializeRefreshService();
-    setupEventListeners();
-    initializeApp();
     
     // Setup session warning listener
     if (eventBus) {
