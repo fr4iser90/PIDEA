@@ -7,20 +7,21 @@
 import { cacheService } from '@/infrastructure/services/CacheService';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 class IDERequirementService {
   constructor() {
     this.cache = new Map();
-    this.cacheTimeout = 30 * 1000; // 30 seconds
+    this.cacheTimeout = TimeoutConfig.getTimeout('CACHE', 'MEMORY_CACHE'); // Use configurable timeout
   }
 
   /**
    * Check if user has any running IDE instances
-   * @param {number} maxRetries Maximum number of retries (default: 3)
-   * @param {number} retryDelay Delay between retries in ms (default: 1000)
+   * @param {number} maxRetries Maximum number of retries (default: from config)
+   * @param {number} retryDelay Delay between retries in ms (default: from config)
    * @returns {Promise<boolean>} True if IDE is running
    */
-  async hasRunningIDE(maxRetries = 3, retryDelay = 1000) {
+  async hasRunningIDE(maxRetries = TimeoutConfig.getRetryConfig('IDE').maxAttempts, retryDelay = TimeoutConfig.getRetryConfig('IDE').initialDelay) {
     try {
       // ✅ FIX: Check authentication before making API call
       const { isAuthenticated } = useAuthStore.getState();
@@ -383,7 +384,7 @@ class IDERequirementService {
       logger.info('Checking if IDE requirement modal should be shown...');
       
       // Wait for IDE detection to complete with polling
-      const hasRunningIDE = await this.hasRunningIDE(3, 1000);
+      const hasRunningIDE = await this.hasRunningIDE(TimeoutConfig.getRetryConfig('IDE').maxAttempts, TimeoutConfig.getRetryConfig('IDE').initialDelay);
       
       // Get configurations (this doesn't need polling as it's fast)
       const hasConfigurations = await this.getActiveIDEConfigurations();

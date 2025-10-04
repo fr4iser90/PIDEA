@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { NOTIFICATION_TYPES, NOTIFICATION_ICONS, NOTIFICATION_TITLES, NOTIFICATION_DELAYS } from '@/infrastructure/constants/NotificationTypes.js';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 const useNotificationStore = create((set, get) => ({
   // State
   notifications: [],
   maxNotifications: 5,
-  autoDismissDelay: 5000, // 5 seconds
+  autoDismissDelay: TimeoutConfig.getTimeout('UI', 'NOTIFICATION_DISMISS'),
 
   // Actions
   addNotification: (notification) => {

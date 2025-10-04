@@ -1,4 +1,5 @@
 import { logger } from "@/infrastructure/logging/Logger";
+import TimeoutConfig from '@/config/timeout-config.js';
 
 /**
  * ActivityTrackerService - User activity detection and tracking
@@ -14,8 +15,8 @@ class ActivityTrackerService {
   constructor() {
     this.isTracking = false;
     this.lastActivity = Date.now();
-    this.activityThreshold = 30 * 1000; // 30 seconds
-    this.debounceDelay = 1000; // 1 second
+    this.activityThreshold = TimeoutConfig.getTimeout('AUTH', 'ACTIVITY_THRESHOLD');
+    this.debounceDelay = TimeoutConfig.getTimeout('UI', 'DEBOUNCE');
     this.debounceTimer = null;
     
     // Activity counters

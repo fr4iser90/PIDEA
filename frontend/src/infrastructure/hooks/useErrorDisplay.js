@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import { ErrorCategorizer } from '@/infrastructure/utils/ErrorCategorizer.js';
 import ErrorDisplay from '@/presentation/components/common/ErrorDisplay.jsx';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 export const useErrorDisplay = (options = {}) => {
   const [errors, setErrors] = useState([]);
@@ -9,7 +10,7 @@ export const useErrorDisplay = (options = {}) => {
   
   const {
     autoDismiss = true,
-    dismissDelay = 5000,
+    dismissDelay = TimeoutConfig.getTimeout('UI', 'NOTIFICATION_DISMISS'),
     showNotifications = true,
     maxErrors = 3
   } = options;

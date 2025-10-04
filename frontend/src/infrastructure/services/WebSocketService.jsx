@@ -1,13 +1,14 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 class WebSocketService {
   constructor() {
     this.ws = null;
     this.isConnected = false;
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
-    this.reconnectDelay = 3000;
+    this.maxReconnectAttempts = TimeoutConfig.getRetryConfig('WEBSOCKET').maxAttempts;
+    this.reconnectDelay = TimeoutConfig.getTimeout('WEBSOCKET', 'RECONNECT_DELAY');
     this.eventListeners = new Map();
     this.connectionPromise = null;
   }
@@ -70,11 +71,12 @@ class WebSocketService {
             return;
           }
           
-          // Attempt reconnection
+          // Attempt reconnection with exponential backoff
           if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            logger.debug(`🔄 WebSocketService: Reconnecting (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-            setTimeout(() => this.connect(), this.reconnectDelay);
+            const delay = TimeoutConfig.getRetryDelay(this.reconnectAttempts, 'WEBSOCKET');
+            logger.debug(`🔄 WebSocketService: Reconnecting (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${delay}ms...`);
+            setTimeout(() => this.connect(), delay);
           } else {
             logger.error('❌ WebSocketService: Max reconnection attempts reached');
           }

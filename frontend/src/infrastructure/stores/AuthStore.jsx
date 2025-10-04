@@ -5,6 +5,7 @@ import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import sessionMonitorService from '../services/SessionMonitorService.jsx';
 import activityTrackerService from '../services/ActivityTrackerService.jsx';
 import crossTabSyncService from '../services/CrossTabSyncService.jsx';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 const useAuthStore = create(
     (set, get) => ({
@@ -174,7 +175,7 @@ const useAuthStore = create(
 
           // CRITICAL FIX: Add delay to ensure cookies are properly set
           logger.info('🔍 [AuthStore] Waiting for cookies to be properly set after registration...');
-          await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+          await new Promise(resolve => setTimeout(resolve, TimeoutConfig.getTimeout('AUTH', 'COOKIE_DELAY'))); // Use configurable delay
 
           // Validate authentication immediately after registration
           logger.info('🔍 [AuthStore] Validating authentication after registration...');

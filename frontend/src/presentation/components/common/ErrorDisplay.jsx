@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
+import TimeoutConfig from '@/config/timeout-config.js';
 import '@/css/components/error-display.css';
 
 const ErrorDisplay = ({ 
   error, 
   onDismiss, 
   autoDismiss = true, 
-  dismissDelay = 5000,
+  dismissDelay = TimeoutConfig.getTimeout('UI', 'NOTIFICATION_DISMISS'),
   showDetails = false,
   className = '',
   style = {}

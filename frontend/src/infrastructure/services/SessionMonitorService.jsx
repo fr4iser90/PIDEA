@@ -2,6 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import webSocketService from './WebSocketService.jsx';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 /**
  * SessionMonitorService - Proactive session monitoring and management
@@ -19,10 +20,10 @@ class SessionMonitorService {
     this.validationInterval = null;
     this.warningInterval = null;
     this.lastActivity = Date.now();
-    this.sessionTimeout = 15 * 60 * 1000; // 15 minutes in production
-    this.warningThreshold = 5 * 60 * 1000; // 5 minutes before expiry
-    this.validationIntervalMs = 2 * 60 * 1000; // Check every 2 minutes
-    this.activityThreshold = 30 * 1000; // 30 seconds of inactivity
+    this.sessionTimeout = TimeoutConfig.getTimeout('AUTH', 'SESSION_TIMEOUT');
+    this.warningThreshold = TimeoutConfig.getTimeout('AUTH', 'WARNING_THRESHOLD');
+    this.validationIntervalMs = TimeoutConfig.getTimeout('AUTH', 'VALIDATION_INTERVAL');
+    this.activityThreshold = TimeoutConfig.getTimeout('AUTH', 'ACTIVITY_THRESHOLD');
     
     // Event listeners
     this.eventListeners = new Map();

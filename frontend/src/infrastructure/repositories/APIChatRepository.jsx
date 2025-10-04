@@ -6,6 +6,7 @@ import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import etagManager from '@/infrastructure/services/ETagManager.js';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import performanceLogger from '@/infrastructure/services/PerformanceLogger';
+import TimeoutConfig from '@/config/timeout-config.js';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -188,16 +189,28 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     hasBody: !!config.body
   });
 
+  // Initialize timeout variables outside try block for proper cleanup
+  let timeoutId = null;
+  let controller = null;
+
   try {
+    // Get appropriate timeout based on endpoint type
+    const timeoutMs = TimeoutConfig.getApiTimeout(endpoint);
+    logger.info(`🔍 [APIChatRepository] Using timeout: ${timeoutMs}ms for endpoint: ${endpoint}`);
+    
     // Add timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    controller = new AbortController();
+    timeoutId = setTimeout(() => {
+      logger.warn(`⏰ [APIChatRepository] Request timeout after ${timeoutMs}ms for ${endpoint}`);
+      controller.abort();
+    }, timeoutMs);
     
     const response = await fetch(url, {
       ...config,
       signal: controller.signal
     });
     
+    // Clear timeout on successful response
     clearTimeout(timeoutId);
     
     logger.info('🔍 [APIChatRepository] Response status:', response.status);
@@ -232,6 +245,21 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
     logger.info('✅ [APIChatRepository] API call successful');
     return data;
   } catch (error) {
+    // Ensure timeout is cleared in all error scenarios
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    
+    // Handle AbortError specifically for better error messages
+    if (error.name === 'AbortError') {
+      const timeoutMs = TimeoutConfig.getApiTimeout(endpoint);
+      const timeoutError = new Error(`Request timeout after ${timeoutMs}ms for ${endpoint}. The server may be slow or unresponsive.`);
+      timeoutError.name = 'TimeoutError';
+      timeoutError.code = 'TIMEOUT';
+      logger.error(`⏰ [APIChatRepository] Request timeout for ${url}:`, timeoutError);
+      throw timeoutError;
+    }
+    
     logger.error(`❌ [APIChatRepository] API call failed for ${url}:`, error);
     throw error;
   }
