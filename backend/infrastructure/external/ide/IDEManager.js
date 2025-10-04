@@ -866,8 +866,23 @@ class IDEManager {
 
     logger.info('Cleaning up stale IDE entries...');
     
-    // Get currently available IDEs
-    const availableIDEs = await this.getAvailableIDEs();
+    // Get currently available IDEs with timeout protection
+    let availableIDEs = [];
+    try {
+      // Add timeout protection to prevent cleanup from failing
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('IDE detection timeout')), 5000)
+      );
+      
+      availableIDEs = await Promise.race([
+        this.getAvailableIDEs(),
+        timeoutPromise
+      ]);
+    } catch (error) {
+      logger.warn('Failed to get available IDEs for cleanup, skipping cleanup:', error.message);
+      return; // Skip cleanup if we can't get IDE data
+    }
+    
     const availablePorts = new Set(availableIDEs.map(ide => ide.port));
     
     // Clean up stale entries

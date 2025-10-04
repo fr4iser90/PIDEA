@@ -6,6 +6,8 @@
 
 import { logger } from "@/infrastructure/logging/Logger";
 import { EventCoordinator } from "@/infrastructure/services/EventCoordinator";
+import { getInvalidationRule, getNamespacePatterns } from "@/config/cache-config";
+import { cacheService } from './CacheService.js';
 
 export class CacheInvalidationService {
   constructor(cacheService) {
@@ -259,38 +261,6 @@ export class CacheInvalidationService {
   }
 
   /**
-   * Get namespace patterns for invalidation
-   * @param {string} namespace - Namespace name
-   * @returns {Array} Namespace patterns
-   */
-  getNamespacePatterns(namespace) {
-    const namespacePatterns = {
-      ide: ['ide:switch', 'ide:data', 'ide:port'],
-      project: ['project:analysis', 'project:structure', 'project:dependencies'],
-      analysis: ['analysis:codeQuality', 'analysis:security', 'analysis:performance'],
-      chat: ['chat:history', 'chat:messages', 'chat:port'],
-      workflow: ['workflow:steps', 'workflow:status', 'workflow:progress']
-    };
-    return namespacePatterns[namespace] || [];
-  }
-
-  /**
-   * Get invalidation rule for event
-   * @param {string} eventType - Event type
-   * @returns {Object|null} Invalidation rule
-   */
-  getInvalidationRule(eventType) {
-    const invalidationRules = {
-      'ide:switch': { namespace: 'ide', pattern: 'ide:*' },
-      'project:change': { namespace: 'project', pattern: 'project:*' },
-      'analysis:complete': { namespace: 'analysis', pattern: 'analysis:*' },
-      'chat:new': { namespace: 'chat', pattern: 'chat:*' },
-      'workflow:update': { namespace: 'workflow', pattern: 'workflow:*' }
-    };
-    return invalidationRules[eventType] || null;
-  }
-
-  /**
    * Invalidate cache entries by pattern
    * @param {string} pattern - Cache key pattern
    * @param {string} identifier - Optional identifier for more specific invalidation
@@ -350,7 +320,7 @@ export class CacheInvalidationService {
     const startTime = performance.now();
     
     try {
-      const patterns = this.getNamespacePatterns(namespace);
+      const patterns = getNamespacePatterns(namespace);
       let totalInvalidated = 0;
       
       for (const pattern of patterns) {
@@ -460,7 +430,7 @@ export class CacheInvalidationService {
    * @param {Object} data - Event data
    */
   triggerInvalidation(eventType, data) {
-    const rule = this.getInvalidationRule(eventType);
+    const rule = getInvalidationRule(eventType);
     
     if (rule) {
       this.invalidateByPattern(rule.pattern, data.identifier);
@@ -488,4 +458,4 @@ export class CacheInvalidationService {
 }
 
 // Export singleton instance
-export const cacheInvalidationService = new CacheInvalidationService();
+export const cacheInvalidationService = new CacheInvalidationService(cacheService);

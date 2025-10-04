@@ -1285,7 +1285,7 @@ class Application {
       }
     }, 6 * 60 * 60 * 1000); // 6 hours
 
-    // Cleanup stale IDE entries every 2 minutes
+    // Cleanup stale IDE entries every 10 minutes (less aggressive)
     setInterval(async () => {
       try {
         if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
@@ -1295,7 +1295,7 @@ class Application {
       } catch (error) {
         this.logger.error('Failed to cleanup stale IDE entries:', error);
       }
-    }, 2 * 60 * 1000); // 2 minutes
+    }, 10 * 60 * 1000); // 10 minutes instead of 2
 
     this.logger.info('Cleanup tasks setup complete');
   }
