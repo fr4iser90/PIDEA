@@ -4,7 +4,7 @@ import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import ChatSession from '@/domain/entities/ChatSession.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import etagManager from '@/infrastructure/services/ETagManager.js';
-import requestDeduplicationService from '@/infrastructure/services/RequestDeduplicationService';
+import { cacheService } from '@/infrastructure/services/CacheService';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -234,8 +234,8 @@ export default class APIChatRepository extends ChatRepository {
     this.currentSession = null;
     this.currentProjectId = null;
     
-    // Initialize deduplication service
-    this.deduplicationService = requestDeduplicationService;
+    // Initialize cache service
+    this.cacheService = cacheService;
   }
 
   // Get current project ID from active IDE
@@ -322,23 +322,33 @@ export default class APIChatRepository extends ChatRepository {
   async getIDEs() {
     const key = 'get_available_ides';
     
-    return this.deduplicationService.execute(key, async () => {
-      return apiCall(API_CONFIG.endpoints.ide.list);
-    }, {
-      useCache: true,
-      cacheTTL: 30 * 1000 // 30 seconds
-    });
+    // Check cache first
+    const cachedResult = this.cacheService.get(key);
+    if (cachedResult) {
+      logger.info('Using cached IDE data');
+      return cachedResult;
+    }
+    
+    // Make API call and cache result
+    const result = await apiCall(API_CONFIG.endpoints.ide.list);
+    this.cacheService.set(key, result, 'ide', 'ide');
+    return result;
   }
 
   async getUserAppUrl() {
     const key = 'get_user_app_url';
     
-    return this.deduplicationService.execute(key, async () => {
-      return apiCall(API_CONFIG.endpoints.ide.userAppUrl);
-    }, {
-      useCache: true,
-      cacheTTL: 60 * 1000 // 1 minute
-    });
+    // Check cache first
+    const cachedResult = this.cacheService.get(key);
+    if (cachedResult) {
+      logger.info('Using cached user app URL');
+      return cachedResult;
+    }
+    
+    // Make API call and cache result
+    const result = await apiCall(API_CONFIG.endpoints.ide.userAppUrl);
+    this.cacheService.set(key, result, 'ide', 'ide');
+    return result;
   }
 
   /**
@@ -372,12 +382,17 @@ export default class APIChatRepository extends ChatRepository {
   async getWorkspaceInfo() {
     const key = 'get_workspace_info';
     
-    return this.deduplicationService.execute(key, async () => {
-      return apiCall(API_CONFIG.endpoints.ide.workspaceInfo);
-    }, {
-      useCache: true,
-      cacheTTL: 2 * 60 * 1000 // 2 minutes
-    });
+    // Check cache first
+    const cachedResult = this.cacheService.get(key);
+    if (cachedResult) {
+      logger.info('Using cached workspace info');
+      return cachedResult;
+    }
+    
+    // Make API call and cache result
+    const result = await apiCall(API_CONFIG.endpoints.ide.workspaceInfo);
+    this.cacheService.set(key, result, 'ide', 'ide');
+    return result;
   }
 
   async setWorkspacePath(port, workspacePath) {
@@ -392,15 +407,20 @@ export default class APIChatRepository extends ChatRepository {
     
     logger.info(`Frontend: Attempting IDE switch to port ${port} with key: ${key}`);
     
-    return this.deduplicationService.execute(key, async () => {
-      logger.info(`Frontend: Making API call for IDE switch to port ${port}`);
-      return apiCall(API_CONFIG.endpoints.ide.switchIDE(port), {
-        method: 'POST'
-      });
-    }, {
-      useCache: true,
-      cacheTTL: 5 * 60 * 1000 // 5 minutes
+    // Check cache first
+    const cachedResult = this.cacheService.get(key);
+    if (cachedResult) {
+      logger.info(`Frontend: Using cached result for IDE switch to port ${port}`);
+      return cachedResult;
+    }
+    
+    // Make API call and cache result
+    logger.info(`Frontend: Making API call for IDE switch to port ${port}`);
+    const result = await apiCall(API_CONFIG.endpoints.ide.switchIDE(port), {
+      method: 'POST'
     });
+    this.cacheService.set(key, result, 'ide', 'ide');
+    return result;
   }
 
   async stopIDE(port) {

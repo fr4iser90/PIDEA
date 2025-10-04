@@ -9,10 +9,10 @@ import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
-import requestDeduplicationService from '@/infrastructure/services/RequestDeduplicationService';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import useIDESwitchOptimizationStore from './IDESwitchOptimizationStore.jsx';
 
-// Using RequestDeduplicationService for caching instead of local cache
+// Using CacheService for caching instead of RequestDeduplicationService
 
 // Helper function to get project ID from workspace path
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -114,9 +114,11 @@ const useIDEStore = create(
           const activeIDE = updatedIDEs.find(ide => ide.port === port);
           if (activeIDE && activeIDE.workspacePath) {
             logger.info('Loading project data for new active port:', port, 'workspace:', activeIDE.workspacePath);
+            // Initialize empty chat data immediately for UI responsiveness
+            get().initializeEmptyChatData(activeIDE.workspacePath);
             // Make project data loading asynchronous to avoid blocking the switch
             setTimeout(() => {
-              get().loadProjectData(activeIDE.workspacePath);
+              get().loadProjectDataForPort(activeIDE.workspacePath);
             }, 100);
           } else {
             logger.warn('No active IDE found or no workspace path for port:', port);
@@ -213,76 +215,25 @@ const useIDEStore = create(
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
 
-          // Use deduplication service for loading IDEs
+          // Use CacheService for loading IDEs
           const key = 'store_load_available_ides';
-          const result = await requestDeduplicationService.execute(key, async () => {
-            return apiCall('/api/ide/available');
-          }, {
-            useCache: true,
-            cacheTTL: 30 * 1000 // 30 seconds
-          });
+          const cachedResult = cacheService.get(key);
+          if (cachedResult) {
+            logger.info('Using cached IDE data from CacheService');
+            set({ availableIDEs: cachedResult, isLoading: false, lastUpdate: Date.now() });
+            return;
+          }
+
+          const result = await apiCall('/api/ide/available');
           if (result.success) {
-            // Handle both response formats: result.data.ides (new) and result.data (old)
-            const ides = result.data.ides || result.data || [];
-            logger.info('API Response:', { 
-              hasData: !!result.data, 
-              dataType: typeof result.data, 
-              isArray: Array.isArray(result.data),
-              idesLength: ides.length,
-              firstIDE: ides[0]
-            });
-            
-            // ✅ FIX: Set active status for IDEs
-            const currentActivePort = get().activePort;
-            const idesWithActiveStatus = ides.map(ide => ({
-              ...ide,
-              active: ide.port === currentActivePort
-            }));
-            
-            set({ 
-              availableIDEs: idesWithActiveStatus,
-              lastUpdate: new Date().toISOString(),
-              retryCount: 0,
-              isLoading: false
-            });
-            logger.info('Loaded', idesWithActiveStatus.length, 'IDEs');
-            
-            // ✅ FIX: Auto-set active port if none is set and we have IDEs
-            if (!currentActivePort && idesWithActiveStatus.length > 0) {
-              const firstIDE = idesWithActiveStatus[0];
-              logger.info('Auto-setting active port to:', firstIDE.port);
-              set({ activePort: firstIDE.port });
-              
-              // ✅ FIX: Load project data for the auto-selected IDE
-              if (firstIDE.workspacePath) {
-                logger.info('Loading project data for auto-selected IDE:', firstIDE.workspacePath);
-                await get().loadProjectData(firstIDE.workspacePath);
-              }
-            }
-            
-            // ✅ FIX: Also set active port if we have IDEs but no active port is set
-            if (idesWithActiveStatus.length > 0 && !get().activePort) {
-              const firstIDE = idesWithActiveStatus[0];
-              logger.info('Setting active port to first available IDE:', firstIDE.port);
-              set({ activePort: firstIDE.port });
-              
-              // Load project data for the selected IDE
-              if (firstIDE.workspacePath) {
-                logger.info('Loading project data for selected IDE:', firstIDE.workspacePath);
-                await get().loadProjectData(firstIDE.workspacePath);
-              }
-            }
-            
-            return idesWithActiveStatus;
+            cacheService.set(key, result.data, 'ide', 'ide');
+            set({ availableIDEs: result.data, isLoading: false, lastUpdate: Date.now() });
           } else {
-            throw new Error(result.error || 'Failed to load IDEs');
+            set({ error: result.error, isLoading: false });
           }
         } catch (error) {
           logger.error('Error loading available IDEs:', error);
           set({ error: error.message, isLoading: false });
-          
-          // Don't retry automatically - only on manual refresh
-          // This prevents infinite loops
           return [];
         }
       },
@@ -693,6 +644,215 @@ const useIDEStore = create(
         }
       },
 
+      // NEW: Load Chat Data Action
+      loadChatData: async (workspacePath = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) {
+          logger.warn('No workspace path available for loading chat data');
+          return;
+        }
+        
+        try {
+          const { activePort } = get();
+          if (!activePort) {
+            logger.warn('No active port available for loading chat data');
+            return;
+          }
+          
+          logger.info('Loading chat data for workspace:', targetWorkspacePath, 'activePort:', activePort);
+          
+          // Load chat history from API
+          const response = await apiCall(`/api/chat/port/${activePort}/history`);
+          
+          const chatData = {
+            messages: response && response.success ? (response.data?.messages || []) : [],
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              chat: {
+                ...state.projectData.chat,
+                [targetWorkspacePath]: chatData
+              },
+              lastUpdate: new Date().toISOString()
+            }
+          }));
+          
+          logger.info('Chat data loaded for workspace:', targetWorkspacePath, 'messageCount:', chatData.messages.length);
+        } catch (error) {
+          logger.error('Failed to load chat data:', error);
+          // Initialize empty chat data on error
+          get().initializeEmptyChatData(targetWorkspacePath);
+        }
+      },
+
+      // NEW: Initialize Empty Chat Data
+      initializeEmptyChatData: (workspacePath) => {
+        if (!workspacePath) return;
+        
+        logger.info('Initializing empty chat data for workspace:', workspacePath);
+        
+        const emptyChatData = {
+          messages: [],
+          lastUpdate: new Date().toISOString()
+        };
+        
+        set(state => ({
+          projectData: {
+            ...state.projectData,
+            chat: {
+              ...state.projectData.chat,
+              [workspacePath]: emptyChatData
+            },
+            lastUpdate: new Date().toISOString()
+          }
+        }));
+        
+        logger.info('Empty chat data initialized for workspace:', workspacePath);
+      },
+
+      // NEW: Load Task Data Action
+      loadTaskData: async (workspacePath = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) {
+          logger.warn('No workspace path available for loading task data');
+          return;
+        }
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(targetWorkspacePath);
+          if (!projectId) return;
+          
+          logger.info('Loading task data for workspace:', targetWorkspacePath, 'projectId:', projectId);
+          
+          // Load tasks from API
+          const response = await apiCall(`/api/projects/${projectId}/tasks`);
+          
+          const taskData = {
+            tasks: response && response.success ? (Array.isArray(response.data) ? response.data : []) : [],
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              tasks: {
+                ...state.projectData.tasks,
+                [targetWorkspacePath]: taskData
+              },
+              lastUpdate: new Date().toISOString()
+            }
+          }));
+          
+          logger.info('Task data loaded for workspace:', targetWorkspacePath, 'taskCount:', taskData.tasks.length);
+        } catch (error) {
+          logger.error('Failed to load task data:', error);
+        }
+      },
+
+      // NEW: Load Git Data Action
+      loadGitData: async (workspacePath = null) => {
+        const targetWorkspacePath = workspacePath || get().availableIDEs.find(ide => ide.active)?.workspacePath;
+        if (!targetWorkspacePath) {
+          logger.warn('No workspace path available for loading git data');
+          return;
+        }
+        
+        try {
+          const projectId = getProjectIdFromWorkspace(targetWorkspacePath);
+          if (!projectId) return;
+          
+          logger.info('Loading git data for workspace:', targetWorkspacePath, 'projectId:', projectId);
+          
+          // Load git status from API
+          const response = await apiCall(`/api/projects/${projectId}/git/status`, { 
+            method: 'POST',
+            body: JSON.stringify({ projectPath: targetWorkspacePath })
+          });
+          
+          const gitData = {
+            status: response && response.success ? response.data : null,
+            lastUpdate: new Date().toISOString()
+          };
+          
+          set(state => ({
+            projectData: {
+              ...state.projectData,
+              git: {
+                ...state.projectData.git,
+                [targetWorkspacePath]: gitData
+              },
+              lastUpdate: new Date().toISOString()
+            }
+          }));
+          
+          logger.info('Git data loaded for workspace:', targetWorkspacePath);
+        } catch (error) {
+          logger.error('Failed to load git data:', error);
+        }
+      },
+
+      // NEW: Load Project Data For Port (enhanced version)
+      loadProjectDataForPort: async (workspacePath) => {
+        if (!workspacePath) return;
+        
+        try {
+          logger.info('Loading project data for port workspace:', workspacePath);
+          
+          // Load all project data in parallel
+          await Promise.allSettled([
+            get().loadGitData(workspacePath),
+            get().loadTaskData(workspacePath),
+            get().loadChatData(workspacePath)
+          ]);
+          
+          logger.info('Project data loaded for port workspace:', workspacePath);
+        } catch (error) {
+          logger.error('Failed to load project data for port:', error);
+        }
+      },
+
+      // NEW: Initialize Empty Data
+      initializeEmptyData: (workspacePath) => {
+        if (!workspacePath) return;
+        
+        logger.info('Initializing empty data for workspace:', workspacePath);
+        
+        const emptyData = {
+          git: { status: null, lastUpdate: new Date().toISOString() },
+          chat: { messages: [], lastUpdate: new Date().toISOString() },
+          tasks: { tasks: [], lastUpdate: new Date().toISOString() },
+          analysis: { status: null, lastUpdate: new Date().toISOString() }
+        };
+        
+        set(state => ({
+          projectData: {
+            ...state.projectData,
+            git: {
+              ...state.projectData.git,
+              [workspacePath]: emptyData.git
+            },
+            chat: {
+              ...state.projectData.chat,
+              [workspacePath]: emptyData.chat
+            },
+            tasks: {
+              ...state.projectData.tasks,
+              [workspacePath]: emptyData.tasks
+            },
+            analysis: {
+              ...state.projectData.analysis,
+              [workspacePath]: emptyData.analysis
+            },
+            lastUpdate: new Date().toISOString()
+          }
+        }));
+        
+        logger.info('Empty data initialized for workspace:', workspacePath);
+      },
+
       // NEW: WebSocket Event Handler
       setupWebSocketListeners: (eventBus) => {
         if (!eventBus) return;
@@ -989,13 +1149,12 @@ const useIDEStore = create(
           // Start optimization tracking
           optimizationStore.startSwitch(port);
 
-          // Check cache first using RequestDeduplicationService
-          logger.info(`IDEStore: Starting switchIDE for port ${port}, cache enabled: ${optimizationStore.cacheEnabled}, service available: ${!!requestDeduplicationService}`);
-          if (optimizationStore.cacheEnabled && requestDeduplicationService) {
+          // Check cache first using CacheService
+          logger.info(`IDEStore: Starting switchIDE for port ${port}, cache enabled: ${optimizationStore.cacheEnabled}`);
+          if (optimizationStore.cacheEnabled) {
             const key = `switch_ide_${port}`; // SAME KEY as APIChatRepository!
-            const cacheKey = requestDeduplicationService.generateCacheKey(key, {});
-            const cached = requestDeduplicationService.getCached(cacheKey);
-            logger.info(`IDEStore: Cache check for key: ${key}, generated key: ${cacheKey}, cached: ${!!cached}`);
+            const cached = cacheService.get(key);
+            logger.info(`IDEStore: Cache check for key: ${key}, cached: ${!!cached}`);
             if (cached) {
               logger.info('Using cached switch result for port:', port);
               optimizationStore.updateProgress(50, 'Using cached result...');
@@ -1004,7 +1163,7 @@ const useIDEStore = create(
               return true;
             }
           } else {
-            logger.warn(`IDEStore: Cache disabled or service unavailable - cacheEnabled: ${optimizationStore.cacheEnabled}, service: ${!!requestDeduplicationService}`);
+            logger.warn(`IDEStore: Cache disabled - cacheEnabled: ${optimizationStore.cacheEnabled}`);
           }
 
           // Optimistic update
@@ -1016,44 +1175,24 @@ const useIDEStore = create(
 
           optimizationStore.updateProgress(50, 'Connecting to IDE...');
           
-          // Use deduplication service for IDE switching
+          // Use CacheService for IDE switching
           const key = `switch_ide_${port}`; // SAME KEY as APIChatRepository!
           logger.info(`IDEStore: Attempting IDE switch to port ${port} with key: ${key}`);
-          logger.info(`IDEStore: RequestDeduplicationService available:`, !!requestDeduplicationService);
-          if (requestDeduplicationService) {
-            logger.info(`IDEStore: RequestDeduplicationService methods:`, Object.keys(requestDeduplicationService));
-            logger.info(`IDEStore: RequestDeduplicationService execute method:`, typeof requestDeduplicationService.execute);
-          } else {
-            logger.error(`IDEStore: RequestDeduplicationService is null or undefined!`);
-          }
-          
-          if (!requestDeduplicationService) {
-            logger.error(`IDEStore: RequestDeduplicationService not available!`);
-            logger.error(`IDEStore: Falling back to direct API call`);
-            const result = await apiCall(`/api/ide/switch/${port}`, {
-              method: 'POST'
-            });
-            return result;
-          }
           
           let result;
           try {
-            result = await requestDeduplicationService.execute(key, async () => {
-              logger.info(`IDEStore: Making API call for IDE switch to port ${port}`);
-              return apiCall(`/api/ide/switch/${port}`, {
-                method: 'POST'
-              });
-            }, {
-              useCache: true,
-              cacheTTL: 5 * 60 * 1000 // 5 minutes
-            });
-          } catch (executeError) {
-            logger.error(`IDEStore: RequestDeduplicationService.execute() failed:`, executeError.message, executeError.stack);
-            // Fallback to direct API call
-            logger.info(`IDEStore: Falling back to direct API call`);
+            logger.info(`IDEStore: Making API call for IDE switch to port ${port}`);
             result = await apiCall(`/api/ide/switch/${port}`, {
               method: 'POST'
             });
+            
+            // Cache the result
+            if (result.success) {
+              cacheService.set(key, result, 'ide', 'ide');
+            }
+          } catch (executeError) {
+            logger.error(`IDEStore: API call failed:`, executeError.message, executeError.stack);
+            throw executeError;
           }
           
           logger.info(`IDEStore: Switch result:`, result);
@@ -1061,7 +1200,7 @@ const useIDEStore = create(
           optimizationStore.updateProgress(75, 'Finalizing switch...');
 
           if (result.success) {
-            // Cache is handled by RequestDeduplicationService
+            // Cache is handled by CacheService
             // No need to manually cache here
             
             logger.info('Successfully switched to IDE:', port);
@@ -1131,24 +1270,23 @@ const useIDEStore = create(
           }
         });
         
-        // Clear RequestDeduplicationService cache for IDE switches
-        if (requestDeduplicationService) {
-          requestDeduplicationService.clearCache();
-        }
-        logger.info('IDEStore reset - RequestDeduplicationService cache cleared');
+        // Clear CacheService cache for IDE switches
+        cacheService.invalidateByNamespace('ide');
+        logger.info('IDEStore reset - CacheService IDE cache cleared');
       },
 
       // Debug function to check performance
       debugPerformance: () => {
-        const stats = requestDeduplicationService.getStats();
+        const stats = cacheService.getStats();
         logger.info('Performance Debug:', {
-          requestDeduplicationStats: stats,
+          cacheServiceStats: stats,
           memoryUsage: {
-            cacheSize: stats.cacheSize,
-            pendingRequests: stats.pendingRequestsCount,
-            cacheMemory: stats.cacheMemoryUsage,
-            pendingMemory: stats.pendingMemoryUsage
-          }
+            cacheSize: stats.memorySize,
+            entryCount: stats.memoryEntries,
+            hitRate: stats.hitRate
+          },
+          activePort: get().activePort,
+          availableIDEs: get().availableIDEs.length
         });
         return stats;
       },

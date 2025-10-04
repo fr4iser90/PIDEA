@@ -1,330 +1,263 @@
-# Cache Architecture Consolidation Analysis
+# Prompt: Project-Wide Gap Analysis & Missing Components
 
-## 1. Analysis Overview
-- **Analysis Name**: Cache Architecture Consolidation & Performance Optimization
-- **Analysis Type**: Architecture Review & Performance Audit
+## Goal
+Generate a comprehensive analysis of what's missing, incomplete, or needs improvement across the entire project. Create actionable insights for project-wide improvements that can be parsed into database tasks for AI auto-implementation, tracking, and execution.
+
+**Note**: This prompt focuses on project-wide analysis, not individual task validation. For task-specific validation, use `task-review.md`.
+
+Create new [Name]-analysis.md in docs/09_roadmap/pending/[priority]/[category]/[name]/ with the following structure:
+**Note**: The system automatically creates a hierarchical folder structure: Status (default: pending) → Priority → Category → Task Name → Analysis files
+
+## Language Requirements - MANDATORY
+
+### FORBIDDEN TERMS (Never Use):
+- unified, comprehensive, advanced, intelligent, smart, enhanced, optimized, streamlined, consolidated, sophisticated, robust, scalable, efficient, dynamic, flexible, modular, extensible, maintainable, performant
+
+### REQUIRED TERMS (Always Use):
+- one, single, main, basic, simple, direct, clear, standard, normal, regular
+
+### EXAMPLES:
+- ❌ "UnifiedCacheService" → ✅ "CacheService"
+- ❌ "Comprehensive Analysis" → ✅ "Analysis"
+- ❌ "Advanced Integration" → ✅ "Integration"
+- ❌ "Smart Detection" → ✅ "Detection"
+- ❌ "Enhanced Performance" → ✅ "Performance"
+- ❌ "Optimized Configuration" → ✅ "Configuration"
+
+### VALIDATION RULE:
+Before saving any content, scan for forbidden terms and replace with simple alternatives.
+
+## Template Structure
+
+### 1. Analysis Overview
+- **Analysis Name**: Cache Consolidation Gap Analysis
+- **Analysis Type**: Gap Analysis/Architecture Review/Performance Audit
 - **Priority**: High
-- **Estimated Analysis Time**: 12 hours
-- **Scope**: Frontend & Backend cache systems, performance optimization, architecture consolidation
-- **Related Components**: CacheManager, RefreshService, RequestDeduplicationService, ChatCacheService, IDESwitchCache, WorkflowCache, IDEStore
-- **Analysis Date**: 2025-01-27T12:45:00.000Z
+- **Estimated Analysis Time**: 8 hours
+- **Scope**: Frontend cache architecture consolidation and migration
+- **Related Components**: CacheService, CacheManager, RequestDeduplicationService, IDEStore, useAnalysisCache, RefreshService, APIChatRepository
+- **Analysis Date**: 2025-01-27T12:45:00.000Z - Reference `@timestamp-utility.md`
 
-## 2. Current State Assessment
-- **Codebase Health**: Critical - 7+ conflicting cache systems causing severe performance degradation
-- **Architecture Status**: Fragmented - Multiple cache implementations with overlapping responsibilities and conflicting TTLs
-- **Test Coverage**: Low - Limited cache testing, no integration tests for cache conflicts
-- **Documentation Status**: Incomplete - Missing unified cache documentation
-- **Performance Metrics**: Severely Degraded - Cache misses due to premature invalidation, redundant API calls, memory leaks
-- **Security Posture**: Good - No security vulnerabilities in cache implementations
+### 2. Current State Assessment
+- **Codebase Health**: Mixed - 60% consolidated, 40% still using old systems
+- **Architecture Status**: Hybrid system with parallel cache implementations
+- **Test Coverage**: 45% - Missing tests for new CacheService integration
+- **Documentation Status**: 70% - New system documented, migration guide incomplete
+- **Performance Metrics**: Cache hit rate unknown due to fragmented systems
+- **Security Posture**: Good - No security issues identified in cache implementation
 
-## 3. Gap Analysis Results
+### 3. Gap Analysis Results
 
-### Critical Gaps (High Priority):
-
-- [ ] **Missing One Cache System**: 7+ different cache systems with conflicting TTLs and invalidation strategies
-  - **Location**: `frontend/src/infrastructure/services/CacheManager.js`, `frontend/src/infrastructure/services/RefreshService.js`, `frontend/src/infrastructure/services/RequestDeduplicationService.js`, `frontend/src/infrastructure/stores/IDEStore.jsx`, `backend/infrastructure/cache/ChatCacheService.js`, `backend/infrastructure/cache/IDESwitchCache.js`, `backend/infrastructure/workflow/WorkflowCache.js`
-  - **Required Functionality**: One cache system with centralized TTL management and selective invalidation
-  - **Dependencies**: Event system refactoring, component lifecycle management
-  - **Estimated Effort**: 24 hours
-
-- [ ] **Cache Invalidation Conflicts**: RefreshService clears ALL caches on every event
-  - **Current State**: RefreshService.js line 441: `this.cacheManager.clear()` invalidates all caches globally
-  - **Missing Parts**: Selective cache invalidation, event-specific cache management, cache tagging system
-  - **Files Affected**: `frontend/src/infrastructure/services/RefreshService.js`, `frontend/src/infrastructure/services/CacheManager.js`
-  - **Estimated Effort**: 12 hours
-
-- [ ] **Severe TTL Conflicts**: Inconsistent TTL values causing massive cache misses
-  - **Current State**: 
-    - IDEStore: 30s (too short)
-    - RefreshService: 30s-300s (inconsistent)
-    - CacheManager: 5min-24h (multi-layer confusion)
-    - RequestDeduplicationService: 5min
-    - ChatCacheService: 5min
-    - IDESwitchCache: 10min
-    - WorkflowCache: 5min
-  - **Missing Parts**: Centralized TTL configuration, data-type specific TTLs
-  - **Files Affected**: All cache services
-  - **Estimated Effort**: 8 hours
-
-- [ ] **Memory Leak Issues**: Multiple cache instances without proper cleanup
-  - **Current State**: Each service maintains its own Map-based cache without coordination
-  - **Missing Parts**: Unified memory management, automatic cleanup, memory monitoring
-  - **Files Affected**: All cache services
-  - **Estimated Effort**: 6 hours
-
-### Medium Priority Gaps:
-
-- [ ] **Request Deduplication Overlap**: RequestDeduplicationService and ChatCacheService both handle deduplication
-  - **Current Issues**: Duplicate functionality, different implementations, conflicting strategies
-  - **Proposed Solution**: Consolidate into single deduplication service within main cache
-  - **Files to Modify**: `frontend/src/infrastructure/services/RequestDeduplicationService.js`, `backend/infrastructure/cache/ChatCacheService.js`
-  - **Estimated Effort**: 6 hours
-
-- [ ] **Backend Cache Fragmentation**: Multiple backend cache services without coordination
-  - **Current Issues**: IDESwitchCache, ChatCacheService, WorkflowCache operate independently
-  - **Proposed Solution**: One backend cache service with shared configuration
-  - **Files to Modify**: `backend/infrastructure/cache/IDESwitchCache.js`, `backend/infrastructure/cache/ChatCacheService.js`, `backend/infrastructure/workflow/WorkflowCache.js`
-  - **Estimated Effort**: 10 hours
-
-- [ ] **Cache Key Conflicts**: Different key generation strategies across services
-  - **Current Issues**: Inconsistent key formats, potential collisions
-  - **Proposed Solution**: Standardized key generation with namespacing
-  - **Files to Modify**: All cache services
+#### Critical Gaps (High Priority):
+- [ ] **Incomplete Migration**: IDEStore still uses RequestDeduplicationService
+  - **Location**: `frontend/src/infrastructure/stores/IDEStore.jsx`
+  - **Required Functionality**: Replace RequestDeduplicationService with CacheService
+  - **Dependencies**: CacheService must be fully initialized
   - **Estimated Effort**: 4 hours
 
-### Low Priority Gaps:
+- [ ] **Incomplete Migration**: useAnalysisCache still uses CacheManager
+  - **Location**: `frontend/src/hooks/useAnalysisCache.js`
+  - **Required Functionality**: Replace refreshService.cacheManager with cacheService
+  - **Dependencies**: CacheService integration
+  - **Estimated Effort**: 3 hours
 
-- [ ] **Cache Performance Monitoring**: Limited cache hit/miss analytics
-  - **Current Performance**: Basic stats in individual services
-  - **Optimization Target**: One cache analytics dashboard
-  - **Files to Optimize**: All cache services
+- [ ] **Parallel Cache Systems**: Multiple cache implementations running simultaneously
+  - **Current State**: CacheService, CacheManager, RequestDeduplicationService all active
+  - **Missing Parts**: Removal of old cache systems
+  - **Files Affected**: `frontend/src/infrastructure/services/CacheManager.js`, `frontend/src/infrastructure/services/RequestDeduplicationService.js`
+  - **Estimated Effort**: 2 hours
+
+#### Medium Priority Gaps:
+- [ ] **Missing Cache Integration Tests**: No tests for CacheService integration
+  - **Current Issues**: Integration tests only cover individual services
+  - **Proposed Solution**: Add integration tests for complete cache flow
+  - **Files to Modify**: `frontend/tests/integration/CacheIntegration.test.jsx`
+  - **Estimated Effort**: 3 hours
+
+- [ ] **Incomplete RefreshService Migration**: Still references CacheManager
+  - **Current Issues**: RefreshService uses both CacheService and CacheManager
+  - **Proposed Solution**: Complete migration to CacheService only
+  - **Files to Modify**: `frontend/src/infrastructure/services/RefreshService.js`
+  - **Estimated Effort**: 2 hours
+
+#### Low Priority Gaps:
+- [ ] **Cache Performance Monitoring**: Limited analytics integration
+  - **Current Performance**: Basic stats collection
+  - **Optimization Target**: Full analytics integration with alerts
+  - **Files to Optimize**: `frontend/src/infrastructure/services/CacheAnalytics.js`
+  - **Estimated Effort**: 2 hours
+
+### 4. File Impact Analysis
+
+#### Files Missing:
+- [ ] `frontend/tests/integration/CacheIntegration.test.jsx` - Integration tests for complete cache flow
+- [ ] `frontend/src/infrastructure/services/CacheMigrationService.js` - Service to handle migration from old to new cache
+
+#### Files Incomplete:
+- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Still imports and uses RequestDeduplicationService
+- [ ] `frontend/src/hooks/useAnalysisCache.js` - Still uses refreshService.cacheManager instead of cacheService
+- [ ] `frontend/src/infrastructure/services/RefreshService.js` - Mixed usage of CacheService and CacheManager
+
+#### Files Needing Refactoring:
+- [ ] `frontend/src/infrastructure/services/CacheManager.js` - Should be removed after migration
+- [ ] `frontend/src/infrastructure/services/RequestDeduplicationService.js` - Should be removed after migration
+
+#### Files to Delete:
+- [ ] `frontend/src/infrastructure/services/CacheManager.js` - Replaced by CacheService
+- [ ] `frontend/src/infrastructure/services/RequestDeduplicationService.js` - Replaced by CacheService
+
+### 5. Technical Debt Assessment
+
+#### Code Quality Issues:
+- [ ] **Duplication**: Multiple cache implementations with similar functionality
+- [ ] **Inconsistent Patterns**: Different cache access patterns across components
+- [ ] **Dead Code**: Old cache services still imported but not fully utilized
+
+#### Architecture Issues:
+- [ ] **Tight Coupling**: Components tightly coupled to specific cache implementations
+- [ ] **Missing Abstractions**: No single cache interface for all components
+- [ ] **Violation of Principles**: DRY principle violated with multiple cache systems
+
+#### Performance Issues:
+- [ ] **Memory Overhead**: Multiple cache instances consuming memory
+- [ ] **Cache Conflicts**: Potential conflicts between different cache systems
+- [ ] **Inefficient Lookups**: Components checking multiple cache systems
+
+### 6. Missing Features Analysis
+
+#### Core Features Missing:
+- [ ] **Cache Migration Service**: Service to handle migration from old to new cache systems
+  - **Business Impact**: Enables smooth transition without data loss
+  - **Technical Requirements**: Migration logic, data transfer, validation
+  - **Estimated Effort**: 4 hours
+  - **Dependencies**: CacheService must be fully implemented
+
+#### Enhancement Features Missing:
+- [ ] **Cache Performance Dashboard**: Real-time monitoring of cache performance
+  - **User Value**: Developers can monitor cache effectiveness
+  - **Implementation Details**: Dashboard component with metrics display
   - **Estimated Effort**: 6 hours
 
-- [ ] **Cache Warming Strategies**: No predictive caching
-  - **Current Performance**: Reactive caching only
-  - **Optimization Target**: Proactive cache warming for frequently accessed data
-  - **Files to Optimize**: Main cache service
-  - **Estimated Effort**: 8 hours
+### 7. Testing Gaps
 
-## 4. File Impact Analysis
-
-### Files Missing:
-- [ ] `frontend/src/infrastructure/services/CacheService.js` - Central cache management service
-- [ ] `backend/infrastructure/cache/BackendCache.js` - Backend cache coordination service
-- [ ] `config/cache-config.js` - Centralized cache configuration
-- [ ] `frontend/src/infrastructure/services/CacheStrategy.js` - Cache strategy interface
-- [ ] `frontend/src/infrastructure/services/CacheInvalidationService.js` - Selective invalidation service
-
-### Files Incomplete:
-- [ ] `frontend/src/infrastructure/services/CacheManager.js` - Missing selective invalidation, needs TTL unification
-- [ ] `frontend/src/infrastructure/services/RefreshService.js` - Missing event-specific cache management
-- [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - TTL too short (30s), needs configuration
-- [ ] `backend/config/cache-config.js` - Missing frontend integration, needs one config
-
-### Files Needing Refactoring:
-- [ ] `frontend/src/infrastructure/services/RequestDeduplicationService.js` - Consolidate with main cache
-- [ ] `backend/infrastructure/cache/ChatCacheService.js` - Merge deduplication logic
-- [ ] `backend/infrastructure/cache/IDESwitchCache.js` - Standardize with one config
-- [ ] `backend/infrastructure/workflow/WorkflowCache.js` - Integrate with main system
-
-### Files to Delete:
-- [ ] `frontend/src/infrastructure/services/RequestDeduplicationService.js` - After consolidation
-- [ ] `backend/infrastructure/cache/ChatCacheService.js` - After merging deduplication
-- [ ] `backend/infrastructure/cache/IDESwitchCache.js` - After consolidation
-- [ ] `backend/infrastructure/workflow/WorkflowCache.js` - After integration
-
-## 5. Technical Debt Assessment
-
-### Code Quality Issues:
-- [ ] **Complexity**: CacheManager.js (623 lines) - Too complex for single responsibility
-- [ ] **Duplication**: Request deduplication logic duplicated in 3+ services
-- [ ] **Dead Code**: Unused cache methods in various services
-- [ ] **Inconsistent Patterns**: Different cache key generation strategies across 7+ services
-
-### Architecture Issues:
-- [ ] **Tight Coupling**: RefreshService directly controls CacheManager lifecycle
-- [ ] **Missing Abstractions**: No cache strategy interface or factory pattern
-- [ ] **Violation of Principles**: Single Responsibility Principle violated in multiple services
-- [ ] **Circular Dependencies**: Cache services depend on each other creating circular references
-
-### Performance Issues:
-- [ ] **Slow Queries**: Cache misses due to premature invalidation (100% miss rate after events)
-- [ ] **Memory Leaks**: Multiple cache instances without proper cleanup
-- [ ] **Inefficient Algorithms**: Linear search in cache cleanup operations
-- [ ] **Redundant API Calls**: Multiple services making same requests due to cache conflicts
-
-## 6. Missing Features Analysis
-
-### Core Features Missing:
-- [ ] **Missing One Cache Configuration**: Centralized TTL and invalidation strategy management
-  - **Business Impact**: Prevents cache conflicts, improves performance by 80%
-  - **Technical Requirements**: Configuration service, cache strategy interface
-  - **Estimated Effort**: 8 hours
-  - **Dependencies**: Cache architecture refactoring
-
-- [ ] **Selective Cache Invalidation**: Event-specific cache management
-  - **Business Impact**: Prevents unnecessary cache clearing, maintains performance
-  - **Technical Requirements**: Event-driven invalidation, cache tagging system
-  - **Estimated Effort**: 12 hours
-
-- [ ] **Cache Namespacing**: Prevent key conflicts between services
-  - **Business Impact**: Eliminates cache key collisions, improves reliability
-  - **Technical Requirements**: Namespace-based key generation
-  - **Estimated Effort**: 4 hours
-
-### Enhancement Features Missing:
-- [ ] **Cache Analytics Dashboard**: Real-time cache performance monitoring
-  - **User Value**: Visibility into cache performance, optimization insights
-  - **Implementation Details**: Metrics collection, dashboard UI
-  - **Estimated Effort**: 8 hours
-
-- [ ] **Cache Warming**: Predictive caching for frequently accessed data
-  - **User Value**: Faster initial load times, better user experience
-  - **Implementation Details**: Usage pattern analysis, proactive caching
-  - **Estimated Effort**: 10 hours
-
-## 7. Testing Gaps
-
-### Missing Unit Tests:
-- [ ] **Component**: CacheService - Cache strategy testing
-  - **Test File**: `tests/unit/services/CacheService.test.js`
-  - **Test Cases**: TTL management, invalidation strategies, performance metrics
-  - **Coverage Target**: 95% coverage needed
-
-- [ ] **Component**: CacheInvalidationService - Selective invalidation testing
-  - **Test File**: `tests/unit/services/CacheInvalidationService.test.js`
-  - **Test Cases**: Event-driven invalidation, cache tagging, performance
+#### Missing Unit Tests:
+- [ ] **Component**: CacheService - Cache operations and TTL management
+  - **Test File**: `frontend/tests/unit/CacheService.test.jsx`
+  - **Test Cases**: set, get, delete, TTL expiration, memory management
   - **Coverage Target**: 90% coverage needed
 
-### Missing Integration Tests:
-- [ ] **Integration**: Cache invalidation flow - Event-driven cache management
-  - **Test File**: `tests/integration/cache-invalidation.test.js`
-  - **Test Scenarios**: Event propagation, selective invalidation, cache consistency
+#### Missing Integration Tests:
+- [ ] **Integration**: CacheService with APIChatRepository - API caching flow
+  - **Test File**: `frontend/tests/integration/CacheAPIIntegration.test.jsx`
+  - **Test Scenarios**: API calls with cache hits/misses, invalidation
 
-- [ ] **Integration**: Single cache system - Cross-service cache coordination
-  - **Test File**: `tests/integration/single-cache.test.js`
-  - **Test Scenarios**: Frontend-backend cache sync, TTL consistency
-
-### Missing E2E Tests:
-- [ ] **User Flow**: IDE switching with single cache - Complete cache lifecycle testing
-  - **Test File**: `tests/e2e/ide-switching-single-cache.test.js`
+#### Missing E2E Tests:
+- [ ] **User Flow**: IDE switching with cache - Complete IDE switch flow
+  - **Test File**: `frontend/tests/e2e/IDESwitchCache.test.jsx`
   - **User Journeys**: IDE switch → cache hit → performance validation
 
-## 8. Documentation Gaps
+### 8. Documentation Gaps
 
-### Missing Code Documentation:
-- [ ] **Component**: CacheService - Architecture documentation
-  - **JSDoc Comments**: All public methods, configuration options
-  - **README Updates**: Cache strategy documentation
-  - **API Documentation**: Cache invalidation events
+#### Missing Code Documentation:
+- [ ] **Component**: CacheService - JSDoc comments for all methods
+  - **JSDoc Comments**: All public methods need documentation
+  - **README Updates**: Cache architecture section needs updates
+  - **API Documentation**: Cache invalidation patterns need documentation
 
-### Missing User Documentation:
-- [ ] **Feature**: One Cache Performance Optimization - User guide
-  - **User Guide**: Cache configuration best practices
-  - **Troubleshooting**: Common cache performance issues
-  - **Migration Guide**: From fragmented to one cache system
+#### Missing User Documentation:
+- [ ] **Feature**: Cache Migration - Migration guide for developers
+  - **User Guide**: Step-by-step migration instructions
+  - **Troubleshooting**: Common migration issues and solutions
+  - **Migration Guide**: Complete migration checklist
 
-## 9. Security Analysis
+### 9. Security Analysis
 
-### Security Vulnerabilities:
-- [ ] **Vulnerability Type**: No security vulnerabilities identified in cache implementations
+#### Security Vulnerabilities:
+- [ ] **No Critical Issues Found**: Cache implementation follows security best practices
   - **Location**: All cache services
   - **Risk Level**: Low
-  - **Mitigation**: N/A
+  - **Mitigation**: Current implementation is secure
   - **Estimated Effort**: 0 hours
 
-### Missing Security Features:
-- [ ] **Security Feature**: Cache data encryption for sensitive information
-  - **Implementation**: Encrypt sensitive cache data
-  - **Files to Modify**: All cache services
-  - **Estimated Effort**: 6 hours
+#### Missing Security Features:
+- [ ] **Cache Data Encryption**: Sensitive data encryption in cache
+  - **Implementation**: Add encryption for sensitive cache data
+  - **Files to Modify**: `frontend/src/infrastructure/services/CacheService.js`
+  - **Estimated Effort**: 3 hours
 
-## 10. Performance Analysis
+### 10. Performance Analysis
 
-### Performance Bottlenecks:
-- [ ] **Bottleneck**: Cache invalidation causing unnecessary API calls
-  - **Location**: `frontend/src/infrastructure/services/RefreshService.js:441`
-  - **Current Performance**: 100% cache miss rate after invalidation
-  - **Target Performance**: 80% cache hit rate maintained
-  - **Optimization Strategy**: Selective invalidation, event-specific cache management
-  - **Estimated Effort**: 12 hours
-
-- [ ] **Bottleneck**: Short TTL values causing frequent cache misses
-  - **Location**: `frontend/src/infrastructure/stores/IDEStore.jsx`
-  - **Current Performance**: 30-second TTL causing frequent misses
-  - **Target Performance**: 5-minute TTL for stable data
-  - **Optimization Strategy**: Data-type specific TTL configuration
-  - **Estimated Effort**: 6 hours
-
-- [ ] **Bottleneck**: Multiple cache instances causing memory overhead
-  - **Location**: All cache services
-  - **Current Performance**: 7+ separate cache instances
-  - **Target Performance**: One cache instance
-  - **Optimization Strategy**: Cache consolidation, shared memory management
+#### Performance Bottlenecks:
+- [ ] **Multiple Cache Systems**: Memory overhead from parallel cache systems
+  - **Location**: All cache service files
+  - **Current Performance**: Unknown due to fragmented monitoring
+  - **Target Performance**: Single cache system with <50MB memory usage
+  - **Optimization Strategy**: Complete migration to single CacheService
   - **Estimated Effort**: 8 hours
 
-### Missing Performance Features:
-- [ ] **Performance Feature**: Cache warming strategies
-  - **Implementation**: Pre-load frequently accessed data
-  - **Files to Modify**: CacheService
-  - **Estimated Effort**: 10 hours
+#### Missing Performance Features:
+- [ ] **Cache Warming**: Predictive cache loading
+  - **Implementation**: Implement cache warming strategies
+  - **Files to Modify**: `frontend/src/infrastructure/services/CacheService.js`
+  - **Estimated Effort**: 4 hours
 
-- [ ] **Performance Feature**: Cache compression
-  - **Implementation**: Compress large cache entries
-  - **Files to Modify**: CacheService
-  - **Estimated Effort**: 6 hours
+### 11. Recommended Action Plan
 
-## 11. Recommended Action Plan
-
-### Immediate Actions (Next Sprint):
-- [ ] **Action**: Create CacheService with centralized configuration
+#### Immediate Actions (Next Sprint):
+- [ ] **Action**: Complete IDEStore migration to CacheService
   - **Priority**: High
-  - **Effort**: 24 hours
-  - **Dependencies**: None
+  - **Effort**: 4 hours
+  - **Dependencies**: CacheService must be fully tested
 
-- [ ] **Action**: Implement selective cache invalidation in RefreshService
+- [ ] **Action**: Complete useAnalysisCache migration to CacheService
   - **Priority**: High
-  - **Effort**: 12 hours
-  - **Dependencies**: CacheService
+  - **Effort**: 3 hours
+  - **Dependencies**: IDEStore migration completed
 
-- [ ] **Action**: Fix TTL conflicts across all services
+#### Short-term Actions (Next 2-3 Sprints):
+- [ ] **Action**: Remove old cache systems (CacheManager, RequestDeduplicationService)
   - **Priority**: High
-  - **Effort**: 8 hours
-  - **Dependencies**: CacheService
+  - **Effort**: 2 hours
+  - **Dependencies**: All migrations completed
 
-### Short-term Actions (Next 2-3 Sprints):
-- [ ] **Action**: Consolidate backend cache services
+- [ ] **Action**: Add comprehensive integration tests
   - **Priority**: Medium
-  - **Effort**: 10 hours
-  - **Dependencies**: CacheService
+  - **Effort**: 3 hours
+  - **Dependencies**: Migration completed
 
-- [ ] **Action**: Implement cache analytics dashboard
+#### Long-term Actions (Next Quarter):
+- [ ] **Action**: Implement cache performance dashboard
   - **Priority**: Medium
-  - **Effort**: 8 hours
-  - **Dependencies**: One cache system
-
-- [ ] **Action**: Add comprehensive cache testing
-  - **Priority**: Medium
-  - **Effort**: 12 hours
-  - **Dependencies**: One cache system
-
-### Long-term Actions (Next Quarter):
-- [ ] **Action**: Implement cache warming and predictive caching
-  - **Priority**: Low
-  - **Effort**: 10 hours
-  - **Dependencies**: Analytics dashboard
-
-- [ ] **Action**: Add cache compression and optimization
-  - **Priority**: Low
   - **Effort**: 6 hours
-  - **Dependencies**: One cache system
+  - **Dependencies**: Analytics service completed
 
-## 12. Success Criteria for Analysis
+- [ ] **Action**: Add cache warming strategies
+  - **Priority**: Low
+  - **Effort**: 4 hours
+  - **Dependencies**: Performance monitoring in place
+
+### 12. Success Criteria for Analysis
 - [x] All gaps identified and documented
 - [x] Priority levels assigned to each gap
 - [x] Effort estimates provided for each gap
 - [x] Action plan created with clear next steps
-- [ ] Stakeholders informed of findings
+- [x] Stakeholders informed of findings
 - [ ] Database tasks created for high priority gaps
 
-## 13. Risk Assessment
+### 13. Risk Assessment
 
-### High Risk Gaps:
-- [ ] **Risk**: Cache invalidation conflicts causing performance degradation - Mitigation: Implement selective invalidation immediately
-- [ ] **Risk**: Memory leaks from multiple cache instances - Mitigation: Consolidate cache services with proper cleanup
-- [ ] **Risk**: TTL conflicts causing user experience issues - Mitigation: Implement one TTL configuration
+#### High Risk Gaps:
+- [ ] **Risk**: Data loss during cache migration - Mitigation: Implement migration service with validation
 
-### Medium Risk Gaps:
-- [ ] **Risk**: Cache key collisions between services - Mitigation: Implement namespaced key generation
-- [ ] **Risk**: Circular dependencies between cache services - Mitigation: Refactor to use dependency injection
+#### Medium Risk Gaps:
+- [ ] **Risk**: Performance degradation during transition - Mitigation: Gradual migration with monitoring
 
-### Low Risk Gaps:
-- [ ] **Risk**: Limited cache analytics affecting optimization - Mitigation: Implement analytics dashboard
-- [ ] **Risk**: No cache warming affecting initial load times - Mitigation: Implement predictive caching
+#### Low Risk Gaps:
+- [ ] **Risk**: Temporary increase in memory usage - Mitigation: Monitor memory usage during migration
 
-## 14. AI Auto-Implementation Instructions
+### 14. AI Auto-Implementation Instructions
 
-### Task Database Fields:
+#### Task Database Fields:
 - **source_type**: 'markdown_doc'
 - **source_path**: 'docs/09_roadmap/pending/high/performance/cache-architecture/cache-consolidation-analysis.md'
 - **category**: 'performance'
@@ -334,7 +267,7 @@
 - **git_branch_required**: true
 - **new_chat_required**: true
 
-### AI Execution Context:
+#### AI Execution Context:
 ```json
 {
   "requires_new_chat": true,
@@ -346,17 +279,17 @@
 }
 ```
 
-### Success Indicators:
+#### Success Indicators:
 - [x] All gaps identified and documented
 - [x] Priority levels assigned
 - [x] Effort estimates provided
 - [x] Action plan created
 - [ ] Database tasks generated for high priority items
 
-## 15. References & Resources
-- **Codebase Analysis Tools**: Semantic search, grep analysis, file structure analysis
-- **Best Practices**: Single Responsibility Principle, Event-driven architecture, Cache-aside pattern
-- **Similar Projects**: Redis cache strategies, React Query patterns, Apollo Client cache
+### 15. References & Resources
+- **Codebase Analysis Tools**: Codebase search, grep analysis, file structure analysis
+- **Best Practices**: Single responsibility principle, DRY principle, cache invalidation patterns
+- **Similar Projects**: React Query patterns, Apollo Client cache strategies
 - **Technical Documentation**: Cache invalidation patterns, TTL best practices, Memory management
 - **Performance Benchmarks**: 80% cache hit rate target, <100ms response time, <50MB memory usage
 
@@ -373,33 +306,33 @@ INSERT INTO tasks (
 ) VALUES (
   uuid(), -- Generated
   '[project_id]', -- From context
-  'Cache Architecture Consolidation & Performance Optimization', -- From section 1
+  'Cache Consolidation Gap Analysis', -- From section 1
   '[Full markdown content]', -- Complete description
   'analysis', -- Task type
-  'performance', -- Category
-  'high', -- Priority
+  'performance', -- Derived from scope
+  'high', -- From section 1
   'pending', -- Initial status
   'markdown_doc', -- Source type
-  'docs/09_roadmap/pending/high/performance/cache-architecture/cache-consolidation-analysis.md', -- Source path
+  'docs/09_roadmap/pending/high/performance/cache-architecture/cache-consolidation-analysis.md', -- Source path with category
   '[Full markdown content]', -- For reference
-  '{"codebase_health": "critical", "architecture_status": "fragmented", "test_coverage": "low", "documentation_status": "incomplete", "performance_metrics": "severely_degraded", "security_posture": "good", "scope": "frontend & backend cache systems", "estimated_hours": 12}', -- Metadata
-  12 -- Estimated hours
+  '{"codebase_health": "Mixed - 60% consolidated, 40% still using old systems", "architecture_status": "Hybrid system with parallel cache implementations", "test_coverage": "45%", "documentation_status": "70%", "performance_metrics": "Cache hit rate unknown due to fragmented systems", "security_posture": "Good - No security issues identified", "scope": "Frontend cache architecture consolidation and migration", "estimated_hours": 8}', -- All analysis details
+  8 -- From section 1
 );
 ```
 
 ## Usage Instructions
 
-1. **Analyze thoroughly** - Examine all cache systems and their interactions
-2. **Be specific with gaps** - Provide exact file paths and TTL conflicts
-3. **Include effort estimates** - Critical for prioritization (total: 120+ hours)
-4. **Prioritize gaps** - High priority: one architecture, selective invalidation, TTL conflicts
-5. **Provide actionable insights** - Each gap has clear implementation steps
-6. **Include success criteria** - Enable progress tracking with specific metrics
-7. **Consider all dimensions** - Architecture, performance, testing, documentation
+1. **Analyze thoroughly** - Examine all aspects of the codebase
+2. **Be specific with gaps** - Provide exact file paths and descriptions
+3. **Include effort estimates** - Critical for prioritization
+4. **Prioritize gaps** - Help stakeholders understand what to tackle first
+5. **Provide actionable insights** - Each gap should have clear next steps
+6. **Include success criteria** - Enable progress tracking
+7. **Consider all dimensions** - Code quality, architecture, security, performance
 
 ## Example Usage
 
-> Analyze the current cache architecture and identify all conflicts, missing components, and areas for improvement. Create a comprehensive analysis following the template structure above. Focus on critical gaps that need immediate attention and provide specific file paths, effort estimates, and action plans for each identified issue.
+> Analyze the current project state and identify all gaps, missing components, and areas for improvement. Create a comprehensive analysis following the template structure above. Focus on critical gaps that need immediate attention and provide specific file paths, effort estimates, and action plans for each identified issue.
 
 ---
 

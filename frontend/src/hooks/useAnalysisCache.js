@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import refreshService from '@/infrastructure/services/RefreshService';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import { logger } from '@/infrastructure/logging/Logger';
 
 /**
- * ✅ MIGRATED: Custom hook now uses the unified CacheManager from RefreshService
+ * ✅ MIGRATED: Custom hook now uses the unified CacheService
  * Provides efficient caching with TTL support and automatic cleanup
  */
 export const useAnalysisCache = () => {
@@ -29,20 +29,19 @@ export const useAnalysisCache = () => {
   }, [isInitialized]);
 
   /**
-   * Update cache statistics from RefreshService
+   * Update cache statistics from CacheService
    */
   const updateCacheStats = useCallback(() => {
     try {
-      const refreshStats = refreshService.getStats();
-      const cacheStats = refreshStats.cacheStats || {};
-      setCacheStats(cacheStats);
+      const stats = cacheService.getStats();
+      setCacheStats(stats);
     } catch (error) {
       logger.error('Failed to update cache stats:', error);
     }
   }, []);
 
   /**
-   * Get cached data for project and data type using RefreshService CacheManager
+   * Get cached data for project and data type using CacheService
    * @param {string} projectId - Project identifier
    * @param {string} dataType - Type of data (metrics, status, etc.)
    * @param {Object} filters - Optional filters
@@ -51,7 +50,7 @@ export const useAnalysisCache = () => {
   const getCachedData = useCallback((projectId, dataType, filters = {}) => {
     try {
       const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
-      const data = refreshService.cacheManager.get(cacheKey);
+      const data = cacheService.get(cacheKey);
       
       if (data) {
         logger.info(`Cache hit for ${dataType}:`, { projectId, filters });
@@ -90,7 +89,7 @@ export const useAnalysisCache = () => {
       
       const ttl = ttlMap[dataType] || 60 * 60 * 1000; // Default 1 hour
       
-      const success = refreshService.cacheManager.set(cacheKey, data, ttl);
+      const success = cacheService.set(cacheKey, data, dataType, 'analysis');
       
       if (success) {
         logger.info(`Cached ${dataType}:`, { 
@@ -126,7 +125,8 @@ export const useAnalysisCache = () => {
   const hasCachedData = useCallback((projectId, dataType, filters = {}) => {
     try {
       const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
-      return refreshService.cacheManager.has(cacheKey);
+      const data = cacheService.get(cacheKey);
+      return !!data;
     } catch (error) {
       logger.error('Failed to check cached data:', error);
       return false;
@@ -142,7 +142,7 @@ export const useAnalysisCache = () => {
   const removeCachedData = useCallback((projectId, dataType, filters = {}) => {
     try {
       const cacheKey = `analysis:${projectId}:${dataType}:${JSON.stringify(filters)}`;
-      refreshService.cacheManager.delete(cacheKey);
+      cacheService.delete(cacheKey);
       
       logger.info(`Removed ${dataType} from cache:`, { projectId, filters });
       updateCacheStats();
@@ -162,13 +162,13 @@ export const useAnalysisCache = () => {
         const dataTypes = ['metrics', 'status', 'history', 'issues', 'techStack', 'architecture', 'recommendations'];
         dataTypes.forEach(dataType => {
           const cacheKey = `analysis:${projectId}:${dataType}`;
-          refreshService.cacheManager.delete(cacheKey);
+          cacheService.delete(cacheKey);
         });
         
         logger.info(`Cleared cache for project:`, { projectId });
       } else {
         // Clear all cache
-        refreshService.cacheManager.clear();
+        cacheService.clear();
         logger.info('Cleared all cache');
       }
       
@@ -197,7 +197,7 @@ export const useAnalysisCache = () => {
    */
   const cleanupExpired = useCallback(() => {
     try {
-      refreshService.cacheManager.cleanupExpiredEntries();
+      cacheService.cleanupExpiredEntries();
       logger.info('Cleaned up expired entries');
       updateCacheStats();
       return 1; // CacheManager doesn't return count, so we return 1 to indicate success
@@ -212,7 +212,7 @@ export const useAnalysisCache = () => {
    * @returns {Object} Current cache configuration
    */
   const getCacheConfig = useCallback(() => {
-    return refreshService.cacheManager.cacheConfig || {};
+    return cacheService.getConfig() || {};
   }, []);
 
   /**

@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import webSocketService from '@/infrastructure/services/WebSocketService';
-import { CacheManager } from './CacheManager';
+import { cacheService } from './CacheService';
+import { cacheInvalidationService } from './CacheInvalidationService';
 import { EventCoordinator } from './EventCoordinator';
 import { ActivityTracker } from './ActivityTracker';
 import { NetworkMonitor } from './NetworkMonitor';
@@ -12,7 +13,8 @@ import { NetworkMonitor } from './NetworkMonitor';
  */
 class RefreshService {
   constructor() {
-    this.cacheManager = new CacheManager();
+    this.cacheService = cacheService;
+    this.cacheInvalidationService = cacheInvalidationService;
     this.eventCoordinator = new EventCoordinator(webSocketService);
     this.activityTracker = new ActivityTracker();
     this.networkMonitor = new NetworkMonitor();
@@ -48,7 +50,7 @@ class RefreshService {
       logger.info('🔄 Initializing RefreshService...');
       
       // Initialize sub-services
-      await this.cacheManager.initialize();
+      await this.cacheService.initialize();
       await this.eventCoordinator.initialize();
       await this.activityTracker.initialize();
       await this.networkMonitor.initialize();
@@ -306,7 +308,7 @@ class RefreshService {
 
       // Check cache first
       const cacheKey = this.getCacheKey(componentType);
-      const cachedData = this.cacheManager.get(cacheKey);
+      const cachedData = this.cacheService.get(cacheKey);
       
       if (cachedData && !force) {
         this.stats.cacheHits++;
@@ -320,7 +322,7 @@ class RefreshService {
       const freshData = await this.fetchComponentData(componentType);
       
       // Cache the data
-      this.cacheManager.set(cacheKey, freshData, componentConfig.cache.ttl);
+      this.cacheService.set(cacheKey, freshData, 'default', componentType);
       
       // Update component
       this.updateComponent(componentType, freshData);
@@ -334,7 +336,7 @@ class RefreshService {
       
       // Try to use cached data as fallback
       const cacheKey = this.getCacheKey(componentType);
-      const cachedData = this.cacheManager.get(cacheKey);
+      const cachedData = this.cacheService.get(cacheKey);
       if (cachedData) {
         this.updateComponent(componentType, cachedData);
         logger.info(`🔄 Used cached data as fallback for ${componentType}`);
@@ -415,7 +417,7 @@ class RefreshService {
     const componentConfig = this.componentStates.get(componentType);
     
     if (componentConfig) {
-      this.cacheManager.set(cacheKey, data, componentConfig.cache.ttl);
+      this.cacheService.set(cacheKey, data, 'default', componentType);
       this.updateComponent(componentType, data);
     }
   }
@@ -428,18 +430,17 @@ class RefreshService {
     const { componentType, keys } = data;
     
     if (componentType) {
-      // Invalidate specific component
-      const cacheKey = this.getCacheKey(componentType);
-      this.cacheManager.invalidate(cacheKey);
+      // Invalidate specific component using selective invalidation
+      this.cacheInvalidationService.invalidateByPattern(`${componentType}:*`, identifier);
       logger.info(`🗑️ Invalidated cache for ${componentType}`);
     } else if (keys) {
-      // Invalidate specific keys
-      keys.forEach(key => this.cacheManager.invalidate(key));
+      // Invalidate specific keys using selective invalidation
+      keys.forEach(key => this.cacheService.delete(key));
       logger.info(`🗑️ Invalidated cache keys:`, keys);
     } else {
-      // Invalidate all caches
-      this.cacheManager.clear();
-      logger.info(`🗑️ Cleared all caches`);
+      // Use selective invalidation instead of global cache clearing
+      this.cacheInvalidationService.invalidateByPattern('*', identifier);
+      logger.info(`🗑️ Selective cache invalidation completed`);
     }
   }
 
@@ -533,7 +534,7 @@ class RefreshService {
       cacheHitRate,
       activeComponents: this.componentStates.size,
       activeTimers: this.activeRefreshTimers.size,
-      cacheStats: this.cacheManager.getStats(),
+      cacheStats: this.cacheService.getStats(),
       activityStats: this.activityTracker.getStats(),
       networkStats: this.networkMonitor.getStats()
     };
@@ -553,7 +554,7 @@ class RefreshService {
     this.eventCoordinator.destroy();
     this.activityTracker.destroy();
     this.networkMonitor.destroy();
-    this.cacheManager.destroy();
+    // CacheService doesn't need explicit destroy
 
     this.isInitialized = false;
     logger.info('🧹 RefreshService destroyed');

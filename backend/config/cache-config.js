@@ -1,62 +1,68 @@
 /**
  * Cache Configuration for Analysis Data Caching System
  * Centralized TTL settings and cache parameters for different analysis types
+ * UPDATED: Now uses centralized configuration from config/cache-config.js
  */
 
+// Import centralized configuration
+const centralizedConfig = require('../../config/cache-config');
+
 const cacheConfig = {
-  // Analysis Steps (in analysis_results table)
+  // Analysis Steps (in analysis_results table) - using centralized TTLs
   project: { 
-    ttl: 24 * 60 * 60, // 24 hours - ProjectAnalysisStep
-    description: 'Project structure analysis - very stable'
+    ttl: centralizedConfig.dataTypes.project.ttl / 1000, // Convert from milliseconds to seconds
+    description: centralizedConfig.dataTypes.project.description
   },
   dependency: { 
-    ttl: 24 * 60 * 60, // 24 hours - DependencyAnalysisStep
-    description: 'Dependency analysis - rarely changes'
+    ttl: centralizedConfig.dataTypes.dependency.ttl / 1000,
+    description: centralizedConfig.dataTypes.dependency.description
   },
   codeQuality: { 
-    ttl: 6 * 60 * 60, // 6 hours - CodeQualityAnalysisStep
-    description: 'Code quality analysis - moderate frequency'
+    ttl: centralizedConfig.dataTypes.codeQuality.ttl / 1000,
+    description: centralizedConfig.dataTypes.codeQuality.description
   },
   security: { 
-    ttl: 4 * 60 * 60, // 4 hours - SecurityAnalysisStep
-    description: 'Security analysis - frequent updates'
+    ttl: centralizedConfig.dataTypes.security.ttl / 1000,
+    description: centralizedConfig.dataTypes.security.description
   },
   performance: { 
-    ttl: 8 * 60 * 60, // 8 hours - PerformanceAnalysisStep
-    description: 'Performance analysis - moderate frequency'
+    ttl: centralizedConfig.dataTypes.performance.ttl / 1000,
+    description: centralizedConfig.dataTypes.performance.description
   },
   architecture: { 
-    ttl: 12 * 60 * 60, // 12 hours - ArchitectureAnalysisStep
-    description: 'Architecture analysis - stable'
+    ttl: centralizedConfig.dataTypes.architecture.ttl / 1000,
+    description: centralizedConfig.dataTypes.architecture.description
   },
   techStack: { 
-    ttl: 24 * 60 * 60, // 24 hours - TechStackAnalysisStep
-    description: 'Tech stack analysis - very stable'
+    ttl: centralizedConfig.dataTypes.techStack.ttl / 1000,
+    description: centralizedConfig.dataTypes.techStack.description
   },
   'repository-type': { 
-    ttl: 24 * 60 * 60, // 24 hours - RepositoryTypeAnalysisStep
-    description: 'Repository type detection - very stable'
+    ttl: centralizedConfig.dataTypes.repositoryType.ttl / 1000,
+    description: centralizedConfig.dataTypes.repositoryType.description
   },
   
   // Default cache settings
   default: {
-    ttl: 12 * 60 * 60, // 12 hours
-    description: 'Default cache duration'
+    ttl: centralizedConfig.dataTypes.default.ttl / 1000,
+    description: centralizedConfig.dataTypes.default.description
   },
   
-  // Cache invalidation settings
+  // Cache invalidation settings - using centralized configuration
   invalidation: {
-    staleThreshold: 60 * 60, // 1 hour
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-    batchSize: 100,
-    batchDelay: 1000 // 1 second
+    staleThreshold: centralizedConfig.invalidation.staleThreshold / 1000,
+    maxAge: centralizedConfig.invalidation.maxAge / 1000,
+    batchSize: centralizedConfig.invalidation.batchSize,
+    batchDelay: centralizedConfig.invalidation.batchDelay,
+    selectiveInvalidation: centralizedConfig.invalidation.selectiveInvalidation,
+    globalClearing: centralizedConfig.invalidation.globalClearing
   },
   
-  // Performance settings
+  // Performance settings - using centralized configuration
   performance: {
-    maxMemoryItems: 1000,
-    hitRateThreshold: 0.8, // 80%
-    responseTimeThreshold: 100 // 100ms
+    maxMemoryItems: centralizedConfig.memory.maxEntries,
+    hitRateThreshold: centralizedConfig.performance.hitRateThreshold,
+    responseTimeThreshold: centralizedConfig.performance.responseTimeThreshold
   }
 };
 
