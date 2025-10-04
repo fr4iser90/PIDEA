@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import '@/css/main/pidea-agent-git.css';
 
 // Utility function to convert workspace path to project ID
@@ -41,7 +42,9 @@ const PideaAgentBranchComponent = ({
 
   const loadWorkspacePath = async () => {
     try {
-      const result = await apiCall('/api/ide/available');
+      // Use centralized cache function
+      const result = await cacheService.getIDEData();
+      
       if (result.success && result.data) {
         const activeIDE = result.data.find(ide => ide.port === activePort);
         if (activeIDE && activeIDE.workspacePath) {

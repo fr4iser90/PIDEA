@@ -305,8 +305,12 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       );
     }
     
+    // Generate stable unique key to prevent React warnings
+    const messageKey = message.id || `msg_${index}`;
+    const uniqueKey = `${messageKey}_${index}`;
+    
     return (
-      <div className={`message ${isUser ? 'user' : 'ai'}`} key={message.id || `msg_${index}`} data-index={index}>
+      <div className={`message ${isUser ? 'user' : 'ai'}`} key={uniqueKey} data-index={index}>
         <div className="message-avatar">{isUser ? 'U' : 'AI'}</div>
         {bubbleContent}
       </div>

@@ -105,9 +105,10 @@ export class CacheService {
    * Set up event listeners for selective invalidation
    */
   setupEventListeners() {
-    // IDE switch events - invalidate IDE-related cache
+    // IDE switch events - update cache instead of invalidating
     this.eventCoordinator.on('ide:switch', (data) => {
-      this.invalidateByNamespace('ide', data.port);
+      // Update cache with new IDE data instead of clearing
+      this.updateIDECache(data);
     });
     
     // Project change events - invalidate project-related cache
@@ -268,6 +269,148 @@ export class CacheService {
     } catch (error) {
       logger.error('Failed to delete cache data:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get IDE data with automatic caching
+   * Centralized function for all IDE data requests
+   * @returns {Promise<Object>} IDE data result
+   */
+  async getIDEData() {
+    const cacheKey = 'store_load_available_ides';
+    
+    // Check cache first
+    const cachedResult = this.get(cacheKey);
+    if (cachedResult) {
+      logger.info('Using cached IDE data');
+      logger.info(`📊 Cache data type: ${Array.isArray(cachedResult) ? 'Array' : typeof cachedResult}`);
+      logger.info(`📊 Cache data: ${JSON.stringify(cachedResult).substring(0, 100)}...`);
+      
+      // Ensure we return an array
+      const data = Array.isArray(cachedResult) ? cachedResult : [];
+      return { success: true, data: data };
+    }
+    
+    // Import apiCall dynamically to avoid circular dependencies
+    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    
+    try {
+      const result = await apiCall('/api/ide/available');
+      
+      // Cache the result if successful
+      if (result.success) {
+        logger.info(`💾 Caching IDE data: ${JSON.stringify(result.data).substring(0, 100)}...`);
+        logger.info(`📊 Data type: ${Array.isArray(result.data) ? 'Array' : typeof result.data}`);
+        logger.info(`📊 Data length: ${Array.isArray(result.data) ? result.data.length : 'N/A'}`);
+        
+        // Only cache if we have valid array data
+        if (Array.isArray(result.data) && result.data.length > 0) {
+          this.set(cacheKey, result.data, 'ide', 'ide');
+          logger.info('IDE data cached successfully');
+        } else {
+          logger.warn('⚠️ Not caching empty or invalid IDE data');
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('Failed to fetch IDE data:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get Git data with caching
+   * @param {string} workspacePath - Workspace path
+   * @param {string} projectId - Project ID
+   */
+  async getGitData(workspacePath, projectId) {
+    const cacheKey = `git_status_${projectId}_${workspacePath}`;
+    
+    // Check cache first
+    const cachedResult = this.get(cacheKey);
+    if (cachedResult) {
+      logger.info('Using cached Git data');
+      return { success: true, data: cachedResult };
+    }
+    
+    // Import apiCall dynamically
+    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    
+    try {
+      const result = await apiCall(`/api/projects/${projectId}/git/status`, { 
+        method: 'POST',
+        body: JSON.stringify({ projectPath: workspacePath })
+      });
+      
+      // Cache the result if successful
+      if (result.success) {
+        this.set(cacheKey, result.data, 'git', 'git');
+        logger.info('Git data cached successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('Failed to fetch Git data:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get Chat data with caching
+   * @param {string} port - IDE port
+   */
+  async getChatData(port) {
+    const cacheKey = `chat_history_${port}`;
+    
+    // Check cache first
+    const cachedResult = this.get(cacheKey);
+    if (cachedResult) {
+      logger.info('Using cached Chat data');
+      return { success: true, data: cachedResult };
+    }
+    
+    // Import apiCall dynamically
+    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    
+    try {
+      const result = await apiCall(`/api/chat/port/${port}/history`);
+      
+      // Cache the result if successful
+      if (result.success) {
+        this.set(cacheKey, result.data, 'chat', 'chat');
+        logger.info('Chat data cached successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('Failed to fetch Chat data:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Update IDE cache with new data instead of clearing
+   * @param {object} data - New IDE data
+   */
+  updateIDECache(data) {
+    try {
+      const key = 'store_load_available_ides';
+      const existingData = this.memoryCache.get(key);
+      
+      if (existingData && Array.isArray(existingData.data)) {
+        // Update existing IDE data
+        const updatedData = existingData.data.map(ide => 
+          ide.port === data.port ? { ...ide, ...data } : ide
+        );
+        
+        // Set updated data with same TTL
+        this.set(key, updatedData, 'ide', 'ide');
+        logger.info(`🔄 IDE cache updated for port ${data.port}`);
+      }
+    } catch (error) {
+      logger.error('Failed to update IDE cache:', error);
     }
   }
 

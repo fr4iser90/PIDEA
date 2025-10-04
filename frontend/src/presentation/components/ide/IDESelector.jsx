@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import '@/css/components/ide/ide-selector.css';
 
 /**
@@ -68,7 +69,9 @@ const IDESelector = ({
       setIsLoading(true);
       setError(null);
 
-      const result = await apiCall('/api/ide/available');
+      // Use centralized cache function
+      const result = await cacheService.getIDEData();
+      
       if (result.success) {
         setAvailableIDEs(result.data.ides || result.data || []);
       } else {

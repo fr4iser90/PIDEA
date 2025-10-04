@@ -3,7 +3,7 @@
  * Service for orchestrating IDE start functionality
  */
 
-import { logger } from '@/infrastructure/logging/Logger';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 
 class IDEStartService {
@@ -163,7 +163,9 @@ class IDEStartService {
    */
   async getAvailablePorts(ideType) {
     try {
-      const result = await apiCall('/api/ide/available');
+      // Use centralized cache function
+      const result = await cacheService.getIDEData();
+      
       if (result.success) {
         const usedPorts = (result.data.ides || result.data || []).map(ide => ide.port);
         const portRanges = {

@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import IDERequirementService from '@/infrastructure/services/IDERequirementService.jsx';
 import '@/css/components/ide/ide-start-modal.css';
@@ -75,7 +76,9 @@ const IDEStartModal = ({
   // Load available ports
   const loadAvailablePorts = useCallback(async () => {
     try {
-      const result = await apiCall('/api/ide/available');
+      // Use centralized cache function
+      const result = await cacheService.getIDEData();
+      
       if (result.success) {
         const usedPorts = (result.data.ides || result.data || []).map(ide => ide.port);
         const range = portRanges[formData.ideType];

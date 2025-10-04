@@ -166,7 +166,7 @@ export class NetworkMonitor {
       const startTime = Date.now();
       
       // Simple speed test using a small image
-      const testImageUrl = '/api/health-check'; // Use existing endpoint
+      const testImageUrl = '/api/health'; // Use existing endpoint
       const response = await fetch(testImageUrl, {
         method: 'HEAD',
         cache: 'no-cache'

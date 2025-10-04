@@ -4,7 +4,7 @@
  * Created: 2025-09-29T19:51:09.000Z
  */
 
-import { logger } from '@/infrastructure/logging/Logger';
+import { cacheService } from '@/infrastructure/services/CacheService';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
@@ -32,7 +32,8 @@ class IDERequirementService {
       // Poll for IDE detection to complete
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          const result = await apiCall('/api/ide/available');
+          // Use centralized cache function
+          const result = await cacheService.getIDEData();
           
           if (result.success && result.data) {
             const ides = Array.isArray(result.data) ? result.data : (result.data.ides || []);

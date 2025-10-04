@@ -7,6 +7,13 @@ import '@/css/global/sidebar-left.css';
 import '@/css/global/sidebar-right.css';
 import '@/css/panel/chat-panel.css';
 
+// Initialize performance monitoring in development
+if (import.meta.env.DEV) {
+  import('@/infrastructure/services/PerformanceDashboard.js').then(() => {
+    logger.info('🚀 Performance Dashboard initialized for development');
+  });
+}
+
 // Add global styles for animations
 const globalStyles = document.createElement('style');
 globalStyles.textContent = `

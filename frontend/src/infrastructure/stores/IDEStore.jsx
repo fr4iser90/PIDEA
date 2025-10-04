@@ -11,6 +11,7 @@ import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import useIDESwitchOptimizationStore from './IDESwitchOptimizationStore.jsx';
+import performanceLogger from '@/infrastructure/services/PerformanceLogger';
 
 // Using CacheService for caching instead of RequestDeduplicationService
 
@@ -35,6 +36,7 @@ const useIDEStore = create(
       lastUpdate: null,
       retryCount: 0,
       maxRetries: 3,
+      loadingLock: false, // Prevent concurrent loading
 
       // NEW: Project Data
       projectData: {
@@ -190,50 +192,94 @@ const useIDEStore = create(
       },
 
       loadAvailableIDEs: async () => {
+        const operationId = `load_available_ides_${Date.now()}`;
+        performanceLogger.start(operationId, 'Load Available IDEs', { timestamp: new Date().toISOString() });
+        
         try {
-          const { isLoading, availableIDEs, lastUpdate } = get();
+          const { isLoading, loadingLock, availableIDEs, lastUpdate } = get();
           
-          // Skip if already loading
-          if (isLoading) {
-            logger.info('IDE load already in progress, skipping');
+          // Prevent concurrent loading
+          if (isLoading || loadingLock) {
+            logger.info('⚠️ IDE load already in progress, skipping duplicate request');
+            performanceLogger.end(operationId, { skipped: true, reason: 'already_loading' });
             return availableIDEs;
           }
           
-          // Skip if data is recent (less than 30 seconds old)
-          if (lastUpdate && (Date.now() - lastUpdate) < 30000) {
-            logger.info('Using recent IDE data, skipping API call');
-            return availableIDEs;
-          }
+          // Set loading lock
+          set({ loadingLock: true });
+          
+          // CACHE FIRST: Always check cache before API
           
           // Check if user is authenticated before making API call
           const { isAuthenticated } = useAuthStore.getState();
           if (!isAuthenticated) {
             logger.info('User not authenticated, skipping IDE load');
+            performanceLogger.end(operationId, { skipped: true, reason: 'not_authenticated' });
             return [];
           }
           
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
-
+      
           // Use CacheService for loading IDEs
           const key = 'store_load_available_ides';
+          const cacheStart = performance.now();
           const cachedResult = cacheService.get(key);
+          const cacheDuration = performance.now() - cacheStart;
+          
           if (cachedResult) {
-            logger.info('Using cached IDE data from CacheService');
-            set({ availableIDEs: cachedResult, isLoading: false, lastUpdate: Date.now() });
+            logger.info('✅ Using cached IDE data from CacheService');
+            logger.info(`📊 Cache hit! Data: ${JSON.stringify(cachedResult).substring(0, 100)}...`);
+            set({ availableIDEs: cachedResult, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'cache', 
+              cacheDuration: cacheDuration,
+              ideCount: cachedResult.length 
+            });
             return;
-          }
-
-          const result = await apiCall('/api/ide/available');
-          if (result.success) {
-            cacheService.set(key, result.data, 'ide', 'ide');
-            set({ availableIDEs: result.data, isLoading: false, lastUpdate: Date.now() });
           } else {
-            set({ error: result.error, isLoading: false });
+            logger.info('❌ Cache MISS - no cached data found');
+            logger.info(`🔍 Cache key: ${key}`);
+            logger.info(`📊 Cache stats: ${JSON.stringify(cacheService.getStats())}`);
+          }
+      
+          const apiStart = performance.now();
+          const result = await apiCall('/api/ide/available');
+          const apiDuration = performance.now() - apiStart;
+          
+          if (result.success) {
+            const cacheSetStart = performance.now();
+            logger.info(`💾 Setting cache for key: ${key}`);
+            logger.info(`📊 Data to cache: ${JSON.stringify(result.data).substring(0, 100)}...`);
+            cacheService.set(key, result.data, 'ide', 'ide');
+            const cacheSetDuration = performance.now() - cacheSetStart;
+            
+            // Verify cache was set
+            const verifyCache = cacheService.get(key);
+            logger.info(`✅ Cache verification: ${verifyCache ? 'SUCCESS' : 'FAILED'}`);
+            if (verifyCache) {
+              logger.info(`📊 Cached data verified: ${JSON.stringify(verifyCache).substring(0, 100)}...`);
+            }
+            
+            set({ availableIDEs: result.data, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'api', 
+              apiDuration: apiDuration,
+              cacheSetDuration: cacheSetDuration,
+              ideCount: result.data.length 
+            });
+          } else {
+            set({ error: result.error, isLoading: false, loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'api', 
+              apiDuration: apiDuration,
+              error: result.error 
+            });
           }
         } catch (error) {
           logger.error('Error loading available IDEs:', error);
-          set({ error: error.message, isLoading: false });
+          set({ error: error.message, isLoading: false, loadingLock: false });
+          performanceLogger.end(operationId, { error: error.message });
           return [];
         }
       },
@@ -266,7 +312,6 @@ const useIDEStore = create(
           };
           
           const hasRecentData = isDataRecent(existingGitData) && 
-                               isDataRecent(existingAnalysisData) && 
                                isDataRecent(existingChatData);
           
           if (hasRecentData) {
@@ -276,17 +321,12 @@ const useIDEStore = create(
           
           logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId, 'activePort:', activePort);
           
-          // Load git, analysis, and chat data in parallel
-          const [gitResult, analysisResult, chatResult] = await Promise.allSettled([
-            apiCall(`/api/projects/${projectId}/git/status`, { 
-              method: 'POST',
-              body: JSON.stringify({ projectPath: workspacePath })
-            }),
-            apiCall(`/api/projects/${projectId}/analysis/status`, {
-              method: 'POST', 
-              body: JSON.stringify({ projectPath: workspacePath })
-            }),
-            apiCall(`/api/chat/port/${activePort}/history`)
+          // Load git and chat data in parallel (analysis only when AnalysisView is opened)
+          const [gitResult, chatResult] = await Promise.allSettled([
+            // Use CacheService for git status
+            cacheService.getGitData(workspacePath, projectId),
+            // Use CacheService for chat history  
+            cacheService.getChatData(activePort)
           ]);
           
           const gitData = {
@@ -294,9 +334,9 @@ const useIDEStore = create(
             lastUpdate: new Date().toISOString()
           };
           
+          // No analysis data - loaded only when AnalysisView is opened
           const analysisData = {
-            status: analysisResult.status === 'fulfilled' && analysisResult.value.success ? analysisResult.value.data : null,
-            // ✅ LAZY LOADING: Recommendations, metrics, techStack, architecture werden erst geladen wenn AnalysisView geöffnet wird
+            status: null,
             recommendations: null,
             metrics: null,
             techStack: null,

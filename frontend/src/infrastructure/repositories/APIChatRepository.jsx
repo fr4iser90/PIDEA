@@ -5,6 +5,7 @@ import ChatSession from '@/domain/entities/ChatSession.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import etagManager from '@/infrastructure/services/ETagManager.js';
 import { cacheService } from '@/infrastructure/services/CacheService';
+import performanceLogger from '@/infrastructure/services/PerformanceLogger';
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -320,34 +321,78 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   async getIDEs() {
+    const operationId = `get_available_ides_${Date.now()}`;
+    performanceLogger.start(operationId, 'Get Available IDEs', { timestamp: new Date().toISOString() });
+    
     const key = 'get_available_ides';
     
     // Check cache first
+    const cacheStart = performance.now();
     const cachedResult = this.cacheService.get(key);
+    const cacheDuration = performance.now() - cacheStart;
+    
     if (cachedResult) {
       logger.info('Using cached IDE data');
+      performanceLogger.end(operationId, { 
+        source: 'cache', 
+        cacheDuration: cacheDuration,
+        ideCount: cachedResult.length 
+      });
       return cachedResult;
     }
     
     // Make API call and cache result
+    const apiStart = performance.now();
     const result = await apiCall(API_CONFIG.endpoints.ide.list);
+    const apiDuration = performance.now() - apiStart;
+    
+    const cacheSetStart = performance.now();
     this.cacheService.set(key, result, 'ide', 'ide');
+    const cacheSetDuration = performance.now() - cacheSetStart;
+    
+    performanceLogger.end(operationId, { 
+      source: 'api', 
+      apiDuration: apiDuration,
+      cacheSetDuration: cacheSetDuration,
+      ideCount: result.length 
+    });
     return result;
   }
 
   async getUserAppUrl() {
+    const operationId = `get_user_app_url_${Date.now()}`;
+    performanceLogger.start(operationId, 'Get User App URL', { timestamp: new Date().toISOString() });
+    
     const key = 'get_user_app_url';
     
     // Check cache first
+    const cacheStart = performance.now();
     const cachedResult = this.cacheService.get(key);
+    const cacheDuration = performance.now() - cacheStart;
+    
     if (cachedResult) {
       logger.info('Using cached user app URL');
+      performanceLogger.end(operationId, { 
+        source: 'cache', 
+        cacheDuration: cacheDuration 
+      });
       return cachedResult;
     }
     
     // Make API call and cache result
+    const apiStart = performance.now();
     const result = await apiCall(API_CONFIG.endpoints.ide.userAppUrl);
+    const apiDuration = performance.now() - apiStart;
+    
+    const cacheSetStart = performance.now();
     this.cacheService.set(key, result, 'ide', 'ide');
+    const cacheSetDuration = performance.now() - cacheSetStart;
+    
+    performanceLogger.end(operationId, { 
+      source: 'api', 
+      apiDuration: apiDuration,
+      cacheSetDuration: cacheSetDuration 
+    });
     return result;
   }
 

@@ -50,6 +50,7 @@ const VoiceInput = ({
         console.warn('Speech recognition not supported:', err.message);
         setIsSupported(false);
         setError(null);
+        // Don't show error to user - just disable the feature gracefully
       }
     };
 
@@ -162,9 +163,10 @@ const VoiceInput = ({
         };
 
       } catch (err) {
-        console.error('Failed to initialize speech recognition:', err);
+        console.warn('Failed to initialize speech recognition:', err.message);
         setIsSupported(false);
         setError(null);
+        // Gracefully disable the feature without showing errors to user
       }
     };
 

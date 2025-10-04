@@ -17,6 +17,7 @@ const SelectorVersionManager = require('@domain/services/ide/SelectorVersionMana
 const VersionDetectionService = require('@domain/services/ide/VersionDetectionService');
 const VersionDetector = require('./VersionDetector');
 const ServiceLogger = require('@logging/ServiceLogger');
+const backendCache = require('../../cache/BackendCache');
 const logger = new ServiceLogger('IDEManager');
 
 class IDEManager {
@@ -190,6 +191,14 @@ class IDEManager {
       await this.initialize();
     }
 
+    // Check BackendCache first
+    const cacheKey = 'ide_available_list';
+    const cachedResult = backendCache.get(cacheKey);
+    if (cachedResult) {
+      logger.info('Returning cached IDE data from BackendCache');
+      return cachedResult;
+    }
+
     const detectedIDEs = await this.detectorFactory.detectAll() || [];
     const startedIDEs = this.starterFactory.getRunningIDEs() || [];
     
@@ -222,28 +231,38 @@ class IDEManager {
       });
     });
 
-    // Detect workspace paths and versions for all IDEs
-    const idesWithWorkspacesAndVersions = await Promise.all(
+    // Detect workspace paths and versions for all IDEs with timeout protection
+    const idesWithWorkspacesAndVersions = await Promise.allSettled(
       Array.from(allIDEs.values()).map(async (ide) => {
         try {
-          const workspacePath = await this.detectWorkspacePath(ide.port);
+          // Use Promise.race to add timeout protection
+          const workspacePromise = this.detectWorkspacePath(ide.port);
+          const versionPromise = this.detectIDEVersion(ide.port, ide.ideType);
           
-          // Detect IDE version
-          let version = null;
-          try {
-            version = await this.detectIDEVersion(ide.port, ide.ideType);
-            logger.info(`Detected version for ${ide.ideType} on port ${ide.port}: ${version}`);
-          } catch (versionError) {
-            logger.warn(`Failed to detect version for port ${ide.port}:`, versionError.message);
+          // Add timeout protection (max 2 seconds per IDE)
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('IDE detection timeout')), 2000)
+          );
+          
+          const [workspacePath, version] = await Promise.race([
+            Promise.allSettled([workspacePromise, versionPromise]),
+            timeoutPromise
+          ]);
+          
+          const finalWorkspacePath = workspacePath?.status === 'fulfilled' ? workspacePath.value : null;
+          const finalVersion = version?.status === 'fulfilled' ? version.value : null;
+          
+          if (finalVersion) {
+            logger.info(`Detected version for ${ide.ideType} on port ${ide.port}: ${finalVersion}`);
           }
           
           return {
             ...ide,
-            workspacePath: workspacePath,
-            version: version
+            workspacePath: finalWorkspacePath,
+            version: finalVersion
           };
         } catch (error) {
-          logger.warn(`Failed to detect workspace for port ${ide.port}:`, error.message);
+          logger.warn(`Failed to detect workspace/version for port ${ide.port}:`, error.message);
           return {
             ...ide,
             workspacePath: null,
@@ -251,10 +270,24 @@ class IDEManager {
           };
         }
       })
+    ).then(results => 
+      results.map(result => result.status === 'fulfilled' ? result.value : {
+        port: 'unknown',
+        status: 'error',
+        workspacePath: null,
+        version: null
+      })
     );
+
+    // Cache the result in BackendCache
+    backendCache.set(cacheKey, idesWithWorkspacesAndVersions, 'ide', 'ide');
 
     return idesWithWorkspacesAndVersions;
   }
+
+  /**
+   * NO LOCAL CACHING - Use centralized CacheService only
+   */
 
   /**
    * Detect IDE version via CDP /json/version endpoint
@@ -315,7 +348,7 @@ class IDEManager {
           });
         });
         req.on('error', reject);
-        req.setTimeout(3000, () => {
+        req.setTimeout(1500, () => {
           req.destroy();
           reject(new Error('Version request timeout'));
         });
