@@ -1,5 +1,41 @@
 const { test, expect } = require('@playwright/test');
-const testData = require('../fixtures/test-data.json');
+
+// Test data from frontend configuration (not static JSON)
+const testData = {
+  urls: {
+    login: process.env.BASE_URL',
+    dashboard: process.env.BASE_URL',
+    home: process.env.BASE_URL'
+  },
+  selectors: {
+    login: {
+      usernameField: "input[name='email']",
+      passwordField: "input[name='password']", 
+      loginButton: "button[type='submit']",
+      errorMessage: ".error-message"
+    },
+    navigation: {
+      logoutButton: "button[data-testid='logout']"
+    }
+  },
+  testData: {
+    login: {
+      validCredentials: {
+        username: process.env.TEST_USERNAME
+        password: process.env.TEST_PASSWORD
+      },
+      invalidCredentials: {
+        username: 'wrong@test.com',
+        password: 'wrongpassword'
+      }
+    }
+  },
+  timeouts: {
+    navigation: 10000,
+    element: 5000,
+    network: 30000
+  }
+};
 
 /**
  * Login Test Suite
