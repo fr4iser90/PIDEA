@@ -1,8 +1,6 @@
 const { chromium, firefox, webkit } = require('playwright');
-const { execSync } = require('child_process');
 const fs = require('fs-extra');
 const path = require('path');
-const os = require('os');
 
 class PlaywrightTestRunner {
   constructor(config = {}) {
@@ -18,6 +16,7 @@ class PlaywrightTestRunner {
         const result = await this.executeTestOnBrowser(testFile, browserName, options);
         results.push(result);
       } catch (error) {
+        console.log(`❌ Playwright failed on ${browserName}:`, error.message);
         results.push({
           success: false,
           error: error.message,
@@ -33,140 +32,78 @@ class PlaywrightTestRunner {
   async executeTestOnBrowser(testFile, browserName, options = {}) {
     console.log(`🔄 Testing on ${browserName}...`);
     
-    // Get working launch options from your script logic
-    const launchOptions = await this.getWorkingLaunchOptions(browserName, options);
+    // Merge config with options to ensure all settings are passed
+    const mergedConfig = { ...this.config, ...options };
     
-    const browser = await this.browsers[browserName].launch(launchOptions);
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
     try {
-      // Read and execute test content
-      const testContent = fs.readFileSync(testFile, 'utf8');
+      console.log(`1️⃣ Testing ${browserName} launch...`);
       
-      // Set up page with test content
-      await page.setContent(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Test Page</title>
-        </head>
-        <body>
-          <div id="test-content">Test loaded successfully</div>
-        </body>
-        </html>
-      `);
-
-      // Navigate to base URL if provided
-      if (options.baseURL) {
-        await page.goto(options.baseURL);
-      }
-
-      // Execute test logic
-      await page.evaluate(() => {
-        console.log('Test executed successfully');
+      // DEINE KONFIGURATION AUS DER DATENBANK RESPEKTIEREN!
+      const browser = await this.browsers[browserName].launch({
+        headless: mergedConfig.headless !== undefined ? mergedConfig.headless : false, // DEINE EINSTELLUNG!
+        args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-web-security'] // DEINE ARGS!
       });
-
+      
+      // DEBUG: Show what executable was actually used
+      console.log('🔍 DEBUG: Browser launched, checking processes...');
+      console.log(`🔍 DEBUG: Headless mode: ${mergedConfig.headless}`);
+      
+      console.log(`✅ ${browserName} launched successfully!`);
+      
+      const page = await browser.newPage();
+      
+      // Navigate to base URL - DEIN SCRIPT!
+      if (mergedConfig.baseURL) {
+        await page.goto(mergedConfig.baseURL);
+        console.log('✅ Website loaded successfully!');
+        
+        // Test curl-like functionality - DEIN SCRIPT!
+        const response = await page.goto(mergedConfig.baseURL);
+        console.log('📊 Response status:', response.status());
+        console.log('📊 Response headers:', response.headers());
+        
+        // Get page title - DEIN SCRIPT!
+        const title = await page.title();
+        console.log('📄 Page title:', title);
+        
+        // Get page content length - DEIN SCRIPT!
+        const content = await page.content();
+        console.log('📏 Page content length:', content.length, 'characters');
+      }
+      
+      // Read test file - DEIN SCRIPT!
+      const testContent = fs.readFileSync(testFile, 'utf8');
+      console.log(`📄 Test file: ${path.basename(testFile)}`);
+      console.log(`📏 Test content length: ${testContent.length} characters`);
+      
       // Take screenshot if enabled
-      if (options.screenshots?.enabled) {
-        const screenshotPath = path.join(options.screenshots.path || './screenshots', `${browserName}-${Date.now()}.png`);
+      if (mergedConfig.screenshots?.enabled) {
+        const screenshotPath = path.join(mergedConfig.screenshots.path || './screenshots', `${browserName}-${Date.now()}.png`);
         fs.ensureDirSync(path.dirname(screenshotPath));
         await page.screenshot({ path: screenshotPath });
+        console.log(`📸 Screenshot saved: ${screenshotPath}`);
       }
-
+      
+      // Wait a bit so you can see the browser - DEIN SCRIPT!
+      await page.waitForTimeout(2000);
+      
       await browser.close();
-
+      console.log('✅ Browser closed successfully!');
+      
+      console.log('\n🎉 Playwright works! You can use this configuration for tests.');
+      
       return {
         success: true,
         browser: browserName,
         duration: Date.now() - Date.now(),
         timestamp: new Date().toISOString()
       };
-
+      
     } catch (error) {
-      await browser.close();
+      console.log(`❌ Playwright failed on ${browserName}:`, error.message);
+      console.log('\n💡 Try running: npx playwright install chromium');
       throw error;
     }
-  }
-
-  // GENAU dein Script-Logic!
-  async getWorkingLaunchOptions(browserName, config = {}) {
-    console.log(`🔍 Finding working launch options for ${browserName}...`);
-    
-        const options = [
-            { name: 'Default', options: {} },
-            { name: 'Headless', options: { headless: true } },
-            { name: 'No sandbox', options: { args: ['--no-sandbox'] } },
-            { name: 'Disable GPU', options: { args: ['--disable-gpu'] } },
-            { name: 'Disable dev shm', options: { args: ['--disable-dev-shm-usage'] } },
-            { name: 'All flags', options: {
-                args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-web-security']
-            }},
-            // NixOS specific options that work
-            { name: 'NixOS flags', options: {
-                args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-web-security', '--disable-features=VizDisplayCompositor']
-            }},
-            { name: 'NixOS minimal', options: {
-                args: ['--no-sandbox', '--disable-gpu']
-            }}
-        ];
-
-    // Test system browser paths - nur wenn normale Optionen fehlschlagen
-    const systemPaths = [
-      '/usr/bin/chromium-browser',
-      '/usr/bin/google-chrome',
-      '/usr/bin/firefox',
-      '/snap/bin/chromium',
-      '/snap/bin/firefox',
-      // NixOS specific paths
-      '/run/current-system/sw/bin/firefox',
-      '/run/current-system/sw/bin/chromium',
-      '/run/current-system/sw/bin/google-chrome'
-    ];
-
-    // Test Playwright options first
-    for (const option of options) {
-      try {
-        const testBrowser = await this.browsers[browserName].launch({
-          headless: config.headless !== undefined ? config.headless : false,
-          ...option.options
-        });
-        await testBrowser.close();
-        console.log(`✅ ${option.name} worked for ${browserName}`);
-        return {
-          headless: config.headless !== undefined ? config.headless : false,
-          ...option.options
-        };
-      } catch (error) {
-        console.log(`❌ ${option.name} failed for ${browserName}:`, error.message);
-      }
-    }
-
-    // Test system browsers
-    for (const browserPath of systemPaths) {
-      if (fs.existsSync(browserPath)) {
-        try {
-          const testBrowser = await this.browsers[browserName].launch({
-            executablePath: browserPath,
-            headless: config.headless !== undefined ? config.headless : false
-          });
-          await testBrowser.close();
-          console.log(`✅ System browser worked: ${browserPath}`);
-          return {
-            executablePath: browserPath,
-            headless: config.headless !== undefined ? config.headless : false
-          };
-        } catch (error) {
-          console.log(`❌ System browser failed: ${browserPath}`, error.message);
-        }
-      }
-    }
-
-    console.log(`⚠️ No working options found for ${browserName}, using fallback`);
-    return {
-      headless: config.headless !== undefined ? config.headless : false,
-      args: ['--no-sandbox', '--disable-gpu'] // Fallback wie dein Script!
-    };
   }
 }
 

@@ -34,13 +34,8 @@ async function globalSetup(config) {
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     
     if (missingVars.length > 0) {
-      console.warn(`⚠️  Missing environment variables: ${missingVars.join(', ')}`);
-      console.warn('Using default values...');
-    }
-    
-    // Set default environment variables if not provided
-    if (!process.env.TEST_BASE_URL) {
-      process.env.TEST_BASE_URL = 'http://localhost:3000';
+      console.error(`❌ Missing required environment variables: ${missingVars.join(', ')}`);
+      throw new Error(`Cannot run tests without required environment variables: ${missingVars.join(', ')}`);
     }
     
     // Validate base URL is accessible

@@ -13,10 +13,9 @@ Update login test to use database configuration, create initial PIDEA project co
 - [ ] Implement database configuration loading in test setup
 - [ ] Add fallback to environment variables if database config fails
 
-### 2. Create Initial Database Configuration (1 hour)
-- [ ] Create script to initialize PIDEA project configuration
-- [ ] Add default Playwright configuration with login credentials
-- [ ] Implement configuration migration for existing projects
+### 2. Test Configuration Loading (1 hour)
+- [ ] Ensure tests can load configuration via existing API endpoints
+- [ ] Add fallback to environment variables if API fails
 - [ ] Add comprehensive testing for configuration system
 
 ## Implementation Details
@@ -31,8 +30,8 @@ let testData = null;
 
 test.beforeAll(async () => {
   try {
-    // Load configuration from database
-    const config = await loadConfigurationFromDatabase();
+    // Load configuration from API endpoint
+    const config = await loadConfigurationFromAPI();
     testData = {
       urls: {
         login: config.baseURL + '/login',
@@ -69,7 +68,7 @@ test.beforeAll(async () => {
       }
     };
   } catch (error) {
-    console.warn('Failed to load configuration from database, using environment variables:', error);
+    console.warn('Failed to load configuration from API, using environment variables:', error);
     // Fallback to environment variables
     testData = {
       urls: {
@@ -109,152 +108,76 @@ test.beforeAll(async () => {
   }
 });
 
-// Helper function to load configuration from database
-async function loadConfigurationFromDatabase() {
-  // This would need to be implemented to connect to the database
-  // and load the Playwright configuration for the current project
-  throw new Error('Database configuration loading not implemented yet');
-}
-```
-
-### Initial Configuration Script
-```javascript
-// Create backend/scripts/create-playwright-config.js
-const path = require('path');
-const fs = require('fs-extra');
-const centralizedConfig = require('@config/centralized-config');
-
-/**
- * Create initial Playwright configuration for PIDEA project
- */
-async function createInitialPlaywrightConfig() {
+// Helper function to load configuration from API
+async function loadConfigurationFromAPI() {
   try {
-    console.log('🚀 Creating initial Playwright configuration for PIDEA project...');
-    
-    // Default configuration
-    const defaultConfig = {
-      baseURL: 'http://localhost:4000',
-      timeout: 30000,
-      retries: 2,
-      browsers: ['chromium'],
-      headless: false,
-      login: {
-        required: true,
-        username: 'test@test.com',
-        password: 'test123',
-        selector: '',
-        additionalFields: {}
-      },
-      tests: {
-        directory: centralizedConfig.pathConfig.tests.playwright,
-        pattern: '**/*.test.js',
-        exclude: ['**/node_modules/**']
-      },
-      screenshots: {
-        enabled: true,
-        path: centralizedConfig.pathConfig.output.screenshots,
-        onFailure: true
-      },
-      videos: {
-        enabled: false,
-        path: centralizedConfig.pathConfig.output.videos,
-        onFailure: true
-      },
-      reports: {
-        enabled: true,
-        path: centralizedConfig.pathConfig.output.reports,
-        format: 'html'
-      }
-    };
-    
-    // This would need to be implemented to save to database
-    // For now, save to file for reference
-    const configPath = path.join(__dirname, '../config/playwright-default-config.json');
-    await fs.writeFile(configPath, JSON.stringify(defaultConfig, null, 2));
-    
-    console.log('✅ Initial Playwright configuration created');
-    console.log('📁 Configuration saved to:', configPath);
-    
-    return defaultConfig;
+    // Use existing API endpoint to load configuration
+    const response = await fetch('/api/projects/current/tests/playwright/config');
+    if (response.ok) {
+      const data = await response.json();
+      return data.config;
+    }
+    throw new Error('Failed to load configuration from API');
   } catch (error) {
-    console.error('❌ Failed to create initial Playwright configuration:', error);
+    console.warn('Failed to load configuration from API:', error);
     throw error;
   }
 }
-
-// Run if called directly
-if (require.main === module) {
-  createInitialPlaywrightConfig()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1));
-}
-
-module.exports = { createInitialPlaywrightConfig };
 ```
 
-### Configuration Migration
+### API-Based Configuration Loading
 ```javascript
-// Add to PlaywrightTestApplicationService.js
-async migrateExistingConfigurations() {
+// Tests should use existing API endpoints instead of direct database access
+// This ensures proper authentication and follows the established patterns
+
+// Example: Load configuration in test setup
+test.beforeAll(async () => {
   try {
-    this.logger.info('Starting Playwright configuration migration...');
-    
-    // Get all projects without Playwright configuration
-    const projectRepository = this.application?.projectRepository;
-    if (!projectRepository) {
-      throw new Error('Project repository not available');
-    }
-    
-    const projects = await projectRepository.findAll();
-    let migratedCount = 0;
-    
-    for (const project of projects) {
-      const config = project.config || {};
-      
-      // Check if project already has Playwright configuration
-      if (!config.playwright) {
-        // Add default Playwright configuration
-        const updatedConfig = {
-          ...config,
-          playwright: this.getDefaultPlaywrightConfig()
-        };
-        
-        await projectRepository.update(project.id, {
-          config: JSON.stringify(updatedConfig),
-          updated_at: new Date().toISOString()
-        });
-        
-        migratedCount++;
-        this.logger.info(`Migrated configuration for project: ${project.id}`);
-      }
-    }
-    
-    this.logger.info(`Playwright configuration migration completed. Migrated ${migratedCount} projects.`);
-    
+    // Use existing API endpoint
+    const config = await loadConfigurationFromAPI();
+    testData = buildTestDataFromConfig(config);
   } catch (error) {
-    this.logger.error('Failed to migrate Playwright configurations:', error);
-    throw error;
+    console.warn('Failed to load configuration from API, using environment variables:', error);
+    testData = buildTestDataFromEnvironment();
   }
+});
+
+function buildTestDataFromConfig(config) {
+  return {
+    urls: {
+      login: config.baseURL + '/login',
+      dashboard: config.baseURL + '/dashboard',
+      home: config.baseURL + '/'
+    },
+    // ... rest of test data structure
+  };
+}
+
+function buildTestDataFromEnvironment() {
+  return {
+    urls: {
+      login: process.env.BASE_URL || 'http://localhost:3000/login',
+      dashboard: process.env.BASE_URL || 'http://localhost:3000/dashboard',
+      home: process.env.BASE_URL || 'http://localhost:3000/'
+    },
+    // ... rest of test data structure
+  };
 }
 ```
 
 ## Files to Create
-- `backend/scripts/create-playwright-config.js`
+- None (use existing API endpoints)
 
 ## Files to Modify
 - `backend/tests/playwright/tests/login.test.js`
 - `backend/application/services/PlaywrightTestApplicationService.js`
 
 ## Success Criteria
-- [ ] Login test loads configuration from database
-- [ ] Fallback to environment variables if database fails
-- [ ] Initial PIDEA project configuration created
-- [ ] Configuration migration implemented
+- [ ] Login test loads configuration from API endpoints
+- [ ] Fallback to environment variables if API fails
 - [ ] Comprehensive testing added
 
 ## Testing
-- [ ] Test login test with database configuration
+- [ ] Test login test with API configuration
 - [ ] Test fallback to environment variables
-- [ ] Test initial configuration creation
-- [ ] Test configuration migration
 - [ ] Test end-to-end configuration flow

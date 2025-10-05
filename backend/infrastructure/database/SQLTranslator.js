@@ -72,7 +72,7 @@ class SQLTranslator {
       
       // Debug: Check if NOW() was converted
       if (postgresSQL.includes('NOW()') && !translatedSQL.includes('NOW()')) {
-        logger.info(`✅ Successfully converted NOW() to CURRENT_TIMESTAMP`);
+        logger.info(`✅ Successfully converted NOW() to datetime('now')`);
       } else if (postgresSQL.includes('NOW()')) {
         logger.warn(`⚠️ NOW() not converted!`);
       }
@@ -127,15 +127,66 @@ class SQLTranslator {
    */
   _convertFunctions(sql) {
     let convertedSQL = sql;
+    
+    logger.info(`🔧 _convertFunctions: Processing SQL: ${sql.substring(0, 200)}...`);
 
     // Convert PostgreSQL UUID functions - handle both with and without ::text
     convertedSQL = convertedSQL.replace(/uuid_generate_v4\(\)(::text)?/gi, "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))");
     
-    // Convert PostgreSQL NOW() to SQLite CURRENT_TIMESTAMP for DEFAULT constraints
+    // Convert PostgreSQL gen_random_uuid() to SQLite UUID generator
+    convertedSQL = convertedSQL.replace(/gen_random_uuid\(\)/gi, "(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))");
+    
+    // Convert PostgreSQL NOW() to SQLite CURRENT_TIMESTAMP for DEFAULT constraints FIRST
+    convertedSQL = convertedSQL.replace(/DEFAULT\s+NOW\(\)/gi, "DEFAULT CURRENT_TIMESTAMP");
+    
+    // Convert standalone NOW() to SQLite CURRENT_TIMESTAMP SECOND
     convertedSQL = convertedSQL.replace(/NOW\(\)/gi, "CURRENT_TIMESTAMP");
     
-    // Convert PostgreSQL CURRENT_TIMESTAMP to SQLite CURRENT_TIMESTAMP (same)
-    // No conversion needed as both support CURRENT_TIMESTAMP
+    // Convert CURRENT_TIMESTAMP to CURRENT_TIMESTAMP for SQLite compatibility THIRD (no change needed)
+    // convertedSQL = convertedSQL.replace(/\bCURRENT_TIMESTAMP\b/gi, "CURRENT_TIMESTAMP");
+    
+    // Remove the old conversion that was causing problems
+    // convertedSQL = convertedSQL.replace(/NOW\(\)/gi, "CURRENT_TIMESTAMP");
+    
+    // Convert PostgreSQL SERIAL PRIMARY KEY to SQLite INTEGER PRIMARY KEY AUTOINCREMENT
+    if (convertedSQL.includes('SERIAL PRIMARY KEY')) {
+      logger.info(`🔧 Converting SERIAL PRIMARY KEY to INTEGER PRIMARY KEY AUTOINCREMENT`);
+      convertedSQL = convertedSQL.replace(/SERIAL\s+PRIMARY\s+KEY/gi, "INTEGER PRIMARY KEY AUTOINCREMENT");
+      logger.info(`🔧 SERIAL PRIMARY KEY conversion completed`);
+    }
+    
+    // Convert PostgreSQL JSONB to SQLite TEXT
+    convertedSQL = convertedSQL.replace(/JSONB/gi, "TEXT");
+    
+    // Convert PostgreSQL BOOLEAN to SQLite INTEGER
+    convertedSQL = convertedSQL.replace(/BOOLEAN/gi, "INTEGER");
+    
+    // Remove duplicate VARCHAR conversion - this is handled in _convertDataTypes
+    
+    // Convert PostgreSQL CREATE OR REPLACE VIEW to SQLite compatible syntax
+    convertedSQL = convertedSQL.replace(/CREATE\s+OR\s+REPLACE\s+VIEW/gi, "CREATE VIEW");
+    
+    // Convert PostgreSQL CREATE OR REPLACE FUNCTION to SQLite compatible syntax (remove completely)
+    // Remove the entire function block including all parts
+    convertedSQL = convertedSQL.replace(/CREATE\s+OR\s+REPLACE\s+FUNCTION[^;]*?language\s+'plpgsql';/gis, '');
+    
+    // Convert PostgreSQL CREATE OR REPLACE TRIGGER to SQLite compatible syntax (remove completely)
+    convertedSQL = convertedSQL.replace(/CREATE\s+OR\s+REPLACE\s+TRIGGER[^;]*?EXECUTE\s+FUNCTION[^;]*?;/gis, '');
+    
+    // Remove any remaining function-related statements that might be parsed separately
+    convertedSQL = convertedSQL.replace(/^\s*(RETURN\s+NEW|END;?|BEGIN|NEW\.\w+\s*=.*?;?)\s*$/gim, '');
+    
+    // Convert PostgreSQL TIMESTAMP WITH TIME ZONE to SQLite TEXT
+    convertedSQL = convertedSQL.replace(/\bTIMESTAMP WITH TIME ZONE\b/gi, 'TEXT');
+    
+    // Convert PostgreSQL CONSTRAINT syntax to SQLite compatible syntax (remove for now to avoid dependency issues)
+    convertedSQL = convertedSQL.replace(/CONSTRAINT\s+\w+\s+FOREIGN\s+KEY\s*\(([^)]+)\)\s*REFERENCES\s+(\w+)\(([^)]+)\)\s*ON\s+DELETE\s+CASCADE/gi, '');
+    
+    // Clean up empty lines before closing parenthesis
+    convertedSQL = convertedSQL.replace(/\s*\n\s*\n\s*\)/g, '\n)');
+    
+    // Remove trailing comma before closing parenthesis
+    convertedSQL = convertedSQL.replace(/,\s*\)/g, ')');
     
     // Convert PostgreSQL COALESCE to SQLite COALESCE (same function)
     // No conversion needed as both support COALESCE
@@ -149,6 +200,8 @@ class SQLTranslator {
     // Convert PostgreSQL LOWER to SQLite LOWER (same function)
     // No conversion needed as both support LOWER
 
+    logger.info(`🔧 _convertFunctions: Final SQL: ${convertedSQL.substring(0, 200)}...`);
+    logger.info(`🔧 _convertFunctions: Complete SQL: ${convertedSQL}`);
     return convertedSQL;
   }
 
@@ -307,8 +360,11 @@ class SQLTranslator {
    */
   canTranslate(sql) {
     if (!sql || typeof sql !== 'string') {
+      logger.debug('❌ canTranslate: Invalid SQL');
       return false;
     }
+    
+    logger.debug(`🔍 canTranslate: Checking SQL: ${sql.substring(0, 100)}...`);
 
     // Check for unsupported PostgreSQL features
     const unsupportedFeatures = [

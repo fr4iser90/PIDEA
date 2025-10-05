@@ -53,8 +53,16 @@ class PlaywrightTestApplicationService {
       this.logger.debug(`Using workspace path: ${workspacePath}`, { projectId });
       
       // Load project-specific configuration
-      const config = await this.loadProjectConfiguration(workspacePath, options);
+      const config = await this.loadProjectConfiguration(workspacePath, { ...options, projectId });
       this.logger.debug('Loaded project configuration', { projectId, config });
+      
+      // Save configuration to database to ensure persistence
+      try {
+        await this.saveConfigurationToDatabase(projectId, config);
+        this.logger.debug('Configuration saved to database', { projectId });
+      } catch (saveError) {
+        this.logger.warn('Failed to save configuration to database, continuing with execution', saveError);
+      }
       
       // Discover available tests
       const testFiles = await this.discoverProjectTests(workspacePath, config);
@@ -225,19 +233,60 @@ class PlaywrightTestApplicationService {
     try {
       this.logger.debug(`Loading configuration for workspace: ${workspacePath}`);
       
-      // Load configuration using test manager
-      const config = await this.testManager.loadTestConfig(workspacePath);
+      // Extract projectId from workspacePath or options
+      const projectId = options.projectId || workspacePath.split('/').pop().replace(/[^a-zA-Z0-9]/g, '_');
       
-      // Merge with provided options
-      const mergedConfig = {
-        ...config,
-        ...options.config
-      };
+      // Try to load configuration from database first
+      let config;
+      try {
+        config = await this.loadConfigurationFromDatabase(projectId);
+        this.logger.debug('Loaded configuration from database', { projectId, config });
+        
+        // If no configuration found in database, throw error to use fallback
+        if (config === null) {
+          throw new Error('No configuration found in database');
+        }
+      } catch (dbError) {
+        this.logger.warn('Failed to load configuration from database, falling back to file', dbError.message);
+        // Fallback to file-based configuration
+        config = await this.testManager.loadTestConfig(workspacePath);
+      }
+      
+      // Merge with provided options (this takes precedence)
+      // Only merge properties that are actually provided in options.config
+      const mergedConfig = { ...config };
+      
+      if (options.config) {
+        // Only override properties that are explicitly provided
+        Object.keys(options.config).forEach(key => {
+          if (options.config[key] !== undefined) {
+            mergedConfig[key] = options.config[key];
+          }
+        });
+      }
+      
+      this.logger.info(`Merged config before validation:`, { 
+        mergedConfig, 
+        browsers: mergedConfig.browsers, 
+        browsersType: typeof mergedConfig.browsers,
+        browsersIsArray: Array.isArray(mergedConfig.browsers)
+      });
+      
+      // Ensure browsers is always an array before validation
+      if (!Array.isArray(mergedConfig.browsers)) {
+        this.logger.warn(`Browsers is not an array, fixing: ${mergedConfig.browsers}`);
+        mergedConfig.browsers = mergedConfig.browsers ? [mergedConfig.browsers] : ['chromium'];
+      }
       
       // Validate configuration
       const validation = this.testManager.validateTestConfig(mergedConfig);
       if (!validation.valid) {
-        this.logger.warn('Configuration validation failed', validation.errors);
+        this.logger.error('Configuration validation failed', { 
+          errors: validation.errors, 
+          config: mergedConfig,
+          browsers: mergedConfig.browsers,
+          browsersType: typeof mergedConfig.browsers
+        });
         throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
       }
       
@@ -288,6 +337,10 @@ class PlaywrightTestApplicationService {
     
     try {
       this.logger.info(`Executing ${testFiles.length} test files`);
+      
+      // Initialize test runner with the loaded configuration
+      this.testRunner = new PlaywrightTestRunner(config);
+      this.logger.debug('Test runner initialized with configuration', { config });
       
       // Execute tests sequentially to avoid resource conflicts
       for (const testFile of testFiles) {
@@ -345,7 +398,7 @@ class PlaywrightTestApplicationService {
       }
       
       // Load project configuration
-      const config = await this.loadProjectConfiguration(workspacePath);
+      const config = await this.loadProjectConfiguration(workspacePath, { projectId });
       
       // Check if login is required
       if (!config.login?.required) {
@@ -451,10 +504,29 @@ class PlaywrightTestApplicationService {
         throw new Error(`Project not found: ${projectId}`);
       }
       
+      // Use the exact config provided - no modifications
+      const validatedConfig = {
+        ...config
+      };
+      
+      this.logger.info(`Saving configuration exactly as provided: ${JSON.stringify(validatedConfig)}`);
+      
+      // Parse existing config if it's a string
+      let existingConfig = {};
+      if (project.config) {
+        try {
+          existingConfig = typeof project.config === 'string' 
+            ? JSON.parse(project.config) 
+            : project.config;
+        } catch (error) {
+          this.logger.warn(`Failed to parse existing project config: ${error.message}`);
+        }
+      }
+      
       // Update project config with Playwright configuration
       const updatedConfig = {
-        ...project.config,
-        playwright: config
+        ...existingConfig,
+        playwright: validatedConfig
       };
       
       await projectRepository.update(projectId, { 
@@ -497,16 +569,21 @@ class PlaywrightTestApplicationService {
             ? JSON.parse(project.config) 
             : project.config;
           config = projectConfig.playwright || {};
+          this.logger.info(`Extracted config from database:`, { config, browsers: config.browsers, browsersType: typeof config.browsers });
         } catch (error) {
           this.logger.warn(`Failed to parse project config for ${projectId}:`, error.message);
         }
       }
       
-      // Return default config if no Playwright config found
+      // Only merge with default config if no configuration exists in database
       if (Object.keys(config).length === 0) {
-        config = this.getDefaultPlaywrightConfig();
-        this.logger.info(`Using default Playwright configuration for project: ${projectId}`);
+        this.logger.info(`No configuration found in database for project: ${projectId}, returning null`);
+        return null;
       }
+      
+
+      
+      this.logger.debug(`Loaded and merged Playwright configuration for project: ${projectId}`, { config });
       
       this.logger.info(`Loaded Playwright configuration from database for project: ${projectId}`);
       return config;
@@ -519,9 +596,11 @@ class PlaywrightTestApplicationService {
   
   /**
    * Get default Playwright configuration
+   * @deprecated This method should not be used as it provides fake data
    * @returns {Object} Default configuration
    */
   getDefaultPlaywrightConfig() {
+    this.logger.warn('getDefaultPlaywrightConfig is deprecated and should not be used');
     return {
       baseURL: 'http://localhost:4000',
       timeout: 30000,

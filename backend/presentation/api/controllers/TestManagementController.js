@@ -73,6 +73,14 @@ class TestManagementController {
             const { config } = req.body;
 
             this.logger.info(`TestManagementController: PUT /api/projects/${projectId}/tests/playwright/config called`);
+            
+            // Debug: Log the received config structure
+            console.log('=== CONTROLLER DEBUG ===');
+            console.log('Received config:', config);
+            console.log('Config browsers:', config?.browsers);
+            console.log('Config browsers type:', typeof config?.browsers);
+            console.log('Config browsers isArray:', Array.isArray(config?.browsers));
+            console.log('=== CONTROLLER DEBUG END ===');
 
             if (!projectId) {
                 return res.status(400).json({

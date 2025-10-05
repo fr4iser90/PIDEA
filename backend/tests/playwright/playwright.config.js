@@ -21,8 +21,8 @@ module.exports = defineConfig({
   
   // Global test settings
   use: {
-    // Base URL for tests (configurable via environment)
-    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
+    // Base URL for tests (must be provided via environment)
+    baseURL: process.env.TEST_BASE_URL,
     
     // Screenshot settings
     screenshot: 'only-on-failure',

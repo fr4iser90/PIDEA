@@ -12,6 +12,7 @@ const TestConfiguration = ({
   onSelect, 
   selected, 
   workspacePath, 
+  projectId,
   testConfig, 
   testProjects, 
   onConfigUpdate, 
@@ -21,21 +22,48 @@ const TestConfiguration = ({
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [browserEnvironment, setBrowserEnvironment] = useState(null);
   const [loadingEnvironment, setLoadingEnvironment] = useState(true);
-  const [configForm, setConfigForm] = useState(testConfig || {});
+  const [configForm, setConfigForm] = useState(testConfig ? {
+    ...testConfig,
+    browsers: Array.isArray(testConfig.browsers) ? testConfig.browsers : ['chromium'], // Ensure browsers is always an array
+    login: testConfig.login || {
+      required: false,
+      username: '',
+      password: ''
+    }
+  } : null);
   const [projectForm, setProjectForm] = useState({ name: '', description: '' });
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configMessage, setConfigMessage] = useState('');
   const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
 
-  // Load browser environment on component mount
+  // Load browser environment and configuration on component mount
   useEffect(() => {
     loadBrowserEnvironment();
   }, []);
 
-  // Update configForm when testConfig changes
+  // Load configuration when projectId changes
   useEffect(() => {
-    if (testConfig) {
-      setConfigForm(testConfig);
+    if (projectId) {
+      loadConfigurationFromDatabase();
     }
-  }, [testConfig]);
+  }, [projectId]);
+
+  // Update configForm when testConfig changes (only if not already loaded from database)
+  useEffect(() => {
+    if (testConfig && !projectId) {
+      // Only use testConfig as fallback when no projectId is available
+      const config = {
+        ...testConfig,
+        browsers: Array.isArray(testConfig.browsers) ? testConfig.browsers : ['chromium'], // Ensure browsers is always an array
+        login: testConfig.login || {
+          required: false,
+          username: '',
+          password: ''
+        }
+      };
+      setConfigForm(config);
+    }
+  }, [testConfig, projectId]);
 
   const loadBrowserEnvironment = async () => {
     try {
@@ -43,19 +71,7 @@ const TestConfiguration = ({
       const response = await apiRepository.getBrowserEnvironment();
       if (response.success) {
         setBrowserEnvironment(response.data);
-        
-        // Update browser list based on available browsers
-        const availablePlaywrightBrowsers = [];
-        if (response.data.browsers.playwright) {
-          availablePlaywrightBrowsers.push(...response.data.browsers.playwright.filter(b => b.available && b.compatible));
-        }
-        
-        // Update config form with ONLY ONE Playwright browser as default
-        const availablePlaywrightBrowserNames = availablePlaywrightBrowsers.map(b => b.name); // Send actual browser names, not prefixed
-        setConfigForm(prev => ({
-          ...prev,
-          browsers: availablePlaywrightBrowserNames.length > 0 ? [availablePlaywrightBrowserNames[0]] : [] // Only FIRST Playwright browser
-        }));
+        // Don't update configForm here - let it be loaded from database
       }
     } catch (error) {
       console.error('Failed to load browser environment:', error);
@@ -64,10 +80,58 @@ const TestConfiguration = ({
     }
   };
 
-  const handleConfigSubmit = (e) => {
+  const loadConfigurationFromDatabase = async () => {
+    try {
+      const response = await apiRepository.getPlaywrightTestConfig(projectId);
+      if (response.success && response.data) {
+        const config = {
+          ...response.data,
+          browsers: Array.isArray(response.data.browsers) ? response.data.browsers : ['chromium'], // Ensure browsers is always an array
+          login: response.data.login || {
+            required: false,
+            username: '',
+            password: ''
+          }
+        };
+        setConfigForm(config);
+        console.log('Configuration loaded from database:', config);
+      } else {
+        console.log('No configuration found in database, using defaults');
+      }
+    } catch (error) {
+      console.error('Failed to load configuration from database:', error);
+    }
+  };
+
+  const handleConfigSubmit = async (e) => {
     e.preventDefault();
-    onConfigUpdate(configForm);
-    setShowConfigForm(false);
+    if (!configForm || !configForm.login) {
+      setConfigMessage('No configuration to save');
+      return;
+    }
+    
+    try {
+      setSavingConfig(true);
+      setConfigMessage('');
+      
+      // Save configuration to database via API
+      const response = await apiRepository.updatePlaywrightTestConfig(projectId, configForm);
+      if (response.success) {
+        // Update parent component with new config
+        onConfigUpdate(configForm);
+        setShowConfigForm(false);
+        setConfigMessage('Configuration saved successfully!');
+        console.log('Configuration saved successfully');
+      } else {
+        setConfigMessage('Failed to save configuration: ' + (response.error || 'Unknown error'));
+        console.error('Failed to save configuration:', response.error);
+      }
+    } catch (error) {
+      setConfigMessage('Error saving configuration: ' + error.message);
+      console.error('Error saving configuration:', error);
+    } finally {
+      setSavingConfig(false);
+    }
   };
 
   const handleProjectSubmit = (e) => {
@@ -102,7 +166,15 @@ const TestConfiguration = ({
       </div>
 
       {/* Configuration Form */}
-      {showConfigForm && (
+      {showConfigForm && !configForm && (
+        <div className="config-form mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="text-center text-gray-500">
+            <p>No configuration available. Please wait for configuration to load from database.</p>
+          </div>
+        </div>
+      )}
+      
+      {showConfigForm && configForm && configForm.login && (
         <div className="config-form mb-6 p-4 bg-gray-50 rounded-lg">
           <form onSubmit={handleConfigSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -266,16 +338,29 @@ const TestConfiguration = ({
                 type="button"
                 onClick={() => setShowConfigForm(false)}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                disabled={savingConfig}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={savingConfig}
               >
-                Save Configuration
+                {savingConfig ? 'Saving...' : 'Save Configuration'}
               </button>
             </div>
+            
+            {/* Configuration Message */}
+            {configMessage && (
+              <div className={`mt-4 p-3 rounded ${
+                configMessage.includes('successfully') 
+                  ? 'bg-green-100 text-green-800 border border-green-200' 
+                  : 'bg-red-100 text-red-800 border border-red-200'
+              }`}>
+                {configMessage}
+              </div>
+            )}
           </form>
         </div>
       )}
@@ -366,12 +451,12 @@ const TestConfiguration = ({
         <div className="config-summary mt-6 p-4 bg-blue-50 rounded-lg">
           <h4 className="text-md font-medium text-gray-800 mb-2">Current Configuration</h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div><span className="font-medium">Base URL:</span> {testConfig.baseURL}</div>
-            <div><span className="font-medium">Timeout:</span> {testConfig.timeout}ms</div>
-            <div><span className="font-medium">Retries:</span> {testConfig.retries}</div>
-            <div><span className="font-medium">Browsers:</span> {testConfig.browsers.join(', ')}</div>
-            <div><span className="font-medium">Headless:</span> {testConfig.headless ? 'Yes' : 'No'}</div>
-            <div><span className="font-medium">Login Required:</span> {testConfig.login.required ? 'Yes' : 'No'}</div>
+            <div><span className="font-medium">Base URL:</span> {testConfig?.baseURL || 'Not set'}</div>
+            <div><span className="font-medium">Timeout:</span> {testConfig?.timeout || 'Not set'}ms</div>
+            <div><span className="font-medium">Retries:</span> {testConfig?.retries || 'Not set'}</div>
+            <div><span className="font-medium">Browsers:</span> {(testConfig?.browsers || ['chromium']).join(', ')}</div>
+            <div><span className="font-medium">Headless:</span> {testConfig?.headless ? 'Yes' : 'No'}</div>
+            <div><span className="font-medium">Login Required:</span> {testConfig?.login?.required ? 'Yes' : 'No'}</div>
           </div>
         </div>
       )}

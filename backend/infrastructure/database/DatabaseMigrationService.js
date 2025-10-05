@@ -147,7 +147,17 @@ class DatabaseMigrationService {
                     const statement = statements[i];
                     if (statement.trim()) {
                         try {
+                            this.logger.debug(`🔧 Translating statement ${i + 1}: ${statement.substring(0, 100)}...`);
+                            this.logger.debug(`🔧 SQLTranslator available: ${!!this.databaseConnection.sqlTranslator}`);
                             const translation = this.databaseConnection.sqlTranslator.translate(statement);
+                            this.logger.debug(`🔧 Translation result: ${translation.sql.substring(0, 100)}...`);
+                            
+                            // Skip empty statements and comments
+                            if (!translation.sql.trim() || translation.sql.trim().startsWith('--')) {
+                                this.logger.debug(`🔧 Skipping empty/comment statement ${i + 1}`);
+                                continue;
+                            }
+                            
                             await this.databaseConnection.dbConnection.execute(translation.sql, translation.params);
                         } catch (error) {
                             this.logger.warn(`⚠️ Statement ${i + 1} failed: ${error.message}`);

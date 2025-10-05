@@ -307,8 +307,32 @@ class PlaywrightTestHandler {
    */
   async handleUpdateConfiguration(projectId, config) {
     try {
+      // Debug: Log the exact config structure being validated
+      console.log('=== CONFIG DEBUG ===');
+      console.log('Config type:', typeof config);
+      console.log('Config keys:', Object.keys(config));
+      console.log('Browsers field:', config.browsers);
+      console.log('Browsers type:', typeof config.browsers);
+      console.log('Browsers isArray:', Array.isArray(config.browsers));
+      console.log('=== CONFIG DEBUG END ===');
+      
+      // Ensure browsers is always an array
+      if (config.browsers && !Array.isArray(config.browsers)) {
+        console.log('Converting browsers to array:', config.browsers);
+        config.browsers = [config.browsers];
+      } else if (!config.browsers) {
+        console.log('Setting default browsers array');
+        config.browsers = ['chromium'];
+      }
+      
       // Validate configuration
+      console.log('=== STARTING VALIDATION ===');
       const validation = this.playwrightTestService.testManager.validateTestConfig(config);
+      console.log('Validation result:', validation);
+      console.log('Validation valid:', validation.valid);
+      console.log('Validation errors:', validation.errors);
+      console.log('=== VALIDATION COMPLETE ===');
+      
       if (!validation.valid) {
         throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
       }

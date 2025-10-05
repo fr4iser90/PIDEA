@@ -17,7 +17,7 @@ class DatabaseConnection {
     this.dbConnection = null; // The actual database connection instance
     this.type = null;
     this.isConnected = false;
-    this.sqlTranslator = new SQLTranslator(); // SQL translator for PostgreSQL → SQLite conversion
+    this.sqlTranslator = null; // Will be initialized only for SQLite
     
     // Store instance
     if (!DatabaseConnection.instances) {
@@ -69,6 +69,7 @@ class DatabaseConnection {
     this.connection = this.dbConnection.getConnection();
     this.type = 'sqlite';
     this.isConnected = true;
+    this.sqlTranslator = new SQLTranslator(); // Initialize translator only for SQLite
     
     logger.info('✅ SQLite connected successfully');
   }

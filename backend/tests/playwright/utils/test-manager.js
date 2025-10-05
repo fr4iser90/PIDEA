@@ -228,9 +228,11 @@ class PlaywrightTestManager {
   
   /**
    * Get default test configuration
+   * @deprecated This method should not be used as it provides fake data
    * @returns {Object} Default configuration
    */
   getDefaultConfig() {
+    console.warn('getDefaultConfig is deprecated and should not be used');
     return {
       baseURL: 'http://localhost:3000',
       timeout: 30000,

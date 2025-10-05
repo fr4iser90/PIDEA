@@ -1,41 +1,29 @@
 const { test, expect } = require('@playwright/test');
 
-// Test data from frontend configuration (not static JSON)
-const testData = {
-  urls: {
-    login: process.env.BASE_URL',
-    dashboard: process.env.BASE_URL',
-    home: process.env.BASE_URL'
-  },
-  selectors: {
-    login: {
-      usernameField: "input[name='email']",
-      passwordField: "input[name='password']", 
-      loginButton: "button[type='submit']",
-      errorMessage: ".error-message"
-    },
-    navigation: {
-      logoutButton: "button[data-testid='logout']"
-    }
-  },
-  testData: {
-    login: {
-      validCredentials: {
-        username: process.env.TEST_USERNAME
-        password: process.env.TEST_PASSWORD
-      },
-      invalidCredentials: {
-        username: 'wrong@test.com',
-        password: 'wrongpassword'
+// Configuration will be loaded from database via API
+let testData = null;
+
+// Load test configuration from database before running tests
+test.beforeAll(async () => {
+  try {
+    // Load configuration from database via API
+    const response = await fetch('http://localhost:4000/api/projects/PIDEA/tests/playwright/config');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.data) {
+        testData = data.data;
+        console.log('Test configuration loaded from database');
+      } else {
+        throw new Error('Failed to load configuration from API');
       }
+    } else {
+      throw new Error(`API request failed: ${response.status}`);
     }
-  },
-  timeouts: {
-    navigation: 10000,
-    element: 5000,
-    network: 30000
+  } catch (error) {
+    console.error('Failed to load configuration from database:', error);
+    throw new Error('Cannot run tests without configuration from database');
   }
-};
+});
 
 /**
  * Login Test Suite
@@ -49,6 +37,11 @@ const testData = {
 test.describe('Login Tests', () => {
   
   test.beforeEach(async ({ page }) => {
+    // Ensure testData is loaded
+    if (!testData) {
+      throw new Error('Test configuration not loaded');
+    }
+    
     // Navigate to login page before each test
     await page.goto(testData.urls.login);
     await page.waitForLoadState('networkidle');

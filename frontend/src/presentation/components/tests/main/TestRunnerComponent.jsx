@@ -165,6 +165,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
           onSelect={setSelectedTest}
           selected={selectedTest}
           workspacePath={workspacePath}
+          projectId={projectId}
           testConfig={testConfig}
           testProjects={testProjects}
           onConfigUpdate={handleConfigUpdate}
