@@ -8,6 +8,7 @@ import IDEMirrorComponent from '@/presentation/components/mirror/main/IDEMirrorC
 import PreviewComponent from '@/presentation/components/chat/main/PreviewComponent.jsx';
 import AnalysisDataViewer from '@/presentation/components/analysis/AnalysisDataViewer.jsx';
 import GitManagementComponent from '@/presentation/components/git/main/GitManagementComponent.jsx';
+import TestRunnerComponent from '@/presentation/components/tests/main/TestRunnerComponent.jsx';
 import AuthWrapper from '@/presentation/components/auth/AuthWrapper.jsx';
 import Header from '@/presentation/components/Header.jsx';
 import Footer from '@/presentation/components/Footer.jsx';
@@ -260,6 +261,8 @@ function App() {
         />;
       case 'code':
         return <div className="code-explorer-container">Code Editor View</div>;
+      case 'tests':
+        return <TestRunnerComponent eventBus={eventBus} activePort={activePort} />;
       default:
         return <ChatComponent eventBus={eventBus} activePort={activePort} attachedPrompts={attachedPrompts} />;
     }

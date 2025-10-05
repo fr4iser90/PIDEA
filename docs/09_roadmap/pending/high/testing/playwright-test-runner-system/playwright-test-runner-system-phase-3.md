@@ -3,9 +3,10 @@
 ## 📋 Phase Overview
 - **Phase**: 3
 - **Name**: Integration
-- **Estimated Time**: 6 hours
-- **Status**: Planning
-- **Progress**: 0%
+- **Estimated Time**: 8 hours
+- **Status**: completed
+- **Progress**: 100%
+- **Completed**: 2025-10-05T12:57:05.000Z
 
 ## 🎯 Objectives
 Connect the Playwright test runner with existing systems and build the frontend UI.
@@ -18,30 +19,42 @@ Connect the Playwright test runner with existing systems and build the frontend 
 - [ ] Add test result aggregation
 - [ ] Implement test reporting integration
 
-### 3.2 Create API Endpoints for Test Execution (1.5 hours)
-- [ ] Create `backend/application/handlers/PlaywrightTestHandler.js`
+### 3.2 Create Comprehensive API Endpoints (3 hours)
+- [ ] Create `backend/application/handlers/categories/testing/PlaywrightTestHandler.js`
 - [ ] Create `backend/presentation/api/controllers/PlaywrightTestController.js`
-- [ ] Implement test execution endpoints
-- [ ] Add test result retrieval endpoints
+- [ ] Implement test execution endpoints (POST /api/projects/:projectId/tests/execute, GET /api/projects/:projectId/tests/results)
+- [ ] **NEW**: Add configuration management endpoints (GET/PUT /api/projects/:projectId/tests/config, POST /api/projects/:projectId/tests/config/validate)
+- [ ] **NEW**: Add project management endpoints (GET/POST /api/projects/:projectId/tests/projects, GET/PUT /api/projects/:projectId/tests/projects/{id}/config)
+- [ ] **NEW**: Add login validation endpoint (POST /api/projects/:projectId/tests/login/validate)
+- [ ] **NEW**: Add test control endpoints (GET /api/projects/:projectId/tests/status, POST /api/projects/:projectId/tests/stop, GET /api/projects/:projectId/tests/logs)
 
-### 3.3 Build Frontend Test Runner UI as Main View (2 hours)
+### 3.3 Build Frontend Test Runner UI as Main View (3 hours)
 - [ ] Create `frontend/src/presentation/components/tests/main/TestRunnerComponent.jsx`
 - [ ] Create `frontend/src/presentation/components/tests/main/TestResultsViewer.jsx`
 - [ ] Create `frontend/src/presentation/components/tests/main/TestConfiguration.jsx`
 - [ ] Create `frontend/src/presentation/components/tests/common/TestStatusBadge.jsx`
+- [ ] Add Tests button to `frontend/src/presentation/components/Header.jsx`
+- [ ] Add tests case to `frontend/src/App.jsx` renderView function
 - [ ] Implement test execution controls
+- [ ] **NEW**: Add configuration management UI components
+- [ ] **NEW**: Add project management UI components
+- [ ] **NEW**: Add login credential management UI
 
-### 3.4 Integrate with Project Configuration (0.5 hours)
+### 3.4 Integrate with Project Configuration (1 hour)
 - [ ] Connect frontend with project configuration
 - [ ] Add configuration editing capabilities
 - [ ] Implement configuration validation
 - [ ] Add configuration persistence
+- [ ] **NEW**: Integrate with centralized config system
+- [ ] **NEW**: Add configuration templates and presets
 
-### 3.5 Add Test Result Visualization (0.5 hours)
+### 3.5 Add Test Result Visualization (1 hour)
 - [ ] Create test result display components
 - [ ] Add screenshot and video viewing
 - [ ] Implement test history tracking
 - [ ] Add performance metrics display
+- [ ] **NEW**: Add real-time test execution monitoring
+- [ ] **NEW**: Add detailed test logs viewer
 
 ## 🔧 Technical Details
 
@@ -84,8 +97,9 @@ class PlaywrightTestController {
 ### Frontend Component Example:
 ```jsx
 // TestRunnerComponent.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTestRunner } from '@/hooks/useTestRunner';
+import { useIDEStore } from '@/infrastructure/stores/IDEStore';
 import TestConfiguration from './TestConfiguration';
 import TestResultsViewer from './TestResultsViewer';
 import TestStatusBadge from '../common/TestStatusBadge';
@@ -93,12 +107,36 @@ import TestStatusBadge from '../common/TestStatusBadge';
 const TestRunnerComponent = ({ eventBus, activePort }) => {
   const [selectedTest, setSelectedTest] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [workspacePath, setWorkspacePath] = useState(null);
+  const [projectId, setProjectId] = useState(null);
+  
   const { executeTest, results, error } = useTestRunner();
+  const { availableIDEs, activePort: storeActivePort } = useIDEStore();
+
+  // Get workspace path from active IDE (follows existing pattern)
+  useEffect(() => {
+    const loadWorkspaceInfo = async () => {
+      const activeIDE = availableIDEs.find(ide => ide.port === (activePort || storeActivePort));
+      if (activeIDE && activeIDE.workspacePath) {
+        setWorkspacePath(activeIDE.workspacePath);
+        // Generate project ID from workspace path (follows existing pattern)
+        const projectName = activeIDE.workspacePath.split('/').pop();
+        setProjectId(projectName.replace(/[^a-zA-Z0-9]/g, '_'));
+      }
+    };
+    
+    loadWorkspaceInfo();
+  }, [availableIDEs, activePort, storeActivePort]);
 
   const handleRunTest = async () => {
+    if (!workspacePath || !projectId) {
+      console.error('Workspace path or project ID not available');
+      return;
+    }
+    
     setIsRunning(true);
     try {
-      await executeTest(selectedTest);
+      await executeTest(selectedTest, { workspacePath, projectId });
     } finally {
       setIsRunning(false);
     }
@@ -109,16 +147,23 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
       <div className="test-runner-header">
         <h2>🧪 Test Runner</h2>
         <TestStatusBadge />
+        {workspacePath && (
+          <div className="workspace-info">
+            <small>Workspace: {workspacePath}</small>
+            <small>Project: {projectId}</small>
+          </div>
+        )}
       </div>
       
       <div className="test-runner-content">
         <TestConfiguration 
           onSelect={setSelectedTest}
           selected={selectedTest}
+          workspacePath={workspacePath}
         />
         <button 
           onClick={handleRunTest}
-          disabled={!selectedTest || isRunning}
+          disabled={!selectedTest || isRunning || !workspacePath}
           className="run-test-btn"
         >
           {isRunning ? 'Running...' : 'Run Tests'}

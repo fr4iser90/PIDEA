@@ -1,0 +1,408 @@
+/* Test Runner Component Styles */
+.test-runner-container {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.test-runner-header {
+  margin-bottom: 1.5rem;
+}
+
+.test-runner-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.test-runner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Test Configuration Styles */
+.test-configuration {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.test-configuration h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+}
+
+.config-form,
+.project-form {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-form form,
+.project-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.config-form .grid,
+.project-form .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.config-form label,
+.project-form label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.config-form input,
+.config-form select,
+.project-form input,
+.project-form textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.config-form input:focus,
+.config-form select:focus,
+.project-form input:focus,
+.project-form textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.config-form button,
+.project-form button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.config-form button[type="submit"],
+.project-form button[type="submit"] {
+  background: var(--accent-color);
+  color: white;
+}
+
+.config-form button[type="submit"]:hover,
+.project-form button[type="submit"]:hover {
+  background: var(--accent-hover);
+}
+
+.config-form button[type="button"],
+.project-form button[type="button"] {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.config-form button[type="button"]:hover,
+.project-form button[type="button"]:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Test Projects List */
+.test-projects h4 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.test-projects .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.test-project-card {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-primary);
+}
+
+.test-project-card:hover {
+  border-color: var(--accent-color);
+  background: var(--bg-secondary);
+}
+
+.test-project-card.selected {
+  border-color: var(--accent-color);
+  background: var(--accent-light);
+}
+
+.test-project-card h5 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.test-project-card p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+}
+
+.test-project-card .text-xs {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Test Controls */
+.test-controls {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.test-controls .flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.test-controls button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.test-controls button:disabled {
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.test-controls button:not(:disabled) {
+  background: var(--accent-color);
+  color: white;
+}
+
+.test-controls button:not(:disabled):hover {
+  background: var(--accent-hover);
+}
+
+.test-controls button.danger {
+  background: var(--danger-color);
+}
+
+.test-controls button.danger:hover {
+  background: var(--danger-hover);
+}
+
+/* Test Results */
+.test-results {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.test-results h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+}
+
+.results-overview .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-overview .grid > div {
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.results-overview .grid > div:first-child {
+  background: var(--bg-tertiary);
+}
+
+.results-overview .grid > div:nth-child(2) {
+  background: var(--success-light);
+}
+
+.results-overview .grid > div:nth-child(3) {
+  background: var(--danger-light);
+}
+
+.results-overview .grid > div:nth-child(4) {
+  background: var(--info-light);
+}
+
+.results-overview .text-2xl {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.results-overview .text-sm {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.ready {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-badge.running {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.status-badge.error {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.empty-state .text-4xl {
+  font-size: 2.25rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.loading-state .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error-state {
+  background: var(--danger-light);
+  border: 1px solid var(--danger-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.error-state .flex {
+  display: flex;
+  align-items: center;
+}
+
+.error-state .text-xl {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+}
+
+.error-state h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--danger-color);
+  margin: 0 0 0.25rem 0;
+}
+
+.error-state p {
+  font-size: 0.875rem;
+  color: var(--danger-color);
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .test-runner-container {
+    padding: 1rem;
+  }
+  
+  .config-form .grid,
+  .project-form .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .test-projects .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .results-overview .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .test-controls .flex {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+}

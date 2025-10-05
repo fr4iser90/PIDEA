@@ -598,6 +598,10 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
+    // Initialize TestManagementController
+    const TestManagementController = require('./presentation/api/controllers/TestManagementController');
+    this.testManagementController = new TestManagementController();
+
     // Initialize AnalysisController
     const AnalysisController = require('./presentation/api/AnalysisController');
     this.analysisController = new AnalysisController(
@@ -992,6 +996,15 @@ class Application {
     const versionRoutes = require('./presentation/api/routes/versionRoutes');
     this.app.use('/api/versions', this.authMiddleware.authenticate());
     this.app.use('/api/versions', versionRoutes);
+
+    // Test Management routes (protected) - PROJECT-BASED
+    this.app.use('/api/projects/:projectId/tests/playwright', this.authMiddleware.authenticate());
+    this.app.get('/api/projects/:projectId/tests/playwright/config', (req, res) => this.testManagementController.getPlaywrightTestConfig(req, res));
+    this.app.put('/api/projects/:projectId/tests/playwright/config', (req, res) => this.testManagementController.updatePlaywrightTestConfig(req, res));
+    this.app.get('/api/projects/:projectId/tests/playwright/projects', (req, res) => this.testManagementController.getPlaywrightTestProjects(req, res));
+    this.app.post('/api/projects/:projectId/tests/playwright/projects', (req, res) => this.testManagementController.createPlaywrightTestProject(req, res));
+    this.app.post('/api/projects/:projectId/tests/playwright/execute', (req, res) => this.testManagementController.executePlaywrightTests(req, res));
+    this.app.post('/api/projects/:projectId/tests/playwright/stop', (req, res) => this.testManagementController.stopPlaywrightTests(req, res));
 
     // Workflow routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());

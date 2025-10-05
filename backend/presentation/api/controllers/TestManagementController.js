@@ -1,14 +1,16 @@
 /**
  * TestManagementController - API controller for test management operations
  */
-const TestManagementService = require('@domain/services/testing/TestManagementService');
-const UpdateTestStatusCommand = require('@categories/management/UpdateTestStatusCommand');
-const UpdateTestStatusHandler = require('@handler-categories/management/UpdateTestStatusHandler');
+const TestManagementService = require('@services/testing/TestManagementService');
+const UpdateTestStatusCommand = require('@commands/categories/workflow/UpdateTestStatusCommand');
+const UpdateTestStatusHandler = require('@handlers/categories/workflow/UpdateTestStatusHandler');
+const PlaywrightTestHandler = require('@handlers/categories/testing/PlaywrightTestHandler');
 
 class TestManagementController {
     constructor() {
         this.testManagementService = new TestManagementService();
         this.updateTestStatusHandler = new UpdateTestStatusHandler(this.testManagementService);
+        this.playwrightTestHandler = new PlaywrightTestHandler();
     }
 
     /**
@@ -476,6 +478,544 @@ class TestManagementController {
                     limit: result.limit,
                     total: result.total,
                     totalPages: result.totalPages
+                },
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    // ==================== PLAYWRIGHT TEST ENDPOINTS ====================
+
+    /**
+     * Execute Playwright tests for a project
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async executePlaywrightTests(req, res) {
+        try {
+            const { projectId } = req.params;
+            const { testName, options = {} } = req.body;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                projectId,
+                testName,
+                options
+            };
+
+            const result = await this.playwrightTestHandler.handleExecuteTests(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                message: 'Playwright tests executed successfully',
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get Playwright test results
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getPlaywrightTestResults(req, res) {
+        try {
+            const { testId } = req.params;
+
+            if (!testId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Test ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = { testId };
+            const result = await this.playwrightTestHandler.handleGetTestResults(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get all Playwright test results
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getAllPlaywrightTestResults(req, res) {
+        try {
+            const command = {};
+            const result = await this.playwrightTestHandler.handleGetAllTestResults(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get Playwright test configuration
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getPlaywrightTestConfig(req, res) {
+        try {
+            const { projectId } = req.params;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            // Get workspace path from project ID
+            let workspacePath = null;
+            
+            // Try to get workspace path from project mapping
+            const projectMappingService = this.application?.projectMappingService;
+            if (projectMappingService) {
+                workspacePath = projectMappingService.getWorkspaceFromProjectId(projectId);
+            }
+
+            const command = {
+                action: 'get',
+                projectId,
+                workspacePath
+            };
+
+            const result = await this.playwrightTestHandler.handleConfigurationCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Update Playwright test configuration
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async updatePlaywrightTestConfig(req, res) {
+        try {
+            const { projectId } = req.params;
+            const { config } = req.body;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            if (!config) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Configuration is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                action: 'update',
+                projectId,
+                config
+            };
+
+            const result = await this.playwrightTestHandler.handleConfigurationCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                message: 'Playwright configuration updated successfully',
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Validate Playwright test configuration
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async validatePlaywrightTestConfig(req, res) {
+        try {
+            const { config } = req.body;
+
+            if (!config) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Configuration is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                action: 'validate',
+                config
+            };
+
+            const result = await this.playwrightTestHandler.handleConfigurationCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get Playwright test projects
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getPlaywrightTestProjects(req, res) {
+        try {
+            const { projectId } = req.params;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                action: 'list',
+                projectId
+            };
+
+            const result = await this.playwrightTestHandler.handleProjectCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Create Playwright test project
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async createPlaywrightTestProject(req, res) {
+        try {
+            const { projectId } = req.params;
+            const { name, config } = req.body;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            if (!name) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project name is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                action: 'create',
+                projectId,
+                projectData: { name, config }
+            };
+
+            const result = await this.playwrightTestHandler.handleProjectCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                message: 'Playwright test project created successfully',
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get project-specific Playwright configuration
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getPlaywrightProjectConfig(req, res) {
+        try {
+            const { projectId } = req.params;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                action: 'getConfig',
+                projectId
+            };
+
+            const result = await this.playwrightTestHandler.handleProjectCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Update project-specific Playwright configuration
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async updatePlaywrightProjectConfig(req, res) {
+        try {
+            const { projectId } = req.params;
+            const { config } = req.body;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            if (!config) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Configuration is required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                action: 'updateConfig',
+                projectId,
+                config
+            };
+
+            const result = await this.playwrightTestHandler.handleProjectCommand(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                message: 'Project configuration updated successfully',
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Validate login credentials for Playwright tests
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async validatePlaywrightLoginCredentials(req, res) {
+        try {
+            const { projectId } = req.params;
+            const { credentials } = req.body;
+
+            if (!projectId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Project ID is required',
+                    timestamp: new Date()
+                });
+            }
+
+            if (!credentials) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Credentials are required',
+                    timestamp: new Date()
+                });
+            }
+
+            const command = {
+                projectId,
+                credentials
+            };
+
+            const result = await this.playwrightTestHandler.handleValidateLoginCredentials(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get Playwright test runner status
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getPlaywrightTestRunnerStatus(req, res) {
+        try {
+            const command = {};
+            const result = await this.playwrightTestHandler.handleGetTestRunnerStatus(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Stop running Playwright tests
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async stopPlaywrightTests(req, res) {
+        try {
+            const { testId } = req.body;
+
+            const command = { testId };
+            const result = await this.playwrightTestHandler.handleStopTests(command);
+
+            res.json({
+                success: true,
+                data: result.result,
+                message: 'Playwright tests stopped successfully',
+                timestamp: new Date()
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get Playwright test execution logs
+     * @param {Object} req - Express request object
+     * @param {Object} res - Express response object
+     */
+    async getPlaywrightTestLogs(req, res) {
+        try {
+            const { testId, lines } = req.query;
+
+            // For now, return a placeholder response
+            // This would be implemented with actual log retrieval
+            res.json({
+                success: true,
+                data: {
+                    testId: testId || 'all',
+                    logs: [],
+                    lines: parseInt(lines) || 100,
+                    message: 'Log retrieval not yet implemented'
                 },
                 timestamp: new Date()
             });

@@ -75,6 +75,12 @@ function Header({ eventBus, currentView, onNavigationClick, onLeftSidebarToggle,
           >
             📝 Code
           </button>
+          <button
+            onClick={() => handleNavigationClick('tests')}
+            className={`mode-btn ${currentView === 'tests' ? 'active' : ''}`}
+          >
+            🧪 Tests
+          </button>
         </nav>
       </div>
       
