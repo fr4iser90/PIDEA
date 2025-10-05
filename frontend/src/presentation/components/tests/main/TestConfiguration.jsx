@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/test/test-runner.css';
 
 /**
@@ -18,45 +19,9 @@ const TestConfiguration = ({
 }) => {
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
-  const [configForm, setConfigForm] = useState(testConfig || getDefaultConfig());
+  const [configForm, setConfigForm] = useState(testConfig || null);
   const [projectForm, setProjectForm] = useState({ name: '', description: '' });
-
-  function getDefaultConfig() {
-    return {
-      baseURL: 'http://localhost:3000',
-      timeout: 30000,
-      retries: 2,
-      browsers: ['chromium'],
-      headless: true,
-      login: {
-        required: false,
-        selector: '',
-        username: '',
-        password: '',
-        additionalFields: {}
-      },
-      tests: {
-        directory: './tests',
-        pattern: '**/*.test.js',
-        exclude: ['**/node_modules/**']
-      },
-      screenshots: {
-        enabled: true,
-        path: './screenshots',
-        onFailure: true
-      },
-      videos: {
-        enabled: false,
-        path: './videos',
-        onFailure: true
-      },
-      reports: {
-        enabled: true,
-        path: './reports',
-        format: 'html'
-      }
-    };
-  }
+  const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
 
   const handleConfigSubmit = (e) => {
     e.preventDefault();

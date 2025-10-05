@@ -1,5 +1,6 @@
 const Logger = require('@logging/Logger');
 const PlaywrightTestApplicationService = require('@application/services/PlaywrightTestApplicationService');
+const centralizedConfig = require('@config/centralized-config');
 
 const logger = new Logger('PlaywrightTestHandler');
 
@@ -13,6 +14,7 @@ class PlaywrightTestHandler {
   constructor(dependencies = {}) {
     this.logger = dependencies.logger || logger;
     this.playwrightTestService = dependencies.playwrightTestService || new PlaywrightTestApplicationService(dependencies);
+    this.application = dependencies.application;  // ✅ APPLICATION OBJEKT!
     
     this.logger.info('PlaywrightTestHandler initialized');
   }
@@ -255,9 +257,9 @@ class PlaywrightTestHandler {
       
       switch (action) {
         case 'get':
-          return await this.handleGetConfiguration(projectId, workspacePath);
+          return await this.handleGetConfiguration(projectId);
         case 'update':
-          return await this.handleUpdateConfiguration(projectId, config, workspacePath);
+          return await this.handleUpdateConfiguration(projectId, config);
         case 'validate':
           return await this.handleValidateConfiguration(config);
         default:
@@ -275,15 +277,10 @@ class PlaywrightTestHandler {
    * @param {string} projectId - Project ID
    * @returns {Promise<Object>} Configuration
    */
-  async handleGetConfiguration(projectId, workspacePath) {
+  async handleGetConfiguration(projectId) {
     try {
-      // Use provided workspace path
-      if (!workspacePath) {
-        throw new Error(`Workspace path is required for project: ${projectId}`);
-      }
-      
-      // Load configuration
-      const config = await this.playwrightTestService.loadProjectConfiguration(workspacePath);
+      // Load configuration from DATABASE instead of file
+      const config = await this.playwrightTestService.loadConfigurationFromDatabase(projectId);
       
       return {
         success: true,
@@ -308,28 +305,23 @@ class PlaywrightTestHandler {
    * @param {Object} config - New configuration
    * @returns {Promise<Object>} Update result
    */
-  async handleUpdateConfiguration(projectId, config, workspacePath) {
+  async handleUpdateConfiguration(projectId, config) {
     try {
-      // Use provided workspace path
-      if (!workspacePath) {
-        throw new Error(`Workspace path is required for project: ${projectId}`);
-      }
-      
       // Validate configuration
       const validation = this.playwrightTestService.testManager.validateTestConfig(config);
       if (!validation.valid) {
         throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
       }
       
-      // Save configuration
-      await this.playwrightTestService.testManager.saveTestConfig(workspacePath, config);
+      // Save configuration to database
+      await this.playwrightTestService.saveConfigurationToDatabase(projectId, config);
       
       return {
         success: true,
         command: 'updateConfiguration',
         result: {
           projectId,
-          message: 'Configuration updated successfully',
+          message: 'Configuration updated successfully in database',
           timestamp: new Date().toISOString()
         },
         timestamp: new Date().toISOString()
@@ -413,14 +405,14 @@ class PlaywrightTestHandler {
    */
   async handleListProjects(projectId) {
     try {
-      // Detect workspace path
-      const workspacePath = await this.playwrightTestService.detectWorkspacePath(projectId);
-      if (!workspacePath) {
+      // ✅ WORKSPACE PATH VOM PROJECT REPOSITORY HOLEN!
+      const project = await this.application.projectRepository.findById(projectId);
+      if (!project || !project.workspacePath) {
         throw new Error(`Workspace path not found for project: ${projectId}`);
       }
       
       // Discover test projects
-      const testFiles = await this.playwrightTestService.discoverProjectTests(workspacePath, {});
+      const testFiles = await this.playwrightTestService.discoverProjectTests(project.workspacePath, {});
       
       const projects = testFiles.map(testFile => ({
         id: testFile.name,

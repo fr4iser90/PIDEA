@@ -170,6 +170,48 @@ class CentralizedConfig {
   }
 
   // ============================================================================
+  // PATH CONFIGURATIONS - ALL PATHS DEFINED HERE
+  // ============================================================================
+
+  get pathConfig() {
+    return {
+      // Test paths
+      tests: {
+        backend: 'tests',
+        frontend: '../frontend/tests',
+        playwright: 'tests/playwright/tests',
+        unit: 'tests/unit',
+        integration: 'tests/integration',
+        e2e: 'tests/e2e'
+      },
+      
+      // Output paths
+      output: {
+        screenshots: 'tests/playwright/screenshots',
+        videos: 'tests/playwright/videos',
+        reports: 'tests/playwright/reports',
+        coverage: 'coverage',
+        logs: 'logs'
+      },
+      
+      // Config paths
+      config: {
+        root: 'config',
+        frameworks: 'config/frameworks',
+        playwright: 'tests/playwright/playwright.config.js'
+      },
+      
+      // Project paths
+      project: {
+        root: process.cwd(),
+        backend: '.',
+        frontend: '../frontend',
+        docs: '../docs'
+      }
+    };
+  }
+
+  // ============================================================================
   // CONFIGURATION OBJECTS - NO HARDCODED VALUES
   // ============================================================================
 

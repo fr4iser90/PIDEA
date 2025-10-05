@@ -61,9 +61,18 @@ const API_CONFIG = {
     projects: {
       list: '/api/projects',
       byId: (id) => `/api/projects/${id}`,
-  
       updatePort: (projectId) => `/api/projects/${projectId}/port`,
-      savePort: (projectId) => `/api/projects/${projectId}/save-port`
+      savePort: (projectId) => `/api/projects/${projectId}/save-port`,
+      // ✅ PLAYWRIGHT TEST ROUTES - FEHLTEN!
+      tests: {
+        playwright: {
+          config: (projectId) => `/api/projects/${projectId}/tests/playwright/config`,
+          projects: (projectId) => `/api/projects/${projectId}/tests/playwright/projects`,
+          execute: (projectId) => `/api/projects/${projectId}/tests/playwright/execute`,
+          stop: (projectId) => `/api/projects/${projectId}/tests/playwright/stop`,
+          create: (projectId) => `/api/projects/${projectId}/tests/playwright/projects`
+        }
+      }
     },
     preview: {
       status: '/api/preview/status',
@@ -1561,6 +1570,84 @@ export default class APIChatRepository extends ChatRepository {
       logger.error('Failed to update project port:', error);
       return { success: false, error: 'Failed to update port' };
     }
+  }
+
+  // ✅ PLAYWRIGHT TEST METHODS - FEHLTEN!
+  
+  /**
+   * Get Playwright test configuration for a project
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Test configuration
+   */
+  async getPlaywrightTestConfig(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.config(currentProjectId), {}, currentProjectId);
+  }
+
+  /**
+   * Update Playwright test configuration for a project
+   * @param {string} projectId - Project ID
+   * @param {Object} config - Test configuration
+   * @returns {Promise<Object>} Update result
+   */
+  async updatePlaywrightTestConfig(projectId = null, config) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.config(currentProjectId), {
+      method: 'PUT',
+      body: JSON.stringify({ config })
+    }, currentProjectId);
+  }
+
+  /**
+   * Get Playwright test projects for a project
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Test projects
+   */
+  async getPlaywrightTestProjects(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.projects(currentProjectId), {}, currentProjectId);
+  }
+
+  /**
+   * Execute Playwright tests for a project
+   * @param {string} projectId - Project ID
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Execution result
+   */
+  async executePlaywrightTests(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.execute(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  /**
+   * Stop running Playwright tests for a project
+   * @param {string} projectId - Project ID
+   * @param {Object} options - Stop options
+   * @returns {Promise<Object>} Stop result
+   */
+  async stopPlaywrightTests(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.stop(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  /**
+   * Create a new Playwright test project
+   * @param {string} projectId - Project ID
+   * @param {Object} testData - Test project data
+   * @returns {Promise<Object>} Creation result
+   */
+  async createPlaywrightTestProject(projectId = null, testData) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.create(currentProjectId), {
+      method: 'POST',
+      body: JSON.stringify(testData)
+    }, currentProjectId);
   }
 }
 

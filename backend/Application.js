@@ -598,9 +598,26 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
-    // Initialize TestManagementController
+    // Initialize TestManagementController - CLEAN VERSION
     const TestManagementController = require('./presentation/api/controllers/TestManagementController');
-    this.testManagementController = new TestManagementController();
+    const PlaywrightTestHandler = require('./application/handlers/categories/testing/PlaywrightTestHandler');
+    const PlaywrightTestApplicationService = require('./application/services/PlaywrightTestApplicationService');
+    
+    // Create PlaywrightTestHandler with proper dependencies
+    const playwrightTestHandler = new PlaywrightTestHandler({
+        playwrightTestService: new PlaywrightTestApplicationService({
+            workspaceDetector: this.serviceRegistry.getService('workspacePathDetector'),
+            projectMapper: this.serviceRegistry.getService('projectMappingService'),
+            application: this  // ✅ APPLICATION OBJEKT ÜBERGEBEN!
+        }),
+        application: this  // ✅ APPLICATION OBJEKT AUCH AN HANDLER!
+    });
+    
+    this.testManagementController = new TestManagementController({
+        playwrightTestHandler: playwrightTestHandler,
+        application: this,
+        logger: this.logger
+    });
 
     // Initialize AnalysisController
     const AnalysisController = require('./presentation/api/AnalysisController');

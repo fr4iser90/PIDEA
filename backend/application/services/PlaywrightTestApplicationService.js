@@ -3,6 +3,7 @@ const PlaywrightTestRunner = require('@tests/playwright/utils/test-runner');
 const PlaywrightTestManager = require('@tests/playwright/utils/test-manager');
 const path = require('path');
 const fs = require('fs-extra');
+const centralizedConfig = require('@config/centralized-config');
 
 const logger = new Logger('PlaywrightTestApplicationService');
 
@@ -20,13 +21,15 @@ class PlaywrightTestApplicationService {
     this.testManager = dependencies.testManager || new PlaywrightTestManager();
     this.workspaceDetector = dependencies.workspaceDetector;
     this.projectMapper = dependencies.projectMapper;
+    this.application = dependencies.application;  // ✅ APPLICATION OBJEKT SPEICHERN!
     
     this.activeTests = new Map();
     this.testConfigurations = new Map();
     
     this.logger.info('PlaywrightTestApplicationService initialized', {
       hasWorkspaceDetector: !!this.workspaceDetector,
-      hasProjectMapper: !!this.projectMapper
+      hasProjectMapper: !!this.projectMapper,
+      hasApplication: !!this.application
     });
   }
   
@@ -261,13 +264,10 @@ class PlaywrightTestApplicationService {
     try {
       this.logger.debug(`Discovering tests in workspace: ${workspacePath}`);
       
-      // Set test directory for discovery
-      const testDir = path.join(workspacePath, config.tests?.directory || 'tests');
-      
-      // Discover tests using test manager
+      // Use testManager with proper configuration - NO HARDCODED PATHS!
       const testFiles = await this.testManager.discoverTests(config.tests?.pattern || '**/*.test.js');
       
-      this.logger.debug(`Discovered ${testFiles.length} test files`, { testDir });
+      this.logger.debug(`Discovered ${testFiles.length} test files`, { workspacePath, testFiles });
       return testFiles;
       
     } catch (error) {
@@ -429,6 +429,133 @@ class PlaywrightTestApplicationService {
         details: error.message
       };
     }
+  }
+  
+  /**
+   * Save configuration to database
+   * @param {string} projectId - Project ID
+   * @param {Object} config - Configuration to save
+   * @returns {Promise<void>}
+   */
+  async saveConfigurationToDatabase(projectId, config) {
+    try {
+      // Get project repository from application
+      const projectRepository = this.application?.projectRepository;
+      if (!projectRepository) {
+        throw new Error('Project repository not available');
+      }
+      
+      // Get existing project
+      const project = await projectRepository.findById(projectId);
+      if (!project) {
+        throw new Error(`Project not found: ${projectId}`);
+      }
+      
+      // Update project config with Playwright configuration
+      const updatedConfig = {
+        ...project.config,
+        playwright: config
+      };
+      
+      await projectRepository.update(projectId, { 
+        config: JSON.stringify(updatedConfig),
+        updated_at: new Date().toISOString()
+      });
+      
+      this.logger.info(`Saved Playwright configuration to database for project: ${projectId}`);
+      
+    } catch (error) {
+      this.logger.error(`Failed to save configuration to database for project: ${projectId}`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Load configuration from database
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Configuration
+   */
+  async loadConfigurationFromDatabase(projectId) {
+    try {
+      // Get project repository from application
+      const projectRepository = this.application?.projectRepository;
+      if (!projectRepository) {
+        throw new Error('Project repository not available');
+      }
+      
+      // Get project from database
+      const project = await projectRepository.findById(projectId);
+      if (!project) {
+        throw new Error(`Project not found: ${projectId}`);
+      }
+      
+      // Extract Playwright configuration from project config
+      let config = {};
+      if (project.config) {
+        try {
+          const projectConfig = typeof project.config === 'string' 
+            ? JSON.parse(project.config) 
+            : project.config;
+          config = projectConfig.playwright || {};
+        } catch (error) {
+          this.logger.warn(`Failed to parse project config for ${projectId}:`, error.message);
+        }
+      }
+      
+      // Return default config if no Playwright config found
+      if (Object.keys(config).length === 0) {
+        config = this.getDefaultPlaywrightConfig();
+        this.logger.info(`Using default Playwright configuration for project: ${projectId}`);
+      }
+      
+      this.logger.info(`Loaded Playwright configuration from database for project: ${projectId}`);
+      return config;
+      
+    } catch (error) {
+      this.logger.error(`Failed to load configuration from database for project: ${projectId}`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get default Playwright configuration
+   * @returns {Object} Default configuration
+   */
+  getDefaultPlaywrightConfig() {
+    return {
+      baseURL: 'http://localhost:3000',
+      timeout: 30000,
+      retries: 2,
+      browsers: ['chromium'],
+      headless: true,
+      login: {
+        required: false,
+        selector: '',
+        username: '',
+        password: '',
+        additionalFields: {}
+      },
+      tests: {
+        directory: centralizedConfig.pathConfig.tests.playwright,
+        pattern: '**/*.test.js',
+        exclude: ['**/node_modules/**']
+      },
+      screenshots: {
+        enabled: true,
+        path: centralizedConfig.pathConfig.output.screenshots,
+        onFailure: true
+      },
+      videos: {
+        enabled: false,
+        path: centralizedConfig.pathConfig.output.videos,
+        onFailure: true
+      },
+      reports: {
+        enabled: true,
+        path: centralizedConfig.pathConfig.output.reports,
+        format: 'html'
+      }
+    };
   }
 }
 

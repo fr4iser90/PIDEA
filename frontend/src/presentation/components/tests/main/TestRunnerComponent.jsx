@@ -4,6 +4,7 @@ import TestConfiguration from './TestConfiguration';
 import TestResultsViewer from './TestResultsViewer';
 import TestStatusBadge from '../common/TestStatusBadge';
 import useTestRunner from '@/hooks/useTestRunner';
+import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/test/test-runner.css';
 
 /**
@@ -22,6 +23,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   
   const { executeTest, results, error, status } = useTestRunner();
   const { availableIDEs, activePort: storeActivePort } = useIDEStore();
+  const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
 
   // Get workspace path from active IDE (follows existing pattern)
   useEffect(() => {
@@ -38,22 +40,35 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     loadWorkspaceInfo();
   }, [availableIDEs, activePort, storeActivePort]);
 
-  // Load test configuration when project changes
+  // Load test configuration and projects when project changes
   useEffect(() => {
     if (projectId) {
       loadTestConfiguration();
+      loadTestProjects();  // ✅ TESTS VOM BACKEND LADEN!
     }
   }, [projectId]);
 
   const loadTestConfiguration = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/tests/playwright/config`);
-      if (response.ok) {
-        const data = await response.json();
+      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
+      const data = await apiRepository.getPlaywrightTestConfig(projectId);
+      if (data.success) {
         setTestConfig(data.data.config);
       }
     } catch (error) {
       console.error('Failed to load test configuration:', error);
+    }
+  };
+
+  const loadTestProjects = async () => {
+    try {
+      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
+      const data = await apiRepository.getPlaywrightTestProjects(projectId);
+      if (data.success) {
+        setTestProjects(data.data.projects || []);
+      }
+    } catch (error) {
+      console.error('Failed to load test projects:', error);
     }
   };
   
@@ -77,11 +92,8 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleStopTest = async () => {
     try {
-      await fetch('/api/projects/${projectId}/tests/playwright/stop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ testId: selectedTest?.id })
-      });
+      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
+      await apiRepository.stopPlaywrightTests(projectId, { testId: selectedTest?.id });
       setIsRunning(false);
     } catch (error) {
       console.error('Failed to stop test:', error);
@@ -90,13 +102,9 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleConfigUpdate = async (newConfig) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/tests/playwright/config`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: newConfig })
-      });
-      
-      if (response.ok) {
+      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
+      const data = await apiRepository.updatePlaywrightTestConfig(projectId, newConfig);
+      if (data.success) {
         setTestConfig(newConfig);
       }
     } catch (error) {
@@ -106,15 +114,12 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleCreateTest = async (testData) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/tests/playwright`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testData)
-      });
-      
-      if (response.ok) {
-        // Test created successfully
+      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
+      const data = await apiRepository.createPlaywrightTestProject(projectId, testData);
+      if (data.success) {
         console.log('Test created successfully');
+        // Reload test projects after creation
+        loadTestProjects();
       }
     } catch (error) {
       console.error('Failed to create test:', error);
