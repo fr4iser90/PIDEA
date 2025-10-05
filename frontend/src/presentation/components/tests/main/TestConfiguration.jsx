@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/test/test-runner.css';
 
@@ -19,9 +19,50 @@ const TestConfiguration = ({
 }) => {
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
-  const [configForm, setConfigForm] = useState(testConfig || null);
+  const [browserEnvironment, setBrowserEnvironment] = useState(null);
+  const [loadingEnvironment, setLoadingEnvironment] = useState(true);
+  const [configForm, setConfigForm] = useState(testConfig || {});
   const [projectForm, setProjectForm] = useState({ name: '', description: '' });
   const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
+
+  // Load browser environment on component mount
+  useEffect(() => {
+    loadBrowserEnvironment();
+  }, []);
+
+  // Update configForm when testConfig changes
+  useEffect(() => {
+    if (testConfig) {
+      setConfigForm(testConfig);
+    }
+  }, [testConfig]);
+
+  const loadBrowserEnvironment = async () => {
+    try {
+      setLoadingEnvironment(true);
+      const response = await apiRepository.getBrowserEnvironment();
+      if (response.success) {
+        setBrowserEnvironment(response.data);
+        
+        // Update browser list based on available browsers
+        const availablePlaywrightBrowsers = [];
+        if (response.data.browsers.playwright) {
+          availablePlaywrightBrowsers.push(...response.data.browsers.playwright.filter(b => b.available && b.compatible));
+        }
+        
+        // Update config form with ONLY ONE Playwright browser as default
+        const availablePlaywrightBrowserNames = availablePlaywrightBrowsers.map(b => b.name); // Send actual browser names, not prefixed
+        setConfigForm(prev => ({
+          ...prev,
+          browsers: availablePlaywrightBrowserNames.length > 0 ? [availablePlaywrightBrowserNames[0]] : [] // Only FIRST Playwright browser
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load browser environment:', error);
+    } finally {
+      setLoadingEnvironment(false);
+    }
+  };
 
   const handleConfigSubmit = (e) => {
     e.preventDefault();
@@ -104,17 +145,66 @@ const TestConfiguration = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Browsers
+                  {loadingEnvironment && <span className="text-xs text-gray-500 ml-2">(Loading...)</span>}
                 </label>
                 <select
                   multiple
                   value={configForm.browsers}
                   onChange={(e) => setConfigForm({...configForm, browsers: Array.from(e.target.selectedOptions, option => option.value)})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loadingEnvironment}
                 >
-                  <option value="chromium">Chromium</option>
-                  <option value="firefox">Firefox</option>
-                  <option value="webkit">WebKit</option>
+                  {browserEnvironment && (
+                    <>
+                      {browserEnvironment.browsers.playwright?.map(browser => (
+                        <option 
+                          key={`playwright-${browser.name}`} 
+                          value={browser.name} // Send actual browser name, not prefixed
+                          disabled={!browser.available || !browser.compatible}
+                        >
+                          {browser.name} (Playwright) {!browser.available ? '- Not Available' : !browser.compatible ? '- Incompatible' : ''}
+                        </option>
+                      ))}
+                      {browserEnvironment.browsers.system?.map(browser => (
+                        <option 
+                          key={`system-${browser.name}`} 
+                          value={`system-${browser.name}`}
+                          disabled={!browser.available}
+                        >
+                          {browser.name} (System) {!browser.available ? '- Not Available' : ''}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
+                
+                {/* NixOS Info - Only show if no Playwright browsers available */}
+                {browserEnvironment?.isNixOS && (!browserEnvironment.browsers.playwright || browserEnvironment.browsers.playwright.length === 0) && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-2">
+                        <h3 className="text-xs font-medium text-yellow-800">
+                          NixOS: Playwright not available
+                        </h3>
+                        <div className="mt-1 text-xs text-yellow-700">
+                          <p>Use system browsers or install Playwright with: <code className="bg-yellow-100 px-1 rounded">npx playwright install chromium</code></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Browser Environment Info - Only show if there are issues */}
+                {browserEnvironment && (!browserEnvironment.browsers.playwright || browserEnvironment.browsers.playwright.length === 0) && (
+                  <div className="mt-1 text-xs text-gray-500">
+                    <p>Platform: {browserEnvironment.platform} • Playwright: Not available • System: {browserEnvironment.browsers.system?.length || 0} available</p>
+                  </div>
+                )}
               </div>
             </div>
             

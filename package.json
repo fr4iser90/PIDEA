@@ -30,7 +30,8 @@
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "analyze:workflows": "node scripts/workflow-analyzer.js",
-    "open:workflows": "node scripts/open-workflow-report.js"
+    "open:workflows": "node scripts/open-workflow-report.js",
+    "postinstall": "echo 'Optional: Run \"npx playwright install chromium\" to enable browser testing'"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

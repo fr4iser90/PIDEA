@@ -1,0 +1,120 @@
+#!/usr/bin/env node
+
+/**
+ * Node Replacement with automatic module alias loading
+ * 
+ * This script replaces the node command and automatically loads module aliases
+ * from package.json before executing any Node.js script.
+ * 
+ * Usage:
+ *   node backend/scripts/test-playwright.js  # Module-Aliase automatisch geladen!
+ * 
+ * Installation:
+ *   ln -sf $(pwd)/scripts/node-replacement /usr/local/bin/node
+ *   # OR add to your shell profile:
+ *   alias node='$(pwd)/scripts/node-replacement'
+ */
+
+const path = require('path');
+const fs = require('fs');
+const moduleAlias = require('module-alias');
+const { spawn } = require('child_process');
+
+// Find the package.json with module aliases
+function findPackageWithAliases(startDir = process.cwd()) {
+    let currentDir = startDir;
+    
+    while (currentDir !== path.dirname(currentDir)) {
+        const packagePath = path.join(currentDir, 'package.json');
+        
+        if (fs.existsSync(packagePath)) {
+            try {
+                const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+                
+                // Check if this package.json has module aliases
+                if (packageJson._moduleAliases) {
+                    return { packagePath, packageJson, rootDir: currentDir };
+                }
+            } catch (error) {
+                // Continue searching if package.json is invalid
+            }
+        }
+        
+        currentDir = path.dirname(currentDir);
+    }
+    
+    return null;
+}
+
+// Load module aliases from package.json
+function loadModuleAliases() {
+    const packageInfo = findPackageWithAliases();
+    
+    if (!packageInfo) {
+        return false;
+    }
+    
+    const { packageJson, rootDir } = packageInfo;
+    const aliases = packageJson._moduleAliases;
+    
+    if (!aliases || Object.keys(aliases).length === 0) {
+        return false;
+    }
+    
+    // Register all aliases
+    Object.entries(aliases).forEach(([alias, target]) => {
+        const resolvedPath = path.resolve(rootDir, target);
+        moduleAlias.addAlias(alias, resolvedPath);
+    });
+    
+    return true;
+}
+
+// Main execution
+function main() {
+    const args = process.argv.slice(2);
+    
+    if (args.length === 0) {
+        // If no arguments, just run regular node
+        const nodeProcess = spawn('node', [], { stdio: 'inherit' });
+        nodeProcess.on('exit', (code) => process.exit(code));
+        return;
+    }
+    
+    const scriptPath = args[0];
+    const scriptArgs = args.slice(1);
+    
+    // Check if script exists
+    if (!fs.existsSync(scriptPath)) {
+        console.error(`❌ Error: Script not found: ${scriptPath}`);
+        process.exit(1);
+    }
+    
+    // Load module aliases silently
+    const aliasesLoaded = loadModuleAliases();
+    
+    if (aliasesLoaded) {
+        console.log('✅ Module aliases loaded automatically');
+    }
+    
+    // Execute the target script
+    try {
+        // Set up the script arguments
+        process.argv = [process.argv[0], scriptPath, ...scriptArgs];
+        
+        // Execute the script
+        require(path.resolve(scriptPath));
+        
+    } catch (error) {
+        console.error(`❌ Error executing script: ${error.message}`);
+        console.error(error.stack);
+        process.exit(1);
+    }
+}
+
+// Only run if this script is executed directly
+if (require.main === module) {
+    main();
+}
+
+module.exports = { loadModuleAliases, findPackageWithAliases };

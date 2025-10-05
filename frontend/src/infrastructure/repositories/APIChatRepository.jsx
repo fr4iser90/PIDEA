@@ -71,7 +71,8 @@ const API_CONFIG = {
           execute: (projectId) => `/api/projects/${projectId}/tests/playwright/execute`,
           stop: (projectId) => `/api/projects/${projectId}/tests/playwright/stop`,
           create: (projectId) => `/api/projects/${projectId}/tests/playwright/projects`
-        }
+        },
+        browserEnvironment: '/api/tests/browser-environment'
       }
     },
     preview: {
@@ -1648,6 +1649,14 @@ export default class APIChatRepository extends ChatRepository {
       method: 'POST',
       body: JSON.stringify(testData)
     }, currentProjectId);
+  }
+
+  /**
+   * Get browser environment information
+   * @returns {Promise<Object>} Browser environment data
+   */
+  async getBrowserEnvironment() {
+    return apiCall(API_CONFIG.endpoints.projects.tests.browserEnvironment);
   }
 }
 

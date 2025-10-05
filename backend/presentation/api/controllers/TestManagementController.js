@@ -4,6 +4,7 @@
  */
 const Logger = require('@logging/Logger');
 const centralizedConfig = require('@config/centralized-config');
+const BrowserEnvironmentService = require('@services/testing/BrowserEnvironmentService');
 const logger = new Logger('TestManagementController');
 
 class TestManagementController {
@@ -12,6 +13,7 @@ class TestManagementController {
         this.playwrightTestHandler = dependencies.playwrightTestHandler;
         this.application = dependencies.application;
         this.logger = dependencies.logger || logger;
+        this.browserEnvironmentService = new BrowserEnvironmentService();
         
         if (!this.playwrightTestHandler) {
             throw new Error('TestManagementController requires playwrightTestHandler dependency');
@@ -257,6 +259,34 @@ class TestManagementController {
                 timestamp: new Date()
             });
         } catch (error) {
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date()
+            });
+        }
+    }
+
+    /**
+     * Get browser environment information
+     * GET /api/tests/browser-environment
+     */
+    async getBrowserEnvironment(req, res) {
+        try {
+            this.logger.info('TestManagementController: GET /api/tests/browser-environment called');
+            
+            const environmentSummary = await this.browserEnvironmentService.getEnvironmentSummary();
+            
+            this.logger.info('TestManagementController: Browser environment info retrieved successfully');
+            
+            res.json({
+                success: true,
+                data: environmentSummary,
+                message: 'Browser environment information retrieved successfully',
+                timestamp: new Date()
+            });
+        } catch (error) {
+            this.logger.error('TestManagementController: Error getting browser environment', error);
             res.status(500).json({
                 success: false,
                 error: error.message,

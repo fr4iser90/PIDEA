@@ -415,7 +415,7 @@ class PlaywrightTestApplicationService {
       const result = await this.testRunner.executeTest(testContent, {
         baseURL: config.baseURL,
         timeout: 10000,
-        headless: true
+        headless: config.headless !== undefined ? config.headless : false
       });
       
       return {
@@ -523,11 +523,11 @@ class PlaywrightTestApplicationService {
    */
   getDefaultPlaywrightConfig() {
     return {
-      baseURL: 'http://localhost:3000',
+      baseURL: 'http://localhost:4000',
       timeout: 30000,
       retries: 2,
       browsers: ['chromium'],
-      headless: true,
+      headless: false, // Default to non-headless
       login: {
         required: false,
         selector: '',

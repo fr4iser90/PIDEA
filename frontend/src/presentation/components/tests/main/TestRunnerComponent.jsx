@@ -3,7 +3,6 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import TestConfiguration from './TestConfiguration';
 import TestResultsViewer from './TestResultsViewer';
 import TestStatusBadge from '../common/TestStatusBadge';
-import useTestRunner from '@/hooks/useTestRunner';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import '@/css/components/test/test-runner.css';
 
@@ -20,8 +19,10 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const [projectId, setProjectId] = useState(null);
   const [testConfig, setTestConfig] = useState(null);
   const [testProjects, setTestProjects] = useState([]);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState('ready');
   
-  const { executeTest, results, error, status } = useTestRunner();
   const { availableIDEs, activePort: storeActivePort } = useIDEStore();
   const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
 
@@ -80,11 +81,25 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     
     setIsRunning(true);
     try {
-      await executeTest(selectedTest, { 
-        workspacePath, 
-        projectId,
-        config: testConfig 
+      // ✅ DIREKTEN PLAYWRIGHT ENDPOINT VERWENDEN STATT WORKFLOW!
+      const data = await apiRepository.executePlaywrightTests(projectId, {
+        testName: selectedTest?.name,
+        options: {
+          workspacePath,
+          config: testConfig
+        }
       });
+      
+      if (data.success) {
+        console.log('Test execution result:', data.data);
+        setResults(data.data);
+        setError(null);
+        setStatus('completed');
+      }
+    } catch (error) {
+      console.error('Failed to execute test:', error);
+      setError(error.message);
+      setStatus('error');
     } finally {
       setIsRunning(false);
     }

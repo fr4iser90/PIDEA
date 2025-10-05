@@ -21,6 +21,9 @@ logs
 backend/coverage
 backend/database
 backend/.jest-cache
+backend/reports
+backend/tests/playwright/screenshots
+test-results
 
 frontend/coverage
 frontend/.jest-cache

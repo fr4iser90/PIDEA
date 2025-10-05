@@ -75,7 +75,20 @@ const TestResultsViewer = ({ results, error, isRunning }) => {
     );
   }
 
-  const latestResult = results[results.length - 1];
+  const latestResult = results && results.length > 0 ? results[results.length - 1] : null;
+  
+  if (!latestResult) {
+    return (
+      <div className="test-results bg-white border rounded-lg p-6">
+        <div className="text-center py-8">
+          <div className="text-gray-400 text-4xl mb-4">🧪</div>
+          <h3 className="text-lg font-medium text-gray-800">No Test Results</h3>
+          <p className="text-gray-600">Run some tests to see results here</p>
+        </div>
+      </div>
+    );
+  }
+  
   const totalTests = latestResult.results ? Object.keys(latestResult.results).length : 0;
   const passedTests = latestResult.results ? 
     Object.values(latestResult.results).filter(r => r.success).length : 0;

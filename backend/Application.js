@@ -1023,6 +1023,10 @@ class Application {
     this.app.post('/api/projects/:projectId/tests/playwright/execute', (req, res) => this.testManagementController.executePlaywrightTests(req, res));
     this.app.post('/api/projects/:projectId/tests/playwright/stop', (req, res) => this.testManagementController.stopPlaywrightTests(req, res));
 
+    // Browser Environment routes (protected)
+    this.app.use('/api/tests/browser-environment', this.authMiddleware.authenticate());
+    this.app.get('/api/tests/browser-environment', (req, res) => this.testManagementController.getBrowserEnvironment(req, res));
+
     // Workflow routes (protected) - PROJECT-BASED
     this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());
     this.app.post('/api/projects/:projectId/workflow/execute', (req, res) => this.workflowController.executeWorkflow(req, res));
