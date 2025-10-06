@@ -86,11 +86,13 @@ class VersionManagementService {
               const versionData = {
                 version: normalizedVersion,
                 packageFile: filePath,
+                packageFiles: packageFilePaths.length, // Total number of package files checked
                 packageJson: packageJson,
                 isValid: this.semanticVersioning.isValidVersion(normalizedVersion),
                 isStable: this.semanticVersioning.isStable(normalizedVersion),
                 isPrerelease: this.semanticVersioning.isPrerelease(normalizedVersion),
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
+                gitTag: await this.getGitTag(projectPath, normalizedVersion) // Check for Git tag
               };
 
               this.logger.info(`📦 Version data created successfully, returning...`);
@@ -498,6 +500,48 @@ ${task.description || 'No description provided'}`,
 
     } catch (error) {
       this.logger.error('Error creating git tag', { error: error.message });
+      return null;
+    }
+  }
+
+  /**
+   * Get Git tag for version
+   * @param {string} projectPath - Project path
+   * @param {string} version - Version string
+   * @returns {Promise<string|null>} Git tag or null if not found
+   */
+  async getGitTag(projectPath, version) {
+    try {
+      if (!this.gitService) {
+        this.logger.debug('No git service available for tag checking');
+        return null;
+      }
+
+      // Check for common tag formats
+      const possibleTags = [
+        `v${version}`,
+        version,
+        `release-${version}`,
+        `version-${version}`
+      ];
+
+      for (const tag of possibleTags) {
+        try {
+          const result = await this.gitService.executeCommand(projectPath, `git tag -l "${tag}"`);
+          if (result && result.trim() === tag) {
+            this.logger.info(`✅ Found Git tag: ${tag}`);
+            return tag;
+          }
+        } catch (error) {
+          this.logger.debug(`Tag ${tag} not found: ${error.message}`);
+        }
+      }
+
+      this.logger.debug(`No Git tag found for version ${version}`);
+      return null;
+
+    } catch (error) {
+      this.logger.debug(`Error checking Git tags: ${error.message}`);
       return null;
     }
   }

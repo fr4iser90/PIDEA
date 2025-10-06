@@ -93,12 +93,13 @@ class VersionManagementHandler {
         data: {
           version: versionData.version,
           packageFile: versionData.packageFile,
+          packageFiles: versionData.packageFiles,
           packageJson: versionData.packageJson,
           isValid: versionData.isValid,
-          isStable: this.semanticVersioning.isStable(versionData.version),
-          isPrerelease: this.semanticVersioning.isPrerelease(versionData.version),
-          lastUpdated: new Date().toISOString(),
-          gitTag: null // TODO: Add git tag detection
+          isStable: versionData.isStable,
+          isPrerelease: versionData.isPrerelease,
+          lastUpdated: versionData.lastUpdated,
+          gitTag: versionData.gitTag
         },
         timestamp: new Date()
       };

@@ -317,7 +317,7 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                     </div>
                     <div className="version-detail">
                       <span className="detail-label">Package Files:</span>
-                      <span className="detail-value">{currentVersion.packageFiles?.length || 0} files</span>
+                      <span className="detail-value">{currentVersion.packageFiles || 0} files</span>
                     </div>
                     <div className="version-detail">
                       <span className="detail-label">Last Updated:</span>
