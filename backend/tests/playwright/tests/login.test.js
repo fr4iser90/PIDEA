@@ -13,11 +13,16 @@ test.beforeAll(async () => {
     // Use environment variables for test data instead of API call
     testData = {
       login: {
-        username: process.env.TEST_LOGIN_USERNAME || 'test@test.com',
-        password: process.env.TEST_LOGIN_PASSWORD || 'test123'
+        username: process.env.TEST_LOGIN_USERNAME,
+        password: process.env.TEST_LOGIN_PASSWORD 
       },
       timeout: parseInt(process.env.TEST_TIMEOUT) || 30000
     };
+    
+    // Validate that credentials are provided
+    if (!testData.login.username || !testData.login.password) {
+      throw new Error('TEST_LOGIN_USERNAME and TEST_LOGIN_PASSWORD environment variables are required');
+    }
     
     console.log('Test configuration loaded from environment:', JSON.stringify(testData, null, 2));
   } catch (error) {
