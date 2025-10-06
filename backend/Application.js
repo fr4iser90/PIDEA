@@ -1021,6 +1021,9 @@ class Application {
     this.app.get('/api/projects/:projectId/tests/playwright/projects', (req, res) => this.testManagementController.getPlaywrightTestProjects(req, res));
     this.app.post('/api/projects/:projectId/tests/playwright/projects', (req, res) => this.testManagementController.createPlaywrightTestProject(req, res));
     this.app.post('/api/projects/:projectId/tests/playwright/execute', (req, res) => this.testManagementController.executePlaywrightTests(req, res));
+    this.app.get('/api/projects/:projectId/tests/playwright/results', (req, res) => this.testManagementController.getPlaywrightTestResults(req, res));
+    this.app.get('/api/projects/:projectId/tests/playwright/results/:testId', (req, res) => this.testManagementController.getPlaywrightTestResultById(req, res));
+    this.app.get('/api/projects/:projectId/tests/playwright/history', (req, res) => this.testManagementController.getPlaywrightTestHistory(req, res));
     this.app.post('/api/projects/:projectId/tests/playwright/stop', (req, res) => this.testManagementController.stopPlaywrightTests(req, res));
 
     // Browser Environment routes (protected)

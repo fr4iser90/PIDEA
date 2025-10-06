@@ -89,17 +89,32 @@ const TestResultsViewer = ({ results, error, isRunning }) => {
     );
   }
   
-  const totalTests = latestResult.results ? Object.keys(latestResult.results).length : 0;
-  const passedTests = latestResult.results ? 
-    Object.values(latestResult.results).filter(r => r.success).length : 0;
-  const failedTests = totalTests - passedTests;
+  // Handle Playwright JSON format
+  let totalTests = 0;
+  let passedTests = 0;
+  let failedTests = 0;
+  let duration = 0;
+  
+  if (latestResult.stats) {
+    // Playwright JSON format
+    totalTests = latestResult.stats.expected || 0;
+    failedTests = latestResult.stats.unexpected || 0;
+    passedTests = totalTests - failedTests;
+    duration = latestResult.stats.duration || 0;
+  } else if (latestResult.results) {
+    // Browser-specific format
+    totalTests = Object.keys(latestResult.results).length;
+    passedTests = Object.values(latestResult.results).filter(r => r && r.success).length;
+    failedTests = totalTests - passedTests;
+    duration = latestResult.duration || 0;
+  }
 
   return (
     <div className="test-results bg-white border rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-800">Test Results</h3>
         <div className="text-sm text-gray-600">
-          Last run: {new Date(latestResult.timestamp).toLocaleString()}
+          Last run: {latestResult.stats?.startTime ? new Date(latestResult.stats.startTime).toLocaleString() : 'Unknown'}
         </div>
       </div>
 
@@ -122,7 +137,7 @@ const TestResultsViewer = ({ results, error, isRunning }) => {
           </div>
           
           <div className="bg-blue-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{formatDuration(latestResult.duration)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatDuration(duration)}</div>
             <div className="text-sm text-blue-600">Duration</div>
           </div>
         </div>

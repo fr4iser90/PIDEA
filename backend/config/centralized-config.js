@@ -190,6 +190,7 @@ class CentralizedConfig {
         screenshots: 'tests/playwright/screenshots',
         videos: 'tests/playwright/videos',
         reports: 'tests/playwright/reports',
+        testResultsJson: 'tests/playwright/reports/test-results.json',
         coverage: 'coverage',
         logs: 'logs'
       },

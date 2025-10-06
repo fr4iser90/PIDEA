@@ -24,15 +24,13 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const [status, setStatus] = useState('ready');
   
   const { availableIDEs, activePort: storeActivePort } = useIDEStore();
-  const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
+  const apiRepository = new APIChatRepository();
 
-  // Get workspace path from active IDE (follows existing pattern)
   useEffect(() => {
     const loadWorkspaceInfo = async () => {
       const activeIDE = availableIDEs.find(ide => ide.port === (activePort || storeActivePort));
       if (activeIDE && activeIDE.workspacePath) {
         setWorkspacePath(activeIDE.workspacePath);
-        // Generate project ID from workspace path (follows existing pattern)
         const projectName = activeIDE.workspacePath.split('/').pop();
         setProjectId(projectName.replace(/[^a-zA-Z0-9]/g, '_'));
       }
@@ -41,17 +39,16 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     loadWorkspaceInfo();
   }, [availableIDEs, activePort, storeActivePort]);
 
-  // Load test configuration and projects when project changes
   useEffect(() => {
     if (projectId) {
       loadTestConfiguration();
-      loadTestProjects();  // ✅ TESTS VOM BACKEND LADEN!
+      loadTestProjects();
+      loadTestResults(); // Load existing test results
     }
   }, [projectId]);
 
   const loadTestConfiguration = async () => {
     try {
-      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
       const data = await apiRepository.getPlaywrightTestConfig(projectId);
       if (data.success) {
         setTestConfig(data.data.config);
@@ -63,13 +60,30 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const loadTestProjects = async () => {
     try {
-      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
       const data = await apiRepository.getPlaywrightTestProjects(projectId);
       if (data.success) {
         setTestProjects(data.data.projects || []);
       }
     } catch (error) {
       console.error('Failed to load test projects:', error);
+    }
+  };
+
+  const loadTestResults = async () => {
+    console.log('🔍 loadTestResults called with projectId:', projectId);
+    try {
+      const data = await apiRepository.getPlaywrightTestResults(projectId);
+      console.log('🔍 loadTestResults response:', data);
+      if (data.success && data.data) {
+        console.log('✅ Loaded existing test results:', data.data);
+        setResults([data.data]);
+        setStatus('completed');
+      } else {
+        console.log('❌ No test results data:', data);
+      }
+    } catch (error) {
+      console.log('❌ loadTestResults error:', error.message);
+      // This is normal if no tests have been run yet
     }
   };
   
@@ -86,9 +100,8 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     
     setIsRunning(true);
     try {
-      // ✅ DIREKTEN PLAYWRIGHT ENDPOINT VERWENDEN STATT WORKFLOW!
       const data = await apiRepository.executePlaywrightTests(projectId, {
-        testNames: selectedTests.map(test => test.name), // Send array of test names
+        testNames: selectedTests.map(test => test.name),
         options: {
           workspacePath,
           config: testConfig
@@ -97,7 +110,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
       
       if (data.success) {
         console.log('Test execution result:', data.data);
-        setResults(data.data);
+        setResults(data.data.results || []);
         setError(null);
         setStatus('completed');
       }
@@ -112,7 +125,6 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleStopTest = async () => {
     try {
-      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
       await apiRepository.stopPlaywrightTests(projectId, { testIds: selectedTests.map(test => test.id) });
       setIsRunning(false);
     } catch (error) {
@@ -122,7 +134,6 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleConfigUpdate = async (newConfig) => {
     try {
-      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
       const data = await apiRepository.updatePlaywrightTestConfig(projectId, newConfig);
       if (data.success) {
         setTestConfig(newConfig);
@@ -134,11 +145,9 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleCreateTest = async (testData) => {
     try {
-      // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
       const data = await apiRepository.createPlaywrightTestProject(projectId, testData);
       if (data.success) {
         console.log('Test created successfully');
-        // Reload test projects after creation
         loadTestProjects();
       }
     } catch (error) {
@@ -150,7 +159,6 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     setSelectedTests(prev => {
       const isSelected = prev.some(t => t.id === test.id);
       if (isSelected) {
-        // Remove from selection
         return prev.filter(t => t.id !== test.id);
       } else {
         // Add to selection
@@ -165,15 +173,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <h2 className="text-2xl font-bold text-gray-800">🧪 Test Runner</h2>
-            <TestStatusBadge status={status} />
           </div>
-          
-          {workspacePath && (
-            <div className="text-sm text-gray-600">
-              <div>Workspace: <span className="font-mono">{workspacePath}</span></div>
-              <div>Project: <span className="font-mono">{projectId}</span></div>
-            </div>
-          )}
         </div>
       </div>
       

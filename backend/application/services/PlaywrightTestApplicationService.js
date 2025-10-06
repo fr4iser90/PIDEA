@@ -81,12 +81,26 @@ class PlaywrightTestApplicationService {
       // Execute tests based on options
       const results = await this.executeTestFiles(testFiles, config, options);
       
+      // Format results for frontend - convert array to object with browser keys
+      const formattedResults = {};
+      results.forEach(result => {
+        if (result.browser) {
+          formattedResults[result.browser] = {
+            success: result.success,
+            duration: result.duration || 0,
+            error: result.error || null,
+            output: result.output || '',
+            timestamp: result.timestamp || new Date().toISOString()
+          };
+        }
+      });
+      
       const executionResult = {
         success: true,
         projectId,
         workspacePath,
         testFiles: testFiles.map(f => f.name),
-        results,
+        results: [formattedResults], // Wrap in array for frontend
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
       };

@@ -70,7 +70,10 @@ const API_CONFIG = {
           projects: (projectId) => `/api/projects/${projectId}/tests/playwright/projects`,
           execute: (projectId) => `/api/projects/${projectId}/tests/playwright/execute`,
           stop: (projectId) => `/api/projects/${projectId}/tests/playwright/stop`,
-          create: (projectId) => `/api/projects/${projectId}/tests/playwright/projects`
+          create: (projectId) => `/api/projects/${projectId}/tests/playwright/projects`,
+          results: (projectId) => `/api/projects/${projectId}/tests/playwright/results`,
+          resultById: (projectId, testId) => `/api/projects/${projectId}/tests/playwright/results/${testId}`,
+          history: (projectId) => `/api/projects/${projectId}/tests/playwright/history`
         },
         browserEnvironment: '/api/tests/browser-environment'
       }
@@ -1649,6 +1652,37 @@ export default class APIChatRepository extends ChatRepository {
       method: 'POST',
       body: JSON.stringify(testData)
     }, currentProjectId);
+  }
+
+  /**
+   * Get Playwright test results for a project
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Test results
+   */
+  async getPlaywrightTestResults(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.results(currentProjectId), {}, currentProjectId);
+  }
+
+  /**
+   * Get specific Playwright test result by ID
+   * @param {string} projectId - Project ID
+   * @param {string} testId - Test ID
+   * @returns {Promise<Object>} Test result
+   */
+  async getPlaywrightTestResultById(projectId = null, testId) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.resultById(currentProjectId, testId), {}, currentProjectId);
+  }
+
+  /**
+   * Get Playwright test history for a project
+   * @param {string} projectId - Project ID
+   * @returns {Promise<Object>} Test history
+   */
+  async getPlaywrightTestHistory(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(API_CONFIG.endpoints.projects.tests.playwright.history(currentProjectId), {}, currentProjectId);
   }
 
   /**

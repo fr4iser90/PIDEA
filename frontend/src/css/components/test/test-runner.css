@@ -5,6 +5,8 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 1.5rem;
   margin: 1rem 0;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
 }
 
 .test-runner-header {
@@ -146,6 +148,27 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
+}
+
+/* Select All Button */
+.test-projects button {
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.test-projects button:hover {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Enhanced Test Project Cards */
@@ -717,6 +740,64 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1.5rem;
+}
+
+/* Results Tabs */
+.results-tabs {
+  margin-bottom: 1.5rem;
+}
+
+.results-tabs .border-b {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.results-tabs nav {
+  display: flex;
+  gap: 2rem;
+}
+
+.results-tabs button {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.results-tabs button:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color);
+}
+
+.results-tabs button.border-blue-500 {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-color);
+}
+
+/* Tab Content */
+.tab-content {
+  min-height: 200px;
+}
+
+.overview-content,
+.details-content,
+.history-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .test-results h3 {
