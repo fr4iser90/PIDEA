@@ -988,7 +988,7 @@ class BrowserManager {
         throw new Error('No connection to IDE');
       }
 
-      logger.info(`Typing message: ${message}`);
+      //logger.info(`Typing message: ${message}`);
 
       // Determine IDE type and version based on current port
             const currentPort = this.currentPort;

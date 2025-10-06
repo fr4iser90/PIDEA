@@ -3,7 +3,7 @@
  * Tests for step execution without IDE service dependencies
  */
 
-const IDESendMessageStep = require('@domain/steps/categories/chat/ide_send_message');
+const IDESendMessageStep = require('@domain/steps/categories/chat/ide_send_message_step');
 
 describe('IDESendMessageStep Integration', () => {
   let step;

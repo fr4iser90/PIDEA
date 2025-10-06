@@ -1666,7 +1666,7 @@ class WorkflowController {
             };
 
             // Format prompt for IDE steps
-            if (step.type === 'ide_send_message') {
+            if (step.type === 'ide_send_message_step') {
                 // If useTaskPrompt is true, use the actual task prompt from TaskService
                 if (step.options?.useTaskPrompt && taskData) {
                     // Use the existing TaskService from the application context

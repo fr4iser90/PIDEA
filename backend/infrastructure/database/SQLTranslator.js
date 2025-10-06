@@ -128,7 +128,7 @@ class SQLTranslator {
   _convertFunctions(sql) {
     let convertedSQL = sql;
     
-    logger.info(`🔧 _convertFunctions: Processing SQL: ${sql.substring(0, 200)}...`);
+    //logger.info(`🔧 _convertFunctions: Processing SQL: ${sql.substring(0, 200)}...`);
 
     // Convert PostgreSQL UUID functions - handle both with and without ::text
     convertedSQL = convertedSQL.replace(/uuid_generate_v4\(\)(::text)?/gi, "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))");
@@ -200,8 +200,8 @@ class SQLTranslator {
     // Convert PostgreSQL LOWER to SQLite LOWER (same function)
     // No conversion needed as both support LOWER
 
-    logger.info(`🔧 _convertFunctions: Final SQL: ${convertedSQL.substring(0, 200)}...`);
-    logger.info(`🔧 _convertFunctions: Complete SQL: ${convertedSQL}`);
+    //logger.info(`🔧 _convertFunctions: Final SQL: ${convertedSQL.substring(0, 200)}...`);
+    //logger.info(`🔧 _convertFunctions: Complete SQL: ${convertedSQL}`);
     return convertedSQL;
   }
 

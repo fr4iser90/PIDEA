@@ -306,13 +306,6 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['eventBus', 'logger'] });
 
-        // Execution Queue Service
-        this.container.register('executionQueue', (logger) => {
-            const ExecutionQueue = require('@domain/workflows/execution/ExecutionQueue');
-            return new ExecutionQueue({
-                logger
-            });
-        }, { singleton: true, dependencies: ['logger'] });
 
         // Chat Session Service
         this.container.register('chatSessionService', (browserManager, ideManager, eventBus, logger) => {
@@ -1476,13 +1469,6 @@ class ServiceRegistry {
                     });
                 }, { singleton: true, dependencies: ['eventBus', 'logger'] });
                 break;
-            case 'executionQueue':
-                this.container.register('executionQueue', (logger) => {
-                    const ExecutionQueue = require('@domain/workflows/execution/ExecutionQueue');
-                    return new ExecutionQueue({
-                        logger
-                    });
-                }, { singleton: true, dependencies: ['logger'] });
                 break;
             case 'chatSessionService':
                 this.container.register('chatSessionService', (chatRepository, browserManager, ideManager, eventBus, logger) => {
@@ -1701,7 +1687,6 @@ class ServiceRegistry {
         this.addServiceDefinition('queueMonitoringService', ['eventBus', 'logger'], 'domain');
         this.addServiceDefinition('queueTaskExecutionService', ['queueMonitoringService', 'taskRepository', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('stepProgressService', ['eventBus', 'logger'], 'domain');
-        this.addServiceDefinition('executionQueue', ['logger'], 'domain');
         this.addServiceDefinition('chatSessionService', ['chatRepository', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('ideAutomationService', ['browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('workflowExecutionService', ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');

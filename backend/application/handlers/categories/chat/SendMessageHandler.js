@@ -86,7 +86,7 @@ class SendMessageHandler {
       });
       // Use BrowserManager for message sending (replaces deprecated IDE service sendMessage)
       const browserManager = await this.getBrowserManager(port);
-      this.logger.info('Sending message via BrowserManager:', command.message);
+      this.logger.info('Sending message via BrowserManager');
       await browserManager.typeMessage(command.message, true); // This now throws on error instead of returning false
       await this.eventBus.publish('message.sent', {
         commandId: command.commandId,

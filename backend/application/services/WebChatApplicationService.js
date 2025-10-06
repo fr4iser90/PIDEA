@@ -182,7 +182,7 @@ class WebChatApplicationService {
         }
       };
       
-      const result = await this.stepRegistry.executeStep('ide_send_message', stepData);
+      const result = await this.stepRegistry.executeStep('ide_send_message_step', stepData);
       
       // Check if step execution was successful
       if (!result.success) {

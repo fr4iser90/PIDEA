@@ -4,12 +4,10 @@
  */
 
 const ServiceLogger = require('@logging/ServiceLogger');
-const ExecutionQueue = require('@domain/workflows/execution/ExecutionQueue');
 
 class QueueMonitoringService {
     constructor(dependencies = {}) {
         this.logger = new ServiceLogger('QueueMonitoringService');
-        this.executionQueue = dependencies.executionQueue || new ExecutionQueue();
         this.eventBus = dependencies.eventBus;
         
         // Project-specific queues
@@ -120,10 +118,8 @@ class QueueMonitoringService {
             // Add to project queue
             projectQueue.push(queueItem);
             
-            // Sort by priority if enabled
-            if (this.executionQueue.enablePriority) {
-                this.sortProjectQueueByPriority(projectId);
-            }
+            // Sort by priority (always enabled)
+            this.sortProjectQueueByPriority(projectId);
 
             // Update statistics
             this.updateQueueStatistics(projectId, 'added');
@@ -399,7 +395,7 @@ class QueueMonitoringService {
             item.updatedBy = userId;
 
             // Re-sort queue if priority changed
-            if (oldPriority !== priority && this.executionQueue.enablePriority) {
+            if (oldPriority !== priority) {
                 this.sortProjectQueueByPriority(projectId);
             }
 

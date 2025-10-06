@@ -8,7 +8,6 @@ const QueueMonitoringService = require('@domain/services/queue/QueueMonitoringSe
 const StepProgressService = require('@domain/services/queue/StepProgressService');
 const QueueHistoryService = require('@domain/services/queue/QueueHistoryService');
 const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
-const ExecutionQueue = require('@domain/workflows/execution/ExecutionQueue');
 
 class QueueController {
     constructor(dependencies = {}) {
@@ -17,7 +16,6 @@ class QueueController {
         this.stepProgressService = dependencies.stepProgressService || new StepProgressService(dependencies);
         this.queueHistoryService = dependencies.queueHistoryService || new QueueHistoryService(dependencies);
         this.workflowTypeDetector = dependencies.workflowTypeDetector || new WorkflowTypeDetector(dependencies);
-        this.executionQueue = dependencies.executionQueue || new ExecutionQueue();
         this.eventBus = dependencies.eventBus;
     }
 

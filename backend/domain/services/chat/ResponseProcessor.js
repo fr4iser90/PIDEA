@@ -160,10 +160,6 @@ class ResponseProcessor {
     
     // Filter out common error messages and system messages
     const errorPatterns = [
-      'extension host unresponsive',
-      'extension host has stopped responding',
-      'reload window',
-      'error',
       'failed',
       'timeout',
       'connection error',
@@ -243,8 +239,6 @@ class ResponseProcessor {
         // First check if this is an error message - don't consider error messages as complete responses
         const trimmed = currentText.trim().toLowerCase();
         const errorPatterns = [
-          'extension host unresponsive',
-          'extension host has stopped responding',
           'reload window',
           'failed',
           'timeout',
@@ -264,8 +258,22 @@ class ResponseProcessor {
           }
         }
         
-        this.logger.info('📝 Text stable and substantial - appears complete');
-        return true; // Consider complete if substantial and stable
+        // Additional checks for completion
+        const hasCompletionKeywords = ['completed', 'done', 'finished', 'fertig', 'success'].some(keyword => 
+          trimmed.includes(keyword)
+        );
+        
+        const hasCodeBlocks = currentText.includes('```');
+        const hasSubstantialContent = currentText.length > 200;
+        
+        // Only consider complete if we have substantial content AND completion indicators
+        if (hasSubstantialContent && (hasCompletionKeywords || hasCodeBlocks)) {
+          this.logger.info('📝 Text stable and substantial with completion indicators - appears complete');
+          return true;
+        }
+        
+        this.logger.info('📝 Text stable but no clear completion indicators - continuing to wait');
+        return false; // Not complete yet
       }
       
       return false;
@@ -678,6 +686,27 @@ class ResponseProcessor {
           stableCheckCount++;
           this.logger.info(`⏸️ Response stable (${stableCheckCount}/${maxStableChecks})`);
           
+          // Check for code blocks during stable checks
+          try {
+            const codeBlocks = await this.extractCodeBlocks(page);
+            if (codeBlocks.length > 0) {
+              this.logger.info(`📦 Found ${codeBlocks.length} code blocks during stable check - AI still working!`);
+              stableCheckCount = 0; // Reset stable count - AI is still working!
+            }
+          } catch (error) {
+            // Skip if code block detection fails
+          }
+          
+          // Only check for completion AFTER we have enough stable checks
+          if (stableCheckCount >= 3) { // Require at least 3 stable checks
+            const isComplete = await this.detectResponseComplete(page, currentText, lastLength);
+            
+            if (isComplete) {
+              this.logger.info('✅ Response appears to be complete after stable checks');
+              break;
+            }
+          }
+          
           // Force continue after max stable checks
           if (stableCheckCount >= maxStableChecks) {
             this.logger.info(`⏰ Max stable checks reached (${maxStableChecks}), forcing continuation`);
@@ -685,15 +714,6 @@ class ResponseProcessor {
           }
         } else if (!currentText) {
           // No response found yet, wait a bit longer
-        }
-        
-        // Check if response appears to be complete FIRST (PRIORITY!)
-        const isComplete = await this.detectResponseComplete(page, currentText, lastLength);
-        
-        // Break if completion is detected (files edited, etc.)
-        if (isComplete) {
-          this.logger.info('✅ Response appears to be complete');
-          break;
         }
         
         // Only then check for typing indicators

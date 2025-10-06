@@ -1356,7 +1356,7 @@ ${task.description}
         };
         
         logger.info('📤 [TaskService] Executing IDESendMessageStep via StepRegistry');
-        stepResult = await this.stepRegistry.executeStep('ide_send_message', stepData);
+        stepResult = await this.stepRegistry.executeStep('ide_send_message_step', stepData);
         
         if (!stepResult.success) {
           throw new Error(`IDESendMessageStep failed: ${stepResult.error}`);

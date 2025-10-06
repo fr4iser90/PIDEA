@@ -591,7 +591,6 @@ class Application {
     this.queueController = new QueueController({
         queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
         stepProgressService: this.serviceRegistry.getService('stepProgressService'),
-        executionQueue: this.serviceRegistry.getService('executionQueue'),
         queueHistoryService: this.serviceRegistry.getService('queueHistoryService'),
         workflowTypeDetector: this.serviceRegistry.getService('workflowTypeDetector'),
         eventBus: this.eventBus,
