@@ -73,6 +73,21 @@ class FileSystemService {
     }
 
     /**
+     * Read JSON file and parse it
+     * @param {string} filePath - JSON file path
+     * @returns {Promise<Object|null>} Parsed JSON object or null if error
+     */
+    async readJsonFile(filePath) {
+        try {
+            const content = await this.readFile(filePath);
+            return JSON.parse(content);
+        } catch (error) {
+            // Return null instead of throwing - this allows graceful handling
+            return null;
+        }
+    }
+
+    /**
      * Write file content
      * @param {string} filePath - File path
      * @param {string} content - File content

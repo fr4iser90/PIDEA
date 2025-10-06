@@ -10,7 +10,20 @@ const logger = new Logger('VersionManagementHandler');
 
 class VersionManagementHandler {
   constructor(dependencies = {}) {
-    this.versionManagementService = dependencies.versionManagementService || new VersionManagementService(dependencies);
+    // Create VersionManagementService with proper dependencies
+    if (dependencies.versionManagementService) {
+      this.versionManagementService = dependencies.versionManagementService;
+    } else {
+      // Create service directly with required dependencies
+      const FileSystemService = require('@infrastructure/external/FileSystemService');
+      const fileSystemService = new FileSystemService();
+      
+      this.versionManagementService = new VersionManagementService({
+        fileSystemService: fileSystemService,
+        logger: dependencies.logger || logger
+      });
+    }
+    
     this.semanticVersioning = dependencies.semanticVersioning || new SemanticVersioningService();
     this.logger = dependencies.logger || logger;
   }
@@ -73,15 +86,19 @@ class VersionManagementHandler {
         projectPath: command.projectPath
       });
 
-      const version = await this.versionManagementService.getCurrentVersion(command.projectPath);
+      const versionData = await this.versionManagementService.getCurrentVersion(command.projectPath);
 
       return {
         success: true,
         data: {
-          version,
-          isValid: this.semanticVersioning.isValidVersion(version),
-          isStable: this.semanticVersioning.isStable(version),
-          isPrerelease: this.semanticVersioning.isPrerelease(version)
+          version: versionData.version,
+          packageFile: versionData.packageFile,
+          packageJson: versionData.packageJson,
+          isValid: versionData.isValid,
+          isStable: this.semanticVersioning.isStable(versionData.version),
+          isPrerelease: this.semanticVersioning.isPrerelease(versionData.version),
+          lastUpdated: new Date().toISOString(),
+          gitTag: null // TODO: Add git tag detection
         },
         timestamp: new Date()
       };

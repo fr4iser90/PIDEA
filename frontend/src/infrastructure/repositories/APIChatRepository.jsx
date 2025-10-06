@@ -154,6 +154,18 @@ const API_CONFIG = {
       pideaAgentStatus: (projectId) => `/api/projects/${projectId}/git/pidea-agent-status`,
       comparePideaAgent: (projectId) => `/api/projects/${projectId}/git/compare-pidea-agent`
     },
+    versions: {
+      // Version Management endpoints
+      bump: '/api/versions/bump',
+      current: '/api/versions/current',
+      history: '/api/versions/history',
+      validate: '/api/versions/validate',
+      compare: '/api/versions/compare',
+      determineBumpType: '/api/versions/determine-bump-type',
+      latest: '/api/versions/latest',
+      config: '/api/versions/config',
+      health: '/api/versions/health'
+    },
     settings: '/api/settings',
     health: '/api/health',
     manualTasks: {

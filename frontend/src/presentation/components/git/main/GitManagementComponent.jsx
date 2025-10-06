@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/git.css';
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
+import VersionManagementComponent from '../version/VersionManagementComponent.jsx';
 import { useGitStatus, useGitBranches, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 
@@ -52,6 +53,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const [showDiff, setShowDiff] = useState(false);
   const [diffContent, setDiffContent] = useState('');
   const [showPideaAgent, setShowPideaAgent] = useState(false);
+  const [activeGitTab, setActiveGitTab] = useState('git-operations');
 
   // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
@@ -269,6 +271,22 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         </div>
       </div>
 
+      {/* Git Tab Navigation */}
+      <div className="git-tabs">
+        <button
+          className={`git-tab ${activeGitTab === 'git-operations' ? 'active' : ''}`}
+          onClick={() => setActiveGitTab('git-operations')}
+        >
+          🔧 Git Operations
+        </button>
+        <button
+          className={`git-tab ${activeGitTab === 'version-management' ? 'active' : ''}`}
+          onClick={() => setActiveGitTab('version-management')}
+        >
+          📦 Version Management
+        </button>
+      </div>
+
       {/* Workspace Info */}
       {workspacePath && (
         <div className="workspace-info">
@@ -277,109 +295,127 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
         </div>
       )}
 
-      {/* Git Management Buttons */}
-      <div className="git-controls">
-        <div className="git-button-group">
-          <button
-            onClick={handleValidate}
-            className="git-btn validate-btn"
-            disabled={isLoading}
-            title="Validate current changes"
-          >
-            <span className="btn-icon">✅</span>
-            <span className="btn-text">Validate</span>
-          </button>
+      {/* Tab Content */}
+      <div className="git-tab-content">
+        {/* Git Operations Tab */}
+        {activeGitTab === 'git-operations' && (
+          <div className="git-operations-content">
+            {/* Git Management Buttons */}
+            <div className="git-controls">
+              <div className="git-button-group">
+                <button
+                  onClick={handleValidate}
+                  className="git-btn validate-btn"
+                  disabled={isLoading}
+                  title="Validate current changes"
+                >
+                  <span className="btn-icon">✅</span>
+                  <span className="btn-text">Validate</span>
+                </button>
 
-          <button
-            onClick={handleCompare}
-            className="git-btn compare-btn"
-            disabled={isLoading}
-            title="Compare with main branch"
-          >
-            <span className="btn-icon">🔍</span>
-            <span className="btn-text">Compare</span>
-          </button>
+                <button
+                  onClick={handleCompare}
+                  className="git-btn compare-btn"
+                  disabled={isLoading}
+                  title="Compare with main branch"
+                >
+                  <span className="btn-icon">🔍</span>
+                  <span className="btn-text">Compare</span>
+                </button>
 
-          <button
-            onClick={handlePull}
-            className="git-btn pull-btn"
-            disabled={isLoading}
-            title="Pull latest changes from main"
-          >
-            <span className="btn-icon">⬇️</span>
-            <span className="btn-text">Pull</span>
-          </button>
+                <button
+                  onClick={handlePull}
+                  className="git-btn pull-btn"
+                  disabled={isLoading}
+                  title="Pull latest changes from main"
+                >
+                  <span className="btn-icon">⬇️</span>
+                  <span className="btn-text">Pull</span>
+                </button>
 
-          <button
-            onClick={handleMerge}
-            className="git-btn merge-btn"
-            disabled={isLoading || currentBranch === 'main'}
-            title="Merge current branch into main"
-          >
-            <span className="btn-icon">🔀</span>
-            <span className="btn-text">Merge</span>
-          </button>
+                <button
+                  onClick={handleMerge}
+                  className="git-btn merge-btn"
+                  disabled={isLoading || currentBranch === 'main'}
+                  title="Merge current branch into main"
+                >
+                  <span className="btn-icon">🔀</span>
+                  <span className="btn-text">Merge</span>
+                </button>
 
-          <button
-            onClick={() => setShowPideaAgent(!showPideaAgent)}
-            className="git-btn pidea-agent-toggle-btn"
-            disabled={isLoading}
-            title="Toggle Pidea-Agent branch management"
-          >
-            <span className="btn-icon">🤖</span>
-            <span className="btn-text">Pidea-Agent</span>
-          </button>
-        </div>
+                <button
+                  onClick={() => setShowPideaAgent(!showPideaAgent)}
+                  className="git-btn pidea-agent-toggle-btn"
+                  disabled={isLoading}
+                  title="Toggle Pidea-Agent branch management"
+                >
+                  <span className="btn-icon">🤖</span>
+                  <span className="btn-text">Pidea-Agent</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Branch Selector */}
+            <div className="branch-selector">
+              <label className="branch-label">Switch Branch:</label>
+              <select
+                value={currentBranch}
+                onChange={(e) => handleSwitchBranch(e.target.value)}
+                disabled={isLoading}
+                className="branch-select"
+              >
+                {localBranches.map(branch => (
+                  <option key={branch} value={branch}>
+                    {branch === currentBranch ? `📍 ${branch}` : branch}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Git Status Details */}
+            {gitStatus.status && (
+              <div className="git-status-details">
+                <div className="status-section">
+                  <h4>📝 Modified Files ({gitStatus.modifiedFiles.length})</h4>
+                  <ul className="file-list">
+                    {gitStatus.modifiedFiles.map(file => (
+                      <li key={file} className="file-item modified">{file}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="status-section">
+                  <h4>➕ Added Files ({gitStatus.addedFiles.length})</h4>
+                  <ul className="file-list">
+                    {gitStatus.addedFiles.map(file => (
+                      <li key={file} className="file-item added">{file}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="status-section">
+                  <h4>🗑️ Deleted Files ({gitStatus.deletedFiles.length})</h4>
+                  <ul className="file-list">
+                    {gitStatus.deletedFiles.map(file => (
+                      <li key={file} className="file-item deleted">{file}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Version Management Tab */}
+        {activeGitTab === 'version-management' && (
+          <div className="version-management-content">
+            <VersionManagementComponent 
+              activePort={activePort}
+              eventBus={eventBus}
+            />
+          </div>
+        )}
       </div>
-
-      {/* Branch Selector */}
-      <div className="branch-selector">
-        <label className="branch-label">Switch Branch:</label>
-        <select
-          value={currentBranch}
-          onChange={(e) => handleSwitchBranch(e.target.value)}
-          disabled={isLoading}
-          className="branch-select"
-        >
-          {localBranches.map(branch => (
-            <option key={branch} value={branch}>
-              {branch === currentBranch ? `📍 ${branch}` : branch}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Git Status Details */}
-      {gitStatus.status && (
-        <div className="git-status-details">
-          <div className="status-section">
-            <h4>📝 Modified Files ({gitStatus.modifiedFiles.length})</h4>
-            <ul className="file-list">
-              {gitStatus.modifiedFiles.map(file => (
-                <li key={file} className="file-item modified">{file}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="status-section">
-            <h4>➕ Added Files ({gitStatus.addedFiles.length})</h4>
-            <ul className="file-list">
-              {gitStatus.addedFiles.map(file => (
-                <li key={file} className="file-item added">{file}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="status-section">
-            <h4>🗑️ Deleted Files ({gitStatus.deletedFiles.length})</h4>
-            <ul className="file-list">
-              {gitStatus.deletedFiles.map(file => (
-                <li key={file} className="file-item deleted">{file}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
 
       {/* Operation Result */}
       {operationResult && (

@@ -496,6 +496,28 @@ class Application {
     });
     this.serviceRegistry.container.register('createChatHandler', () => this.createChatHandler, { singleton: true });
 
+    // Initialize VersionManagementHandler
+    const VersionManagementHandler = require('./application/handlers/categories/version/VersionManagementHandler');
+    const VersionManagementService = require('./domain/services/version/VersionManagementService');
+    
+    // Get or create versionManagementService
+    let versionManagementService;
+    try {
+      versionManagementService = this.serviceRegistry.getService('versionManagementService');
+    } catch (error) {
+      this.logger.warn('VersionManagementService not found in registry, creating directly');
+      versionManagementService = new VersionManagementService({
+        fileSystemService: this.serviceRegistry.getService('fileSystemService'),
+        logger: this.serviceRegistry.getService('logger')
+      });
+    }
+    
+    this.versionManagementHandler = new VersionManagementHandler({
+      versionManagementService: versionManagementService,
+      logger: this.serviceRegistry.getService('logger')
+    });
+    this.serviceRegistry.container.register('versionManagementHandler', () => this.versionManagementHandler, { singleton: true });
+
     // Legacy handlers removed - using new workflow system instead
     this.processTodoListHandler = null;
 

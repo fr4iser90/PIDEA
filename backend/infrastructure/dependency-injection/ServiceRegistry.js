@@ -174,6 +174,15 @@ class ServiceRegistry {
             return new IDEWorkspaceDetectionService(ideManager, projectRepository);
         }, { singleton: true, dependencies: ['ideManager', 'projectRepository'] });
 
+        // Version Management Service
+        this.container.register('versionManagementService', (fileSystemService, logger) => {
+            const VersionManagementService = require('@domain/services/version/VersionManagementService');
+            return new VersionManagementService({
+                fileSystemService,
+                logger
+            });
+        }, { singleton: true, dependencies: ['fileSystemService', 'logger'] });
+
         // CDP Connection Manager for Workspace Detection
         this.container.register('cdpConnectionManager', () => {
             const CDPConnectionManager = require('@external/cdp/CDPConnectionManager');
@@ -1607,6 +1616,15 @@ class ServiceRegistry {
                     });
                 }, { singleton: true, dependencies: ['eventBus'] });
                 break;
+            case 'versionManagementService':
+                this.container.register('versionManagementService', (fileSystemService, logger) => {
+                    const VersionManagementService = require('@domain/services/version/VersionManagementService');
+                    return new VersionManagementService({
+                        fileSystemService,
+                        logger
+                    });
+                }, { singleton: true, dependencies: ['fileSystemService', 'logger'] });
+                break;
             default:
                 throw new Error(`Unknown domain service: ${serviceName}`);
         }
@@ -1697,11 +1715,12 @@ class ServiceRegistry {
         this.addServiceDefinition('windsurfIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
         this.addServiceDefinition('sessionActivityService', ['userSessionRepository', 'eventBus'], 'domain');
         this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository', 'sessionActivityService'], 'domain');
-                    this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'], 'domain');
+        this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'], 'domain');
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
         this.addServiceDefinition('workflowLoaderService', [], 'domain');
         this.addServiceDefinition('queueHistoryService', ['queueHistoryRepository', 'eventBus'], 'domain');
         this.addServiceDefinition('workflowTypeDetector', ['eventBus'], 'domain');
+        this.addServiceDefinition('versionManagementService', ['fileSystemService', 'logger'], 'domain');
 
         // 🚨 NEW APPLICATION SERVICES - Layer Boundary Violation Fixes
         this.addServiceDefinition('analysisApplicationService', ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'], 'application');

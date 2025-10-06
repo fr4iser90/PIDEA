@@ -13,7 +13,11 @@ class VersionManagementService {
     this.versionRepository = dependencies.versionRepository;
     this.gitService = dependencies.gitService;
     this.fileSystemService = dependencies.fileSystemService;
-    this.logger = dependencies.logger || logger;
+    this.logger = logger; // Always use our own logger with correct name
+    
+    // Cache system for version data
+    this.versionCache = new Map();
+    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
     
     // Configuration
     this.config = {
@@ -37,27 +41,107 @@ class VersionManagementService {
    */
   async getCurrentVersion(projectPath) {
     try {
-      for (const packageFile of this.config.packageFiles) {
-        const filePath = `${projectPath}/${packageFile}`;
-        
+      // Check cache first
+      const cacheKey = `version:${projectPath}`;
+      const cached = this.versionCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+        this.logger.info(`📦 Using cached version for ${projectPath}: ${cached.data.version}`);
+        return cached.data;
+      }
+
+      this.logger.info(`Looking for version in project path: ${projectPath}`);
+      
+      // Try different package file locations
+      const packageFilePaths = [
+        `${projectPath}/package.json`,           // Root package.json
+        `${projectPath}/backend/package.json`,   // Backend package.json
+        `${projectPath}/frontend/package.json`,  // Frontend package.json
+        `${projectPath}/../package.json`,        // Parent directory package.json
+        `${projectPath}/../../package.json`      // Grandparent directory package.json
+      ];
+      
+      for (const filePath of packageFilePaths) {
         try {
+          this.logger.debug(`Checking package file: ${filePath}`);
+          
+          // Check if fileSystemService is available
+          if (!this.fileSystemService) {
+            this.logger.error('❌ fileSystemService is not available!');
+            continue;
+          }
+          
+          if (!this.fileSystemService.readJsonFile) {
+            this.logger.error('❌ fileSystemService.readJsonFile method is not available!');
+            continue;
+          }
+          
           const packageJson = await this.fileSystemService.readJsonFile(filePath);
+          
           if (packageJson && packageJson.version) {
             const normalizedVersion = this.semanticVersioning.normalizeVersion(packageJson.version);
-            this.logger.info(`Found current version: ${normalizedVersion} in ${packageFile}`);
-            return normalizedVersion;
+            this.logger.info(`✅ Found current version: ${normalizedVersion} in ${filePath}`);
+            
+            try {
+              // Return additional metadata
+              const versionData = {
+                version: normalizedVersion,
+                packageFile: filePath,
+                packageJson: packageJson,
+                isValid: this.semanticVersioning.isValidVersion(normalizedVersion),
+                isStable: this.semanticVersioning.isStable(normalizedVersion),
+                isPrerelease: this.semanticVersioning.isPrerelease(normalizedVersion),
+                lastUpdated: new Date().toISOString()
+              };
+
+              this.logger.info(`📦 Version data created successfully, returning...`);
+
+              // Cache the result
+              this.versionCache.set(cacheKey, {
+                data: versionData,
+                timestamp: Date.now()
+              });
+
+              this.logger.info(`📦 Version data cached successfully, returning...`);
+
+              return versionData;
+            } catch (error) {
+              this.logger.error(`❌ Error creating version data: ${error.message}`);
+              this.logger.error(`❌ Error stack: ${error.stack}`);
+              // Continue to next file if there's an error
+            }
           }
         } catch (error) {
-          this.logger.debug(`Package file not found or invalid: ${filePath}`);
+          this.logger.debug(`Package file not found or invalid: ${filePath} - ${error.message}`);
         }
       }
       
-      this.logger.warn('No valid version found in package files, using 0.0.0');
-      return '0.0.0';
+      this.logger.warn('⚠️ No valid version found in package files, using 0.0.0');
+      const fallbackData = {
+        version: '0.0.0',
+        packageFile: null,
+        packageJson: null,
+        isValid: false,
+        isStable: false,
+        isPrerelease: false,
+        lastUpdated: new Date().toISOString()
+      };
+
+      // Cache the fallback result too
+      this.versionCache.set(cacheKey, {
+        data: fallbackData,
+        timestamp: Date.now()
+      });
+
+      return fallbackData;
       
     } catch (error) {
-      this.logger.error('Error getting current version', { error: error.message });
-      return '0.0.0';
+      this.logger.error('❌ Error getting current version', { error: error.message });
+      return {
+        version: '0.0.0',
+        packageFile: null,
+        packageJson: null,
+        isValid: false
+      };
     }
   }
 
@@ -78,7 +162,8 @@ class VersionManagementService {
       });
 
       // Get current version
-      const currentVersion = await this.getCurrentVersion(projectPath);
+      const currentVersionData = await this.getCurrentVersion(projectPath);
+      const currentVersion = currentVersionData.version;
       
       // Determine bump type if not provided
       if (!bumpType) {
