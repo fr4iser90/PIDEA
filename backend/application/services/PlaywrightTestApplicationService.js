@@ -511,15 +511,13 @@ class PlaywrightTestApplicationService {
       
       this.logger.info(`Saving configuration exactly as provided: ${JSON.stringify(validatedConfig)}`);
       
-      // Parse existing config if it's a string
+      // Config is already parsed by the repository
       let existingConfig = {};
       if (project.config) {
         try {
-          existingConfig = typeof project.config === 'string' 
-            ? JSON.parse(project.config) 
-            : project.config;
+          existingConfig = project.config;
         } catch (error) {
-          this.logger.warn(`Failed to parse existing project config: ${error.message}`);
+          this.logger.warn(`Failed to access existing project config: ${error.message}`);
         }
       }
       
@@ -529,10 +527,14 @@ class PlaywrightTestApplicationService {
         playwright: validatedConfig
       };
       
-      await projectRepository.update(projectId, { 
-        config: JSON.stringify(updatedConfig),
+      // Update the project with the merged config
+      const updatedProject = {
+        ...project,
+        config: updatedConfig,
         updated_at: new Date().toISOString()
-      });
+      };
+      
+      await projectRepository.update(updatedProject);
       
       this.logger.info(`Saved Playwright configuration to database for project: ${projectId}`);
       
@@ -565,13 +567,12 @@ class PlaywrightTestApplicationService {
       let config = {};
       if (project.config) {
         try {
-          const projectConfig = typeof project.config === 'string' 
-            ? JSON.parse(project.config) 
-            : project.config;
+          // Config is already parsed by the repository, no need to parse again
+          const projectConfig = project.config;
           config = projectConfig.playwright || {};
           this.logger.info(`Extracted config from database:`, { config, browsers: config.browsers, browsersType: typeof config.browsers });
         } catch (error) {
-          this.logger.warn(`Failed to parse project config for ${projectId}:`, error.message);
+          this.logger.warn(`Failed to extract project config for ${projectId}:`, error.message);
         }
       }
       

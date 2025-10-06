@@ -316,18 +316,48 @@ class PlaywrightTestHandler {
       console.log('Browsers isArray:', Array.isArray(config.browsers));
       console.log('=== CONFIG DEBUG END ===');
       
+      // Extract only the relevant Playwright configuration fields
+      const playwrightConfig = {
+        baseURL: config.baseURL,
+        timeout: config.timeout || 30000,
+        retries: config.retries || 2,
+        browsers: config.browsers || ['chromium'],
+        headless: config.headless !== undefined ? config.headless : true,
+        login: config.login || { required: false, username: '', password: '' },
+        tests: config.tests || {
+          directory: 'tests/playwright/tests',
+          pattern: '**/*.test.js',
+          exclude: ['**/node_modules/**']
+        },
+        screenshots: config.screenshots || {
+          enabled: true,
+          path: 'tests/playwright/screenshots',
+          onFailure: true
+        },
+        videos: config.videos || {
+          enabled: false,
+          path: 'tests/playwright/videos',
+          onFailure: true
+        },
+        reports: config.reports || {
+          enabled: true,
+          path: 'tests/playwright/reports',
+          format: 'html'
+        }
+      };
+      
       // Ensure browsers is always an array
-      if (config.browsers && !Array.isArray(config.browsers)) {
-        console.log('Converting browsers to array:', config.browsers);
-        config.browsers = [config.browsers];
-      } else if (!config.browsers) {
+      if (playwrightConfig.browsers && !Array.isArray(playwrightConfig.browsers)) {
+        console.log('Converting browsers to array:', playwrightConfig.browsers);
+        playwrightConfig.browsers = [playwrightConfig.browsers];
+      } else if (!playwrightConfig.browsers) {
         console.log('Setting default browsers array');
-        config.browsers = ['chromium'];
+        playwrightConfig.browsers = ['chromium'];
       }
       
       // Validate configuration
       console.log('=== STARTING VALIDATION ===');
-      const validation = this.playwrightTestService.testManager.validateTestConfig(config);
+      const validation = this.playwrightTestService.testManager.validateTestConfig(playwrightConfig);
       console.log('Validation result:', validation);
       console.log('Validation valid:', validation.valid);
       console.log('Validation errors:', validation.errors);
@@ -338,7 +368,7 @@ class PlaywrightTestHandler {
       }
       
       // Save configuration to database
-      await this.playwrightTestService.saveConfigurationToDatabase(projectId, config);
+      await this.playwrightTestService.saveConfigurationToDatabase(projectId, playwrightConfig);
       
       return {
         success: true,

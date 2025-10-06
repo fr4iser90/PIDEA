@@ -84,10 +84,11 @@ const TestConfiguration = ({
     try {
       const response = await apiRepository.getPlaywrightTestConfig(projectId);
       if (response.success && response.data) {
+        const configData = response.data.config || response.data;
         const config = {
-          ...response.data,
-          browsers: Array.isArray(response.data.browsers) ? response.data.browsers : ['chromium'], // Ensure browsers is always an array
-          login: response.data.login || {
+          ...configData,
+          browsers: Array.isArray(configData.browsers) ? configData.browsers : ['chromium'], // Ensure browsers is always an array
+          login: configData.login || {
             required: false,
             username: '',
             password: ''
@@ -97,9 +98,31 @@ const TestConfiguration = ({
         console.log('Configuration loaded from database:', config);
       } else {
         console.log('No configuration found in database, using defaults');
+        // Initialize with default values when no configuration is found
+        const defaultConfig = {
+          timeout: 30000,
+          retries: 2,
+          login: {
+            required: false,
+            username: '',
+            password: ''
+          }
+        };
+        setConfigForm(defaultConfig);
       }
     } catch (error) {
       console.error('Failed to load configuration from database:', error);
+      // Initialize with default values on error
+      const defaultConfig = {
+        timeout: 30000,
+        retries: 2,
+        login: {
+          required: false,
+          username: '',
+          password: ''
+        }
+      };
+      setConfigForm(defaultConfig);
     }
   };
 
