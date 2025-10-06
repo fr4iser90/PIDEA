@@ -1,6 +1,6 @@
 {
   "name": "pidea",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Personal IDE Agent - A unified development platform",
   "private": true,
   "workspaces": [

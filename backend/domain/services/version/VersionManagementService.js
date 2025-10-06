@@ -360,20 +360,24 @@ class VersionManagementService {
    */
   async updatePackageFiles(projectPath, newVersion) {
     const updatedFiles = [];
+    const fs = require('fs');
 
     for (const packageFile of this.config.packageFiles) {
       const filePath = `${projectPath}/${packageFile}`;
       
       try {
-        const packageJson = await this.fileSystemService.readJsonFile(filePath);
-        if (packageJson) {
+        // Use direct fs methods instead of fileSystemService
+        const content = fs.readFileSync(filePath, 'utf8');
+        const packageJson = JSON.parse(content);
+        
+        if (packageJson && packageJson.version) {
           packageJson.version = newVersion;
-          await this.fileSystemService.writeJsonFile(filePath, packageJson);
+          fs.writeFileSync(filePath, JSON.stringify(packageJson, null, 2) + '\n');
           updatedFiles.push(filePath);
-          this.logger.info(`Updated version in ${packageFile} to ${newVersion}`);
+          this.logger.info(`✅ Updated version in ${packageFile} to ${newVersion}`);
         }
       } catch (error) {
-        this.logger.debug(`Could not update ${packageFile}: ${error.message}`);
+        this.logger.error(`❌ Could not update ${packageFile}: ${error.message}`);
       }
     }
 
