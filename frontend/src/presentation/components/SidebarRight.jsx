@@ -24,34 +24,45 @@ function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePor
   const [currentTab, setCurrentTab] = useState('tasks');
   const [isVisible, setIsVisible] = useState(true);
 
-  if (!isVisible) return null;
-
   return (
-    <div className="sidebar-right-content">
-      <div className="panel-header">
-        <div className="panel-tabs">
-          <button className={`tab-btn${currentTab === 'tasks' ? ' active' : ''}`} onClick={() => setCurrentTab('tasks')}>🗂️ Tasks</button>
-          <button className={`tab-btn${currentTab === 'queue' ? ' active' : ''}`} onClick={() => setCurrentTab('queue')}>🔄 Queue</button>
-          <button className={`tab-btn${currentTab === 'auto' ? ' active' : ''}`} onClick={() => setCurrentTab('auto')}>🤖 Auto</button>
-          <button className={`tab-btn${currentTab === 'frameworks' ? ' active' : ''}`} onClick={() => setCurrentTab('frameworks')}>🧩 Frameworks</button>
-          <button className={`tab-btn${currentTab === 'prompts' ? ' active' : ''}`} onClick={() => setCurrentTab('prompts')}>💬 Prompts</button>
-          <button className={`tab-btn${currentTab === 'templates' ? ' active' : ''}`} onClick={() => setCurrentTab('templates')}>📋 Templates</button>
-          <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} onClick={() => setCurrentTab('analysis')}>📊 Analysis</button>
-          <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} onClick={() => setCurrentTab('settings')}>⚙️ Settings</button>
-        </div>
-        <button id="toggleSidebarRightBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={() => setIsVisible(v => !v)}>◀</button>
+    <>
+      <div className={`sidebar-right-content ${!isVisible ? 'collapsed' : ''}`}>
+        {isVisible && (
+          <>
+            <div className="panel-header">
+              <div className="panel-tabs">
+                <button className={`tab-btn${currentTab === 'tasks' ? ' active' : ''}`} onClick={() => setCurrentTab('tasks')}>🗂️ Tasks</button>
+                <button className={`tab-btn${currentTab === 'queue' ? ' active' : ''}`} onClick={() => setCurrentTab('queue')}>🔄 Queue</button>
+                <button className={`tab-btn${currentTab === 'auto' ? ' active' : ''}`} onClick={() => setCurrentTab('auto')}>🤖 Auto</button>
+                <button className={`tab-btn${currentTab === 'frameworks' ? ' active' : ''}`} onClick={() => setCurrentTab('frameworks')}>🧩 Frameworks</button>
+                <button className={`tab-btn${currentTab === 'prompts' ? ' active' : ''}`} onClick={() => setCurrentTab('prompts')}>💬 Prompts</button>
+                <button className={`tab-btn${currentTab === 'templates' ? ' active' : ''}`} onClick={() => setCurrentTab('templates')}>📋 Templates</button>
+                <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} onClick={() => setCurrentTab('analysis')}>📊 Analysis</button>
+                <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} onClick={() => setCurrentTab('settings')}>⚙️ Settings</button>
+              </div>
+              <button id="toggleSidebarRightBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={() => setIsVisible(v => !v)}>◀</button>
+            </div>
+            <div className="panel-content">
+              {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} activePort={activePort} />}
+              {currentTab === 'queue' && <QueueManagementPanel eventBus={eventBus} activePort={activePort} />}
+              {currentTab === 'auto' && <AutoPanelComponent eventBus={eventBus} />}
+              {currentTab === 'frameworks' && <FrameworksPanelComponent />}
+              {currentTab === 'prompts' && <PromptsPanelComponent attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
+              {currentTab === 'templates' && <TemplatesPanelComponent />}
+              {currentTab === 'analysis' && <AnalysisPanelComponent />}
+              {currentTab === 'settings' && <div className="settings-tab">Settings Panel (TODO)</div>}
+            </div>
+          </>
+        )}
       </div>
-      <div className="panel-content">
-        {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} activePort={activePort} />}
-        {currentTab === 'queue' && <QueueManagementPanel eventBus={eventBus} activePort={activePort} />}
-        {currentTab === 'auto' && <AutoPanelComponent eventBus={eventBus} />}
-        {currentTab === 'frameworks' && <FrameworksPanelComponent />}
-        {currentTab === 'prompts' && <PromptsPanelComponent attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} />}
-        {currentTab === 'templates' && <TemplatesPanelComponent />}
-        {currentTab === 'analysis' && <AnalysisPanelComponent />}
-        {currentTab === 'settings' && <div className="settings-tab">Settings Panel (TODO)</div>}
+      
+      {/* Toggle button always visible */}
+      <div className="sidebar-toggle-strip">
+        <button id="toggleSidebarRightBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={() => setIsVisible(v => !v)}>
+          {isVisible ? '◀' : '▶'}
+        </button>
       </div>
-    </div>
+    </>
   );
 }
 

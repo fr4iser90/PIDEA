@@ -17,8 +17,9 @@
   
   /* Layout variables */
   --header-height: 65px;
-  --sidebar-left-width: 280px;
-  --sidebar-right-width: 320px;
+  --sidebar-left-width: 17.5rem; /* 280px equivalent, responsive */
+  --sidebar-right-width: 20rem; /* 320px equivalent, responsive */
+  --sidebar-bg: #20232a;
   --sidebar-left-bg: #20232a;
   --sidebar-right-bg: #23272e;
   --header-bg: #1a1d23;
@@ -67,17 +68,22 @@ body.light-theme {
   background: var(--bg-primary);
 }
 
-/* Main Content Area */
+/* Main Content Area - Almost full width, leave space for sidebar strip */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--bg-secondary);
-  margin-left: var(--sidebar-left-width);
+  margin-left: 20px; /* Space for sidebar strip */
   margin-right: 0;
   min-width: 0;
   transition: margin 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* Main-Content macht Platz wenn Sidebar expanded ist */
+.main-layout:has(.sidebar-left:hover) .main-content {
+  margin-left: var(--sidebar-left-width);
 }
 
 body.light-theme .main-content {

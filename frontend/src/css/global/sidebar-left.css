@@ -1,6 +1,6 @@
 /* SidebarLeft Component Styles */
 
-/* Main Sidebar Container */
+/* Main Sidebar Container - Collapsed by default, show strip */
 .sidebar-left {
   position: fixed;
   top: var(--header-height);
@@ -15,7 +15,14 @@
   flex-direction: column;
   overflow: hidden;
   z-index: 100;
-  transition: transform 0.3s ease;
+  transform: translateX(calc(-100% + 20px)); /* Show 20px strip */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Expand sidebar on hover */
+.sidebar-left:hover {
+  transform: translateX(0); /* Show full sidebar */
+  z-index: 100; /* Same level as main content */
 }
 
 /* Alternative class for when sidebar is wrapped */

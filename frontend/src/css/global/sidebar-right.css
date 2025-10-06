@@ -9,8 +9,7 @@
   height: auto;
   background: var(--sidebar-bg);
   border-left: 1px solid var(--border-color);
-  width: var(--sidebar-right-width);
-  min-width: var(--sidebar-right-width);
+  width: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -22,8 +21,27 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #1a1a1a;
-  color: #ffffff;
+  background: var(--sidebar-right-bg);
+  color: var(--text-primary);
+}
+
+.sidebar-right-content.collapsed {
+  width: 40px;
+  min-width: 40px;
+}
+
+.sidebar-toggle-strip {
+  position: fixed;
+  top: var(--header-height);
+  right: 0;
+  bottom: 40px;
+  width: 40px;
+  background: var(--sidebar-bg);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
 }
 
 /* Panel Header */
@@ -32,8 +50,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #404040;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -47,7 +65,7 @@
   padding: 6px 12px;
   background: transparent;
   border: none;
-  color: #cccccc;
+  color: var(--text-secondary);
   font-size: 12px;
   cursor: pointer;
   border-radius: 4px;
@@ -56,13 +74,13 @@
 }
 
 .tab-btn:hover {
-  background: #404040;
-  color: #ffffff;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .tab-btn.active {
-  background: #4e8cff;
-  color: #ffffff;
+  background: var(--accent-blue);
+  color: var(--text-primary);
 }
 
 /* Panel Content */
@@ -74,17 +92,17 @@
 
 /* Panel Blocks */
 .panel-block {
-  background: #2d2d2d;
-  border-radius: 8px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
   padding: 16px;
   margin-bottom: 16px;
-  border: 1px solid #404040;
+  border: 1px solid var(--border-color);
 }
 
 /* Button Styles */
 .btn-primary {
-  background: #4e8cff;
-  color: white;
+  background: var(--accent-blue);
+  color: var(--text-primary);
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -104,9 +122,9 @@
 }
 
 .btn-secondary {
-  background: #404040;
-  color: #cccccc;
-  border: 1px solid #555555;
+  background: var(--button-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
@@ -115,8 +133,8 @@
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #555555;
-  color: #ffffff;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .btn-secondary:disabled {
@@ -125,9 +143,9 @@
 }
 
 .btn-preset {
-  background: #2d2d2d;
-  color: #cccccc;
-  border: 1px solid #404040;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -136,9 +154,9 @@
 }
 
 .btn-preset:hover {
-  background: #404040;
-  color: #ffffff;
-  border-color: #4e8cff;
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--accent-blue);
 }
 
 .btn-vibecoder {
@@ -163,8 +181,8 @@
 }
 
 .btn-danger {
-  background: #dc3545;
-  color: white;
+  background: var(--accent-red);
+  color: var(--text-primary);
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -188,9 +206,9 @@ input[type="text"],
 input[type="password"],
 select,
 textarea {
-  background: #2d2d2d;
-  border: 1px solid #404040;
-  color: #ffffff;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 14px;
@@ -202,14 +220,31 @@ input[type="password"]:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #4e8cff;
+  border-color: var(--accent-blue);
   box-shadow: 0 0 0 2px rgba(78, 140, 255, 0.2);
 }
 
 input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #4e8cff;
+  accent-color: var(--accent-blue);
+}
+
+/* Icon Button */
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--hover-bg);
+  color: var(--accent-blue);
 }
 
 /* Task Items */
@@ -219,7 +254,7 @@ input[type="checkbox"] {
 
 .docs-task-item:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .priority-badge,
@@ -233,8 +268,8 @@ input[type="checkbox"] {
 .loading-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #404040;
-  border-top: 2px solid #4e8cff;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--accent-blue);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -246,9 +281,9 @@ input[type="checkbox"] {
 
 /* Theme Buttons */
 .theme-btn {
-  background: #2d2d2d;
-  color: #cccccc;
-  border: 1px solid #404040;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -257,14 +292,14 @@ input[type="checkbox"] {
 }
 
 .theme-btn:hover {
-  background: #404040;
-  color: #ffffff;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .theme-btn.active {
-  background: #4e8cff;
-  color: #ffffff;
-  border-color: #4e8cff;
+  background: var(--accent-blue);
+  color: var(--text-primary);
+  border-color: var(--accent-blue);
 }
 
 /* Utility Classes */
