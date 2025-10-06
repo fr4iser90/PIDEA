@@ -606,7 +606,7 @@ class PlaywrightTestApplicationService {
       timeout: 30000,
       retries: 2,
       browsers: ['chromium'],
-      headless: false, // Default to non-headless
+      headless: true, // Default to headless for NixOS compatibility
       login: {
         required: false,
         selector: '',

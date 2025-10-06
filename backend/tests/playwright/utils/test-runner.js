@@ -40,8 +40,8 @@ class PlaywrightTestRunner {
       
       // DEINE KONFIGURATION AUS DER DATENBANK RESPEKTIEREN!
       const browser = await this.browsers[browserName].launch({
-        headless: mergedConfig.headless !== undefined ? mergedConfig.headless : false, // DEINE EINSTELLUNG!
-        args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-web-security'] // DEINE ARGS!
+        headless: mergedConfig.headless !== undefined ? mergedConfig.headless : true, // DEINE EINSTELLUNG! Default to headless for NixOS compatibility
+        args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args - same as working script!
       });
       
       // DEBUG: Show what executable was actually used

@@ -52,7 +52,7 @@ module.exports = defineConfig({
         ...devices['Desktop Chrome'],
         // Additional Chrome-specific settings
         launchOptions: {
-          args: ['--disable-web-security', '--disable-features=VizDisplayCompositor']
+          args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args
         }
       },
     },
@@ -74,7 +74,7 @@ module.exports = defineConfig({
         ...devices['Desktop Safari'],
         // Additional Safari-specific settings
         launchOptions: {
-          args: ['--disable-web-security']
+          args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args
         }
       },
     },
