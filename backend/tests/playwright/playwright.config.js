@@ -52,7 +52,8 @@ module.exports = defineConfig({
         ...devices['Desktop Chrome'],
         // Additional Chrome-specific settings
         launchOptions: {
-          args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args
+          args: ['--no-sandbox', '--disable-gpu'], // NixOS compatible args
+          executablePath: process.env.NIXOS_CHROMIUM_PATH || undefined // Use NixOS Chromium if available
         }
       },
     },

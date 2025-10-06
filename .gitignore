@@ -23,6 +23,9 @@ backend/database
 backend/.jest-cache
 backend/reports
 backend/tests/playwright/screenshots
+backend/tests/playwright/reports
+backend/tests/playwright/videos
+backend/tests/playwright/traces
 test-results
 
 frontend/coverage

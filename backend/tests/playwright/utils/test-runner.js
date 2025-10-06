@@ -51,84 +51,89 @@ class PlaywrightTestRunner {
   }
 
   async executeTestOnBrowser(testFile, browserName, options = {}) {
-    console.log(`🔄 Testing on ${browserName}...`);
+    console.log(`🔄 Running REAL tests on ${browserName}...`);
     
     // Merge config with options to ensure all settings are passed
     const mergedConfig = { ...this.config, ...options };
     
     try {
-      console.log(`1️⃣ Testing ${browserName} launch...`);
+      const { exec } = require('child_process');
+      const { promisify } = require('util');
+      const execAsync = promisify(exec);
       
-      // DEINE KONFIGURATION AUS DER DATENBANK RESPEKTIEREN!
-      const executablePath = this.getNixOSChromiumPath();
-      console.log(`🔍 DEBUG: executablePath = ${executablePath}`);
+      // Build Playwright command with proper options
+      const testDir = path.dirname(testFile);
+      const testFileName = path.basename(testFile);
       
-      const browser = await this.browsers[browserName].launch({
-        headless: mergedConfig.headless !== undefined ? mergedConfig.headless : true, // DEINE EINSTELLUNG! Default to headless for NixOS compatibility
-        args: ['--no-sandbox', '--disable-gpu'], // NixOS compatible args - same as working script!
-        // Verwende NixOS Chromium falls verfügbar
-        executablePath: executablePath
+      let command = `npx playwright test ${testFileName}`;
+      
+      // Add project directory
+      command += ` --config ${path.join(testDir, '../playwright.config.js')}`;
+      
+      // Add browser project
+      command += ` --project ${browserName}`;
+      
+      // Add headless option
+      if (mergedConfig.headless === false) {
+        command += ` --headed`;
+      }
+      
+      // Environment variables will be set in execAsync options
+      
+      console.log(`🚀 Executing: ${command}`);
+      console.log(`📁 Working directory: ${testDir}`);
+      
+      // Execute the REAL Playwright tests
+      const { stdout, stderr } = await execAsync(command, {
+        cwd: testDir,
+        timeout: mergedConfig.timeout || 30000,
+        env: {
+          ...process.env,
+          TEST_BASE_URL: mergedConfig.baseURL,
+          VITE_FRONTEND_URL: mergedConfig.baseURL,
+          NIXOS_CHROMIUM_PATH: this.getNixOSChromiumPath(), // Set NixOS Chromium path
+          TEST_LOGIN_USERNAME: mergedConfig.login?.username || 'test@test.com',
+          TEST_LOGIN_PASSWORD: mergedConfig.login?.password || 'test123',
+          TEST_TIMEOUT: mergedConfig.timeout || 30000
+        }
       });
       
-      // DEBUG: Show what executable was actually used
-      console.log('🔍 DEBUG: Browser launched, checking processes...');
-      console.log(`🔍 DEBUG: Headless mode: ${mergedConfig.headless}`);
+      console.log('📊 Test Output:');
+      console.log(stdout);
       
-      console.log(`✅ ${browserName} launched successfully!`);
-      
-      const page = await browser.newPage();
-      
-      // Navigate to base URL - DEIN SCRIPT!
-      if (mergedConfig.baseURL) {
-        await page.goto(mergedConfig.baseURL);
-        console.log('✅ Website loaded successfully!');
-        
-        // Test curl-like functionality - DEIN SCRIPT!
-        const response = await page.goto(mergedConfig.baseURL);
-        console.log('📊 Response status:', response.status());
-        console.log('📊 Response headers:', response.headers());
-        
-        // Get page title - DEIN SCRIPT!
-        const title = await page.title();
-        console.log('📄 Page title:', title);
-        
-        // Get page content length - DEIN SCRIPT!
-        const content = await page.content();
-        console.log('📏 Page content length:', content.length, 'characters');
+      if (stderr) {
+        console.log('⚠️ Test Warnings/Errors:');
+        console.log(stderr);
       }
       
-      // Read test file - DEIN SCRIPT!
-      const testContent = fs.readFileSync(testFile, 'utf8');
-      console.log(`📄 Test file: ${path.basename(testFile)}`);
-      console.log(`📏 Test content length: ${testContent.length} characters`);
+      // Parse test results
+      const success = !stderr.includes('failed') && stdout.includes('passed');
       
-      // Take screenshot if enabled
-      if (mergedConfig.screenshots?.enabled) {
-        const screenshotPath = path.join(mergedConfig.screenshots.path || './screenshots', `${browserName}-${Date.now()}.png`);
-        fs.ensureDirSync(path.dirname(screenshotPath));
-        await page.screenshot({ path: screenshotPath });
-        console.log(`📸 Screenshot saved: ${screenshotPath}`);
-      }
-      
-      // Wait a bit so you can see the browser - DEIN SCRIPT!
-      await page.waitForTimeout(2000);
-      
-      await browser.close();
-      console.log('✅ Browser closed successfully!');
-      
-      console.log('\n🎉 Playwright works! You can use this configuration for tests.');
+      console.log(`✅ Tests completed on ${browserName}`);
       
       return {
-        success: true,
+        success: success,
         browser: browserName,
+        output: stdout,
+        error: stderr,
+        command: command,
         duration: Date.now() - Date.now(),
         timestamp: new Date().toISOString()
       };
       
     } catch (error) {
-      console.log(`❌ Playwright failed on ${browserName}:`, error.message);
-      console.log('\n💡 Try running: npx playwright install chromium');
-      throw error;
+      console.log(`❌ Tests failed on ${browserName}:`, error.message);
+      console.log('\n💡 Make sure Playwright is installed: npx playwright install chromium');
+      
+      return {
+        success: false,
+        browser: browserName,
+        error: error.message,
+        output: error.stdout || '',
+        stderr: error.stderr || '',
+        duration: Date.now() - Date.now(),
+        timestamp: new Date().toISOString()
+      };
     }
   }
 }
