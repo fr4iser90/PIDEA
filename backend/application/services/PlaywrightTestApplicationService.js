@@ -65,7 +65,7 @@ class PlaywrightTestApplicationService {
       }
       
       // Discover available tests
-      const testFiles = await this.discoverProjectTests(workspacePath, config);
+      const testFiles = await this.discoverProjectTests(workspacePath, config, options);
       this.logger.info(`Discovered ${testFiles.length} test files`, { projectId });
       
       if (testFiles.length === 0) {
@@ -164,19 +164,28 @@ class PlaywrightTestApplicationService {
   
   /**
    * Stop running tests
-   * @param {string} testId - Optional test ID to stop specific test
+   * @param {string|Array} testIds - Optional test ID(s) to stop specific test(s)
    * @returns {Promise<Object>} Stop result
    */
-  async stopTests(testId = null) {
+  async stopTests(testIds = null) {
     try {
-      this.logger.info(`Stopping tests${testId ? ` for ID: ${testId}` : ''}`);
+      this.logger.info(`Stopping tests${testIds ? ` for IDs: ${Array.isArray(testIds) ? testIds.join(', ') : testIds}` : ''}`);
       
-      if (testId) {
-        // Stop specific test
-        const testResult = this.testRunner.getTestResult(testId);
+      if (testIds && Array.isArray(testIds) && testIds.length > 0) {
+        // Stop specific tests
+        for (const testId of testIds) {
+          const testResult = this.testRunner.getTestResult(testId);
+          if (testResult && testResult.isRunning) {
+            await this.testRunner.stopAllTests();
+            this.activeTests.delete(testId);
+          }
+        }
+      } else if (testIds && !Array.isArray(testIds)) {
+        // Single test ID (backward compatibility)
+        const testResult = this.testRunner.getTestResult(testIds);
         if (testResult && testResult.isRunning) {
           await this.testRunner.stopAllTests();
-          this.activeTests.delete(testId);
+          this.activeTests.delete(testIds);
         }
       } else {
         // Stop all tests
@@ -186,7 +195,7 @@ class PlaywrightTestApplicationService {
       
       return {
         success: true,
-        message: testId ? `Test ${testId} stopped` : 'All tests stopped',
+        message: testIds ? `Tests ${Array.isArray(testIds) ? testIds.join(', ') : testIds} stopped` : 'All tests stopped',
         timestamp: new Date().toISOString()
       };
       
@@ -307,14 +316,26 @@ class PlaywrightTestApplicationService {
    * Discover test files in project
    * @param {string} workspacePath - Workspace path
    * @param {Object} config - Project configuration
+   * @param {Object} options - Discovery options (including testNames filter)
    * @returns {Promise<Array>} Array of test files
    */
-  async discoverProjectTests(workspacePath, config) {
+  async discoverProjectTests(workspacePath, config, options = {}) {
     try {
       this.logger.debug(`Discovering tests in workspace: ${workspacePath}`);
       
       // Use testManager with proper configuration - NO HARDCODED PATHS!
-      const testFiles = await this.testManager.discoverTests(config.tests?.pattern || '**/*.test.js');
+      const allTestFiles = await this.testManager.discoverTests(config.tests?.pattern || '**/*.test.js');
+      
+      // Filter tests if specific test names are provided
+      let testFiles = allTestFiles;
+      if (options.testNames && Array.isArray(options.testNames) && options.testNames.length > 0) {
+        this.logger.info(`Filtering tests by names: ${options.testNames.join(', ')}`);
+        testFiles = allTestFiles.filter(testFile => {
+          const testName = testFile.name.replace(/\.test\.js$/, ''); // Remove .test.js extension
+          return options.testNames.includes(testName);
+        });
+        this.logger.info(`Filtered from ${allTestFiles.length} to ${testFiles.length} test files`);
+      }
       
       this.logger.debug(`Discovered ${testFiles.length} test files`, { workspacePath, testFiles });
       return testFiles;
@@ -538,8 +559,33 @@ class PlaywrightTestApplicationService {
       
       this.logger.info(`Saved Playwright configuration to database for project: ${projectId}`);
       
+      // Emit event for successful configuration save
+      if (this.application && this.application.eventBus) {
+        await this.application.eventBus.emit('playwright:config:saved', {
+          projectId,
+          config: validatedConfig,
+          timestamp: new Date().toISOString()
+        });
+        this.logger.info(`Emitted playwright:config:saved event for project: ${projectId}`);
+      } else {
+        this.logger.warn('EventBus not available for playwright:config:saved event');
+      }
+      
     } catch (error) {
       this.logger.error(`Failed to save configuration to database for project: ${projectId}`, error);
+      
+      // Emit event for failed configuration save
+      if (this.application && this.application.eventBus) {
+        await this.application.eventBus.emit('playwright:config:failed', {
+          projectId,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+        this.logger.info(`Emitted playwright:config:failed event for project: ${projectId}`);
+      } else {
+        this.logger.warn('EventBus not available for playwright:config:failed event');
+      }
+      
       throw error;
     }
   }

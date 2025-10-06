@@ -28,11 +28,11 @@ class PlaywrightTestHandler {
     try {
       this.logger.info('Handling execute tests command', {
         projectId: command.projectId,
-        testName: command.testName,
+        testNames: command.testNames,
         options: command.options
       });
       
-      const { projectId, testName, options = {} } = command;
+      const { projectId, testNames, options = {} } = command;
       
       if (!projectId) {
         throw new Error('Project ID is required');
@@ -41,7 +41,7 @@ class PlaywrightTestHandler {
       // Execute tests using application service
       const result = await this.playwrightTestService.executeTests(projectId, {
         ...options,
-        testName
+        testNames
       });
       
       this.logger.info('Test execution completed', {
@@ -139,16 +139,16 @@ class PlaywrightTestHandler {
   async handleStopTests(command) {
     try {
       this.logger.info('Handling stop tests command', {
-        testId: command.testId
+        testIds: command.testIds
       });
       
-      const { testId } = command;
+      const { testIds } = command;
       
       // Stop tests using application service
-      const result = await this.playwrightTestService.stopTests(testId);
+      const result = await this.playwrightTestService.stopTests(testIds);
       
       this.logger.info('Tests stopped', {
-        testId,
+        testIds,
         success: result.success
       });
       

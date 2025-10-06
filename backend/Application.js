@@ -1277,6 +1277,25 @@ class Application {
           this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
         }
       });
+
+      // Playwright Test Configuration Events
+      this.eventBus.subscribe('playwright:config:saved', (data) => {
+        this.logger.info('Playwright config saved event:', '[REDACTED_CONFIG_DATA]');
+        if (this.webSocketManager) {
+          this.webSocketManager.broadcastToAll('playwright:config:saved', data);
+        } else {
+          this.logger.warn('WebSocket manager not available for playwright:config:saved broadcast');
+        }
+      });
+
+      this.eventBus.subscribe('playwright:config:failed', (data) => {
+        this.logger.info('Playwright config failed event:', '[REDACTED_ERROR_DATA]');
+        if (this.webSocketManager) {
+          this.webSocketManager.broadcastToAll('playwright:config:failed', data);
+        } else {
+          this.logger.warn('WebSocket manager not available for playwright:config:failed broadcast');
+        }
+      });
     } else {
       this.logger.warn('No EventBus available for setting up event handlers');
     }

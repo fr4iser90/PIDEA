@@ -131,7 +131,7 @@ class TestManagementController {
     async executePlaywrightTests(req, res) {
         try {
             const { projectId } = req.params;
-            const { testName, options = {} } = req.body;
+            const { testNames, options = {} } = req.body;
 
             if (!projectId) {
                 return res.status(400).json({
@@ -143,7 +143,7 @@ class TestManagementController {
 
             const command = {
                 projectId,
-                testName,
+                testNames,
                 options
             };
 
@@ -170,9 +170,9 @@ class TestManagementController {
      */
     async stopPlaywrightTests(req, res) {
         try {
-            const { testId } = req.body;
+            const { testIds } = req.body;
 
-            const command = { testId };
+            const command = { testIds };
             const result = await this.playwrightTestHandler.handleStopTests(command);
 
             res.json({

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import '@/css/components/test/test-runner.css';
 
 /**
@@ -20,6 +21,8 @@ const TestConfiguration = ({
 }) => {
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
+  const [isConfigExpanded, setIsConfigExpanded] = useState(true);
+  const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [browserEnvironment, setBrowserEnvironment] = useState(null);
   const [loadingEnvironment, setLoadingEnvironment] = useState(true);
   const [configForm, setConfigForm] = useState(testConfig ? {
@@ -64,6 +67,77 @@ const TestConfiguration = ({
       setConfigForm(config);
     }
   }, [testConfig, projectId]);
+
+  // Add event listeners for configuration save events
+  useEffect(() => {
+    if (!projectId) return;
+
+    const setupWebSocket = async () => {
+      try {
+        await WebSocketService.connect();
+        
+        const handleConfigSaved = (data) => {
+          if (data.projectId === projectId) {
+            // Update UI state via WebSocket event
+            setConfigMessage('Configuration saved successfully!');
+            
+            // Update testConfig in parent component so preview shows correct values
+            if (onConfigUpdate && configForm) {
+              onConfigUpdate(configForm);
+            }
+            
+            // Show success notification via event system
+            window.dispatchEvent(new CustomEvent('notification', {
+              detail: {
+                type: 'success',
+                message: 'Test configuration saved!',
+                duration: 3000
+              }
+            }));
+            
+            // Auto-collapse configuration card and exit edit mode AFTER notification
+            setTimeout(() => {
+              setIsEditingConfig(false);
+              setIsConfigExpanded(false);
+            }, 1000); // Wait 1 second to show notification first
+            
+            console.log('Configuration saved successfully via WebSocket event system');
+          }
+        };
+
+        const handleConfigFailed = (data) => {
+          if (data.projectId === projectId) {
+            // Show error notification via event system
+            window.dispatchEvent(new CustomEvent('notification', {
+              detail: {
+                type: 'error',
+                message: data.error || 'Configuration save failed!',
+                duration: 5000
+              }
+            }));
+            
+            console.error('Configuration save failed via WebSocket event system:', data.error);
+          }
+        };
+
+        // Register WebSocket event listeners
+        WebSocketService.on('playwright:config:saved', handleConfigSaved);
+        WebSocketService.on('playwright:config:failed', handleConfigFailed);
+
+        console.log('WebSocket event listeners registered for playwright config events');
+        
+        // Cleanup function
+        return () => {
+          WebSocketService.off('playwright:config:saved', handleConfigSaved);
+          WebSocketService.off('playwright:config:failed', handleConfigFailed);
+        };
+      } catch (error) {
+        console.error('Failed to setup WebSocket for config events:', error);
+      }
+    };
+
+    setupWebSocket();
+  }, [projectId]);
 
   const loadBrowserEnvironment = async () => {
     try {
@@ -140,17 +214,16 @@ const TestConfiguration = ({
       // Save configuration to database via API
       const response = await apiRepository.updatePlaywrightTestConfig(projectId, configForm);
       if (response.success) {
-        // Update parent component with new config
-        onConfigUpdate(configForm);
-        setShowConfigForm(false);
-        setConfigMessage('Configuration saved successfully!');
-        console.log('Configuration saved successfully');
+        // Configuration save initiated - WebSocket events will handle notifications and UI updates
+        console.log('Configuration save initiated successfully');
       } else {
-        setConfigMessage('Failed to save configuration: ' + (response.error || 'Unknown error'));
+        const errorMsg = 'Failed to save configuration: ' + (response.error || 'Unknown error');
+        setConfigMessage(errorMsg);
         console.error('Failed to save configuration:', response.error);
       }
     } catch (error) {
-      setConfigMessage('Error saving configuration: ' + error.message);
+      const errorMsg = 'Error saving configuration: ' + error.message;
+      setConfigMessage(errorMsg);
       console.error('Error saving configuration:', error);
     } finally {
       setSavingConfig(false);
@@ -168,24 +241,197 @@ const TestConfiguration = ({
     onSelect(test);
   };
 
+  const isTestSelected = (test) => {
+    return Array.isArray(selected) ? selected.some(t => t.id === test.id) : selected?.id === test.id;
+  };
+
   return (
     <div className="test-configuration bg-white border rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Test Configuration</h3>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setShowConfigForm(!showConfigForm)}
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-          >
-            {showConfigForm ? 'Hide Config' : 'Edit Config'}
-          </button>
-          <button
-            onClick={() => setShowProjectForm(!showProjectForm)}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-          >
-            {showProjectForm ? 'Hide Test Form' : 'Create New Test'}
-          </button>
+      {/* Top Section with Configuration Cards */}
+      <div className="flex gap-6 mb-6">
+        {/* Test Configuration Card */}
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Test Configuration</h3>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setIsEditingConfig(!isEditingConfig)}
+                className="config-button"
+              >
+                <span className="button-icon">⚙️</span>
+                <span>{isEditingConfig ? 'Cancel' : 'Edit Config'}</span>
+              </button>
+              <button
+                onClick={() => setShowProjectForm(!showProjectForm)}
+                className="create-button"
+              >
+                <span className="button-icon">➕</span>
+                <span>{showProjectForm ? 'Hide Test Form' : 'Create New Test'}</span>
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Current Configuration Card */}
+        {testConfig && (
+          <div className="config-card">
+            <div 
+              className="config-card-header"
+              onClick={() => setIsConfigExpanded(!isConfigExpanded)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="config-card-icon">📋</div>
+              <h4 className="config-card-title">Current Configuration</h4>
+              <div className="config-toggle-icon">
+                {isConfigExpanded ? '▼' : '▶'}
+              </div>
+            </div>
+            {isConfigExpanded && (
+              <div className="config-card-content">
+                <div className="config-item">
+                  <span className="config-label">Base URL:</span>
+                  {isEditingConfig ? (
+                    <input
+                      type="text"
+                      value={configForm?.baseURL || ''}
+                      onChange={(e) => setConfigForm({...configForm, baseURL: e.target.value})}
+                      className="config-input"
+                      placeholder="http://localhost:4000"
+                    />
+                  ) : (
+                    <span className="config-value">{testConfig?.baseURL || 'Not set'}</span>
+                  )}
+                </div>
+                <div className="config-item">
+                  <span className="config-label">Timeout:</span>
+                  {isEditingConfig ? (
+                    <input
+                      type="number"
+                      value={configForm?.timeout || ''}
+                      onChange={(e) => setConfigForm({...configForm, timeout: parseInt(e.target.value) || 30000})}
+                      className="config-input"
+                      placeholder="30000"
+                    />
+                  ) : (
+                    <span className="config-value">{testConfig?.timeout || 'Not set'}ms</span>
+                  )}
+                </div>
+                <div className="config-item">
+                  <span className="config-label">Retries:</span>
+                  {isEditingConfig ? (
+                    <input
+                      type="number"
+                      value={configForm?.retries || ''}
+                      onChange={(e) => setConfigForm({...configForm, retries: parseInt(e.target.value) || 2})}
+                      className="config-input"
+                      placeholder="2"
+                    />
+                  ) : (
+                    <span className="config-value">{testConfig?.retries || 'Not set'}</span>
+                  )}
+                </div>
+                <div className="config-item">
+                  <span className="config-label">Browsers:</span>
+                  {isEditingConfig ? (
+                    <select
+                      value={configForm?.browsers?.[0] || 'chromium'}
+                      onChange={(e) => setConfigForm({...configForm, browsers: [e.target.value]})}
+                      className="config-select"
+                    >
+                      <option value="chromium">chromium</option>
+                      <option value="firefox">firefox</option>
+                      <option value="webkit">webkit</option>
+                    </select>
+                  ) : (
+                    <span className="config-value">{(testConfig?.browsers || ['chromium']).join(', ')}</span>
+                  )}
+                </div>
+                <div className="config-item">
+                  <span className="config-label">Headless:</span>
+                  {isEditingConfig ? (
+                    <input
+                      type="checkbox"
+                      checked={configForm?.headless || false}
+                      onChange={(e) => setConfigForm({...configForm, headless: e.target.checked})}
+                      className="config-checkbox"
+                    />
+                  ) : (
+                    <span className="config-value">{testConfig?.headless ? 'Yes' : 'No'}</span>
+                  )}
+                </div>
+                <div className="config-item">
+                  <span className="config-label">Login Required:</span>
+                  {isEditingConfig ? (
+                    <input
+                      type="checkbox"
+                      checked={configForm?.login?.required || false}
+                      onChange={(e) => setConfigForm({...configForm, login: {...configForm.login, required: e.target.checked}})}
+                      className="config-checkbox"
+                    />
+                  ) : (
+                    <span className="config-value">{testConfig?.login?.required ? 'Yes' : 'No'}</span>
+                  )}
+                </div>
+                
+                {/* Login Credentials - only show when login is required */}
+                {(isEditingConfig ? configForm?.login?.required : testConfig?.login?.required) && (
+                  <div className="login-credentials">
+                    <div className="config-item">
+                      <span className="config-label">Username:</span>
+                      {isEditingConfig ? (
+                        <input
+                          type="text"
+                          value={configForm?.login?.username || ''}
+                          onChange={(e) => setConfigForm({...configForm, login: {...configForm.login, username: e.target.value}})}
+                          className="config-input"
+                          placeholder="Enter username"
+                        />
+                      ) : (
+                        <span className="config-value">{testConfig?.login?.username || 'Not set'}</span>
+                      )}
+                    </div>
+                    <div className="config-item">
+                      <span className="config-label">Password:</span>
+                      {isEditingConfig ? (
+                        <input
+                          type="password"
+                          value={configForm?.login?.password || ''}
+                          onChange={(e) => setConfigForm({...configForm, login: {...configForm.login, password: e.target.value}})}
+                          className="config-input"
+                          placeholder="Enter password"
+                        />
+                      ) : (
+                        <span className="config-value">{testConfig?.login?.password ? '••••••••' : 'Not set'}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {isEditingConfig && (
+                  <div className="config-actions">
+                    <button
+                      onClick={handleConfigSubmit}
+                      className="save-button"
+                    >
+                      <span className="button-icon">💾</span>
+                      <span>Save</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingConfig(false);
+                        setConfigForm(testConfig);
+                      }}
+                      className="cancel-button"
+                    >
+                      <span className="button-icon">❌</span>
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Configuration Form */}
@@ -438,7 +684,38 @@ const TestConfiguration = ({
 
       {/* Test Projects List */}
       <div className="test-projects">
-        <h4 className="text-md font-medium text-gray-800 mb-3">Available Tests</h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-md font-medium text-gray-800">Available Tests</h4>
+          <div className="flex items-center space-x-3">
+            {Array.isArray(selected) && selected.length > 0 && (
+              <div className="text-sm text-blue-600 font-medium">
+                {selected.length} test{selected.length !== 1 ? 's' : ''} selected
+              </div>
+            )}
+            {testProjects.length > 0 && (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    if (Array.isArray(selected) && selected.length === testProjects.length) {
+                      // Deselect all
+                      testProjects.forEach(test => onSelect(test));
+                    } else {
+                      // Select all
+                      testProjects.forEach(test => {
+                        if (!isTestSelected(test)) {
+                          onSelect(test);
+                        }
+                      });
+                    }
+                  }}
+                  className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                >
+                  {Array.isArray(selected) && selected.length === testProjects.length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         
         {testProjects.length === 0 ? (
           <div className="text-gray-500 text-center py-4">
@@ -447,21 +724,36 @@ const TestConfiguration = ({
             <div className="text-xs mt-1">Expected location: <code className="bg-gray-100 px-1 rounded">tests/playwright/tests/</code></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid">
             {testProjects.map((project) => (
               <div
                 key={project.id}
                 onClick={() => handleTestSelect(project)}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  selected?.id === project.id 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                className={`test-project-card ${
+                  isTestSelected(project) ? 'selected' : ''
                 }`}
               >
-                <h5 className="font-medium text-gray-800">{project.name}</h5>
-                <p className="text-sm text-gray-600 mt-1">{project.path}</p>
-                <div className="text-xs text-gray-500 mt-2">
-                  Directory: {project.directory}
+                <div className="card-header">
+                  <div className="card-icon">
+                    {project.name === 'login' ? '🔐' : 
+                     project.name === 'form-submission' ? '📝' : 
+                     project.name === 'dashboard' ? '📊' : '🧪'}
+                  </div>
+                  <h5>{project.name}</h5>
+                </div>
+                
+                <div className="card-content">
+                  <p className="file-path" title={project.path}>
+                    {project.path.split('/').slice(-2).join('/')}
+                  </p>
+                  <div className="directory-info" title={project.directory}>
+                    {project.directory.split('/').slice(-2).join('/')}
+                  </div>
+                </div>
+                
+                <div className="card-footer">
+                  <span className="test-type">Playwright Test</span>
+                  <div className="status-indicator" title="Test Available"></div>
                 </div>
               </div>
             ))}
@@ -469,20 +761,6 @@ const TestConfiguration = ({
         )}
       </div>
 
-      {/* Current Configuration Summary */}
-      {testConfig && (
-        <div className="config-summary mt-6 p-4 bg-blue-50 rounded-lg">
-          <h4 className="text-md font-medium text-gray-800 mb-2">Current Configuration</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div><span className="font-medium">Base URL:</span> {testConfig?.baseURL || 'Not set'}</div>
-            <div><span className="font-medium">Timeout:</span> {testConfig?.timeout || 'Not set'}ms</div>
-            <div><span className="font-medium">Retries:</span> {testConfig?.retries || 'Not set'}</div>
-            <div><span className="font-medium">Browsers:</span> {(testConfig?.browsers || ['chromium']).join(', ')}</div>
-            <div><span className="font-medium">Headless:</span> {testConfig?.headless ? 'Yes' : 'No'}</div>
-            <div><span className="font-medium">Login Required:</span> {testConfig?.login?.required ? 'Yes' : 'No'}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

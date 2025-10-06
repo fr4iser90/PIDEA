@@ -8,6 +8,27 @@ class PlaywrightTestRunner {
     this.config = config;
   }
 
+  // Finde NixOS Chromium
+  getNixOSChromiumPath() {
+    const { execSync } = require('child_process');
+    
+    try {
+      // Versuche NixOS Chromium zu finden
+      const nixOSChromium = execSync('which chromium', { encoding: 'utf8' }).trim();
+      
+      if (nixOSChromium) {
+        console.log(`🔍 Using NixOS Chromium: ${nixOSChromium}`);
+        return nixOSChromium;
+      }
+    } catch (error) {
+      // NixOS Chromium nicht gefunden, verwende Standard
+      console.log(`🔍 NixOS Chromium not found, using standard Playwright Chromium`);
+    }
+    
+    // Fallback zu Standard Playwright Chromium
+    return undefined;
+  }
+
   async executeTest(testFile, options = {}) {
     const results = [];
     
@@ -39,9 +60,14 @@ class PlaywrightTestRunner {
       console.log(`1️⃣ Testing ${browserName} launch...`);
       
       // DEINE KONFIGURATION AUS DER DATENBANK RESPEKTIEREN!
+      const executablePath = this.getNixOSChromiumPath();
+      console.log(`🔍 DEBUG: executablePath = ${executablePath}`);
+      
       const browser = await this.browsers[browserName].launch({
         headless: mergedConfig.headless !== undefined ? mergedConfig.headless : true, // DEINE EINSTELLUNG! Default to headless for NixOS compatibility
-        args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args - same as working script!
+        args: ['--no-sandbox', '--disable-gpu'], // NixOS compatible args - same as working script!
+        // Verwende NixOS Chromium falls verfügbar
+        executablePath: executablePath
       });
       
       // DEBUG: Show what executable was actually used

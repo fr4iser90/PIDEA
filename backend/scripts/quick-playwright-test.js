@@ -9,9 +9,24 @@ async function quickTest() {
     try {
         console.log('1️⃣ Testing Chromium launch...');
         
+        // Finde NixOS Chromium
+        const { execSync } = require('child_process');
+        let executablePath = undefined;
+        
+        try {
+            const nixOSChromium = execSync('which chromium', { encoding: 'utf8' }).trim();
+            if (nixOSChromium) {
+                console.log(`🔍 Using NixOS Chromium: ${nixOSChromium}`);
+                executablePath = nixOSChromium;
+            }
+        } catch (error) {
+            console.log(`🔍 NixOS Chromium not found, using standard Playwright Chromium`);
+        }
+        
         const browser = await chromium.launch({
             headless: true, // HEADLESS MODE - Hide browser window
-            args: ['--no-sandbox', '--disable-gpu'] // Common NixOS flags
+            args: ['--no-sandbox', '--disable-gpu'], // Common NixOS flags
+            executablePath: executablePath // Verwende NixOS Chromium falls verfügbar
         });
         
         // DEBUG: Show what executable was actually used

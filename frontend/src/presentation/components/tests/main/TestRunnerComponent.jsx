@@ -13,7 +13,7 @@ import '@/css/components/test/test-runner.css';
  * with workspace integration and eventBus/activePort props.
  */
 const TestRunnerComponent = ({ eventBus, activePort }) => {
-  const [selectedTest, setSelectedTest] = useState(null);
+  const [selectedTests, setSelectedTests] = useState([]); // Changed to array for multiple selection
   const [isRunning, setIsRunning] = useState(false);
   const [workspacePath, setWorkspacePath] = useState(null);
   const [projectId, setProjectId] = useState(null);
@@ -79,11 +79,16 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
       return;
     }
     
+    if (selectedTests.length === 0) {
+      console.error('No tests selected');
+      return;
+    }
+    
     setIsRunning(true);
     try {
       // ✅ DIREKTEN PLAYWRIGHT ENDPOINT VERWENDEN STATT WORKFLOW!
       const data = await apiRepository.executePlaywrightTests(projectId, {
-        testName: selectedTest?.name,
+        testNames: selectedTests.map(test => test.name), // Send array of test names
         options: {
           workspacePath,
           config: testConfig
@@ -108,7 +113,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const handleStopTest = async () => {
     try {
       // ✅ API REPOSITORY VERWENDEN STATT DIREKTE FETCH!
-      await apiRepository.stopPlaywrightTests(projectId, { testId: selectedTest?.id });
+      await apiRepository.stopPlaywrightTests(projectId, { testIds: selectedTests.map(test => test.id) });
       setIsRunning(false);
     } catch (error) {
       console.error('Failed to stop test:', error);
@@ -141,6 +146,19 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     }
   };
 
+  const handleTestSelect = (test) => {
+    setSelectedTests(prev => {
+      const isSelected = prev.some(t => t.id === test.id);
+      if (isSelected) {
+        // Remove from selection
+        return prev.filter(t => t.id !== test.id);
+      } else {
+        // Add to selection
+        return [...prev, test];
+      }
+    });
+  };
+
   return (
     <div className="test-runner-container bg-white rounded-lg shadow-lg p-6">
       <div className="test-runner-header mb-6">
@@ -162,8 +180,8 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
       <div className="test-runner-content space-y-6">
         {/* Test Configuration Section */}
         <TestConfiguration 
-          onSelect={setSelectedTest}
-          selected={selectedTest}
+          onSelect={handleTestSelect}
+          selected={selectedTests}
           workspacePath={workspacePath}
           projectId={projectId}
           testConfig={testConfig}
@@ -178,24 +196,28 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
             <div className="flex items-center space-x-4">
               <button 
                 onClick={handleRunTest}
-                disabled={!selectedTest || isRunning || !workspacePath}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                disabled={selectedTests.length === 0 || isRunning || !workspacePath}
+                className="run-button"
               >
-                {isRunning ? 'Running...' : 'Run Tests'}
+                <span className="button-icon">
+                  {isRunning ? '⏳' : '▶️'}
+                </span>
+                <span>{isRunning ? 'Running...' : `Run Tests (${selectedTests.length})`}</span>
               </button>
               
               {isRunning && (
                 <button 
                   onClick={handleStopTest}
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="stop-button"
                 >
-                  Stop Tests
+                  <span className="button-icon">⏹️</span>
+                  <span>Stop Tests</span>
                 </button>
               )}
             </div>
             
             <div className="text-sm text-gray-600">
-              {selectedTest ? `Selected: ${selectedTest.name}` : 'No test selected'}
+              {selectedTests.length > 0 ? `Selected: ${selectedTests.map(t => t.name).join(', ')}` : 'No tests selected'}
             </div>
           </div>
         </div>

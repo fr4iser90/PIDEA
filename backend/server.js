@@ -1,6 +1,7 @@
 
 require('module-alias/register');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+
 const Application = require('./Application');
 const { getLogger } = require('@logging/Logger');
 const logger = getLogger('Server');
