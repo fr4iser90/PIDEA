@@ -8,25 +8,9 @@ class PlaywrightTestRunner {
     this.config = config;
   }
 
-  // Finde NixOS Chromium
+  // Verwende NixOS Chromium aus Umgebungsvariable
   getNixOSChromiumPath() {
-    const { execSync } = require('child_process');
-    
-    try {
-      // Versuche NixOS Chromium zu finden
-      const nixOSChromium = execSync('which chromium', { encoding: 'utf8' }).trim();
-      
-      if (nixOSChromium) {
-        console.log(`🔍 Using NixOS Chromium: ${nixOSChromium}`);
-        return nixOSChromium;
-      }
-    } catch (error) {
-      // NixOS Chromium nicht gefunden, verwende Standard
-      console.log(`🔍 NixOS Chromium not found, using standard Playwright Chromium`);
-    }
-    
-    // Fallback zu Standard Playwright Chromium
-    return undefined;
+    return process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
   }
 
   async executeTest(testFile, options = {}) {

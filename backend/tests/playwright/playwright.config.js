@@ -42,6 +42,11 @@ module.exports = defineConfig({
     
     // Navigation timeout
     navigationTimeout: 30000,
+    
+    // Global NixOS Chromium path for ALL browsers
+    launchOptions: {
+      executablePath: process.env.NIXOS_CHROMIUM_PATH || undefined
+    }
   },
   
   // Test projects for different browsers
@@ -57,28 +62,29 @@ module.exports = defineConfig({
         }
       },
     },
-    {
-      name: 'firefox',
-      use: { 
-        ...devices['Desktop Firefox'],
-        // Additional Firefox-specific settings
-        launchOptions: {
-          firefoxUserPrefs: {
-            'security.tls.insecure_fallback_hosts': 'localhost'
-          }
-        }
-      },
-    },
-    {
-      name: 'webkit',
-      use: { 
-        ...devices['Desktop Safari'],
-        // Additional Safari-specific settings
-        launchOptions: {
-          args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args
-        }
-      },
-    },
+    // Temporarily disable Firefox and WebKit on NixOS to avoid Chromium conflicts
+    // {
+    //   name: 'firefox',
+    //   use: { 
+    //     ...devices['Desktop Firefox'],
+    //     // Additional Firefox-specific settings
+    //     launchOptions: {
+    //       firefoxUserPrefs: {
+    //         'security.tls.insecure_fallback_hosts': 'localhost'
+    //       }
+    //     }
+    //   },
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: { 
+    //     ...devices['Desktop Safari'],
+    //     // Additional Safari-specific settings
+    //     launchOptions: {
+    //       args: ['--no-sandbox', '--disable-gpu'] // NixOS compatible args
+    //     }
+    //   },
+    // },
   ],
   
   // Output directories
