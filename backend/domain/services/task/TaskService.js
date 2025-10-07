@@ -223,9 +223,7 @@ class TaskService {
   async buildTaskExecutionPrompt(task) {
     logger.info('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
       id: task.id,
-      title: task.title,
-      type: task.type?.value,
-      hasTaskFilePath: !!task.metadata?.taskFilePath
+      projectId: task.projectId
     });
     
     // Load task-execute.md prompt using dynamic path resolution
@@ -249,7 +247,7 @@ class TaskService {
         
         // Kombiniere: task-execute.md + Task-Inhalt
         const finalPrompt = `${taskExecutePrompt}\n\n${markdownContent}`;
-        logger.info('✅ [TaskService] Final prompt for doc task generated');
+      logger.info('✅ [TaskService] Final prompt for doc task generated');
         return finalPrompt;
       } catch (error) {
         logger.error('❌ [TaskService] Error reading task file:', error);
@@ -263,7 +261,7 @@ class TaskService {
     const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
     logger.info('✅ [TaskService] Final prompt for normal task generated', {
       taskId: task.id,
-      taskTitle: task.title,
+      projectId: task.projectId,
       promptLength: finalPrompt.length
     });
     return finalPrompt;
@@ -433,7 +431,10 @@ class TaskService {
         throw new Error('Task not found');
       }
 
-      logger.info('🔍 [TaskService] Found task for engine execution:', task);
+      logger.info('🔍 [TaskService] Found task for engine execution:', {
+        id: task.id,
+        projectId: task.projectId
+      });
 
       if (task.isCompleted()) {
         throw new Error('Task is already completed');
@@ -1282,13 +1283,17 @@ ${task.description}
         throw new Error('Task not found');
       }
 
-      logger.info('🔍 [TaskService] Found task for review:', task);
+      logger.info('🔍 [TaskService] Found task for review:', {
+        id: task.id,
+        projectId: task.projectId
+      });
 
       // Build task review prompt
       const reviewPrompt = await this.buildTaskReviewPrompt(task, options);
       
       logger.info('🔍 [TaskService] Built review prompt:', {
         taskId: task.id,
+        projectId: task.projectId,
         promptLength: reviewPrompt.length
       });
 
@@ -1481,6 +1486,7 @@ ${task.description}
       
       logger.info('🔍 [TaskService] Built task review prompt', {
         taskId: task.id,
+        projectId: task.projectId,
         promptLength: fullPrompt.length,
         hasTaskContext: !!taskIndexContent
       });
@@ -1490,6 +1496,7 @@ ${task.description}
     } catch (error) {
       logger.error('❌ [TaskService] Failed to build task review prompt', {
         taskId: task.id,
+        projectId: task.projectId,
         error: error.message
       });
       throw error;

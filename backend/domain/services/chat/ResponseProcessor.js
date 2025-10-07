@@ -78,14 +78,27 @@ class ResponseProcessor {
    */
   async extractAIResponse(page) {
     try {
+      this.logger.info('🔍 ResponseProcessor.extractAIResponse called');
+      this.logger.info('🔍 ResponseProcessor selectors:', {
+        hasSelectors: !!this.selectors,
+        selectorKeys: this.selectors ? Object.keys(this.selectors) : [],
+        hasChatSelectors: !!this.selectors?.chatSelectors,
+        chatSelectorKeys: this.selectors?.chatSelectors ? Object.keys(this.selectors.chatSelectors) : [],
+        aiMessages: this.selectors?.chatSelectors?.aiMessages,
+        messagesContainer: this.selectors?.chatSelectors?.messagesContainer
+      });
+      
       // Try multiple strategies to find the AI response
       const responseStrategies = [
         // Strategy 1: Direct AI message selectors
         async () => {
+          this.logger.info('🔍 Strategy 1: Looking for AI messages with selector:', this.selectors?.chatSelectors?.aiMessages);
           const messages = await page.$$(this.selectors.chatSelectors.aiMessages);
+          this.logger.info(`🔍 Strategy 1: Found ${messages.length} AI message elements`);
           if (messages.length > 0) {
             const lastMessage = messages[messages.length - 1];
             const text = await lastMessage.textContent();
+            this.logger.info(`🔍 Strategy 1: Last message text length: ${text?.length || 0}`);
             return text; // Let main loop validate
           }
           return null;
@@ -234,6 +247,29 @@ class ResponseProcessor {
         }
       }
       
+      // Check for completion indicators - if visible, response is complete!
+      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.completionIndicator) {
+        try {
+          this.logger.info(`🔍 Debug: Checking completion indicator with selector: ${this.selectors.chatSelectors.completionIndicator}`);
+          const elements = await page.$$(this.selectors.chatSelectors.completionIndicator);
+          this.logger.info(`🔍 Debug: Found ${elements.length} completion indicator elements`);
+          
+          if (elements.length > 0) {
+            for (const element of elements) {
+              const isVisible = await element.isVisible();
+              const text = await element.textContent();
+              this.logger.info(`🔍 Debug: Completion indicator - text: "${text}", visible: ${isVisible}`);
+              if (isVisible && text && (text.includes('Review Changes') || text.includes('Review') || text.includes('Apply'))) {
+                this.logger.info('✅ Completion indicator visible with correct text - response is complete!');
+                return true;
+              }
+            }
+          }
+        } catch (error) {
+          this.logger.info(`🔍 Debug: Completion indicator selector failed: ${error.message}`);
+        }
+      }
+      
       // Check if text has stopped growing and is substantial
       if (currentText && currentText.length > 100 && currentText.length === lastLength) {
         // First check if this is an error message - don't consider error messages as complete responses
@@ -291,7 +327,7 @@ class ResponseProcessor {
    */
   async extractCodeBlocks(page) {
     try {
-      if (!this.selectors?.codeBlocks) {
+      if (!this.selectors?.chatSelectors?.codeBlocks) {
         return [];
       }
 
@@ -690,11 +726,20 @@ class ResponseProcessor {
           try {
             const codeBlocks = await this.extractCodeBlocks(page);
             if (codeBlocks.length > 0) {
-              this.logger.info(`📦 Found ${codeBlocks.length} code blocks during stable check - AI still working!`);
-              stableCheckCount = 0; // Reset stable count - AI is still working!
+              this.logger.info(`📦 Found ${codeBlocks.length} code blocks during stable check`);
+              
+              // Only reset stable count if code blocks are actually growing
+              if (!this.lastCodeBlockCount || codeBlocks.length > this.lastCodeBlockCount) {
+                this.logger.info(`📦 Code blocks growing (${this.lastCodeBlockCount || 0} → ${codeBlocks.length}) - AI still working!`);
+                stableCheckCount = 0; // Reset stable count - AI is still working!
+                this.lastCodeBlockCount = codeBlocks.length;
+              } else {
+                this.logger.info(`📦 Code blocks stable at ${codeBlocks.length} - not resetting stable count`);
+                this.lastCodeBlockCount = codeBlocks.length;
+              }
             }
           } catch (error) {
-            // Skip if code block detection fails
+            this.logger.info(`📦 Code block detection failed: ${error.message}`);
           }
           
           // Only check for completion AFTER we have enough stable checks

@@ -1371,7 +1371,7 @@ class Application {
       try {
         if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
           await this.ideManager.cleanupStaleIDEs();
-          this.logger.info('Cleaned up stale IDE entries');
+        // Silent cleanup - no logging here, IDEManager handles it
         }
       } catch (error) {
         this.logger.error('Failed to cleanup stale IDE entries:', error);
@@ -1395,9 +1395,6 @@ class Application {
         this.logger.info(`Environment: ${this.autoSecurityManager.getEnvironment()}`);
         this.logger.info(`Database: ${this.databaseConnection.getType()}`);
         this.logger.info(`Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
-        
-        // DISABLED: Automatic workspace detection to prevent duplicate terminal commands
-        this.logger.info('Automatic workspace detection disabled - will be triggered manually when needed');
       });
 
       // Graceful shutdown

@@ -115,6 +115,15 @@ class IDESendMessageStep {
               const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
               const ideVersion = await browserManager.detectIDEVersion(browserManager.getCurrentPort());
               const ideSelectors = await browserManager.getIDESelectors(ideType, ideVersion);
+              
+              logger.info('🔍 Debug: IDE selectors retrieved:', {
+                ideType,
+                ideVersion,
+                hasSelectors: !!ideSelectors,
+                selectorKeys: ideSelectors ? Object.keys(ideSelectors) : [],
+                chatSelectors: ideSelectors?.chatSelectors ? Object.keys(ideSelectors.chatSelectors) : []
+              });
+              
               const aiTextDetector = new AITextDetector(ideSelectors);
               
               // Wait for AI response with timeout using improved detection

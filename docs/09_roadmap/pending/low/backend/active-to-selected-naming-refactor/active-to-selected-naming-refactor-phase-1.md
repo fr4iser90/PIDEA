@@ -131,20 +131,20 @@ activeIDE → selectedIDE
 
 ### State Example:
 ```javascript
-// ❌ FALSCH:
+// ❌ WRONG:
 selectedPort: null
-// ✅ RICHTIG:
+// ✅ CORRECT:
 selectedIDE: null
 ```
 
 ### Store Example:
 ```javascript
-// ❌ FALSCH:
+// ❌ WRONG:
 const useIDEStore = create(() => ({
   selectedPort: null,
   setSelectedPort: (port) => ...
 }))
-// ✅ RICHTIG:
+// ✅ CORRECT:
 const useIDEStore = create(() => ({
   selectedIDE: null,
   setSelectedIDE: (ide) => ...
@@ -153,7 +153,7 @@ const useIDEStore = create(() => ({
 
 ### Method Example:
 ```javascript
-// ✅ ERLAUBT:
+// ✅ ALLOWED:
 getSelectedPort() { return this.selectedIDE?.port || null; }
 ```
 

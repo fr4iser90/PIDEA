@@ -55,6 +55,8 @@ class ManualTasksImportService {
             // ✅ NEW: Initialize completion statistics
             let completedCount = 0;
             let totalProcessedFiles = 0;
+            let skippedCount = 0;
+            let importedCount = 0;
             
             // Updated to scan the new status-based structure
             const roadmapDir = path.join(workspacePath, 'docs/09_roadmap');
@@ -280,7 +282,7 @@ class ManualTasksImportService {
                     task.title.toLowerCase().trim() === normalizedTitle
                 );
                 
-                logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}, Similar: ${similarTask ? 1 : 0}`);
+                logger.debug(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}, Similar: ${similarTask ? 1 : 0}`);
                 
                 if (existing.length === 0 && !similarTask) {
                     // Markdown content is the SINGLE source of truth for status
@@ -290,7 +292,7 @@ class ManualTasksImportService {
                     if (content) {
                         // Extract status from markdown content using content hash service
                         taskStatus = await this.contentHashService.extractStatusFromContent(content);
-                        logger.info(`📄 Status determined from markdown content: ${taskStatus} for task: ${title}`);
+                        logger.debug(`📄 Status determined from markdown content: ${taskStatus} for task: ${title}`);
                     } else {
                         // Fallback to pending if no content available
                         taskStatus = 'pending';
@@ -490,9 +492,9 @@ class ManualTasksImportService {
                     // 🆕 NEW: Trigger automatic file movement for completed tasks (NEW TASKS)
                     if (taskStatus === 'completed' && this.taskService?.statusTransitionService) {
                         try {
-                            logger.info(`🔄 Triggering automatic file movement for new completed task: ${title}`);
+                            logger.debug(`🔄 Triggering automatic file movement for new completed task: ${title}`);
                             await this.taskService.statusTransitionService.moveTaskToCompleted(task.id);
-                            logger.info(`✅ Successfully moved files for new completed task: ${title}`);
+                            logger.debug(`✅ Successfully moved files for new completed task: ${title}`);
                         } catch (moveError) {
                             logger.warn(`⚠️ Failed to move files for new completed task ${title}:`, moveError.message);
                             // Don't fail the import if file movement fails
@@ -505,17 +507,18 @@ class ManualTasksImportService {
                         completedCount++;
                     }
                     
-                    logger.info(`✅ Created task: "${title}" (${type}) for project "${projectId}" with status: ${taskStatus}, progress: ${taskProgress}%`);
+                    logger.debug(`✅ Created task: "${title}" (${type}) for project "${projectId}" with status: ${taskStatus}, progress: ${taskProgress}%`);
                     importedTasks.push(task);
                 } else {
                     // ✅ FIXED: Skip existing tasks to avoid re-processing
+                    skippedCount++;
                     logger.debug(`⏭️ Skipping existing task to avoid re-processing: "${title}"`);
                     continue;
                 }
             }
             // ✅ NEW: Log completion summary
             const completionRate = totalProcessedFiles > 0 ? Math.round((completedCount / totalProcessedFiles) * 100) : 0;
-            logger.info(`📊 TASK COMPLETION SUMMARY: ${completedCount}/${totalProcessedFiles} tasks completed (${completionRate}%)`);
+            logger.info(`📊 IMPORT SUMMARY: ${importedCount} imported, ${skippedCount} skipped, ${completedCount}/${totalProcessedFiles} completed (${completionRate}%)`);
             
             // Commit database transaction
             logger.info(`💾 Committing database transaction for ${importedTasks.length} tasks`);
@@ -683,7 +686,7 @@ class ManualTasksImportService {
                     }
                     
                     progressInfo.status = normalizedStatus;
-                    logger.info(`📊 [ManualTasksImportService] Status detected: ${emoji} ${statusText} -> ${normalizedStatus}`);
+                    logger.debug(`📊 [ManualTasksImportService] Status detected: ${emoji} ${statusText} -> ${normalizedStatus}`);
                     statusDetected = true;
                     break;
                 }
@@ -746,7 +749,7 @@ class ManualTasksImportService {
                 progressInfo.overallProgress = 100;
                 progressInfo.implementationVerified = true;
                 progressInfo.implementationFiles = implementationStatus.files;
-                logger.info(`✅ Feature implementation detected: ${implementationStatus.files.length} files found`);
+                logger.debug(`✅ Feature implementation detected: ${implementationStatus.files.length} files found`);
             }
             
             // ✅ NEW: Additional completion detection patterns (only for 100% completion)
@@ -763,7 +766,7 @@ class ManualTasksImportService {
                 if (pattern.test(content)) {
                     progressInfo.status = 'completed';
                     progressInfo.overallProgress = 100;
-                    logger.info(`✅ 100% Completion pattern detected: ${pattern.source}`);
+                    logger.debug(`✅ 100% Completion pattern detected: ${pattern.source}`);
                     break;
                 }
             }
@@ -778,7 +781,7 @@ class ManualTasksImportService {
             for (const pattern of partialCompletionPatterns) {
                 if (pattern.test(content)) {
                     hasPartialCompletion = true;
-                    logger.info(`✅ Partial completion pattern detected: ${pattern.source}`);
+                    logger.debug(`✅ Partial completion pattern detected: ${pattern.source}`);
                     break;
                 }
             }
@@ -787,32 +790,32 @@ class ManualTasksImportService {
             const intelligentStatus = this.determineIntelligentStatus(progressInfo.phases, progressInfo.overallProgress);
             if (intelligentStatus) {
                 progressInfo.status = intelligentStatus;
-                logger.info(`🧠 Intelligent status detection: ${intelligentStatus} (based on critical phases analysis)`);
+                logger.debug(`🧠 Intelligent status detection: ${intelligentStatus} (based on critical phases analysis)`);
             }
             
             // Only set status to completed if progress is actually 100%
             // If we have partial completion but progress < 100%, keep it as in_progress
             if (hasPartialCompletion && progressInfo.overallProgress < 100 && !intelligentStatus) {
                 progressInfo.status = 'in_progress';
-                logger.info(`🔄 Partial completion detected but progress is ${progressInfo.overallProgress}% - setting status to in_progress`);
+                logger.debug(`🔄 Partial completion detected but progress is ${progressInfo.overallProgress}% - setting status to in_progress`);
             }
             
             // ✅ FINAL VALIDATION: Ensure status matches progress (but respect intelligent detection)
             if (progressInfo.overallProgress >= 100) {
                 progressInfo.status = 'completed';
-                logger.info(`✅ Progress is 100% - final status set to completed`);
+                logger.debug(`✅ Progress is 100% - final status set to completed`);
             } else if (progressInfo.overallProgress > 0 && progressInfo.overallProgress < 100) {
                 // Only override if intelligent detection didn't set it to completed
                 if (progressInfo.status === 'completed' && !intelligentStatus) {
                     progressInfo.status = 'in_progress';
-                    logger.info(`🔄 Progress is ${progressInfo.overallProgress}% but status was completed - corrected to in_progress`);
+                    logger.debug(`🔄 Progress is ${progressInfo.overallProgress}% but status was completed - corrected to in_progress`);
                 } else if (intelligentStatus === 'completed') {
-                    logger.info(`🧠 Keeping intelligent status 'completed' despite ${progressInfo.overallProgress}% progress`);
+                    logger.debug(`🧠 Keeping intelligent status 'completed' despite ${progressInfo.overallProgress}% progress`);
                 }
             } else if (progressInfo.overallProgress === 0) {
                 if (progressInfo.status === 'completed' && !intelligentStatus) {
                     progressInfo.status = 'planning';
-                    logger.info(`🔄 Progress is 0% but status was completed - corrected to planning`);
+                    logger.debug(`🔄 Progress is 0% but status was completed - corrected to planning`);
                 }
             }
 
@@ -882,7 +885,7 @@ class ManualTasksImportService {
             
             if (totalPhases > 0) {
                 const calculatedProgress = Math.round((completedPhases / totalPhases) * 100);
-                logger.info(`📊 [ManualTasksImportService] Progress calculated: ${completedPhases}/${totalPhases} phases = ${calculatedProgress}%`);
+                logger.debug(`📊 [ManualTasksImportService] Progress calculated: ${completedPhases}/${totalPhases} phases = ${calculatedProgress}%`);
                 return calculatedProgress;
             }
             
@@ -1200,7 +1203,7 @@ class ManualTasksImportService {
         const criticalPhases = phases.filter(phase => this.isCriticalPhase(phase));
         const optionalPhases = phases.filter(phase => !this.isCriticalPhase(phase));
 
-        logger.info(`🧠 Phase analysis: ${criticalPhases.length} critical, ${optionalPhases.length} optional phases`);
+        logger.debug(`🧠 Phase analysis: ${criticalPhases.length} critical, ${optionalPhases.length} optional phases`);
 
         // Count completed phases
         const criticalCompleted = criticalPhases.filter(p => p.status === 'completed').length;
@@ -1208,35 +1211,35 @@ class ManualTasksImportService {
         const optionalCompleted = optionalPhases.filter(p => p.status === 'completed').length;
         const optionalTotal = optionalPhases.length;
 
-        logger.info(`🧠 Critical phases: ${criticalCompleted}/${criticalTotal} completed`);
-        logger.info(`🧠 Optional phases: ${optionalCompleted}/${optionalTotal} completed`);
+        logger.debug(`🧠 Critical phases: ${criticalCompleted}/${criticalTotal} completed`);
+        logger.debug(`🧠 Optional phases: ${optionalCompleted}/${optionalTotal} completed`);
 
         // Rule 1: All critical phases completed = COMPLETED (regardless of optional phases)
         if (criticalTotal > 0 && criticalCompleted === criticalTotal) {
-            logger.info(`🧠 All critical phases completed - marking as COMPLETED`);
+            logger.debug(`🧠 All critical phases completed - marking as COMPLETED`);
             return 'completed';
         }
 
         // Rule 2: At least one critical phase in progress = IN_PROGRESS
         if (criticalPhases.some(p => p.status === 'in_progress')) {
-            logger.info(`🧠 Critical phases in progress - marking as IN_PROGRESS`);
+            logger.debug(`🧠 Critical phases in progress - marking as IN_PROGRESS`);
             return 'in_progress';
         }
 
         // Rule 3: Only optional phases remaining = COMPLETED (with note)
         if (criticalTotal > 0 && criticalCompleted === criticalTotal && optionalTotal > 0) {
-            logger.info(`🧠 Only optional phases remaining - marking as COMPLETED`);
+            logger.debug(`🧠 Only optional phases remaining - marking as COMPLETED`);
             return 'completed';
         }
 
         // Rule 4: No critical phases, only optional = use progress-based logic
         if (criticalTotal === 0 && optionalTotal > 0) {
-            logger.info(`🧠 No critical phases, using progress-based logic`);
+            logger.debug(`🧠 No critical phases, using progress-based logic`);
             return overallProgress >= 100 ? 'completed' : 'in_progress';
         }
 
         // Rule 5: Fallback to original logic
-        logger.info(`🧠 Using fallback logic`);
+        logger.debug(`🧠 Using fallback logic`);
         return null;
     }
 

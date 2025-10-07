@@ -11,8 +11,21 @@ class AITextDetector {
   constructor(selectors) {
     this.selectors = selectors;
     this.logger = new ServiceLogger('AITextDetector');
-    // ResponseProcessor expects direct chatSelectors, not the full object
-    this.responseProcessor = new ResponseProcessor(selectors.chatSelectors);
+    
+    // Debug: Log what we're getting
+    this.logger.info('🔍 AITextDetector constructor - selectors:', {
+      hasSelectors: !!selectors,
+      selectorKeys: selectors ? Object.keys(selectors) : [],
+      chatSelectors: selectors?.chatSelectors ? Object.keys(selectors.chatSelectors) : 'undefined'
+    });
+    
+    // ResponseProcessor expects the full selectors object, not just chatSelectors
+    if (selectors && selectors.chatSelectors) {
+      this.responseProcessor = new ResponseProcessor(selectors);
+    } else {
+      this.logger.error('❌ No chatSelectors found in selectors object!');
+      this.responseProcessor = new ResponseProcessor({});
+    }
   }
 
   /**
@@ -22,20 +35,20 @@ class AITextDetector {
    */
   async extractLatestAIResponse(page) {
     try {
-      this.logger.info('🔍 [AITextDetector] Extracting latest AI response');
+      this.logger.info('🔍 Extracting latest AI response');
       
       // Use the improved response processor
       const response = await this.responseProcessor.extractAIResponse(page);
       
       if (response) {
-        this.logger.info(`📝 [AITextDetector] Extracted response (${response.length} chars)`);
+        this.logger.info(`📝 Extracted response (${response.length} chars)`);
         return response;
       } else {
-        this.logger.warn('⚠️ [AITextDetector] No response found');
+        this.logger.warn('⚠️ No response found');
         return '';
       }
     } catch (error) {
-      this.logger.error(`❌ [AITextDetector] Error extracting response: ${error.message}`);
+      this.logger.error(`❌ Error extracting response: ${error.message}`);
       return '';
     }
   }
@@ -259,7 +272,7 @@ class AITextDetector {
    */
   async waitForAIResponse(page, options = {}) {
     try {
-      this.logger.info('⏳ [AITextDetector] Waiting for AI response...');
+      this.logger.info('⏳ Waiting for AI response...');
       
       // Use the improved response processor
       const result = await this.responseProcessor.waitForAIResponse(page, options);
@@ -269,7 +282,7 @@ class AITextDetector {
         const completionAnalysis = this.detectCompletion(result.response);
         const qualityAnalysis = this.analyzeResponseQuality(result.response);
         
-        this.logger.info('✅ [AITextDetector] AI response received', {
+        this.logger.info('✅ AI response received', {
           length: result.response.length,
           confidence: completionAnalysis.confidence,
           quality: qualityAnalysis.score,
@@ -285,7 +298,7 @@ class AITextDetector {
           stable: result.stable
         };
       } else {
-        this.logger.warn('⚠️ [AITextDetector] No AI response received');
+        this.logger.warn('⚠️ No AI response received');
         return {
           success: false,
           response: null,
@@ -296,7 +309,7 @@ class AITextDetector {
         };
       }
     } catch (error) {
-      this.logger.error(`❌ [AITextDetector] Error waiting for AI response: ${error.message}`);
+      this.logger.error(`❌ Error waiting for AI response: ${error.message}`);
       return {
         success: false,
         response: null,

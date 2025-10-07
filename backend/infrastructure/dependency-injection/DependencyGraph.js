@@ -206,18 +206,19 @@ class DependencyGraph {
                 }
             }
             
-            this.logger.warn('Topological sort incomplete. Unprocessed nodes:', unprocessedNodes);
-            this.logger.warn('Total nodes:', this.nodes.size, 'Processed nodes:', result.length);
+            // Commented out to reduce log spam during shutdown - can be uncommented for debugging
+            // this.logger.warn('Topological sort incomplete. Unprocessed nodes:', unprocessedNodes);
+            // this.logger.warn('Total nodes:', this.nodes.size, 'Processed nodes:', result.length);
             
             // During shutdown, be more lenient and return what we have
             if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-                this.logger.warn('Development mode: Returning partial topological sort for shutdown');
-                this.logger.warn('Unprocessed nodes:', unprocessedNodes.join(', '));
+                // this.logger.warn('Development mode: Returning partial topological sort for shutdown');
+                // this.logger.warn('Unprocessed nodes:', unprocessedNodes.join(', '));
                 return result;
             }
             
             // During shutdown, gracefully continue with partial result instead of crashing
-            this.logger.warn(`⚠️ Topological sort incomplete during shutdown. Continuing gracefully. Unprocessed: ${unprocessedNodes.join(', ')}`);
+            // this.logger.warn(`⚠️ Topological sort incomplete during shutdown. Continuing gracefully. Unprocessed: ${unprocessedNodes.join(', ')}`);
             return result;
         }
 

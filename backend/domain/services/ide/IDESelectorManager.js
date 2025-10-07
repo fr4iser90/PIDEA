@@ -33,10 +33,9 @@ class IDESelectorManager {
       // Try JSON files first (new system)
       const selectorsData = await this.jsonSelectorManager.getSelectors(ideType, version);
       
-      // Extract selectors from the structure (chatSelectors, etc.)
-      const selectors = selectorsData.chatSelectors || selectorsData;
-      
-      return selectors;
+      // Return the full structure, not just chatSelectors
+      this.logger.info(`Retrieved selectors for ${ideType} version ${version} from JSON file`);
+      return selectorsData;
     } catch (error) {
       this.logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
       throw error; // Re-throw - NO FALLBACKS!
@@ -75,10 +74,8 @@ class IDESelectorManager {
       const selectorsData = JSON.parse(content);
       
       // Return the full selectors structure (consolidated 7-category structure)
-      const selectors = selectorsData;
-      
       logger.info(`Retrieved selectors for ${ideType} version ${version} from JSON file`);
-      return selectors;
+      return selectorsData;
     } catch (error) {
       logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
       throw error; // Re-throw - NO FALLBACKS!

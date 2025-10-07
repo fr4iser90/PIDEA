@@ -66,7 +66,7 @@ class CDPWorkspaceDetector {
     const startTime = Date.now();
     
     try {
-      logger.info(`Starting workspace detection for port ${port}`);
+      // Don't log individual detections - will be logged in batch
       
       // Perform new detection (no cache)
       const workspaceInfo = await this.cdpManager.executeWorkspaceDetection(

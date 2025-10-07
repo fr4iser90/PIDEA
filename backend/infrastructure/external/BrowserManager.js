@@ -124,7 +124,6 @@ class BrowserManager {
       return; // Already connected to this port
     }
     
-    const start = process.hrtime.bigint();
     logger.info(`Switching to port ${port} using optimized connection pool...`);
     
     try {
@@ -139,26 +138,16 @@ class BrowserManager {
       this.currentPort = port;
       this.browser = connection.browser;
       this.page = connection.page;
-      
-      const duration = Number(process.hrtime.bigint() - start) / 1000; // Convert to milliseconds
-      
-      // Track performance
-      this.trackSwitchTime(duration);
+
       
       // Check connection pool health after switching
       const poolHealthAfter = this.connectionPool.getHealth();
       logger.debug(`Connection pool health after switch: ${JSON.stringify(poolHealthAfter)}`);
       
-      logger.info(`Successfully switched to port ${port} in ${duration.toFixed(2)}ms`);
-      
-      // Log performance warning if switch was slow
-      if (duration > 1000) {
-        logger.warn(`Slow switch detected: ${duration.toFixed(2)}ms for port ${port}`);
-      }
+      logger.info(`Successfully switched to port ${port}`);
       
     } catch (error) {
-      const duration = Number(process.hrtime.bigint() - start) / 1000;
-      logger.error(`Failed to switch to port ${port} after ${duration.toFixed(2)}ms:`, error.message);
+      logger.error(`Failed to switch to port ${port}:`, error.message);
       throw error;
     }
   }

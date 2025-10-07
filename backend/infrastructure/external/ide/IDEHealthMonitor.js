@@ -368,8 +368,21 @@ class IDEHealthMonitor extends EventEmitter {
 
     this.healthHistory.set(port, []);
 
-    logger.info(`Registered IDE ${ideType} on port ${port} for health monitoring`);
+    // Don't log individual registrations - will be logged in batch
     this.emit('ideRegistered', { port, ideType });
+  }
+
+  /**
+   * Log all registered IDEs in a single batch log
+   */
+  logRegisteredIDEs() {
+    const registeredIDEs = Array.from(this.ideHealth.entries())
+      .map(([port, health]) => `${health.ideType}:${port}`)
+      .join(', ');
+    
+    if (registeredIDEs) {
+      logger.info(`Registered IDEs for health monitoring: ${registeredIDEs}`);
+    }
   }
 
   /**

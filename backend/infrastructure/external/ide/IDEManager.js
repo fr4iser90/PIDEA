@@ -214,8 +214,14 @@ class IDEManager {
       existingIDEs.forEach(ide => {
         this.ideStatus.set(ide.port, ide.status);
         this.ideTypes.set(ide.port, ide.type || 'cursor');
-        logger.info(`Registered IDE: ${ide.type} on port ${ide.port} (${ide.status})`);
+        // Don't log individual IDE registration - will be logged in batch
       });
+      
+      // Batch log all registered IDEs
+      if (existingIDEs.length > 0) {
+        const ideList = existingIDEs.map(ide => `${ide.type || 'cursor'}:${ide.port}(${ide.status})`).join(', ');
+        logger.info(`Registered existing IDEs: ${ideList}`);
+      }
       
       // Initialize port manager
       await this.portManager.initialize();
@@ -296,7 +302,10 @@ class IDEManager {
       });
     });
 
-    // Detect workspace paths and versions for all IDEs with caching and status change detection
+    // Detect workspace paths and versions for all IDEs with batch logging
+    const detectionPorts = Array.from(allIDEs.keys());
+    logger.info(`Starting workspace detection for ports: ${detectionPorts.join(', ')}`);
+    
     const idesWithWorkspacesAndVersions = await Promise.allSettled(
       Array.from(allIDEs.values()).map(async (ide) => {
         try {
@@ -329,17 +338,8 @@ class IDEManager {
             version: finalVersion
           };
 
-          // Only log if status has changed
-          if (this.hasIDEStatusChanged(ide.port, ideData)) {
-            if (finalVersion) {
-              logger.info(`Detected version for ${ide.ideType} on port ${ide.port}: ${finalVersion}`);
-            }
-            if (finalWorkspacePath) {
-              logger.info(`Detected workspace for ${ide.ideType} on port ${ide.port}: ${finalWorkspacePath}`);
-            }
-            // Update last detection status
-            this.updateLastDetectionStatus(ide.port, ideData);
-          }
+          // Update last detection status
+          this.updateLastDetectionStatus(ide.port, ideData);
           
           // Cache the result
           this.cacheIDEResult(ide.port, ideData);
@@ -366,11 +366,35 @@ class IDEManager {
       })
     );
 
+    // Batch log all detection results
+    const versionResults = idesWithWorkspacesAndVersions
+      .filter(ide => ide.version)
+      .map(ide => `${ide.ideType}:${ide.port}(${ide.version})`)
+      .join(', ');
+    
+    const workspaceResults = idesWithWorkspacesAndVersions
+      .filter(ide => ide.workspacePath)
+      .map(ide => `${ide.ideType}:${ide.port}(${ide.workspacePath.split('/').pop()})`)
+      .join(', ');
+    
+    if (versionResults) {
+      logger.info(`Version detection completed: ${versionResults}`);
+    }
+    
+    if (workspaceResults) {
+      logger.info(`Workspace detection completed: ${workspaceResults}`);
+    }
+
     // Register new IDEs with health monitoring
     for (const ide of idesWithWorkspacesAndVersions) {
       if (this.healthMonitor && typeof this.healthMonitor.registerIDE === 'function') {
         this.healthMonitor.registerIDE(ide.port, ide.ideType || 'cursor');
       }
+    }
+    
+    // Log all registered IDEs in batch
+    if (this.healthMonitor && typeof this.healthMonitor.logRegisteredIDEs === 'function') {
+      this.healthMonitor.logRegisteredIDEs();
     }
     
     // Start health monitoring if not already started
@@ -462,14 +486,6 @@ class IDEManager {
       const result = await this.versionDetectionService.detectVersion(port, ideType);
       
       if (result && result.currentVersion) {
-        // Only log if this is a new detection or version changed
-        const lastStatus = this.lastDetectionStatus.get(port);
-        const isNewDetection = !lastStatus || lastStatus.version !== result.currentVersion;
-        
-        if (isNewDetection) {
-          const selectorVersion = result.compatibleVersion || result.currentVersion;
-          logger.info(`✅ Version detected for ${ideType} on port ${port}: ${result.currentVersion} (selector: ${selectorVersion})`);
-        }
         return result.currentVersion;
       }
       
@@ -843,19 +859,10 @@ class IDEManager {
           const workspaceInfo = await this.cdpWorkspaceDetector.detectWorkspace(port);
           
           if (workspaceInfo && workspaceInfo.workspacePath) {
-            // Only log if this is a new detection or workspace changed
-            const lastStatus = this.lastDetectionStatus.get(port);
-            const isNewDetection = !lastStatus || lastStatus.workspacePath !== workspaceInfo.workspacePath;
-            
-            if (isNewDetection) {
-              logger.info(`Using CDP-based workspace detection for port ${port}`);
-              logger.debug(`CDP-based detected workspace path for port ${port}: ${workspaceInfo.workspacePath}`);
-            }
-            
             // Store workspace path in ideWorkspaces Map
             this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
             
-            // Automatisch Projekt in der DB erstellen
+            // Automatisch Projekt in der DB erstellen (silent)
             await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
             
             return workspaceInfo.workspacePath;
@@ -1076,7 +1083,8 @@ class IDEManager {
       await this.initialize();
     }
 
-    logger.info('Cleaning up stale IDE entries...');
+    // Silent cleanup - only log if there are changes
+    let hasChanges = false;
     
     // Get currently available IDEs with timeout protection
     let availableIDEs = [];
@@ -1103,7 +1111,7 @@ class IDEManager {
     
     for (const stalePort of portsToClean) {
       if (!availablePorts.has(stalePort)) {
-        logger.info(`Cleaning up stale IDE entry for port ${stalePort}`);
+        hasChanges = true;
         
         // Remove from all tracking maps
         this.ideStatus.delete(stalePort);
@@ -1130,7 +1138,12 @@ class IDEManager {
       }
     }
     
-    // Emit event for frontend updates
+    // Only log if there were actual changes
+    if (hasChanges) {
+      logger.info(`Cleaned up ${cleanedPorts.length} stale IDE entries: ${cleanedPorts.join(', ')}`);
+    }
+    
+    // Emit event for frontend updates (always, but silently)
     if (this.eventBus) {
       // Emit ideListUpdated event for frontend
       this.eventBus.emit('ideListUpdated', {
@@ -1138,10 +1151,11 @@ class IDEManager {
         cleanedPorts: cleanedPorts,
         timestamp: new Date().toISOString()
       });
-      logger.info('Emitted ideListUpdated event for cleanup');
+      // Only log event emission if there were changes
+      if (hasChanges) {
+        logger.info('Emitted ideListUpdated event for cleanup');
+      }
     }
-    
-    logger.info('Stale IDE cleanup completed');
   }
 
   /**
@@ -1168,7 +1182,7 @@ class IDEManager {
       let project = await this.projectRepository.findByWorkspacePath(workspacePath);
       let created = false;
       if (!project) {
-        logger.info(`Creating project in database: ${projectId} (${projectName}) at ${workspacePath}`);
+        // Don't log individual project creation - will be logged in batch
         created = true;
       }
     
@@ -1191,11 +1205,7 @@ class IDEManager {
         }
       });
       
-      if (created) {
-        logger.info(`Project created in database: ${project.id}`);
-      } else {
-        logger.info(`Project already exists in database: ${project.id}`);
-      }
+      // Don't log individual project status - will be logged in batch
       
     } catch (error) {
       logger.error('Failed to create project in database:', error.message);

@@ -25,9 +25,21 @@ class WebSocketService {
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${location.host}/ws`;
         
-        logger.info('🔌 WebSocketService: Connecting to:', wsUrl);
+        // Extract authentication token from cookies
+        const getCookie = (name) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(';').shift();
+          return null;
+        };
+        
+        const accessToken = getCookie('accessToken');
+        const wsUrl = accessToken 
+          ? `${protocol}//${location.host}/ws?token=${encodeURIComponent(accessToken)}`
+          : `${protocol}//${location.host}/ws`;
+        
+        logger.info('🔌 WebSocketService: Connecting to:', wsUrl.replace(/token=[^&]+/, 'token=***'));
         
         this.ws = new WebSocket(wsUrl);
 
@@ -36,8 +48,8 @@ class WebSocketService {
           this.isConnected = true;
           this.reconnectAttempts = 0;
           
-          // Authentication handled via cookies automatically
-          // No need to send tokens manually
+          // Authentication token passed via query parameter
+          logger.debug('🔐 WebSocketService: Authentication token included in connection');
           
           resolve();
         };

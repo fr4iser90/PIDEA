@@ -87,8 +87,7 @@ class VersionDetectionService {
         timestamp: Date.now()
       });
 
-      const selectorVersion = compatibleVersion || currentVersion;
-      this.logger.info(`Version detection completed for ${ideType}: ${currentVersion} (selector: ${selectorVersion})`);
+      // Don't log individual detections - will be logged in batch
       return result;
 
     } catch (error) {
