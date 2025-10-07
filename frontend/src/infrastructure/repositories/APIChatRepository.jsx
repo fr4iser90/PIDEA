@@ -1265,16 +1265,14 @@ export default class APIChatRepository extends ChatRepository {
   }
 
   // Git Management Methods
-  // Git operations - Direct API calls (fast, no Steps)
+  // Git operations - Use CacheService for better performance
   async getGitStatus(projectId = null, projectPath = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     const currentProjectPath = projectPath || await this.getProjectPath(currentProjectId);
     
-    // ✅ OPTIMIZATION: Use existing Git API (now uses direct Commands/Handlers)
-    return apiCall(`/api/projects/${currentProjectId}/git/status`, {
-      method: 'POST',
-      body: JSON.stringify({ projectPath: currentProjectPath })
-    }, currentProjectId);
+    // Use CacheService for git status instead of direct API call
+    const { cacheService } = await import('@/infrastructure/services/CacheService.js');
+    return cacheService.getGitData(currentProjectPath, currentProjectId);
   }
 
   async getGitBranches(projectId = null, projectPath = null) {

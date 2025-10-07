@@ -5,6 +5,16 @@ cd "$HOME/Documents" || exit 1
 # IDE Konfigurationen - werden vom Backend geladen
 declare -A IDES
 
+# Version-Profile-Konfiguration für Cursor
+declare -A CURSOR_VERSIONS=(
+  ["1"]="Cursor-1.5.7-x86_64.AppImage"    # Default
+  ["2"]="Cursor-1.6.46-x86_64.AppImage"   
+  ["3"]="Cursor-1.7.17-x86_64.AppImage"   
+)
+
+# Default Version-Profile (kann geändert werden)
+DEFAULT_CURSOR_VERSION="1"
+
 # Pfade vom Backend laden
 load_ide_paths() {
   echo "📡 Lade IDE-Pfade vom Backend..."
@@ -98,31 +108,93 @@ show_ides() {
   echo "📋 Verfügbare IDEs:"
   for ide in "${!IDES[@]}"; do
     local range="${PORT_RANGES[$ide]}"
-    echo "   $ide (Ports $range)"
+    if [[ $ide == "cursor" ]]; then
+      echo "   $ide (Ports $range) - Version-Profile verfügbar"
+    else
+      echo "   $ide (Ports $range)"
+    fi
   done
+}
+
+# Hilfsfunktion: zeigt verfügbare Cursor-Versionen
+show_cursor_versions() {
+  echo "📋 Verfügbare Cursor-Versionen:"
+  for version in "${!CURSOR_VERSIONS[@]}"; do
+    local file="${CURSOR_VERSIONS[$version]}"
+    local status=""
+    if [[ -f "$file" ]]; then
+      status="✅"
+    else
+      status="❌"
+    fi
+    if [[ "$version" == "$DEFAULT_CURSOR_VERSION" ]]; then
+      echo "   $version) $file $status (Default)"
+    else
+      echo "   $version) $file $status"
+    fi
+  done
+}
+
+# Hilfsfunktion: bestimmt Cursor-Pfad basierend auf Version-Profile
+get_cursor_path() {
+  local version_profile=$1
+  
+  if [[ -z "$version_profile" ]]; then
+    version_profile="$DEFAULT_CURSOR_VERSION"
+  fi
+  
+  if [[ -v CURSOR_VERSIONS[$version_profile] ]]; then
+    echo "${CURSOR_VERSIONS[$version_profile]}"
+  else
+    echo "❌ Unbekanntes Version-Profile: $version_profile"
+    show_cursor_versions
+    return 1
+  fi
 }
 
 # Hilfsfunktion: zeigt Hilfe
 show_help() {
-  echo "🚀 IDE Starter Script"
+  echo "🚀 IDE Starter Script - Explanation"
   echo ""
-  echo "Verwendung:"
-  echo "  $0 [ide] [slot]"
-  echo "  $0 [ide] auto"
+  echo "📖 WHAT IS WHAT?"
+  echo "  IDE        = Integrated Development Environment (Editor)"
+  echo "  Slot       = Port number for Remote Debugging (9222-9242)"
+  echo "  Version    = Different Cursor versions (1.5.7, 1.6.46, 1.7.17)"
+  echo "  Profile    = Numbered versions for easy selection"
+  echo ""
+  echo "🎯 USAGE:"
+  echo "  $0 [ide] [slot] [version-options]"
+  echo "  $0 [ide] auto [version-options]"
   echo "  $0 menu"
   echo ""
-  echo "Argumente:"
-  echo "  ide    - cursor, vscode"
-  echo "  slot   - spezifischer Slot (Zahl)"
-  echo "  auto   - automatisch freien Slot finden"
-  echo "  menu   - interaktives Menü"
+  echo "📋 ARGUMENTS:"
+  echo "  ide        - Which IDE to start? (cursor, vscode)"
+  echo "  slot       - Which port? (1-11 for Cursor, 1-10 for VSCode)"
+  echo "  auto       - Automatically find free port"
+  echo "  menu       - Interactive menu with selection"
+  echo ""
+  echo "🔧 VERSION OPTIONS (Cursor only):"
+  echo "  -v[N]              # Short: Use version profile N"
+  echo "  --version-profile=N # Long: Use version profile N"
   echo ""
   show_ides
   echo ""
-  echo "Beispiele:"
-  echo "  $0 cursor        # Cursor mit freiem Port starten"
-  echo "  $0 vscode 3      # VSCode auf Slot 3 starten"
-  echo "  $0 cursor auto   # Cursor mit automatischem Slot"
+  show_cursor_versions
+  echo ""
+  echo "💡 EXAMPLES WITH EXPLANATION:"
+  echo "  $0 cursor                    # Cursor with standard version (1.5.7)"
+  echo "  $0 cursor auto -v2          # Cursor version 1.6.46, free port"
+  echo "  $0 cursor 3 --version-profile=3 # Cursor version 1.7.17 on port 9224"
+  echo "  $0 vscode 3                 # VSCode on port 9235"
+  echo ""
+  echo "🔍 PORT RANGES:"
+  echo "  Cursor:  9222-9232 (Slots 1-11)"
+  echo "  VSCode:  9233-9242 (Slots 1-10)"
+  echo ""
+  echo "📁 DIRECTORIES:"
+  echo "  Each IDE instance gets its own directory:"
+  echo "  ~/.pidea/cursor_9222/  (Cursor on port 9222)"
+  echo "  ~/.pidea/vscode_9233/ (VSCode on port 9233)"
 }
 
 # Interaktives Menü
@@ -132,7 +204,11 @@ show_menu() {
   local i=1
   for ide in "${!IDES[@]}"; do
     local range="${PORT_RANGES[$ide]}"
-    echo "  $i) $ide (Ports $range)"
+    if [[ $ide == "cursor" ]]; then
+      echo "  $i) $ide (Ports $range) - Version-Profile verfügbar"
+    else
+      echo "  $i) $ide (Ports $range)"
+    fi
     ((i++))
   done
   echo "  $i) Hilfe"
@@ -149,7 +225,20 @@ show_menu() {
         local selected_ide="${ides_array[$((choice-1))]}"
         echo ""
         read -p "Slot für $selected_ide (Zahl oder 'auto'): " slot
-        start_ide "$selected_ide" "$slot"
+        
+        # Version-Auswahl für Cursor
+        local version_profile=""
+        if [[ $selected_ide == "cursor" ]]; then
+          echo ""
+          show_cursor_versions
+          echo ""
+          read -p "Version-Profile für Cursor (Enter für Default $DEFAULT_CURSOR_VERSION): " version_input
+          if [[ -n "$version_input" ]]; then
+            version_profile="$version_input"
+          fi
+        fi
+        
+        start_ide "$selected_ide" "$slot" "$version_profile"
       else
         echo "❌ Ungültige Auswahl"
         exit 1
@@ -162,6 +251,7 @@ show_menu() {
 start_ide() {
   local ide=$1
   local slot=$2
+  local version_profile=$3
   
   # Prüfe ob IDE existiert
   if [[ ! -v IDES[$ide] ]]; then
@@ -170,13 +260,27 @@ start_ide() {
     exit 1
   fi
   
-  local ide_path="${IDES[$ide]}"
+  # Bestimme IDE-Pfad
+  local ide_path
+  if [[ $ide == "cursor" ]]; then
+    # Für Cursor: Version-Profile verwenden
+    ide_path=$(get_cursor_path "$version_profile")
+    if [[ $? -ne 0 ]]; then
+      exit 1
+    fi
+  else
+    # Für andere IDEs: Standard-Pfad
+    ide_path="${IDES[$ide]}"
+  fi
+  
   local port_range="${PORT_RANGES[$ide]}"
   
   # Prüfe ob IDE verfügbar ist
   if [[ $ide == "cursor" ]]; then
     if [[ ! -f "$ide_path" ]]; then
       echo "❌ Cursor AppImage nicht gefunden: $ide_path"
+      echo "   Verfügbare Versionen:"
+      show_cursor_versions
       exit 1
     fi
   else
@@ -232,7 +336,18 @@ start_ide() {
   mkdir -p "$dir"
   
   # IDE starten
-  echo "🚀 Starte $ide auf Port $port..."
+  if [[ $ide == "cursor" ]]; then
+    local version_info=""
+    if [[ -n "$version_profile" ]]; then
+      version_info=" (Version-Profile $version_profile)"
+    else
+      version_info=" (Version-Profile $DEFAULT_CURSOR_VERSION - Default)"
+    fi
+    echo "🚀 Starte $ide$version_info auf Port $port..."
+    echo "   Datei: $ide_path"
+  else
+    echo "🚀 Starte $ide auf Port $port..."
+  fi
   
   if [[ $ide == "cursor" ]]; then
     $RUNNER "$ide_path" \
@@ -250,18 +365,85 @@ start_ide() {
   echo "   Debug URL: http://localhost:$port"
 }
 
+# Hilfsfunktion: parst Kommandozeilen-Argumente
+parse_arguments() {
+  local ide=""
+  local slot=""
+  local version_profile=""
+  
+  # Alle Argumente durchgehen
+  for arg in "$@"; do
+    case $arg in
+      -v[0-9]*)
+        version_profile="${arg#-v}"
+        ;;
+      --version-profile=*)
+        version_profile="${arg#--version-profile=}"
+        ;;
+      menu|help|-h|--help)
+        echo "$arg"
+        return
+        ;;
+      auto|[0-9]*)
+        if [[ -z "$slot" ]]; then
+          slot="$arg"
+        fi
+        ;;
+      cursor|vscode)
+        if [[ -z "$ide" ]]; then
+          ide="$arg"
+        fi
+        ;;
+      *)
+        if [[ -z "$ide" ]]; then
+          ide="$arg"
+        elif [[ -z "$slot" ]]; then
+          slot="$arg"
+        fi
+        ;;
+    esac
+  done
+  
+  echo "$ide|$slot|$version_profile"
+}
+
 # Hauptlogik
 # IDE-Pfade vom Backend laden
 load_ide_paths
 
-if [[ "$1" == "menu" ]]; then
-  show_menu
-elif [[ "$1" == "help" || "$1" == "-h" || "$1" == "--help" ]]; then
-  show_help
-elif [[ -z "$1" ]]; then
+# Argumente parsen
+if [[ $# -eq 0 ]]; then
   echo "❌ Keine IDE angegeben"
   echo ""
   show_help
-else
-  start_ide "$1" "$2"
+  exit 1
 fi
+
+# Spezielle Befehle
+if [[ "$1" == "menu" ]]; then
+  show_menu
+  exit 0
+elif [[ "$1" == "help" || "$1" == "-h" || "$1" == "--help" ]]; then
+  show_help
+  exit 0
+fi
+
+# Argumente parsen
+parsed=$(parse_arguments "$@")
+if [[ $? -ne 0 ]]; then
+  echo "❌ Fehler beim Parsen der Argumente"
+  exit 1
+fi
+
+# Parsed Werte extrahieren
+IFS='|' read -r ide slot version_profile <<< "$parsed"
+
+if [[ -z "$ide" ]]; then
+  echo "❌ Keine IDE angegeben"
+  echo ""
+  show_help
+  exit 1
+fi
+
+# IDE starten
+start_ide "$ide" "$slot" "$version_profile"

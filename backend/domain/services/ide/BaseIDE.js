@@ -226,12 +226,24 @@ class BaseIDE extends IDEInterface {
 
   /**
    * Common chat history extraction
+   * @param {number} requestedPort - Port to extract chat from (optional)
    * @returns {Promise<Array>} Chat history
    */
-  async getChatHistory() {
+  async getChatHistory(requestedPort = null) {
     try {
       if (this.chatHistoryExtractor) {
-        return await this.chatHistoryExtractor.extractChatHistory();
+        // Use requested port if provided, otherwise get current port
+        const targetPort = requestedPort || this.browserManager.getCurrentPort();
+        if (!targetPort) {
+          throw new Error('No target port available for version detection');
+        }
+        
+        const version = await this.versionDetector.detectVersion(targetPort);
+        if (!version) {
+          throw new Error(`Version detection failed for port ${targetPort}. Version is required for ${this.ideType}.`);
+        }
+        
+        return await this.chatHistoryExtractor.extractChatHistory(version);
       }
       return [];
     } catch (error) {

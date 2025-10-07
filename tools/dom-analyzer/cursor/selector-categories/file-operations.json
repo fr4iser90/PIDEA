@@ -1,0 +1,44 @@
+{
+  "name": "File Operations Selectors",
+  "description": "Selectors for Cursor file operations functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "fileTabs": {
+      "activeTab": ".tab.active, .tab.active-modified",
+      "tabTitle": ".tab-title",
+      "tabByLabel": ".tab[aria-label*=\"{fileName}\"]",
+      "closeTab": ".tab .codicon-close",
+      "tabList": ".tabs-container"
+    },
+    "fileOperations": {
+      "newFile": "[aria-label*=\"New File\"], [aria-label*=\"New\"]",
+      "openFile": "[aria-label*=\"Open File\"], [aria-label*=\"Open\"]",
+      "saveFile": "[aria-label*=\"Save\"], [aria-label*=\"Save\"]",
+      "saveAs": "[aria-label*=\"Save As\"], [aria-label*=\"Save As\"]",
+      "saveAll": "[aria-label*=\"Save All\"], [aria-label*=\"Save All\"]",
+      "closeFile": "[aria-label*=\"Close\"], [aria-label*=\"Close\"]",
+      "closeAll": "[aria-label*=\"Close All\"], [aria-label*=\"Close All\"]",
+      "revertFile": "[aria-label*=\"Revert\"], [aria-label*=\"Revert\"]"
+    },
+    "fileContextMenu": {
+      "contextMenu": "[role=\"menu\"], .context-menu",
+      "copy": "[aria-label*=\"Copy\"], [aria-label*=\"Copy\"]",
+      "cut": "[aria-label*=\"Cut\"], [aria-label*=\"Cut\"]",
+      "paste": "[aria-label*=\"Paste\"], [aria-label*=\"Paste\"]",
+      "rename": "[aria-label*=\"Rename\"], [aria-label*=\"Rename\"]",
+      "delete": "[aria-label*=\"Delete\"], [aria-label*=\"Delete\"]",
+      "duplicate": "[aria-label*=\"Duplicate\"], [aria-label*=\"Duplicate\"]",
+      "revealInExplorer": "[aria-label*=\"Reveal in Explorer\"], [aria-label*=\"Reveal\"]"
+    },
+    "fileSearch": {
+      "searchInput": "input[placeholder*=\"Search\"], input[placeholder*=\"Find\"]",
+      "searchButton": "[aria-label*=\"Search\"], [aria-label*=\"Find\"]",
+      "replaceInput": "input[placeholder*=\"Replace\"], input[placeholder*=\"Replace\"]",
+      "replaceButton": "[aria-label*=\"Replace\"], [aria-label*=\"Replace\"]",
+      "replaceAllButton": "[aria-label*=\"Replace All\"], [aria-label*=\"Replace All\"]",
+      "caseSensitive": "input[type=\"checkbox\"][aria-label*=\"Case\"]",
+      "wholeWord": "input[type=\"checkbox\"][aria-label*=\"Whole Word\"]",
+      "regex": "input[type=\"checkbox\"][aria-label*=\"Regex\"]"
+    }
+  }
+}

@@ -26,6 +26,7 @@ backend/tests/playwright/screenshots
 backend/tests/playwright/reports
 backend/tests/playwright/videos
 backend/tests/playwright/traces
+tools/dom-analyzer/*/reports
 test-results
 
 frontend/coverage

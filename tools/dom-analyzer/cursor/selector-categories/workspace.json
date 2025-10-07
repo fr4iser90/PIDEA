@@ -1,0 +1,24 @@
+{
+  "name": "Workspace Selectors",
+  "description": "Selectors for Cursor workspace management functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "workspaceManagement": {
+      "workspaceName": "[class*=\"workspace\"], [class*=\"folder\"]",
+      "workspacePath": "[class*=\"path\"], [class*=\"location\"]",
+      "openWorkspace": "[aria-label*=\"Open Workspace\"], [aria-label*=\"Workspace\"]",
+      "closeWorkspace": "[aria-label*=\"Close Workspace\"], [aria-label*=\"Close\"]",
+      "switchWorkspace": "[aria-label*=\"Switch Workspace\"], [aria-label*=\"Switch\"]",
+      "addToWorkspace": "[aria-label*=\"Add to Workspace\"], [aria-label*=\"Add\"]",
+      "removeFromWorkspace": "[aria-label*=\"Remove from Workspace\"], [aria-label*=\"Remove\"]",
+      "saveWorkspace": "[aria-label*=\"Save Workspace\"], [aria-label*=\"Save\"]",
+      "reloadWindow": "[aria-label*=\"Reload Window\"], [aria-label*=\"Reload\"]"
+    },
+    "workspaceSettings": {
+      "workspaceSettings": "[aria-label*=\"Workspace Settings\"], [aria-label*=\"Settings\"]",
+      "workspaceConfig": "[class*=\"workspace-config\"], [class*=\"settings\"]",
+      "workspaceExtensions": "[class*=\"workspace-extensions\"], [class*=\"extensions\"]",
+      "workspaceTasks": "[class*=\"workspace-tasks\"], [class*=\"tasks\"]"
+    }
+  }
+}

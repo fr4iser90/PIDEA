@@ -93,7 +93,7 @@ class AuthService {
       email: user.email
     });
 
-    // CRITICAL FIX: Clean up old sessions before creating new one
+    // Clean up old sessions before creating new one
     await this.cleanupUserSessions(user.id);
 
     const accessToken = this.generateAccessToken(user);
@@ -437,7 +437,7 @@ class AuthService {
     return await this.userSessionRepository.findActiveSessionsByUserId(userId);
   }
 
-  // CRITICAL FIX: Clean up all sessions for a user
+  // Clean up all sessions for a user
   async cleanupUserSessions(userId) {
     if (!userId) {
       throw new Error('User ID is required');

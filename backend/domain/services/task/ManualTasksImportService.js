@@ -283,7 +283,7 @@ class ManualTasksImportService {
                 logger.info(`🔍 Checking for existing task: "${title}" in project "${projectId}" - Found: ${existing.length}, Similar: ${similarTask ? 1 : 0}`);
                 
                 if (existing.length === 0 && !similarTask) {
-                    // ✅ CRITICAL FIX: Markdown content is the SINGLE source of truth for status
+                    // Markdown content is the SINGLE source of truth for status
                     // Status is determined ONLY from markdown content, NOT from directory path
                     let taskStatus;
                     
@@ -297,7 +297,7 @@ class ManualTasksImportService {
                         logger.warn(`⚠️ No content available, defaulting to pending for task: ${title}`);
                     }
                     
-                    // ✅ CRITICAL FIX: Status is determined ONLY from markdown content
+                    // Status is determined ONLY from markdown content
                     // Directory path is used ONLY for file location metadata, NOT for status determination
                     
                     // ✅ FIXED: Better priority detection from content
@@ -517,7 +517,7 @@ class ManualTasksImportService {
             const completionRate = totalProcessedFiles > 0 ? Math.round((completedCount / totalProcessedFiles) * 100) : 0;
             logger.info(`📊 TASK COMPLETION SUMMARY: ${completedCount}/${totalProcessedFiles} tasks completed (${completionRate}%)`);
             
-            // ✅ CRITICAL FIX: Commit database transaction
+            // Commit database transaction
             logger.info(`💾 Committing database transaction for ${importedTasks.length} tasks`);
             
             return {
@@ -790,7 +790,7 @@ class ManualTasksImportService {
                 logger.info(`🧠 Intelligent status detection: ${intelligentStatus} (based on critical phases analysis)`);
             }
             
-            // ✅ CRITICAL FIX: Only set status to completed if progress is actually 100%
+            // Only set status to completed if progress is actually 100%
             // If we have partial completion but progress < 100%, keep it as in_progress
             if (hasPartialCompletion && progressInfo.overallProgress < 100 && !intelligentStatus) {
                 progressInfo.status = 'in_progress';

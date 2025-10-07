@@ -628,9 +628,6 @@ class ServiceRegistry {
             case 'ideMirrorApplicationService':
                 this.registerIDEMirrorApplicationService();
                 break;
-            case 'ideApplicationService':
-                this.registerIDEApplicationService();
-                break;
             default:
                 throw new Error(`Unknown application service: ${serviceName}`);
         }
@@ -788,21 +785,6 @@ class ServiceRegistry {
                 eventBus
             });
         }, { singleton: true, dependencies: ['ideMirrorService', 'logger', 'eventBus'] });
-    }
-
-    registerIDEApplicationService() {
-        this.container.register('ideApplicationService', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader, logger) => {
-            const IDEApplicationService = require('@application/services/IDEApplicationService');
-            return new IDEApplicationService({
-                ideManager,
-                eventBus,
-                cursorIDEService,
-                taskRepository,
-                terminalLogCaptureService,
-                terminalLogReader,
-                logger
-            });
-        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'logger'] });
     }
 
     /**

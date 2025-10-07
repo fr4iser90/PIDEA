@@ -29,22 +29,22 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const activeIDE = useActiveIDE();
   const { refreshGitStatus } = useProjectDataActions();
 
-  // ✅ NEW: Integrate with RefreshService
-  const { forceRefresh, getStats } = useRefreshService('git', {
-    fetchData: async () => {
-      if (activeIDE.workspacePath) {
-        const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
-        return await apiRepository.getGitStatus(projectId);
-      }
-      return null;
-    },
-    updateData: (data) => {
-      // Update global state with new data
-      if (data) {
-        refreshGitStatus();
-      }
-    }
-  });
+  // ✅ DISABLED: RefreshService for git - NO MORE AUTOMATIC POLLING!
+  // const { forceRefresh, getStats } = useRefreshService('git', {
+  //   fetchData: async () => {
+  //     if (activeIDE.workspacePath) {
+  //       const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
+  //       return await apiRepository.getGitStatus(projectId);
+  //     }
+  //     return null;
+  //   },
+  //   updateData: (data) => {
+  //     // Update global state with new data
+  //     if (data) {
+  //       refreshGitStatus();
+  //     }
+  //   }
+  // });
 
   
   // Local state for UI interactions

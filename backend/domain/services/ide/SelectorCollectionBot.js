@@ -147,77 +147,78 @@ class SelectorCollectionBot {
     try {
       const categories = {
         chatSelectors: {},
-        chatControls: {},
-        chatHistory: {},
-        chatStatus: {},
-        chatSettings: {},
-        chatContext: {},
-        chatMessages: {},
-        chatCodeBlocks: {},
-        chatModals: {},
-        chatErrors: {},
-        chatUI: {},
-        agentControls: {},
-        editor: {},
-        explorer: {},
-        terminal: {},
-        search: {},
-        git: {},
-        commands: {},
-        panels: {},
+        commandPaletteSelectors: {},
+        fileOperationSelectors: {},
+        menuNavigationSelectors: {},
+        projectManagementSelectors: {},
+        welcomeScreenSelectors: {},
+        workspaceSelectors: {},
         other: {}
       };
 
-      // Enhanced categorization rules with comprehensive chat groups
+      // Enhanced categorization rules with consolidated 7-category structure
       const categoryRules = {
-        'chatModals': [
-          'chatsettingsmodal', 'chathistorymodal', 'chatexportmodal'
-        ],
-        'chatCodeBlocks': [
-          'codeblockrejectbutton', 'codeblockcopybutton', 'codeblockdownloadbutton'
-        ],
-        'chatMessages': [
-          'messagetimestamp', 'messageactions', 'messagecopybutton'
-        ],
-        'chatContext': [
-          'contextbutton', 'attachfilebutton', 'helpbutton', 'premiumpill', 'atsignbutton'
-        ],
-        'chatSettings': [
-          'settingsbutton', 'modelselector', 'websearchtoggle'
-        ],
-        'chatStatus': [
-          'connectionstatus', 'loadingindicator', 'thinkingindicator'
-        ],
-        'chatHistory': [
-          'chathistory', 'chathistoryitem', 'chathistorytitle'
-        ],
-        'chatControls': [
-          'newchatbutton', 'sendbutton', 'deletechatbutton', 'renamechatbutton'
-        ],
-        'agentControls': [
-          'agentmodeselector', 'agentmodedropdown', 'askmodebutton', 'agentmodebutton',
-          'modeldropdown', 'automodeltoggle', 'modeloptions'
-        ],
-        'chatUI': [
-          'useravatar', 'username', 'themetoggle', 'agentautobutton', 'contextpercentage'
-        ],
-        'chatErrors': [
-          'errormessage', 'retrybutton', 'connectionerror'
-        ],
         'chatSelectors': [
           'input', 'inputcontainer', 'usermessages', 'aimessages', 'messagescontainer',
           'chatcontainer', 'isactive', 'isinputready', 'codeblocks', 'codeblockcontent',
           'codeblockheader', 'codeblockfilename', 'codeblocklanguage', 'monacoeditor',
           'codelines', 'syntaxtokens', 'codeblockapplybutton', 'inlinecode', 'codespans',
-          'syntaxclasses', 'messagerows', 'usermessagerow', 'aimessagerow'
+          'terminalblocks', 'filereferences', 'urls', 'jsonblocks', 'cssblocks', 'sqlblocks',
+          'yamlblocks', 'dockerblocks', 'envblocks', 'lists', 'tables', 'syntaxclasses',
+          'newchatbutton', 'sendbutton', 'deletechatbutton', 'renamechatbutton',
+          'chathistory', 'chathistoryitem', 'chathistorytitle', 'connectionstatus',
+          'loadingindicator', 'thinkingindicator', 'settingsbutton', 'modelselector',
+          'websearchtoggle', 'contextbutton', 'attachfilebutton', 'helpbutton',
+          'premiumpill', 'atsignbutton', 'messagetimestamp', 'messageactions',
+          'messagecopybutton', 'codeblockrejectbutton', 'codeblockcopybutton',
+          'codeblockdownloadbutton', 'chatsettingsmodal', 'chathistorymodal',
+          'chatexportmodal', 'errormessage', 'retrybutton', 'connectionerror',
+          'useravatar', 'username', 'themetoggle', 'agentautobutton', 'contextpercentage',
+          'agentmodeselector', 'agentmodedropdown', 'askmodebutton', 'agentmodebutton',
+          'modeldropdown', 'automodeltoggle', 'modeloptions', 'newchatbuttoncommand',
+          'newchatbuttonlink', 'newchatbuttonlabel', 'addtwobutton', 'addtwobuttontab',
+          'addtwobuttonrole', 'addtwobuttonclass', 'newchataria', 'newtabaria',
+          'codiconaddtwo', 'actionlabelnew', 'buttonnewchat', 'linknewchat',
+          'newchatbuttonclass', 'newchattestid', 'codiconadd', 'arialabeladd',
+          'buttonnewchat', 'linknewchat', 'newchatbuttonclass', 'newchattestid',
+          'codiconadd', 'arialabeladd', 'buttonnewchat', 'linknewchat',
+          'newchatbuttonclass', 'newchattestid', 'codiconadd', 'arialabeladd',
+          'buttontitlenew', 'linktitlenew', 'codiconsend', 'actionlabelsend',
+          'chatexecutetoolbar', 'monacoactionbar', 'buttonsend', 'sendbuttonclass',
+          'buttontitlesend', 'sendbuttontestid', 'contenteditable', 'textarea',
+          'viewline', 'viewlines'
         ],
-        editor: ['editor', 'monaco', 'view-line', 'code'],
-        explorer: ['explorer', 'file', 'tree', 'pane'],
-        terminal: ['terminal', 'xterm', 'console'],
-        search: ['search', 'find', 'query'],
-        git: ['git', 'scm', 'source-control', 'commit'],
-        commands: ['command', 'palette', 'quick-open'],
-        panels: ['panel', 'sidebar', 'activitybar', 'statusbar']
+        'commandPaletteSelectors': [
+          'commandpalette', 'palette', 'command', 'input', 'executecommand',
+          'cancelcommand', 'historyup', 'historydown', 'terminalcommands'
+        ],
+        'fileOperationSelectors': [
+          'filetabs', 'activetab', 'closetab', 'tablist', 'fileoperations',
+          'newfile', 'closefile', 'filesearch', 'searchinput', 'searchbutton',
+          'replacebutton', 'tabtitle', 'tabbylabel', 'modal', 'closebutton',
+          'button', 'okbutton', 'continuebutton', 'startbutton', 'createbutton',
+          'beginbutton', 'yesbutton', 'nobutton', 'cancelbutton'
+        ],
+        'menuNavigationSelectors': [
+          'menubar', 'filemenu', 'editmenu', 'viewmenu', 'gomenu', 'runmenu',
+          'terminalmenu', 'helpmenu', 'menuitem', 'contextmenu', 'contextmenuitem',
+          'contextsubmenu'
+        ],
+        'projectManagementSelectors': [
+          'welcomescreen', 'newproject', 'recentprojects', 'filemenu', 'closefolder',
+          'closeworkspace', 'projectexplorer', 'container', 'list', 'tree', 'rows',
+          'labelname', 'refreshbutton', 'newfilebutton', 'newfolderbutton',
+          'workspace', 'workspacename', 'workspacepath', 'switchworkspace',
+          'addtoworkspace', 'treeitemexpanded'
+        ],
+        'welcomeScreenSelectors': [
+          'authentication', 'startbutton', 'authfeatures', 'authdescription',
+          'welcomeactions', 'helpbutton'
+        ],
+        'workspaceSelectors': [
+          'workspacemanagement', 'workspacesettings', 'workspaceconfig',
+          'workspaceextensions'
+        ]
       };
 
       for (const [key, value] of Object.entries(selectors)) {
@@ -419,17 +420,15 @@ class SelectorCollectionBot {
         throw new Error('Invalid input: ideType, version, and selectors are required');
       }
 
-      // Format selectors for storage
+      // Format selectors for storage using consolidated 7-category structure
       const formattedSelectors = {
-        chatSelectors: selectors.chat || {},
-        editorSelectors: selectors.editor || {},
-        explorerSelectors: selectors.explorer || {},
-        terminalSelectors: selectors.terminal || {},
-        searchSelectors: selectors.search || {},
-        gitSelectors: selectors.git || {},
-        commandSelectors: selectors.commands || {},
-        panelSelectors: selectors.panels || {},
-        otherSelectors: selectors.other || {},
+        chatSelectors: selectors.chatSelectors || {},
+        commandPaletteSelectors: selectors.commandPaletteSelectors || {},
+        fileOperationSelectors: selectors.fileOperationSelectors || {},
+        menuNavigationSelectors: selectors.menuNavigationSelectors || {},
+        projectManagementSelectors: selectors.projectManagementSelectors || {},
+        welcomeScreenSelectors: selectors.welcomeScreenSelectors || {},
+        workspaceSelectors: selectors.workspaceSelectors || {},
         metadata: {
           version,
           collectedAt: new Date().toISOString(),

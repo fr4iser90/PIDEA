@@ -44,6 +44,14 @@ class IDEApplicationService {
         
         // RequestQueuingService removed - using direct execution for better performance
         
+        // ✅ FIX: Listen for IDE cache invalidation events
+        if (this.eventBus) {
+            this.eventBus.on('ide:cache:invalidate', (data) => {
+                this.logger.info('Received IDE cache invalidation event:', data);
+                this.invalidateIDECache();
+            });
+        }
+        
         // Initialize manual tasks handler if we have required dependencies
         if (this.ideManager && this.taskRepository) {
             this.manualTasksHandler = new ManualTasksHandler(() => {
@@ -77,13 +85,19 @@ class IDEApplicationService {
             
             const availableIDEs = await this.ideManager.getAvailableIDEs();
             
+            // Backend gibt KEINEN active Status zurück - separate API verwenden
+            const idesWithoutActive = availableIDEs.map(ide => {
+                const { active, ...ideWithoutActive } = ide;
+                return ideWithoutActive;
+            });
+            
             // Cache the result
-            this._cachedIDEs = availableIDEs;
+            this._cachedIDEs = idesWithoutActive;
             this._cacheTime = Date.now();
             
             return {
                 success: true,
-                data: availableIDEs
+                data: idesWithoutActive
             };
         } catch (error) {
             this.logger.error('Error getting available IDEs:', error);

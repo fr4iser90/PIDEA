@@ -41,36 +41,32 @@ class CursorIDEService {
     throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
-  async extractChatHistory() {
-    // Ensure browser is connected to the active IDE port
-    const activePort = this.getActivePort();
-    logger.info(`extractChatHistory() - Active port: ${activePort}`);
+  async extractChatHistory(requestedPort = null) {
+    // Use requested port if provided, otherwise fall back to active port
+    const targetPort = requestedPort || this.getActivePort();
+    logger.info(`extractChatHistory() - Requested port: ${requestedPort}, Target port: ${targetPort}`);
     
-    if (!activePort) {
-      logger.warn('extractChatHistory() - No active port available');
+    if (!targetPort) {
+      logger.warn('extractChatHistory() - No target port available');
       return [];
     }
     
     try {
-      // Switch browser to active port if needed
+      // Switch browser to target port if needed
       const currentBrowserPort = this.browserManager.currentPort;
       logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
       
-      if (currentBrowserPort !== activePort) {
-        logger.info('extractChatHistory() - Switching browser to active port:', activePort);
-        await this.browserManager.switchToPort(activePort);
+      if (currentBrowserPort !== targetPort) {
+        logger.info('extractChatHistory() - Switching browser to target port:', targetPort);
+        await this.browserManager.switchToPort(targetPort);
       }
       
       // ✅ FIX: Detect version and pass it to ChatHistoryExtractor
-      logger.info(`extractChatHistory() - Detecting version for port ${activePort}...`);
-      const version = await this.versionDetector.detectVersion(activePort);
+      logger.info(`extractChatHistory() - Detecting version for port ${targetPort}...`);
+      const version = await this.versionDetector.detectVersion(targetPort);
       
       if (!version) {
-        logger.warn(`extractChatHistory() - No version detected for port ${activePort}, using fallback`);
-        // Use fallback version for Cursor
-        const fallbackVersion = '0.42.0';
-        logger.info(`extractChatHistory() - Using fallback version: ${fallbackVersion}`);
-        return await this.chatHistoryExtractor.extractChatHistory(fallbackVersion);
+        throw new Error(`Version detection failed for port ${targetPort}. Version is required for Cursor.`);
       }
       
       logger.info(`extractChatHistory() - Version detected: ${version}`);

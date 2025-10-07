@@ -79,14 +79,14 @@ class RefreshService {
   setupDefaultStrategies() {
     const strategies = {
       git: {
-        interval: 2000,           // 2 seconds
+        interval: 0,               // DISABLED - NO MORE AUTOMATIC POLLING!
         events: ['data:git:changed', 'system:user-active'],
         cache: { ttl: 30000, priority: 'high' },
         apiEndpoint: '/api/git/status',
         component: 'GitManagementComponent'
       },
       queue: {
-        interval: 1000,          // 1 second
+        interval: 5000,           // 5 seconds
         events: ['data:queue:updated', 'system:user-active'],
         cache: { ttl: 10000, priority: 'high' },
         apiEndpoint: '/api/queue/status',
@@ -100,7 +100,7 @@ class RefreshService {
         component: 'AnalysisDataViewer'
       },
       ide: {
-        interval: 5000,          // 5 seconds
+        interval: 10000,          // 10 seconds (statt 5 Sekunden!)
         events: ['data:ide:state-changed', 'system:user-active'],
         cache: { ttl: 60000, priority: 'high' },
         apiEndpoint: '/api/ide/status',

@@ -1,0 +1,29 @@
+{
+  "name": "Menu Navigation Selectors",
+  "description": "Selectors for Cursor menu navigation functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "menuBar": {
+      "menuBar": ".menubar, [role=\"menubar\"]",
+      "fileMenu": "[aria-label*=\"File\"], .menubar-menu-item[aria-label*=\"File\"]",
+      "editMenu": "[aria-label*=\"Edit\"], .menubar-menu-item[aria-label*=\"Edit\"]",
+      "viewMenu": "[aria-label*=\"View\"], .menubar-menu-item[aria-label*=\"View\"]",
+      "goMenu": "[aria-label*=\"Go\"], .menubar-menu-item[aria-label*=\"Go\"]",
+      "runMenu": "[aria-label*=\"Run\"], .menubar-menu-item[aria-label*=\"Run\"]",
+      "terminalMenu": "[aria-label*=\"Terminal\"], .menubar-menu-item[aria-label*=\"Terminal\"]",
+      "helpMenu": "[aria-label*=\"Help\"], .menubar-menu-item[aria-label*=\"Help\"]"
+    },
+    "menuItems": {
+      "menuItem": ".menubar-menu-item, [role=\"menuitem\"]",
+      "submenu": ".menubar-menu-item[aria-haspopup=\"true\"]",
+      "separator": ".menubar-menu-item-separator",
+      "disabledItem": ".menubar-menu-item[aria-disabled=\"true\"]"
+    },
+    "contextMenu": {
+      "contextMenu": "[role=\"menu\"], .context-menu",
+      "contextMenuItem": "[role=\"menuitem\"], .context-menu-item",
+      "contextSubmenu": "[role=\"menuitem\"][aria-haspopup=\"true\"]",
+      "contextSeparator": ".context-menu-separator"
+    }
+  }
+}

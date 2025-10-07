@@ -825,6 +825,52 @@ export class CacheService {
   }
 
   /**
+   * Get Task data with caching
+   * @param {string} port - IDE port
+   */
+  async getTaskData(port) {
+    const cacheKey = `tasks_${port}`;
+    
+    // Check cache first
+    const cachedResult = this.get(cacheKey);
+    if (cachedResult) {
+      logger.info('Using cached Task data');
+      return { success: true, data: cachedResult };
+    }
+    
+    // Import apiCall dynamically
+    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    
+    try {
+      // Get projectId from port
+      const ideResponse = await apiCall('/api/ide/available');
+      if (!ideResponse.success) {
+        return { success: false, error: 'Failed to get IDE data' };
+      }
+      
+      const ide = ideResponse.data.find(i => i.port === port);
+      if (!ide) {
+        return { success: false, error: 'IDE not found' };
+      }
+      
+      const projectId = ide.workspacePath.split('/').pop(); // Get project name from path
+      
+      const result = await apiCall(`/api/projects/${projectId}/tasks`);
+      
+      // Cache the result if successful
+      if (result.success) {
+        this.set(cacheKey, result.data, 'tasks', 'tasks');
+        logger.info('Task data cached successfully');
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('Failed to fetch Task data:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Update IDE cache with new data instead of clearing
    * @param {object} data - New IDE data
    */

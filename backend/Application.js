@@ -1330,7 +1330,8 @@ class Application {
   setupCleanupTasks() {
     this.logger.info('Setting up cleanup tasks...');
 
-    // Cleanup expired sessions every 15 minutes
+    // Cleanup expired sessions
+    const sessionCleanupInterval = this.autoSecurityManager.getConfig().session?.cleanupInterval || 900000;
     setInterval(async () => {
       try {
         const result = await this.authService.cleanupExpiredSessions();
@@ -1338,9 +1339,10 @@ class Application {
       } catch (error) {
         this.logger.error('Failed to cleanup expired sessions:', error);
       }
-    }, 15 * 60 * 1000); // 15 minutes
+    }, sessionCleanupInterval);
 
-    // Cleanup old secrets every day
+    // Cleanup old secrets
+    const secretsCleanupInterval = this.autoSecurityManager.getConfig().security?.cleanupInterval || 86400000;
     setInterval(async () => {
       try {
         await this.autoSecurityManager.cleanupOldSecrets();
@@ -1348,9 +1350,10 @@ class Application {
       } catch (error) {
         this.logger.error('Failed to cleanup old secrets:', error);
       }
-    }, 24 * 60 * 60 * 1000); // 24 hours
+    }, secretsCleanupInterval);
 
-    // Cleanup old Auto-Finish sessions every 6 hours
+    // Cleanup old Auto-Finish sessions
+    const taskSessionCleanupInterval = this.autoSecurityManager.getConfig().taskSession?.cleanupInterval || 21600000;
     setInterval(async () => {
       try {
         if (this.taskSessionRepository) {
@@ -1360,9 +1363,10 @@ class Application {
       } catch (error) {
         this.logger.error('Failed to cleanup old Auto-Finish sessions:', error);
       }
-    }, 6 * 60 * 60 * 1000); // 6 hours
+    }, taskSessionCleanupInterval);
 
-    // Cleanup stale IDE entries every 10 minutes (less aggressive)
+    // Cleanup stale IDE entries
+    const cleanupInterval = this.autoSecurityManager.getConfig().ide?.cleanupInterval || 30000;
     setInterval(async () => {
       try {
         if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
@@ -1372,7 +1376,7 @@ class Application {
       } catch (error) {
         this.logger.error('Failed to cleanup stale IDE entries:', error);
       }
-    }, 10 * 60 * 1000); // 10 minutes instead of 2
+    }, cleanupInterval);
 
     this.logger.info('Cleanup tasks setup complete');
   }

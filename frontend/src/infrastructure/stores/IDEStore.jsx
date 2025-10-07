@@ -112,15 +112,15 @@ const useIDEStore = create(
           }));
           set({ availableIDEs: updatedIDEs });
           
-          // ✅ FIX: Load project data when active port changes - NOW ASYNC!
+          // ✅ FIX: Initialize empty data AND load chat data when active port changes
           const activeIDE = updatedIDEs.find(ide => ide.port === port);
           if (activeIDE && activeIDE.workspacePath) {
-            logger.info('Loading project data for new active port:', port, 'workspace:', activeIDE.workspacePath);
+            logger.info('Initializing empty data for new active port:', port, 'workspace:', activeIDE.workspacePath);
             // Initialize empty chat data immediately for UI responsiveness
             get().initializeEmptyChatData(activeIDE.workspacePath);
-            // Make project data loading asynchronous to avoid blocking the switch
+            // Load chat data asynchronously to avoid blocking the switch
             setTimeout(() => {
-              get().loadProjectDataForPort(activeIDE.workspacePath);
+              get().loadChatData(activeIDE.workspacePath);
             }, 100);
           } else {
             logger.warn('No active IDE found or no workspace path for port:', port);
@@ -221,51 +221,26 @@ const useIDEStore = create(
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
       
-          // Use CacheService for loading IDEs
-          const key = 'store_load_available_ides';
-          const cacheStart = performance.now();
-          const cachedResult = cacheService.get(key);
-          const cacheDuration = performance.now() - cacheStart;
+          // NO CACHE - ALWAYS FETCH FRESH DATA
+          logger.info('🔄 Fetching fresh IDE data from API (no cache)');
           
-          if (cachedResult) {
-            logger.info('✅ Using cached IDE data from CacheService');
-            logger.info(`📊 Cache hit! Data: ${JSON.stringify(cachedResult).substring(0, 100)}...`);
-            set({ availableIDEs: cachedResult, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
-            performanceLogger.end(operationId, { 
-              source: 'cache', 
-              cacheDuration: cacheDuration,
-              ideCount: cachedResult.length 
-            });
-            return;
-          } else {
-            logger.info('❌ Cache MISS - no cached data found');
-            logger.info(`🔍 Cache key: ${key}`);
-            logger.info(`📊 Cache stats: ${JSON.stringify(cacheService.getStats())}`);
-            
-            // ✅ FIX: Only make API call on cache miss
-            const apiStart = performance.now();
-            const result = await apiCall('/api/ide/available');
-            const apiDuration = performance.now() - apiStart;
+          const apiStart = performance.now();
+          const result = await apiCall('/api/ide/available');
+          const apiDuration = performance.now() - apiStart;
           
           if (result.success) {
-            const cacheSetStart = performance.now();
-            logger.info(`💾 Setting cache for key: ${key}`);
-            logger.info(`📊 Data to cache: ${JSON.stringify(result.data).substring(0, 100)}...`);
-            cacheService.set(key, result.data, 'ide', 'ide');
-            const cacheSetDuration = performance.now() - cacheSetStart;
+            const { activePort } = get();
             
-            // Verify cache was set
-            const verifyCache = cacheService.get(key);
-            logger.info(`✅ Cache verification: ${verifyCache ? 'SUCCESS' : 'FAILED'}`);
-            if (verifyCache) {
-              logger.info(`📊 Cached data verified: ${JSON.stringify(verifyCache).substring(0, 100)}...`);
-            }
+            // Add active status to fresh data
+            const availableIDEsWithActive = result.data.map(ide => ({
+              ...ide,
+              active: ide.port === activePort
+            }));
             
-            set({ availableIDEs: result.data, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
+            set({ availableIDEs: availableIDEsWithActive, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
             performanceLogger.end(operationId, { 
               source: 'api', 
               apiDuration: apiDuration,
-              cacheSetDuration: cacheSetDuration,
               ideCount: result.data.length 
             });
           } else {
@@ -276,7 +251,6 @@ const useIDEStore = create(
               error: result.error 
             });
           }
-          } // ✅ FIX: Close the else block for cache miss
         } catch (error) {
           logger.error('Error loading available IDEs:', error);
           set({ error: error.message, isLoading: false, loadingLock: false });
@@ -624,10 +598,8 @@ const useIDEStore = create(
           
           logger.info('Refreshing git status for workspace:', targetWorkspacePath);
           
-          const gitResult = await apiCall(`/api/projects/${projectId}/git/status`, { 
-            method: 'POST',
-            body: JSON.stringify({ projectPath: targetWorkspacePath })
-          });
+          // Use CacheService for git status instead of direct API call
+          const gitResult = await cacheService.getGitData(targetWorkspacePath, projectId);
           
           const gitData = {
             status: gitResult.success ? gitResult.data : null,
@@ -760,8 +732,8 @@ const useIDEStore = create(
           
           logger.info('Loading chat data for workspace:', targetWorkspacePath, 'activePort:', activePort);
           
-          // Load chat history from API
-          const response = await apiCall(`/api/chat/port/${activePort}/history`);
+          // Use CacheService for chat history instead of direct API call
+          const response = await cacheService.getChatData(activePort);
           
           const chatData = {
             messages: response && response.success ? (response.data?.messages || []) : [],
@@ -826,8 +798,8 @@ const useIDEStore = create(
           
           logger.info('Loading task data for workspace:', targetWorkspacePath, 'projectId:', projectId);
           
-          // Load tasks from API
-          const response = await apiCall(`/api/projects/${projectId}/tasks`);
+          // Use CacheService for tasks instead of direct API call
+          const response = await cacheService.getTaskData(activePort);
           
           const taskData = {
             tasks: response && response.success ? (Array.isArray(response.data) ? response.data : []) : [],
@@ -865,11 +837,8 @@ const useIDEStore = create(
           
           logger.info('Loading git data for workspace:', targetWorkspacePath, 'projectId:', projectId);
           
-          // Load git status from API
-          const response = await apiCall(`/api/projects/${projectId}/git/status`, { 
-            method: 'POST',
-            body: JSON.stringify({ projectPath: targetWorkspacePath })
-          });
+          // Use CacheService for git status instead of direct API call
+          const response = await cacheService.getGitData(targetWorkspacePath, projectId);
           
           const gitData = {
             status: response && response.success ? response.data : null,
@@ -1001,13 +970,41 @@ const useIDEStore = create(
         // Listen to local event bus
         eventBus.on('git-status-updated', handleGitStatusUpdated);
         eventBus.on('git-branch-changed', handleGitBranchChanged);
+        eventBus.on('ideListUpdated', () => {
+          logger.info('IDE list updated event received - reloading available IDEs');
+          get().loadAvailableIDEs();
+        });
         
         // ALSO listen to WebSocket service directly (like other components do)
         import('@/infrastructure/services/WebSocketService.jsx').then(module => {
           const WebSocketService = module.default;
           if (WebSocketService) {
+            // Start WebSocket connection
+            WebSocketService.connect().then(() => {
+              logger.info('WebSocket connected successfully');
+            }).catch(error => {
+              logger.warn('WebSocket connection failed:', error);
+            });
             WebSocketService.on('git-status-updated', handleGitStatusUpdated);
             WebSocketService.on('git-branch-changed', handleGitBranchChanged);
+            WebSocketService.on('ideListUpdated', () => {
+              logger.info('IDE list updated event received via WebSocket - reloading available IDEs');
+              get().loadAvailableIDEs();
+            });
+            WebSocketService.on('activePortChanged', (data) => {
+              const { port } = data;
+              logger.info('Active port changed via WebSocket:', port);
+              // Update active port in store
+              set({ activePort: port });
+              // Update active status for all IDEs
+              const { availableIDEs } = get();
+              const updatedIDEs = availableIDEs.map(ide => ({
+                ...ide,
+                active: ide.port === port
+              }));
+              set({ availableIDEs: updatedIDEs });
+            });
+            
             WebSocketService.on('analysis-completed', (data) => {
               const { workspacePath, analysisData, workflowId, projectId, type, results } = data;
               logger.info('Analysis completed via WebSocketService for workspace:', workspacePath, 'type:', type);
@@ -1131,6 +1128,7 @@ const useIDEStore = create(
         
         eventBus.off('git-status-updated');
         eventBus.off('git-branch-changed');
+        eventBus.off('ideListUpdated');
         eventBus.off('analysis-completed');
         eventBus.off('analysis-progress');
       },
@@ -1269,6 +1267,15 @@ const useIDEStore = create(
           if (optimizationStore.optimisticUpdates) {
             const previousPort = get().activePort;
             set({ activePort: port });
+            
+            // Also update availableIDEs optimistically
+            const { availableIDEs } = get();
+            const updatedIDEs = availableIDEs.map(ide => ({
+              ...ide,
+              active: ide.port === port
+            }));
+            set({ availableIDEs: updatedIDEs });
+            
             optimizationStore.updateProgress(25, 'Updating UI optimistically...');
           }
 
@@ -1331,6 +1338,14 @@ const useIDEStore = create(
               // Don't fail the IDE switch if warming fails
             }
             
+            // Update availableIDEs with new active status
+            const { availableIDEs } = get();
+            const updatedIDEs = availableIDEs.map(ide => ({
+              ...ide,
+              active: ide.port === port
+            }));
+            set({ availableIDEs: updatedIDEs });
+            
             logger.info('Successfully switched to IDE:', port);
             optimizationStore.completeSwitch(true, Date.now() - startTime);
             return true;
@@ -1338,6 +1353,14 @@ const useIDEStore = create(
             // Revert on failure
             if (optimizationStore.optimisticUpdates) {
               set({ activePort: previousPort });
+              
+              // Also revert availableIDEs state
+              const { availableIDEs } = get();
+              const revertedIDEs = availableIDEs.map(ide => ({
+                ...ide,
+                active: ide.port === previousPort
+              }));
+              set({ availableIDEs: revertedIDEs });
             }
             throw new Error(result.error || 'Failed to switch IDE');
           }
@@ -1358,20 +1381,20 @@ const useIDEStore = create(
           // Reload available IDEs
           await get().loadAvailableIDEs();
           
-          // Re-validate current active port
-          const { activePort } = get();
-          if (activePort) {
-            const isValid = await get().validatePort(activePort);
-            if (!isValid) {
-              logger.info('Current active port invalid, selecting new one');
-              await get().loadActivePort();
-            }
-          } else {
-            // No active port, select one
-            await get().loadActivePort();
-          }
+          // DISABLED: Re-validate current active port - This was causing port to reset!
+          // const { activePort } = get();
+          // if (activePort) {
+          //   const isValid = await get().validatePort(activePort);
+          //   if (!isValid) {
+          //     logger.info('Current active port invalid, selecting new one');
+          //     await get().loadActivePort();
+          //   }
+          // } else {
+          //   // No active port, select one
+          //   await get().loadActivePort();
+          // }
           
-          logger.info('Refresh complete');
+          logger.info('Refresh complete - NO PORT RESET!');
         } catch (error) {
           logger.error('Error refreshing:', error);
           set({ error: error.message });
@@ -1381,6 +1404,7 @@ const useIDEStore = create(
       clearError: () => {
         set({ error: null });
       },
+
 
       reset: () => {
         set({
@@ -1398,9 +1422,7 @@ const useIDEStore = create(
           }
         });
         
-        // Clear CacheService cache for IDE switches
-        cacheService.invalidateByNamespace('ide');
-        logger.info('IDEStore reset - CacheService IDE cache cleared');
+        logger.info('IDEStore reset - no cache to clear');
       },
 
       // Debug function to check performance

@@ -179,8 +179,8 @@ class IDESelectionController {
 
       res.json({
         success: true,
-        data: {
-          ides: enhancedIDEs,
+        data: enhancedIDEs, // Return array directly for frontend compatibility
+        meta: {
           activePort: activePort,
           total: enhancedIDEs.length,
           selectable: enhancedIDEs.filter(ide => ide.canSelect).length
@@ -349,8 +349,8 @@ class IDESelectionController {
   getSelectionPriority(ide) {
     let priority = 0;
     
-    // Active IDE gets highest priority
-    if (ide.active) priority += 100;
+    const activePort = this.ideManager.getActivePort();
+    if (ide.port === activePort) priority += 100;
     
     // Running IDEs get higher priority
     if (ide.status === 'running') priority += 50;

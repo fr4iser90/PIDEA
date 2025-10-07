@@ -73,16 +73,16 @@ class DOMCodeBlockDetector {
           let confidence = 0.5; // Base confidence
           
           // Check for Monaco editor (high confidence)
-          if (container.querySelector(selectors.monacoEditor)) confidence += 0.3;
+          if (container.querySelector(selectors.chatSelectors.monacoEditor)) confidence += 0.3;
           
           // Check for syntax highlighting (medium confidence)
-          if (container.querySelector(selectors.syntaxTokens)) confidence += 0.2;
+          if (container.querySelector(selectors.chatSelectors.syntaxTokens)) confidence += 0.2;
           
           // Check for filename (low confidence)
-          if (container.querySelector(selectors.codeBlockFilename)) confidence += 0.1;
+          if (container.querySelector(selectors.chatSelectors.codeBlockFilename)) confidence += 0.1;
           
           // Check for language indicator (medium confidence)
-          if (container.querySelector(selectors.codeBlockLanguage)) confidence += 0.15;
+          if (container.querySelector(selectors.chatSelectors.codeBlockLanguage)) confidence += 0.15;
           
           return Math.min(confidence, 1.0);
         };
@@ -123,17 +123,17 @@ class DOMCodeBlockDetector {
         };
 
         const codeBlocks = [];
-        const containers = document.querySelectorAll(selectors.codeBlocks);
+        const containers = document.querySelectorAll(selectors.chatSelectors.codeBlocks);
         
         // Log found containers
         const containerCount = containers.length;
         
         containers.forEach((container, index) => {
-          const content = container.querySelector(selectors.codeBlockContent);
-          const header = container.querySelector(selectors.codeBlockHeader);
-          const filename = container.querySelector(selectors.codeBlockFilename);
-          const language = container.querySelector(selectors.codeBlockLanguage);
-          const editor = container.querySelector(selectors.monacoEditor);
+          const content = container.querySelector(selectors.chatSelectors.codeBlockContent);
+          const header = container.querySelector(selectors.chatSelectors.codeBlockHeader);
+          const filename = container.querySelector(selectors.chatSelectors.codeBlockFilename);
+          const language = container.querySelector(selectors.chatSelectors.codeBlockLanguage);
+          const editor = container.querySelector(selectors.chatSelectors.monacoEditor);
           
           // Initialize variables
           let codeLines = null;
@@ -153,7 +153,7 @@ class DOMCodeBlockDetector {
           
           if (content && editor) {
             // Try multiple selectors for code lines
-            let codeLines = editor.querySelectorAll(selectors.codeLines);
+            let codeLines = editor.querySelectorAll(selectors.chatSelectors.codeLines);
             
             // If no lines found, try alternative selectors
             if (codeLines.length === 0) {
@@ -202,8 +202,8 @@ class DOMCodeBlockDetector {
               filename: filename?.textContent || null,
               confidence: confidence,
               syntax: syntax,
-              hasApplyButton: !!container.querySelector(selectors.codeBlockApplyButton) && 
-                container.querySelector(selectors.codeBlockApplyButton).textContent.includes('Apply'),
+              hasApplyButton: !!container.querySelector(selectors.chatSelectors.codeBlockApplyButton) && 
+                container.querySelector(selectors.chatSelectors.codeBlockApplyButton).textContent.includes('Apply'),
               lineCount: codeLines ? codeLines.length : 0,
               characterCount: codeText.length,
               debugInfo: debugInfo
@@ -237,10 +237,10 @@ class DOMCodeBlockDetector {
         if (!container) return [];
         
         const codeBlocks = [];
-        const editors = container.querySelectorAll(selectors.monacoEditor);
+        const editors = container.querySelectorAll(selectors.chatSelectors.monacoEditor);
         
         editors.forEach((editor, index) => {
-          const codeLines = editor.querySelectorAll(selectors.codeLines);
+          const codeLines = editor.querySelectorAll(selectors.chatSelectors.codeLines);
           const codeText = Array.from(codeLines)
             .map(line => line.textContent || '')
             .join('\n')

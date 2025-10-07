@@ -39,20 +39,21 @@ const StatusBadge = ({
     setLastUpdate(new Date().toISOString());
   }, [activePort, availableIDEs]);
 
-  // Refresh status manually
+  // Refresh status manually - DISABLED AUTO REFRESH!
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
     try {
-      await refresh();
+      // DISABLED: await refresh(); - This was causing port to reset!
+      // Only detect status, don't refresh IDE data
       detectStatus();
     } catch (error) {
       logger.error('Error refreshing status:', error);
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, detectStatus, refresh]);
+  }, [isRefreshing, detectStatus]);
 
   // Handle click events
   const handleClick = useCallback((e) => {

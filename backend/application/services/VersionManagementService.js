@@ -44,7 +44,6 @@ class VersionManagementService {
       };
 
       // Step 1: Detect current version
-      this.logger.info(`Step 1: Detecting version for ${ideType} on port ${port}`);
       const versionResult = await this.versionDetectionService.detectVersion(port, ideType);
       
       if (!versionResult || !versionResult.currentVersion) {
@@ -61,7 +60,8 @@ class VersionManagementService {
       const currentVersion = versionResult.currentVersion;
       const isNewVersion = versionResult.isNewVersion;
 
-      this.logger.info(`Detected version: ${currentVersion} (new: ${isNewVersion})`);
+      const selectorVersion = versionResult.compatibleVersion || currentVersion;
+      this.logger.info(`Detected version: ${currentVersion} (selector: ${selectorVersion})`);
 
       // Step 2: Check if we need to collect selectors
       if (isNewVersion) {

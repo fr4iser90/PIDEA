@@ -113,11 +113,13 @@ class IDETypesUpdater {
   formatSelectorsForIDETypes(selectors) {
     try {
       const formatted = {
-        chatSelectors: selectors.chat || {},
-        editorSelectors: selectors.editor || {},
-        explorerSelectors: selectors.explorer || {},
-        terminalSelectors: selectors.terminal || {},
-        searchSelectors: selectors.search || {},
+        chatSelectors: selectors.chatSelectors || {},
+        commandPaletteSelectors: selectors.commandPaletteSelectors || {},
+        fileOperationSelectors: selectors.fileOperationSelectors || {},
+        menuNavigationSelectors: selectors.menuNavigationSelectors || {},
+        projectManagementSelectors: selectors.projectManagementSelectors || {},
+        welcomeScreenSelectors: selectors.welcomeScreenSelectors || {},
+        workspaceSelectors: selectors.workspaceSelectors || {},
         gitSelectors: selectors.git || {},
         commandSelectors: selectors.commands || {},
         panelSelectors: selectors.panels || {},

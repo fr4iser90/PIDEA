@@ -449,7 +449,7 @@ class TaskStatusTransitionService {
                     task.sourcePath = updatedSourcePath;
                 }
                 
-                // ✅ CRITICAL FIX: Update metadata with new directory name and path
+                // Update metadata with new directory name and path
                 if (!task.metadata) {
                     task.metadata = {};
                 }

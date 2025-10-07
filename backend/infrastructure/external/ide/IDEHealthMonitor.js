@@ -18,7 +18,11 @@ class IDEHealthMonitor extends EventEmitter {
     this.ideHealth = new Map(); // port -> health info
     this.healthHistory = new Map(); // port -> health history
     this.maxHistorySize = 100;
-    this.healthCheckInterval = 30000; // 30 seconds default
+    this.healthCheckInterval = 15000; // 30 seconds
+    
+    // Stale detection configuration
+    this.failureCounts = new Map(); // port -> failure count
+    this.maxFailures = 1; // Consider stale after X consecutive failures
   }
 
   /**
@@ -180,7 +184,7 @@ class IDEHealthMonitor extends EventEmitter {
         hostname: '127.0.0.1',
         port: port,
         path: '/json/version',
-        timeout: 5000
+        timeout: 1000 // 1 second timeout
       }, (res) => {
         resolve(res.statusCode === 200);
       });
@@ -389,6 +393,9 @@ class IDEHealthMonitor extends EventEmitter {
     // Update current health
     this.ideHealth.set(port, healthInfo);
 
+    // Handle stale detection
+    this.handleStaleDetection(port, healthInfo);
+
     // Add to history
     const history = this.healthHistory.get(port) || [];
     history.push(healthInfo);
@@ -402,6 +409,113 @@ class IDEHealthMonitor extends EventEmitter {
 
     // Emit health update event
     this.emit('healthUpdate', { port, healthInfo });
+  }
+
+  /**
+   * Handle stale detection for IDE
+   * @param {number} port - IDE port
+   * @param {Object} healthInfo - Health information
+   */
+  handleStaleDetection(port, healthInfo) {
+    const currentFailureCount = this.failureCounts.get(port) || 0;
+    
+    if (healthInfo.status === 'unhealthy' || healthInfo.status === 'error') {
+      // Increment failure count
+      const newFailureCount = currentFailureCount + 1;
+      this.failureCounts.set(port, newFailureCount);
+      
+      logger.warn(`IDE on port ${port} failed health check (${newFailureCount}/${this.maxFailures})`);
+      
+      // Check if IDE is now stale
+      if (newFailureCount >= this.maxFailures) {
+        logger.error(`IDE on port ${port} is now STALE after ${newFailureCount} consecutive failures`);
+        
+        // Emit stale event
+        this.emit('ideStale', {
+          port: port,
+          ideType: healthInfo.ideType,
+          failureCount: newFailureCount,
+          lastHealthInfo: healthInfo,
+          timestamp: Date.now()
+        });
+        
+        // Mark as stale in health info
+        healthInfo.stale = true;
+        healthInfo.staleSince = Date.now();
+      }
+    } else if (healthInfo.status === 'healthy') {
+      // Reset failure count on successful health check
+      if (currentFailureCount > 0) {
+        logger.info(`IDE on port ${port} recovered, resetting failure count from ${currentFailureCount} to 0`);
+        this.failureCounts.set(port, 0);
+        
+        // Remove stale flag if it was set
+        if (healthInfo.stale) {
+          healthInfo.stale = false;
+          healthInfo.staleSince = null;
+          logger.info(`IDE on port ${port} is no longer stale`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Get stale IDEs
+   * @returns {Array} Array of stale IDE information
+   */
+  getStaleIDEs() {
+    const staleIDEs = [];
+    
+    for (const [port, healthInfo] of this.ideHealth) {
+      if (healthInfo.stale) {
+        staleIDEs.push({
+          port: port,
+          ideType: healthInfo.ideType,
+          failureCount: this.failureCounts.get(port) || 0,
+          staleSince: healthInfo.staleSince,
+          lastHealthInfo: healthInfo
+        });
+      }
+    }
+    
+    return staleIDEs;
+  }
+
+  /**
+   * Check if IDE is stale
+   * @param {number} port - IDE port
+   * @returns {boolean} True if IDE is stale
+   */
+  isIDEStale(port) {
+    const healthInfo = this.ideHealth.get(port);
+    return healthInfo && healthInfo.stale === true;
+  }
+
+  /**
+   * Get failure count for IDE
+   * @param {number} port - IDE port
+   * @returns {number} Failure count
+   */
+  getFailureCount(port) {
+    return this.failureCounts.get(port) || 0;
+  }
+
+  /**
+   * Reset failure count for IDE
+   * @param {number} port - IDE port
+   */
+  resetFailureCount(port) {
+    this.failureCounts.set(port, 0);
+    logger.info(`Reset failure count for IDE on port ${port}`);
+  }
+
+  /**
+   * Set stale detection configuration
+   * @param {number} maxFailures - Maximum failures before considering stale
+   */
+  setStaleThreshold(maxFailures) {
+    this.maxFailures = maxFailures;
+    logger.info(`Set stale threshold to ${maxFailures} failures`);
   }
 
   /**

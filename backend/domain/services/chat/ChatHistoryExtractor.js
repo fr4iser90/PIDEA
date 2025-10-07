@@ -205,7 +205,7 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Find all User messages
-      const userElements = document.querySelectorAll(selectors.userMessages);
+      const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
       userElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -220,7 +220,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI normal messages (text only)
-      const aiElements = document.querySelectorAll(selectors.aiMessages);
+      const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
       aiElements.forEach((element, index) => {
         const content = element.innerText || element.textContent || '';
         if (content.trim()) {
@@ -235,7 +235,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI code blocks as SEPARATE messages
-      const codeBlockElements = document.querySelectorAll(selectors.codeBlocks);
+      const codeBlockElements = document.querySelectorAll(selectors.chatSelectors.codeBlocks);
       codeBlockElements.forEach((element, index) => {
         const content = element.innerText || element.textContent || '';
         if (content.trim()) {
@@ -302,7 +302,7 @@ class ChatHistoryExtractor {
         debug.allChatContainers = allChatContainers.length;
         
         // Try the original selectors
-        const messageRows = document.querySelectorAll(selectors.messageRows || '.monaco-list-row');
+        const messageRows = document.querySelectorAll(selectors.chatSelectors.messageRows || '.monaco-list-row');
         debug.messageRowsCount = messageRows.length;
         
         messageRows.forEach((row, index) => {
@@ -365,7 +365,7 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Find all User messages
-      const userElements = document.querySelectorAll(selectors.userMessages);
+      const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
       userElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -380,7 +380,7 @@ class ChatHistoryExtractor {
       });
       
       // Find all AI messages
-      const aiElements = document.querySelectorAll(selectors.aiMessages);
+      const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
       aiElements.forEach((element, index) => {
         const text = element.innerText || element.textContent || '';
         if (text.trim()) {
@@ -419,8 +419,8 @@ class ChatHistoryExtractor {
       const messages = [];
       
       // Try to find user messages
-      if (selectors.userMessages) {
-        const userElements = document.querySelectorAll(selectors.userMessages);
+      if (selectors.chatSelectors.userMessages) {
+        const userElements = document.querySelectorAll(selectors.chatSelectors.userMessages);
         userElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {
@@ -436,8 +436,8 @@ class ChatHistoryExtractor {
       }
       
       // Try to find AI messages
-      if (selectors.aiMessages) {
-        const aiElements = document.querySelectorAll(selectors.aiMessages);
+      if (selectors.chatSelectors.aiMessages) {
+        const aiElements = document.querySelectorAll(selectors.chatSelectors.aiMessages);
         aiElements.forEach((element, index) => {
           const text = element.innerText || element.textContent || '';
           if (text.trim()) {

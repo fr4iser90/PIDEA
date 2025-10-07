@@ -265,7 +265,7 @@ class WorkflowGitService {
                 description: 'Documentation generation by AI'
             },
 
-            // ===== CRITICAL BUG FIXES (merge to main) =====
+            // ===== BUG FIXES (merge to main) =====
             [safe(TaskType.BUG)]: {
                 type: 'bugfix',
                 prefix: 'fix',

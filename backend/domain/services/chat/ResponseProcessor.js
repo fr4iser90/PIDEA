@@ -22,9 +22,9 @@ class ResponseProcessor {
       // Check for generating indicator using JSON selector
       
       // Check for typing indicators using JSON selectors
-      if (this.selectors && this.selectors.loadingIndicator) {
+      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.loadingIndicator) {
         try {
-          const elements = await page.$$(this.selectors.loadingIndicator);
+          const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
           if (elements.length > 0) {
             for (const element of elements) {
               const text = await element.textContent();
@@ -40,9 +40,9 @@ class ResponseProcessor {
       }
       
       // Check for typing indicators using thinkingIndicator from JSON
-      if (this.selectors && this.selectors.thinkingIndicator) {
+      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.thinkingIndicator) {
         try {
-          const elements = await page.$$(this.selectors.thinkingIndicator);
+          const elements = await page.$$(this.selectors.chatSelectors.thinkingIndicator);
           if (elements.length > 0) {
             return true;
           }
@@ -52,9 +52,9 @@ class ResponseProcessor {
       }
       
       // Additional check using alternative selectors from JSON
-      if (this.selectors && this.selectors.chatStatus && this.selectors.chatStatus.loadingIndicator) {
+      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.loadingIndicator) {
         try {
-          const elements = await page.$$(this.selectors.chatStatus.loadingIndicator);
+          const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
           if (elements.length > 0) {
             return true;
           }
@@ -82,7 +82,7 @@ class ResponseProcessor {
       const responseStrategies = [
         // Strategy 1: Direct AI message selectors
         async () => {
-          const messages = await page.$$(this.selectors.aiMessages);
+          const messages = await page.$$(this.selectors.chatSelectors.aiMessages);
           if (messages.length > 0) {
             const lastMessage = messages[messages.length - 1];
             const text = await lastMessage.textContent();
@@ -94,8 +94,8 @@ class ResponseProcessor {
         // Strategy 2: Look for markdown containers using JSON selector
         async () => {
           // Use the aiMessages selector as it points to the markdown container
-          if (this.selectors.aiMessages) {
-            const elements = await page.$$(this.selectors.aiMessages);
+          if (this.selectors.chatSelectors.aiMessages) {
+            const elements = await page.$$(this.selectors.chatSelectors.aiMessages);
             if (elements.length > 0) {
               const lastElement = elements[elements.length - 1];
               const text = await lastElement.textContent();
@@ -107,8 +107,8 @@ class ResponseProcessor {
         
         // Strategy 3: Look for content using messagesContainer from JSON  
         async () => {
-          if (this.selectors.messagesContainer) {
-            const elements = await page.$$(this.selectors.messagesContainer);
+          if (this.selectors.chatSelectors.messagesContainer) {
+            const elements = await page.$$(this.selectors.chatSelectors.messagesContainer);
             if (elements.length > 0) {
               const lastElement = elements[elements.length - 1];
               const text = await lastElement.textContent();
@@ -199,9 +199,9 @@ class ResponseProcessor {
       }
       
       // Check for loading indicators - if visible, not complete
-      if (this.selectors && this.selectors.loadingIndicator) {
+      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.loadingIndicator) {
         try {
-          const elements = await page.$$(this.selectors.loadingIndicator);
+          const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
@@ -217,9 +217,9 @@ class ResponseProcessor {
       }
       
       // Check for thinking indicators - if visible, not complete
-      if (this.selectors && this.selectors.thinkingIndicator) {
+      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.thinkingIndicator) {
         try {
-          const elements = await page.$$(this.selectors.thinkingIndicator);
+          const elements = await page.$$(this.selectors.chatSelectors.thinkingIndicator);
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
@@ -295,15 +295,15 @@ class ResponseProcessor {
         return [];
       }
 
-      const codeBlocks = await page.$$(this.selectors.codeBlocks);
+      const codeBlocks = await page.$$(this.selectors.chatSelectors.codeBlocks);
       const blocks = [];
 
       for (const block of codeBlocks) {
         try {
           // Extract code content
           let codeText = '';
-          if (this.selectors.codeBlockContent) {
-            const contentElements = await block.$$(this.selectors.codeBlockContent);
+          if (this.selectors.chatSelectors.codeBlockContent) {
+            const contentElements = await block.$$(this.selectors.chatSelectors.codeBlockContent);
             if (contentElements.length > 0) {
               codeText = await contentElements[0].textContent();
             } else {
@@ -315,9 +315,9 @@ class ResponseProcessor {
 
           // Extract language if available
           let language = null;
-          if (this.selectors.codeBlockLanguage) {
+          if (this.selectors.chatSelectors.codeBlockLanguage) {
             try {
-              const langElements = await block.$$(this.selectors.codeBlockLanguage);
+              const langElements = await block.$$(this.selectors.chatSelectors.codeBlockLanguage);
               if (langElements.length > 0) {
                 const langElement = langElements[0];
                 const className = await langElement.getAttribute('class');

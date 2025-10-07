@@ -1,0 +1,54 @@
+{
+  "name": "Welcome Screen Selectors",
+  "description": "Selectors for Cursor welcome screen and authentication functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "welcomeContainer": {
+      "mainContainer": "[class*=\"welcome\"], [class*=\"getting-started\"], [class*=\"onboarding\"]",
+      "authContainer": "[class*=\"auth\"], [class*=\"login\"], [class*=\"signup\"]",
+      "welcomeTitle": "*:has-text(\"Welcome to Cursor\")",
+      "subtitle": "*:has-text(\"The AI Code Editor\")"
+    },
+    "authentication": {
+      "loginButton": "*:has-text(\"Log In\"), button:has-text(\"Login\"), [aria-label*=\"Login\"]",
+      "signUpButton": "*:has-text(\"Sign Up\"), button:has-text(\"Sign Up\"), [aria-label*=\"Sign Up\"]",
+      "signInButton": "*:has-text(\"Sign In\"), button:has-text(\"Sign In\")",
+      "createAccountButton": "*:has-text(\"Create Account\"), button:has-text(\"Create Account\")",
+      "skipButton": "*:has-text(\"Skip\"), button:has-text(\"Skip\")",
+      "continueButton": "*:has-text(\"Continue\"), button:has-text(\"Continue\")",
+      "skipAndContinueLink": "*:has-text(\"Skip and continue\")",
+      "getStartedButton": "*:has-text(\"Get Started\"), button:has-text(\"Get Started\")",
+      "startButton": "*:has-text(\"Start\"), button:has-text(\"Start\")"
+    },
+    "authFeatures": {
+      "aiFeaturesText": "*:has-text(\"AI features require log in\")",
+      "authDescription": "[class*=\"description\"], [class*=\"subtitle\"]",
+      "authBenefits": "[class*=\"benefits\"], [class*=\"features\"]",
+      "authForm": "form[class*=\"auth\"], form[class*=\"login\"]",
+      "emailInput": "input[type=\"email\"], input[placeholder*=\"email\"]",
+      "passwordInput": "input[type=\"password\"], input[placeholder*=\"password\"]",
+      "usernameInput": "input[placeholder*=\"username\"], input[placeholder*=\"name\"]"
+    },
+    "welcomeActions": {
+      "openFolder": "[aria-label*=\"Open Folder\"], [aria-label*=\"Open\"]",
+      "newProject": "[aria-label*=\"New Project\"], [aria-label*=\"New\"]",
+      "recentProjects": "[class*=\"recent\"], [class*=\"history\"]",
+      "tutorialButton": "[aria-label*=\"Tutorial\"], button:has-text(\"Tutorial\")",
+      "helpButton": "[aria-label*=\"Help\"], button:has-text(\"Help\")",
+      "documentationButton": "[aria-label*=\"Documentation\"], button:has-text(\"Documentation\")"
+    },
+    "testIds": {
+      "welcomeScreen": "[data-testid*=\"welcome\"]",
+      "authScreen": "[data-testid*=\"auth\"]",
+      "loginScreen": "[data-testid*=\"login\"]",
+      "signupScreen": "[data-testid*=\"signup\"]",
+      "onboardingScreen": "[data-testid*=\"onboarding\"]"
+    }
+  },
+  "status": {
+    "isWelcomeScreen": "[class*=\"welcome\"], *:has-text(\"Welcome to Cursor\")",
+    "isAuthScreen": "[class*=\"auth\"], [class*=\"login\"], [class*=\"signup\"]",
+    "isOnboarding": "[class*=\"onboarding\"], [class*=\"getting-started\"]",
+    "isLoggedIn": "[class*=\"workspace\"], [class*=\"folder\"], .tab"
+  }
+}

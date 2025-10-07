@@ -45,13 +45,11 @@ class VersionDetectionService {
    */
   async detectVersion(port, ideType) {
     try {
-      this.logger.info(`Detecting version for ${ideType} on port ${port}`);
-      
       // Check cache first
       const cacheKey = `${ideType}:${port}`;
       const cached = this.cache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        this.logger.info(`Using cached version for ${ideType} on port ${port}: ${cached.version}`);
+        this.logger.debug(`Using cached version for ${ideType} on port ${port}: ${cached.version}`);
         return cached.result;
       }
 
@@ -89,7 +87,8 @@ class VersionDetectionService {
         timestamp: Date.now()
       });
 
-      this.logger.info(`Version detection completed for ${ideType}: ${currentVersion} (new: ${isNewVersion})`);
+      const selectorVersion = compatibleVersion || currentVersion;
+      this.logger.info(`Version detection completed for ${ideType}: ${currentVersion} (selector: ${selectorVersion})`);
       return result;
 
     } catch (error) {
@@ -215,21 +214,48 @@ class VersionDetectionService {
         return null;
       }
 
-      // Convert to array and sort by version
+      // If current version is known, use it
+      if (knownVersions.has(currentVersion)) {
+        return currentVersion;
+      }
+
+      // Convert to array and sort by version (ascending order)
       const sortedVersions = Array.from(knownVersions).sort((a, b) => {
         const aParts = a.split('.').map(Number);
         const bParts = b.split('.').map(Number);
         
         for (let i = 0; i < 3; i++) {
           if (aParts[i] !== bParts[i]) {
-            return bParts[i] - aParts[i]; // Descending order
+            return aParts[i] - bParts[i]; // Ascending order
           }
         }
         return 0;
       });
 
-      // Return the latest known version as potential compatible version
-      return sortedVersions[0] || null;
+      // Find the highest known version that is <= current version
+      const currentParts = currentVersion.split('.').map(Number);
+      let compatibleVersion = null;
+
+      for (let i = sortedVersions.length - 1; i >= 0; i--) {
+        const versionParts = sortedVersions[i].split('.').map(Number);
+        
+        // Check if this version is <= current version
+        let isCompatible = true;
+        for (let j = 0; j < 3; j++) {
+          if (versionParts[j] > currentParts[j]) {
+            isCompatible = false;
+            break;
+          }
+        }
+        
+        if (isCompatible) {
+          compatibleVersion = sortedVersions[i];
+          break;
+        }
+      }
+
+      // If no compatible version found, use the oldest known version
+      return compatibleVersion || sortedVersions[0] || null;
 
     } catch (error) {
       this.logger.error(`Error finding compatible version for ${ideType} ${currentVersion}:`, error.message);

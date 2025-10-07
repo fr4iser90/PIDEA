@@ -74,7 +74,7 @@ class IDESelectorManager {
       const content = fs.readFileSync(selectorPath, 'utf8');
       const selectorsData = JSON.parse(content);
       
-      // Return the full selectors structure (don't extract just chatSelectors)
+      // Return the full selectors structure (consolidated 7-category structure)
       const selectors = selectorsData;
       
       logger.info(`Retrieved selectors for ${ideType} version ${version} from JSON file`);

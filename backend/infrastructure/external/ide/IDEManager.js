@@ -48,6 +48,11 @@ class IDEManager {
       logger: logger
     });
     
+    // Add caching for IDE detection results
+    this.ideDetectionCache = new Map(); // port -> { data, timestamp }
+    this.ideDetectionCacheTimeout = 30 * 1000; // 30 seconds cache
+    this.lastDetectionStatus = new Map(); // port -> { version, workspacePath, status }
+    
     // Initialize workspace detection (only if browserManager is provided)
     this.cdpConnectionManager = null;
     this.cdpWorkspaceDetector = null;
@@ -112,6 +117,66 @@ class IDEManager {
         }
       });
     }
+    
+    // Setup health monitor event handlers
+    if (this.healthMonitor) {
+      // Listen for stale IDE events
+      this.healthMonitor.on('ideStale', async (staleData) => {
+        logger.error(`IDE on port ${staleData.port} is STALE! Cleaning up immediately...`);
+        
+        try {
+          // Immediately clean up the stale IDE
+          await this.cleanupStaleIDEs(staleData.port);
+          
+          // If this was the active IDE, switch to another one
+          if (this.activePort === staleData.port) {
+            const availableIDEs = await this.getAvailableIDEs();
+            if (availableIDEs.length > 0) {
+              const newActivePort = availableIDEs[0].port;
+              logger.info(`Switching from stale port ${staleData.port} to ${newActivePort}`);
+              
+              // Switch to the new active port
+              await this.switchToIDE(newActivePort);
+              
+              // Emit event to frontend
+              if (this.eventBus) {
+                this.eventBus.emit('activePortChanged', {
+                  port: newActivePort,
+                  previousPort: staleData.port,
+                  reason: 'stale_ide_cleanup',
+                  timestamp: Date.now()
+                });
+              }
+            } else {
+              // No IDEs available
+              this.activePort = null;
+              logger.warn('No IDEs available after cleaning up stale IDE');
+              
+              // Emit event to frontend
+              if (this.eventBus) {
+                this.eventBus.emit('activePortChanged', {
+                  port: null,
+                  previousPort: staleData.port,
+                  reason: 'no_ides_available',
+                  timestamp: Date.now()
+                });
+              }
+            }
+          }
+          
+          logger.info(`Successfully cleaned up stale IDE on port ${staleData.port}`);
+        } catch (error) {
+          logger.error(`Failed to clean up stale IDE on port ${staleData.port}:`, error.message);
+        }
+      });
+      
+      // Listen for health updates
+      this.healthMonitor.on('healthUpdate', (healthData) => {
+        logger.debug(`Health update for port ${healthData.port}:`, healthData.healthInfo.status);
+      });
+      
+      logger.info('Health monitor event handlers setup complete');
+    }
   }
 
   /**
@@ -168,6 +233,16 @@ class IDEManager {
         }
       }
       
+      // Start health monitoring
+      if (this.healthMonitor && typeof this.healthMonitor.startMonitoring === 'function') {
+        try {
+          await this.healthMonitor.startMonitoring();
+          logger.info('Health monitoring started successfully');
+        } catch (error) {
+          logger.warn('Failed to start health monitoring:', error.message);
+        }
+      }
+      
       this.initialized = true;
       logger.info('Initialization complete');
       
@@ -191,14 +266,6 @@ class IDEManager {
       await this.initialize();
     }
 
-    // Check BackendCache first
-    const cacheKey = 'ide_available_list';
-    const cachedResult = backendCache.get(cacheKey);
-    if (cachedResult) {
-      logger.info('Returning cached IDE data from BackendCache');
-      return cachedResult;
-    }
-
     const detectedIDEs = await this.detectorFactory.detectAll() || [];
     const startedIDEs = this.starterFactory.getRunningIDEs() || [];
     
@@ -211,7 +278,6 @@ class IDEManager {
         source: 'detected',
         workspacePath: null, // Will be detected on demand
         ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
-        active: ide.port === this.activePort,
         healthStatus: this.healthMonitor && typeof this.healthMonitor.getIDEHealthStatus === 'function' 
           ? this.healthMonitor.getIDEHealthStatus(ide.port) 
           : null
@@ -224,17 +290,22 @@ class IDEManager {
         source: 'started',
         workspacePath: null, // Will be detected on demand
         ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
-        active: ide.port === this.activePort,
         healthStatus: this.healthMonitor && typeof this.healthMonitor.getIDEHealthStatus === 'function' 
           ? this.healthMonitor.getIDEHealthStatus(ide.port) 
           : null
       });
     });
 
-    // Detect workspace paths and versions for all IDEs with timeout protection
+    // Detect workspace paths and versions for all IDEs with caching and status change detection
     const idesWithWorkspacesAndVersions = await Promise.allSettled(
       Array.from(allIDEs.values()).map(async (ide) => {
         try {
+          // Check cache first
+          const cachedResult = this.getCachedIDEResult(ide.port);
+          if (cachedResult) {
+            return cachedResult;
+          }
+
           // Use Promise.race to add timeout protection
           const workspacePromise = this.detectWorkspacePath(ide.port);
           const versionPromise = this.detectIDEVersion(ide.port, ide.ideType);
@@ -252,22 +323,38 @@ class IDEManager {
           const finalWorkspacePath = workspacePath?.status === 'fulfilled' ? workspacePath.value : null;
           const finalVersion = version?.status === 'fulfilled' ? version.value : null;
           
-          if (finalVersion) {
-            logger.info(`Detected version for ${ide.ideType} on port ${ide.port}: ${finalVersion}`);
-          }
-          
-          return {
+          const ideData = {
             ...ide,
             workspacePath: finalWorkspacePath,
             version: finalVersion
           };
+
+          // Only log if status has changed
+          if (this.hasIDEStatusChanged(ide.port, ideData)) {
+            if (finalVersion) {
+              logger.info(`Detected version for ${ide.ideType} on port ${ide.port}: ${finalVersion}`);
+            }
+            if (finalWorkspacePath) {
+              logger.info(`Detected workspace for ${ide.ideType} on port ${ide.port}: ${finalWorkspacePath}`);
+            }
+            // Update last detection status
+            this.updateLastDetectionStatus(ide.port, ideData);
+          }
+          
+          // Cache the result
+          this.cacheIDEResult(ide.port, ideData);
+          
+          return ideData;
         } catch (error) {
           logger.warn(`Failed to detect workspace/version for port ${ide.port}:`, error.message);
-          return {
+          const errorData = {
             ...ide,
             workspacePath: null,
             version: null
           };
+          // Cache error result too (shorter timeout)
+          this.cacheIDEResult(ide.port, errorData);
+          return errorData;
         }
       })
     ).then(results => 
@@ -279,10 +366,84 @@ class IDEManager {
       })
     );
 
-    // Cache the result in BackendCache
-    backendCache.set(cacheKey, idesWithWorkspacesAndVersions, 'ide', 'ide');
+    // Register new IDEs with health monitoring
+    for (const ide of idesWithWorkspacesAndVersions) {
+      if (this.healthMonitor && typeof this.healthMonitor.registerIDE === 'function') {
+        this.healthMonitor.registerIDE(ide.port, ide.ideType || 'cursor');
+      }
+    }
+    
+    // Start health monitoring if not already started
+    if (this.healthMonitor && typeof this.healthMonitor.startMonitoring === 'function' && !this.healthMonitor.isMonitoring()) {
+      try {
+        await this.healthMonitor.startMonitoring();
+        logger.info('Health monitoring started during IDE detection');
+      } catch (error) {
+        logger.warn('Failed to start health monitoring during detection:', error.message);
+      }
+    }
 
     return idesWithWorkspacesAndVersions;
+  }
+
+  /**
+   * Check if IDE status has changed since last detection
+   * @param {number} port - IDE port
+   * @param {Object} currentData - Current IDE data
+   * @returns {boolean} True if status changed
+   */
+  hasIDEStatusChanged(port, currentData) {
+    const lastStatus = this.lastDetectionStatus.get(port);
+    if (!lastStatus) {
+      return true; // First detection
+    }
+    
+    return (
+      lastStatus.version !== currentData.version ||
+      lastStatus.workspacePath !== currentData.workspacePath ||
+      lastStatus.status !== currentData.status ||
+      lastStatus.ideType !== currentData.ideType
+    );
+  }
+
+  /**
+   * Update last detection status for IDE
+   * @param {number} port - IDE port
+   * @param {Object} data - IDE data
+   */
+  updateLastDetectionStatus(port, data) {
+    this.lastDetectionStatus.set(port, {
+      version: data.version,
+      workspacePath: data.workspacePath,
+      status: data.status,
+      ideType: data.ideType,
+      timestamp: Date.now()
+    });
+  }
+
+  /**
+   * Get cached IDE detection result if still valid
+   * @param {number} port - IDE port
+   * @returns {Object|null} Cached result or null
+   */
+  getCachedIDEResult(port) {
+    const cached = this.ideDetectionCache.get(port);
+    if (cached && Date.now() - cached.timestamp < this.ideDetectionCacheTimeout) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  /**
+   * Cache IDE detection result
+   * @param {number} port - IDE port
+   * @param {Object} data - IDE data
+   */
+  cacheIDEResult(port, data) {
+    this.ideDetectionCache.set(port, {
+      data,
+      timestamp: Date.now()
+    });
   }
 
   /**
@@ -297,13 +458,18 @@ class IDEManager {
    */
   async detectIDEVersion(port, ideType) {
     try {
-      logger.info(`Detecting IDE version for port ${port} using enhanced version detection service`);
-      
       // Use the enhanced version detection service
       const result = await this.versionDetectionService.detectVersion(port, ideType);
       
       if (result && result.currentVersion) {
-        logger.info(`✅ Version detected: ${result.currentVersion} (new: ${result.isNewVersion})`);
+        // Only log if this is a new detection or version changed
+        const lastStatus = this.lastDetectionStatus.get(port);
+        const isNewDetection = !lastStatus || lastStatus.version !== result.currentVersion;
+        
+        if (isNewDetection) {
+          const selectorVersion = result.compatibleVersion || result.currentVersion;
+          logger.info(`✅ Version detected for ${ideType} on port ${port}: ${result.currentVersion} (selector: ${selectorVersion})`);
+        }
         return result.currentVersion;
       }
       
@@ -431,6 +597,16 @@ class IDEManager {
       this.healthMonitor.registerIDE(availablePort, ideType);
     }
     
+    // Start health monitoring if not already started
+    if (this.healthMonitor && typeof this.healthMonitor.startMonitoring === 'function' && !this.healthMonitor.isMonitoring()) {
+      try {
+        await this.healthMonitor.startMonitoring();
+        logger.info('Health monitoring started for new IDE');
+      } catch (error) {
+        logger.warn('Failed to start health monitoring for new IDE:', error.message);
+      }
+    }
+    
           logger.info('Tracked workspace path for port', availablePort, ':', workspacePath, 'IDE type:', ideType);
     
     // Wait for IDE to be ready
@@ -484,6 +660,15 @@ class IDEManager {
     // Store the previous port before switching
     const previousPort = this.activePort;
     
+    // Prüfe ob IDE wirklich läuft
+    logger.info(`Validating IDE on port ${port} before switching...`);
+    const isPortValid = await this.validateIDEExists(port);
+    if (!isPortValid) {
+      logger.warn(`IDE on port ${port} is not responding, cleaning up stale entry immediately`);
+      await this.cleanupStaleIDEs(port);
+      throw new Error(`IDE on port ${port} is not responding`);
+    }
+    
     // Use port manager to validate and set active port
     const success = await this.portManager.setActivePort(port);
     if (!success) {
@@ -493,8 +678,8 @@ class IDEManager {
       throw new Error(`Failed to switch to IDE on port ${port}`);
     }
     
-    // Update local state
-    this.activePort = this.portManager.getActivePort();
+    // Update local state - use the port we just set
+    this.activePort = port;
     
     // Update the active status in ideStatus map
     if (this.ideStatus.has(port)) {
@@ -567,6 +752,15 @@ class IDEManager {
     // Unregister from health monitoring
     if (this.healthMonitor && typeof this.healthMonitor.unregisterIDE === 'function') {
       this.healthMonitor.unregisterIDE(port);
+    }
+    
+    // Stop health monitoring if no IDEs left
+    if (this.healthMonitor && typeof this.healthMonitor.isMonitoring === 'function' && this.healthMonitor.isMonitoring()) {
+      const remainingIDEs = Array.from(this.ideStatus.keys()).filter(p => p !== port);
+      if (remainingIDEs.length === 0) {
+        this.healthMonitor.stopMonitoring();
+        logger.info('Health monitoring stopped - no IDEs remaining');
+      }
     }
     
     // If this was the active IDE, switch to another one
@@ -643,22 +837,25 @@ class IDEManager {
    */
   async detectWorkspacePath(port) {
     try {
-      logger.info(`Starting workspace detection for port ${port}`);
-      
       // Try modern CDP-based detection first
       if (this.cdpWorkspaceDetector) {
         try {
-          logger.info(`Using CDP-based workspace detection for port ${port}`);
-          
           const workspaceInfo = await this.cdpWorkspaceDetector.detectWorkspace(port);
           
           if (workspaceInfo && workspaceInfo.workspacePath) {
-            logger.debug(`CDP-based detected workspace path for port ${port}: ${workspaceInfo.workspacePath}`);
+            // Only log if this is a new detection or workspace changed
+            const lastStatus = this.lastDetectionStatus.get(port);
+            const isNewDetection = !lastStatus || lastStatus.workspacePath !== workspaceInfo.workspacePath;
+            
+            if (isNewDetection) {
+              logger.info(`Using CDP-based workspace detection for port ${port}`);
+              logger.debug(`CDP-based detected workspace path for port ${port}: ${workspaceInfo.workspacePath}`);
+            }
             
             // Store workspace path in ideWorkspaces Map
             this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
             
-            // AUTOMATISCH Projekt in der DB erstellen
+            // Automatisch Projekt in der DB erstellen
             await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
             
             return workspaceInfo.workspacePath;
@@ -838,7 +1035,22 @@ class IDEManager {
     this.ideStatus.clear();
     availableIDEs.forEach(ide => {
       this.ideStatus.set(ide.port, ide.status);
+      
+      // Register new IDEs with health monitoring
+      if (this.healthMonitor && typeof this.healthMonitor.registerIDE === 'function') {
+        this.healthMonitor.registerIDE(ide.port, ide.ideType || 'cursor');
+      }
     });
+    
+    // Start health monitoring if not already started
+    if (this.healthMonitor && typeof this.healthMonitor.startMonitoring === 'function' && !this.healthMonitor.isMonitoring()) {
+      try {
+        await this.healthMonitor.startMonitoring();
+        logger.info('Health monitoring started during IDE list refresh');
+      } catch (error) {
+        logger.warn('Failed to start health monitoring during refresh:', error.message);
+      }
+    }
     
     // Check if active IDE is still available
     if (this.activePort && !availableIDEs.find(ide => ide.port === this.activePort)) {
@@ -887,6 +1099,7 @@ class IDEManager {
     
     // Clean up stale entries
     const portsToClean = port ? [port] : Array.from(this.ideStatus.keys());
+    let cleanedPorts = [];
     
     for (const stalePort of portsToClean) {
       if (!availablePorts.has(stalePort)) {
@@ -902,19 +1115,37 @@ class IDEManager {
           this.healthMonitor.unregisterIDE(stalePort);
         }
         
+        // Reset failure count for this port
+        if (this.healthMonitor && typeof this.healthMonitor.resetFailureCount === 'function') {
+          this.healthMonitor.resetFailureCount(stalePort);
+        }
+        
         // If this was the active port, clear it
         if (this.activePort === stalePort) {
           this.activePort = null;
           logger.info(`Cleared active port ${stalePort} due to cleanup`);
         }
+        
+        cleanedPorts.push(stalePort);
       }
+    }
+    
+    // Emit event for frontend updates
+    if (this.eventBus) {
+      // Emit ideListUpdated event for frontend
+      this.eventBus.emit('ideListUpdated', {
+        action: 'cleanup',
+        cleanedPorts: cleanedPorts,
+        timestamp: new Date().toISOString()
+      });
+      logger.info('Emitted ideListUpdated event for cleanup');
     }
     
     logger.info('Stale IDE cleanup completed');
   }
 
   /**
-   * AUTOMATISCH Projekt in der DB erstellen
+   * Automatisch Projekt in der DB erstellen
    * @param {string} workspacePath - Workspace path
    * @param {number} port - IDE port
    */
@@ -996,7 +1227,10 @@ class IDEManager {
     logger.info('Shutting down...');
     
     // Stop health monitoring
-    this.healthMonitor.stopMonitoring();
+    if (this.healthMonitor && typeof this.healthMonitor.stopMonitoring === 'function') {
+      this.healthMonitor.stopMonitoring();
+      logger.info('Health monitoring stopped');
+    }
     
     // Stop all running IDEs
     await this.starterFactory.stopAllIDEs();
@@ -1019,6 +1253,12 @@ class IDEManager {
     logger.info('Stopping all IDEs...');
     await this.starterFactory.stopAllIDEs();
     
+    // Stop health monitoring
+    if (this.healthMonitor && typeof this.healthMonitor.stopMonitoring === 'function') {
+      this.healthMonitor.stopMonitoring();
+      logger.info('Health monitoring stopped');
+    }
+    
     // Clear state
     this.ideStatus.clear();
     this.ideWorkspaces.clear();
@@ -1029,9 +1269,48 @@ class IDEManager {
   }
 
   /**
-   * Get active port
-   * @returns {number|null} Active port
+   * Validate if IDE exists and is responding
+   * @param {number} port - IDE port
+   * @returns {Promise<boolean>} True if IDE is responding
    */
+  async validateIDEExists(port) {
+    try {
+      logger.info(`Validating IDE existence on port ${port}`);
+      
+      // Use health monitor if available
+      if (this.healthMonitor && typeof this.healthMonitor.checkIDEResponse === 'function') {
+        const isResponding = await this.healthMonitor.checkIDEResponse(port);
+        logger.info(`Health monitor check for port ${port}: ${isResponding ? 'RESPONDING' : 'NOT RESPONDING'}`);
+        return isResponding;
+      }
+      
+      // Fallback: Direct HTTP check
+      const http = require('http');
+      const isResponding = await new Promise((resolve) => {
+        const req = http.get({
+          hostname: '127.0.0.1',
+          port: port,
+          path: '/json/version',
+          timeout: 1000 // 1 second timeout
+        }, (res) => {
+          resolve(res.statusCode === 200);
+        });
+        
+        req.on('error', () => resolve(false));
+        req.on('timeout', () => {
+          req.destroy();
+          resolve(false);
+        });
+      });
+      
+      logger.info(`Direct HTTP check for port ${port}: ${isResponding ? 'RESPONDING' : 'NOT RESPONDING'}`);
+      return isResponding;
+      
+    } catch (error) {
+      logger.error(`Error validating IDE on port ${port}:`, error.message);
+      return false;
+    }
+  }
   getActivePort() {
     // Use port manager as primary source
     if (this.portManager) {
@@ -1105,6 +1384,7 @@ class IDEManager {
     // Stop health monitoring
     if (this.healthMonitor && typeof this.healthMonitor.stopMonitoring === 'function') {
       this.healthMonitor.stopMonitoring();
+      logger.info('Health monitoring stopped');
     }
     
     // Save configuration

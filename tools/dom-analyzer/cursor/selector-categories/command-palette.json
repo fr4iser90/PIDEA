@@ -1,0 +1,33 @@
+{
+  "name": "Command Palette Selectors",
+  "description": "Selectors for Cursor command palette functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "commandPalette": {
+      "palette": ".quick-input-widget, [class*=\"command\"], [class*=\"palette\"]",
+      "input": ".input, input[type=\"text\"]",
+      "placeholder": "input[placeholder*=\"command\"], input[placeholder*=\"palette\"]",
+      "suggestions": ".suggest-widget, [class*=\"suggestion\"]",
+      "suggestionItem": ".suggest-widget-item, [class*=\"suggestion-item\"]",
+      "suggestionLabel": ".suggest-widget-item-label",
+      "suggestionDetail": ".suggest-widget-item-detail",
+      "suggestionDescription": ".suggest-widget-item-description"
+    },
+    "commandActions": {
+      "executeCommand": "[aria-label*=\"Execute\"], [aria-label*=\"Run\"]",
+      "cancelCommand": "[aria-label*=\"Cancel\"], [aria-label*=\"Close\"]",
+      "clearInput": "[aria-label*=\"Clear\"], [aria-label*=\"Clear\"]",
+      "historyUp": "[aria-label*=\"History Up\"], [aria-label*=\"Previous\"]",
+      "historyDown": "[aria-label*=\"History Down\"], [aria-label*=\"Next\"]"
+    },
+    "commandCategories": {
+      "fileCommands": "[data-category*=\"file\"], [class*=\"file-command\"]",
+      "editCommands": "[data-category*=\"edit\"], [class*=\"edit-command\"]",
+      "viewCommands": "[data-category*=\"view\"], [class*=\"view-command\"]",
+      "goCommands": "[data-category*=\"go\"], [class*=\"go-command\"]",
+      "runCommands": "[data-category*=\"run\"], [class*=\"run-command\"]",
+      "terminalCommands": "[data-category*=\"terminal\"], [class*=\"terminal-command\"]",
+      "helpCommands": "[data-category*=\"help\"], [class*=\"help-command\"]"
+    }
+  }
+}

@@ -477,11 +477,13 @@ export const useProjectDataActions = () => {
   return {
     loadProjectData: store.loadProjectData,
     loadProjectTasks: store.loadProjectTasks,
+    loadChatData: store.loadChatData,
     loadAnalysisData: store.loadAnalysisData,
     loadCategoryAnalysisData: store.loadCategoryAnalysisData,
     refreshGitStatus: store.refreshGitStatus,
     setupWebSocketListeners: store.setupWebSocketListeners,
-    cleanupWebSocketListeners: store.cleanupWebSocketListeners
+    cleanupWebSocketListeners: store.cleanupWebSocketListeners,
+    invalidateIDECache: store.invalidateIDECache
   };
 };
 

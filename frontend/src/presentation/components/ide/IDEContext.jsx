@@ -18,7 +18,8 @@ export const IDEProvider = ({ children, eventBus }) => {
     loadAvailableIDEs,
     switchIDE,
     refresh,
-    clearError
+    clearError,
+    invalidateIDECache
   } = useIDEStore();
   
   const { isAuthenticated } = useAuthStore();
@@ -292,6 +293,7 @@ export const IDEProvider = ({ children, eventBus }) => {
     isFeatureAvailable,
     isFeatureEnabled,
     toggleFeature,
+    invalidateIDECache,
     
     // Computed values
     currentIDE: getCurrentIDE(),

@@ -5,7 +5,7 @@ import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import VoiceInput from '../../common/VoiceInput';
 import '@/css/main/chat.css';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
-import { useChatMessages, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useChatMessages, useProjectDataActions, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 // Use global marked from CDN script tag
 
@@ -57,6 +57,8 @@ async function fetchPromptContent(promptFile) {
 function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
   // ✅ REFACTORED: Use global state for messages
   const { messages, hasMessages, messageCount } = useChatMessages();
+  const activeIDE = useActiveIDE();
+  const { loadChatData } = useProjectDataActions();
   
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -77,11 +79,17 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     setExpandedBlocks(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // ✅ FIXED: No more manual data loading - global state handles it automatically
+  // ✅ FIXED: Load chat data when activePort changes
   useEffect(() => {
     logger.info('ChatComponent: activePort changed to:', activePort);
     setError(null);
-  }, [activePort]);
+    
+    // Load chat data when activePort changes
+    if (activePort && activeIDE.workspacePath) {
+      logger.info('Loading chat data for activePort:', activePort, 'workspace:', activeIDE.workspacePath);
+      loadChatData(activeIDE.workspacePath);
+    }
+  }, [activePort, activeIDE.workspacePath, loadChatData]);
 
   useEffect(() => {
     if (shouldAutoScroll) scrollToBottom();

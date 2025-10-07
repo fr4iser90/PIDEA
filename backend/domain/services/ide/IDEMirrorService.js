@@ -584,35 +584,26 @@ class IDEMirrorService {
         });
 
         try {
-            // Common chat input selectors in Cursor
-            const chatSelectors = [
-                '.chat-input textarea',
-                '.composer-bar textarea',
-                '[placeholder*="Ask"]',
-                '[placeholder*="chat"]',
-                '.chat-composer textarea'
-            ];
-
-            let chatFound = false;
-            for (const selector of chatSelectors) {
-                try {
-                    await page.waitForSelector(selector, { timeout: 1000 });
-                    await page.click(selector);
-                    await page.waitForTimeout(200);
-                    await page.keyboard.type(message, { delay: 30 });
-                    await page.keyboard.press('Enter');
-                    logger.info(`✅ Chat message sent via ${selector}`);
-                    chatFound = true;
-                    break;
-                } catch (e) {
-                    // Try next selector
-                }
+            // Get IDE-specific selectors from JSON configuration
+            const selectors = await this.browserManager.getAllSelectors();
+            const chatSelectors = selectors.chatSelectors;
+            if (!chatSelectors) {
+                throw new Error('No chat selectors found in configuration');
             }
 
-            if (!chatFound) {
-                throw new Error('Chat input not found');
+            const inputSelector = chatSelectors.input;
+            if (!inputSelector) {
+                throw new Error('Chat input selector not found in configuration');
             }
 
+            // Use single correct selector from JSON configuration
+            await page.waitForSelector(inputSelector, { timeout: 5000 });
+            await page.click(inputSelector);
+            await page.waitForTimeout(200);
+            await page.keyboard.type(message, { delay: 30 });
+            await page.keyboard.press('Enter');
+            logger.info(`✅ Chat message sent via ${inputSelector}`);
+            
             return true;
 
         } catch (error) {

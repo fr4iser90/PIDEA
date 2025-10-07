@@ -28,7 +28,7 @@ class IDETypes {
         validationEnabled: true
       },
       // Available versions are now loaded from JSON files
-      availableVersions: ['1.5.7'] // This will be updated dynamically
+      availableVersions: ['1.5.7', '1.7.17'] // This will be updated dynamically
     },
     [IDETypes.VSCODE]: {
       name: 'Visual Studio Code',

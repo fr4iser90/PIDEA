@@ -39,7 +39,7 @@ class GetChatHistoryHandler {
           const ideService = await this.getIDEServiceForPort(port);
           if (ideService && typeof ideService.extractChatHistory === 'function') {
             logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
-            liveMessages = await ideService.extractChatHistory();
+            liveMessages = await ideService.extractChatHistory(port);
             logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
             
             // Cache the extracted messages
@@ -52,7 +52,7 @@ class GetChatHistoryHandler {
         const ideService = await this.getIDEServiceForPort(port);
         if (ideService && typeof ideService.extractChatHistory === 'function') {
           logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
-          liveMessages = await ideService.extractChatHistory();
+          liveMessages = await ideService.extractChatHistory(port);
           logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
         }
       }

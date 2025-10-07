@@ -210,9 +210,24 @@ class WindsurfIDE extends BaseIDE {
 
   /**
    * Extract chat history from Windsurf
+   * @param {number} requestedPort - Port to extract chat from (optional)
    */
-  async extractChatHistory() {
+  async extractChatHistory(requestedPort = null) {
     try {
+      // Use requested port if provided, otherwise get current port
+      const targetPort = requestedPort || this.browserManager.getCurrentPort();
+      if (!targetPort) {
+        logger.warn('No target port available for chat extraction');
+        return [];
+      }
+
+      // Switch to target port if needed
+      const currentPort = this.browserManager.getCurrentPort();
+      if (currentPort !== targetPort) {
+        logger.info(`Switching from port ${currentPort} to ${targetPort} for chat extraction`);
+        await this.browserManager.switchToPort(targetPort);
+      }
+
       const page = await this.browserManager.getPage();
       if (!page) {
         return [];

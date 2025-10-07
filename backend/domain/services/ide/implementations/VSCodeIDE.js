@@ -301,14 +301,26 @@ class VSCodeIDE extends BaseIDE {
 
   /**
    * Extract chat history from VSCode
+   * @param {number} requestedPort - Port to extract chat from (optional)
    * @returns {Promise<Array>} Chat history
    */
-  async extractChatHistory() {
+  async extractChatHistory(requestedPort = null) {
     logger.info('extractChatHistory() called');
     logger.info('Using chatHistoryExtractor with IDE type:', this.chatHistoryExtractor?.ideType);
     
     if (this.chatHistoryExtractor) {
-      const result = await this.chatHistoryExtractor.extractChatHistory();
+      // Use requested port if provided, otherwise get current port
+      const targetPort = requestedPort || this.browserManager.getCurrentPort();
+      if (!targetPort) {
+        throw new Error('No target port available for version detection');
+      }
+      
+      const version = await this.versionDetector.detectVersion(targetPort);
+      if (!version) {
+        throw new Error(`Version detection failed for port ${targetPort}. Version is required for VSCode.`);
+      }
+      
+      const result = await this.chatHistoryExtractor.extractChatHistory(version);
       logger.info('extractChatHistory() result:', result);
       return result;
     } else {

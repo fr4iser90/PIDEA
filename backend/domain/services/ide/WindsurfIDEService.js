@@ -41,36 +41,32 @@ class WindsurfIDEService {
     throw new Error('sendMessage() - ChatMessageHandler removed, use IDE Steps instead');
   }
 
-  async extractChatHistory() {
-    // Ensure browser is connected to the active IDE port
-    const activePort = this.getActivePort();
-    this.logger.info(`extractChatHistory() - Active port: ${activePort}`);
+  async extractChatHistory(requestedPort = null) {
+    // Use requested port if provided, otherwise fall back to active port
+    const targetPort = requestedPort || this.getActivePort();
+    this.logger.info(`extractChatHistory() - Requested port: ${requestedPort}, Target port: ${targetPort}`);
     
-    if (!activePort) {
-      this.logger.warn('extractChatHistory() - No active port available');
+    if (!targetPort) {
+      this.logger.warn('extractChatHistory() - No target port available');
       return [];
     }
     
     try {
-      // Switch browser to active port if needed
+      // Switch browser to target port if needed
       const currentBrowserPort = this.browserManager.currentPort;
       this.logger.info(`extractChatHistory() - Current browser port: ${currentBrowserPort}`);
       
-      if (currentBrowserPort !== activePort) {
-        this.logger.info('extractChatHistory() - Switching browser to active port:', activePort);
-        await this.browserManager.switchToPort(activePort);
+      if (currentBrowserPort !== targetPort) {
+        this.logger.info('extractChatHistory() - Switching browser to target port:', targetPort);
+        await this.browserManager.switchToPort(targetPort);
       }
       
       // ✅ FIX: Detect version and pass it to ChatHistoryExtractor
-      this.logger.info(`extractChatHistory() - Detecting version for port ${activePort}...`);
-      const version = await this.versionDetector.detectVersion(activePort);
+      this.logger.info(`extractChatHistory() - Detecting version for port ${targetPort}...`);
+      const version = await this.versionDetector.detectVersion(targetPort);
       
       if (!version) {
-        this.logger.warn(`extractChatHistory() - No version detected for port ${activePort}, using fallback`);
-        // Use fallback version for Windsurf
-        const fallbackVersion = '0.9.0';
-        this.logger.info(`extractChatHistory() - Using fallback version: ${fallbackVersion}`);
-        return await this.chatHistoryExtractor.extractChatHistory(fallbackVersion);
+        throw new Error(`Version detection failed for port ${targetPort}. Version is required for Windsurf.`);
       }
       
       this.logger.info(`extractChatHistory() - Version detected: ${version}`);

@@ -51,11 +51,11 @@ class JSONSelectorManager {
       const selectorsData = JSON.parse(content);
       this.logger.info(`JSONSelectorManager: Parsed JSON data keys: ${Object.keys(selectorsData).join(', ')}`);
 
-      // Extract selectors from the structure (chatSelectors, etc.)
-      const selectors = selectorsData.chatSelectors || selectorsData;
+      // Extract selectors from the structure (return full structure)
+      const selectors = selectorsData;
       this.logger.info(`JSONSelectorManager: Final selectors keys: ${Object.keys(selectors).join(', ')}`);
       this.logger.info(`JSONSelectorManager: Final selectors type: ${typeof selectors}`);
-      this.logger.info(`JSONSelectorManager: Final selectors userMessages: ${selectors.userMessages || 'NOT_FOUND'}`);
+      this.logger.info(`JSONSelectorManager: Final selectors userMessages: ${selectors.chatSelectors?.userMessages || 'NOT_FOUND'}`);
 
       this.logger.info(`JSONSelectorManager: Successfully loaded selectors for ${ideType} version ${version} from ${selectorPath}`);
       return selectors;

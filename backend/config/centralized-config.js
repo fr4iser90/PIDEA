@@ -296,7 +296,8 @@ class CentralizedConfig {
           end: this.windsurfPortEnd 
         }
       },
-      healthCheckInterval: this.currentEnv === 'production' ? 120000 : 30000,
+      healthCheckInterval: this.currentEnv === 'production' ? 2000 : 1000,
+      cleanupInterval: this.currentEnv === 'production' ? 60000 : 30000,
       maxConcurrentIDEs: this.currentEnv === 'production' ? 20 : 10,
       autoStart: false,
       logLevel: this.currentEnv === 'production' ? 'warn' : 'debug'

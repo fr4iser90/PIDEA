@@ -1,0 +1,66 @@
+{
+  "name": "Chat Selectors",
+  "description": "Selectors for Cursor chat functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "input": ".aislash-editor-input[contenteditable=\"true\"]",
+    "inputContainer": ".aislash-editor-container",
+    "userMessages": "div.aislash-editor-input-readonly[contenteditable=\"false\"][data-lexical-editor=\"true\"]",
+    "aiMessages": "span.anysphere-markdown-container-root",
+    "messagesContainer": "div[style*=\"display: flex; flex-direction: column\"]",
+    "chatContainer": ".aislash-container",
+    "isActive": ".aislash-container",
+    "isInputReady": ".aislash-editor-input[contenteditable=\"true\"]",
+    "codeBlocks": ".composer-code-block-container",
+    "codeBlockContent": ".composer-code-block-content",
+    "codeBlockHeader": ".composer-code-block-header",
+    "codeBlockFilename": ".composer-code-block-filename",
+    "codeBlockLanguage": ".composer-code-block-file-info .javascript-lang-file-icon",
+    "monacoEditor": ".monaco-editor",
+    "codeLines": ".view-line, .view-lines .view-line, span[class*=\"mtk\"]",
+    "syntaxTokens": ".mtk1, .mtk4, .mtk14, .mtk18",
+    "codeBlockApplyButton": ".anysphere-text-button",
+    "inlineCode": "code:not(pre code)",
+    "codeSpans": "span[class*=\"code\"]",
+    "terminalBlocks": "pre[class*=\"terminal\"], pre[class*=\"bash\"], pre[class*=\"shell\"]",
+    "fileReferences": "span[class*=\"file\"], a[href*=\".\"], span[title*=\".\"]",
+    "urls": "a[href^=\"http\"], a[href^=\"https\"], a[href^=\"ftp\"]",
+    "jsonBlocks": "pre[class*=\"json\"], code[class*=\"json\"]",
+    "cssBlocks": "pre[class*=\"css\"], code[class*=\"css\"]",
+    "sqlBlocks": "pre[class*=\"sql\"], code[class*=\"sql\"]",
+    "yamlBlocks": "pre[class*=\"yaml\"], code[class*=\"yaml\"]",
+    "dockerBlocks": "pre[class*=\"dockerfile\"], code[class*=\"dockerfile\"]",
+    "envBlocks": "pre[class*=\"env\"], code[class*=\"env\"]",
+    "lists": "ul, ol, li",
+    "tables": "table, tr, td, th",
+    "syntaxClasses": {
+      "mtk1": ".mtk1",
+      "mtk4": ".mtk4",
+      "mtk14": ".mtk14",
+      "mtk18": ".mtk18"
+    }
+  },
+  "controls": {
+    "newChatButton": "[aria-label*=\"New Chat\"], [data-testid*=\"new-chat\"], button[title*=\"New Chat\"], .new-chat-button",
+    "sendButton": "[aria-label*=\"Send\"], [data-testid*=\"send\"], button[title*=\"Send\"], .send-button",
+    "deleteChatButton": "[aria-label*=\"Delete\"], [data-testid*=\"delete\"], button[title*=\"Delete\"], .delete-chat-button",
+    "renameChatButton": "[aria-label*=\"Rename\"], [data-testid*=\"rename\"], button[title*=\"Rename\"], .rename-chat-button"
+  },
+  "status": {
+    "connectionStatus": "[class*=\"connection-status\"], [data-testid*=\"connection-status\"], .connection-status",
+    "loadingIndicator": "[class*=\"loading\"], [data-testid*=\"loading\"], .loading-indicator, .spinner",
+    "thinkingIndicator": "[class*=\"thinking\"], [data-testid*=\"thinking\"], .thinking-indicator"
+  },
+  "settings": {
+    "settingsButton": "[aria-label*=\"Settings\"], [data-testid*=\"settings\"], button[title*=\"Settings\"], .settings-button",
+    "modelSelector": "[aria-label*=\"Model\"], [data-testid*=\"model\"], select[name*=\"model\"], .model-selector",
+    "webSearchToggle": "[aria-label*=\"Web Search\"], [data-testid*=\"web-search\"], input[type=\"checkbox\"][name*=\"web\"], .web-search-toggle"
+  },
+  "context": {
+    "contextButton": "[aria-label*=\"Context\"], [data-testid*=\"context\"], button[title*=\"Context\"], .context-button",
+    "attachFileButton": "[aria-label*=\"Attach\"], [data-testid*=\"attach\"], button[title*=\"Attach\"], .attach-file-button",
+    "helpButton": "[aria-label*=\"Help\"], [data-testid*=\"help\"], button[title*=\"Help\"], .help-button",
+    "premiumPill": "[class*=\"premium\"], [data-testid*=\"premium\"], .premium-pill",
+    "atSignButton": "[aria-label*=\"@\"], [data-testid*=\"at-sign\"], button[title*=\"@\"], .at-sign-button"
+  }
+}

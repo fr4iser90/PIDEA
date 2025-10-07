@@ -1,0 +1,55 @@
+{
+  "name": "Project Management Selectors",
+  "description": "Selectors for Cursor project management functionality",
+  "version": "1.5.7",
+  "selectors": {
+    "welcomeScreen": {
+      "openFolder": "[aria-label*=\"Open Folder\"], [aria-label*=\"Open\"]",
+      "newProject": "[aria-label*=\"New Project\"], [aria-label*=\"New\"]",
+      "recentProjects": "[class*=\"recent\"], [class*=\"history\"]",
+      "welcomeTitle": "[class*=\"welcome\"], [class*=\"getting-started\"]"
+    },
+    "authWelcomeScreen": {
+      "welcomeTitle": "*:has-text(\"Welcome to Cursor\")",
+      "aiCodeEditorSubtitle": "*:has-text(\"The AI Code Editor\")",
+      "signUpButton": "*:has-text(\"Sign Up\")",
+      "logInButton": "*:has-text(\"Log In\")",
+      "skipAndContinueLink": "*:has-text(\"Skip and continue\")",
+      "aiFeaturesText": "*:has-text(\"AI features require log in\")"
+    },
+    "fileMenu": {
+      "fileMenu": "[aria-label*=\"File\"], .menubar-menu-item[aria-label*=\"File\"]",
+      "newFile": "[aria-label*=\"New File\"], [aria-label*=\"New\"]",
+      "openFile": "[aria-label*=\"Open File\"], [aria-label*=\"Open\"]",
+      "openFolder": "[aria-label*=\"Open Folder\"], [aria-label*=\"Open\"]",
+      "openWorkspace": "[aria-label*=\"Open Workspace\"], [aria-label*=\"Workspace\"]",
+      "saveFile": "[aria-label*=\"Save\"], [aria-label*=\"Save\"]",
+      "saveAs": "[aria-label*=\"Save As\"], [aria-label*=\"Save As\"]",
+      "saveAll": "[aria-label*=\"Save All\"], [aria-label*=\"Save All\"]",
+      "closeFile": "[aria-label*=\"Close\"], [aria-label*=\"Close\"]",
+      "closeFolder": "[aria-label*=\"Close Folder\"], [aria-label*=\"Close\"]",
+      "closeWorkspace": "[aria-label*=\"Close Workspace\"], [aria-label*=\"Close\"]",
+      "exit": "[aria-label*=\"Exit\"], [aria-label*=\"Quit\"]"
+    },
+    "projectExplorer": {
+      "container": ".explorer-folders-view",
+      "list": ".monaco-list.list_id_2",
+      "tree": ".monaco-list[role=\"tree\"]",
+      "rows": ".monaco-list-row",
+      "labelName": ".label-name",
+      "treeItemExpanded": ".codicon-tree-item-expanded",
+      "refreshButton": ".codicon-refresh",
+      "newFileButton": "[aria-label*=\"New File\"], [aria-label*=\"New\"]",
+      "newFolderButton": "[aria-label*=\"New Folder\"], [aria-label*=\"Folder\"]",
+      "renameButton": "[aria-label*=\"Rename\"], [aria-label*=\"Rename\"]",
+      "deleteButton": "[aria-label*=\"Delete\"], [aria-label*=\"Delete\"]"
+    },
+    "workspace": {
+      "workspaceName": "[class*=\"workspace\"], [class*=\"folder\"]",
+      "workspacePath": "[class*=\"path\"], [class*=\"location\"]",
+      "switchWorkspace": "[aria-label*=\"Switch Workspace\"], [aria-label*=\"Switch\"]",
+      "addToWorkspace": "[aria-label*=\"Add to Workspace\"], [aria-label*=\"Add\"]",
+      "removeFromWorkspace": "[aria-label*=\"Remove from Workspace\"], [aria-label*=\"Remove\"]"
+    }
+  }
+}
