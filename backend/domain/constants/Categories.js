@@ -23,6 +23,7 @@ const STANDARD_CATEGORIES = {
   APPLICATION: 'application',
   ANALYZE: 'analyze', // Legacy support
   COMPLETION: 'completion', // Task completion, process completion, workflow completion
+  FILE: 'file', // File operations, file management, file processing
   
   // IDE Categories
   IDE: 'ide',
@@ -54,6 +55,7 @@ const CATEGORY_DESCRIPTIONS = {
   [STANDARD_CATEGORIES.TASK]: 'Task execution, task management, task automation',
   [STANDARD_CATEGORIES.APPLICATION]: 'Application-specific operations, business logic',
   [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)',
+  [STANDARD_CATEGORIES.FILE]: 'File operations, file management, file processing',
   [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management',
   [STANDARD_CATEGORIES.GIT]: 'Git operations, version control, branch management',
   [STANDARD_CATEGORIES.TERMINAL]: 'Terminal operations, command execution, process management',
@@ -111,7 +113,8 @@ function getCategoriesByType() {
       STANDARD_CATEGORIES.TASK,
       STANDARD_CATEGORIES.APPLICATION,
       STANDARD_CATEGORIES.ANALYZE,
-      STANDARD_CATEGORIES.COMPLETION
+      STANDARD_CATEGORIES.COMPLETION,
+      STANDARD_CATEGORIES.FILE
     ],
     ide: [
       STANDARD_CATEGORIES.IDE

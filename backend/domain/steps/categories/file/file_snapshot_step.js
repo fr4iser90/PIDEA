@@ -1,8 +1,8 @@
 const fs = require('fs').promises;
 const path = require('path');
+const StepBuilder = require('@steps/StepBuilder');
 const Logger = require('@logging/Logger');
-
-const logger = new Logger('FileSnapshotStep');
+const logger = new Logger('file_snapshot_step');
 
 // Step configuration
 const config = {
@@ -34,13 +34,16 @@ class FileSnapshotStep {
     return config;
   }
 
-  /**
-   * Execute file snapshot step
-   * @param {Object} context - Step context
-   * @returns {Promise<Object>} Step result
-   */
-  async execute(context) {
+  async execute(context = {}) {
+    const config = FileSnapshotStep.getConfig();
+    const step = StepBuilder.build(config, context);
+    
     try {
+      logger.info(`🔧 Executing ${this.name}...`);
+      
+      // Validate context
+      this.validateContext(context);
+      
       const { workspacePath, snapshotType = 'before_workflow' } = context;
       
       if (!workspacePath) {
@@ -104,6 +107,12 @@ class FileSnapshotStep {
     }
     
     return fileSet;
+  }
+
+  validateContext(context) {
+    if (!context.workspacePath) {
+      throw new Error('workspacePath is required');
+    }
   }
 }
 
