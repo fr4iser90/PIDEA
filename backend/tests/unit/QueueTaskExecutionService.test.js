@@ -10,7 +10,7 @@ jest.mock('@logging/ServiceLogger');
 
 describe('QueueTaskExecutionService', () => {
     let queueTaskExecutionService;
-    let mockQueueMonitoringService;
+    let mockTaskQueueStore;
     let mockTaskRepository;
     let mockEventBus;
     let mockWorkflowLoaderService;
@@ -20,7 +20,7 @@ describe('QueueTaskExecutionService', () => {
         jest.clearAllMocks();
 
         // Create mock dependencies
-        mockQueueMonitoringService = {
+        mockTaskQueueStore = {
             addToProjectQueue: jest.fn(),
             getProjectQueue: jest.fn(),
             updateQueueItem: jest.fn()
@@ -46,7 +46,7 @@ describe('QueueTaskExecutionService', () => {
 
         // Create service instance
         queueTaskExecutionService = new QueueTaskExecutionService({
-            queueMonitoringService: mockQueueMonitoringService,
+            taskQueueStore: mockTaskQueueStore,
             taskRepository: mockTaskRepository,
             eventBus: mockEventBus,
             workflowLoaderService: mockWorkflowLoaderService
@@ -84,7 +84,7 @@ describe('QueueTaskExecutionService', () => {
             mockTaskRepository.findById.mockResolvedValue(mockTask);
             mockWorkflowLoaderService.loadWorkflows.mockResolvedValue();
             mockWorkflowLoaderService.getWorkflow.mockReturnValue(mockWorkflow);
-            mockQueueMonitoringService.addToProjectQueue.mockResolvedValue(mockQueueItem);
+            mockTaskQueueStore.addToProjectQueue.mockResolvedValue(mockQueueItem);
 
             // Act
             const result = await queueTaskExecutionService.addTaskToQueue(
@@ -98,7 +98,7 @@ describe('QueueTaskExecutionService', () => {
             expect(mockTaskRepository.findById).toHaveBeenCalledWith('task-123');
             expect(mockWorkflowLoaderService.loadWorkflows).toHaveBeenCalled();
             expect(mockWorkflowLoaderService.getWorkflow).toHaveBeenCalledWith('standard-task-workflow');
-            expect(mockQueueMonitoringService.addToProjectQueue).toHaveBeenCalledWith(
+            expect(mockTaskQueueStore.addToProjectQueue).toHaveBeenCalledWith(
                 'project-456',
                 'user-789',
                 mockWorkflow,
@@ -191,7 +191,7 @@ describe('QueueTaskExecutionService', () => {
 
         it('should get task execution status successfully', async () => {
             // Arrange
-            mockQueueMonitoringService.getProjectQueue.mockReturnValue([mockQueueItem]);
+            mockTaskQueueStore.getProjectQueue.mockReturnValue([mockQueueItem]);
 
             // Act
             const result = await queueTaskExecutionService.getTaskExecutionStatus(
@@ -200,7 +200,7 @@ describe('QueueTaskExecutionService', () => {
             );
 
             // Assert
-            expect(mockQueueMonitoringService.getProjectQueue).toHaveBeenCalledWith('project-456');
+            expect(mockTaskQueueStore.getProjectQueue).toHaveBeenCalledWith('project-456');
             expect(result).toEqual({
                 queueItemId: 'queue-item-123',
                 projectId: 'project-456',
@@ -237,7 +237,7 @@ describe('QueueTaskExecutionService', () => {
 
         it('should throw error when queue item not found', async () => {
             // Arrange
-            mockQueueMonitoringService.getProjectQueue.mockReturnValue([]);
+            mockTaskQueueStore.getProjectQueue.mockReturnValue([]);
 
             // Act & Assert
             await expect(
@@ -256,7 +256,7 @@ describe('QueueTaskExecutionService', () => {
 
         it('should cancel task execution successfully', async () => {
             // Arrange
-            mockQueueMonitoringService.updateQueueItem.mockResolvedValue(mockUpdatedItem);
+            mockTaskQueueStore.updateQueueItem.mockResolvedValue(mockUpdatedItem);
 
             // Act
             const result = await queueTaskExecutionService.cancelTaskExecution(
@@ -266,7 +266,7 @@ describe('QueueTaskExecutionService', () => {
             );
 
             // Assert
-            expect(mockQueueMonitoringService.updateQueueItem).toHaveBeenCalledWith(
+            expect(mockTaskQueueStore.updateQueueItem).toHaveBeenCalledWith(
                 'project-456',
                 'queue-item-123',
                 {
@@ -312,7 +312,7 @@ describe('QueueTaskExecutionService', () => {
 
         it('should get project task executions successfully', async () => {
             // Arrange
-            mockQueueMonitoringService.getProjectQueue.mockReturnValue(mockQueueItems);
+            mockTaskQueueStore.getProjectQueue.mockReturnValue(mockQueueItems);
 
             // Act
             const result = await queueTaskExecutionService.getProjectTaskExecutions(
@@ -321,7 +321,7 @@ describe('QueueTaskExecutionService', () => {
             );
 
             // Assert
-            expect(mockQueueMonitoringService.getProjectQueue).toHaveBeenCalledWith('project-456');
+            expect(mockTaskQueueStore.getProjectQueue).toHaveBeenCalledWith('project-456');
             expect(result).toHaveLength(2);
             expect(result[0]).toEqual({
                 queueItemId: 'queue-item-1',

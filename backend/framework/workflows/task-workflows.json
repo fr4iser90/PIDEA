@@ -1,14 +1,89 @@
 {
   "workflows": {
+    "task-review-workflow": {
+      "name": "Single Task Review Workflow",
+      "description": "Review single task implementation status: Send Review Message → Optional Confirmation",
+      "steps": [
+        {
+          "name": "send-review-message",
+          "type": "ide_send_message_step",
+          "description": "Send task review prompt to IDE with auto IDE detection",
+          "step": "ide_send_message_step",
+          "options": {
+            "useTaskPrompt": true,
+            "message": "${reviewPrompt}",
+            "waitForResponse": true,
+            "timeout": 300000,
+            "sessionId": "task-review-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}",
+            "autoDetectIDE": true,
+            "clickNewChat": true
+          },
+          "strict": true
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation_step",
+          "description": "Check task completion status (optional)",
+          "step": "confirmation_step",
+          "options": {
+            "confirmationPrompt": "All task files complete or done, ANSWER with Complete percentage please",
+            "timeout": 60000,
+            "maxAttempts": 1,
+            "sessionId": "task-review-completion-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": false,
+          "condition": "previousStep.success && previousStep.result.success",
+          "enabled": false
+        }
+      ],
+      "metadata": {
+        "version": "1.0.0",
+        "created": "2025-01-07",
+        "description": "Workflow for reviewing single task implementation status"
+      }
+    },
+    "bulk-task-review-workflow": {
+      "name": "Bulk Task Review Workflow",
+      "description": "Review multiple tasks sequentially: For each task → Review → Delay → Next Task",
+      "steps": [
+        {
+          "name": "process-tasks-loop",
+          "type": "loop",
+          "description": "Process each task in the tasks array",
+          "step": "TaskLoopStep",
+          "options": {
+            "tasks": "${tasks}",
+            "workflowName": "task-review-workflow",
+            "delayBetweenTasks": 2000,
+            "continueOnError": true,
+            "maxConcurrentTasks": 1
+          },
+          "strict": false
+        }
+      ],
+      "metadata": {
+        "version": "1.0.0",
+        "created": "2025-01-07",
+        "description": "Workflow for reviewing multiple tasks in bulk"
+      }
+    },
     "standard-task-workflow": {
       "name": "Standard Task Workflow",
       "description": "Einheitlicher Flow für alle Tasks: Task + Prompt → IDE → Validieren → 3x Complete-Check → Test → npm run dev",
       "steps": [
         {
           "name": "create-branch",
-          "type": "git",
+          "type": "git_create_branch",
           "description": "Create Git branch for task",
-          "step": "GitCreateBranchStep",
+          "step": "git_create_branch",
           "options": {
             "branchName": "task/${task.id}",
             "checkout": true,
@@ -18,11 +93,12 @@
         },
         {
           "name": "create-chat",
-          "type": "ide",
+          "type": "create_chat_step",
           "description": "Create new chat session",
           "step": "create_chat_step",
           "options": {
             "title": "Task Execution Session",
+            "userId": "me",
             "metadata": {
               "workflow": "standard-task-workflow",
               "autoCreated": true
@@ -31,19 +107,21 @@
         },
         {
           "name": "send-to-ide",
-          "type": "ide_send_message",
+          "type": "ide_send_message_step",
           "description": "Send task to IDE with prompt",
           "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
             "waitForResponse": true,
-            "timeout": "IDE.SEND_MESSAGE"
+            "timeout": "IDE.SEND_MESSAGE",
+            "projectId": "PIDEA",
+            "message": "Execute this task"
           },
           "strict": true
         },
         {
           "name": "validate-response",
-          "type": "validation",
+          "type": "CodeQualityAnalysisOrchestrator",
           "description": "Validate IDE response",
           "step": "CodeQualityAnalysisOrchestrator",
           "options": {
@@ -56,7 +134,7 @@
           "name": "completion-check",
           "type": "confirmation_step",
           "description": "3x Complete-Check with AI confirmation",
-          "step": "ConfirmationStep",
+          "step": "confirmation_step",
           "options": {
             "maxAttempts": 3,
             "timeout": "WORKFLOW.CONFIRMATION",
@@ -70,7 +148,7 @@
           "name": "test-run",
           "type": "project_test_step",
           "description": "Run project tests",
-          "step": "ProjectTestStep",
+          "step": "project_test_step",
           "options": {
             "commands": ["npm test", "npm run test"],
             "continueOnFailure": true
@@ -81,7 +159,7 @@
           "name": "dev-server",
           "type": "run_dev_step",
           "description": "Start development server",
-          "step": "RunDevStep",
+          "step": "run_dev_step",
           "options": {
             "commands": ["npm run dev", "npm start"],
             "waitForReady": true,
@@ -90,9 +168,9 @@
         },
         {
           "name": "update-task-status",
-          "type": "status",
+          "type": "task_status_update_step",
           "description": "Update task status and organize files",
-          "step": "TaskStatusUpdateStep",
+          "step": "task_status_update_step",
           "options": {
             "autoMoveFiles": true,
             "updateDatabase": true
@@ -103,7 +181,7 @@
           "name": "organize-task-files",
           "type": "organization",
           "description": "Organize task files based on status",
-          "step": "TaskFileOrganizationStep",
+          "step": "organization",
           "options": {
             "createDirectories": true,
             "moveFiles": true,

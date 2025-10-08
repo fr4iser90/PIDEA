@@ -50,10 +50,28 @@ class IDESendMessageStep {
       // Validate context
       this.validateContext(context);
       
-      const { projectId, workspacePath, message, ideType, waitForResponse = false, timeout = null, activeIDE } = context;
+      // Get message from context or options
+      const message = context.message || context.options?.message;
+      const { projectId, workspacePath, ideType, waitForResponse = false, timeout = null, activeIDE } = context;
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       
+      // ✅ NEW CHAT BUTTON CLICK (if requested)
+      const { clickNewChat = false } = context;
+      if (clickNewChat) {
+        logger.info('🔘 [IDESendMessageStep] Clicking New Chat button first');
+        const browserManager = context.getService('browserManager');
+        if (browserManager) {
+          await browserManager.clickNewChat();
+          // Wait for new chat to be ready
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          logger.warn('🔘 [IDESendMessageStep] BrowserManager not available for New Chat click');
+        }
+      } else {
+        logger.info('🔘 [IDESendMessageStep] Skipping New Chat click (clickNewChat: false)');
+      }
+
       // ✅ BUSINESS LOGIC + BROWSER AUTOMATION über Handler
       const sendMessageHandler = context.getService('sendMessageHandler');
       if (!sendMessageHandler) {
@@ -155,9 +173,12 @@ class IDESendMessageStep {
       
       logger.info(`✅ Message sent to IDE successfully via Handler`);
       
+      // Check if AI response was successful (if we were waiting for one)
+      const aiResponseSuccessful = !waitForResponse || (aiResponse && aiResponse.success !== false);
+      
       return {
-        success: true,
-        message: 'Message sent to IDE via Handler',
+        success: aiResponseSuccessful,
+        message: aiResponseSuccessful ? 'Message sent to IDE via Handler' : 'Message sent but AI response failed',
         data: result,
         aiResponse: aiResponse,
         ideType: ideType || 'auto-detected'
@@ -178,7 +199,8 @@ class IDESendMessageStep {
     if (!context.projectId) {
       throw new Error('Project ID is required');
     }
-    if (!context.message) {
+    // Message can come from context.message or context.options.message
+    if (!context.message && !context.options?.message) {
       throw new Error('Message is required');
     }
   }

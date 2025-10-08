@@ -4,7 +4,7 @@
  */
 
 const Logger = require('@logging/Logger');
-const QueueMonitoringService = require('@domain/services/queue/QueueMonitoringService');
+const TaskQueueStore = require('@domain/services/queue/TaskQueueStore');
 const StepProgressService = require('@domain/services/queue/StepProgressService');
 const QueueHistoryService = require('@domain/services/queue/QueueHistoryService');
 const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
@@ -12,7 +12,7 @@ const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetecto
 class QueueController {
     constructor(dependencies = {}) {
         this.logger = new Logger('QueueController');
-        this.queueMonitoringService = dependencies.queueMonitoringService || new QueueMonitoringService(dependencies);
+        this.taskQueueStore = dependencies.taskQueueStore || new TaskQueueStore(dependencies);
         this.stepProgressService = dependencies.stepProgressService || new StepProgressService(dependencies);
         this.queueHistoryService = dependencies.queueHistoryService || new QueueHistoryService(dependencies);
         this.workflowTypeDetector = dependencies.workflowTypeDetector || new WorkflowTypeDetector(dependencies);
@@ -31,7 +31,7 @@ class QueueController {
 
             this.logger.debug('Getting queue status', { projectId, userId });
 
-            const queueStatus = await this.queueMonitoringService.getProjectQueueStatus(projectId, userId);
+            const queueStatus = await this.taskQueueStore.getProjectQueueStatus(projectId, userId);
             
             res.json({
                 success: true,
@@ -62,7 +62,7 @@ class QueueController {
 
             this.logger.info('Adding item to queue', { projectId, userId, workflowType: workflow?.type });
 
-            const queueItem = await this.queueMonitoringService.addToProjectQueue(
+            const queueItem = await this.taskQueueStore.addToProjectQueue(
                 projectId, 
                 userId, 
                 workflow, 
@@ -107,7 +107,7 @@ class QueueController {
 
             this.logger.info('Cancelling queue item', { projectId, itemId, userId });
 
-            const result = await this.queueMonitoringService.cancelQueueItem(projectId, itemId, userId);
+            const result = await this.taskQueueStore.cancelQueueItem(projectId, itemId, userId);
 
             // Emit WebSocket event for real-time updates
             if (this.eventBus) {
@@ -147,7 +147,7 @@ class QueueController {
 
             this.logger.info('Updating queue item priority', { projectId, itemId, userId, priority });
 
-            const result = await this.queueMonitoringService.updateQueueItemPriority(
+            const result = await this.taskQueueStore.updateQueueItemPriority(
                 projectId, 
                 itemId, 
                 userId, 
@@ -270,7 +270,7 @@ class QueueController {
 
             this.logger.info('Getting queue statistics', { projectId, userId });
 
-            const statistics = await this.queueMonitoringService.getQueueStatistics(projectId, userId);
+            const statistics = await this.taskQueueStore.getQueueStatistics(projectId, userId);
 
             res.json({
                 success: true,
@@ -300,7 +300,7 @@ class QueueController {
 
             this.logger.info('Clearing completed items', { projectId, userId });
 
-            const result = await this.queueMonitoringService.clearCompletedItems(projectId, userId);
+            const result = await this.taskQueueStore.clearCompletedItems(projectId, userId);
 
             // Emit WebSocket event for real-time updates
             if (this.eventBus) {

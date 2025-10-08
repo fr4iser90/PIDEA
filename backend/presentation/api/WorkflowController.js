@@ -16,7 +16,7 @@ class WorkflowController {
         this.ideManager = dependencies.ideManager;
         this.taskService = dependencies.taskService;
         this.analysisApplicationService = dependencies.analysisApplicationService;
-        this.queueMonitoringService = dependencies.queueMonitoringService;
+        this.taskQueueStore = dependencies.taskQueueStore;
         this.workflowLoaderService = dependencies.workflowLoaderService;
         this.stepProgressService = dependencies.stepProgressService;
         this.queueHistoryService = dependencies.queueHistoryService;
@@ -25,15 +25,23 @@ class WorkflowController {
     /**
      * Execute workflow
      * POST /api/workflow/execute
+     * 
+     * @deprecated This endpoint bypasses the new queue system. Use TaskController.enqueueTask() instead.
+     * @deprecated This endpoint will be removed in a future version.
+     * @deprecated Use POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution.
      */
     async executeWorkflow(req, res) {
         try {
+            // Log deprecation warning
+            this.logger.warn('🚨 [WorkflowController] executeWorkflow endpoint is DEPRECATED! Use TaskController.enqueueTask instead');
+            
             // Validate request
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({
                     success: false,
-                    errors: errors.array()
+                    errors: errors.array(),
+                    deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
                 });
             }
 
@@ -181,7 +189,8 @@ class WorkflowController {
                         projectId,
                         workflowType: 'task',
                         taskType: req.body.taskType,
-                        workflowName: workflow.name
+                        workflowName: workflow.name,
+                        deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
                     });
 
                 } catch (error) {
@@ -410,15 +419,15 @@ class WorkflowController {
                             }
                         }
                         
-                        // 5. Execute the actual task
-                        const taskResult = await this.taskService.executeTask(taskOptions.taskId, userId, {
+                        // 5. Queue the actual task for execution
+                        const taskResult = await this.taskService.queueTaskForExecution(taskOptions.taskId, userId, {
                             projectPath: workspacePath,
                             projectId
                         });
                         
-                        this.logger.info('WorkflowController: Task executed successfully', {
+                        this.logger.info('WorkflowController: Task queued successfully', {
                             taskId: taskOptions.taskId,
-                            result: taskResult
+                            queueItemId: taskResult.queueItemId
                         });
 
                         res.json({
@@ -799,7 +808,23 @@ class WorkflowController {
                     });
                 }
             } else if (mode === 'task-review') {
-                // Execute Task Review Workflow for multiple tasks - SAME AS NORMAL TASK EXECUTION
+                // 📋 TASK REVIEW WORKFLOW - QUEUE-BASED EXECUTION
+                // 
+                // 🔄 EXECUTION FLOW:
+                // Frontend → WorkflowController → TaskService.queueTaskForExecution() → QueueTaskExecutionService → TaskQueueStore → Queue Management
+                //
+                // 🎯 QUEUE-BASED BENEFITS:
+                // - Bulk task management (pause, remove, prioritize)
+                // - Real-time status tracking
+                // - Retry logic and error handling
+                // - Configurable workflows via JSON (task-review-workflow)
+                // - Concurrent execution control
+                //
+                // 📝 IMPLEMENTATION:
+                // Tasks are queued via TaskService.queueTaskForExecution() with workflowType: 'task-review'
+                // QueueTaskExecutionService loads 'task-review-workflow' from JSON
+                // Queue Management handles execution, pausing, priorities
+                
                 try {
                     const tasks = req.body.tasks || [];
                     
@@ -813,59 +838,75 @@ class WorkflowController {
                         throw new Error('No tasks provided for review');
                     }
                     
-                    const results = [];
+                    // Add all tasks to queue for proper management - QUEUE-BASED APPROACH!
+                    const queueResults = [];
                     
-                    // Process each task sequentially - EXACTLY LIKE NORMAL TASK EXECUTION
                     for (let i = 0; i < tasks.length; i++) {
                         const task = tasks[i];
                         
                         try {
-                            this.logger.info(`WorkflowController: Processing task ${i + 1}/${tasks.length}`, {
-                                taskId: task.id,
-                                taskTitle: task.title || task.name,
-                                projectId,
-                                userId
-                            });
+                            // Safe logging with fallback
+                            if (this.logger && this.logger.info) {
+                                this.logger.info(`WorkflowController: Adding task ${i + 1}/${tasks.length} to review queue`, {
+                                    taskId: task.id,
+                                    taskTitle: task.title || task.name,
+                                    projectId,
+                                    userId
+                                });
+                            } else {
+                                console.log(`WorkflowController: Adding task ${i + 1}/${tasks.length} to review queue - ${task.id}`);
+                            }
                             
-                            // Use TaskService.reviewTask - NEW REVIEW METHOD!
-                            if (this.taskService) {
-                                // Execute task review using TaskService.reviewTask
-                                const reviewResult = await this.taskService.reviewTask(task.id, userId, {
+                            // Use TaskService.queueTaskForExecution for queue-based execution
+                            if (this.taskService && typeof this.taskService.queueTaskForExecution === 'function') {
+                                // Add task to queue with review-specific options
+                                const queueResult = await this.taskService.queueTaskForExecution(task.id, userId, {
+                                    projectId: projectId,
                                     projectPath: workspacePath,
-                                    projectId
+                                    priority: 'normal',
+                                    workflowType: 'task-review',
+                                    autoExecute: true,
+                                    createGitBranch: false
                                 });
                                 
-                                results.push({
+                                queueResults.push({
                                     taskId: task.id,
                                     taskTitle: task.title || task.name,
                                     success: true,
-                                    result: reviewResult,
+                                    queueItemId: queueResult.queueItemId,
+                                    status: queueResult.status,
+                                    position: queueResult.position,
+                                    estimatedStartTime: queueResult.estimatedStartTime,
                                     index: i + 1
                                 });
                                 
-                                this.logger.info(`WorkflowController: Task ${i + 1} review completed`, {
-                                    taskId: task.id,
-                                    success: reviewResult.success
-                                });
+                                if (this.logger && this.logger.info) {
+                                    this.logger.info(`WorkflowController: Task ${i + 1} added to review queue`, {
+                                        taskId: task.id,
+                                        queueItemId: queueResult.queueItemId,
+                                        position: queueResult.position
+                                    });
+                                } else {
+                                    console.log(`WorkflowController: Task ${i + 1} added to review queue - ${task.id}`);
+                                }
                                 
                             } else {
-                                throw new Error('TaskService not available');
-                            }
-                            
-                            // Add delay between tasks to prevent overwhelming the IDE
-                            if (i < tasks.length - 1) {
-                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                throw new Error('TaskService not available or queueTaskForExecution method not found');
                             }
                             
                         } catch (error) {
-                            this.logger.error(`WorkflowController: Failed to process task ${i + 1}`, {
-                                taskId: task.id,
-                                error: error.message,
-                                projectId,
-                                userId
-                            });
+                            if (this.logger && this.logger.error) {
+                                this.logger.error(`WorkflowController: Failed to add task ${i + 1} to queue`, {
+                                    taskId: task.id,
+                                    error: error.message,
+                                    projectId,
+                                    userId
+                                });
+                            } else {
+                                console.error(`WorkflowController: Failed to add task ${i + 1} to queue - ${task.id}: ${error.message}`);
+                            }
                             
-                            results.push({
+                            queueResults.push({
                                 taskId: task.id,
                                 taskTitle: task.title || task.name,
                                 success: false,
@@ -875,16 +916,23 @@ class WorkflowController {
                         }
                     }
                     
+                    // Use queueResults directly instead of reassigning
+                    const results = queueResults;
+                    
                     const successCount = results.filter(r => r.success).length;
                     const totalCount = results.length;
                     
-                    this.logger.info('WorkflowController: Task review workflow completed', {
-                        totalTasks: totalCount,
-                        successfulTasks: successCount,
-                        failedTasks: totalCount - successCount,
-                        projectId,
-                        userId
-                    });
+                    if (this.logger && this.logger.info) {
+                        this.logger.info('WorkflowController: Task review workflow completed', {
+                            totalTasks: totalCount,
+                            successfulTasks: successCount,
+                            failedTasks: totalCount - successCount,
+                            projectId,
+                            userId
+                        });
+                    } else {
+                        console.log(`WorkflowController: Task review workflow completed - ${successCount}/${totalCount} successful`);
+                    }
                     
                     return res.status(200).json({
                         success: successCount > 0,
@@ -901,11 +949,15 @@ class WorkflowController {
                     });
                     
                 } catch (error) {
-                    this.logger.error('WorkflowController: Task review workflow failed', {
-                        error: error.message,
-                        projectId,
-                        userId
-                    });
+                    if (this.logger && this.logger.error) {
+                        this.logger.error('WorkflowController: Task review workflow failed', {
+                            error: error.message,
+                            projectId,
+                            userId
+                        });
+                    } else {
+                        console.error('WorkflowController: Task review workflow failed:', error.message);
+                    }
                     
                     return res.status(500).json({
                         success: false,
@@ -1377,7 +1429,7 @@ class WorkflowController {
 
             // Add workflow to queue if queue monitoring service is available
             let queueItemId = null;
-            if (this.queueMonitoringService) {
+            if (this.taskQueueStore) {
                 // Use central WorkflowTypes for type detection
                 const WorkflowTypes = require('@domain/constants/WorkflowTypes');
                 const workflowType = WorkflowTypes.getTypeFromName(workflow.name);
@@ -1404,7 +1456,7 @@ class WorkflowController {
                     userId
                 };
 
-                const addedItem = await this.queueMonitoringService.addToQueue(projectId, userId, queueItem);
+                const addedItem = await this.taskQueueStore.addToQueue(projectId, userId, queueItem);
                 queueItemId = addedItem.id; // Speichere die Queue-Item-ID!
                 this.logger.info('WorkflowController: Added workflow to queue', { workflowId, queueItemId });
 
@@ -1448,8 +1500,8 @@ class WorkflowController {
                     });
 
                     // Update queue with current step
-                    if (this.queueMonitoringService && queueItemId) {
-                        await this.queueMonitoringService.updateStepProgress(projectId, queueItemId, stepId, {
+                    if (this.taskQueueStore && queueItemId) {
+                        await this.taskQueueStore.updateStepProgress(projectId, queueItemId, stepId, {
                             status: 'running',
                             progress: 0
                         });
@@ -1470,8 +1522,8 @@ class WorkflowController {
                     results.steps.push(stepProgress);
 
                     // Update queue with step completion
-                    if (this.queueMonitoringService && queueItemId) {
-                        await this.queueMonitoringService.updateStepProgress(projectId, queueItemId, stepId, {
+                    if (this.taskQueueStore && queueItemId) {
+                        await this.taskQueueStore.updateStepProgress(projectId, queueItemId, stepId, {
                             status: stepResult.success ? 'completed' : 'failed',
                             progress: 100,
                             result: stepProgress
@@ -1479,7 +1531,7 @@ class WorkflowController {
 
                         // Update overall workflow progress
                         const overallProgress = Math.round(((i + 1) / workflow.steps.length) * 100);
-                        await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+                        await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
                             progress: overallProgress,
                             currentStep: i + 1
                         });
@@ -1511,8 +1563,8 @@ class WorkflowController {
                     results.steps.push(stepProgress);
 
                     // Update queue with step failure
-                    if (this.queueMonitoringService && queueItemId) {
-                        await this.queueMonitoringService.updateStepProgress(projectId, queueItemId, stepId, {
+                    if (this.taskQueueStore && queueItemId) {
+                        await this.taskQueueStore.updateStepProgress(projectId, queueItemId, stepId, {
                             status: 'failed',
                             progress: 100,
                             result: stepProgress
@@ -1529,8 +1581,8 @@ class WorkflowController {
             }
 
             // Update queue with workflow completion
-            if (this.queueMonitoringService && queueItemId) {
-                await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+            if (this.taskQueueStore && queueItemId) {
+                await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
                     status: results.success ? 'completed' : 'failed',
                     progress: 100,
                     completedAt: new Date()
@@ -1614,8 +1666,8 @@ class WorkflowController {
             results.errors.push(`Workflow execution failed: ${error.message}`);
 
             // Update queue with workflow failure
-            if (this.queueMonitoringService && queueItemId) {
-                await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+            if (this.taskQueueStore && queueItemId) {
+                await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
                     status: 'failed',
                     error: error.message,
                     completedAt: new Date()
@@ -1680,8 +1732,14 @@ class WorkflowController {
                             metadata: taskData.metadata || {}
                         };
                         
-                        const taskPrompt = await this.taskService.buildTaskExecutionPrompt(task);
-                        stepOptions.message = taskPrompt;
+                        // Check if this is a review workflow
+                        if (options.workflowType === 'task-review') {
+                            const reviewPrompt = await this.taskService.buildTaskReviewPrompt(task, options);
+                            stepOptions.message = reviewPrompt;
+                        } else {
+                            const taskPrompt = await this.taskService.buildTaskExecutionPrompt(task);
+                            stepOptions.message = taskPrompt;
+                        }
                     } else {
                         this.logger.error('TaskService not available for prompt building');
                         stepOptions.message = `Execute the following task:\n\n${taskData.title}\n\n${taskData.description || ''}`;

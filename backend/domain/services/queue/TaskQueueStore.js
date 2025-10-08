@@ -1,13 +1,13 @@
 /**
- * QueueMonitoringService - Domain service for queue monitoring and management
+ * TaskQueueStore - Domain service for queue monitoring and management
  * Provides comprehensive queue tracking, status reporting, and control operations
  */
 
 const ServiceLogger = require('@logging/ServiceLogger');
 
-class QueueMonitoringService {
+class TaskQueueStore {
     constructor(dependencies = {}) {
-        this.logger = new ServiceLogger('QueueMonitoringService');
+        this.logger = new ServiceLogger('TaskQueueStore');
         this.eventBus = dependencies.eventBus;
         
         // Project-specific queues
@@ -16,7 +16,7 @@ class QueueMonitoringService {
         // Queue statistics tracking
         this.queueStats = new Map();
         
-        this.logger.info('QueueMonitoringService initialized');
+        this.logger.info('TaskQueueStore initialized');
     }
 
     /**
@@ -703,4 +703,4 @@ class QueueMonitoringService {
     }
 }
 
-module.exports = QueueMonitoringService; 
+module.exports = TaskQueueStore; 

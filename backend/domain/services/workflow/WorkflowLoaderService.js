@@ -199,6 +199,19 @@ class WorkflowLoaderService {
     }
 
     /**
+     * Load a specific workflow by name
+     * @param {string} workflowName - Name of the workflow to load
+     * @returns {Promise<Object>} The workflow definition
+     */
+    async loadWorkflow(workflowName) {
+        if (!this.workflows.has(workflowName)) {
+            throw new Error(`Workflow '${workflowName}' not found`);
+        }
+        
+        return this.workflows.get(workflowName);
+    }
+
+    /**
      * Reload workflows from file
      */
     async reloadWorkflows() {

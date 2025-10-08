@@ -17,9 +17,10 @@ const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('TaskController');
 
 class TaskController {
-    constructor(taskApplicationService, eventBus = null) {
+    constructor(taskApplicationService, eventBus = null, application = null) {
         this.taskApplicationService = taskApplicationService;
         this.eventBus = eventBus;
+        this.application = application; // Add application for IDE/Git services
         this.logger = logger;
         
         // DEBUG: Check what methods taskApplicationService has
@@ -228,49 +229,52 @@ class TaskController {
     }
 
     /**
-     * POST /api/projects/:projectId/tasks/:id/execute - Execute task within project via queue
+     * POST /api/projects/:projectId/tasks/:id/execute - Queue task for execution within project
+     * 
+     * @deprecated This endpoint is deprecated. Use TaskController.enqueueTask() instead.
+     * @deprecated This endpoint will be removed in a future version.
+     * @deprecated Use POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution.
      */
     async executeTask(req, res) {
         try {
+            // Log deprecation warning
+            this.logger.warn('🚨 [TaskController] executeTask endpoint is DEPRECATED! Redirecting to enqueueTask');
+            
+            // Transform the request to match enqueueTask format
             const { projectId, id } = req.params;
             const userId = req.user.id;
             const options = req.body.options || {};
 
-            this.logger.info('🚀 [TaskController] executeTask called with queue system:', { 
-                projectId, 
-                id, 
-                userId,
-                options 
-            });
+            // Create a new request object for enqueueTask
+            const enqueueReq = {
+                params: { projectId },
+                body: {
+                    task: { id },
+                    taskId: id,
+                    ...req.body,
+                    options
+                },
+                user: req.user
+            };
 
-            // Use Application Service for queue-based task execution
-            const execution = await this.taskApplicationService.executeTask(id, projectId, userId, options);
-
-            this.logger.info('✅ [TaskController] Task queued successfully');
-
-            res.json({
-                success: true,
-                data: execution,
-                projectId,
-                taskId: id,
-                queueItemId: execution.queueItemId,
-                status: 'queued',
-                timestamp: new Date().toISOString()
-            });
+            // Redirect to the new enqueueTask method
+            return await this.enqueueTask(enqueueReq, res);
 
         } catch (error) {
-            this.logger.error('❌ [TaskController] Task queueing failed:', error);
+            this.logger.error('❌ [TaskController] Task execution failed:', error);
             if (error.message.includes('not found') || error.message.includes('does not belong')) {
                 res.status(404).json({
                     success: false,
                     error: 'Task not found',
-                    message: error.message
+                    message: error.message,
+                    deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
                 });
             } else {
                 res.status(500).json({
                     success: false,
-                    error: 'Task queueing failed',
-                    message: error.message
+                    error: 'Task execution failed',
+                    message: error.message,
+                    deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
                 });
             }
         }
@@ -606,6 +610,309 @@ class TaskController {
             res.status(500).json({
                 success: false,
                 error: 'Failed to batch sync tasks',
+                message: error.message
+            });
+        }
+    }
+
+    /**
+     * Enqueue task for execution
+     * POST /api/projects/:projectId/tasks/enqueue
+     * 
+     * This method handles task execution requests, including:
+     * - Single task execution
+     * - Bulk task review
+     * - Analysis workflows
+     * - IDE integration (New Chat, Git branches)
+     */
+    async enqueueTask(req, res) {
+        try {
+            const { projectId } = req.params;
+            const {
+                mode = 'full',
+                options = {},
+                autoExecute = true,
+                task,
+                createGitBranch = false,
+                branchName,
+                clickNewChat = false
+            } = req.body;
+
+            this.logger.info('TaskController: Received task execution request', {
+                projectId,
+                mode,
+                taskId: task?.id,
+                createGitBranch,
+                branchName,
+                clickNewChat
+            });
+
+            const userId = req.user?.id;
+
+            // Handle task execution requests
+            if (req.body.taskId || (task && task.id)) {
+                const taskId = req.body.taskId || task.id;
+                
+                this.logger.info('TaskController: Processing task execution', {
+                    taskId,
+                    createGitBranch,
+                    branchName,
+                    clickNewChat
+                });
+
+                // Create Git branch if requested
+                if (createGitBranch && branchName) {
+                    try {
+                        const gitService = this.application?.gitService;
+                        if (gitService) {
+                            // Let TaskApplicationService handle the workspace path
+                            await gitService.createBranch(null, branchName); // projectId will be resolved internally
+                            this.logger.info('TaskController: Git branch created', {
+                                branchName
+                            });
+                        }
+                    } catch (error) {
+                        this.logger.error('TaskController: Failed to create Git branch', {
+                            error: error.message,
+                            branchName
+                        });
+                    }
+                }
+
+                // Click new chat if requested
+                if (clickNewChat) {
+                    try {
+                        this.logger.info('TaskController: Starting New Chat click process');
+                        
+                        const ideManager = this.application?.ideManager;
+                        if (ideManager) {
+                            const activeIDE = await ideManager.getActiveIDE();
+                            this.logger.info('TaskController: Active IDE found', {
+                                hasActiveIDE: !!activeIDE,
+                                port: activeIDE?.port
+                            });
+                            
+                            if (activeIDE && activeIDE.port) {
+                                // Use CreateChatCommand with proper handler execution
+                                const CreateChatCommand = require('@categories/ide/CreateChatCommand');
+                                const CreateChatHandler = require('@application/handlers/categories/ide/CreateChatHandler');
+                                
+                                const createChatCommand = new CreateChatCommand({
+                                    userId: userId,
+                                    title: 'New Chat',
+                                    clickNewChat: true,
+                                    metadata: { port: activeIDE.port }
+                                });
+                                
+                                // Create handler with all required dependencies
+                                const createChatHandler = new CreateChatHandler({
+                                    chatSessionService: this.application?.chatSessionService || this.application?.getChatHistoryHandler,
+                                    ideManager: ideManager,
+                                    browserManager: this.application?.browserManager,
+                                    eventBus: this.eventBus,
+                                    logger: this.logger
+                                });
+                                
+                                this.logger.info('TaskController: Creating new chat with timeout');
+                                // Add timeout to prevent hanging
+                                const clickPromise = createChatHandler.handle(createChatCommand, {}, activeIDE.port);
+                                const timeoutPromise = new Promise((_, reject) => 
+                                    setTimeout(() => reject(new Error('New Chat creation timeout')), 10000)
+                                );
+                                
+                                const result = await Promise.race([clickPromise, timeoutPromise]);
+                                
+                                if (result && result.success) {
+                                    this.logger.info('TaskController: New chat created successfully', {
+                                        port: activeIDE.port,
+                                        sessionId: result.session?.id
+                                    });
+                                } else {
+                                    throw new Error('Failed to create new chat');
+                                }
+                            } else {
+                                this.logger.warn('TaskController: No active IDE found for New Chat');
+                            }
+                        }
+                    } catch (error) {
+                        this.logger.error('TaskController: Failed to click new chat', {
+                            error: error.message,
+                            stack: error.stack
+                        });
+                    }
+                }
+                
+                this.logger.info('TaskController: New Chat process completed, proceeding to task execution');
+
+                    // Queue the task for execution using TaskApplicationService
+                    try {
+                        const taskResult = await this.taskApplicationService.executeTask(taskId, projectId, userId, {
+                            createGitBranch,
+                            branchName,
+                            clickNewChat,
+                            autoExecute
+                        });
+                    
+                    this.logger.info('TaskController: Task queued successfully', {
+                        taskId,
+                        queueItemId: taskResult.queueItemId
+                    });
+
+                    res.json({
+                        success: true,
+                        message: 'Task queued for execution successfully',
+                        data: {
+                            taskId,
+                            result: taskResult,
+                            gitBranch: createGitBranch ? branchName : null,
+                            newChat: clickNewChat
+                        }
+                    });
+                    return;
+                } catch (error) {
+                    this.logger.error('TaskController: Failed to queue task', {
+                        error: error.message,
+                        taskId,
+                        stack: error.stack
+                    });
+                    
+                    res.status(500).json({
+                        success: false,
+                        error: 'Failed to queue task for execution',
+                        message: error.message
+                    });
+                    return;
+                }
+            }
+
+            // Handle bulk task review
+            if (mode === 'task-review') {
+                try {
+                    const tasks = req.body.tasks || [];
+                    
+                    this.logger.info('TaskController: Starting bulk task review', {
+                        taskCount: tasks.length,
+                        projectId,
+                        userId
+                    });
+                    
+                    if (!tasks || tasks.length === 0) {
+                        throw new Error('No tasks provided for review');
+                    }
+                    
+                    // Add all tasks to queue for proper management
+                    const queueResults = [];
+                    
+                    for (let i = 0; i < tasks.length; i++) {
+                        const task = tasks[i];
+                        
+                        try {
+                            this.logger.info(`TaskController: Adding task ${i + 1}/${tasks.length} to review queue`, {
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                projectId,
+                                userId
+                            });
+                            
+                                // Queue task for execution using TaskApplicationService
+                                const queueResult = await this.taskApplicationService.executeTask(task.id, projectId, userId, {
+                                    priority: 'normal',
+                                    workflowType: 'task-review',
+                                    autoExecute: true,
+                                    createGitBranch: false
+                                });
+                            
+                            queueResults.push({
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                success: true,
+                                queueItemId: queueResult.queueItemId,
+                                status: queueResult.status,
+                                position: queueResult.position,
+                                estimatedStartTime: queueResult.estimatedStartTime,
+                                index: i + 1
+                            });
+                            
+                            this.logger.info(`TaskController: Task ${i + 1} added to review queue`, {
+                                taskId: task.id,
+                                queueItemId: queueResult.queueItemId,
+                                position: queueResult.position
+                            });
+                            
+                        } catch (error) {
+                            this.logger.error(`TaskController: Failed to add task ${i + 1} to queue`, {
+                                taskId: task.id,
+                                error: error.message,
+                                projectId,
+                                userId
+                            });
+                            
+                            queueResults.push({
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                success: false,
+                                error: error.message,
+                                index: i + 1
+                            });
+                        }
+                    }
+                    
+                    const successCount = queueResults.filter(r => r.success).length;
+                    const totalCount = queueResults.length;
+                    
+                    this.logger.info('TaskController: Bulk task review completed', {
+                        totalTasks: totalCount,
+                        successfulTasks: successCount,
+                        failedTasks: totalCount - successCount,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(200).json({
+                        success: successCount > 0,
+                        message: `Bulk task review completed: ${successCount}/${totalCount} tasks processed successfully`,
+                        data: {
+                            results: queueResults,
+                            summary: {
+                                totalTasks: totalCount,
+                                completedTasks: successCount,
+                                failedTasks: totalCount - successCount,
+                                workflowPrompt: 'task-check-state.md'
+                            }
+                        }
+                    });
+                    
+                } catch (error) {
+                    this.logger.error('TaskController: Bulk task review failed', {
+                        error: error.message,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(500).json({
+                        success: false,
+                        error: `Bulk task review failed: ${error.message}`
+                    });
+                }
+            }
+
+            // For other modes, return not implemented
+            res.status(501).json({
+                success: false,
+                error: 'Mode not implemented',
+                message: `Mode '${mode}' is not yet implemented in TaskController`
+            });
+
+        } catch (error) {
+            this.logger.error('TaskController: Failed to enqueue task', {
+                projectId: req.params.projectId,
+                error: error.message,
+                userId: req.user?.id
+            });
+
+            res.status(500).json({
+                success: false,
+                error: 'Failed to enqueue task',
                 message: error.message
             });
         }

@@ -8,7 +8,7 @@ const ServiceLogger = require('@logging/ServiceLogger');
 class QueueTaskExecutionService {
     constructor(dependencies = {}) {
         this.logger = new ServiceLogger('QueueTaskExecutionService');
-        this.queueMonitoringService = dependencies.queueMonitoringService;
+        this.taskQueueStore = dependencies.taskQueueStore;
         this.taskRepository = dependencies.taskRepository;
         this.eventBus = dependencies.eventBus;
         this.workflowLoaderService = dependencies.workflowLoaderService;
@@ -44,10 +44,19 @@ class QueueTaskExecutionService {
             const workflowLoader = new WorkflowLoaderService();
             await workflowLoader.loadWorkflows();
             
-            // Get standard task workflow
-            const workflow = workflowLoader.getWorkflow('standard-task-workflow');
+            // Determine workflow based on options or task type
+            let workflowName = 'standard-task-workflow';
+            
+            if (options.workflowType === 'task-review') {
+                workflowName = 'task-review-workflow';
+            } else if (options.workflowType) {
+                workflowName = options.workflowType;
+            }
+            
+            // Get workflow
+            const workflow = workflowLoader.getWorkflow(workflowName);
             if (!workflow) {
-                throw new Error('Standard task workflow not found');
+                throw new Error(`Workflow '${workflowName}' not found`);
             }
 
             // Create workflow context with task data
@@ -64,7 +73,7 @@ class QueueTaskExecutionService {
             };
 
             // Add to queue with proper priority
-            const queueItem = await this.queueMonitoringService.addToProjectQueue(
+            const queueItem = await this.taskQueueStore.addToProjectQueue(
                 projectId,
                 userId,
                 workflow,
@@ -128,7 +137,7 @@ class QueueTaskExecutionService {
         try {
             this.logger.debug('Getting task execution status', { projectId, queueItemId });
 
-            const projectQueue = this.queueMonitoringService.getProjectQueue(projectId);
+            const projectQueue = this.taskQueueStore.getProjectQueue(projectId);
             const queueItem = projectQueue.find(item => item.id === queueItemId);
             
             if (!queueItem) {
@@ -187,7 +196,7 @@ class QueueTaskExecutionService {
             this.logger.info('Cancelling task execution', { projectId, queueItemId, userId });
 
             // Update queue item status to cancelled
-            const updatedItem = await this.queueMonitoringService.updateQueueItem(projectId, queueItemId, {
+            const updatedItem = await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
                 status: 'cancelled',
                 cancelledAt: new Date().toISOString(),
                 cancelledBy: userId
@@ -236,7 +245,7 @@ class QueueTaskExecutionService {
         try {
             this.logger.debug('Getting project task executions', { projectId, userId });
 
-            const projectQueue = this.queueMonitoringService.getProjectQueue(projectId);
+            const projectQueue = this.taskQueueStore.getProjectQueue(projectId);
             
             // Filter queue items that are task executions
             const taskExecutions = projectQueue.filter(item => 

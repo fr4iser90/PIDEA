@@ -90,9 +90,10 @@ class WindsurfIDEService {
   /**
    * Send a prompt to Windsurf IDE via chat
    * @param {string} prompt - The prompt to send
+   * @param {Object} options - Options including clickNewChat flag
    * @returns {Promise<Object>} Result of sending prompt
    */
-  async postToWindsurf(prompt) {
+  async postToWindsurf(prompt, options = {}) {
     try {
       this.logger.info('Sending prompt to Windsurf IDE', {
         promptLength: prompt.length,

@@ -21,6 +21,7 @@ const ETagService = require('@domain/services/shared/ETagService');
 class TaskApplicationService {
   constructor({
     taskService,
+    taskQueueService,
     taskRepository,
     aiService,
     projectAnalyzer,
@@ -31,6 +32,7 @@ class TaskApplicationService {
   }) {
     // Domain services
     this.taskService = taskService;
+    this.taskQueueService = taskQueueService;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
     this.projectMappingService = projectMappingService;
@@ -282,24 +284,29 @@ class TaskApplicationService {
   }
 
   /**
-   * Execute task within project context using queue system
+   * Queue task for execution within project context using queue system
    * @param {string} taskId - Task identifier
    * @param {string} projectId - Project identifier
    * @param {string} userId - User identifier
    * @param {Object} options - Execution options
-   * @returns {Promise<Object>} Queue execution result
+   * @returns {Promise<Object>} Queue result (task is queued, not executed immediately)
    */
   async executeTask(taskId, projectId, userId, options = {}) {
     try {
-      this.logger.info(`🚀 Executing task: ${taskId} for project: ${projectId} via queue`);
+      this.logger.info(`🚀 Queuing task for execution: ${taskId} for project: ${projectId}`);
       
       // Validate task belongs to project
       const task = await this.getTask(taskId, projectId);
       
-      // Execute task using queue system
-      const execution = await this.taskService.executeTask(taskId, userId, {
+      // Get projectPath from database using projectId
+      const projectPath = await this.getProjectWorkspacePath(projectId);
+      this.logger.info(`✅ Resolved projectPath for ${projectId}: ${projectPath}`);
+      
+      // Queue task for execution using TaskQueueService
+      const execution = await this.taskQueueService.enqueue(taskId, userId, {
         ...options,
-        projectId
+        projectId,
+        projectPath  // ← WICHTIG: projectPath aus DB hinzufügen
       });
       
       this.logger.info(`✅ Task queued successfully: ${taskId}`);

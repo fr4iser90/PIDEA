@@ -9,17 +9,17 @@ const logger = new Logger('ProjectTestStep');
 
 // Step configuration
 const config = {
-      name: 'ProjectTestStep',
+  name: 'project_test_step',
   type: 'testing',
-      category: 'testing',
+  category: 'testing',
   description: 'Run tests for the project',
   version: '1.0.0',
   dependencies: ['projectRepository', 'terminalService'],
-      settings: {
+  settings: {
     includeUnitTests: true,
     includeIntegrationTests: true,
-        includeCoverage: true,
-        timeout: 120000
+    includeCoverage: true,
+    timeout: 120000
   },
   validation: {
     required: ['projectId'],

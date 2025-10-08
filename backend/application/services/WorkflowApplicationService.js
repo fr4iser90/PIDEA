@@ -23,6 +23,7 @@ class WorkflowApplicationService {
     eventBus,
     ideManager,
     taskService,
+    taskQueueService,
     projectMappingService,
     logger
   }) {
@@ -36,6 +37,7 @@ class WorkflowApplicationService {
     // Remove circular dependency on application
     this.ideManager = ideManager;
     this.taskService = taskService;
+    this.taskQueueService = taskQueueService;
     // TODO: Add workflowExecutionService when implemented
     this.projectMappingService = projectMappingService;
   }
@@ -243,8 +245,8 @@ class WorkflowApplicationService {
         throw new Error('Task service not available');
       }
       
-      // Execute task with enhanced context
-      const taskResult = await this.taskService.executeTask(taskOptions.taskId, userContext.userId, {
+      // Queue task for execution with enhanced context
+      const taskResult = await this.taskQueueService.enqueue(taskOptions.taskId, userContext.userId, {
         projectPath: workspacePath,
         createGitBranch: taskOptions.createGitBranch,
         branchName: taskOptions.branchName,
@@ -253,14 +255,14 @@ class WorkflowApplicationService {
         projectId: taskOptions.projectId
       });
       
-      this.logger.info('✅ Task workflow executed successfully:', { 
+      this.logger.info('✅ Task workflow queued successfully:', { 
         taskId: taskOptions.taskId,
-        executionId: taskResult.executionId
+        queueItemId: taskResult.queueItemId
       });
       
       return {
         taskExecution: taskResult,
-        executionId: taskResult.executionId,
+        queueItemId: taskResult.queueItemId,
         type: 'task'
       };
       

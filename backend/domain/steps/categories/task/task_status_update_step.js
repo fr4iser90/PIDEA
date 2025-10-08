@@ -22,7 +22,7 @@ class TaskStatusUpdateStep {
 
   static getConfig() {
     return {
-      name: 'TaskStatusUpdateStep',
+      name: 'task_status_update_step',
       type: 'status',
       description: 'Updates task status and organizes files accordingly',
       category: 'task',

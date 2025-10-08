@@ -9,7 +9,7 @@ const logger = new Logger('run_dev_step');
 
 // Step configuration
 const config = {
-  name: 'RunDevStep',
+  name: 'run_dev_step',
   type: 'completion',
   category: 'completion',
   description: 'Starts the development server',

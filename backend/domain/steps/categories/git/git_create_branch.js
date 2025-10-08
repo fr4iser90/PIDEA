@@ -11,7 +11,7 @@ const HandlerRegistry = require('@application/handlers/HandlerRegistry');
 
 // Step configuration
 const config = {
-  name: 'GitCreateBranchStep',
+  name: 'git_create_branch',
   type: 'git',
   description: 'Creates a new Git branch using DDD pattern with Commands and Handlers',
   category: 'git',

@@ -104,12 +104,14 @@ class CreateChatStep {
   validateContext(context) {
     const errors = [];
     
+    // Use default userId if not provided
     if (!context.userId) {
-      errors.push('User ID is required');
+      context.userId = 'me';
     }
     
+    // Use default title if not provided
     if (!context.title || context.title.trim().length === 0) {
-      errors.push('Chat title is required');
+      context.title = context.options?.title || 'Task Execution Session';
     }
     
     if (context.title && context.title.length > 200) {

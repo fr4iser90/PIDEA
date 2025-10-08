@@ -92,9 +92,10 @@ class VSCodeIDEService {
   /**
    * Send a prompt to VSCode IDE via chat
    * @param {string} prompt - The prompt to send
+   * @param {Object} options - Options including clickNewChat flag
    * @returns {Promise<Object>} Result of sending prompt
    */
-  async postToVSCode(prompt) {
+  async postToVSCode(prompt, options = {}) {
     try {
       logger.info('Sending prompt to VSCode IDE', {
         promptLength: prompt.length,

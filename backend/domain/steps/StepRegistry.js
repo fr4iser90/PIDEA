@@ -14,6 +14,7 @@ const IStandardRegistry = require('../interfaces/IStandardRegistry');
 const ServiceLogger = require('@logging/ServiceLogger');
 const StepClassifier = require('./execution/StepClassifier');
 const ParallelExecutionEngine = require('./execution/ParallelExecutionEngine');
+const StepContextValidator = require('./validation/StepContextValidator');
 
 class StepRegistry {
   constructor(serviceRegistry = null) {
@@ -30,13 +31,21 @@ class StepRegistry {
       stepRegistry: this
     });
     
+    // Initialize step context validator
+    this.stepValidator = new StepContextValidator({
+      logger: this.logger,
+      strictMode: true
+    });
+    
     // Execution statistics
     this.executionStats = {
       totalExecutions: 0,
       sequentialExecutions: 0,
       parallelExecutions: 0,
       totalExecutionTime: 0,
-      averageExecutionTime: 0
+      averageExecutionTime: 0,
+      validationFailures: 0,
+      validationWarnings: 0
     };
   }
 
@@ -252,10 +261,38 @@ class StepRegistry {
   }
 
   /**
-   * Get all categories
+   * Get validation statistics
+   * @returns {Object} Validation statistics
    */
-  getCategories() {
-    return Array.from(this.categories.keys());
+  getValidationStatistics() {
+    return {
+      ...this.stepValidator.getStatistics(),
+      executionStats: {
+        validationFailures: this.executionStats.validationFailures,
+        validationWarnings: this.executionStats.validationWarnings,
+        totalExecutions: this.executionStats.totalExecutions
+      }
+    };
+  }
+
+  /**
+   * Validate step context without execution
+   * @param {string} stepName - Step name
+   * @param {Object} context - Execution context
+   * @returns {Object} Validation result
+   */
+  validateStepContext(stepName, context = {}) {
+    const step = this.getStep(stepName);
+    if (!step) {
+      return {
+        isValid: false,
+        errors: [`Step "${stepName}" not found`],
+        warnings: [],
+        stepName
+      };
+    }
+
+    return this.stepValidator.validateStepContext(step.category, stepName, context);
   }
 
   /**
@@ -270,6 +307,25 @@ class StepRegistry {
       
       if (step.status !== 'active') {
         throw new Error(`Step "${step.name}" is not active (status: ${step.status})`);
+      }
+
+      // Validate step context before execution
+      const validationResult = this.stepValidator.validateStepContext(step.category, name, context);
+      if (!validationResult.isValid) {
+        this.executionStats.validationFailures++;
+        this.logger.error(`❌ Step context validation failed for "${name}":`, {
+          errors: validationResult.errors,
+          missingFields: validationResult.missingFields
+        });
+        throw new Error(`Step context validation failed: ${validationResult.errors.join(', ')}`);
+      }
+
+      // Log validation warnings if any
+      if (validationResult.warnings.length > 0) {
+        this.executionStats.validationWarnings += validationResult.warnings.length;
+        this.logger.warn(`⚠️ Step context validation warnings for "${name}":`, {
+          warnings: validationResult.warnings
+        });
       }
 
       // Get executor
@@ -295,15 +351,40 @@ class StepRegistry {
       step.lastExecuted = new Date();
       step.lastDuration = duration;
 
-      this.logger.info(`✅ Step "${step.name}" executed successfully in ${duration}ms`);
-      return {
-        success: true,
-        result,
-        duration,
-        step: step.name,
-        timestamp: new Date(),
-        executionMode: 'individual'
-      };
+      // Check if step actually succeeded
+      const stepSucceeded = result && result.success !== false && !result.error;
+      
+      if (stepSucceeded) {
+        this.logger.info(`✅ Step "${step.name}" executed successfully in ${duration}ms`);
+        return {
+          success: true,
+          result,
+          duration,
+          step: step.name,
+          timestamp: new Date(),
+          executionMode: 'individual',
+          validation: {
+            passed: true,
+            warnings: validationResult.warnings
+          }
+        };
+      } else {
+        this.logger.error(`❌ Step "${step.name}" FAILED in ${duration}ms:`, result?.error || 'Unknown error');
+        return {
+          success: false,
+          error: result?.error || 'Step execution failed',
+          result,
+          duration,
+          step: step.name,
+          timestamp: new Date(),
+          executionMode: 'individual',
+          validation: {
+            passed: false,
+            error: result?.error || 'Step execution failed',
+            warnings: validationResult.warnings
+          }
+        };
+      }
     } catch (error) {
       this.logger.error(`❌ Failed to execute step "${name}":`, error.message);
       
@@ -319,7 +400,11 @@ class StepRegistry {
         success: false,
         error: error.message,
         step: name,
-        timestamp: new Date()
+        timestamp: new Date(),
+        validation: {
+          passed: false,
+          error: error.message
+        }
       };
     }
   }

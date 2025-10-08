@@ -16,7 +16,7 @@ describe('QueueTaskExecutionService Integration', () => {
     let taskService;
     let taskApplicationService;
     let mockTaskRepository;
-    let mockQueueMonitoringService;
+    let mockTaskQueueStore;
     let mockEventBus;
     let mockLogger;
 
@@ -37,7 +37,7 @@ describe('QueueTaskExecutionService Integration', () => {
             clear: jest.fn()
         };
 
-        mockQueueMonitoringService = {
+        mockTaskQueueStore = {
             addToProjectQueue: jest.fn(),
             getProjectQueue: jest.fn(),
             updateQueueItem: jest.fn(),
@@ -51,7 +51,7 @@ describe('QueueTaskExecutionService Integration', () => {
 
         // Create services manually
         queueTaskExecutionService = new QueueTaskExecutionService({
-            queueMonitoringService: mockQueueMonitoringService,
+            taskQueueStore: mockTaskQueueStore,
             taskRepository: mockTaskRepository,
             eventBus: mockEventBus,
             logger: mockLogger
@@ -93,7 +93,7 @@ describe('QueueTaskExecutionService Integration', () => {
             };
 
             mockTaskRepository.findById.mockResolvedValue(mockTask);
-            mockQueueMonitoringService.addToProjectQueue
+            mockTaskQueueStore.addToProjectQueue
                 .mockResolvedValue({ queueId: 'queue-1', status: 'queued' });
 
             // Act
@@ -102,7 +102,7 @@ describe('QueueTaskExecutionService Integration', () => {
             });
 
             // Assert
-            expect(mockQueueMonitoringService.addToProjectQueue).toHaveBeenCalledWith(
+            expect(mockTaskQueueStore.addToProjectQueue).toHaveBeenCalledWith(
                 'test-project-1',
                 'user-1',
                 expect.any(Object), // workflow
@@ -151,7 +151,7 @@ describe('QueueTaskExecutionService Integration', () => {
             };
 
             mockTaskRepository.findById.mockResolvedValue(mockTask);
-            mockQueueMonitoringService.addToProjectQueue
+            mockTaskQueueStore.addToProjectQueue
                 .mockResolvedValue({ queueId: 'queue-2', status: 'queued' });
 
             // Act
@@ -188,7 +188,7 @@ describe('QueueTaskExecutionService Integration', () => {
             };
 
             mockTaskRepository.findById.mockResolvedValue(mockTask);
-            mockQueueMonitoringService.addToProjectQueue
+            mockTaskQueueStore.addToProjectQueue
                 .mockResolvedValue({ queueId: 'queue-3', status: 'queued' });
 
             // Act
@@ -225,7 +225,7 @@ describe('QueueTaskExecutionService Integration', () => {
             };
 
             mockTaskRepository.findById.mockResolvedValue(mockTask);
-            mockQueueMonitoringService.addToProjectQueue
+            mockTaskQueueStore.addToProjectQueue
                 .mockResolvedValue({ queueId: 'queue-4', status: 'queued' });
 
             // Add task to queue
@@ -236,7 +236,7 @@ describe('QueueTaskExecutionService Integration', () => {
             );
 
             // Mock queue status
-            mockQueueMonitoringService.getProjectQueue
+            mockTaskQueueStore.getProjectQueue
                 .mockReturnValue([
                     {
                         id: 'queue-4',
@@ -284,7 +284,7 @@ describe('QueueTaskExecutionService Integration', () => {
             };
 
             mockTaskRepository.findById.mockResolvedValue(mockTask);
-            mockQueueMonitoringService.addToProjectQueue
+            mockTaskQueueStore.addToProjectQueue
                 .mockRejectedValue(new Error('Queue service unavailable'));
 
             // Act & Assert
@@ -301,7 +301,7 @@ describe('QueueTaskExecutionService Integration', () => {
             // Arrange
             const serviceWithoutDependencies = new QueueTaskExecutionService({
                 taskRepository: mockTaskRepository
-                // Missing queueMonitoringService
+                // Missing taskQueueStore
             });
 
             // Mock task to exist

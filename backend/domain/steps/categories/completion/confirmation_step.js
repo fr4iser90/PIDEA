@@ -10,7 +10,7 @@ const logger = new Logger('confirmation_step');
 
 // Step configuration
 const config = {
-  name: 'ConfirmationStep',
+  name: 'confirmation_step',
   type: 'completion',
   category: 'completion',
   description: 'Handle task confirmation and validation',
@@ -105,7 +105,7 @@ class ConfirmationStep {
         
         try {
           // Send confirmation question to IDE (like IDESendMessageStep)
-          const confirmationQuestion = this.getConfirmationQuestion(attempts);
+          const confirmationQuestion = this.getConfirmationQuestion(attempts, context);
           const result = await browserManager.typeMessage(confirmationQuestion, true);
           
           if (!result) {
@@ -266,11 +266,15 @@ class ConfirmationStep {
     return Math.min(Math.max(score, 0), 1);
   }
 
-  getConfirmationQuestion(attempt) {
+  getConfirmationQuestion(attempt, context = {}) {
+    const { task, projectId } = context;
+    const taskTitle = task?.title || 'the task';
+    const taskDescription = task?.description || '';
+    
     const questions = [
-      'Check your status against the task and respond with your status: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
-      'Have you completed the task? Please respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.',
-      'Task status check: Are you finished? Respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.'
+      `Have you completed the task "${taskTitle}" for project ${projectId}? Please respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`,
+      `Task status check for "${taskTitle}" in project ${projectId}: Are you finished? Respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`,
+      `Please confirm completion status for task "${taskTitle}" (${projectId}): completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`
     ];
     
     return questions[attempt % questions.length];

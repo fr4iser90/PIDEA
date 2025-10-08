@@ -276,6 +276,15 @@ class Application {
   async initializeDomainServices() {
     this.logger.info('🔧 Initializing domain services with automatic dependency resolution...');
 
+    // Debug: Log all registered services before validation
+    const container = this.serviceRegistry.getContainer();
+    const allServices = Array.from(container.factories.keys());
+    this.logger.info('🔍 All registered services:', allServices);
+    
+    // Debug: Log dependency graph nodes
+    const graphNodes = Array.from(container.dependencyGraph.nodes.keys());
+    this.logger.info('🔍 Dependency graph nodes:', graphNodes);
+
     // Validate dependency resolution before getting services
     const validation = this.serviceRegistry.getContainer().validateDependencies();
     if (!validation.isValid) {
@@ -349,6 +358,11 @@ class Application {
     // Initialize Auto-Finish System
     this.taskSessionRepository = this.databaseConnection.getRepository('TaskSession');
     await this.taskSessionRepository.initialize();
+
+    // Initialize TaskProcessor for queue processing
+    this.taskProcessor = this.serviceRegistry.getService('taskProcessor');
+    this.taskProcessor.startQueueProcessor();
+    this.logger.info('✅ TaskProcessor initialized and started');
 
     // Auto Test Fix System - Now converted to workflow
     // this.autoTestFixSystem = new AutoTestFixSystem({
@@ -599,7 +613,7 @@ class Application {
         analysisRepository: this.serviceRegistry.getService('analysisRepository'),
         ideManager: this.serviceRegistry.getService('ideManager'),
         taskService: this.serviceRegistry.getService('taskService'),
-        queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
+        queueMonitoringService: this.serviceRegistry.getService('taskQueueStore'),
         workflowLoaderService: this.serviceRegistry.getService('workflowLoaderService'),
         stepProgressService: this.serviceRegistry.getService('stepProgressService'),
         queueHistoryService: this.serviceRegistry.getService('queueHistoryService'),
@@ -611,7 +625,7 @@ class Application {
     // Initialize QueueController
     const QueueController = require('./presentation/api/QueueController');
     this.queueController = new QueueController({
-        queueMonitoringService: this.serviceRegistry.getService('queueMonitoringService'),
+        taskQueueStore: this.serviceRegistry.getService('taskQueueStore'),
         stepProgressService: this.serviceRegistry.getService('stepProgressService'),
         queueHistoryService: this.serviceRegistry.getService('queueHistoryService'),
         workflowTypeDetector: this.serviceRegistry.getService('workflowTypeDetector'),

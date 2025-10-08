@@ -18,6 +18,7 @@ const WorkflowTypes = {
 
   // Special workflow types
   TASK: 'task',
+  TASK_REVIEW: 'task-review',
   WORKFLOW_EXECUTION: 'workflow-execution',
   BRANCH_CREATION: 'branch-creation',
   WORKFLOW_COMPLETION: 'workflow-completion',
@@ -55,7 +56,9 @@ const WorkflowTypes = {
     
     const name = workflowName.toLowerCase();
     
-    if (name.includes('comprehensive') || name.includes('analysis')) {
+    if (name.includes('task-review') || name.includes('task_review')) {
+      return this.TASK_REVIEW;
+    } else if (name.includes('comprehensive') || name.includes('analysis')) {
       return this.ANALYSIS;
     } else if (name.includes('refactor')) {
       return this.REFACTORING;
