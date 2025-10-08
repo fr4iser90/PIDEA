@@ -1010,6 +1010,138 @@ class TaskController {
                 }
             }
 
+            // Handle task creation workflow
+            if (workflow === 'task-create-workflow') {
+                try {
+                    const taskData = req.body.task || {};
+                    const creationOptions = req.body.options || {};
+                    
+                    this.logger.info('TaskController: Starting task creation workflow', {
+                        taskTitle: taskData.title,
+                        creationMode: creationOptions.creationMode || 'normal',
+                        projectId,
+                        userId
+                    });
+                    
+                    // In normal mode, title can be empty as AI will generate it
+                    // In advanced mode, title is required
+                    if (creationOptions.creationMode === 'advanced' && !taskData.title) {
+                        throw new Error('Task title is required for advanced task creation');
+                    }
+                    
+                    // Create a real task entry in the database with temporary title
+                    // The AI will update the title during workflow execution
+                    const createdTask = await this.taskApplicationService.createTask({
+                        title: taskData.title || 'New Task', // Will be updated by AI
+                        description: taskData.description || '',
+                        type: taskData.type || 'feature',
+                        priority: taskData.priority || 'medium',
+                        estimatedHours: taskData.estimatedHours || 1,
+                        category: taskData.category || 'general',
+                        metadata: {
+                            creationMode: creationOptions.creationMode || 'normal',
+                            originalDescription: taskData.description,
+                            status: 'pending_ai_creation' // Special status for AI to process
+                        }
+                    }, projectId, userId);
+                    
+                    this.logger.info('TaskController: Task created successfully', {
+                        taskId: createdTask.id,
+                        taskTitle: createdTask.title,
+                        projectId,
+                        userId
+                    });
+                    
+                    // If autoExecute is enabled, queue the task for execution
+                    if (creationOptions.autoExecute !== false) {
+                        try {
+                            const queueResult = await this.taskApplicationService.executeTask(createdTask.id, projectId, userId, {
+                                priority: taskData.priority || 'medium',
+                                taskMode: 'task-create',
+                                autoExecute: true,
+                                createGitBranch: creationOptions.createGitBranch || false,
+                                workflow: 'task-create-workflow',
+                                creationMode: creationOptions.creationMode || 'normal'
+                            });
+                            
+                            this.logger.info('TaskController: Task queued for execution', {
+                                taskId: createdTask.id,
+                                queueItemId: queueResult.queueItemId,
+                                position: queueResult.position
+                            });
+                            
+                            return res.status(200).json({
+                                success: true,
+                                message: 'Task created and queued for execution successfully',
+                                data: {
+                                    task: createdTask,
+                                    workflowId: createdTask.id,
+                                    queueItemId: queueResult.queueItemId,
+                                    status: queueResult.status,
+                                    position: queueResult.position,
+                                    estimatedStartTime: queueResult.estimatedStartTime,
+                                    taskMode: 'task-create',
+                                    creationMode: creationOptions.creationMode || 'normal'
+                                }
+                            });
+                            
+                        } catch (queueError) {
+                            this.logger.error('TaskController: Failed to queue created task', {
+                                taskId: createdTask.id,
+                                error: queueError.message,
+                                projectId,
+                                userId
+                            });
+                            
+                            // Task was created but failed to queue - return partial success
+                            return res.status(200).json({
+                                success: true,
+                                message: 'Task created successfully but failed to queue for execution',
+                                data: {
+                                    task: createdTask,
+                                    workflowId: createdTask.id,
+                                    queueItemId: null,
+                                    status: 'created',
+                                    position: null,
+                                    estimatedStartTime: null,
+                                    taskMode: 'task-create',
+                                    creationMode: creationOptions.creationMode || 'normal',
+                                    warning: 'Task created but not queued for execution'
+                                }
+                            });
+                        }
+                    } else {
+                        // Task created but not queued for execution
+                        return res.status(200).json({
+                            success: true,
+                            message: 'Task created successfully',
+                            data: {
+                                task: createdTask,
+                                workflowId: createdTask.id,
+                                queueItemId: null,
+                                status: 'created',
+                                position: null,
+                                estimatedStartTime: null,
+                                taskMode: 'task-create',
+                                creationMode: creationOptions.creationMode || 'normal'
+                            }
+                        });
+                    }
+                    
+                } catch (error) {
+                    this.logger.error('TaskController: Task creation workflow failed', {
+                        error: error.message,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(500).json({
+                        success: false,
+                        error: `Task creation workflow failed: ${error.message}`
+                    });
+                }
+            }
+
             // For other workflows, return not implemented
             res.status(501).json({
                 success: false,

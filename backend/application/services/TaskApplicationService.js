@@ -241,28 +241,33 @@ class TaskApplicationService {
       const { title, description, priority, type, metadata } = taskData;
       
       // Validate required fields
-      if (!title) {
-        throw new Error('Task title is required');
+      // In normal mode, title can be empty as AI will generate it
+      // In advanced mode, title is required
+      const creationMode = metadata?.creationMode || 'normal';
+      if (creationMode === 'advanced' && !title) {
+        throw new Error('Task title is required for advanced task creation');
       }
+      
+      // Generate a temporary title if none provided (for normal mode)
+      const taskTitle = title || 'New Task';
       
       // Get project workspace path
       const workspacePath = await this.getProjectWorkspacePath(projectId);
       
       // Create task using domain service
-      const task = await this.taskService.createTask({
-        title,
-        description,
-        priority: priority || TaskPriority.MEDIUM,
-        type: type || TaskType.GENERAL,
+      const task = await this.taskService.createTask(
         projectId,
-        userId,
-        workspacePath,
-        metadata: {
+        taskTitle,
+        description,
+        priority || TaskPriority.MEDIUM,
+        type || TaskType.GENERAL,
+        null, // category
+        {
           ...metadata,
           createdBy: userId,
           workspacePath
         }
-      });
+      );
       
       this.logger.info(`✅ Task created: ${task.id}`);
       
