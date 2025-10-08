@@ -68,7 +68,7 @@
           "description": "Create git branch with source pidea-agent",
           "step": "git_create_branch",
           "options": {
-            "branchName": "task/${task.title}-${Date.now()}",
+            "branchName": "task/{{task.title}}-{{timestamp}}",
             "sourceBranch": "pidea-agent",
             "createBranch": true,
             "sessionId": "git-branch-${task.id}",

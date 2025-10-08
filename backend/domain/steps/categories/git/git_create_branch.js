@@ -63,6 +63,17 @@ class GitCreateBranchStep {
         if (resolvedParams.branchName.includes('${task.id}') && context.taskData?.id) {
           resolvedParams.branchName = resolvedParams.branchName.replace(/\$\{task\.id\}/g, context.taskData.id);
         }
+        
+        // Replace {{task.title}} with actual task title
+        if (resolvedParams.branchName.includes('{{task.title}}') && context.task?.title) {
+          resolvedParams.branchName = resolvedParams.branchName.replace(/\{\{task\.title\}\}/g, context.task.title);
+        }
+        
+        // Replace {{timestamp}} with current timestamp
+        if (resolvedParams.branchName.includes('{{timestamp}}')) {
+          const timestamp = Date.now();
+          resolvedParams.branchName = resolvedParams.branchName.replace(/\{\{timestamp\}\}/g, timestamp.toString());
+        }
       }
       
       const command = CommandRegistry.buildFromCategory('git', 'GitCreateBranchCommand', {
