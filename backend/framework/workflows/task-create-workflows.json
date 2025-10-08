@@ -51,11 +51,12 @@
         {
           "name": "new-chat-task-review",
           "type": "ide_send_message_step",
-          "description": "Start new chat session with task-review.md prompt",
+          "description": "Start new chat session with task-review.md prompt using synchronized task content",
           "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
             "taskMode": "task-review",
+            "useSynchronizedTask": true,
             "waitForResponse": true,
             "timeout": 300000,
             "sessionId": "task-review-${task.id}",

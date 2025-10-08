@@ -27,10 +27,10 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors, creati
     description: {
       required: true,
       minLength: creationMode === 'normal' ? 5 : 10,
-      maxLength: 1000,
+      maxLength: 5000,
       message: creationMode === 'normal' 
-        ? 'Description must be 5-1000 characters' 
-        : 'Description must be 10-1000 characters'
+        ? 'Description must be 5-5000 characters' 
+        : 'Description must be 10-5000 characters'
     },
     category: {
       required: creationMode === 'advanced',
@@ -283,7 +283,7 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors, creati
               rows={4}
               disabled={isGeneratingPlan}
               required
-              maxLength={1000}
+              maxLength={5000}
             />
             <VoiceInput 
               onTextReceived={handleVoiceDescription}
@@ -298,7 +298,7 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors, creati
             <div className="success-message">✓ Description is valid</div>
           )}
           <div className="char-count">
-            {formData.description.length}/1000
+            {formData.description.length}/5000
           </div>
         </div>
         
