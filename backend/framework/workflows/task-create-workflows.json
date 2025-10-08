@@ -48,6 +48,7 @@
           "type": "confirmation_step",
           "description": "Confirm if files are up-to-date and executable",
           "step": "confirmation_step",
+          "enabled": false,
           "options": {
             "confirmationPrompt": "Are all task files up-to-date and ready for execution? Please confirm with 'yes' or 'no'",
             "timeout": 60000,
@@ -67,7 +68,7 @@
           "description": "Create git branch with source pidea-agent",
           "step": "git_create_branch",
           "options": {
-            "branchName": "feature/${task.title}-${Date.now()}",
+            "branchName": "task/${task.title}-${Date.now()}",
             "sourceBranch": "pidea-agent",
             "createBranch": true,
             "sessionId": "git-branch-${task.id}",

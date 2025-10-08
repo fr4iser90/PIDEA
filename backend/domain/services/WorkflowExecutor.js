@@ -102,6 +102,23 @@ class WorkflowExecutor {
             // Execute workflow steps
             for (const step of workflow.steps || []) {
                 try {
+                    // Check if step is enabled/skipped
+                    if (step.enabled === false) {
+                        this.logger.info('WorkflowExecutor: Skipping disabled step', {
+                            stepName: step.step,
+                            stepType: step.type,
+                            stepId: step.id,
+                            reason: 'enabled: false'
+                        });
+                        
+                        results.push({
+                            success: true,
+                            step: step,
+                            result: { success: true, skipped: true, reason: 'Step disabled' }
+                        });
+                        continue;
+                    }
+
                     this.logger.info('WorkflowExecutor: Executing step', {
                         stepName: step.step,
                         stepType: step.type,
