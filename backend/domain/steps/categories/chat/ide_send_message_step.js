@@ -55,9 +55,9 @@ class IDESendMessageStep {
       const { projectId, workspacePath, ideType, waitForResponse = false, timeout = null, activeIDE, useSynchronizedTask = false } = context;
       
       // If using synchronized task, get the task content from previous sync steps
-      if (useSynchronizedTask && context.previousSteps) {
+      if (useSynchronizedTask && context.previousSteps && Array.isArray(context.previousSteps)) {
         const syncStep = context.previousSteps.find(step => 
-          step.name.includes('sync-task') && step.result?.success
+          step && step.name && step.name.includes('sync-task') && step.result?.success
         );
         
         if (syncStep && syncStep.result?.data?.updatedTask) {
@@ -76,7 +76,11 @@ class IDESendMessageStep {
             contentLength: synchronizedTask.content?.length || 0,
             filePath: synchronizedTask.filePath
           });
+        } else {
+          logger.warn('⚠️ [IDESendMessageStep] useSynchronizedTask=true but no sync step found in previousSteps');
         }
+      } else if (useSynchronizedTask) {
+        logger.warn('⚠️ [IDESendMessageStep] useSynchronizedTask=true but previousSteps is not available or not an array');
       }
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);

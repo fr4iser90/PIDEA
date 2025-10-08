@@ -356,7 +356,8 @@ class TaskSyncStep {
       const beforeSnapshot = this.getBeforeSnapshotFromContext(context);
       
       if (!beforeSnapshot) {
-        throw new Error('No beforeSnapshot found in workflow context - file_snapshot_step must run first!');
+        logger.warn('⚠️ [TaskSyncStep] No beforeSnapshot found - skipping new file detection');
+        return null;
       }
       
       // Get current snapshot of files
@@ -372,8 +373,8 @@ class TaskSyncStep {
         try {
           const content = await fs.promises.readFile(filePath, 'utf8');
           
-          // Check if file contains task-like content
-          if (this.isTaskFile(content)) {
+          // Check if file contains task-like content using filename patterns
+          if (this.isTaskFileByFilename(filePath)) {
             const stats = await fs.promises.stat(filePath);
             logger.info(`📄 Found new task file: ${path.basename(filePath)}`);
             return {
@@ -405,14 +406,15 @@ class TaskSyncStep {
    */
   getBeforeSnapshotFromContext(context) {
     // Look for file_snapshot_step result in previousSteps
-    if (context.previousSteps) {
+    if (context.previousSteps && Array.isArray(context.previousSteps)) {
       for (const step of context.previousSteps) {
-        if (step.step?.name === 'create-file-snapshot' && step.result?.success) {
+        if (step && step.step?.name === 'create-file-snapshot' && step.result?.success && step.result?.data?.snapshot) {
           return step.result.data.snapshot;
         }
       }
     }
     
+    logger.warn('⚠️ [TaskSyncStep] No file snapshot found in previousSteps, will use fallback detection');
     return null;
   }
 
@@ -467,30 +469,40 @@ class TaskSyncStep {
   }
 
   /**
+   * Check if file is a task file based on filename patterns (same as ManualTasksImportService)
+   * @param {string} filePath - File path
+   * @returns {boolean} True if filename matches task patterns
+   */
+  isTaskFileByFilename(filePath) {
+    const filename = path.basename(filePath);
+    
+    // ONLY use index files for task sync - not implementation, phase, or summary files
+    return filename.endsWith('-index.md');
+  }
+
+  /**
    * Check if file content looks like a task file
    * @param {string} content - File content
    * @returns {boolean} True if content looks like a task
    */
   isTaskFile(content) {
-    const taskIndicators = [
-      '# Task:',
-      '## Description',
-      '## Instructions',
-      '## Steps',
-      '## Requirements',
-      '## Acceptance Criteria',
-      'Task ID:',
-      'Priority:',
-      'Status:',
-      'Type:'
+    // Use the same detection logic as ManualTasksImportService
+    // Check for task file patterns in filename (passed via content parameter)
+    // This is a simplified version - in practice we should check the actual filename
+    
+    // For now, check if content contains typical task structure
+    const taskPatterns = [
+      /# .*Implementation/i,
+      /# .*Index/i,
+      /## Description/i,
+      /## Requirements/i,
+      /## Steps/i,
+      /## Acceptance Criteria/i
     ];
     
-    const lowerContent = content.toLowerCase();
-    const matches = taskIndicators.filter(indicator => 
-      lowerContent.includes(indicator.toLowerCase())
-    );
+    const matches = taskPatterns.filter(pattern => pattern.test(content));
     
-    // Consider it a task file if it has at least 2 task indicators
+    // Consider it a task file if it has at least 2 task patterns
     return matches.length >= 2;
   }
 
