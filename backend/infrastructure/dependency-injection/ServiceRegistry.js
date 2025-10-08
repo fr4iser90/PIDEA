@@ -467,6 +467,12 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService', 'fileSystemService', 'eventBus'] });
 
 
+        // Task Content Hash Service
+        this.container.register('contentHashService', (fileSystemService) => {
+            const TaskContentHashService = require('@domain/services/task/TaskContentHashService');
+            return new TaskContentHashService(fileSystemService);
+        }, { singleton: true, dependencies: ['fileSystemService'] });
+
         // Manual Tasks Import Service
         this.container.register('manualTasksImportService', (browserManager, taskService, taskRepository, fileSystemService) => {
             const ManualTasksImportService = require('@domain/services/task/ManualTasksImportService');
