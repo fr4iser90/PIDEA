@@ -418,7 +418,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
     }
   };
 
-  const handleStartReview = async (selectedTasks) => {
+  const handleStartReview = async (selectedTasks, workflowType = 'task-review') => {
     if (!projectId || !activeIDE?.workspacePath) {
       setFeedback('No project selected for task review');
       return;
@@ -431,7 +431,8 @@ function TasksPanelComponent({ eventBus, activePort }) {
       const result = await taskReviewService.executeTaskReviewWorkflow(
         selectedTasks, 
         projectId, 
-        activeIDE.workspacePath
+        activeIDE.workspacePath,
+        workflowType
       );
       
       setFeedback(result.message);
@@ -445,6 +446,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       logger.info('Task review workflow completed:', {
         taskCount: selectedTasks.length,
         projectId,
+        workflowType,
         result: result.data
       });
       

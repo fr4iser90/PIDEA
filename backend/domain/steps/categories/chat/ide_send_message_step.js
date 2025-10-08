@@ -62,6 +62,10 @@ class IDESendMessageStep {
         logger.info('🔘 [IDESendMessageStep] Clicking New Chat button first');
         const browserManager = context.getService('browserManager');
         if (browserManager) {
+          // Set port from context before clicking New Chat
+          if (context.activeIDE?.port) {
+            await browserManager.switchToPort(context.activeIDE.port);
+          }
           await browserManager.clickNewChat();
           // Wait for new chat to be ready
           await new Promise(resolve => setTimeout(resolve, 1000));

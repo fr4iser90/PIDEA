@@ -82,6 +82,9 @@ class TaskRoutes {
     // SCRIPT GENERATION ROUTES - Task Scripts
     // ========================================
     
+    // Apply authentication middleware to script routes
+    app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());
+    
     // Generate script from task
     app.post('/api/projects/:projectId/scripts/generate', (req, res) => this.taskController.generateScript(req, res));
     

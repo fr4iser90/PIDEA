@@ -1433,12 +1433,84 @@ ${task.description}
   }
 
   /**
-   * Build task review prompt
+   * Build task prompt based on step name and workflow type
    * @param {Object} task - Task object
-   * @param {Object} options - Review options
-   * @returns {Promise<string>} Review prompt
+   * @param {Object} options - Options including stepName and workflowType
+   * @returns {Promise<string>} Appropriate prompt
    */
-  async buildTaskReviewPrompt(task, options = {}) {
+  async buildTaskPromptForStep(task, options = {}) {
+    const { stepName, workflowType } = options;
+    
+    logger.info('🔍 [TaskService] buildTaskPromptForStep called', {
+      taskId: task.id,
+      stepName,
+      workflowType
+    });
+    
+    // Determine prompt type based on step name and workflow type
+    if (workflowType === 'task-review' || stepName?.includes('review')) {
+      return await this.buildTaskReviewPrompt(task, options);
+    } else if (workflowType === 'task-check-state' || stepName?.includes('check-state') || stepName?.includes('checkstate')) {
+      return await this.buildTaskCheckStatePrompt(task, options);
+    } else if (stepName?.includes('create') || stepName?.includes('task-create')) {
+      return await this.buildTaskCreatePrompt(task, options);
+    } else if (stepName?.includes('execute') || stepName?.includes('task-execute')) {
+      return await this.buildTaskExecutionPrompt(task);
+    } else {
+      // Default to execution prompt
+      return await this.buildTaskExecutionPrompt(task);
+    }
+  }
+
+  /**
+   * Build task creation prompt
+   * @param {Object} task - Task object
+   * @param {Object} options - Creation options
+   * @returns {Promise<string>} Creation prompt
+   */
+  async buildTaskCreatePrompt(task, options = {}) {
+    logger.info('🔍 [TaskService] buildTaskCreatePrompt called for task:', {
+      id: task.id,
+      projectId: task.projectId
+    });
+    
+    try {
+      // Load task-create.md prompt using dynamic path resolution
+      let taskCreatePrompt = '';
+      try {
+        logger.info('🔍 [TaskService] Loading task-create.md using dynamic path resolution...');
+        const taskCreatePath = this.getPromptPath('task-create');
+        const fullPath = path.join(process.cwd(), taskCreatePath);
+        taskCreatePrompt = fs.readFileSync(fullPath, 'utf8');
+        logger.info('✅ [TaskService] Successfully loaded task-create.md');
+      } catch (error) {
+        logger.error('❌ [TaskService] Error reading task-create.md from file:', error);
+        taskCreatePrompt = 'Create a comprehensive development task plan:\n\n';
+      }
+
+      // Combine task-create.md with task details
+      const finalPrompt = `${taskCreatePrompt}\n\n## Task Details:\n- **Title**: ${task.title}\n- **Description**: ${task.description || ''}\n- **Type**: ${task.type?.value || 'feature'}\n- **Priority**: ${task.priority?.value || 'medium'}\n- **Category**: ${task.category || 'general'}\n- **Project**: ${task.projectId || 'Current Project'}`;
+      
+      logger.info('✅ [TaskService] Final task create prompt generated', {
+        taskId: task.id,
+        projectId: task.projectId,
+        promptLength: finalPrompt.length
+      });
+      
+      return finalPrompt;
+    } catch (error) {
+      logger.error('❌ [TaskService] Error building task create prompt:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build task check state prompt
+   * @param {Object} task - Task object
+   * @param {Object} options - Check state options
+   * @returns {Promise<string>} Check state prompt
+   */
+  async buildTaskCheckStatePrompt(task, options = {}) {
     try {
       // Read task-check-state.md content
       const fs = require('fs');
@@ -1448,7 +1520,7 @@ ${task.description}
       const projectPath = options.projectPath || task.projectPath;
       
       if (!projectPath) {
-        throw new Error('Project path is required for task review');
+        throw new Error('Project path is required for task check state');
       }
       
       const taskCheckStatePath = path.join(projectPath, 'content-library', 'prompts', 'task-management', 'task-check-state.md');
@@ -1491,7 +1563,87 @@ ${task.description}
       }
       
       // Combine task-check-state.md with task context
-      const fullPrompt = `${taskCheckStateContent}\n\n## Task Context:\n\n**Task ID:** ${task.id}\n**Task Title:** ${task.title}\n**Task Description:** ${task.description || 'No description available'}\n\n## Task Index Content:\n\n${taskIndexContent}\n\n## Instructions:\n\nPlease analyze this task against the current codebase and provide a comprehensive status review.`;
+      const fullPrompt = `${taskCheckStateContent}\n\n## Task Context:\n\n**Task ID:** ${task.id}\n**Task Title:** ${task.title}\n**Task Description:** ${task.description || 'No description available'}\n\n## Task Index Content:\n\n${taskIndexContent}\n\n## Instructions:\n\nPlease check the current state of this task and provide a comprehensive status analysis.`;
+      
+      logger.info('🔍 [TaskService] Built task check state prompt', {
+        taskId: task.id,
+        projectId: task.projectId,
+        promptLength: fullPrompt.length,
+        hasTaskContext: !!taskIndexContent
+      });
+      
+      return fullPrompt;
+      
+    } catch (error) {
+      logger.error('❌ [TaskService] Failed to build task check state prompt', {
+        taskId: task.id,
+        projectId: task.projectId,
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Build task review prompt
+   * @param {Object} task - Task object
+   * @param {Object} options - Review options
+   * @returns {Promise<string>} Review prompt
+   */
+  async buildTaskReviewPrompt(task, options = {}) {
+    try {
+      // Read task-check-state.md content
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Use projectPath from options or task.projectPath
+      const projectPath = options.projectPath || task.projectPath;
+      
+      if (!projectPath) {
+        throw new Error('Project path is required for task review');
+      }
+      
+      const taskReviewPath = path.join(projectPath, 'content-library', 'prompts', 'task-management', 'task-review.md');
+      
+      let taskReviewContent = '';
+      try {
+        taskReviewContent = fs.readFileSync(taskReviewPath, 'utf8');
+        logger.info('🔍 [TaskService] Loaded task-review.md content', {
+          contentLength: taskReviewContent.length
+        });
+      } catch (error) {
+        logger.error('❌ [TaskService] Failed to read task-review.md', {
+          error: error.message,
+          path: taskReviewPath
+        });
+        throw new Error(`Failed to read task-review.md: ${error.message}`);
+      }
+      
+      // Read task's index.md content for context
+      let taskIndexContent = '';
+      try {
+        const taskIndexPath = path.join(projectPath, 'docs', '09_roadmap', 'pending', 'high', 'frontend', task.id, `${task.id}-index.md`);
+        if (fs.existsSync(taskIndexPath)) {
+          taskIndexContent = fs.readFileSync(taskIndexPath, 'utf8');
+          logger.info('🔍 [TaskService] Loaded task index content', {
+            taskId: task.id,
+            contentLength: taskIndexContent.length
+          });
+        } else {
+          logger.warn('⚠️ [TaskService] Task index file not found', {
+            taskId: task.id,
+            path: taskIndexPath
+          });
+        }
+      } catch (error) {
+        logger.warn('⚠️ [TaskService] Failed to read task index', {
+          taskId: task.id,
+          error: error.message
+        });
+      }
+      
+      // Combine task-review.md with task context
+      const fullPrompt = `${taskReviewContent}\n\n## Task Context:\n\n**Task ID:** ${task.id}\n**Task Title:** ${task.title}\n**Task Description:** ${task.description || 'No description available'}\n\n## Task Index Content:\n\n${taskIndexContent}\n\n## Instructions:\n\nPlease analyze this task against the current codebase and provide a comprehensive status review.`;
       
       logger.info('🔍 [TaskService] Built task review prompt', {
         taskId: task.id,

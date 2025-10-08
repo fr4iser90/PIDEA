@@ -17,6 +17,7 @@ const TaskReviewSelectionModal = ({
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [reviewMode, setReviewMode] = useState('review'); // 'review' or 'check-state'
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -148,7 +149,8 @@ const TaskReviewSelectionModal = ({
 
   const handleStartReview = () => {
     const selectedTaskList = tasks.filter(task => selectedTasks.has(task.id));
-    onStartReview(selectedTaskList);
+    const workflowType = reviewMode === 'check-state' ? 'task-check-state' : 'task-review';
+    onStartReview(selectedTaskList, workflowType);
   };
 
   const toggleTaskExpansion = (taskId) => {
@@ -259,6 +261,45 @@ const TaskReviewSelectionModal = ({
             <p>Select tasks to review. Completed tasks are automatically excluded.</p>
             <div className="selection-info">
               <span className="selected-count">{selectedCount}</span> of <span className="total-count">{totalCount}</span> tasks selected
+            </div>
+          </div>
+
+          {/* Review Mode Toggle */}
+          <div className="review-mode-toggle">
+            <label className="toggle-label">
+              <span className="toggle-text">Mode:</span>
+              <div className="toggle-switch">
+                <input
+                  type="radio"
+                  name="reviewMode"
+                  value="review"
+                  checked={reviewMode === 'review'}
+                  onChange={(e) => setReviewMode(e.target.value)}
+                  id="mode-review"
+                />
+                <label htmlFor="mode-review" className="toggle-option">
+                  📋 Review
+                </label>
+                
+                <input
+                  type="radio"
+                  name="reviewMode"
+                  value="check-state"
+                  checked={reviewMode === 'check-state'}
+                  onChange={(e) => setReviewMode(e.target.value)}
+                  id="mode-check-state"
+                />
+                <label htmlFor="mode-check-state" className="toggle-option">
+                  🔍 Check State
+                </label>
+              </div>
+            </label>
+            <div className="mode-description">
+              {reviewMode === 'review' ? (
+                <span>📋 Comprehensive review: Validates plan against codebase, creates missing files, analyzes implementation status, updates plan</span>
+              ) : (
+                <span>🔍 Quick check: Only checks existing files, updates status indicators, detects/translates non-English content, no file creation</span>
+              )}
             </div>
           </div>
 

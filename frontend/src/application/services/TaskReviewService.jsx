@@ -569,12 +569,13 @@ Please execute the task according to the review analysis and provide real-time p
    * @param {String} projectPath - Project workspace path
    * @returns {Promise<Object>} Review workflow result
    */
-  async executeTaskReviewWorkflow(selectedTasks, projectId, projectPath) {
+  async executeTaskReviewWorkflow(selectedTasks, projectId, projectPath, workflowType = 'task-review') {
     try {
       console.log('TaskReviewService: Starting task review workflow:', {
         taskCount: selectedTasks.length,
         projectId,
-        projectPath
+        projectPath,
+        workflowType
       });
       
       // ⚠️ DEPRECATED: This endpoint is deprecated and will be removed in a future version
@@ -591,7 +592,7 @@ Please execute the task according to the review analysis and provide real-time p
           mode: 'task-review',
           tasks: selectedTasks,
           options: {
-            workflowPrompt: 'task-check-state.md',
+            workflowType: workflowType,
             autoExecute: true
           }
         })

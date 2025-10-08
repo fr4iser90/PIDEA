@@ -787,8 +787,11 @@ class WorkflowController {
                     const taskType = req.body.task?.type || 'default';
                     const workflow = workflowLoaderService.getWorkflowByTaskType(taskType);
                     
-                    // Execute the workflow
-                    const result = await this.executeWorkflowSteps(workflow, req.body.task, projectId, userId, workspacePath, req.body.options);
+                    // Execute the workflow with correct workflow type
+                    const result = await this.executeWorkflowSteps(workflow, req.body.task, projectId, userId, workspacePath, {
+                        ...req.body.options,
+                        workflowType: 'task-creation'
+                    });
                     
                     return res.status(200).json({
                         success: true,
@@ -859,12 +862,15 @@ class WorkflowController {
                             
                             // Use TaskService.queueTaskForExecution for queue-based execution
                             if (this.taskService && typeof this.taskService.queueTaskForExecution === 'function') {
+                                // Extract workflowType from options (consistent approach)
+                                const workflowType = req.body.options?.workflowType || 'task-review';
+                                
                                 // Add task to queue with review-specific options
                                 const queueResult = await this.taskService.queueTaskForExecution(task.id, userId, {
                                     projectId: projectId,
                                     projectPath: workspacePath,
                                     priority: 'normal',
-                                    workflowType: 'task-review',
+                                    workflowType: workflowType,
                                     autoExecute: true,
                                     createGitBranch: false
                                 });
@@ -1736,8 +1742,15 @@ class WorkflowController {
                         if (options.workflowType === 'task-review') {
                             const reviewPrompt = await this.taskService.buildTaskReviewPrompt(task, options);
                             stepOptions.message = reviewPrompt;
+                        } else if (options.workflowType === 'task-check-state') {
+                            const checkStatePrompt = await this.taskService.buildTaskCheckStatePrompt(task, options);
+                            stepOptions.message = checkStatePrompt;
                         } else {
-                            const taskPrompt = await this.taskService.buildTaskExecutionPrompt(task);
+                            // Use the new smart prompt building method
+                            const taskPrompt = await this.taskService.buildTaskPromptForStep(task, {
+                                ...options,
+                                stepName: step.name
+                            });
                             stepOptions.message = taskPrompt;
                         }
                     } else {

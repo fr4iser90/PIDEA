@@ -49,6 +49,8 @@ class QueueTaskExecutionService {
             
             if (options.workflowType === 'task-review') {
                 workflowName = 'task-review-workflow';
+            } else if (options.workflowType === 'task-check-state') {
+                workflowName = 'task-review-workflow'; // Use same workflow but different prompt
             } else if (options.workflowType) {
                 workflowName = options.workflowType;
             }

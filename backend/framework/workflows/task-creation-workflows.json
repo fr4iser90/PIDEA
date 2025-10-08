@@ -2,109 +2,128 @@
   "workflows": {
     "task-creation-workflow": {
       "name": "Task Creation Workflow",
-      "description": "Complete workflow for task creation: Prompt generation → IDE communication → Auto-finish execution",
+      "description": "Complete workflow for task creation: ide_send task-create.md → confirmation → task-review → git branch → task-execute",
       "steps": [
         {
-          "name": "generate-prompt",
-          "type": "generate",
-          "description": "Generate comprehensive task creation prompt",
-          "step": "TaskPromptGenerationStep",
-          "options": {
-            "useTaskCreateTemplate": true,
-            "includeProjectAnalysis": true,
-            "includeArchitectureContext": true,
-            "includeDependencies": true
-          },
-          "strict": true
-        },
-        {
-          "name": "create-chat",
-          "type": "ide",
-          "description": "Create new chat session for task creation",
-          "step": "create_chat_step",
-          "options": {
-            "title": "Task Creation Session",
-            "metadata": {
-              "workflow": "task-creation-workflow",
-              "autoCreated": true,
-              "taskType": "creation"
-            }
-          },
-          "strict": true
-        },
-        {
-          "name": "send-to-ide",
-          "type": "ide_send_message",
-          "description": "Send generated prompt to IDE",
+          "name": "send-task-create-prompt",
+          "type": "ide_send_message_step",
+          "description": "Send task-create.md prompt to IDE for task planning",
           "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
             "waitForResponse": true,
-            "timeout": 60000,
-            "retryOnFailure": true,
-            "maxRetries": 3
+            "timeout": 300000,
+            "sessionId": "task-create-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}",
+            "autoDetectIDE": true,
+            "clickNewChat": true
           },
           "strict": true
         },
         {
-          "name": "validate-response",
-          "type": "validation",
-          "description": "Validate IDE response quality",
-          "step": "CodeQualityAnalysisOrchestrator",
-          "options": {
-            "checks": ["completeness", "relevance", "structure"],
-            "strict": false,
-            "continueOnFailure": true
-          },
-          "strict": false
-        },
-        {
-          "name": "auto-finish",
-          "type": "completion",
-          "description": "Start auto-finish workflow for task execution",
-          "step": "AutoFinishStep",
-          "options": {
-            "maxConfirmationAttempts": 3,
-            "confirmationTimeout": 30000,
-            "fallbackDetectionEnabled": true,
-            "autoContinueThreshold": 0.8,
-            "includeCompletionDetection": true,
-            "includeAutoCommit": true
-          },
-          "strict": true
-        },
-        {
-          "name": "completion-check",
+          "name": "confirm-file-creation",
           "type": "confirmation_step",
-          "description": "Final completion check with AI confirmation",
-          "step": "ConfirmationStep",
+          "description": "Confirm if files were created successfully",
+          "step": "confirmation_step",
           "options": {
+            "confirmationPrompt": "Were the task files created successfully? Please confirm with 'yes' or 'no'",
+            "timeout": 60000,
             "maxAttempts": 2,
-            "timeout": 15000,
-            "autoContinueThreshold": 0.9,
-            "enableMultiLanguage": true
+            "sessionId": "task-create-confirmation-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}"
           },
-          "strict": false
+          "strict": false,
+          "condition": "previousStep.success && previousStep.result.success"
         },
         {
-          "name": "organize-task-files",
-          "type": "organization",
-          "description": "Organize newly created task files",
-          "step": "TaskFileOrganizationStep",
+          "name": "new-chat-task-review",
+          "type": "ide_send_message_step",
+          "description": "Start new chat session with task-review.md prompt",
+          "step": "ide_send_message_step",
           "options": {
-            "createDirectories": true,
-            "moveFiles": true,
-            "updateReferences": true
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 300000,
+            "sessionId": "task-review-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}",
+            "autoDetectIDE": true,
+            "clickNewChat": true
           },
-          "strict": false
+          "strict": true
+        },
+        {
+          "name": "confirm-task-review",
+          "type": "confirmation_step",
+          "description": "Confirm if files are up-to-date and executable",
+          "step": "confirmation_step",
+          "options": {
+            "confirmationPrompt": "Are all task files up-to-date and ready for execution? Please confirm with 'yes' or 'no'",
+            "timeout": 60000,
+            "maxAttempts": 2,
+            "sessionId": "task-review-confirmation-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": false,
+          "condition": "previousStep.success && previousStep.result.success"
+        },
+        {
+          "name": "create-git-branch",
+          "type": "git_create_branch",
+          "description": "Create git branch with source pidea-agent",
+          "step": "git_create_branch",
+          "options": {
+            "branchName": "feature/${task.title}-${Date.now()}",
+            "sourceBranch": "pidea-agent",
+            "createBranch": true,
+            "sessionId": "git-branch-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": true,
+          "condition": "previousStep.success && previousStep.result.success"
+        },
+        {
+          "name": "new-chat-task-execute",
+          "type": "ide_send_message_step",
+          "description": "Start new chat session with task-execute.md prompt",
+          "step": "ide_send_message_step",
+          "options": {
+            "useTaskPrompt": true,
+            "waitForResponse": true,
+            "timeout": 600000,
+            "sessionId": "task-execute-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}",
+            "autoDetectIDE": true,
+            "clickNewChat": true
+          },
+          "strict": true,
+          "condition": "previousStep.success && previousStep.result.success"
         }
       ],
       "options": {
-        "autoConfirm": true,
+        "autoConfirm": false,
         "createBranch": true,
-        "timeout": 300000,
+        "timeout": 900000,
         "enableProgressTracking": true,
-        "enableErrorRecovery": true
+        "enableErrorRecovery": true,
+        "sourceBranch": "pidea-agent"
       }
     },
     "quick-task-creation-workflow": {

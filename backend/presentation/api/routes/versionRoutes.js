@@ -1,87 +1,76 @@
 /**
- * Version Routes - API routes for version management
- * Defines HTTP endpoints for version management operations
+ * Version Routes - Professional RESTful API Design
+ * 
+ * This module provides a clean, modular approach to version management routes
+ * including version bumping, history, validation, and configuration.
  */
 
 const express = require('express');
 const VersionController = require('../controllers/VersionController');
 const Logger = require('@logging/Logger');
 
-const logger = new Logger('VersionRoutes');
-const router = express.Router();
+class VersionRoutes {
+  constructor(authMiddleware) {
+    this.authMiddleware = authMiddleware;
+    this.logger = new Logger('VersionRoutes');
+    this.versionController = new VersionController();
+  }
 
-// Initialize controller
-const versionController = new VersionController();
+  /**
+   * Setup all version routes
+   * @param {Express.Router} app - Express app instance
+   */
+  setupRoutes(app) {
+    // ========================================
+    // VERSION MANAGEMENT ROUTES - Version Control
+    // ========================================
+    
+    // Apply authentication middleware to version routes
+    app.use('/api/versions', this.authMiddleware.authenticate());
+    
+    // Health check endpoint
+    app.get('/api/versions/health', (req, res) => {
+      this.versionController.healthCheck(req, res);
+    });
 
-// Middleware for request logging
-router.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path}`, {
-    ip: req.ip,
-    userAgent: req.get('User-Agent'),
-    timestamp: new Date()
-  });
-  next();
-});
+    // Version management endpoints
+    app.post('/api/versions/bump', (req, res) => {
+      this.versionController.bumpVersion(req, res);
+    });
 
-// Middleware for error handling
-router.use((error, req, res, next) => {
-  logger.error('Route error', {
-    error: error.message,
-    stack: error.stack,
-    path: req.path,
-    method: req.method
-  });
+    app.get('/api/versions/current', (req, res) => {
+      this.versionController.getCurrentVersion(req, res);
+    });
 
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error',
-    timestamp: new Date()
-  });
-});
+    app.get('/api/versions/history', (req, res) => {
+      this.versionController.getVersionHistory(req, res);
+    });
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-  versionController.healthCheck(req, res);
-});
+    app.post('/api/versions/validate', (req, res) => {
+      this.versionController.validateVersion(req, res);
+    });
 
-// Version management endpoints
-router.post('/bump', (req, res) => {
-  versionController.bumpVersion(req, res);
-});
+    app.post('/api/versions/compare', (req, res) => {
+      this.versionController.compareVersions(req, res);
+    });
 
-router.get('/current', (req, res) => {
-  versionController.getCurrentVersion(req, res);
-});
+    app.post('/api/versions/determine-bump-type', (req, res) => {
+      this.versionController.determineBumpType(req, res);
+    });
 
-router.get('/history', (req, res) => {
-  versionController.getVersionHistory(req, res);
-});
+    app.get('/api/versions/latest', (req, res) => {
+      this.versionController.getLatestVersion(req, res);
+    });
 
-router.post('/validate', (req, res) => {
-  versionController.validateVersion(req, res);
-});
+    // Configuration endpoints
+    app.get('/api/versions/config', (req, res) => {
+      this.versionController.getConfiguration(req, res);
+    });
 
-router.post('/compare', (req, res) => {
-  versionController.compareVersions(req, res);
-});
+    app.put('/api/versions/config', (req, res) => {
+      this.versionController.updateConfiguration(req, res);
+    });
+  }
+}
 
-router.post('/determine-bump-type', (req, res) => {
-  versionController.determineBumpType(req, res);
-});
-
-router.get('/latest', (req, res) => {
-  versionController.getLatestVersion(req, res);
-});
-
-// Configuration endpoints
-router.get('/config', (req, res) => {
-  versionController.getConfiguration(req, res);
-});
-
-router.put('/config', (req, res) => {
-  versionController.updateConfiguration(req, res);
-});
-
-// Catch-all route removed - causes path-to-regexp error
-
-module.exports = router;
+module.exports = VersionRoutes;

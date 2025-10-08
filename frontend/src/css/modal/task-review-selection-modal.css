@@ -1,5 +1,72 @@
 /* Task Review Selection Modal Styles */
 
+/* Review Mode Toggle Styles */
+.review-mode-toggle {
+  margin: 16px 0;
+  padding: 16px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  border: 1px solid #404040;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.toggle-text {
+  font-weight: 600;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.toggle-switch {
+  display: flex;
+  background: #1a1a1a;
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid #404040;
+}
+
+.toggle-switch input[type="radio"] {
+  display: none;
+}
+
+.toggle-option {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toggle-switch input[type="radio"]:checked + .toggle-option {
+  background: #007acc;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 122, 204, 0.3);
+}
+
+.toggle-switch input[type="radio"]:hover + .toggle-option {
+  background: #333;
+  color: #e0e0e0;
+}
+
+.mode-description {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 .task-review-selection-modal-overlay {
   position: fixed;
   top: 0;

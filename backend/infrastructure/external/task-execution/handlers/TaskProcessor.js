@@ -17,7 +17,29 @@ class TaskProcessor {
     
     async getActiveIDE() {
         if (this.ideManager) {
-            return await this.ideManager.getActiveIDE();
+            try {
+                // Try to get active IDE first
+                let activeIDE = await this.ideManager.getActiveIDE();
+                
+                // If no active IDE, get first available IDE
+                if (!activeIDE) {
+                    this.logger.info('TaskProcessor: No active IDE found, getting available IDEs');
+                    const availableIDEs = await this.ideManager.getAvailableIDEs();
+                    if (availableIDEs && availableIDEs.length > 0) {
+                        activeIDE = availableIDEs[0];
+                        this.logger.info('TaskProcessor: Using first available IDE:', {
+                            port: activeIDE.port,
+                            type: activeIDE.type,
+                            workspace: activeIDE.workspacePath
+                        });
+                    }
+                }
+                
+                return activeIDE;
+            } catch (error) {
+                this.logger.error('TaskProcessor: Error getting active IDE:', error.message);
+                return null;
+            }
         }
         return null;
     }

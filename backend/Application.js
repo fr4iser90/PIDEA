@@ -104,23 +104,86 @@ class Application {
 
     try {
       // Initialize database connection
-      await this.initializeDatabase();
+      const DatabaseInitialization = require('./infrastructure/database/DatabaseInitialization');
+      const databaseInitialization = new DatabaseInitialization(this.logger);
+      const { databaseConnection, migrationService } = await databaseInitialization.initializeDatabase(this.securityConfig);
+      this.databaseConnection = databaseConnection;
+      this.migrationService = migrationService;
 
       // Initialize infrastructure
-      await this.initializeInfrastructure();
+      const ServiceInitialization = require('./infrastructure/dependency-injection/ServiceInitialization');
+      const serviceInitialization = new ServiceInitialization(this.logger);
+      const infrastructureServices = await serviceInitialization.initializeInfrastructure();
+      
+      // Assign infrastructure services
+      this.stepRegistry = infrastructureServices.stepRegistry;
+      this.serviceRegistry = infrastructureServices.serviceRegistry;
+      this.projectContext = infrastructureServices.projectContext;
+      this.browserManager = infrastructureServices.browserManager;
+      this.ideManager = infrastructureServices.ideManager;
+      this.chatRepository = infrastructureServices.chatRepository;
+      this.eventBus = infrastructureServices.eventBus;
+      this.commandBus = infrastructureServices.commandBus;
+      this.queryBus = infrastructureServices.queryBus;
+      this.userRepository = infrastructureServices.userRepository;
+      this.userSessionRepository = infrastructureServices.userSessionRepository;
+      this.ideWorkspaceDetectionService = infrastructureServices.ideWorkspaceDetectionService;
+      this.fileSystemService = infrastructureServices.fileSystemService;
+      this.monorepoStrategy = infrastructureServices.monorepoStrategy;
+      this.singleRepoStrategy = infrastructureServices.singleRepoStrategy;
 
       // Initialize domain services
-      await this.initializeDomainServices();
+      const domainServices = await serviceInitialization.initializeDomainServices(this.serviceRegistry, this.databaseConnection);
+      
+      // Assign domain services
+      this.cursorIDEService = domainServices.cursorIDEService;
+      this.authService = domainServices.authService;
+      this.aiService = domainServices.aiService;
+      this.recommendationsService = domainServices.recommendationsService;
+      this.subprojectDetector = domainServices.subprojectDetector;
+      this.analysisOutputService = domainServices.analysisOutputService;
+      this.analysisRepository = domainServices.analysisRepository;
+      this.projectRepository = domainServices.projectRepository;
+      this.projectMappingService = domainServices.projectMappingService;
+      this.taskRepository = domainServices.taskRepository;
+      this.taskExecutionRepository = domainServices.taskExecutionRepository;
+      this.taskService = domainServices.taskService;
+      this.taskValidationService = domainServices.taskValidationService;
+      this.taskAnalysisService = domainServices.taskAnalysisService;
+      this.workflowOrchestrationService = domainServices.workflowOrchestrationService;
+      this.gitService = domainServices.gitService;
+      this.testOrchestrator = domainServices.testOrchestrator;
+      this.workflowLoaderService = domainServices.workflowLoaderService;
+      this.taskProcessor = domainServices.taskProcessor;
+      this.taskSessionRepository = domainServices.taskSessionRepository;
+      this.frameworkManager = domainServices.manager;
+      this.frameworkLoader = domainServices.loader;
+      this.frameworkValidator = domainServices.validator;
+      this.frameworkConfig = domainServices.config;
+      this.frameworkStepRegistry = domainServices.stepRegistry;
+      this.frameworkInitializationResults = domainServices.initializationResults;
 
       // Initialize application handlers
-      await this.initializeApplicationHandlers();
+      const applicationHandlers = await serviceInitialization.initializeApplicationHandlers(this.serviceRegistry);
+      
+      // Assign application handlers
+      this.sendMessageHandler = applicationHandlers.sendMessageHandler;
+      this.getChatHistoryHandler = applicationHandlers.getChatHistoryHandler;
+      this.createTaskHandler = applicationHandlers.createTaskHandler;
+      this.createChatHandler = applicationHandlers.createChatHandler;
+      this.versionManagementHandler = applicationHandlers.versionManagementHandler;
 
       // Initialize presentation layer
       await this.initializePresentationLayer();
 
       // Setup Express app
       this.app = express();
-      this.setupMiddleware();
+      
+      // Middleware setup - Using modular setup file
+      const MiddlewareSetup = require('./infrastructure/MiddlewareSetup');
+      const middlewareSetup = new MiddlewareSetup(this.autoSecurityManager, this.logger);
+      middlewareSetup.setupMiddleware(this.app);
+      
       this.setupRoutes();
 
       // Create HTTP server
@@ -172,11 +235,15 @@ class Application {
         this.logger.warn('IDE Manager initialization failed, continuing without IDE support:', error.message);
       }
 
-      // Setup event handlers
-      this.setupEventHandlers();
+    // Event handlers - Using modular handler file
+    const EventHandlers = require('./presentation/api/routes/eventHandlers');
+    const eventHandlers = new EventHandlers(this.eventBus, this.webSocketManager, this.logger);
+    eventHandlers.setupEventHandlers();
 
-      // Setup cleanup tasks
-      this.setupCleanupTasks();
+    // Cleanup tasks - Using modular handler file
+    const CleanupTasks = require('./infrastructure/CleanupTasks');
+    const cleanupTasks = new CleanupTasks(this.autoSecurityManager, this.authService, this.taskSessionRepository, this.ideManager, this.logger);
+    cleanupTasks.setupCleanupTasks();
 
       // Make application instance globally available
       global.application = this;
@@ -188,355 +255,11 @@ class Application {
     }
   }
 
-  async initializeDatabase() {
-    this.logger.info('💾 Initializing database...');
-    
-    // Get database from DI Container
-    const { getServiceContainer } = require('./infrastructure/dependency-injection/ServiceContainer');
-    const container = getServiceContainer();
-    
-    if (!container.singletons.has('databaseConnection')) {
-      this.databaseConnection = new DatabaseConnection(this.securityConfig.database);
-      await this.databaseConnection.connect();
-      container.registerSingleton('databaseConnection', this.databaseConnection);
-    } else {
-      this.databaseConnection = container.resolve('databaseConnection');
-    }
-    
-    this.logger.info(`✅ Database connected: ${this.databaseConnection.getType()}`);
-    
-    // Initialize database migrations
-    const DatabaseMigrationService = require('./infrastructure/database/DatabaseMigrationService');
-    this.migrationService = new DatabaseMigrationService(this.databaseConnection);
-    await this.migrationService.initialize();
-    
-  }
 
 
-  async initializeInfrastructure() {
-    this.logger.info('🏗️ Initializing infrastructure...');
 
-    // Initialize Step Registry FIRST (before DI)
-    const { initializeSteps } = require('./domain/steps');
-    await initializeSteps();
-    this.stepRegistry = require('./domain/steps').getStepRegistry();
-    // this.logger.info('Step Registry initialized');
 
-    // Initialize DI system
-    const { getServiceRegistry } = require('./infrastructure/dependency-injection/ServiceRegistry');
-    const { getProjectContextService } = require('./infrastructure/dependency-injection/ProjectContextService');
-    
-    this.serviceRegistry = getServiceRegistry();
-    this.projectContext = getProjectContextService();
-    
-    // Register all services (including handlers)
-    this.serviceRegistry.registerAllServices();
-    
-    // Register the logger service with the actual logger instance
-    this.serviceRegistry.getContainer().registerSingleton('logger', this.logger);
-    
-    // Use the DI logger instead of the local logger
-    this.logger = this.serviceRegistry.getService('logger');
-    
-    // Replace the DI container's database connection with the properly configured one
-    this.serviceRegistry.getContainer().registerSingleton('databaseConnection', this.databaseConnection);
 
-    // Get services from DI container with consistent error handling
-    try {
-        this.browserManager = this.serviceRegistry.getService('browserManager');
-        this.ideManager = this.serviceRegistry.getService('ideManager');
-        this.chatRepository = this.serviceRegistry.getService('chatRepository');
-        this.eventBus = this.serviceRegistry.getService('eventBus');
-        
-        // Initialize command and query buses
-        this.commandBus = this.serviceRegistry.getService('commandBus');
-        this.queryBus = this.serviceRegistry.getService('queryBus');
-
-        // Initialize repositories
-        this.userRepository = this.serviceRegistry.getService('userRepository');
-        this.userSessionRepository = this.serviceRegistry.getService('userSessionRepository');
-
-        // IDE Services
-        this.ideWorkspaceDetectionService = this.serviceRegistry.getService('ideWorkspaceDetectionService');
-
-        // Initialize file system service for strategies
-        this.fileSystemService = this.serviceRegistry.getService('fileSystemService');
-
-        // Get strategies through DI
-        this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
-        this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
-    } catch (error) {
-        this.logger.error('Failed to get infrastructure services:', error.message);
-        throw error; // Re-throw because these are critical services
-    }
-
-    this.logger.info('✅ Infrastructure initialized with DI');
-  }
-
-  async initializeDomainServices() {
-    this.logger.info('🔧 Initializing domain services with automatic dependency resolution...');
-
-    // Debug: Log all registered services before validation
-    const container = this.serviceRegistry.getContainer();
-    const allServices = Array.from(container.factories.keys());
-    this.logger.info('🔍 All registered services:', allServices);
-    
-    // Debug: Log dependency graph nodes
-    const graphNodes = Array.from(container.dependencyGraph.nodes.keys());
-    this.logger.info('🔍 Dependency graph nodes:', graphNodes);
-
-    // Validate dependency resolution before getting services
-    const validation = this.serviceRegistry.getContainer().validateDependencies();
-    if (!validation.isValid) {
-        this.logger.error('Dependency validation failed:', validation);
-        throw new Error(`Dependency validation failed: ${JSON.stringify(validation)}`);
-    }
-
-    // Get services through DI container with automatic dependency resolution
-    try {
-        // Core services
-        this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
-        this.authService = this.serviceRegistry.getService('authService');
-        this.aiService = this.serviceRegistry.getService('aiService');
-        this.recommendationsService = this.serviceRegistry.getService('recommendationsService');
-        this.subprojectDetector = this.serviceRegistry.getService('subprojectDetector');
-        this.analysisOutputService = this.serviceRegistry.getService('analysisOutputService');
-        this.analysisRepository = this.serviceRegistry.getService('analysisRepository');
-        this.projectRepository = this.serviceRegistry.getService('projectRepository');
-        this.projectMappingService = this.serviceRegistry.getService('projectMappingService');
-        this.taskRepository = this.serviceRegistry.getService('taskRepository');
-        this.taskExecutionRepository = this.serviceRegistry.getService('taskExecutionRepository');
-        this.taskService = this.serviceRegistry.getService('taskService');
-        this.taskValidationService = this.serviceRegistry.getService('taskValidationService');
-        this.taskAnalysisService = this.serviceRegistry.getService('taskAnalysisService');
-        this.monorepoStrategy = this.serviceRegistry.getService('monorepoStrategy');
-        this.singleRepoStrategy = this.serviceRegistry.getService('singleRepoStrategy');
-
-        // Workflow and orchestration services
-        this.workflowOrchestrationService = this.serviceRegistry.getService('workflowOrchestrationService');
-        this.gitService = this.serviceRegistry.getService('gitService');
-        this.testOrchestrator = this.serviceRegistry.getService('testOrchestrator');
-        
-        // Get WorkflowLoaderService from service registry and initialize it
-        this.workflowLoaderService = this.serviceRegistry.getService('workflowLoaderService');
-        await this.workflowLoaderService.loadWorkflows();
-        this.logger.info('✅ WorkflowLoaderService loaded and initialized from service registry');
-
-            // Log dependency statistics
-    const stats = this.serviceRegistry.getContainer().getDependencyStats();
-    this.logger.info('Dependency resolution statistics:', stats);
-
-    // Start all services with lifecycle hooks
-    this.logger.info('Starting services with lifecycle hooks...');
-    const startupResults = await this.serviceRegistry.getContainer().startAllServices();
-    
-    if (startupResults.failed.length > 0) {
-        this.logger.warn('Some services failed to start:', startupResults.failed);
-    }
-    
-    this.logger.info(`Service startup completed: ${startupResults.started.length} started, ${startupResults.failed.length} failed`);
-
-    } catch (error) {
-        this.logger.error('Failed to get domain services:', error.message);
-        
-        // Get detailed dependency information for debugging
-        const dependencyInfo = this.serviceRegistry.getContainer().getAllDependencyInfo();
-        this.logger.error('Dependency information:', dependencyInfo);
-        
-        throw error; // Re-throw because these are critical services
-    }
-
-    // Set up project context AFTER repositories are available
-    await this.setupProjectContext();
-
-    // Update step registry with service registry for dependency injection
-    if (this.stepRegistry && this.serviceRegistry) {
-        this.stepRegistry.serviceRegistry = this.serviceRegistry;
-        this.logger.info('Step Registry updated with DI container');
-    }
-
-    // Initialize Auto-Finish System
-    this.taskSessionRepository = this.databaseConnection.getRepository('TaskSession');
-    await this.taskSessionRepository.initialize();
-
-    // Initialize TaskProcessor for queue processing
-    this.taskProcessor = this.serviceRegistry.getService('taskProcessor');
-    this.taskProcessor.startQueueProcessor();
-    this.logger.info('✅ TaskProcessor initialized and started');
-
-    // Auto Test Fix System - Now converted to workflow
-    // this.autoTestFixSystem = new AutoTestFixSystem({
-    //   cursorIDE: this.cursorIDEService,
-    //   browserManager: this.browserManager,
-    //   ideManager: this.ideManager,
-    //   webSocketManager: this.webSocketManager,
-    //   taskRepository: this.taskRepository,
-    //   workflowOrchestrationService: this.workflowOrchestrationService,
-    //   gitService: this.gitService,
-    //   eventBus: this.eventBus,
-    //   logger: this.logger,
-    //   testOrchestrator: this.testOrchestrator
-    // });
-    // await this.autoTestFixSystem.initialize();
-
-    // Step Registry already initialized in initializeInfrastructure()
-    // Update it with service registry for dependency injection
-    if (this.stepRegistry && this.serviceRegistry) {
-      this.stepRegistry.serviceRegistry = this.serviceRegistry;
-      this.logger.info('Step Registry updated with DI container');
-    }
-
-    // Initialize Framework Infrastructure
-    try {
-      const { initializeFrameworkInfrastructure } = require('./infrastructure/framework');
-      const frameworkInfrastructure = await initializeFrameworkInfrastructure(this.stepRegistry);
-      this.frameworkManager = frameworkInfrastructure.manager;
-      this.frameworkLoader = frameworkInfrastructure.loader;
-      this.frameworkValidator = frameworkInfrastructure.validator;
-      this.frameworkConfig = frameworkInfrastructure.config;
-      this.frameworkStepRegistry = frameworkInfrastructure.stepRegistry;
-      this.frameworkInitializationResults = frameworkInfrastructure.initializationResults;
-      
-      // Log initialization results
-      this.logger.info('Framework Infrastructure initialized');
-      this.logger.info('Framework initialization results:', this.frameworkInitializationResults);
-      
-      // Log health status
-      if (this.frameworkLoader.getHealthStatus) {
-        const healthStatus = this.frameworkLoader.getHealthStatus();
-        this.logger.info('Framework Loader health status:', healthStatus);
-      }
-      
-      if (this.frameworkStepRegistry.getHealthStatus) {
-        const stepHealthStatus = this.frameworkStepRegistry.getHealthStatus();
-        this.logger.info('Framework Step Registry health status:', stepHealthStatus);
-      }
-    } catch (error) {
-      this.logger.warn('Framework Infrastructure initialization failed, continuing without framework support:', error.message);
-      this.frameworkInitializationResults = { error: error.message };
-      
-      // Create fallback framework services
-      this.frameworkManager = { 
-        activateFramework: () => Promise.resolve({}),
-        deactivateFramework: () => Promise.resolve(true),
-        getActiveFramework: () => null,
-        getAllActiveFrameworks: () => []
-      };
-      this.frameworkLoader = { 
-        getStats: () => ({}),
-        getHealthStatus: () => ({ isHealthy: false, error: 'Framework infrastructure not initialized' })
-      };
-      this.frameworkValidator = { validateFramework: () => Promise.resolve({ isValid: true }) };
-      this.frameworkConfig = { getConfigStats: () => ({}) };
-      this.frameworkStepRegistry = { 
-        getFrameworkSteps: () => [], 
-        isFrameworkStep: () => false,
-        getLoadedFrameworks: () => [],
-        getHealthStatus: () => ({ isHealthy: false, error: 'Framework step registry not initialized' })
-      };
-    }
-
-    this.logger.info('Domain services initialized with DI');
-  }
-
-  async setupProjectContext() {
-    this.logger.info('📁 Setting up project context...');
-    
-    // Auto-detect project path
-    const projectPath = await this.projectContext.autoDetectProjectPath();
-    
-    // Set project context
-    await this.projectContext.setProjectContext({
-      projectPath: projectPath || process.env.PROJECT_PATH,
-      projectId: process.env.PROJECT_ID,
-      workspacePath: process.env.WORKSPACE_PATH
-    });
-
-    // Validate project context
-    const validation = await this.projectContext.validateProjectContext();
-    if (!validation.isValid) {
-      this.logger.warn('Project context validation warnings:', validation.warnings);
-    } else {
-      this.logger.info('✅ Project context validated successfully');
-    }
-  }
-
-  async initializeApplicationHandlers() {
-    this.logger.info('Initializing application handlers with DI...');
-
-    // Instantiate handlers with dependencies from ServiceRegistry
-    const SendMessageHandler = require('./application/handlers/categories/chat/SendMessageHandler');
-    const GetChatHistoryHandler = require('./application/handlers/categories/chat/GetChatHistoryHandler');
-    const CreateTaskHandler = require('./application/handlers/categories/workflow/CreateTaskHandler');
-
-    // Create handler instances with dependencies
-    this.sendMessageHandler = new SendMessageHandler({
-      browserManager: this.serviceRegistry.getService('browserManager'),
-      ideManager: this.serviceRegistry.getService('ideManager'),
-      eventBus: this.serviceRegistry.getService('eventBus'),
-      logger: this.serviceRegistry.getService('logger')
-    });
-
-    this.getChatHistoryHandler = new GetChatHistoryHandler(
-      this.serviceRegistry.getService('chatRepository'),
-      this.serviceRegistry.getService('ideManager'),
-      this.serviceRegistry,
-      this.serviceRegistry.getService('chatCacheService')
-    );
-
-    this.createTaskHandler = new CreateTaskHandler({
-      taskRepository: this.serviceRegistry.getService('taskRepository'),
-      taskTemplateRepository: this.serviceRegistry.getService('taskTemplateRepository'),
-                  analysisRepository: this.serviceRegistry.getService('analysisRepository'),
-      taskValidationService: this.serviceRegistry.getService('taskValidationService'),
-      taskGenerationService: this.serviceRegistry.getService('taskGenerationService'),
-      eventBus: this.serviceRegistry.getService('eventBus'),
-      logger: this.serviceRegistry.getService('logger')
-    });
-
-    // Register handlers in ServiceRegistry for steps to access
-    this.serviceRegistry.container.register('sendMessageHandler', () => this.sendMessageHandler, { singleton: true });
-    this.serviceRegistry.container.register('getChatHistoryHandler', () => this.getChatHistoryHandler, { singleton: true });
-    this.serviceRegistry.container.register('createTaskHandler', () => this.createTaskHandler, { singleton: true });
-    
-    // Register CreateChatHandler for steps
-    const CreateChatHandler = require('./application/handlers/categories/chat/CreateChatHandler');
-    this.createChatHandler = new CreateChatHandler({
-      chatSessionService: this.serviceRegistry.getService('chatSessionService'),
-      ideManager: this.serviceRegistry.getService('ideManager'),
-      browserManager: this.serviceRegistry.getService('browserManager'),
-      eventBus: this.serviceRegistry.getService('eventBus'),
-      logger: this.serviceRegistry.getService('logger')
-    });
-    this.serviceRegistry.container.register('createChatHandler', () => this.createChatHandler, { singleton: true });
-
-    // Initialize VersionManagementHandler
-    const VersionManagementHandler = require('./application/handlers/categories/version/VersionManagementHandler');
-    const VersionManagementService = require('./domain/services/version/VersionManagementService');
-    
-    // Get or create versionManagementService
-    let versionManagementService;
-    try {
-      versionManagementService = this.serviceRegistry.getService('versionManagementService');
-    } catch (error) {
-      this.logger.warn('VersionManagementService not found in registry, creating directly');
-      versionManagementService = new VersionManagementService({
-        fileSystemService: this.serviceRegistry.getService('fileSystemService'),
-        logger: this.serviceRegistry.getService('logger')
-      });
-    }
-    
-    this.versionManagementHandler = new VersionManagementHandler({
-      versionManagementService: versionManagementService,
-      logger: this.serviceRegistry.getService('logger')
-    });
-    this.serviceRegistry.container.register('versionManagementHandler', () => this.versionManagementHandler, { singleton: true });
-
-    // Legacy handlers removed - using new workflow system instead
-    this.processTodoListHandler = null;
-
-    this.logger.info('Application handlers initialized with DI');
-  }
 
   async initializePresentationLayer() {
     this.logger.info('Initializing presentation layer...');
@@ -674,167 +397,19 @@ class Application {
     this.logger.info('Presentation layer initialized');
   }
 
-  setupMiddleware() {
-    this.logger.info('Setting up middleware...');
-
-    // Import centralized security configuration
-    const securityConfig = require('./config/security-config');
-
-    // Security middleware
-    this.app.use(helmet(securityConfig.config.helmet));
-    this.app.use(cors({
-      ...securityConfig.config.cors,
-      credentials: true // Allow cookies
-    }));
-
-    // HTTP Parameter Pollution protection
-    this.app.use(hpp());
-
-    // Progressive rate limiting (slow down) - only for unauthenticated users
-    const speedLimiter = slowDown({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      delayAfter: 20, // allow 20 requests per 15 minutes for visitors, then...
-      delayMs: 1000, // begin adding 1000ms of delay per request above 20
-      skip: (req) => {
-        // Skip rate limiting for authenticated users
-        return req.user || req.path === '/api/health';
-      },
-      onLimitReached: (req, res) => {
-        // Redirect content library requests to GitHub
-        if (req.path.includes('/api/frameworks') || req.path.includes('/api/prompts') || req.path.includes('/api/templates')) {
-          return res.status(429).json({
-            success: false,
-            error: 'Rate limit exceeded for content library',
-            message: 'Please visit our GitHub repository for direct access to frameworks, prompts, and templates',
-            githubUrl: 'https://github.com/fr4iser90/PIDEA'
-          });
-        }
-      }
-    });
-    this.app.use('/api/', speedLimiter);
-
-    // Standard rate limiting
-    const limiter = rateLimit({
-      ...securityConfig.config.rateLimiting,
-      skip: (req) => {
-        // Skip rate limiting for authenticated users and public content
-        return req.user || 
-               req.path === '/api/health' || 
-               req.path.startsWith('/web/') || 
-               req.path.startsWith('/framework/') ||
-               req.path.startsWith('/api/frameworks') ||
-               req.path.startsWith('/api/prompts') ||
-               req.path.startsWith('/api/templates');
-      }
-    });
-    this.app.use('/api/', limiter);
-
-    // Cookie parsing
-    this.app.use(cookieParser());
-
-    // Body parsing with security limits
-    this.app.use(express.json({ 
-      limit: securityConfig.config.inputValidation.limits.maxBodySize,
-      strict: true
-    }));
-    this.app.use(express.urlencoded({ 
-      extended: true,
-      limit: securityConfig.config.inputValidation.limits.maxBodySize
-    }));
-
-    // Request logging entfernt auf Wunsch des Users
-
-    // Serve static files with security headers
-    this.app.use('/web', express.static(path.join(__dirname, '../web'), {
-      etag: false,
-      lastModified: false,
-      setHeaders: (res, path) => {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        // Add security headers to static files
-        Object.entries(securityConfig.config.headers).forEach(([key, value]) => {
-          res.setHeader(key, value);
-        });
-      }
-    }));
-
-    this.app.use('/framework', require('express').static(path.join(__dirname, '../framework')));
-
-    // Serve frontend build files in development
-    if (process.env.NODE_ENV === 'development') {
-      const frontendDistPath = path.join(__dirname, '../frontend/dist');
-      const frontendPath = path.join(__dirname, '../frontend');
-      
-      if (!fs.existsSync(frontendDistPath)) {
-        logger.info('🔨 Frontend dist not found, building automatically...');
-        try {
-          const { execSync } = require('child_process');
-          
-          // Check if frontend package.json exists
-          if (fs.existsSync(path.join(frontendPath, 'package.json'))) {
-            logger.info('📦 Installing frontend dependencies...');
-            execSync('npm install', { 
-              cwd: frontendPath, 
-              stdio: 'inherit',
-              timeout: 120000 // 2 minutes timeout
-            });
-            
-            logger.info('🔨 Building frontend...');
-            execSync('npm run build', { 
-              cwd: frontendPath, 
-              stdio: 'inherit',
-              timeout: 180000 // 3 minutes timeout
-            });
-            
-            logger.info('✅ Frontend built successfully!');
-          } else {
-            logger.warn('⚠️ Frontend package.json not found, skipping auto-build');
-          }
-        } catch (error) {
-          logger.error('❌ Failed to build frontend automatically:', error.message);
-          logger.info('💡 Please run: cd frontend && npm install && npm run build');
-        }
-      }
-      
-      if (fs.existsSync(frontendDistPath)) {
-        this.app.use(express.static(frontendDistPath));
-        logger.info('📁 Serving frontend from:', frontendDistPath);
-      } else {
-        logger.warn('⚠️ Frontend dist still not found, serving fallback');
-      }
-    }
-  }
 
   setupRoutes() {
     this.logger.info('Setting up routes...');
 
-    // Serve the main page
-    this.app.get('/', (req, res) => {
-      if (process.env.NODE_ENV === 'development') {
-        const frontendDistPath = path.join(__dirname, '../frontend/dist');
-        if (fs.existsSync(frontendDistPath)) {
-          res.sendFile(path.join(frontendDistPath, 'index.html'));
-        } else {
-          res.sendFile(path.join(__dirname, '../frontend/index.html'));
-        }
-      } else {
-        res.sendFile(path.join(__dirname, '../frontend/index.html'));
-      }
-    });
+    // Main routes - Using modular route file
+    const MainRoutes = require('./presentation/api/routes/mainRoutes');
+    const mainRoutes = new MainRoutes();
+    mainRoutes.setupRoutes(this.app);
 
-    // Health check (public)
-    this.app.get('/api/health', (req, res) => {
-      res.json({
-        success: true,
-        data: {
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          environment: this.autoSecurityManager.getEnvironment(),
-          database: this.databaseConnection.getType()
-        }
-      });
-    });
+    // Health check routes - Using modular route file
+    const HealthRoutes = require('./presentation/api/routes/healthRoutes');
+    const healthRoutes = new HealthRoutes(this.autoSecurityManager, this.databaseConnection);
+    healthRoutes.setupRoutes(this.app);
 
     // Auth routes - Using modular route file
     const AuthRoutes = require('./presentation/api/routes/authRoutes');
@@ -890,11 +465,6 @@ class Application {
     // Bulk Documentation Analysis route (protected)
     // REMOVED: DocumentationController routes - using WorkflowController + Steps instead
 
-    // Script Generation routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/scripts/generate', (req, res) => this.taskController.generateScript(req, res));
-    this.app.get('/api/projects/:projectId/scripts', (req, res) => this.taskController.getGeneratedScripts(req, res));
-    this.app.post('/api/projects/:projectId/scripts/:id/execute', (req, res) => this.taskController.executeScript(req, res));
 
     // Git Management routes - Using modular route file
     const GitRoutes = require('./presentation/api/routes/gitRoutes');
@@ -905,10 +475,10 @@ class Application {
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
 
-    // Version Management routes (protected)
-    const versionRoutes = require('./presentation/api/routes/versionRoutes');
-    this.app.use('/api/versions', this.authMiddleware.authenticate());
-    this.app.use('/api/versions', versionRoutes);
+    // Version Management routes - Using modular route file
+    const VersionRoutes = require('./presentation/api/routes/versionRoutes');
+    const versionRoutes = new VersionRoutes(this.authMiddleware);
+    versionRoutes.setupRoutes(this.app);
 
     // Test Management routes - Using modular route file
     const TestRoutes = require('./presentation/api/routes/testRoutes');
@@ -943,285 +513,7 @@ class Application {
     this.logger.info('Routes setup complete');
   }
 
-  setupEventHandlers() {
-    this.logger.info('Setting up event handlers...');
 
-    if (this.eventBus) {
-      this.logger.info('EventBus available, setting up subscriptions...');
-      this.eventBus.subscribe('ide-started', (data) => {
-        this.logger.info('IDE started:', '[REDACTED_IDE_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('ide-started', data);
-        }
-      });
-
-      this.eventBus.subscribe('ide-stopped', (data) => {
-        this.logger.info('IDE stopped:', '[REDACTED_IDE_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('ide-stopped', data);
-        }
-      });
-
-      this.eventBus.subscribe('chat-message', (data) => {
-        this.logger.info('Chat message:', '[REDACTED_CHAT_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('chat-message', data);
-        }
-      });
-
-      this.eventBus.subscribe('MessageSent', (data) => {
-        this.logger.info('Message sent event:', '[REDACTED_MESSAGE_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('chat-message', data);
-        }
-      });
-
-      this.eventBus.subscribe('ChatHistoryUpdated', (data) => {
-        this.logger.info('Chat history updated event:', '[REDACTED_HISTORY_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToUser('chat-history-updated', data);
-        }
-      });
-
-      this.eventBus.subscribe('userAppDetected', (data) => {
-        this.logger.info('User app detected event:', '[REDACTED_APP_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToAll('userAppUrl', data);
-        }
-      });
-
-      this.eventBus.subscribe('activeIDEChanged', (data) => {
-        this.logger.info('Active IDE changed event:', '[REDACTED_IDE_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting activeIDEChanged to all clients');
-          this.webSocketManager.broadcastToAll('activeIDEChanged', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting activeIDEChanged');
-        }
-      });
-
-      this.eventBus.subscribe('ideListUpdated', (data) => {
-        this.logger.info('IDE list updated event:', '[REDACTED_IDE_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting ideListUpdated to all clients');
-          this.webSocketManager.broadcastToAll('ideListUpdated', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting ideListUpdated');
-        }
-      });
-
-      this.eventBus.subscribe('analysis:completed', (data) => {
-        this.logger.info('Analysis completed event:', '[REDACTED_ANALYSIS_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting analysis:completed to all clients');
-          this.webSocketManager.broadcastToAll('analysis:completed', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting analysis:completed');
-        }
-      });
-
-      // Queue Events
-      this.eventBus.subscribe('queue:item:added', (data) => {
-        this.logger.info('Queue item added event:', '[REDACTED_QUEUE_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting queue:item:added to all clients');
-          this.webSocketManager.broadcastToAll('queue:item:added', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting queue:item:added');
-        }
-      });
-
-      this.eventBus.subscribe('queue:item:updated', (data) => {
-        this.logger.info('Queue item updated event:', '[REDACTED_QUEUE_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting queue:item:updated to all clients');
-          this.webSocketManager.broadcastToAll('queue:item:updated', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting queue:item:updated');
-        }
-      });
-
-      this.eventBus.subscribe('queue:item:completed', (data) => {
-        this.logger.info('Queue item completed event:', '[REDACTED_QUEUE_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting queue:item:completed to all clients');
-          this.webSocketManager.broadcastToAll('queue:item:completed', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting queue:item:completed');
-        }
-      });
-
-      // Workflow Events
-      this.eventBus.subscribe('workflow:step:progress', (data) => {
-        this.logger.info('Workflow step progress event:', '[REDACTED_WORKFLOW_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting workflow:step:progress to all clients');
-          this.webSocketManager.broadcastToAll('workflow:step:progress', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting workflow:step:progress');
-        }
-      });
-
-      this.eventBus.subscribe('workflow:step:completed', (data) => {
-        this.logger.info('Workflow step completed event:', '[REDACTED_WORKFLOW_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting workflow:step:completed to all clients');
-          this.webSocketManager.broadcastToAll('workflow:step:completed', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting workflow:step:completed');
-        }
-      });
-
-      this.eventBus.subscribe('workflow:step:failed', (data) => {
-        this.logger.info('Workflow step failed event:', '[REDACTED_WORKFLOW_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting workflow:step:failed to all clients');
-          this.webSocketManager.broadcastToAll('workflow:step:failed', data);
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting workflow:step:failed');
-        }
-      });
-
-      // Git Events - Map backend events to frontend events
-      this.eventBus.subscribe('git:checkout:completed', (data) => {
-        this.logger.info('Git checkout completed event:', '[REDACTED_GIT_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting git-branch-changed to all clients');
-          this.webSocketManager.broadcastToAll('git-branch-changed', {
-            workspacePath: data.projectPath,
-            newBranch: data.branch
-          });
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting git-branch-changed');
-        }
-      });
-
-      this.eventBus.subscribe('git:pull:completed', (data) => {
-        this.logger.info('Git pull completed event:', '[REDACTED_GIT_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting git-status-updated to all clients');
-          this.webSocketManager.broadcastToAll('git-status-updated', {
-            workspacePath: data.projectPath,
-            gitStatus: {
-              currentBranch: data.branch,
-              lastUpdate: new Date().toISOString()
-            }
-          });
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
-        }
-      });
-
-      this.eventBus.subscribe('git:merge:completed', (data) => {
-        this.logger.info('Git merge completed event:', '[REDACTED_GIT_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting git-status-updated to all clients');
-          this.webSocketManager.broadcastToAll('git-status-updated', {
-            workspacePath: data.projectPath,
-            gitStatus: {
-              currentBranch: data.targetBranch,
-              lastUpdate: new Date().toISOString()
-            }
-          });
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
-        }
-      });
-
-      this.eventBus.subscribe('git:branch:created', (data) => {
-        this.logger.info('Git branch created event:', '[REDACTED_GIT_DATA]');
-        if (this.webSocketManager) {
-          this.logger.info('Broadcasting git-status-updated to all clients');
-          this.webSocketManager.broadcastToAll('git-status-updated', {
-            workspacePath: data.projectPath,
-            gitStatus: {
-              currentBranch: data.branchName,
-              lastUpdate: new Date().toISOString()
-            }
-          });
-        } else {
-          this.logger.warn('No WebSocket manager available for broadcasting git-status-updated');
-        }
-      });
-
-      // Playwright Test Configuration Events
-      this.eventBus.subscribe('playwright:config:saved', (data) => {
-        this.logger.info('Playwright config saved event:', '[REDACTED_CONFIG_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToAll('playwright:config:saved', data);
-        } else {
-          this.logger.warn('WebSocket manager not available for playwright:config:saved broadcast');
-        }
-      });
-
-      this.eventBus.subscribe('playwright:config:failed', (data) => {
-        this.logger.info('Playwright config failed event:', '[REDACTED_ERROR_DATA]');
-        if (this.webSocketManager) {
-          this.webSocketManager.broadcastToAll('playwright:config:failed', data);
-        } else {
-          this.logger.warn('WebSocket manager not available for playwright:config:failed broadcast');
-        }
-      });
-    } else {
-      this.logger.warn('No EventBus available for setting up event handlers');
-    }
-
-    this.logger.info('Event handlers setup complete');
-  }
-
-  setupCleanupTasks() {
-    this.logger.info('Setting up cleanup tasks...');
-
-    // Cleanup expired sessions
-    const sessionCleanupInterval = this.autoSecurityManager.getConfig().session?.cleanupInterval || 900000;
-    setInterval(async () => {
-      try {
-        const result = await this.authService.cleanupExpiredSessions();
-        this.logger.info(`Cleaned up ${result.expired} expired and ${result.orphaned} orphaned sessions`);
-      } catch (error) {
-        this.logger.error('Failed to cleanup expired sessions:', error);
-      }
-    }, sessionCleanupInterval);
-
-    // Cleanup old secrets
-    const secretsCleanupInterval = this.autoSecurityManager.getConfig().security?.cleanupInterval || 86400000;
-    setInterval(async () => {
-      try {
-        await this.autoSecurityManager.cleanupOldSecrets();
-        this.logger.info('Cleaned up old secrets');
-      } catch (error) {
-        this.logger.error('Failed to cleanup old secrets:', error);
-      }
-    }, secretsCleanupInterval);
-
-    // Cleanup old Auto-Finish sessions
-    const taskSessionCleanupInterval = this.autoSecurityManager.getConfig().taskSession?.cleanupInterval || 21600000;
-    setInterval(async () => {
-      try {
-        if (this.taskSessionRepository) {
-          await this.taskSessionRepository.cleanupOldSessions(7); // Keep sessions for 7 days
-          this.logger.info('Cleaned up old Auto-Finish sessions');
-        }
-      } catch (error) {
-        this.logger.error('Failed to cleanup old Auto-Finish sessions:', error);
-      }
-    }, taskSessionCleanupInterval);
-
-    // Cleanup stale IDE entries
-    const cleanupInterval = this.autoSecurityManager.getConfig().ide?.cleanupInterval || 30000;
-    setInterval(async () => {
-      try {
-        if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
-          await this.ideManager.cleanupStaleIDEs();
-        // Silent cleanup - no logging here, IDEManager handles it
-        }
-      } catch (error) {
-        this.logger.error('Failed to cleanup stale IDE entries:', error);
-      }
-    }, cleanupInterval);
-
-    this.logger.info('Cleanup tasks setup complete');
-  }
 
   async start() {
     try {

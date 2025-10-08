@@ -42,6 +42,8 @@ class WorkflowExecutor {
             let workflowName = 'standard-task-workflow';
             if (options.workflowType === 'task-review') {
                 workflowName = 'task-review-workflow';
+            } else if (options.workflowType === 'task-check-state') {
+                workflowName = 'task-review-workflow'; // Use same workflow but different prompt
             } else if (options.workflowType) {
                 workflowName = options.workflowType;
             }
@@ -107,6 +109,12 @@ class WorkflowExecutor {
                             if (context.workflowType === 'task-review') {
                                 stepMessage = await this.taskService.buildTaskReviewPrompt(context.task, context);
                                 this.logger.info('WorkflowExecutor: Built review prompt', {
+                                    taskId: context.task.id,
+                                    promptLength: stepMessage.length
+                                });
+                            } else if (context.workflowType === 'task-check-state') {
+                                stepMessage = await this.taskService.buildTaskCheckStatePrompt(context.task, context);
+                                this.logger.info('WorkflowExecutor: Built check-state prompt', {
                                     taskId: context.task.id,
                                     promptLength: stepMessage.length
                                 });
