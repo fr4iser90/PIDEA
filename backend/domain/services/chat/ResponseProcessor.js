@@ -30,6 +30,7 @@ class ResponseProcessor {
               const text = await element.textContent();
               const isVisible = await element.isVisible();
               if (isVisible && text && (text.includes('Generating') || text.includes('Typing') || text.includes('Thinking'))) {
+                this.logger.debug(`🔍 Found typing indicator: "${text}"`);
                 return true;
               }
             }
@@ -47,6 +48,7 @@ class ResponseProcessor {
             for (const element of elements) {
               const isVisible = await element.isVisible();
               if (isVisible) {
+                this.logger.debug(`🔍 Found thinking indicator`);
                 return true;
               }
             }
@@ -64,6 +66,7 @@ class ResponseProcessor {
             for (const element of elements) {
               const isVisible = await element.isVisible();
               if (isVisible) {
+                this.logger.debug(`🔍 Found loading indicator`);
                 return true;
               }
             }
@@ -73,6 +76,8 @@ class ResponseProcessor {
         }
       }
       
+      // If no typing indicators found, AI is not typing
+      this.logger.debug(`🔍 No typing indicators found - AI not typing`);
       return false;
       
     } catch (error) {
@@ -321,13 +326,14 @@ class ResponseProcessor {
         const hasCodeBlocks = currentText.includes('```');
         const hasSubstantialContent = currentText.length > 200;
         
-        // Only consider complete if we have substantial content AND completion indicators
-        if (hasSubstantialContent && (hasCompletionKeywords || hasCodeBlocks)) {
-          this.logger.info('📝 Text stable and substantial with completion indicators - appears complete');
+        // More lenient completion detection - if we have substantial content, consider it complete
+        // This prevents the infinite loop issue
+        if (hasSubstantialContent) {
+          this.logger.info('📝 Text stable and substantial - appears complete');
           return true;
         }
         
-        this.logger.info('📝 Text stable but no clear completion indicators - continuing to wait');
+        this.logger.info('📝 Text stable but not substantial enough - continuing to wait');
         return false; // Not complete yet
       }
       
@@ -756,6 +762,9 @@ class ResponseProcessor {
                 this.logger.info(`📦 Code blocks stable at ${codeBlocks.length} - not resetting stable count`);
                 this.lastCodeBlockCount = codeBlocks.length;
               }
+            } else {
+              // No code blocks found - this is normal for text-only responses
+              this.logger.info(`📦 No code blocks found - text-only response`);
             }
           } catch (error) {
             this.logger.info(`📦 Code block detection failed: ${error.message}`);
@@ -769,6 +778,12 @@ class ResponseProcessor {
               this.logger.info('✅ Response appears to be complete after stable checks');
               break;
             }
+          }
+          
+          // Additional check: if response is substantial and stable for a reasonable time, consider it complete
+          if (stableCheckCount >= 5 && currentText.length > 500) {
+            this.logger.info('✅ Response substantial and stable for 5 checks - considering complete');
+            break;
           }
           
           // Force continue after max stable checks
