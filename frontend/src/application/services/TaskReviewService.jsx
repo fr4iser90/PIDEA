@@ -577,6 +577,9 @@ Please execute the task according to the review analysis and provide real-time p
         projectPath
       });
       
+      // ⚠️ DEPRECATED: This endpoint is deprecated and will be removed in a future version
+      // TODO: Migrate to POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution
+      console.warn('🚨 [TaskReviewService] Using DEPRECATED workflow/execute endpoint. Please migrate to tasks/enqueue');
       // Call WorkflowController.executeWorkflow() endpoint
       const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
         method: 'POST',

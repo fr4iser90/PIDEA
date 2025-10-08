@@ -78,6 +78,9 @@ export default class TaskWorkflowRepository {
       // Get current project ID if not provided
       const currentProjectId = projectId || await this.api.getCurrentProjectId();
 
+      // ⚠️ DEPRECATED: This endpoint is deprecated and will be removed in a future version
+      // TODO: Migrate to POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution
+      console.warn('🚨 [TaskWorkflowRepository] Using DEPRECATED workflow/execute endpoint. Please migrate to tasks/enqueue');
       // Use WorkflowController with task-creation mode instead of non-existent auto-finish endpoint
       const response = await apiCall(`/api/projects/${currentProjectId}/workflow/execute`, {
         method: 'POST',

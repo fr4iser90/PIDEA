@@ -27,6 +27,9 @@ function ExecutionStep({ tasks, onTaskProgress, workflowData }) {
         [task.id]: 'in_progress'
       }));
 
+      // ⚠️ DEPRECATED: This method uses deprecated task execution API
+      // TODO: Migrate to POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution
+      console.warn('🚨 [ExecutionStep] Using DEPRECATED executeTask method. Please migrate to tasks/enqueue');
       // Execute the task using existing API
       const response = await api.executeTask(task.databaseId, workflowData.projectId);
       

@@ -554,7 +554,10 @@ function TasksPanelComponent({ eventBus, activePort }) {
       // Get current project ID
       const projectId = await api.getCurrentProjectId();
       
+      // ⚠️ DEPRECATED: This endpoint is deprecated and will be removed in a future version
+      // TODO: Migrate to POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution
       // Use the workflow execution endpoint for task execution
+      console.warn('🚨 [TasksPanelComponent] Using DEPRECATED workflow/execute endpoint. Please migrate to tasks/enqueue');
       const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
         method: 'POST',
         body: JSON.stringify({
