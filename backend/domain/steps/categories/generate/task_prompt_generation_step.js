@@ -52,8 +52,8 @@ function getPromptPath(promptType) {
   return promptPaths[promptType] || promptPaths['task-create'];
 }
 
-function getWorkflowPath(workflowType) {
-  return `backend/framework/workflows/${workflowType}-workflows.json`;
+function getWorkflowPath(taskMode) {
+  return `backend/framework/workflows/${taskMode}-workflows.json`;
 }
 
 /**

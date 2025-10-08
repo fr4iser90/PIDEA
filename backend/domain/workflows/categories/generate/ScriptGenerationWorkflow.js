@@ -61,7 +61,7 @@ class ScriptGenerationWorkflow extends IWorkflow {
           metadata: result.metadata
         },
         metadata: {
-          workflowType: 'script_generation',
+          taskMode: 'script_generation',
           executionTime: Date.now(),
           scriptSize: scriptContent.length
         }
@@ -78,7 +78,7 @@ class ScriptGenerationWorkflow extends IWorkflow {
         success: false,
         error: error.message,
         metadata: {
-          workflowType: 'script_generation',
+          taskMode: 'script_generation',
           executionTime: Date.now()
         }
       };

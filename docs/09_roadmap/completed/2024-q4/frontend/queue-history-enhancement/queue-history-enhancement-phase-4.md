@@ -29,7 +29,7 @@
   - **New Features**: Live updates, step details, progress indicators
 
 - [ ] `frontend/src/presentation/components/queue/ActiveTaskItem.jsx` - Enhance workflow type display and step progress
-  - **Enhancements**: Add WorkflowTypeBadge, real-time progress, error handling
+  - **Enhancements**: Add taskModeBadge, real-time progress, error handling
   - **New Features**: Type badges, progress indicators, error states
 
 ### WebSocket Integration
@@ -62,7 +62,7 @@ import React, { useState } from 'react';
 import { QueueHistoryPanel } from './QueueHistoryPanel';
 import { ActiveTaskItem } from './ActiveTaskItem';
 import { StepTimeline } from './StepTimeline';
-import { WorkflowTypeBadge } from './WorkflowTypeBadge';
+import { taskModeBadge } from './taskModeBadge';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import './queue-management-panel.css';
 
@@ -218,7 +218,7 @@ const QueueManagementPanel = () => {
             <div className="section-header">
               <h3>Step Timeline</h3>
               <div className="task-info">
-                <WorkflowTypeBadge type={selectedTask.type} />
+                <taskModeBadge type={selectedTask.type} />
                 <span className="task-id">ID: {selectedTask.id}</span>
               </div>
             </div>
@@ -246,7 +246,7 @@ export default QueueManagementPanel;
 ```jsx
 import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { WorkflowTypeBadge } from './WorkflowTypeBadge';
+import { taskModeBadge } from './taskModeBadge';
 import './step-timeline.css';
 
 const StepTimeline = ({ taskId, onStepError }) => {
@@ -396,7 +396,7 @@ const StepTimeline = ({ taskId, onStepError }) => {
                     {step.metadata && (
                       <div className="step-metadata">
                         {step.metadata.type && (
-                          <WorkflowTypeBadge type={step.metadata.type} size="small" />
+                          <taskModeBadge type={step.metadata.type} size="small" />
                         )}
                         {step.metadata.duration && (
                           <span className="step-duration">
@@ -468,7 +468,7 @@ export default StepTimeline;
 ### Enhanced ActiveTaskItem Component
 ```jsx
 import React from 'react';
-import { WorkflowTypeBadge } from './WorkflowTypeBadge';
+import { taskModeBadge } from './taskModeBadge';
 import './active-task-item.css';
 
 const ActiveTaskItem = ({ task, isSelected, onSelect, onTypeError }) => {
@@ -502,7 +502,7 @@ const ActiveTaskItem = ({ task, isSelected, onSelect, onTypeError }) => {
     >
       <div className="task-header">
         <div className="task-type">
-          <WorkflowTypeBadge 
+          <taskModeBadge 
             type={task.type} 
             onError={handleTypeError}
           />
@@ -902,7 +902,7 @@ describe('StepTimeline Integration', () => {
 - [ ] QueueHistoryPanel integrates seamlessly into QueueManagementPanel
 - [ ] StepTimeline shows real-time updates correctly
 - [ ] WebSocket connections work reliably with error handling
-- [ ] WorkflowTypeBadge displays throughout the UI
+- [ ] taskModeBadge displays throughout the UI
 - [ ] All real-time functionality works without fallbacks
 - [ ] Integration tests pass with 90%+ coverage
 

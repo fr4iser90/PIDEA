@@ -16,8 +16,8 @@
 - **Architecture Pattern**: Domain-Driven Design (DDD) with CQRS
 - **Database Changes**: ✅ COMPLETED - New queue_history table, workflow_type_detection table, indexes for performance
 - **API Changes**: ✅ COMPLETED - New history endpoints, enhanced type detection endpoints, step progress endpoints
-- **Frontend Changes**: ✅ COMPLETED - QueueHistoryPanel component, WorkflowTypeBadge component, enhanced StepTimeline
-- **Backend Changes**: ✅ COMPLETED - QueueHistoryService, WorkflowTypeDetector, enhanced QueueMonitoringService
+- **Frontend Changes**: ✅ COMPLETED - QueueHistoryPanel component, taskModeBadge component, enhanced StepTimeline
+- **Backend Changes**: ✅ COMPLETED - QueueHistoryService, TaskModeDetector, enhanced QueueMonitoringService
 
 ## 3. File Impact Analysis
 
@@ -31,10 +31,10 @@
 
 #### Files to Create:
 - [x] `backend/domain/services/queue/QueueHistoryService.js` - ✅ COMPLETED - Queue history management and persistence
-- [x] `backend/domain/services/queue/WorkflowTypeDetector.js` - ✅ COMPLETED - Intelligent workflow type detection
+- [x] `backend/domain/services/queue/TaskModeDetector.js` - ✅ COMPLETED - Intelligent workflow type detection
 - [x] `backend/infrastructure/database/QueueHistoryRepository.js` - ✅ COMPLETED - Database operations for queue history
 - [x] `frontend/src/presentation/components/queue/QueueHistoryPanel.jsx` - ✅ COMPLETED - Queue history UI component
-- [x] `frontend/src/presentation/components/queue/WorkflowTypeBadge.jsx` - ✅ COMPLETED - Workflow type display component
+- [x] `frontend/src/presentation/components/queue/taskModeBadge.jsx` - ✅ COMPLETED - Workflow type display component
 - [x] `frontend/src/css/panel/queue-history-panel.css` - ✅ COMPLETED - Queue history panel styling
 - [x] `database/migrations/add_queue_history_table.sql` - ✅ COMPLETED - Database migration for history table
 - [x] `database/migrations/add_workflow_type_detection_table.sql` - ✅ COMPLETED - Database migration for type detection
@@ -46,7 +46,7 @@
 
 #### Phase 1: Backend Foundation Setup (12 hours) - ✅ COMPLETED
 - [x] Create QueueHistoryService with persistence logic
-- [x] Implement WorkflowTypeDetector with strict type detection (no fallbacks)
+- [x] Implement TaskModeDetector with strict type detection (no fallbacks)
 - [x] Create QueueHistoryRepository for database operations
 - [x] Add database migrations for history and type detection tables
 - [x] Set up Redis caching for history data
@@ -62,7 +62,7 @@
 
 #### Phase 3: Frontend Infrastructure (10 hours) - ✅ COMPLETED
 - [x] Create QueueHistoryPanel component with filtering and search
-- [x] Implement WorkflowTypeBadge component with visual indicators
+- [x] Implement taskModeBadge component with visual indicators
 - [x] Enhance QueueRepository with history API calls
 - [x] Add enhanced type detection to frontend
 - [x] Create queue history panel CSS styling - ✅ COMPLETED
@@ -90,13 +90,13 @@
 
 #### **Backend Services (100% Complete)**
 - ✅ QueueHistoryService - Full implementation with strict error handling
-- ✅ WorkflowTypeDetector - Intelligent type detection with zero fallbacks
+- ✅ TaskModeDetector - Intelligent type detection with zero fallbacks
 - ✅ QueueHistoryRepository - Complete database operations with optimization
 - ✅ Database migrations - All tables and indexes created
 
 #### **Frontend Components (100% Complete)**
 - ✅ QueueHistoryPanel - Complete UI component with all features
-- ✅ WorkflowTypeBadge - Visual indicators with error handling
+- ✅ taskModeBadge - Visual indicators with error handling
 - ✅ QueueRepository enhancements - All API methods implemented
 - ✅ QueueManagementPanel - Integrated with history tab system
 - ✅ StepTimeline - Enhanced with real-time updates and workflow type badges
@@ -123,7 +123,7 @@
 
 #### **✅ Phase 1: Backend Foundation Setup (12 hours) - COMPLETED**
 - QueueHistoryService with persistence logic
-- WorkflowTypeDetector with strict type detection
+- TaskModeDetector with strict type detection
 - QueueHistoryRepository for database operations
 - Database migrations for history and type detection tables
 - Redis caching for history data
@@ -139,7 +139,7 @@
 
 #### **✅ Phase 3: Frontend Infrastructure (10 hours) - COMPLETED**
 - QueueHistoryPanel component with filtering and search
-- WorkflowTypeBadge component with visual indicators
+- taskModeBadge component with visual indicators
 - QueueRepository enhancements with history API calls
 - Enhanced type detection in frontend
 - Queue history panel CSS styling

@@ -65,7 +65,7 @@ class DocumentationGenerationWorkflow extends IWorkflow {
           metadata: result.metadata
         },
         metadata: {
-          workflowType: 'documentation_generation',
+          taskMode: 'documentation_generation',
           executionTime: Date.now(),
           docSize: docContent.length
         }
@@ -82,7 +82,7 @@ class DocumentationGenerationWorkflow extends IWorkflow {
         success: false,
         error: error.message,
         metadata: {
-          workflowType: 'documentation_generation',
+          taskMode: 'documentation_generation',
           executionTime: Date.now()
         }
       };

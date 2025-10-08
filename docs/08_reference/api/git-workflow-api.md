@@ -43,7 +43,7 @@ const context = new GitWorkflowContext({
     type: { value: 'feature' }
   },
   options: { autoMerge: false },
-  workflowType: 'branch-creation'
+  taskMode: 'branch-creation'
 });
 
 const result = await manager.createBranch(context);
@@ -69,11 +69,11 @@ const context = new GitWorkflowContext({
     type: { value: 'feature' }
   },
   options: { autoMerge: true },
-  workflowType: 'workflow-execution'
+  taskMode: 'workflow-execution'
 });
 
 const result = await manager.executeWorkflow(context);
-// Returns: { success: true, workflowType: 'workflow-execution', ... }
+// Returns: { success: true, taskMode: 'workflow-execution', ... }
 ```
 
 ##### completeWorkflow(context)
@@ -91,7 +91,7 @@ const context = new GitWorkflowContext({
   projectPath: '/path/to/project',
   task: { id: 'task-1', title: 'Add user authentication' },
   options: { autoMerge: true },
-  workflowType: 'workflow-completion',
+  taskMode: 'workflow-completion',
   branchName: 'feature/add-user-authentication'
 });
 
@@ -114,7 +114,7 @@ const context = new GitWorkflowContext({
   projectPath: '/path/to/project',
   task: { id: 'task-1', title: 'Add user authentication' },
   options: {},
-  workflowType: 'pull-request-creation',
+  taskMode: 'pull-request-creation',
   branchName: 'feature/add-user-authentication'
 });
 
@@ -135,7 +135,7 @@ const context = new GitWorkflowContext({
   projectPath: '/path/to/project',
   task: TaskObject,
   options: WorkflowOptions,
-  workflowType: 'workflow-execution',
+  taskMode: 'workflow-execution',
   branchName: 'optional-branch-name'
 });
 ```
@@ -145,7 +145,7 @@ const context = new GitWorkflowContext({
 - `projectPath` (string): Path to the git repository
 - `task` (Object): Task object with id, title, type, and metadata
 - `options` (Object): Workflow options (autoMerge, createPullRequest, etc.)
-- `workflowType` (string): Type of workflow ('branch-creation', 'workflow-execution', etc.)
+- `taskMode` (string): Type of workflow ('branch-creation', 'workflow-execution', etc.)
 - `branchName` (string, optional): Existing branch name for operations
 
 ### GitWorkflowResult
@@ -157,7 +157,7 @@ Result object returned by all workflow operations.
 - `success` (boolean): Whether the operation was successful
 - `error` (string, optional): Error message if operation failed
 - `branchName` (string, optional): Created or used branch name
-- `workflowType` (string): Type of workflow executed
+- `taskMode` (string): Type of workflow executed
 - `status` (string): Status of the operation
 - `prUrl` (string, optional): Pull request URL if created
 - `metadata` (Object): Additional metadata about the operation
@@ -346,7 +346,7 @@ const context = new GitWorkflowContext({
     type: { value: 'feature' }
   },
   options: {},
-  workflowType: 'branch-creation'
+  taskMode: 'branch-creation'
 });
 
 const result = await manager.createBranch(context);
@@ -369,7 +369,7 @@ const context = new GitWorkflowContext({
     type: { value: 'bug' }
   },
   options: {},
-  workflowType: 'branch-creation'
+  taskMode: 'branch-creation'
 });
 
 const result = await manager.createBranch(context);
@@ -392,7 +392,7 @@ const context = new GitWorkflowContext({
     type: { value: 'refactor' }
   },
   options: {},
-  workflowType: 'branch-creation'
+  taskMode: 'branch-creation'
 });
 
 const result = await manager.createBranch(context);
@@ -451,7 +451,7 @@ Published when a workflow is executed.
 {
   projectPath: '/path/to/project',
   taskId: 'task-1',
-  workflowType: 'workflow-execution',
+  taskMode: 'workflow-execution',
   branchName: 'feature/add-user-authentication',
   timestamp: '2024-01-01T00:00:00.000Z'
 }

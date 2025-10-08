@@ -47,9 +47,9 @@ docs/09_roadmap/tasks/frontend/queue-history-enhancement/
 - [x] [Backend Foundation Setup](./queue-history-enhancement-phase-1.md) - ✅ Done - 100%
 - [x] [API Enhancement](./queue-history-enhancement-phase-2.md) - ✅ Done - 100%
 - [x] [QueueHistoryService Implementation](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
-- [x] [WorkflowTypeDetector Implementation](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
+- [x] [TaskModeDetector Implementation](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
 - [x] [QueueHistoryPanel Component](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
-- [x] [WorkflowTypeBadge Component](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
+- [x] [taskModeBadge Component](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
 - [x] [Database Migrations](./queue-history-enhancement-implementation.md#files-to-create) - ✅ Done - 100%
 
 ### Pending Subtasks
@@ -70,8 +70,8 @@ docs/09_roadmap/tasks/frontend/queue-history-enhancement/
 
 ## 📝 Notes & Updates
 ### 2025-07-28T13:27:24.000Z - ✅ TASK COMPLETED SUCCESSFULLY
-- ✅ **Backend Services**: QueueHistoryService, WorkflowTypeDetector, QueueHistoryRepository fully implemented
-- ✅ **Frontend Components**: QueueHistoryPanel, WorkflowTypeBadge fully implemented with strict error handling
+- ✅ **Backend Services**: QueueHistoryService, TaskModeDetector, QueueHistoryRepository fully implemented
+- ✅ **Frontend Components**: QueueHistoryPanel, taskModeBadge fully implemented with strict error handling
 - ✅ **API Infrastructure**: All history endpoints, WebSocket integration, error handling implemented
 - ✅ **Database**: All migrations and tables created with proper indexing
 - ✅ **CSS Styling**: Queue history panel styling completed and integrated
@@ -138,12 +138,12 @@ docs/09_roadmap/tasks/frontend/queue-history-enhancement/
 
 ### Backend Services ✅ COMPLETED
 - ✅ `QueueHistoryService` - History management and persistence
-- ✅ `WorkflowTypeDetector` - Intelligent type detection
+- ✅ `TaskModeDetector` - Intelligent type detection
 - ✅ `QueueHistoryRepository` - Database operations
 
 ### Frontend Components ✅ COMPLETED
 - ✅ `QueueHistoryPanel` - History UI component
-- ✅ `WorkflowTypeBadge` - Type display component
+- ✅ `taskModeBadge` - Type display component
 - ⚠️ Enhanced `StepTimeline` - Real-time progress tracking (needs verification)
 
 ### Database Changes ✅ COMPLETED

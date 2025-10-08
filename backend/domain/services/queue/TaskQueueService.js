@@ -46,14 +46,19 @@ class TaskQueueService {
         this.logger.info('🔍 [TaskQueueService] enqueue called:', { taskId, options });
         
         try {
-            // Validate task exists
-            const task = await this.taskRepository.findById(taskId);
-            if (!task) {
-                throw new Error('Task not found');
-            }
-            
-            if (task.isCompleted()) {
-                throw new Error('Task is already completed');
+            // For task creation workflows, skip task validation since task doesn't exist yet
+            if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
+                this.logger.info('🔍 [TaskQueueService] Task creation workflow detected, skipping task validation');
+            } else {
+                // Validate task exists for execution workflows
+                const task = await this.taskRepository.findById(taskId);
+                if (!task) {
+                    throw new Error('Task not found');
+                }
+                
+                if (task.isCompleted()) {
+                    throw new Error('Task is already completed');
+                }
             }
             
             // Use QueueTaskExecutionService for queue-based execution
@@ -72,7 +77,7 @@ class TaskQueueService {
                     branchName: options.branchName,
                     autoExecute: options.autoExecute || true,
                     projectPath: options.projectPath,
-                    workflowType: options.workflowType  // ← WICHTIG: workflowType weitergeben!
+                    taskMode: options.taskMode  // ← WICHTIG: taskMode weitergeben!
                 }
             );
             

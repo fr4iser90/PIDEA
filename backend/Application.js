@@ -351,7 +351,7 @@ class Application {
         taskQueueStore: this.serviceRegistry.getService('taskQueueStore'),
         stepProgressService: this.serviceRegistry.getService('stepProgressService'),
         queueHistoryService: this.serviceRegistry.getService('queueHistoryService'),
-        workflowTypeDetector: this.serviceRegistry.getService('workflowTypeDetector'),
+        TaskModeDetector: this.serviceRegistry.getService('TaskModeDetector'),
         eventBus: this.eventBus,
         logger: this.serviceRegistry.getService('logger')
     });

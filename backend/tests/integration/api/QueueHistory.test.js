@@ -7,7 +7,7 @@ const request = require('supertest');
 const { expect } = require('chai');
 const app = require('../../../Application');
 const QueueHistoryService = require('../../../domain/services/queue/QueueHistoryService');
-const WorkflowTypeDetector = require('../../../domain/services/queue/WorkflowTypeDetector');
+const TaskModeDetector = require('../../../domain/services/queue/TaskModeDetector');
 
 describe('Queue History API Integration Tests', () => {
   let authToken;
@@ -52,7 +52,7 @@ describe('Queue History API Integration Tests', () => {
       
       // Verify all items are of the specified type
       response.body.data.items.forEach(item => {
-        expect(item.workflowType).to.equal('refactoring');
+        expect(item.taskMode).to.equal('refactoring');
       });
     });
 
@@ -136,7 +136,7 @@ describe('Queue History API Integration Tests', () => {
       // First create a test history item
       const testHistoryData = {
         workflowId: 'test-workflow-123',
-        workflowType: 'testing',
+        taskMode: 'testing',
         status: 'completed',
         createdAt: new Date().toISOString(),
         completedAt: new Date().toISOString(),
@@ -157,7 +157,7 @@ describe('Queue History API Integration Tests', () => {
       expect(response.body.success).to.be.true;
       expect(response.body.data.id).to.equal(testHistoryId);
       expect(response.body.data.workflowId).to.equal(testHistoryData.workflowId);
-      expect(response.body.data.workflowType).to.equal(testHistoryData.workflowType);
+      expect(response.body.data.taskMode).to.equal(testHistoryData.taskMode);
     });
 
     it('should return 404 for non-existent history item', async () => {
@@ -400,9 +400,9 @@ describe('Queue History API Integration Tests', () => {
       expect(response.body.data.count).to.be.a('number');
       expect(response.body.data.detectionMethod).to.equal('strict_no_fallbacks');
       
-              // Use central WorkflowTypes constants
-        const WorkflowTypes = require('../../../domain/constants/WorkflowTypes');
-        const expectedTypes = WorkflowTypes.getAllTypes();
+              // Use central taskModes constants
+        const taskModes = require('../../../domain/constants/taskModes');
+        const expectedTypes = taskModes.getAllTypes();
       
       expectedTypes.forEach(type => {
         expect(response.body.data.types).to.include(type);

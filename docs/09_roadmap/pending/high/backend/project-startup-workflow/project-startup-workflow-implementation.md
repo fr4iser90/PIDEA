@@ -305,7 +305,7 @@ class ProjectStartupWorkflow extends BaseWorkflowStep {
     // Leverage existing WorkflowOrchestrationService
     const orchestrationResult = await this.workflowOrchestrator.executeWorkflow({
       type: 'project_startup',
-      workflowType: 'project_startup',
+      taskMode: 'project_startup',
       priority: 'high',
       projectPath: context.projectPath
     }, context);

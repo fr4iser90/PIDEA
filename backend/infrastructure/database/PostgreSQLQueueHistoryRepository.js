@@ -80,7 +80,7 @@ class PostgreSQLQueueHistoryRepository {
       const params = [
         id,
         historyData.workflowId,
-        historyData.workflowType,
+        historyData.taskMode,
         historyData.status,
         historyData.createdAt || now,
         historyData.completedAt || null,
@@ -220,9 +220,9 @@ class PostgreSQLQueueHistoryRepository {
       let paramIndex = 1;
 
       // Build update fields
-      if (updates.workflowType !== undefined) {
+      if (updates.taskMode !== undefined) {
         updateFields.push(`workflow_type = $${paramIndex}`);
-        params.push(updates.workflowType);
+        params.push(updates.taskMode);
         paramIndex++;
       }
 
@@ -472,7 +472,7 @@ class PostgreSQLQueueHistoryRepository {
     return {
       id: row.id,
       workflowId: row.workflow_id,
-      workflowType: row.workflow_type,
+      taskMode: row.workflow_type,
       status: row.status,
       createdAt: row.created_at,
       completedAt: row.completed_at,

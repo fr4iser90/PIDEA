@@ -604,7 +604,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                                     onToggleStepStatus={handleToggleStepStatus}
                                     taskId={selectedTask.id}
                                     projectId={projectId}
-                                    workflowType={selectedTask.workflow?.type}
+                                    taskMode={selectedTask.workflow?.type}
                                 />
                             </div>
                         )}

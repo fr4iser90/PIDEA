@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import VoiceInput from '../../common/VoiceInput';
 
-const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
+const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors, creationMode = 'normal' }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -15,10 +15,10 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
   const [touched, setTouched] = useState({});
   const [isValid, setIsValid] = useState(false);
 
-  // Validation rules
+  // Validation rules - different rules based on creation mode
   const validationRules = {
     title: {
-      required: true,
+      required: creationMode === 'advanced',
       minLength: 3,
       maxLength: 100,
       pattern: /^[a-zA-Z0-9\s\-_]+$/,
@@ -26,12 +26,14 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
     },
     description: {
       required: true,
-      minLength: 10,
+      minLength: creationMode === 'normal' ? 5 : 10,
       maxLength: 1000,
-      message: 'Description must be 10-1000 characters'
+      message: creationMode === 'normal' 
+        ? 'Description must be 5-1000 characters' 
+        : 'Description must be 10-1000 characters'
     },
     category: {
-      required: true,
+      required: creationMode === 'advanced',
       minLength: 2,
       maxLength: 50,
       pattern: /^[a-zA-Z0-9\s\-_]+$/,
@@ -45,12 +47,12 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
       message: 'Estimated time must be 1-100 hours'
     },
     type: {
-      required: true,
+      required: creationMode === 'advanced',
       enum: ['feature', 'bugfix', 'refactor', 'documentation', 'testing', 'performance', 'security', 'automation', 'deployment'],
       message: 'Please select a valid task type'
     },
     priority: {
-      required: true,
+      required: creationMode === 'advanced',
       enum: ['low', 'medium', 'high', 'urgent'],
       message: 'Please select a valid priority level'
     }
@@ -107,7 +109,12 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
     const newValidation = {};
     let formIsValid = true;
     
-    Object.keys(formData).forEach(field => {
+    // Only validate fields that are relevant for the current mode
+    const fieldsToValidate = creationMode === 'normal' 
+      ? ['description'] // Only description in normal mode
+      : Object.keys(formData); // All fields in advanced mode
+    
+    fieldsToValidate.forEach(field => {
       const validation = validateField(field, formData[field]);
       newValidation[field] = validation;
       if (!validation.isValid) {
@@ -118,7 +125,7 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
     setValidation(newValidation);
     setIsValid(formIsValid);
     return formIsValid;
-  }, [formData, validateField]);
+  }, [formData, validateField, creationMode]);
 
   // Debounced validation
   useEffect(() => {
@@ -215,43 +222,50 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
 
   return (
     <div className="modal-description">
-      <p>Describe your task and let AI create a comprehensive implementation plan with automatic execution.</p>
+      <p>
+        {creationMode === 'normal' 
+          ? 'Provide a description and AI will analyze and create the task automatically.'
+          : 'Fill in all task details manually for complete control and advanced configuration.'
+        }
+      </p>
       
       <form onSubmit={handleSubmit} className="task-creation-form">
-        {/* Task Title */}
-        <div className="form-group">
-          <label htmlFor="title" className="form-label">
-            Task Title *
-          </label>
-          <div className="input-with-voice">
-            <input
-              type="text"
-              id="title"
-              className={`form-input ${validation.title && !validation.title.isValid && touched.title ? 'form-input-error' : ''} ${validation.title && validation.title.isValid && touched.title && formData.title ? 'form-input-success' : ''}`}
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              onBlur={() => handleFieldBlur('title')}
-              placeholder="Enter a descriptive title for your task..."
-              disabled={isGeneratingPlan}
-              required
-              maxLength={100}
-            />
-            <VoiceInput 
-              onTextReceived={handleVoiceTitle}
-              disabled={isGeneratingPlan}
-              size="md"
-            />
+        {/* Task Title - Only show in advanced mode */}
+        {creationMode === 'advanced' && (
+          <div className="form-group">
+            <label htmlFor="title" className="form-label">
+              Task Title *
+            </label>
+            <div className="input-with-voice">
+              <input
+                type="text"
+                id="title"
+                className={`form-input ${validation.title && !validation.title.isValid && touched.title ? 'form-input-error' : ''} ${validation.title && validation.title.isValid && touched.title && formData.title ? 'form-input-success' : ''}`}
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                onBlur={() => handleFieldBlur('title')}
+                placeholder="Enter a descriptive title for your task..."
+                disabled={isGeneratingPlan}
+                required
+                maxLength={100}
+              />
+              <VoiceInput 
+                onTextReceived={handleVoiceTitle}
+                disabled={isGeneratingPlan}
+                size="md"
+              />
+            </div>
+            {validation.title && !validation.title.isValid && touched.title && (
+              <div className="error-message">{validation.title.message}</div>
+            )}
+            {validation.title && validation.title.isValid && touched.title && formData.title && (
+              <div className="success-message">✓ Title is valid</div>
+            )}
+            <div className="char-count">
+              {formData.title.length}/100
+            </div>
           </div>
-          {validation.title && !validation.title.isValid && touched.title && (
-            <div className="error-message">{validation.title.message}</div>
-          )}
-          {validation.title && validation.title.isValid && touched.title && formData.title && (
-            <div className="success-message">✓ Title is valid</div>
-          )}
-          <div className="char-count">
-            {formData.title.length}/100
-          </div>
-        </div>
+        )}
         
         {/* Task Description */}
         <div className="form-group">
@@ -288,100 +302,104 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
           </div>
         </div>
         
-        {/* Task Type and Priority Row */}
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="type" className="form-label">
-              Task Type
-            </label>
-            <select
-              id="type"
-              className="form-select"
-              value={formData.type}
-              onChange={(e) => handleInputChange('type', e.target.value)}
-              disabled={isGeneratingPlan}
-            >
-              <option value="feature">Feature</option>
-              <option value="bugfix">Bug Fix</option>
-              <option value="refactor">Refactor</option>
-              <option value="documentation">Documentation</option>
-              <option value="testing">Testing</option>
-              <option value="performance">Performance</option>
-              <option value="security">Security</option>
-              <option value="automation">Automation</option>
-              <option value="deployment">Deployment</option>
-            </select>
+        {/* Task Type and Priority Row - Only show in advanced mode */}
+        {creationMode === 'advanced' && (
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="type" className="form-label">
+                Task Type
+              </label>
+              <select
+                id="type"
+                className="form-select"
+                value={formData.type}
+                onChange={(e) => handleInputChange('type', e.target.value)}
+                disabled={isGeneratingPlan}
+              >
+                <option value="feature">Feature</option>
+                <option value="bugfix">Bug Fix</option>
+                <option value="refactor">Refactor</option>
+                <option value="documentation">Documentation</option>
+                <option value="testing">Testing</option>
+                <option value="performance">Performance</option>
+                <option value="security">Security</option>
+                <option value="automation">Automation</option>
+                <option value="deployment">Deployment</option>
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="priority" className="form-label">
+                Priority
+              </label>
+              <select
+                id="priority"
+                className="form-select"
+                value={formData.priority}
+                onChange={(e) => handleInputChange('priority', e.target.value)}
+                disabled={isGeneratingPlan}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="priority" className="form-label">
-              Priority
-            </label>
-            <select
-              id="priority"
-              className="form-select"
-              value={formData.priority}
-              onChange={(e) => handleInputChange('priority', e.target.value)}
-              disabled={isGeneratingPlan}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </div>
-        </div>
+        )}
         
-        {/* Category and Estimated Time Row */}
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="category" className="form-label">
-              Category *
-            </label>
-            <input
-              type="text"
-              id="category"
-              className={`form-input ${validation.category && !validation.category.isValid && touched.category ? 'form-input-error' : ''} ${validation.category && validation.category.isValid && touched.category && formData.category ? 'form-input-success' : ''}`}
-              value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
-              onBlur={() => handleFieldBlur('category')}
-              placeholder="e.g., frontend, backend, database, etc."
-              disabled={isGeneratingPlan}
-              required
-              maxLength={50}
-            />
-            {validation.category && !validation.category.isValid && touched.category && (
-              <div className="error-message">{validation.category.message}</div>
-            )}
-            {validation.category && validation.category.isValid && touched.category && formData.category && (
-              <div className="success-message">✓ Category is valid</div>
-            )}
+        {/* Category and Estimated Time Row - Only show in advanced mode */}
+        {creationMode === 'advanced' && (
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="category" className="form-label">
+                Category *
+              </label>
+              <input
+                type="text"
+                id="category"
+                className={`form-input ${validation.category && !validation.category.isValid && touched.category ? 'form-input-error' : ''} ${validation.category && validation.category.isValid && touched.category && formData.category ? 'form-input-success' : ''}`}
+                value={formData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
+                onBlur={() => handleFieldBlur('category')}
+                placeholder="e.g., frontend, backend, database, etc."
+                disabled={isGeneratingPlan}
+                required
+                maxLength={50}
+              />
+              {validation.category && !validation.category.isValid && touched.category && (
+                <div className="error-message">{validation.category.message}</div>
+              )}
+              {validation.category && validation.category.isValid && touched.category && formData.category && (
+                <div className="success-message">✓ Category is valid</div>
+              )}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="estimatedHours" className="form-label">
+                Estimated Time (hours) <span className="optional-label">(Optional)</span>
+              </label>
+              <input
+                type="number"
+                id="estimatedHours"
+                className={`form-input ${validation.estimatedHours && !validation.estimatedHours.isValid && touched.estimatedHours ? 'form-input-error' : ''} ${validation.estimatedHours && validation.estimatedHours.isValid && touched.estimatedHours && formData.estimatedHours ? 'form-input-success' : ''}`}
+                value={formData.estimatedHours}
+                onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
+                onBlur={() => handleFieldBlur('estimatedHours')}
+                placeholder="2"
+                min="1"
+                max="100"
+                disabled={isGeneratingPlan}
+              />
+              {validation.estimatedHours && !validation.estimatedHours.isValid && touched.estimatedHours && (
+                <div className="error-message">{validation.estimatedHours.message}</div>
+              )}
+              {validation.estimatedHours && validation.estimatedHours.isValid && touched.estimatedHours && formData.estimatedHours && (
+                <div className="success-message">✓ Time estimate is valid</div>
+              )}
+            </div>
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="estimatedHours" className="form-label">
-              Estimated Time (hours) <span className="optional-label">(Optional)</span>
-            </label>
-            <input
-              type="number"
-              id="estimatedHours"
-              className={`form-input ${validation.estimatedHours && !validation.estimatedHours.isValid && touched.estimatedHours ? 'form-input-error' : ''} ${validation.estimatedHours && validation.estimatedHours.isValid && touched.estimatedHours && formData.estimatedHours ? 'form-input-success' : ''}`}
-              value={formData.estimatedHours}
-              onChange={(e) => handleInputChange('estimatedHours', e.target.value)}
-              onBlur={() => handleFieldBlur('estimatedHours')}
-              placeholder="2"
-              min="1"
-              max="100"
-              disabled={isGeneratingPlan}
-            />
-            {validation.estimatedHours && !validation.estimatedHours.isValid && touched.estimatedHours && (
-              <div className="error-message">{validation.estimatedHours.message}</div>
-            )}
-            {validation.estimatedHours && validation.estimatedHours.isValid && touched.estimatedHours && formData.estimatedHours && (
-              <div className="success-message">✓ Time estimate is valid</div>
-            )}
-          </div>
-        </div>
+        )}
         
         {/* Submit Error */}
         {errors && errors.length > 0 && (
@@ -417,10 +435,10 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors }) => {
             {isGeneratingPlan ? (
               <>
                 <div className="spinner"></div>
-                Generating Plan...
+                {creationMode === 'normal' ? 'AI Analyzing...' : 'Generating Plan...'}
               </>
             ) : (
-              '📋 Generate Plan'
+              creationMode === 'normal' ? '🤖 AI Create Task' : '🔬 Advanced Analysis'
             )}
           </button>
         </div>

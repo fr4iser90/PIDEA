@@ -92,8 +92,8 @@ class IWorkflowContext {
    * Get workflow type
    * @returns {string} Workflow type
    */
-  getWorkflowType() {
-    throw new Error('getWorkflowType method must be implemented');
+  gettaskMode() {
+    throw new Error('gettaskMode method must be implemented');
   }
 
   /**

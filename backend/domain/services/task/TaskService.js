@@ -52,8 +52,8 @@ function getPromptPath(promptType) {
   return promptPaths[promptType] || promptPaths['task-create'];
 }
 
-function getWorkflowPath(workflowType) {
-  return `backend/framework/workflows/${workflowType}-workflows.json`;
+function getWorkflowPath(taskMode) {
+  return `backend/framework/workflows/${taskMode}-workflows.json`;
 }
 
 const Task = require('@entities/Task');
@@ -194,11 +194,11 @@ class TaskService {
 
   /**
    * Get workflow path dynamically based on workflow type
-   * @param {string} workflowType - Type of workflow
+   * @param {string} taskMode - Type of workflow
    * @returns {string} Dynamic workflow path
    */
-  getWorkflowPath(workflowType) {
-    return `backend/framework/workflows/${workflowType}-workflows.json`;
+  getWorkflowPath(taskMode) {
+    return `backend/framework/workflows/${taskMode}-workflows.json`;
   }
 
   buildRefactoringPrompt(task) {
@@ -366,7 +366,7 @@ class TaskService {
    * @param {Object} task - Task object
    * @returns {string} Workflow type
    */
-  determineWorkflowType(task) {
+  determinetaskMode(task) {
     const taskType = task.type?.value?.toLowerCase() || '';
     
     if (taskType.includes('refactor') || taskType.includes('refactoring')) {
@@ -1251,11 +1251,11 @@ ${task.description}
    * ⚠️  DEPRECATED: This method is deprecated in favor of queue-based execution.
    * 
    * 📋 NEW FLOW (RECOMMENDED):
-   * Use queueTaskForExecution() with workflowType: 'task-review' instead:
+   * Use queueTaskForExecution() with taskMode: 'task-review' instead:
    * 
    * ```javascript
    * await taskService.queueTaskForExecution(taskId, userId, {
-   *   workflowType: 'task-review',
+   *   taskMode: 'task-review',
    *   projectPath: options.projectPath,
    *   projectId: options.projectId
    * });
@@ -1268,7 +1268,7 @@ ${task.description}
    * @param {string} userId - User ID
    * @param {Object} options - Review options
    * @returns {Promise<Object>} Review result
-   * @deprecated Use queueTaskForExecution() with workflowType: 'task-review' instead
+   * @deprecated Use queueTaskForExecution() with taskMode: 'task-review' instead
    */
   async reviewTask(taskId, userId, options = {}) {
     logger.info('🔍 [TaskService] reviewTask called with:', { taskId, userId, options });
@@ -1435,24 +1435,24 @@ ${task.description}
   /**
    * Build task prompt based on step name and workflow type
    * @param {Object} task - Task object
-   * @param {Object} options - Options including stepName and workflowType
+   * @param {Object} options - Options including stepName and taskMode
    * @returns {Promise<string>} Appropriate prompt
    */
   async buildTaskPromptForStep(task, options = {}) {
-    const { stepName, workflowType } = options;
+    const { stepName, taskMode } = options;
     
     logger.info('🔍 [TaskService] buildTaskPromptForStep called', {
       taskId: task.id,
       stepName,
-      workflowType
+      taskMode
     });
     
     // Determine prompt type based on step name and workflow type
-    if (workflowType === 'task-review' || stepName?.includes('review')) {
+    if (taskMode === 'task-review' || stepName?.includes('review')) {
       return await this.buildTaskReviewPrompt(task, options);
-    } else if (workflowType === 'task-check-state' || stepName?.includes('check-state') || stepName?.includes('checkstate')) {
+    } else if (taskMode === 'task-check-state' || stepName?.includes('check-state') || stepName?.includes('checkstate')) {
       return await this.buildTaskCheckStatePrompt(task, options);
-    } else if (stepName?.includes('create') || stepName?.includes('task-create')) {
+    } else if (taskMode === 'task-creation-workflow' || taskMode === 'advanced-task-creation-workflow' || stepName?.includes('create') || stepName?.includes('task-create')) {
       return await this.buildTaskCreatePrompt(task, options);
     } else if (stepName?.includes('execute') || stepName?.includes('task-execute')) {
       return await this.buildTaskExecutionPrompt(task);

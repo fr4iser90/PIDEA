@@ -7,13 +7,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
-import WorkflowTypeBadge from './WorkflowTypeBadge.jsx';
+import TaskModeBadge from './TaskModeBadge.jsx';
 
-const StepTimeline = ({ stepProgress, onToggleStepStatus, taskId, projectId, workflowType: propWorkflowType }) => {
+const StepTimeline = ({ stepProgress, onToggleStepStatus, taskId, projectId, taskMode: proptaskMode }) => {
     const [expandedSteps, setExpandedSteps] = useState(new Set());
     const [showStepDetails, setShowStepDetails] = useState({});
     const [realTimeProgress, setRealTimeProgress] = useState(stepProgress);
-    const [workflowType, setWorkflowType] = useState(null);
+    const [taskMode, settaskMode] = useState(null);
     const [lastUpdate, setLastUpdate] = useState(null);
 
     const queueRepository = new QueueRepository();
@@ -22,23 +22,23 @@ const StepTimeline = ({ stepProgress, onToggleStepStatus, taskId, projectId, wor
     /**
      * Get workflow type from props or stepProgress data
      */
-    const getWorkflowType = useCallback(() => {
+    const gettaskMode = useCallback(() => {
         // Use prop first, then fallback to stepProgress data
-        if (propWorkflowType) return propWorkflowType;
+        if (proptaskMode) return proptaskMode;
         if (!stepProgress || !stepProgress.workflow) return null;
         return stepProgress.workflow.type;
-    }, [propWorkflowType, stepProgress]);
+    }, [proptaskMode, stepProgress]);
 
     useEffect(() => {
-        const type = getWorkflowType();
-        setWorkflowType(type);
+        const type = gettaskMode();
+        settaskMode(type);
         logger.debug('Got workflow type for StepTimeline', { 
             projectId, 
             taskId,
             type,
-            fromProp: !!propWorkflowType
+            fromProp: !!proptaskMode
         });
-    }, [getWorkflowType, projectId, taskId]);
+    }, [gettaskMode, projectId, taskId]);
 
     /**
      * Set up real-time updates
@@ -215,9 +215,9 @@ const StepTimeline = ({ stepProgress, onToggleStepStatus, taskId, projectId, wor
                 <div className="progress-header">
                     <div className="progress-title">
                         <h5>Overall Progress: {realTimeProgress?.progressPercentage || progressPercentage}%</h5>
-                        {workflowType && (
-                            <WorkflowTypeBadge 
-                                type={workflowType} 
+                        {taskMode && (
+                            <TaskModeBadge 
+                                type={taskMode} 
                                 size="small"
                             />
                         )}

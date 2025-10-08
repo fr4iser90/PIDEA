@@ -817,7 +817,7 @@ class TaskController {
                                 // Queue task for execution using TaskApplicationService
                                 const queueResult = await this.taskApplicationService.executeTask(task.id, projectId, userId, {
                                     priority: 'normal',
-                                    workflowType: 'task-review',
+                                    taskMode: 'task-review',
                                     autoExecute: true,
                                     createGitBranch: false
                                 });

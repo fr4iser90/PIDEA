@@ -165,7 +165,7 @@ describe('Git Workflow E2E Scenarios', () => {
           createPullRequest: false,
           requireReview: false
         },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       const result = await gitWorkflowManager.executeWorkflow(context);
@@ -219,7 +219,7 @@ describe('Git Workflow E2E Scenarios', () => {
           requireReview: true,
           mergeTarget: 'develop'
         },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       const result = await gitWorkflowManager.executeWorkflow(context);
@@ -312,7 +312,7 @@ describe('Git Workflow E2E Scenarios', () => {
           projectPath: task.metadata.projectPath,
           task,
           options: { autoMerge: false, createPullRequest: true },
-          workflowType: 'workflow-execution'
+          taskMode: 'workflow-execution'
         });
 
         const result = await gitWorkflowManager.executeWorkflow(context);
@@ -348,7 +348,7 @@ describe('Git Workflow E2E Scenarios', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: {},
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       const result = await gitWorkflowManager.executeWorkflow(context);
@@ -385,7 +385,7 @@ describe('Git Workflow E2E Scenarios', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: { autoMerge: false },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       }));
 
       const results = await Promise.all(
@@ -422,7 +422,7 @@ describe('Git Workflow E2E Scenarios', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: { createPullRequest: true },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       await gitWorkflowManager.executeWorkflow(context);

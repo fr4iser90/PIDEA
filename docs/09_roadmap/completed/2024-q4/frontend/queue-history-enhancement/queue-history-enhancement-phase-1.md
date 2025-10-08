@@ -11,7 +11,7 @@
 
 ## 🎯 Phase Objectives
 - [ ] Create QueueHistoryService with persistence logic
-- [ ] Implement WorkflowTypeDetector with strict type detection (no fallbacks)
+- [ ] Implement TaskModeDetector with strict type detection (no fallbacks)
 - [ ] Create QueueHistoryRepository for database operations
 - [ ] Add database migrations for history and type detection tables
 - [ ] Set up Redis caching for history data
@@ -25,7 +25,7 @@
   - **Key Features**: History persistence, cleanup policies, filtering, pagination
   - **Error Handling**: No fallbacks - throw errors for invalid operations
 
-- [ ] `backend/domain/services/queue/WorkflowTypeDetector.js` - Intelligent workflow type detection
+- [ ] `backend/domain/services/queue/TaskModeDetector.js` - Intelligent workflow type detection
   - **Purpose**: Strict type detection with zero fallback mechanisms
   - **Key Features**: Step analysis, metadata analysis, pattern recognition
   - **Error Handling**: Throw specific errors for unknown types
@@ -49,7 +49,7 @@
   - **Error Tests**: Verify errors thrown for invalid operations
   - **Mock Requirements**: Database connection, Redis cache, event bus
 
-- [ ] `backend/tests/unit/services/queue/WorkflowTypeDetector.test.js` - Type detector tests
+- [ ] `backend/tests/unit/services/queue/TaskModeDetector.test.js` - Type detector tests
   - **Test Cases**: Type detection accuracy, error throwing for unknown types, strict validation
   - **Error Tests**: Verify errors thrown for unrecognized workflow types
   - **Mock Requirements**: Workflow data, step definitions, metadata
@@ -99,9 +99,9 @@ class QueueHistoryService {
 }
 ```
 
-### WorkflowTypeDetector Implementation
+### TaskModeDetector Implementation
 ```javascript
-class WorkflowTypeDetector {
+class TaskModeDetector {
   constructor(logger) {
     this.logger = logger;
     this.knownTypes = new Set([
@@ -110,7 +110,7 @@ class WorkflowTypeDetector {
     ]);
   }
 
-  detectWorkflowType(workflowData) {
+  detecttaskMode(workflowData) {
     // Validate input - throw error if invalid
     if (!workflowData || !workflowData.steps) {
       throw new InvalidWorkflowDataError('Workflow data and steps are required');
@@ -120,7 +120,7 @@ class WorkflowTypeDetector {
     
     // Strict validation - throw error if type not recognized
     if (!this.knownTypes.has(detectedType)) {
-      throw new UnknownWorkflowTypeError(`Unknown workflow type detected: ${detectedType}`);
+      throw new UnknowntaskModeError(`Unknown workflow type detected: ${detectedType}`);
     }
 
     return detectedType;
@@ -219,23 +219,23 @@ describe('QueueHistoryService', () => {
 });
 ```
 
-### Unit Tests for WorkflowTypeDetector
+### Unit Tests for TaskModeDetector
 ```javascript
-describe('WorkflowTypeDetector', () => {
-  describe('detectWorkflowType', () => {
+describe('TaskModeDetector', () => {
+  describe('detecttaskMode', () => {
     it('should detect known workflow types', () => {
       // Test known type detection
     });
 
     it('should throw error for unknown workflow types', () => {
       // Test error throwing for unknown types
-      expect(() => detector.detectWorkflowType({ steps: [{ action: 'unknown_action' }] }))
-        .toThrow(UnknownWorkflowTypeError);
+      expect(() => detector.detecttaskMode({ steps: [{ action: 'unknown_action' }] }))
+        .toThrow(UnknowntaskModeError);
     });
 
     it('should throw error for invalid workflow data', () => {
       // Test error throwing for invalid data
-      expect(() => detector.detectWorkflowType(null))
+      expect(() => detector.detecttaskMode(null))
         .toThrow(InvalidWorkflowDataError);
     });
   });
@@ -257,7 +257,7 @@ describe('WorkflowTypeDetector', () => {
 
 ## ✅ Success Criteria
 - [ ] QueueHistoryService successfully persists workflow history
-- [ ] WorkflowTypeDetector correctly identifies known types
+- [ ] TaskModeDetector correctly identifies known types
 - [ ] All unknown types throw specific errors (no fallbacks)
 - [ ] Database migrations execute successfully
 - [ ] Redis caching is functional
@@ -272,7 +272,7 @@ describe('WorkflowTypeDetector', () => {
 
 ## 🔄 Next Phase Dependencies
 - QueueHistoryService must be complete for API endpoints
-- WorkflowTypeDetector must be functional for type detection APIs
+- TaskModeDetector must be functional for type detection APIs
 - Database schema must be in place for repository operations
 - Error handling patterns must be established for frontend integration
 

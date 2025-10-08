@@ -153,7 +153,7 @@ test.describe('Queue History E2E Tests', () => {
           event: 'queue.error.type_detection',
           workflowId: 'test-123',
           error: 'Unknown workflow type detected',
-          code: 'UnknownWorkflowTypeError'
+          code: 'UnknowntaskModeError'
         }
       });
       window.dispatchEvent(event);
@@ -629,7 +629,7 @@ All error responses include specific error codes:
 - `HistoryItemNotFoundError`: History item not found
 - `InvalidRetentionError`: Invalid retention period
 - `InvalidWorkflowDataError`: Invalid workflow data
-- `UnknownWorkflowTypeError`: Unknown workflow type
+- `UnknowntaskModeError`: Unknown workflow type
 - `InvalidFilterError`: Invalid filter parameters
 - `InvalidTypeError`: Invalid workflow type
 - `InvalidStatusError`: Invalid status value
@@ -684,7 +684,7 @@ Real-time updates are available via WebSocket:
 {
   "workflowId": "uuid",
   "error": "Unknown workflow type detected",
-  "code": "UnknownWorkflowTypeError"
+  "code": "UnknowntaskModeError"
 }
 ```
 ```
@@ -704,7 +704,7 @@ describe('Queue History Complete Test Suite', () => {
       it('should cleanup old history');
     });
 
-    describe('WorkflowTypeDetector', () => {
+    describe('TaskModeDetector', () => {
       it('should detect known workflow types');
       it('should throw error for unknown types');
       it('should analyze steps correctly');
@@ -722,7 +722,7 @@ describe('Queue History Complete Test Suite', () => {
       it('should handle errors');
     });
 
-    describe('WorkflowTypeBadge', () => {
+    describe('taskModeBadge', () => {
       it('should display known types');
       it('should handle unknown types');
       it('should apply correct styling');

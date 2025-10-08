@@ -404,7 +404,7 @@ class TaskType {
     return this.requiresExecution() || this.requiresAI();
   }
 
-  getWorkflowType() {
+  gettaskMode() {
     if (this.isRefactor()) {
       return 'refactoring';
     } else if (this.isTest()) {
@@ -429,9 +429,9 @@ class TaskType {
   }
 
   getWorkflowSteps() {
-    const workflowType = this.getWorkflowType();
+    const taskMode = this.gettaskMode();
     
-    switch (workflowType) {
+    switch (taskMode) {
       case 'refactoring':
         return ['analysis', 'refactoring', 'testing', 'documentation'];
       case 'testing':
@@ -456,9 +456,9 @@ class TaskType {
   }
 
   getWorkflowDependencies() {
-    const workflowType = this.getWorkflowType();
+    const taskMode = this.gettaskMode();
     
-    switch (workflowType) {
+    switch (taskMode) {
       case 'refactoring':
         return ['code_analyzer', 'refactoring_engine', 'test_runner'];
       case 'testing':
@@ -484,7 +484,7 @@ class TaskType {
 
   getWorkflowMetadata() {
     return {
-      type: this.getWorkflowType(),
+      type: this.gettaskMode(),
       steps: this.getWorkflowSteps(),
       dependencies: this.getWorkflowDependencies(),
       supportsRollback: this.isRefactor() || this.isTest(),

@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
-import WorkflowTypeBadge from './WorkflowTypeBadge.jsx';
+import TaskModeBadge from './TaskModeBadge.jsx';
 
 /**
  * Get display name for queue item
@@ -48,7 +48,7 @@ const ActiveTaskItem = ({
     const [showDetails, setShowDetails] = useState(false);
     const [showPriorityMenu, setShowPriorityMenu] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
-    const [workflowType, setWorkflowType] = useState(null);
+    const [taskMode, settaskMode] = useState(null);
     const [currentStepName, setCurrentStepName] = useState(null);
 
     const queueRepository = new QueueRepository();
@@ -57,7 +57,7 @@ const ActiveTaskItem = ({
     /**
      * Get workflow type from backend data
      */
-    const getWorkflowType = useCallback(() => {
+    const gettaskMode = useCallback(() => {
         if (!item.workflow) return null;
 
         // Use the workflow type from backend data - should be correct now
@@ -66,14 +66,14 @@ const ActiveTaskItem = ({
 
     // Get workflow type when component mounts or item changes
     useEffect(() => {
-        const type = getWorkflowType();
-        setWorkflowType(type);
+        const type = gettaskMode();
+        settaskMode(type);
         logger.debug('Got workflow type from backend', { 
             projectId: item.projectId, 
             taskId: item.id,
             type 
         });
-    }, [getWorkflowType, item.projectId, item.id]);
+    }, [gettaskMode, item.projectId, item.id]);
 
     // Listen for step progress updates
     useEffect(() => {
@@ -227,10 +227,10 @@ const ActiveTaskItem = ({
                         {currentStepName ? `🔍${currentStepName}` : getDisplayName(item)}
                     </div>
                     <div className="task-meta">
-                        <span className="task-type">{formattedItem.workflowTypeLabel}</span>
-                        {workflowType && (
-                            <WorkflowTypeBadge 
-                                type={workflowType} 
+                        <span className="task-type">{formattedItem.taskModeLabel}</span>
+                        {taskMode && (
+                            <taskModeBadge 
+                                type={taskMode} 
                                 size="small"
                             />
                         )}

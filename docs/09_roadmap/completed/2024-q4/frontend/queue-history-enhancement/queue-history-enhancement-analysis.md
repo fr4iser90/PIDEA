@@ -28,7 +28,7 @@
   - **Estimated Effort**: 8 hours
 
 - [ ] **Incomplete Workflow Type Identification**: Limited workflow type detection and labeling
-  - **Location**: `frontend/src/infrastructure/repositories/QueueRepository.jsx` (getWorkflowTypeLabel method)
+  - **Location**: `frontend/src/infrastructure/repositories/QueueRepository.jsx` (gettaskModeLabel method)
   - **Current State**: Basic type mapping (task, analysis, framework, refactoring, testing, deployment)
   - **Missing Parts**: Intelligent workflow type detection, step-based type identification, custom type labels
   - **Files Affected**: `backend/domain/services/queue/QueueMonitoringService.js`, `frontend/src/infrastructure/repositories/QueueRepository.jsx`
@@ -51,7 +51,7 @@
 - [ ] **Improvement Needed**: Workflow Type Detection Logic - Basic type detection
   - **Current Issues**: Relies on simple string matching, no intelligent detection based on workflow content
   - **Proposed Solution**: Implement intelligent workflow type detection based on steps, metadata, and execution patterns
-  - **Files to Modify**: `backend/domain/services/queue/WorkflowTypeDetector.js` (new)
+  - **Files to Modify**: `backend/domain/services/queue/TaskModeDetector.js` (new)
   - **Estimated Effort**: 6 hours
 
 #### Low Priority Gaps:
@@ -66,10 +66,10 @@
 
 #### Files Missing:
 - [ ] `backend/domain/services/queue/QueueHistoryService.js` - Queue history management and persistence
-- [ ] `backend/domain/services/queue/WorkflowTypeDetector.js` - Intelligent workflow type detection
+- [ ] `backend/domain/services/queue/TaskModeDetector.js` - Intelligent workflow type detection
 - [ ] `backend/infrastructure/database/QueueHistoryRepository.js` - Database operations for queue history
 - [ ] `frontend/src/presentation/components/queue/QueueHistoryPanel.jsx` - Queue history UI component
-- [ ] `frontend/src/presentation/components/queue/WorkflowTypeBadge.jsx` - Workflow type display component
+- [ ] `frontend/src/presentation/components/queue/taskModeBadge.jsx` - Workflow type display component
 - [ ] `frontend/src/css/panel/queue-history-panel.css` - Queue history panel styling
 
 #### Files Incomplete:
@@ -140,8 +140,8 @@
   - **Test Cases**: History persistence, cleanup, retrieval, filtering
   - **Coverage Target**: 90% coverage needed
 
-- [ ] **Component**: WorkflowTypeDetector - Type detection algorithm tests
-  - **Test File**: `tests/unit/services/queue/WorkflowTypeDetector.test.js`
+- [ ] **Component**: TaskModeDetector - Type detection algorithm tests
+  - **Test File**: `tests/unit/services/queue/TaskModeDetector.test.js`
   - **Test Cases**: Type detection accuracy, edge cases, performance
   - **Coverage Target**: 95% coverage needed
 
@@ -208,7 +208,7 @@
   - **Effort**: 8 hours
   - **Dependencies**: Database schema updates
 
-- [ ] **Action**: Create WorkflowTypeDetector for intelligent type detection
+- [ ] **Action**: Create TaskModeDetector for intelligent type detection
   - **Priority**: High
   - **Effort**: 6 hours
   - **Dependencies**: Workflow analysis service
@@ -232,7 +232,7 @@
 - [ ] **Action**: Add workflow type badges and enhanced type display
   - **Priority**: Medium
   - **Effort**: 4 hours
-  - **Dependencies**: WorkflowTypeDetector
+  - **Dependencies**: TaskModeDetector
 
 #### Long-term Actions (Next Quarter):
 - [ ] **Action**: Implement history data encryption and security features

@@ -74,7 +74,7 @@ class WorkflowGitService {
                 projectPath,
                 task,
                 options,
-                workflowType: 'branch-creation'
+                taskMode: 'branch-creation'
             });
 
             const result = await this.gitWorkflowManager.createBranch(context);
@@ -164,7 +164,7 @@ class WorkflowGitService {
                 metadata: {
                     taskId: task.id,
                     taskType: task.type?.value,
-                    workflowType: branchStrategy.type,
+                    taskMode: branchStrategy.type,
                     startPoint: branchStrategy.startPoint || 'main',
                     mergeTarget: branchStrategy.mergeTarget || 'main',
                     timestamp: new Date()
@@ -636,7 +636,7 @@ class WorkflowGitService {
                 projectPath,
                 task,
                 options,
-                workflowType: 'workflow-completion',
+                taskMode: 'workflow-completion',
                 branchName
             });
 
@@ -760,7 +760,7 @@ class WorkflowGitService {
                 metadata: {
                     taskId: task.id,
                     taskType: task.type?.value,
-                    workflowType: strategy.type,
+                    taskMode: strategy.type,
                     autoMerged: strategy.autoMerge,
                     mergeTarget: strategy.mergeTarget,
                     timestamp: new Date()
@@ -820,9 +820,9 @@ class WorkflowGitService {
     generateCommitMessage(task, strategy) {
         const taskTitle = task.title || task.description || 'Task';
         const taskId = task.id || 'unknown';
-        const workflowType = strategy.type;
+        const taskMode = strategy.type;
 
-        return `${workflowType}: ${taskTitle}\n\n- Task ID: ${taskId}\n- Workflow Type: ${workflowType}\n- Automated workflow execution\n- Timestamp: ${new Date().toISOString()}`;
+        return `${taskMode}: ${taskTitle}\n\n- Task ID: ${taskId}\n- Workflow Type: ${taskMode}\n- Automated workflow execution\n- Timestamp: ${new Date().toISOString()}`;
     }
 
     /**
@@ -965,7 +965,7 @@ class WorkflowGitService {
                 projectPath,
                 task,
                 options,
-                workflowType: 'pull-request-creation',
+                taskMode: 'pull-request-creation',
                 branchName
             });
 

@@ -97,14 +97,14 @@ describe('Git Workflow Integration', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: { autoMerge: true },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       // Execute complete workflow
       const result = await gitWorkflowManager.executeWorkflow(context);
 
       expect(result.success).toBe(true);
-      expect(result.workflowType).toBe('workflow-execution');
+      expect(result.taskMode).toBe('workflow-execution');
       expect(result.branchName).toMatch(/feature\/add-user-authentication/);
       expect(mockGitService.createBranch).toHaveBeenCalled();
       expect(mockGitService.addFiles).toHaveBeenCalled();
@@ -128,7 +128,7 @@ describe('Git Workflow Integration', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: { createPullRequest: true, autoMerge: false },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       // Execute workflow
@@ -139,7 +139,7 @@ describe('Git Workflow Integration', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: {},
-        workflowType: 'pull-request-creation',
+        taskMode: 'pull-request-creation',
         branchName: workflowResult.branchName
       });
 
@@ -288,7 +288,7 @@ describe('Git Workflow Integration', () => {
         projectPath: '',
         task: invalidTask,
         options: {},
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       // Should throw GitWorkflowException
@@ -312,7 +312,7 @@ describe('Git Workflow Integration', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: { createPullRequest: true },
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       // Execute workflow
@@ -343,7 +343,7 @@ describe('Git Workflow Integration', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: {},
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       // Should not throw error, just log it
@@ -380,7 +380,7 @@ describe('Git Workflow Integration', () => {
         projectPath: task.metadata.projectPath,
         task,
         options: {},
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       }));
 
       // Execute workflows concurrently

@@ -161,13 +161,13 @@ test.describe('Queue History E2E Tests', () => {
         await page.waitForSelector('[data-testid="history-item"]', { timeout: 10000 });
         
         // Verify workflow type badges are displayed
-        const workflowTypeBadges = page.locator('[data-testid="workflow-type-badge"]');
-        const badgeCount = await workflowTypeBadges.count();
+        const taskModeBadges = page.locator('[data-testid="workflow-type-badge"]');
+        const badgeCount = await taskModeBadges.count();
         expect(badgeCount).toBeGreaterThan(0);
         
         // Verify badge content
         for (let i = 0; i < badgeCount; i++) {
-            const badge = workflowTypeBadges.nth(i);
+            const badge = taskModeBadges.nth(i);
             await expect(badge).toBeVisible();
             
             const type = await badge.getAttribute('data-type');
@@ -299,13 +299,13 @@ test.describe('Queue History E2E Tests', () => {
         await page.waitForSelector('[data-testid="active-task-item"]', { timeout: 10000 });
         
         // Verify workflow type badges are displayed in active tasks
-        const workflowTypeBadges = page.locator('[data-testid="workflow-type-badge"]');
-        const badgeCount = await workflowTypeBadges.count();
+        const taskModeBadges = page.locator('[data-testid="workflow-type-badge"]');
+        const badgeCount = await taskModeBadges.count();
         
         if (badgeCount > 0) {
             // Verify badge content
             for (let i = 0; i < badgeCount; i++) {
-                const badge = workflowTypeBadges.nth(i);
+                const badge = taskModeBadges.nth(i);
                 await expect(badge).toBeVisible();
                 
                 const type = await badge.getAttribute('data-type');

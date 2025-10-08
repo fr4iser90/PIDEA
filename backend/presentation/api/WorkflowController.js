@@ -187,7 +187,7 @@ class WorkflowController {
                         success: true,
                         data: executionResult,
                         projectId,
-                        workflowType: 'task',
+                        taskMode: 'task',
                         taskType: req.body.taskType,
                         workflowName: workflow.name,
                         deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
@@ -775,36 +775,79 @@ class WorkflowController {
                 stepOptions.includeTestAnalysis = true;
                 stepOptions.includeTestGeneration = true;
                 stepOptions.includeTestFixing = true;
-            } else if (mode === 'task-creation' || mode === 'task-creation-workflow') {
-                // Execute Task Creation Workflow using WorkflowLoaderService
+            } else if (mode === 'task-creation') {
+                // 🚀 TASK CREATION WORKFLOW - FILE-FIRST APPROACH
+                // 
+                // 🔄 EXECUTION FLOW:
+                // Frontend → WorkflowController → TaskService.queueTaskForExecution() → QueueTaskExecutionService → WorkflowExecutor → File Creation → Database Parsing
+                //
+                // 🎯 FILE-FIRST BENEFITS:
+                // - Files created first, then parsed to database
+                // - Consistent with task-review workflow
+                // - Proper file management and organization
+                // - Queue-based execution for reliability
+                //
+                // 📝 IMPLEMENTATION:
+                // Tasks are queued via TaskService.queueTaskForExecution() with taskMode: 'task-creation'
+                // QueueTaskExecutionService loads 'task-creation-workflow' from JSON
+                // WorkflowExecutor handles file creation and database parsing
+                
                 try {
-                    const workflowLoaderService = this.application?.workflowLoaderService;
-                    if (!workflowLoaderService) {
-                        throw new Error('WorkflowLoaderService not available');
-                    }
-
-                    // Get workflow based on task type or use default
-                    const taskType = req.body.task?.type || 'default';
-                    const workflow = workflowLoaderService.getWorkflowByTaskType(taskType);
+                    const taskData = req.body.task || {};
+                    const creationMode = req.body.options?.creationMode || 'normal';
                     
-                    // Execute the workflow with correct workflow type
-                    const result = await this.executeWorkflowSteps(workflow, req.body.task, projectId, userId, workspacePath, {
-                        ...req.body.options,
-                        workflowType: 'task-creation'
+                    this.logger.info('WorkflowController: Starting task creation workflow', {
+                        creationMode,
+                        projectId,
+                        userId,
+                        taskTitle: taskData.title
+                    });
+                    
+                    if (!taskData || !taskData.description) {
+                        throw new Error('Task description is required for task creation');
+                    }
+                    
+                    // Create a temporary task entry for workflow execution
+                    const tempTaskId = `temp-task-${Date.now()}`;
+                    
+                    // Determine workflow based on creation mode
+                    const taskMode = creationMode === 'normal' ? 'task-creation-workflow' : 'advanced-task-creation-workflow';
+                    
+                    // Add task to queue for proper workflow execution
+                    const queueResult = await this.taskService.queueTaskForExecution(tempTaskId, userId, {
+                        projectId: projectId,
+                        projectPath: workspacePath,
+                        priority: 'normal',
+                        taskMode: taskMode,
+                        autoExecute: true,
+                        createGitBranch: false,
+                        taskData: taskData,
+                        creationMode: creationMode
+                    });
+                    
+                    this.logger.info('WorkflowController: Task creation workflow queued', {
+                        tempTaskId,
+                        queueItemId: queueResult.queueItemId,
+                        position: queueResult.position,
+                        creationMode
                     });
                     
                     return res.status(200).json({
                         success: true,
-                        message: 'Task creation workflow executed successfully',
+                        message: `Task creation workflow started successfully`,
                         data: {
-                            workflowId: workflow.name,
-                            taskType,
-                            result
+                            workflowId: tempTaskId,
+                            queueItemId: queueResult.queueItemId,
+                            status: queueResult.status,
+                            position: queueResult.position,
+                            estimatedStartTime: queueResult.estimatedStartTime,
+                            creationMode: creationMode,
+                            taskMode: taskMode
                         }
                     });
                     
                 } catch (error) {
-                    this.logger.error('Task creation workflow failed:', error);
+                    this.logger.error('WorkflowController: Task creation workflow failed:', error);
                     return res.status(500).json({
                         success: false,
                         error: `Task creation workflow failed: ${error.message}`
@@ -824,7 +867,7 @@ class WorkflowController {
                 // - Concurrent execution control
                 //
                 // 📝 IMPLEMENTATION:
-                // Tasks are queued via TaskService.queueTaskForExecution() with workflowType: 'task-review'
+                // Tasks are queued via TaskService.queueTaskForExecution() with taskMode: 'task-review'
                 // QueueTaskExecutionService loads 'task-review-workflow' from JSON
                 // Queue Management handles execution, pausing, priorities
                 
@@ -862,15 +905,15 @@ class WorkflowController {
                             
                             // Use TaskService.queueTaskForExecution for queue-based execution
                             if (this.taskService && typeof this.taskService.queueTaskForExecution === 'function') {
-                                // Extract workflowType from options (consistent approach)
-                                const workflowType = req.body.options?.workflowType || 'task-review';
+                                // Extract taskMode from options (consistent approach)
+                                const taskMode = req.body.options?.taskMode || 'task-review';
                                 
                                 // Add task to queue with review-specific options
                                 const queueResult = await this.taskService.queueTaskForExecution(task.id, userId, {
                                     projectId: projectId,
                                     projectPath: workspacePath,
                                     priority: 'normal',
-                                    workflowType: workflowType,
+                                    taskMode: taskMode,
                                     autoExecute: true,
                                     createGitBranch: false
                                 });
@@ -1436,13 +1479,13 @@ class WorkflowController {
             // Add workflow to queue if queue monitoring service is available
             let queueItemId = null;
             if (this.taskQueueStore) {
-                // Use central WorkflowTypes for type detection
-                const WorkflowTypes = require('@domain/constants/WorkflowTypes');
-                const workflowType = WorkflowTypes.getTypeFromName(workflow.name);
+                // Use central taskModes for type detection
+                const taskModes = require('@domain/constants/taskModes');
+                const taskMode = taskModes.getTypeFromName(workflow.name);
                 
                 const queueItem = {
                     id: workflowId,
-                    type: workflowType,
+                    type: taskMode,
                     title: `${workflow.name} Workflow`,
                     description: `Executing ${workflow.steps.length} steps for project ${projectId}`,
                     status: 'running',
@@ -1598,12 +1641,12 @@ class WorkflowController {
             // Add to queue history when workflow completes
             if (this.queueHistoryService && queueItemId) {
                 try {
-                    const WorkflowTypes = require('@domain/constants/WorkflowTypes');
-                    const workflowType = WorkflowTypes.getTypeFromName(workflow.name);
+                    const taskModes = require('@domain/constants/taskModes');
+                    const taskMode = taskModes.getTypeFromName(workflow.name);
                     
                     await this.queueHistoryService.persistWorkflowHistory({
                         id: queueItemId,
-                        type: workflowType,
+                        type: taskMode,
                         status: results.success ? 'completed' : 'failed',
                         createdAt: new Date(startTime),
                         completedAt: new Date(),
@@ -1622,7 +1665,7 @@ class WorkflowController {
                     this.logger.info('WorkflowController: Added workflow to history', { 
                         workflowId, 
                         queueItemId, 
-                        workflowType 
+                        taskMode 
                     });
                 } catch (error) {
                     this.logger.error('WorkflowController: Failed to add workflow to history', {
@@ -1739,10 +1782,10 @@ class WorkflowController {
                         };
                         
                         // Check if this is a review workflow
-                        if (options.workflowType === 'task-review') {
+                        if (options.taskMode === 'task-review') {
                             const reviewPrompt = await this.taskService.buildTaskReviewPrompt(task, options);
                             stepOptions.message = reviewPrompt;
-                        } else if (options.workflowType === 'task-check-state') {
+                        } else if (options.taskMode === 'task-check-state') {
                             const checkStatePrompt = await this.taskService.buildTaskCheckStatePrompt(task, options);
                             stepOptions.message = checkStatePrompt;
                         } else {

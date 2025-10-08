@@ -79,10 +79,10 @@ class QueueRoutes {
     // ========================================
     
     // Detect workflow type
-    app.post('/api/projects/:projectId/queue/type-detect', (req, res) => this.queueController.detectWorkflowType(req, res));
+    app.post('/api/projects/:projectId/queue/type-detect', (req, res) => this.queueController.detectTaskMode(req, res));
     
     // Get available workflow types
-    app.get('/api/projects/:projectId/queue/types', (req, res) => this.queueController.getWorkflowTypes(req, res));
+    app.get('/api/projects/:projectId/queue/types', (req, res) => this.queueController.getTaskModes(req, res));
 
     // ========================================
     // QUEUE MAINTENANCE ROUTES - Cleanup Operations

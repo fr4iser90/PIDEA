@@ -813,7 +813,7 @@ class AutoFinishSystem {
             projectPath: task.metadata.projectPath,
             task,
             options: { ...options, sessionId },
-            workflowType: 'auto-finish-task'
+            taskMode: 'auto-finish-task'
           });
 
           const result = await this.gitWorkflowManager.executeWorkflow(context);

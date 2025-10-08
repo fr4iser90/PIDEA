@@ -77,7 +77,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue('main');
@@ -101,7 +101,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       mockGitService.getCurrentBranch.mockRejectedValue(new Error('Git service error'));
@@ -118,7 +118,7 @@ describe('GitWorkflowManager', () => {
         projectPath: '',
         task: null,
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       await expect(gitWorkflowManager.createBranch(invalidContext))
@@ -136,7 +136,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue('main');
@@ -148,7 +148,7 @@ describe('GitWorkflowManager', () => {
 
       expect(result).toBeInstanceOf(GitWorkflowResult);
       expect(result.success).toBe(true);
-      expect(result.workflowType).toBe('workflow-execution');
+      expect(result.taskMode).toBe('workflow-execution');
       expect(mockEventBus.publish).toHaveBeenCalledWith('git.workflow.executed', expect.any(Object));
     });
 
@@ -161,7 +161,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'workflow-execution'
+        taskMode: 'workflow-execution'
       });
 
       mockGitService.getCurrentBranch.mockRejectedValue(new Error('Workflow execution error'));
@@ -184,7 +184,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: { autoMerge: true },
-        workflowType: 'workflow-completion',
+        taskMode: 'workflow-completion',
         branchName: 'feature/test-task'
       });
 
@@ -211,7 +211,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: { autoMerge: false },
-        workflowType: 'workflow-completion',
+        taskMode: 'workflow-completion',
         branchName: 'feature/test-task'
       });
 
@@ -237,7 +237,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'pull-request-creation',
+        taskMode: 'pull-request-creation',
         branchName: 'feature/test-task'
       });
 
@@ -258,7 +258,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'pull-request-creation',
+        taskMode: 'pull-request-creation',
         branchName: 'feature/test-task'
       });
 
@@ -283,7 +283,7 @@ describe('GitWorkflowManager', () => {
         projectPath: '',
         task: { id: 'task-1', title: 'Test' },
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       await expect(gitWorkflowManager.createBranch(context))
@@ -295,7 +295,7 @@ describe('GitWorkflowManager', () => {
         projectPath: '/test/project',
         task: null,
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       await expect(gitWorkflowManager.createBranch(context))
@@ -313,7 +313,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue('main');
@@ -334,7 +334,7 @@ describe('GitWorkflowManager', () => {
           type: { value: 'feature' }
         },
         options: {},
-        workflowType: 'branch-creation'
+        taskMode: 'branch-creation'
       });
 
       mockGitService.getCurrentBranch.mockRejectedValue(new Error('Git error'));

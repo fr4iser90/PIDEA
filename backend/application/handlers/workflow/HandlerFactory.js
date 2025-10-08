@@ -116,7 +116,7 @@ class HandlerFactory {
     }
     
     // Check for workflow handler patterns
-    if (request.workflow || request.workflowType) {
+    if (request.workflow || request.taskMode) {
       return 'workflow';
     }
     

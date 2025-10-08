@@ -56,7 +56,7 @@ class QueueRepository {
         try {
             this.logger.info('Adding item to queue', { 
                 projectId, 
-                workflowType: workflow?.type,
+                taskMode: workflow?.type,
                 priority: options.priority || 'normal'
             });
 
@@ -89,7 +89,7 @@ class QueueRepository {
         } catch (error) {
             this.logger.error('Failed to add item to queue', { 
                 projectId, 
-                workflowType: workflow?.type,
+                taskMode: workflow?.type,
                 error: error.message 
             });
             throw error;
@@ -378,7 +378,7 @@ class QueueRepository {
                 new Date(item.estimatedStartTime).toLocaleString() : null,
             priorityLabel: this.getPriorityLabel(item.options?.priority),
             statusLabel: this.getStatusLabel(item.status),
-            workflowTypeLabel: this.getWorkflowTypeLabel(item.workflow?.type)
+            taskModeLabel: this.gettaskModeLabel(item.workflow?.type)
         };
     }
 
@@ -418,7 +418,7 @@ class QueueRepository {
      * @param {string} type - Workflow type
      * @returns {string} Workflow type label
      */
-    getWorkflowTypeLabel(type) {
+    gettaskModeLabel(type) {
         const labels = {
             refactoring: 'Refactoring',
             testing: 'Testing',
@@ -679,7 +679,7 @@ class QueueRepository {
      * @param {string} taskId - Task identifier
      * @returns {Promise<string>} Workflow type
      */
-    async getWorkflowType(projectId, taskId) {
+    async gettaskMode(projectId, taskId) {
         try {
             this.logger.debug('Loading workflow type for active task', { projectId, taskId });
 
@@ -702,7 +702,7 @@ class QueueRepository {
      * @param {Object} workflowData - Workflow data to analyze
      * @returns {Promise<Object>} Detection result
      */
-    async detectWorkflowType(projectId, workflowData) {
+    async detecttaskMode(projectId, workflowData) {
         try {
             this.logger.debug('Detecting workflow type', { projectId, workflowId: workflowData?.id });
 
@@ -741,7 +741,7 @@ class QueueRepository {
      * Get list of all known workflow types
      * @returns {Promise<Object>} Workflow types
      */
-    async getWorkflowTypes(projectId) {
+    async gettaskModes(projectId) {
         try {
             this.logger.debug('Getting workflow types', { projectId });
 

@@ -7,7 +7,7 @@ const Logger = require('@logging/Logger');
 const TaskQueueStore = require('@domain/services/queue/TaskQueueStore');
 const StepProgressService = require('@domain/services/queue/StepProgressService');
 const QueueHistoryService = require('@domain/services/queue/QueueHistoryService');
-const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
+const TaskModeDetector = require('@domain/services/queue/TaskModeDetector');
 
 class QueueController {
     constructor(dependencies = {}) {
@@ -15,7 +15,7 @@ class QueueController {
         this.taskQueueStore = dependencies.taskQueueStore || new TaskQueueStore(dependencies);
         this.stepProgressService = dependencies.stepProgressService || new StepProgressService(dependencies);
         this.queueHistoryService = dependencies.queueHistoryService || new QueueHistoryService(dependencies);
-        this.workflowTypeDetector = dependencies.workflowTypeDetector || new WorkflowTypeDetector(dependencies);
+        this.TaskModeDetector = dependencies.TaskModeDetector || new TaskModeDetector(dependencies);
         this.eventBus = dependencies.eventBus;
     }
 
@@ -60,7 +60,7 @@ class QueueController {
             const { userId } = req.user;
             const { workflow, context, options } = req.body;
 
-            this.logger.info('Adding item to queue', { projectId, userId, workflowType: workflow?.type });
+            this.logger.info('Adding item to queue', { projectId, userId, taskMode: workflow?.type });
 
             const queueItem = await this.taskQueueStore.addToProjectQueue(
                 projectId, 
@@ -510,7 +510,7 @@ class QueueController {
      * @param {Object} req - Express request object
      * @param {Object} res - Express response object
      */
-    async detectWorkflowType(req, res) {
+    async detectTaskMode(req, res) {
         try {
             const { projectId } = req.params;
             const userId = req.user?.id || 'me';
@@ -522,7 +522,7 @@ class QueueController {
                 workflowId: workflowData?.id 
             });
 
-            const result = await this.workflowTypeDetector.detectWorkflowType(workflowData);
+            const result = await this.TaskModeDetector.detectTaskMode(workflowData);
 
             res.json({
                 success: true,
@@ -548,14 +548,14 @@ class QueueController {
      * @param {Object} req - Express request object
      * @param {Object} res - Express response object
      */
-    async getWorkflowTypes(req, res) {
+    async getTaskModes(req, res) {
         try {
             const { projectId } = req.params;
             const userId = req.user?.id || 'me';
 
             this.logger.info('Getting workflow types', { projectId, userId });
 
-            const types = this.workflowTypeDetector.getKnownTypes();
+            const types = this.TaskModeDetector.getKnownTypes();
 
             res.json({
                 success: true,

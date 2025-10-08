@@ -33,10 +33,23 @@ class QueueTaskExecutionService {
                 priority: options.priority || 'normal'
             });
 
-            // Validate task exists and belongs to project
-            const task = await this.taskRepository.findById(taskId);
-            if (!task) {
-                throw new Error(`Task not found: ${taskId}`);
+            // For task creation workflows, skip task validation since task doesn't exist yet
+            let task = null;
+            if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
+                this.logger.info('Task creation workflow detected, skipping task validation');
+                // Create a minimal task object for task creation workflows
+                task = {
+                    id: taskId,
+                    title: options.taskData?.title || 'New Task',
+                    type: { value: options.taskData?.type || 'feature' },
+                    description: options.taskData?.description || ''
+                };
+            } else {
+                // Validate task exists and belongs to project
+                task = await this.taskRepository.findById(taskId);
+                if (!task) {
+                    throw new Error(`Task not found: ${taskId}`);
+                }
             }
 
             // Load workflow configuration
@@ -47,12 +60,12 @@ class QueueTaskExecutionService {
             // Determine workflow based on options or task type
             let workflowName = 'standard-task-workflow';
             
-            if (options.workflowType === 'task-review') {
+            if (options.taskMode === 'task-review') {
                 workflowName = 'task-review-workflow';
-            } else if (options.workflowType === 'task-check-state') {
+            } else if (options.taskMode === 'task-check-state') {
                 workflowName = 'task-review-workflow'; // Use same workflow but different prompt
-            } else if (options.workflowType) {
-                workflowName = options.workflowType;
+            } else if (options.taskMode) {
+                workflowName = options.taskMode;
             }
             
             // Get workflow

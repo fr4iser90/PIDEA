@@ -202,7 +202,7 @@
 ### Files to Modify:
 - [ ] `backend/domain/workflows/WorkflowComposer.js` - Add new workflow types
 - [ ] `backend/domain/steps/StepRegistry.js` - Register new steps
-- [ ] `backend/domain/constants/WorkflowTypes.js` - Add new workflow types
+- [ ] `backend/domain/constants/taskModes.js` - Add new workflow types
 - [ ] `backend/presentation/api/WorkflowController.js` - Add new endpoints
 - [ ] `frontend/src/components/WorkflowBuilder/WorkflowComposer.jsx` - Add new workflow types
 

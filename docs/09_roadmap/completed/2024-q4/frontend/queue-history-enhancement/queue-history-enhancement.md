@@ -17,7 +17,7 @@
   - **Impact**: Users see different workflow types in UI vs actual execution
 
 #### 2. **Missing Intelligent Type Detection**
-- [ ] **File**: `backend/domain/services/queue/WorkflowTypeDetector.js` - Status: Not found, needs creation
+- [ ] **File**: `backend/domain/services/queue/TaskModeDetector.js` - Status: Not found, needs creation
 - [ ] **Feature**: Step-based type detection - Status: Not implemented
 - [ ] **Feature**: Metadata-based type detection - Status: Not implemented
 - [ ] **Feature**: Execution pattern analysis - Status: Not implemented
@@ -41,7 +41,7 @@
 
 **Frontend Implementation** (`QueueRepository.jsx`):
 ```javascript
-getWorkflowTypeLabel(type) {
+gettaskModeLabel(type) {
     const labels = {
         task: 'Task',
         analysis: 'Analysis', 
@@ -57,7 +57,7 @@ getWorkflowTypeLabel(type) {
 
 **Backend Implementation** (`TaskType.js`):
 ```javascript
-getWorkflowType() {
+gettaskMode() {
     if (this.isRefactor()) return 'refactoring';
     else if (this.isTest()) return 'testing';
     else if (this.isAnalysis()) return 'analysis';
@@ -73,7 +73,7 @@ getWorkflowType() {
 
 **TaskService Implementation**:
 ```javascript
-determineWorkflowType(task) {
+determinetaskMode(task) {
     const taskType = task.type?.value?.toLowerCase() || '';
     
     if (taskType.includes('refactor') || taskType.includes('refactoring')) {
@@ -111,14 +111,14 @@ determineWorkflowType(task) {
 - [ ] **Remove All Fallbacks**: Replace fallback mechanisms with strict error throwing
 
 #### 2. **Intelligent Detection Implementation (High Priority)**
-- [ ] **Create WorkflowTypeDetector Service**: Implement intelligent type detection with strict error handling
+- [ ] **Create TaskModeDetector Service**: Implement intelligent type detection with strict error handling
 - [ ] **Step Analysis**: Analyze workflow steps to determine type
 - [ ] **Metadata Analysis**: Use workflow metadata for type detection
 - [ ] **Pattern Recognition**: Implement execution pattern analysis
 - [ ] **Error Handling**: Throw specific errors for unrecognized types, no fallbacks
 
 #### 3. **Enhanced UI Components (Medium Priority)**
-- [ ] **WorkflowTypeBadge Component**: Visual type indicators with icons
+- [ ] **taskModeBadge Component**: Visual type indicators with icons
 - [ ] **Type Confidence Display**: Show confidence level for detected types
 - [ ] **Type Filtering**: Allow filtering by workflow type in history
 
@@ -133,7 +133,7 @@ determineWorkflowType(task) {
 #### **Subtask 1**: Workflow Type Detection Foundation (14 hours)
 - **Focus**: Backend intelligent type detection
 - **Files**: 
-  - `backend/domain/services/queue/WorkflowTypeDetector.js` (new)
+  - `backend/domain/services/queue/TaskModeDetector.js` (new)
   - `backend/domain/services/queue/QueueMonitoringService.js` (enhance)
   - `backend/presentation/api/QueueController.js` (enhance)
 - **Dependencies**: None
@@ -143,7 +143,7 @@ determineWorkflowType(task) {
 - **Focus**: Frontend type display and consistency
 - **Files**:
   - `frontend/src/infrastructure/repositories/QueueRepository.jsx` (enhance)
-  - `frontend/src/presentation/components/queue/WorkflowTypeBadge.jsx` (new)
+  - `frontend/src/presentation/components/queue/taskModeBadge.jsx` (new)
   - `frontend/src/presentation/components/queue/QueueManagementPanel.jsx` (enhance)
 - **Dependencies**: Subtask 1 completion
 - **Deliverables**: Enhanced type display, visual badges, consistent mapping

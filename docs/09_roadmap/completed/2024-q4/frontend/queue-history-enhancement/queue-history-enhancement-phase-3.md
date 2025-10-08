@@ -11,7 +11,7 @@
 
 ## 🎯 Phase Objectives
 - [ ] Create QueueHistoryPanel component with filtering and search
-- [ ] Implement WorkflowTypeBadge component with visual indicators
+- [ ] Implement taskModeBadge component with visual indicators
 - [ ] Enhance QueueRepository with history API calls
 - [ ] Add enhanced type detection to frontend
 - [ ] Create queue history panel CSS styling
@@ -25,7 +25,7 @@
   - **Key Features**: History list, filters, search, pagination, export functionality
   - **Error Handling**: Display specific error messages for API failures
 
-- [ ] `frontend/src/presentation/components/queue/WorkflowTypeBadge.jsx` - Workflow type display component
+- [ ] `frontend/src/presentation/components/queue/taskModeBadge.jsx` - Workflow type display component
   - **Purpose**: Visual type indicators with icons and color coding
   - **Key Features**: Type badges, color coding, icons, tooltips
   - **Error Handling**: Show error state for unknown types
@@ -35,7 +35,7 @@
   - **Purpose**: Frontend service for queue history operations
   - **Key Features**: API calls, caching, error handling, data transformation
 
-- [ ] `frontend/src/infrastructure/services/WorkflowTypeService.js` - Frontend type detection service
+- [ ] `frontend/src/infrastructure/services/taskModeService.js` - Frontend type detection service
   - **Purpose**: Frontend service for workflow type operations
   - **Key Features**: Type detection, validation, error handling
 
@@ -46,16 +46,16 @@
 
 ### Test Files
 - [ ] `frontend/tests/unit/components/queue/QueueHistoryPanel.test.jsx` - Queue history panel tests
-- [ ] `frontend/tests/unit/components/queue/WorkflowTypeBadge.test.jsx` - Workflow type badge tests
+- [ ] `frontend/tests/unit/components/queue/taskModeBadge.test.jsx` - Workflow type badge tests
 - [ ] `frontend/tests/unit/services/QueueHistoryService.test.js` - Queue history service tests
-- [ ] `frontend/tests/unit/services/WorkflowTypeService.test.js` - Workflow type service tests
+- [ ] `frontend/tests/unit/services/taskModeService.test.js` - Workflow type service tests
 
 ## 📁 Files to Modify
 
 ### Existing Components
 - [ ] `frontend/src/infrastructure/repositories/QueueRepository.jsx` - Add history API calls and enhanced type detection
   - **Enhancements**: Add history methods, remove fallback mechanisms, add strict error handling
-  - **New Methods**: getQueueHistory, getHistoryItem, deleteHistory, detectWorkflowType
+  - **New Methods**: getQueueHistory, getHistoryItem, deleteHistory, detecttaskMode
 
 ## 🔧 Implementation Details
 
@@ -63,7 +63,7 @@
 ```jsx
 import React, { useState, useEffect } from 'react';
 import { useQueueHistory } from '@/hooks/useQueueHistory';
-import { WorkflowTypeBadge } from './WorkflowTypeBadge';
+import { taskModeBadge } from './taskModeBadge';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import '@/css/panel/queue-panel.css';
 
@@ -312,7 +312,7 @@ const QueueHistoryItem = ({ item }) => {
     <div className="queue-history-item">
       <div className="history-item-header">
         <div className="history-item-type">
-          <WorkflowTypeBadge type={item.type} />
+          <taskModeBadge type={item.type} />
         </div>
         <div className="history-item-status">
           <span className={`status-badge status-${item.status}`}>
@@ -348,12 +348,12 @@ const QueueHistoryItem = ({ item }) => {
 export default QueueHistoryPanel;
 ```
 
-### WorkflowTypeBadge Component
+### taskModeBadge Component
 ```jsx
 import React from 'react';
 import '@/css/panel/queue-panel.css';
 
-const WorkflowTypeBadge = ({ type, showIcon = true, size = 'medium' }) => {
+const taskModeBadge = ({ type, showIcon = true, size = 'medium' }) => {
   // Strict type validation - throw error for unknown types
   const validateType = (type) => {
     const validTypes = [
@@ -468,7 +468,7 @@ const WorkflowTypeBadge = ({ type, showIcon = true, size = 'medium' }) => {
   }
 };
 
-export default WorkflowTypeBadge;
+export default taskModeBadge;
 ```
 
 ### Enhanced QueueRepository
@@ -545,7 +545,7 @@ class QueueRepository {
     }
   }
 
-  async detectWorkflowType(workflowData) {
+  async detecttaskMode(workflowData) {
     try {
       if (!workflowData || !workflowData.steps) {
         throw new Error('Workflow data with steps is required');
@@ -566,7 +566,7 @@ class QueueRepository {
     }
   }
 
-  async getWorkflowTypes() {
+  async gettaskModes() {
     try {
       const response = await apiCall(`${this.baseUrl}/types`);
       
@@ -581,7 +581,7 @@ class QueueRepository {
   }
 
   // Remove fallback mechanisms from existing methods
-  getWorkflowTypeLabel(type) {
+  gettaskModeLabel(type) {
     // Strict type mapping - throw error for unknown types
     const labels = {
       refactoring: 'Refactoring',
@@ -1050,15 +1050,15 @@ describe('QueueHistoryPanel', () => {
 });
 ```
 
-### Unit Tests for WorkflowTypeBadge
+### Unit Tests for taskModeBadge
 ```javascript
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import WorkflowTypeBadge from './WorkflowTypeBadge';
+import taskModeBadge from './taskModeBadge';
 
-describe('WorkflowTypeBadge', () => {
+describe('taskModeBadge', () => {
   it('should render known workflow type', () => {
-    render(<WorkflowTypeBadge type="refactoring" />);
+    render(<taskModeBadge type="refactoring" />);
     expect(screen.getByText('Refactoring')).toBeInTheDocument();
     expect(screen.getByText('🔄')).toBeInTheDocument();
   });
@@ -1066,7 +1066,7 @@ describe('WorkflowTypeBadge', () => {
   it('should throw error for unknown type', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     
-    render(<WorkflowTypeBadge type="unknown_type" />);
+    render(<taskModeBadge type="unknown_type" />);
     expect(screen.getByText('Unknown Type')).toBeInTheDocument();
     expect(screen.getByText('❌')).toBeInTheDocument();
     
@@ -1074,13 +1074,13 @@ describe('WorkflowTypeBadge', () => {
   });
 
   it('should render without icon when showIcon is false', () => {
-    render(<WorkflowTypeBadge type="testing" showIcon={false} />);
+    render(<taskModeBadge type="testing" showIcon={false} />);
     expect(screen.getByText('Testing')).toBeInTheDocument();
     expect(screen.queryByText('🧪')).not.toBeInTheDocument();
   });
 
   it('should apply correct size class', () => {
-    const { container } = render(<WorkflowTypeBadge type="analysis" size="large" />);
+    const { container } = render(<taskModeBadge type="analysis" size="large" />);
     expect(container.firstChild).toHaveClass('workflow-type-large');
   });
 });
@@ -1101,7 +1101,7 @@ describe('WorkflowTypeBadge', () => {
 
 ## ✅ Success Criteria
 - [ ] QueueHistoryPanel renders correctly with all features
-- [ ] WorkflowTypeBadge displays all known types with proper styling
+- [ ] taskModeBadge displays all known types with proper styling
 - [ ] Enhanced QueueRepository works without fallback mechanisms
 - [ ] All components handle errors gracefully
 - [ ] CSS styling is responsive and accessible
@@ -1157,7 +1157,7 @@ describe('WorkflowTypeBadge', () => {
 
 #### 5. **Missing Service Files**
 - [ ] **File**: `frontend/src/infrastructure/services/QueueHistoryService.js` - Status: Not found, needs creation
-- [ ] **File**: `frontend/src/infrastructure/services/WorkflowTypeService.js` - Status: Not found, needs creation
+- [ ] **File**: `frontend/src/infrastructure/services/taskModeService.js` - Status: Not found, needs creation
 - [ ] **Impact**: Service layer abstraction missing
 
 ### 🔧 Improvements Made
@@ -1175,7 +1175,7 @@ describe('WorkflowTypeBadge', () => {
 
 ### 🚀 Next Steps
 1. Create missing hook: `frontend/src/hooks/useQueueHistory.js`
-2. Create missing service files: QueueHistoryService and WorkflowTypeService
+2. Create missing service files: QueueHistoryService and taskModeService
 3. Create missing component: ErrorBoundary
 4. Update existing QueueRepository with new methods
 5. Add unit tests for all new components
@@ -1190,8 +1190,8 @@ describe('WorkflowTypeBadge', () => {
 
 ### 🔄 Integration Points
 - **QueueManagementPanel**: Will integrate QueueHistoryPanel as new tab
-- **StepTimeline**: Will use WorkflowTypeBadge for type display
-- **ActiveTaskItem**: Will use WorkflowTypeBadge for type display
+- **StepTimeline**: Will use taskModeBadge for type display
+- **ActiveTaskItem**: Will use taskModeBadge for type display
 - **QueueRepository**: Will be enhanced with history methods
 - **WebSocketService**: Will provide real-time updates for history
 

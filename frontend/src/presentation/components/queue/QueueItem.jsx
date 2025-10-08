@@ -99,7 +99,7 @@ const QueueItem = ({ item, showActions = true }) => {
                         {getDisplayName(item)}
                     </div>
                     <div className="item-meta">
-                        <span className="item-type">{formattedItem.workflowTypeLabel}</span>
+                        <span className="item-type">{formattedItem.taskModeLabel}</span>
                         <span className="item-position">#{item.position}</span>
                         <span className="item-added">
                             {formattedItem.formattedAddedAt}

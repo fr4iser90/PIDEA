@@ -38,16 +38,16 @@
 
 ### Integration Tests
 - [ ] `backend/tests/integration/api/QueueHistory.test.js` - History API integration tests
-- [ ] `backend/tests/integration/api/WorkflowTypeDetection.test.js` - Type detection API tests
+- [ ] `backend/tests/integration/api/taskModeDetection.test.js` - Type detection API tests
 
 ## 🔧 Implementation Details
 
 ### QueueController Enhancements
 ```javascript
 class QueueController {
-  constructor(queueHistoryService, workflowTypeDetector, logger) {
+  constructor(queueHistoryService, TaskModeDetector, logger) {
     this.historyService = queueHistoryService;
-    this.typeDetector = workflowTypeDetector;
+    this.typeDetector = TaskModeDetector;
     this.logger = logger;
   }
 
@@ -135,7 +135,7 @@ class QueueController {
   }
 
   // Type Detection Endpoints
-  async detectWorkflowType(req, res) {
+  async detecttaskMode(req, res) {
     try {
       const { workflowData } = req.body;
       
@@ -144,7 +144,7 @@ class QueueController {
         throw new InvalidWorkflowDataError('Workflow data with steps is required');
       }
       
-      const detectedType = this.typeDetector.detectWorkflowType(workflowData);
+      const detectedType = this.typeDetector.detecttaskMode(workflowData);
       
       res.json({
         success: true,
@@ -167,7 +167,7 @@ class QueueController {
     }
   }
 
-  async getWorkflowTypes(req, res) {
+  async gettaskModes(req, res) {
     try {
       const types = this.typeDetector.getKnownTypes();
       
@@ -233,9 +233,9 @@ class QueueController {
 ### WebSocket Event Updates
 ```javascript
 class QueueWebSocketHandler {
-  constructor(queueHistoryService, workflowTypeDetector, logger) {
+  constructor(queueHistoryService, TaskModeDetector, logger) {
     this.historyService = queueHistoryService;
-    this.typeDetector = workflowTypeDetector;
+    this.typeDetector = TaskModeDetector;
     this.logger = logger;
   }
 
@@ -264,7 +264,7 @@ class QueueWebSocketHandler {
   // Real-time Type Detection
   async handleTypeDetection(workflowId, workflowData) {
     try {
-      const detectedType = this.typeDetector.detectWorkflowType(workflowData);
+      const detectedType = this.typeDetector.detecttaskMode(workflowData);
       
       this.broadcast('queue.type.detected', {
         workflowId,
@@ -320,8 +320,8 @@ router.get('/api/queue/history/:id', queueController.getQueueHistoryItem.bind(qu
 router.delete('/api/queue/history', queueController.deleteQueueHistory.bind(queueController));
 
 // Workflow Type Detection Routes
-router.post('/api/queue/type-detect', queueController.detectWorkflowType.bind(queueController));
-router.get('/api/queue/types', queueController.getWorkflowTypes.bind(queueController));
+router.post('/api/queue/type-detect', queueController.detecttaskMode.bind(queueController));
+router.get('/api/queue/types', queueController.gettaskModes.bind(queueController));
 ```
 
 ## 🧪 Testing Strategy
@@ -411,7 +411,7 @@ describe('Workflow Type Detection API', () => {
         .send({ workflowData });
       
       expect(response.status).toBe(400);
-      expect(response.body.code).toBe('UnknownWorkflowTypeError');
+      expect(response.body.code).toBe('UnknowntaskModeError');
     });
 
     it('should throw error for invalid workflow data', async () => {

@@ -99,7 +99,7 @@ class TaskExecutionEngine {
         try {
             this.logger.info('TaskExecutionEngine: Starting workflow execution', {
                 taskId: taskId,
-                workflowType: options.workflowType,
+                taskMode: options.taskMode,
                 userId: options.userId
             });
 
@@ -111,10 +111,10 @@ class TaskExecutionEngine {
 
             // Determine workflow based on options
             let workflowName = 'standard-task-workflow';
-            if (options.workflowType === 'task-review') {
+            if (options.taskMode === 'task-review') {
                 workflowName = 'task-review-workflow';
-            } else if (options.workflowType) {
-                workflowName = options.workflowType;
+            } else if (options.taskMode) {
+                workflowName = options.taskMode;
             }
 
             // Load workflow definition
@@ -130,7 +130,7 @@ class TaskExecutionEngine {
                 userId: options.userId,
                 projectId: options.projectId,
                 projectPath: options.projectPath,
-                workflowType: options.workflowType,
+                taskMode: options.taskMode,
                 ...options
             };
 

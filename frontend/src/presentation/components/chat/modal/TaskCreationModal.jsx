@@ -17,6 +17,7 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [createdTask, setCreatedTask] = useState(null);
+  const [creationMode, setCreationMode] = useState('normal'); // 'normal' or 'advanced'
 
   const taskCreationService = new TaskCreationService();
   const taskReviewService = new TaskReviewService();
@@ -38,6 +39,7 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
     setIsReviewModalOpen(false);
     setIsGeneratingPlan(false);
     setCreatedTask(null);
+    setCreationMode('normal');
   };
 
   const handleFormSubmit = async (data) => {
@@ -46,8 +48,16 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
       setCurrentStep('create');
       setIsGeneratingPlan(true);
 
-      // STEP 1: CREATE - Create task using TaskCreationService with task-create.md
-      const createdTaskResult = await taskCreationService.startTaskCreationWorkflow(data);
+      let createdTaskResult;
+      
+      if (creationMode === 'advanced') {
+        // Advanced Mode: Advanced workflow with comprehensive analysis
+        createdTaskResult = await taskCreationService.startAdvancedTaskCreation(data);
+      } else {
+        // Normal Mode: Standard workflow with basic configuration
+        createdTaskResult = await taskCreationService.startTaskCreationWorkflow(data);
+      }
+      
       setCreatedTask(createdTaskResult);
       
       // STEP 2: REVIEW - Generate review plan using TaskReviewService with task-review.md
@@ -180,6 +190,7 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
             onCancel={handleClose}
             isGeneratingPlan={isGeneratingPlan}
             errors={errors}
+            creationMode={creationMode}
           />
         );
       
@@ -220,6 +231,44 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
           <div className="modal-header">
             <h2>🚀 Create New Task</h2>
             <button className="modal-close-btn" onClick={handleClose}>×</button>
+          </div>
+          
+          {/* Creation Mode Toggle */}
+          <div className="creation-mode-toggle">
+            <label className="toggle-label">
+              <span className="toggle-text">Mode:</span>
+              <div className="toggle-switch">
+              <input
+                type="radio"
+                name="creationMode"
+                value="normal"
+                checked={creationMode === 'normal'}
+                onChange={(e) => setCreationMode(e.target.value)}
+                id="mode-normal"
+              />
+              <label htmlFor="mode-normal" className="toggle-option">
+                📋 Normal Creation
+              </label>
+
+              <input
+                type="radio"
+                name="creationMode"
+                value="advanced"
+                checked={creationMode === 'advanced'}
+                onChange={(e) => setCreationMode(e.target.value)}
+                id="mode-advanced"
+              />
+              <label htmlFor="mode-advanced" className="toggle-option">
+                🔬 Advanced Creation
+              </label>
+              </div>
+            </label>
+            <div className="mode-description">
+            {creationMode === 'normal'
+              ? 'AI analyzes your description and automatically determines title, category, priority, and creates files.'
+              : 'You manually configure all task details including title, category, priority, and type.'
+            }
+            </div>
           </div>
           
           <div className="modal-content">

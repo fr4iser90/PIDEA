@@ -80,7 +80,7 @@ class QueueHistoryService {
       // Prepare history data
       const historyData = {
         workflowId: workflowData.id,
-        workflowType: workflowData.type,
+        taskMode: workflowData.type,
         status: workflowData.status,
         createdAt: workflowData.createdAt || new Date().toISOString(),
         completedAt: workflowData.completedAt || null,
@@ -333,9 +333,9 @@ class QueueHistoryService {
    */
   validateFilters(filters) {
     const validFilters = ['type', 'status', 'startDate', 'endDate', 'search'];
-    // Use central WorkflowTypes constants
-    const WorkflowTypes = require('@domain/constants/WorkflowTypes');
-    const validTypes = WorkflowTypes.getAllTypes();
+    // Use central taskModes constants
+    const taskModes = require('@domain/constants/taskModes');
+    const validTypes = taskModes.getAllTypes();
     const validStatuses = ['completed', 'failed', 'cancelled'];
 
     // Check for invalid filter keys
@@ -402,7 +402,7 @@ class QueueHistoryService {
       const csvRows = result.items.map(item => {
         const duration = item.executionTimeMs || '';
         const errorMessage = item.errorMessage ? `"${item.errorMessage.replace(/"/g, '""')}"` : '';
-        return `${item.id},${item.workflowType},${item.status},${item.createdAt},${item.completedAt || ''},${duration},${errorMessage}`;
+        return `${item.id},${item.taskMode},${item.status},${item.createdAt},${item.completedAt || ''},${duration},${errorMessage}`;
       });
 
       const csv = csvHeader + csvRows.join('\n');

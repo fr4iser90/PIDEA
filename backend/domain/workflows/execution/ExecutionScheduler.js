@@ -246,8 +246,8 @@ class ExecutionScheduler {
     let estimatedDuration = stepCount * 30000;
     
     // Adjust based on workflow type
-    const workflowType = workflow.getType();
-    switch (workflowType) {
+    const taskMode = workflow.getType();
+    switch (taskMode) {
       case 'analysis':
         estimatedDuration *= 1.5; // Analysis workflows take longer
         break;
@@ -284,8 +284,8 @@ class ExecutionScheduler {
     };
     
     // Adjust based on workflow type
-    const workflowType = workflow.getType();
-    switch (workflowType) {
+    const taskMode = workflow.getType();
+    switch (taskMode) {
       case 'analysis':
         requirements.memory *= 1.5; // Analysis needs more memory
         break;

@@ -8,7 +8,7 @@ import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
-import WorkflowTypeBadge from './WorkflowTypeBadge.jsx';
+import TaskModeBadge from './TaskModeBadge.jsx';
 import '@/css/panel/queue-history-panel.css';
 
 const QueueHistoryPanel = ({ eventBus, activePort }) => {
@@ -420,7 +420,7 @@ const QueueHistoryPanel = ({ eventBus, activePort }) => {
                             >
                                 <div className="history-item-header">
                                     <div className="history-item-type">
-                                        <WorkflowTypeBadge type={item.workflowType} />
+                                        <TaskModeBadge type={item.taskMode} />
                                     </div>
                                     <div className="history-item-status">
                                         <span className={`status-badge ${item.status}`}>

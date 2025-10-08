@@ -1,10 +1,10 @@
 /**
- * WorkflowTypes - Central constants for all workflow types
- * Single source of truth for workflow type definitions
+ * TaskModes - Central constants for all task modes
+ * Single source of truth for task mode definitions
  */
 
-const WorkflowTypes = {
-  // Core workflow types
+const taskModes = {
+  // Core task modes
   REFACTORING: 'refactoring',
   TESTING: 'testing', 
   ANALYSIS: 'analysis',
@@ -16,9 +16,10 @@ const WorkflowTypes = {
   SECURITY: 'security',
   GENERIC: 'generic',
 
-  // Special workflow types
+  // Special task modes
   TASK: 'task',
   TASK_REVIEW: 'task-review',
+  TASK_CHECK_STATE: 'task-check-state',
   WORKFLOW_EXECUTION: 'workflow-execution',
   BRANCH_CREATION: 'branch-creation',
   WORKFLOW_COMPLETION: 'workflow-completion',
@@ -36,7 +37,9 @@ const WorkflowTypes = {
       this.MANUAL,
       this.OPTIMIZATION,
       this.SECURITY,
-      this.GENERIC
+      this.GENERIC,
+      this.TASK_REVIEW,
+      this.TASK_CHECK_STATE
     ];
   },
 
@@ -50,14 +53,16 @@ const WorkflowTypes = {
     return this.getKnownTypesSet().has(type);
   },
 
-  // Get workflow type from workflow name
-  getTypeFromName(workflowName) {
+  // Get task mode from workflow name
+  getModeFromName(workflowName) {
     if (!workflowName) return this.GENERIC;
     
     const name = workflowName.toLowerCase();
     
     if (name.includes('task-review') || name.includes('task_review')) {
       return this.TASK_REVIEW;
+    } else if (name.includes('task-check-state') || name.includes('check-state')) {
+      return this.TASK_CHECK_STATE;
     } else if (name.includes('comprehensive') || name.includes('analysis')) {
       return this.ANALYSIS;
     } else if (name.includes('refactor')) {
@@ -80,4 +85,4 @@ const WorkflowTypes = {
   }
 };
 
-module.exports = WorkflowTypes; 
+module.exports = taskModes;

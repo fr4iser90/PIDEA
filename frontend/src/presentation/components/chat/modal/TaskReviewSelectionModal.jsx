@@ -149,8 +149,8 @@ const TaskReviewSelectionModal = ({
 
   const handleStartReview = () => {
     const selectedTaskList = tasks.filter(task => selectedTasks.has(task.id));
-    const workflowType = reviewMode === 'check-state' ? 'task-check-state' : 'task-review';
-    onStartReview(selectedTaskList, workflowType);
+    const taskMode = reviewMode === 'check-state' ? 'task-check-state' : 'task-review';
+    onStartReview(selectedTaskList, taskMode);
   };
 
   const toggleTaskExpansion = (taskId) => {

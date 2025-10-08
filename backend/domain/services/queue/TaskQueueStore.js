@@ -87,7 +87,7 @@ class TaskQueueStore {
             this.logger.info('Adding to project queue', { 
                 projectId, 
                 userId, 
-                workflowType: workflow?.type,
+                taskMode: workflow?.type,
                 priority: options.priority || 'normal'
             });
 

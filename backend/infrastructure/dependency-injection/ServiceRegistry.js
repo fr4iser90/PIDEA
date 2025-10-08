@@ -502,9 +502,9 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['queueHistoryRepository', 'eventBus'] });
 
         // Workflow Type Detector
-        this.container.register('workflowTypeDetector', (eventBus) => {
-            const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
-            return new WorkflowTypeDetector({
+        this.container.register('TaskModeDetector', (eventBus) => {
+            const TaskModeDetector = require('@domain/services/queue/TaskModeDetector');
+            return new TaskModeDetector({
                 eventBus
             });
         }, { singleton: true, dependencies: ['eventBus'] });
@@ -1697,10 +1697,10 @@ class ServiceRegistry {
                 });
             }, { singleton: true, dependencies: ['queueHistoryRepository', 'eventBus'] });
                 break;
-            case 'workflowTypeDetector':
-                this.container.register('workflowTypeDetector', (eventBus) => {
-                    const WorkflowTypeDetector = require('@domain/services/queue/WorkflowTypeDetector');
-                    return new WorkflowTypeDetector({
+            case 'TaskModeDetector':
+                this.container.register('TaskModeDetector', (eventBus) => {
+                    const TaskModeDetector = require('@domain/services/queue/TaskModeDetector');
+                    return new TaskModeDetector({
                         eventBus
                     });
                 }, { singleton: true, dependencies: ['eventBus'] });
@@ -1811,7 +1811,7 @@ class ServiceRegistry {
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
         this.addServiceDefinition('workflowLoaderService', [], 'domain');
         this.addServiceDefinition('queueHistoryService', ['queueHistoryRepository', 'eventBus'], 'domain');
-        this.addServiceDefinition('workflowTypeDetector', ['eventBus'], 'domain');
+        this.addServiceDefinition('TaskModeDetector', ['eventBus'], 'domain');
         this.addServiceDefinition('versionManagementService', ['fileSystemService', 'logger'], 'domain');
 
         // 🚨 NEW APPLICATION SERVICES - Layer Boundary Violation Fixes

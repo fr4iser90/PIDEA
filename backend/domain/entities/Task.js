@@ -371,8 +371,8 @@ class Task {
   }
 
   // Workflow compatibility methods
-  getWorkflowType() {
-    return this._type.getWorkflowType();
+  gettaskMode() {
+    return this._type.gettaskMode();
   }
 
   getWorkflowSteps() {

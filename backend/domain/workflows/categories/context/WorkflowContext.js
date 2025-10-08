@@ -10,7 +10,7 @@ const WorkflowMetadata = require('./WorkflowMetadata');
 class WorkflowContext extends IWorkflowContext {
   constructor(
     workflowId = uuidv4(),
-    workflowType = 'default',
+    taskMode = 'default',
     workflowVersion = '1.0.0',
     state = null,
     metadata = null,
@@ -21,7 +21,7 @@ class WorkflowContext extends IWorkflowContext {
     super();
     
     this._workflowId = workflowId;
-    this._workflowType = workflowType;
+    this._taskMode = taskMode;
     this._workflowVersion = workflowVersion;
     this._state = state || WorkflowState.createPending();
     this._metadata = metadata || WorkflowMetadata.create();
@@ -89,8 +89,8 @@ class WorkflowContext extends IWorkflowContext {
     return this._workflowId;
   }
 
-  getWorkflowType() {
-    return this._workflowType;
+  gettaskMode() {
+    return this._taskMode;
   }
 
   getWorkflowVersion() {
@@ -339,10 +339,10 @@ class WorkflowContext extends IWorkflowContext {
     }
 
     // Validate workflow type
-    if (!this._workflowType) {
+    if (!this._taskMode) {
       results.isValid = false;
       results.errors.push({
-        field: 'workflowType',
+        field: 'taskMode',
         message: 'Workflow type is required',
         code: 'WORKFLOW_TYPE_REQUIRED'
       });
@@ -363,7 +363,7 @@ class WorkflowContext extends IWorkflowContext {
   getSummary() {
     return {
       workflowId: this._workflowId,
-      workflowType: this._workflowType,
+      taskMode: this._taskMode,
       workflowVersion: this._workflowVersion,
       status: this._state.status,
       dataCount: Object.keys(this._data).length,
@@ -388,7 +388,7 @@ class WorkflowContext extends IWorkflowContext {
       throw new Error('Workflow ID is required');
     }
 
-    if (!this._workflowType) {
+    if (!this._taskMode) {
       throw new Error('Workflow type is required');
     }
 
@@ -409,7 +409,7 @@ class WorkflowContext extends IWorkflowContext {
   toJSON() {
     return {
       workflowId: this._workflowId,
-      workflowType: this._workflowType,
+      taskMode: this._taskMode,
       workflowVersion: this._workflowVersion,
       state: this._state.toJSON(),
       metadata: this._metadata.toJSON(),
@@ -428,7 +428,7 @@ class WorkflowContext extends IWorkflowContext {
   static fromJSON(data) {
     const context = new WorkflowContext(
       data.workflowId,
-      data.workflowType,
+      data.taskMode,
       data.workflowVersion,
       WorkflowState.fromJSON(data.state),
       WorkflowMetadata.fromJSON(data.metadata),
@@ -448,20 +448,20 @@ class WorkflowContext extends IWorkflowContext {
   }
 
   // Factory methods
-  static create(workflowId, workflowType, workflowVersion = '1.0.0') {
-    return new WorkflowContext(workflowId, workflowType, workflowVersion);
+  static create(workflowId, taskMode, workflowVersion = '1.0.0') {
+    return new WorkflowContext(workflowId, taskMode, workflowVersion);
   }
 
-  static createWithData(workflowId, workflowType, data, workflowVersion = '1.0.0') {
-    return new WorkflowContext(workflowId, workflowType, workflowVersion, null, null, data);
+  static createWithData(workflowId, taskMode, data, workflowVersion = '1.0.0') {
+    return new WorkflowContext(workflowId, taskMode, workflowVersion, null, null, data);
   }
 
-  static createWithState(workflowId, workflowType, state, workflowVersion = '1.0.0') {
-    return new WorkflowContext(workflowId, workflowType, workflowVersion, state);
+  static createWithState(workflowId, taskMode, state, workflowVersion = '1.0.0') {
+    return new WorkflowContext(workflowId, taskMode, workflowVersion, state);
   }
 
-  static createWithMetadata(workflowId, workflowType, metadata, workflowVersion = '1.0.0') {
-    return new WorkflowContext(workflowId, workflowType, workflowVersion, null, metadata);
+  static createWithMetadata(workflowId, taskMode, metadata, workflowVersion = '1.0.0') {
+    return new WorkflowContext(workflowId, taskMode, workflowVersion, null, metadata);
   }
 }
 

@@ -26,28 +26,41 @@ class WorkflowExecutor {
         try {
             this.logger.info('WorkflowExecutor: Starting workflow execution', {
                 taskId: taskId,
-                workflowType: options.workflowType,
+                taskMode: options.taskMode,
                 userId: options.userId
             });
 
-            // Load task from database
-            this.logger.info('WorkflowExecutor: Loading task from database', { taskId });
-            const task = await this.loadTask(taskId);
-            if (!task) {
-                throw new Error(`Task ${taskId} not found`);
+            // For task creation workflows, skip task loading since task doesn't exist yet
+            let task = null;
+            if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
+                this.logger.info('WorkflowExecutor: Task creation workflow detected, skipping task loading');
+                // Create a minimal task object for task creation workflows
+                task = {
+                    id: taskId,
+                    title: options.taskData?.title || 'New Task',
+                    type: { value: options.taskData?.type || 'feature' },
+                    description: options.taskData?.description || ''
+                };
+            } else {
+                // Load task from database for execution workflows
+                this.logger.info('WorkflowExecutor: Loading task from database', { taskId });
+                task = await this.loadTask(taskId);
+                if (!task) {
+                    throw new Error(`Task ${taskId} not found`);
+                }
+                this.logger.info('WorkflowExecutor: Task loaded successfully', { taskId, taskTitle: task.title });
             }
-            this.logger.info('WorkflowExecutor: Task loaded successfully', { taskId, taskTitle: task.title });
 
             // Determine workflow based on options
             let workflowName = 'standard-task-workflow';
-            if (options.workflowType === 'task-review') {
+            if (options.taskMode === 'task-review') {
                 workflowName = 'task-review-workflow';
-            } else if (options.workflowType === 'task-check-state') {
+            } else if (options.taskMode === 'task-check-state') {
                 workflowName = 'task-review-workflow'; // Use same workflow but different prompt
-            } else if (options.workflowType) {
-                workflowName = options.workflowType;
+            } else if (options.taskMode) {
+                workflowName = options.taskMode;
             }
-            this.logger.info('WorkflowExecutor: Determined workflow name', { workflowName, workflowType: options.workflowType });
+            this.logger.info('WorkflowExecutor: Determined workflow name', { workflowName, taskMode: options.taskMode });
 
             // Load workflow definition
             this.logger.info('WorkflowExecutor: Loading workflow definition', { workflowName });
@@ -64,7 +77,7 @@ class WorkflowExecutor {
                 userId: options.userId,
                 projectId: options.projectId,
                 projectPath: options.projectPath,
-                workflowType: options.workflowType,
+                taskMode: options.taskMode,
                 ...options
             };
             
@@ -106,13 +119,13 @@ class WorkflowExecutor {
                     // Build prompt if useTaskPrompt is true
                     if (step.type === 'ide_send_message_step' && step.options?.useTaskPrompt && context.task) {
                         if (this.taskService) {
-                            if (context.workflowType === 'task-review') {
+                            if (context.taskMode === 'task-review') {
                                 stepMessage = await this.taskService.buildTaskReviewPrompt(context.task, context);
                                 this.logger.info('WorkflowExecutor: Built review prompt', {
                                     taskId: context.task.id,
                                     promptLength: stepMessage.length
                                 });
-                            } else if (context.workflowType === 'task-check-state') {
+                            } else if (context.taskMode === 'task-check-state') {
                                 stepMessage = await this.taskService.buildTaskCheckStatePrompt(context.task, context);
                                 this.logger.info('WorkflowExecutor: Built check-state prompt', {
                                     taskId: context.task.id,
@@ -195,7 +208,7 @@ class WorkflowExecutor {
             const result = {
                 success: successCount === totalSteps,
                 workflowId: workflow.id,
-                workflowType: workflow.type,
+                taskMode: workflow.type,
                 userId: context.userId,
                 results: results,
                 summary: {
