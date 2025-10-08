@@ -836,160 +836,43 @@ class Application {
       });
     });
 
-    // Auth routes (public) with brute force protection
-    this.app.post('/api/auth/login', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.login(req, res));
-    this.app.post('/api/auth/refresh', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.refresh(req, res));
-    this.app.get('/api/auth/validate', (req, res) => this.authController.validateToken(req, res));
+    // Auth routes - Using modular route file
+    const AuthRoutes = require('./presentation/api/routes/authRoutes');
+    const authRoutes = new AuthRoutes(this.authController, this.authMiddleware);
+    authRoutes.setupRoutes(this.app);
 
-    // Protected routes
-    this.app.use('/api/auth/profile', this.authMiddleware.authenticate());
-    this.app.get('/api/auth/profile', (req, res) => this.authController.getProfile(req, res));
-    this.app.put('/api/auth/profile', (req, res) => this.authController.updateProfile(req, res));
-    this.app.get('/api/auth/sessions', (req, res) => this.authController.getSessions(req, res));
-    this.app.post('/api/auth/logout', this.authMiddleware.authenticate(), (req, res) => this.authController.logout(req, res));
+    // Session management routes - Using modular route file
+    const SessionRoutes = require('./presentation/api/routes/sessionRoutes');
+    const sessionRoutes = new SessionRoutes(this.sessionController, this.authMiddleware);
+    sessionRoutes.setupRoutes(this.app);
 
-    // Session management routes (protected)
-    this.app.use('/api/session', this.authMiddleware.authenticate());
-    this.app.post('/api/session/extend', (req, res) => this.sessionController.extendSession(req, res));
-    this.app.get('/api/session/status', (req, res) => this.sessionController.getSessionStatus(req, res));
-    this.app.post('/api/session/activity', (req, res) => this.sessionController.recordActivity(req, res));
-    this.app.get('/api/session/analytics', (req, res) => this.sessionController.getSessionAnalytics(req, res));
-    this.app.get('/api/session/monitor', (req, res) => this.sessionController.getMonitoringData(req, res));
-    this.app.post('/api/session/cleanup', (req, res) => this.sessionController.triggerCleanup(req, res));
-    this.app.put('/api/session/config', (req, res) => this.sessionController.updateConfig(req, res));
-    this.app.get('/api/session/health', (req, res) => this.sessionController.healthCheck(req, res));
+    // Chat routes - Using modular route file
+    const ChatRoutes = require('./presentation/api/routes/chatRoutes');
+    const chatRoutes = new ChatRoutes(this.webChatController, this.authMiddleware);
+    chatRoutes.setupRoutes(this.app);
 
-    // Chat routes (protected) - no rate limiting for authenticated users
-    this.app.use('/api/chat', this.authMiddleware.authenticate());
-    this.app.post('/api/chat', (req, res) => this.webChatController.sendMessage(req, res));
-    this.app.get('/api/chat/history', (req, res) => this.webChatController.getChatHistory(req, res));
-    this.app.get('/api/chat/port/:port/history', (req, res) => this.webChatController.getPortChatHistory(req, res));
-    this.app.get('/api/chat/status', (req, res) => this.webChatController.getConnectionStatus(req, res));
+    // IDE routes - Using modular route file
+    const IDERoutes = require('./presentation/api/routes/ideRoutes');
+    const ideRoutes = new IDERoutes(this.ideController, this.ideFeatureController, this.ideConfigurationController, this.authMiddleware);
+    ideRoutes.setupRoutes(this.app);
 
-    // Settings routes (protected)
-    this.app.use('/api/settings', this.authMiddleware.authenticate());
-    this.app.get('/api/settings', (req, res) => this.webChatController.getSettings(req, res));
+    // File explorer routes - Using modular route file
+    const FileRoutes = require('./presentation/api/routes/fileRoutes');
+    const fileRoutes = new FileRoutes(this.browserManager, this.authMiddleware, this.logger);
+    fileRoutes.setupRoutes(this.app);
 
-    // Prompts routes (protected)
-    this.app.use('/api/prompts', this.authMiddleware.authenticate());
-    this.app.get('/api/prompts/quick', (req, res) => this.webChatController.getQuickPrompts(req, res));
+    // Content Library routes - Using modular route file
+    const ContentLibraryRoutes = require('./presentation/api/routes/contentLibraryRoutes');
+    const contentLibraryRoutes = new ContentLibraryRoutes(this.ContentLibraryController, this.authMiddleware);
+    contentLibraryRoutes.setupRoutes(this.app);
 
-    // IDE routes (protected)
-    this.app.use('/api/ide', this.authMiddleware.authenticate());
-    this.app.get('/api/ide/available', (req, res) => this.ideController.getAvailableIDEs(req, res));
-    this.app.get('/api/ide/features', (req, res) => this.ideFeatureController.getIDEFeatures(req, res));
-    this.app.post('/api/ide/start', (req, res) => this.ideController.startIDE(req, res));
-    this.app.post('/api/ide/switch/:port', (req, res) => this.ideController.switchIDE(req, res));
-    this.app.delete('/api/ide/stop/:port', (req, res) => this.ideController.stopIDE(req, res));
-    this.app.get('/api/ide/status', (req, res) => this.ideController.getStatus(req, res));
-    this.app.post('/api/ide/restart-app', (req, res) => this.ideController.restartUserApp(req, res));
-    this.app.get('/api/ide/user-app-url', (req, res) => this.ideController.getUserAppUrl(req, res));
-    this.app.get('/api/ide/user-app-url/:port', (req, res) => this.ideController.getUserAppUrlForPort(req, res));
-    this.app.post('/api/ide/monitor-terminal', (req, res) => this.ideController.monitorTerminal(req, res));
-    this.app.post('/api/ide/set-workspace/:port', (req, res) => this.ideController.setWorkspacePath(req, res));
-    this.app.get('/api/ide/workspace-info', (req, res) => this.ideController.getWorkspaceInfo(req, res));
-    this.app.post('/api/ide/detect-workspace-paths', (req, res) => this.ideController.detectWorkspacePaths(req, res));
-    this.app.post('/api/ide/new-chat/:port', (req, res) => this.ideController.clickNewChat(req, res));
-
-    // IDE Configuration routes
-    this.app.get('/api/ide/configurations/download-links', (req, res) => this.ideConfigurationController.getDownloadLinks(req, res));
-    this.app.get('/api/ide/configurations/executable-paths', (req, res) => this.ideConfigurationController.getExecutablePaths(req, res));
-    this.app.post('/api/ide/configurations/executable-paths', (req, res) => this.ideConfigurationController.saveExecutablePaths(req, res));
-    this.app.post('/api/ide/configurations/validate-path', (req, res) => this.ideConfigurationController.validatePath(req, res));
-
-    // VSCode-specific routes (protected)
-    this.app.post('/api/ide/start-vscode', (req, res) => this.ideController.startVSCode(req, res));
-    this.app.get('/api/ide/vscode/:port/extensions', (req, res) => this.ideController.getVSCodeExtensions(req, res));
-    this.app.get('/api/ide/vscode/:port/workspace-info', (req, res) => this.ideController.getVSCodeWorkspaceInfo(req, res));
-    this.app.post('/api/ide/vscode/send-message', (req, res) => this.ideController.sendMessageToVSCode(req, res));
-    this.app.get('/api/ide/vscode/:port/status', (req, res) => this.ideController.getVSCodeStatus(req, res));
-
-    // Workspace Detection routes (protected)
-    this.app.get('/api/ide/workspace-detection', (req, res) => this.ideController.detectAllWorkspaces(req, res));
-    this.app.get('/api/ide/workspace-detection/:port', (req, res) => this.ideController.detectWorkspaceForIDE(req, res));
-    this.app.post('/api/ide/workspace-detection/:port', (req, res) => this.ideController.forceDetectWorkspaceForIDE(req, res));
-    this.app.get('/api/ide/workspace-detection/stats', (req, res) => this.ideController.getDetectionStats(req, res));
-    this.app.delete('/api/ide/workspace-detection/results', (req, res) => this.ideController.clearDetectionResults(req, res));
-    this.app.post('/api/ide/workspace-detection/:port/execute', (req, res) => this.ideController.executeTerminalCommand(req, res));
-
-    // File explorer routes (protected)
-    this.app.use('/api/files', this.authMiddleware.authenticate());
-    this.app.get('/api/files', async (req, res) => {
-      try {
-        const fileTree = await this.browserManager.getFileExplorerTree();
-        res.json({
-          success: true,
-          data: fileTree
-        });
-      } catch (error) {
-        this.logger.error('Error getting file tree:', error);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to get file tree'
-        });
-      }
-    });
-
-    this.app.get('/api/files/content', async (req, res) => {
-      try {
-        const filePath = req.query.path;
-        this.logger.info('/api/files/content called with path:', '[REDACTED_FILE_PATH]');
-        if (!filePath) {
-          return res.status(400).json({
-            success: false,
-            error: 'File path is required'
-          });
-        }
-        const content = await this.browserManager.getFileContent(filePath);
-        res.json({
-          success: true,
-          data: {
-            path: filePath,
-            content: content
-          }
-        });
-      } catch (error) {
-        this.logger.error('Error getting file content:', error);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to get file content'
-        });
-      }
-    });
-
-    // Content Library routes (protected) - MUST BE BEFORE GENERIC AUTH MIDDLEWARE
-    this.app.get('/api/frameworks', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworks(req, res));
-    this.app.get('/api/frameworks/:frameworkId/prompts', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkPrompts(req, res));
-    this.app.get('/api/frameworks/:frameworkId/templates', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkTemplates(req, res));
-    this.app.get('/api/frameworks/:frameworkId/prompts/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkPromptFile(req, res));
-    this.app.get('/api/frameworks/:frameworkId/templates/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getFrameworkTemplateFile(req, res));
-    this.app.get('/api/prompts', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getPrompts(req, res));
-    this.app.get('/api/prompts/:category/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getPromptFile(req, res));
-    this.app.get('/api/templates', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getTemplates(req, res));
-    this.app.get('/api/templates/:category/:filename', this.authMiddleware.authenticate(), (req, res) => this.ContentLibraryController.getTemplateFile(req, res));
-
-    // Task Management routes (protected) - PROJECT-BASED (CRUD only, no execution)
-    this.app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/tasks', (req, res) => this.taskController.createTask(req, res));
-    this.app.get('/api/projects/:projectId/tasks', (req, res) => this.taskController.getProjectTasks(req, res));
-    this.app.get('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.getTask(req, res));
-    this.app.put('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.updateTask(req, res));
-    this.app.delete('/api/projects/:projectId/tasks/:id', (req, res) => this.taskController.deleteTask(req, res));
-    this.app.get('/api/projects/:projectId/tasks/:id/execution', (req, res) => this.taskController.getTaskExecution(req, res));
-    this.app.post('/api/projects/:projectId/tasks/:id/cancel', (req, res) => this.taskController.cancelTask(req, res));
-    
-    // NEW: Sync manual tasks route
-    this.app.post('/api/projects/:projectId/tasks/sync-manual', (req, res) => this.taskController.syncManualTasks(req, res));
-    // NEW: Clean manual tasks route
-    this.app.post('/api/projects/:projectId/tasks/clean-manual', (req, res) => this.taskController.cleanManualTasks(req, res));
-    
-    // 🆕 NEW: Task Status Sync routes
-    this.app.post('/api/projects/:projectId/tasks/sync-status', (req, res) => this.taskStatusSyncController.syncTaskStatuses(req, res));
-    this.app.post('/api/projects/:projectId/tasks/validate-status', (req, res) => this.taskStatusSyncController.validateTaskStatuses(req, res));
-    this.app.post('/api/projects/:projectId/tasks/rollback-status', (req, res) => this.taskStatusSyncController.rollbackTaskStatuses(req, res));
+    // Task Management routes - Using modular route file
+    const TaskRoutes = require('./presentation/api/routes/taskRoutes');
+    const taskRoutes = new TaskRoutes(this.taskController, this.taskStatusSyncController, this.authMiddleware);
+    taskRoutes.setupRoutes(this.app);
 
     // Project Analysis routes (protected) - PROJECT-BASED
-    const AnalysisRoutes = require('./presentation/api/routes/analysis');
+    const AnalysisRoutes = require('./presentation/api/routes/analysisRoutes');
     const analysisRoutes = new AnalysisRoutes(
       this.workflowController, 
       this.analysisController, 
@@ -1013,33 +896,11 @@ class Application {
     this.app.get('/api/projects/:projectId/scripts', (req, res) => this.taskController.getGeneratedScripts(req, res));
     this.app.post('/api/projects/:projectId/scripts/:id/execute', (req, res) => this.taskController.executeScript(req, res));
 
-    // Git Management routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/git', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/git/status', (req, res) => this.gitController.getStatus(req, res));
-    this.app.post('/api/projects/:projectId/git/branches', (req, res) => this.gitController.getBranches(req, res));
-    this.app.post('/api/projects/:projectId/git/validate', (req, res) => this.gitController.validate(req, res));
-    this.app.post('/api/projects/:projectId/git/compare', (req, res) => this.gitController.compare(req, res));
-    this.app.post('/api/projects/:projectId/git/pull', (req, res) => this.gitController.pull(req, res));
-    this.app.post('/api/projects/:projectId/git/checkout', (req, res) => this.gitController.checkout(req, res));
-    this.app.post('/api/projects/:projectId/git/merge', (req, res) => this.gitController.merge(req, res));
-    this.app.post('/api/projects/:projectId/git/create-branch', (req, res) => this.gitController.createBranch(req, res));
-    this.app.post('/api/projects/:projectId/git/info', (req, res) => this.gitController.getRepositoryInfo(req, res));
-    
-    // Pidea-Agent Git routes (protected) - PROJECT-BASED
-    this.app.post('/api/projects/:projectId/git/pull-pidea-agent', (req, res) => this.gitController.pullPideaAgent(req, res));
-    this.app.post('/api/projects/:projectId/git/merge-to-pidea-agent', (req, res) => this.gitController.mergeToPideaAgent(req, res));
-    this.app.post('/api/projects/:projectId/git/pidea-agent-status', (req, res) => this.gitController.getPideaAgentStatus(req, res));
-    this.app.post('/api/projects/:projectId/git/compare-pidea-agent', (req, res) => this.gitController.compareWithPideaAgent(req, res));
+    // Git Management routes - Using modular route file
+    const GitRoutes = require('./presentation/api/routes/gitRoutes');
+    const gitRoutes = new GitRoutes(this.gitController, this.authMiddleware);
+    gitRoutes.setupRoutes(this.app);
 
-    // Terminal Log routes (protected)
-    this.app.use('/api/terminal-logs/:port', this.authMiddleware.authenticate());
-    this.app.post('/api/terminal-logs/:port/initialize', (req, res) => this.ideController.initializeTerminalLogCapture(req, res));
-    this.app.post('/api/terminal-logs/:port/execute', (req, res) => this.ideController.executeTerminalCommandWithCapture(req, res));
-    this.app.get('/api/terminal-logs/:port', (req, res) => this.ideController.getTerminalLogs(req, res));
-    this.app.get('/api/terminal-logs/:port/search', (req, res) => this.ideController.searchTerminalLogs(req, res));
-    this.app.get('/api/terminal-logs/:port/export', (req, res) => this.ideController.exportTerminalLogs(req, res));
-    this.app.delete('/api/terminal-logs/:port', (req, res) => this.ideController.deleteTerminalLogs(req, res));
-    this.app.get('/api/terminal-logs/:port/capture-status', (req, res) => this.ideController.getTerminalLogCaptureStatus(req, res));
 
     // IDE Mirror API-Routen einbinden
     this.ideMirrorController.setupRoutes(this.app);
@@ -1049,59 +910,26 @@ class Application {
     this.app.use('/api/versions', this.authMiddleware.authenticate());
     this.app.use('/api/versions', versionRoutes);
 
-    // Test Management routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/tests/playwright', this.authMiddleware.authenticate());
-    this.app.get('/api/projects/:projectId/tests/playwright/config', (req, res) => this.testManagementController.getPlaywrightTestConfig(req, res));
-    this.app.put('/api/projects/:projectId/tests/playwright/config', (req, res) => this.testManagementController.updatePlaywrightTestConfig(req, res));
-    this.app.get('/api/projects/:projectId/tests/playwright/projects', (req, res) => this.testManagementController.getPlaywrightTestProjects(req, res));
-    this.app.post('/api/projects/:projectId/tests/playwright/projects', (req, res) => this.testManagementController.createPlaywrightTestProject(req, res));
-    this.app.post('/api/projects/:projectId/tests/playwright/execute', (req, res) => this.testManagementController.executePlaywrightTests(req, res));
-    this.app.get('/api/projects/:projectId/tests/playwright/results', (req, res) => this.testManagementController.getPlaywrightTestResults(req, res));
-    this.app.get('/api/projects/:projectId/tests/playwright/results/:testId', (req, res) => this.testManagementController.getPlaywrightTestResultById(req, res));
-    this.app.get('/api/projects/:projectId/tests/playwright/history', (req, res) => this.testManagementController.getPlaywrightTestHistory(req, res));
-    this.app.post('/api/projects/:projectId/tests/playwright/stop', (req, res) => this.testManagementController.stopPlaywrightTests(req, res));
+    // Test Management routes - Using modular route file
+    const TestRoutes = require('./presentation/api/routes/testRoutes');
+    const testRoutes = new TestRoutes(this.testManagementController, this.authMiddleware);
+    testRoutes.setupRoutes(this.app);
 
-    // Browser Environment routes (protected)
-    this.app.use('/api/tests/browser-environment', this.authMiddleware.authenticate());
-    this.app.get('/api/tests/browser-environment', (req, res) => this.testManagementController.getBrowserEnvironment(req, res));
+    // Workflow routes - Using modular route file (DEPRECATED)
+    const WorkflowRoutes = require('./presentation/api/routes/workflowRoutes');
+    const workflowRoutes = new WorkflowRoutes(this.workflowController, this.authMiddleware);
+    workflowRoutes.setupRoutes(this.app);
 
-    // Workflow routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());
-    this.app.post('/api/projects/:projectId/workflow/execute', (req, res) => this.workflowController.executeWorkflow(req, res));
-    this.app.get('/api/projects/:projectId/workflow/status', (req, res) => this.workflowController.getWorkflowStatus(req, res));
-    this.app.post('/api/projects/:projectId/workflow/stop', (req, res) => this.workflowController.stopWorkflow(req, res));
-    this.app.get('/api/projects/:projectId/workflow/health', (req, res) => this.workflowController.healthCheck(req, res));
-
-    // Queue Management routes (protected) - PROJECT-BASED
-    this.app.use('/api/projects/:projectId/queue', this.authMiddleware.authenticate());
-    this.app.get('/api/projects/:projectId/queue/status', (req, res) => this.queueController.getQueueStatus(req, res));
-    this.app.post('/api/projects/:projectId/queue/add', (req, res) => this.queueController.addToQueue(req, res));
-    this.app.delete('/api/projects/:projectId/queue/:itemId', (req, res) => this.queueController.cancelQueueItem(req, res));
-    this.app.put('/api/projects/:projectId/queue/:itemId/priority', (req, res) => this.queueController.updateQueueItemPriority(req, res));
-    this.app.get('/api/projects/:projectId/queue/:itemId/step-progress', (req, res) => this.queueController.getStepProgress(req, res));
-    this.app.post('/api/projects/:projectId/queue/:itemId/step/:stepId/toggle', (req, res) => this.queueController.toggleStepStatus(req, res));
-    
-    // Queue History routes (protected) - PROJECT-BASED
-    this.app.get('/api/projects/:projectId/queue/history', (req, res) => this.queueController.getQueueHistory(req, res));
-    this.app.get('/api/projects/:projectId/queue/history/statistics', (req, res) => this.queueController.getHistoryStatistics(req, res));
-    this.app.get('/api/projects/:projectId/queue/history/export', (req, res) => this.queueController.exportHistory(req, res));
-    this.app.delete('/api/projects/:projectId/queue/history', (req, res) => this.queueController.deleteHistory(req, res));
-    this.app.get('/api/projects/:projectId/queue/history/:historyId', (req, res) => this.queueController.getHistoryItem(req, res));
-    
-    // Workflow Type Detection routes (protected) - PROJECT-BASED
-    this.app.post('/api/projects/:projectId/queue/type-detect', (req, res) => this.queueController.detectWorkflowType(req, res));
-    this.app.get('/api/projects/:projectId/queue/types', (req, res) => this.queueController.getWorkflowTypes(req, res));
-    this.app.get('/api/projects/:projectId/queue/statistics', (req, res) => this.queueController.getQueueStatistics(req, res));
-    this.app.delete('/api/projects/:projectId/queue/completed', (req, res) => this.queueController.clearCompletedItems(req, res));
+    // Queue Management routes - Using modular route file
+    const QueueRoutes = require('./presentation/api/routes/queueRoutes');
+    const queueRoutes = new QueueRoutes(this.queueController, this.authMiddleware);
+    queueRoutes.setupRoutes(this.app);
 
 
-    // Project routes (protected)
-    this.app.use('/api/projects', this.authMiddleware.authenticate());
-    this.app.get('/api/projects', (req, res) => this.projectController.list(req, res));
-    this.app.get('/api/projects/:id', (req, res) => this.projectController.getById(req, res));
-
-    this.app.post('/api/projects/:id/save-port', (req, res) => this.projectController.savePort(req, res));
-    this.app.put('/api/projects/:id/port', (req, res) => this.projectController.updatePort(req, res));
+    // Project routes - Using modular route file
+    const ProjectRoutes = require('./presentation/api/routes/projectRoutes');
+    const projectRoutes = new ProjectRoutes(this.projectController, this.authMiddleware);
+    projectRoutes.setupRoutes(this.app);
 
     // Error handling middleware
     this.app.use((error, req, res, next) => {
