@@ -64,9 +64,17 @@ class GitCreateBranchStep {
           resolvedParams.branchName = resolvedParams.branchName.replace(/\$\{task\.id\}/g, context.taskData.id);
         }
         
-        // Replace {{task.title}} with actual task title
+        // Replace {{task.title}} with actual task title (sanitized for git branch names)
         if (resolvedParams.branchName.includes('{{task.title}}') && context.task?.title) {
-          resolvedParams.branchName = resolvedParams.branchName.replace(/\{\{task\.title\}\}/g, context.task.title);
+          // Sanitize task title for git branch names: replace spaces with hyphens, remove special chars
+          const sanitizedTitle = context.task.title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+            .replace(/\s+/g, '-') // Replace spaces with hyphens
+            .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+            .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+          
+          resolvedParams.branchName = resolvedParams.branchName.replace(/\{\{task\.title\}\}/g, sanitizedTitle);
         }
         
         // Replace {{timestamp}} with current timestamp
