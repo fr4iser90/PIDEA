@@ -172,19 +172,28 @@ class ResponseProcessor {
     const trimmed = text.trim().toLowerCase();
     
     // Filter out common error messages and system messages
+    // BUT NOT test results like "[FAILED] 0%" which are valid AI responses
     const errorPatterns = [
-      'failed',
       'timeout',
       'connection error',
-      'network error'
+      'network error',
+      'extension host unresponsive',
+      'extension host has stopped responding',
+      'reload window'
     ];
     
-    // If text contains error patterns, it's not a valid AI response
+    // Check for specific error patterns (not test results)
     for (const pattern of errorPatterns) {
       if (trimmed.includes(pattern)) {
-        this.logger.info(`🚫 Filtered out error message: ${pattern}`);
+        this.logger.debug(`🚫 Filtered out error message: ${pattern}`);
         return false;
       }
+    }
+    
+    // Don't filter out "failed" if it's part of a test result like "[FAILED] 0%"
+    if (trimmed.includes('failed') && !trimmed.includes('[failed]')) {
+      this.logger.debug(`🚫 Filtered out error message: failed`);
+      return false;
     }
     
     // Valid AI responses should be longer and contain actual content

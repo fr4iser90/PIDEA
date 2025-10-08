@@ -208,194 +208,217 @@ class TaskProcessor {
                     item.options?.autoExecute !== false
                 );
 
-                // Check if any tasks are already running
+                // Check if any tasks are already running - if so, skip this project
                 const runningTasks = projectQueue.filter(item => item.status === 'running');
-                let stuckTasks = [];
                 
                 if (runningTasks.length > 0) {
-                    this.logger.info(`TaskProcessor: ${runningTasks.length} tasks already running, checking if they need completion`);
-                    
-                    // Check if running tasks are actually stuck (running for too long without completion)
-                    stuckTasks = runningTasks.filter(task => {
-                        const startedAt = new Date(task.startedAt);
-                        const now = new Date();
-                        const runningTime = now.getTime() - startedAt.getTime();
-                        const maxRunningTime = 30 * 1000; // 30 seconds - viel kürzer für Tests
-                        
-                        return runningTime > maxRunningTime;
-                    });
-                    
-                    if (stuckTasks.length > 0) {
-                        this.logger.warn(`TaskProcessor: Found ${stuckTasks.length} stuck running tasks, will attempt to complete them`, {
-                            stuckTasks: stuckTasks.map(task => ({
-                                id: task.id,
-                                startedAt: task.startedAt,
-                                runningTime: new Date().getTime() - new Date(task.startedAt).getTime()
-                            }))
-                        });
-                        // Don't continue, let the execution proceed to handle stuck tasks
-                    } else {
-                        this.logger.info(`TaskProcessor: Running tasks are still within timeout, skipping queue processing`, {
-                            runningTasks: runningTasks.map(task => ({
-                                id: task.id,
-                                startedAt: task.startedAt,
-                                runningTime: new Date().getTime() - new Date(task.startedAt).getTime()
-                            }))
-                        });
-                        continue;
-                    }
-                }
-
-                // Process stuck running tasks first, then queued tasks
-                let queueItem = null;
-                
-                if (stuckTasks && stuckTasks.length > 0) {
-                    // Process the first stuck task
-                    queueItem = stuckTasks[0];
-                    this.logger.info('TaskProcessor: Processing stuck running task', {
-                        taskId: queueItem.context?.taskId,
-                        queueItemId: queueItem.id,
-                        projectId: projectId,
-                        runningTime: new Date().getTime() - new Date(queueItem.startedAt).getTime()
-                    });
-                } else if (queuedTasks.length > 0) {
-                    // Process the first queued task
-                    queueItem = queuedTasks[0];
-                    this.logger.info('TaskProcessor: Processing queued task', {
-                        taskId: queueItem.context?.taskId,
-                        queueItemId: queueItem.id,
-                        projectId: projectId
-                    });
-                }
-                
-                if (!queueItem) {
+                    this.logger.info(`TaskProcessor: ${runningTasks.length} tasks already running in project ${projectId}, skipping`);
                     continue;
                 }
 
-                this.logger.info('TaskProcessor: Found queued task to process', {
-                    taskId: queueItem.context?.taskId,
-                    queueItemId: queueItem.id,
-                    projectId: projectId,
-                    currentStatus: queueItem.status
-                });
-
-                try {
-                    this.logger.info('TaskProcessor: Entering try block');
+                // Process the FIRST queued task only
+                if (queuedTasks.length > 0) {
+                    const queueItem = queuedTasks[0];
                     
-                    // Update status to running
-                    queueItem.status = 'running';
-                    queueItem.startedAt = new Date().toISOString();
-                    queueItem.updatedAt = new Date().toISOString();
-
-                    this.logger.info('TaskProcessor: Status updated to running');
-
-                    this.logger.info('TaskProcessor: Starting task execution', {
-                        taskId: queueItem.context.taskId,
-                        queueItemId: queueItem.id,
-                        projectId: projectId
-                    });
-
-                    // Execute the task using WorkflowExecutor
-                    this.logger.info('TaskProcessor: Calling workflowExecutor.run()', {
-                        taskId: queueItem.context.taskId,
-                        options: queueItem.options,
-                        workflowExecutor: !!this.workflowExecutor,
-                        workflowExecutorType: this.workflowExecutor?.constructor?.name
-                    });
-                    
-                    if (!this.workflowExecutor) {
-                        throw new Error('WorkflowExecutor not available');
-                    }
-                    
-                    // Add activeIDE to options
-                    const activeIDE = await this.getActiveIDE();
-                    
-                    // Resolve projectPath if not available in context
-                    let projectPath = queueItem.context.projectPath || queueItem.options.projectPath;
-                    if (!projectPath) {
-                        this.logger.info('TaskProcessor: projectPath not in context, resolving from database...');
-                        projectPath = await this.resolveProjectPath(projectId);
-                    }
-                    
-                    const optionsWithIDE = {
-                        ...queueItem.options,
-                        ...queueItem.context,
-                        activeIDE: activeIDE,
-                        projectId: projectId,
-                        projectPath: projectPath
-                    };
-                    
-                    // Log the context being passed to workflow
-                    this.logger.info('TaskProcessor: Passing context to WorkflowExecutor', {
-                        taskId: queueItem.context.taskId,
-                        projectId: projectId,
-                        activeIDE: activeIDE ? {
-                            port: activeIDE.port,
-                            type: activeIDE.type,
-                            workspace: activeIDE.workspace
-                        } : null,
-                        hasActiveIDE: !!activeIDE,
-                        projectPath: optionsWithIDE.projectPath,
-                        hasProjectPath: !!optionsWithIDE.projectPath,
-                        queueItemContext: queueItem.context,
-                        queueItemOptions: queueItem.options
-                    });
-                    
-                    // MANUALLY LOAD WorkflowLoaderService if not available
-                    if (!this.workflowExecutor.workflowLoaderService) {
-                        this.logger.warn('TaskProcessor: WorkflowLoaderService not available, loading manually');
-                        const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
-                        const workflowLoaderService = new WorkflowLoaderService();
-                        await workflowLoaderService.loadWorkflows();
-                        this.workflowExecutor.workflowLoaderService = workflowLoaderService;
-                    }
-                    
-                    const result = await this.workflowExecutor.run(queueItem.context.taskId, optionsWithIDE);
-                    
-                    this.logger.info('TaskProcessor: workflowExecutor.run() completed', {
-                        taskId: queueItem.context.taskId,
-                        result: result
-                    });
-                    
-                    // Update status to completed
-                    queueItem.status = 'completed';
-                    queueItem.completedAt = new Date().toISOString();
-                    queueItem.result = result;
-                    queueItem.updatedAt = new Date().toISOString();
-                    
-                    this.logger.info('TaskProcessor: Task completed successfully', {
-                        taskId: queueItem.context.taskId,
-                        queueItemId: queueItem.id,
-                        status: queueItem.status
-                    });
-                    
-                    // Update the queue item in the store
-                    await this.taskQueueStore.updateQueueItem(projectId, queueItem.id, {
-                        status: 'completed',
-                        completedAt: queueItem.completedAt,
-                        result: result
-                    });
-                    
-                } catch (error) {
-                    this.logger.error('TaskProcessor: Failed to execute queued task', {
-                        taskId: queueItem.context.taskId,
+                    this.logger.info('TaskProcessor: Processing queued task', {
+                        taskId: queueItem.context?.taskId,
                         queueItemId: queueItem.id,
                         projectId: projectId,
-                        error: error.message
+                        remainingTasks: queuedTasks.length - 1
                     });
-                    
-                    // Update status to failed
-                    queueItem.status = 'failed';
-                    queueItem.error = error.message;
-                    queueItem.completedAt = new Date().toISOString();
-                    queueItem.updatedAt = new Date().toISOString();
-                    
-                    // Update the queue item in the store
-                    await this.taskQueueStore.updateQueueItem(projectId, queueItem.id, {
-                        status: 'failed',
-                        completedAt: queueItem.completedAt,
-                        error: error.message
-                    });
+
+                    try {
+                        this.logger.info('TaskProcessor: Entering try block');
+                        
+                        // Update status to running
+                        queueItem.status = 'running';
+                        queueItem.startedAt = new Date().toISOString();
+                        queueItem.updatedAt = new Date().toISOString();
+
+                        this.logger.info('TaskProcessor: Status updated to running');
+                        
+                        // Emit execution start event
+                        if (this.eventBus) {
+                            this.eventBus.emit(EXECUTION_CONSTANTS.EVENTS.EXECUTION_START, {
+                                taskId: queueItem.context.taskId,
+                                queueItemId: queueItem.id,
+                                projectId: projectId,
+                                startedAt: queueItem.startedAt
+                            });
+                            this.logger.info('TaskProcessor: Emitted EXECUTION_START event', {
+                                taskId: queueItem.context.taskId,
+                                queueItemId: queueItem.id
+                            });
+                        } else {
+                            this.logger.warn('TaskProcessor: No eventBus available, cannot emit start event');
+                        }
+
+                        this.logger.info('TaskProcessor: Starting task execution', {
+                            taskId: queueItem.context.taskId,
+                            queueItemId: queueItem.id,
+                            projectId: projectId
+                        });
+
+                        // Execute the task using WorkflowExecutor
+                        this.logger.info('TaskProcessor: Calling workflowExecutor.run()', {
+                            taskId: queueItem.context.taskId,
+                            options: queueItem.options,
+                            workflowExecutor: !!this.workflowExecutor,
+                            workflowExecutorType: this.workflowExecutor?.constructor?.name,
+                            workflowExecutorMethods: this.workflowExecutor ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.workflowExecutor)) : 'undefined'
+                        });
+                        
+                        if (!this.workflowExecutor) {
+                            throw new Error('WorkflowExecutor not available');
+                        }
+                        
+                        if (!this.workflowExecutor.run) {
+                            throw new Error('WorkflowExecutor.run method not available');
+                        }
+                        
+                        // Add activeIDE to options
+                        const activeIDE = await this.getActiveIDE();
+                        
+                        // Resolve projectPath if not available in context
+                        let projectPath = queueItem.context.projectPath || queueItem.options.projectPath;
+                        if (!projectPath) {
+                            this.logger.info('TaskProcessor: projectPath not in context, resolving from database...');
+                            projectPath = await this.resolveProjectPath(projectId);
+                        }
+                        
+                        const optionsWithIDE = {
+                            ...queueItem.options,
+                            ...queueItem.context,
+                            activeIDE: activeIDE,
+                            projectId: projectId,
+                            projectPath: projectPath
+                        };
+                        
+                        // Log the context being passed to workflow
+                        this.logger.info('TaskProcessor: Passing context to WorkflowExecutor', {
+                            taskId: queueItem.context.taskId,
+                            projectId: projectId,
+                            activeIDE: activeIDE ? {
+                                port: activeIDE.port,
+                                type: activeIDE.type,
+                                workspace: activeIDE.workspace
+                            } : null,
+                            hasActiveIDE: !!activeIDE,
+                            projectPath: optionsWithIDE.projectPath,
+                            hasProjectPath: !!optionsWithIDE.projectPath,
+                            queueItemContext: queueItem.context,
+                            queueItemOptions: queueItem.options
+                        });
+                        
+                        // MANUALLY LOAD WorkflowLoaderService if not available
+                        if (!this.workflowExecutor.workflowLoaderService) {
+                            this.logger.warn('TaskProcessor: WorkflowLoaderService not available, loading manually');
+                            const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
+                            const workflowLoaderService = new WorkflowLoaderService();
+                            await workflowLoaderService.loadWorkflows();
+                            this.workflowExecutor.workflowLoaderService = workflowLoaderService;
+                        }
+                        
+                        const result = await this.workflowExecutor.run(queueItem.context.taskId, optionsWithIDE);
+                        
+                        this.logger.info('TaskProcessor: workflowExecutor.run() completed', {
+                            taskId: queueItem.context.taskId,
+                            result: result
+                        });
+                        
+                        // Update status to completed
+                        queueItem.status = 'completed';
+                        queueItem.completedAt = new Date().toISOString();
+                        queueItem.result = result;
+                        queueItem.updatedAt = new Date().toISOString();
+                        
+                        this.logger.info('TaskProcessor: Task completed successfully', {
+                            taskId: queueItem.context.taskId,
+                            queueItemId: queueItem.id,
+                            status: queueItem.status
+                        });
+                        
+                        // Update the queue item in the store
+                        await this.taskQueueStore.updateQueueItem(projectId, queueItem.id, {
+                            status: 'completed',
+                            completedAt: queueItem.completedAt,
+                            result: result
+                        });
+                        
+                        // Emit completion event
+                        if (this.eventBus) {
+                            this.eventBus.emit(EXECUTION_CONSTANTS.EVENTS.EXECUTION_COMPLETE, {
+                                taskId: queueItem.context.taskId,
+                                queueItemId: queueItem.id,
+                                projectId: projectId,
+                                result: result,
+                                completedAt: queueItem.completedAt,
+                                executionTime: Date.now() - new Date(queueItem.startedAt).getTime()
+                            });
+                            this.logger.info('TaskProcessor: Emitted EXECUTION_COMPLETE event', {
+                                taskId: queueItem.context.taskId,
+                                queueItemId: queueItem.id
+                            });
+                        } else {
+                            this.logger.warn('TaskProcessor: No eventBus available, cannot emit completion event');
+                        }
+                        
+                        // 🔄 SIMPLE: Trigger next task processing after completion
+                        this.logger.info('TaskProcessor: Task completed, triggering next task processing');
+                        setTimeout(() => {
+                            this.processExecutionQueue();
+                        }, 2000); // 2 second delay
+                        
+                    } catch (error) {
+                        this.logger.error('TaskProcessor: Failed to execute queued task', {
+                            taskId: queueItem.context.taskId,
+                            queueItemId: queueItem.id,
+                            projectId: projectId,
+                            error: error.message,
+                            stack: error.stack,
+                            workflowExecutor: !!this.workflowExecutor,
+                            workflowExecutorType: this.workflowExecutor?.constructor?.name
+                        });
+                        
+                        // Update status to failed
+                        queueItem.status = 'failed';
+                        queueItem.error = error.message;
+                        queueItem.completedAt = new Date().toISOString();
+                        queueItem.updatedAt = new Date().toISOString();
+                        
+                        // Update the queue item in the store
+                        await this.taskQueueStore.updateQueueItem(projectId, queueItem.id, {
+                            status: 'failed',
+                            completedAt: queueItem.completedAt,
+                            error: error.message
+                        });
+                        
+                        // Emit failure event
+                        if (this.eventBus) {
+                            this.eventBus.emit(EXECUTION_CONSTANTS.EVENTS.EXECUTION_ERROR, {
+                                taskId: queueItem.context.taskId,
+                                queueItemId: queueItem.id,
+                                projectId: projectId,
+                                error: error.message,
+                                stack: error.stack,
+                                completedAt: queueItem.completedAt,
+                                executionTime: Date.now() - new Date(queueItem.startedAt).getTime()
+                            });
+                            this.logger.info('TaskProcessor: Emitted EXECUTION_ERROR event', {
+                                taskId: queueItem.context.taskId,
+                                queueItemId: queueItem.id,
+                                error: error.message
+                            });
+                        } else {
+                            this.logger.warn('TaskProcessor: No eventBus available, cannot emit failure event');
+                        }
+                        
+                        // 🔄 SIMPLE: Trigger next task processing even after failure
+                        this.logger.info('TaskProcessor: Task failed, triggering next task processing');
+                        setTimeout(() => {
+                            this.processExecutionQueue();
+                        }, 2000);
+                    }
                 }
             }
         } catch (error) {

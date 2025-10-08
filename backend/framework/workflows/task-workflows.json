@@ -50,29 +50,65 @@
         "description": "Workflow for reviewing single task implementation status"
       }
     },
-    "bulk-task-review-workflow": {
-      "name": "Bulk Task Review Workflow",
-      "description": "Review multiple tasks sequentially: For each task → Review → Delay → Next Task",
+    "task-execution-workflow": {
+      "name": "Task Execution Workflow",
+      "description": "Execute task: Send Task Prompt → IDE → Validate Response → Complete Check",
       "steps": [
         {
-          "name": "process-tasks-loop",
-          "type": "loop",
-          "description": "Process each task in the tasks array",
-          "step": "TaskLoopStep",
+          "name": "send-task-prompt",
+          "type": "ide_send_message_step",
+          "description": "Send task prompt to IDE with auto IDE detection",
+          "step": "ide_send_message_step",
           "options": {
-            "tasks": "${tasks}",
-            "workflowName": "task-review-workflow",
-            "delayBetweenTasks": 2000,
-            "continueOnError": true,
-            "maxConcurrentTasks": 1
+            "useTaskPrompt": true,
+            "message": "${taskPrompt}",
+            "waitForResponse": true,
+            "timeout": 300000,
+            "sessionId": "task-execution-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}",
+            "autoDetectIDE": true,
+            "clickNewChat": true
+          },
+          "strict": true
+        },
+        {
+          "name": "validate-response",
+          "type": "CodeQualityAnalysisOrchestrator",
+          "description": "Validate IDE response",
+          "step": "CodeQualityAnalysisOrchestrator",
+          "options": {
+            "checks": ["code-quality", "syntax", "completeness"],
+            "strict": false
           },
           "strict": false
+        },
+        {
+          "name": "completion-check",
+          "type": "confirmation_step",
+          "description": "Check task completion status",
+          "step": "confirmation_step",
+          "options": {
+            "confirmationPrompt": "All task files complete or done, ANSWER with Complete percentage please",
+            "timeout": 60000,
+            "maxAttempts": 1,
+            "sessionId": "task-execution-completion-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": false,
+          "condition": "previousStep.success && previousStep.result.success",
+          "enabled": false
         }
       ],
       "metadata": {
         "version": "1.0.0",
         "created": "2025-01-07",
-        "description": "Workflow for reviewing multiple tasks in bulk"
+        "description": "Workflow for executing single task"
       }
     },
     "standard-task-workflow": {
