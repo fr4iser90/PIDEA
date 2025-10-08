@@ -44,7 +44,12 @@ class ResponseProcessor {
         try {
           const elements = await page.$$(this.selectors.chatSelectors.thinkingIndicator);
           if (elements.length > 0) {
-            return true;
+            for (const element of elements) {
+              const isVisible = await element.isVisible();
+              if (isVisible) {
+                return true;
+              }
+            }
           }
         } catch (error) {
           // Skip if selector fails
@@ -56,7 +61,12 @@ class ResponseProcessor {
         try {
           const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
           if (elements.length > 0) {
-            return true;
+            for (const element of elements) {
+              const isVisible = await element.isVisible();
+              if (isVisible) {
+                return true;
+              }
+            }
           }
         } catch (error) {
           // Skip if selector fails
