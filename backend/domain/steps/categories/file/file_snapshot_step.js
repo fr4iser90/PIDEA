@@ -4,12 +4,34 @@ const Logger = require('@logging/Logger');
 
 const logger = new Logger('FileSnapshotStep');
 
+// Step configuration
+const config = {
+  name: 'file_snapshot_step',
+  type: 'file',
+  category: 'file',
+  description: 'Creates snapshot of files before workflow starts',
+  version: '1.0.0',
+  dependencies: [],
+  settings: {
+    includeTimeout: false,
+    includeRetry: false
+  },
+  validation: {
+    required: ['workspacePath'],
+    optional: ['snapshotType']
+  }
+};
+
 /**
  * File Snapshot Step - Creates snapshot of files before workflow starts
  */
 class FileSnapshotStep {
   constructor() {
     this.name = 'file_snapshot_step';
+  }
+
+  static getConfig() {
+    return config;
   }
 
   /**
@@ -85,4 +107,11 @@ class FileSnapshotStep {
   }
 }
 
-module.exports = FileSnapshotStep;
+// Create instance for execution
+const stepInstance = new FileSnapshotStep();
+
+// Export in StepRegistry format
+module.exports = {
+  config,
+  execute: async (context) => await stepInstance.execute(context)
+};
