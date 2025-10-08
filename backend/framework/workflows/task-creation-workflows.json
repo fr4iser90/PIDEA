@@ -24,24 +24,6 @@
           "strict": true
         },
         {
-          "name": "confirm-file-creation",
-          "type": "confirmation_step",
-          "description": "Confirm if files were created successfully",
-          "step": "confirmation_step",
-          "options": {
-            "confirmationPrompt": "Were the task files created successfully? Please confirm with 'yes' or 'no'",
-            "timeout": 60000,
-            "maxAttempts": 2,
-            "sessionId": "task-create-confirmation-${task.id}",
-            "requestedBy": "${userId}",
-            "userId": "${userId}",
-            "projectId": "${options.projectId}",
-            "workspacePath": "${options.projectPath}"
-          },
-          "strict": false,
-          "condition": "previousStep.success && previousStep.result.success"
-        },
-        {
           "name": "new-chat-task-review",
           "type": "ide_send_message_step",
           "description": "Start new chat session with task-review.md prompt",
