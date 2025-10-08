@@ -100,8 +100,6 @@ class Application {
   }
 
   async initialize() {
-    this.logger.info('🔧 Initializing...');
-
     try {
       // Initialize database connection
       const DatabaseInitialization = require('./infrastructure/database/DatabaseInitialization');
@@ -248,9 +246,9 @@ class Application {
       // Make application instance globally available
       global.application = this;
 
-      this.logger.info('✅ Initialization complete');
+      this.logger.info('[Application] Ready');
     } catch (error) {
-      this.logger.error('Initialization failed:', error);
+      this.logger.error('[Application] Initialization failed:', error);
       throw error;
     }
   }
@@ -262,7 +260,6 @@ class Application {
 
 
   async initializePresentationLayer() {
-    this.logger.info('Initializing presentation layer...');
 
     // Initialize auth middleware
     this.authMiddleware = new AuthMiddleware(this.authService);
@@ -517,18 +514,13 @@ class Application {
 
   async start() {
     try {
-      this.logger.info('Starting...');
-      
       if (!this.app) {
         await this.initialize();
       }
 
       this.server.listen(this.config.port, async () => {
         this.isRunning = true;
-        this.logger.info(`Server running on port ${this.config.port}`);
-        this.logger.info(`Environment: ${this.autoSecurityManager.getEnvironment()}`);
-        this.logger.info(`Database: ${this.databaseConnection.getType()}`);
-        this.logger.info(`Auto-security: ${this.autoSecurityManager.isProduction() ? 'Production' : 'Development'}`);
+        this.logger.info(`[Application] Server ready on port ${this.config.port} (${this.autoSecurityManager.getEnvironment()})`);
       });
 
       // Graceful shutdown

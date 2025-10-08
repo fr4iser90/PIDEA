@@ -19,12 +19,9 @@ const frameworkBuilder = new FrameworkBuilder(frameworkRegistry);
  */
 async function initializeFrameworks(configs = []) {
   try {
-    logger.info('🚀 Initializing framework system...');
-    
     // Load framework configurations from infrastructure layer
     await frameworkRegistry.loadFrameworkConfigs(configs);
     
-    logger.info('✅ Framework system initialized successfully');
     return {
       registry: frameworkRegistry,
       builder: frameworkBuilder

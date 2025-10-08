@@ -105,14 +105,11 @@ class IDEManager {
   setupEventHandlers() {
     if (this.eventBus) {
       this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
-        logger.info('Received activeIDEChanged event:', eventData);
         if (eventData.port) {
           try {
-                    logger.info(`Setting active port from event: ${eventData.port}`);
-        this.activePort = eventData.port;
-                  logger.info(`Active port set to: ${this.activePort}`);
+            this.activePort = eventData.port;
           } catch (error) {
-            logger.error('Failed to set active port from event:', error.message);
+            logger.error('[IDEManager] Failed to set active port from event:', error.message);
           }
         }
       });
@@ -189,8 +186,6 @@ class IDEManager {
       return;
     }
 
-    logger.info('Initializing...');
-    
     try {
       // Load configuration
       await this.configManager.loadConfig();
@@ -200,27 +195,23 @@ class IDEManager {
         try {
           await this.cdpConnectionManager.initialize();
           await this.cdpWorkspaceDetector.initialize();
-          logger.info('CDP-based workspace detection initialized successfully');
         } catch (cdpError) {
           logger.warn('Failed to initialize CDP-based workspace detection:', cdpError.message);
         }
       }
       
       // Scan for existing IDEs with timeout
-      logger.info('Scanning for existing IDEs...');
       const existingIDEs = await this.detectorFactory.detectAll() || [];
       
-      logger.info(`Found ${existingIDEs.length} existing IDEs`);
       existingIDEs.forEach(ide => {
         this.ideStatus.set(ide.port, ide.status);
         this.ideTypes.set(ide.port, ide.type || 'cursor');
-        // Don't log individual IDE registration - will be logged in batch
       });
       
-      // Batch log all registered IDEs
+      // Only log summary if IDEs found
       if (existingIDEs.length > 0) {
-        const ideList = existingIDEs.map(ide => `${ide.type || 'cursor'}:${ide.port}(${ide.status})`).join(', ');
-        logger.info(`Registered existing IDEs: ${ideList}`);
+        const ideList = existingIDEs.map(ide => `${ide.type || 'cursor'}:${ide.port}`).join(', ');
+        logger.info(`[IDEManager] Detected ${existingIDEs.length} IDEs: ${ideList}`);
       }
       
       // Initialize port manager
@@ -229,7 +220,6 @@ class IDEManager {
       // Set initial active port
       if (existingIDEs.length > 0) {
         this.activePort = existingIDEs[0].port;
-        logger.info(`Set initial active port: ${this.activePort}`);
       }
       
       // Register IDEs with health monitoring
@@ -243,14 +233,12 @@ class IDEManager {
       if (this.healthMonitor && typeof this.healthMonitor.startMonitoring === 'function') {
         try {
           await this.healthMonitor.startMonitoring();
-          logger.info('Health monitoring started successfully');
         } catch (error) {
           logger.warn('Failed to start health monitoring:', error.message);
         }
       }
       
       this.initialized = true;
-      logger.info('Initialization complete');
       
       // Start workspace detection in background (non-blocking)
       this.detectWorkspacePathsForAllIDEs().catch(error => {

@@ -25,8 +25,6 @@ const frameworkStepRegistry = new FrameworkStepRegistry();
  */
 async function initializeFrameworkInfrastructure(stepRegistry = null) {
   try {
-    logger.info('🚀 Initializing Framework Infrastructure...');
-    
     const initializationResults = {
       config: false,
       validator: false,
@@ -83,7 +81,7 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
       throw new Error(`Critical framework components failed to initialize: ${criticalComponents.filter(c => !initializationResults[c]).join(', ')}`);
     }
     
-    logger.info('✅ Framework Infrastructure initialized successfully');
+    // Only log summary, not individual component successes
     
     return {
       loader: frameworkLoader,

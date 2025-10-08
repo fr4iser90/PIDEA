@@ -26,15 +26,11 @@ class FrameworkManager {
    */
   async initialize() {
     try {
-  
-      logger.info('🚀 Initializing Framework Manager...');
-      
       // Components are already initialized by initializeFrameworkInfrastructure
       // Only load auto-load frameworks
       await this.loadAutoLoadFrameworks();
       
       this.isInitialized = true;
-      logger.info('✅ Framework Manager initialized successfully');
       return true;
     } catch (error) {
       logger.error('❌ Failed to initialize Framework Manager:', error.message);

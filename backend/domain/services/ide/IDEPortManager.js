@@ -55,27 +55,22 @@ class IDEPortManager {
    * @returns {Promise<number|null>} Selected active port
    */
   async selectActivePort() {
-    logger.info('Selecting active port...');
-    
     try {
       // Strategy 1: Previously active port
       const previouslyActive = await this.tryPreviouslyActivePort();
       if (previouslyActive) {
-        logger.info('Using previously active port:', previouslyActive);
         return previouslyActive;
       }
 
       // Strategy 2: First available port
       const firstAvailable = await this.tryFirstAvailablePort();
       if (firstAvailable) {
-        logger.info(`Using first available port: ${firstAvailable}`);
         return firstAvailable;
       }
 
       // Strategy 3: Healthiest IDE
       const healthiest = await this.tryHealthiestIDE();
       if (healthiest) {
-        logger.info('Using healthiest IDE port:', healthiest);
         return healthiest;
       }
 
@@ -353,11 +348,9 @@ class IDEPortManager {
    */
   async setActivePort(port) {
     try {
-      logger.info(`Setting active port: ${port}`);
-      
       const isValid = await this.validatePort(port);
       if (!isValid) {
-        logger.error('Port validation failed:', port);
+        logger.error('[IDEPortManager] Port validation failed:', port);
         return false;
       }
 
@@ -379,7 +372,6 @@ class IDEPortManager {
         });
       }
       
-      logger.info(`Active port set successfully: ${port}`);
       return true;
     } catch (error) {
       logger.error('Error setting active port:', error);
@@ -437,12 +429,10 @@ class IDEPortManager {
 
     // Check if already initialized
     if (this.initialized) {
-      logger.info('Already initialized');
       return;
     }
 
     this.initializing = true;
-    logger.info('Initializing...');
     
     try {
       // Select initial active port with timeout
@@ -453,15 +443,11 @@ class IDEPortManager {
       
       if (initialPort) {
         await this.setActivePort(initialPort);
-        logger.info('Active port set:', initialPort);
-      } else {
-        logger.info('No active port selected - no IDEs available');
       }
       
       this.initialized = true;
-      logger.info('Initialization complete');
     } catch (error) {
-      logger.error('Initialization failed:', error);
+      logger.error('[IDEPortManager] Initialization failed:', error);
       this.initialized = false;
     } finally {
       this.initializing = false;

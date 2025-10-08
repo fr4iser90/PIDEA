@@ -20,8 +20,6 @@ class FrameworkValidator {
    */
   async initialize() {
     try {
-      logger.info('🚀 Initializing Framework Validator...');
-      
       // Set up validation rules
       this.setupValidationRules();
       
@@ -29,7 +27,6 @@ class FrameworkValidator {
       this.setupSecurityRules();
       
       this.isInitialized = true;
-      logger.info('✅ Framework Validator initialized successfully');
       return true;
     } catch (error) {
       logger.error('❌ Failed to initialize Framework Validator:', error.message);

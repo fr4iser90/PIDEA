@@ -78,14 +78,18 @@ class ServiceInitialization {
   async initializeDomainServices(serviceRegistry, databaseConnection) {
     this.logger.info('🔧 Initializing domain services with automatic dependency resolution...');
 
-    // Debug: Log all registered services before validation
+    // Debug: Log service count only (detailed lists moved to debug level)
     const container = serviceRegistry.getContainer();
     const allServices = Array.from(container.factories.keys());
-    this.logger.info('🔍 All registered services:', allServices);
-    
-    // Debug: Log dependency graph nodes
     const graphNodes = Array.from(container.dependencyGraph.nodes.keys());
-    this.logger.info('🔍 Dependency graph nodes:', graphNodes);
+    
+    // Only log summary in production, detailed info in debug mode
+    if (process.env.LOG_LEVEL === 'debug') {
+      this.logger.debug('🔍 All registered services:', allServices);
+      this.logger.debug('🔍 Dependency graph nodes:', graphNodes);
+    } else {
+      this.logger.info(`[ServiceRegistry] Registered ${allServices.length} services`);
+    }
 
     // Validate dependency resolution before getting services
     const validation = serviceRegistry.getContainer().validateDependencies();
@@ -97,9 +101,11 @@ class ServiceInitialization {
     // Get services through DI container with automatic dependency resolution
     const services = await this.getDomainServices(serviceRegistry);
     
-    // Log dependency statistics
+    // Log dependency statistics only in debug mode
     const stats = serviceRegistry.getContainer().getDependencyStats();
-    this.logger.info('Dependency resolution statistics:', stats);
+    if (process.env.LOG_LEVEL === 'debug') {
+      this.logger.debug('Dependency resolution statistics:', stats);
+    }
 
     // Start all services with lifecycle hooks
     this.logger.info('Starting services with lifecycle hooks...');

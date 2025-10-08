@@ -22,8 +22,6 @@ class FrameworkConfig {
    */
   async initialize() {
     try {
-      logger.info('🚀 Initializing Framework Config...');
-      
       // Load configuration from file
       await this.loadConfig();
       
@@ -34,7 +32,6 @@ class FrameworkConfig {
       this.setupEnvironmentVariables();
       
       this.isInitialized = true;
-      logger.info('✅ Framework Config initialized successfully');
       return true;
     } catch (error) {
       logger.error('❌ Failed to initialize Framework Config:', error.message);

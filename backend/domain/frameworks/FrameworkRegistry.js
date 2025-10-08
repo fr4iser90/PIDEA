@@ -84,7 +84,7 @@ class FrameworkRegistry {
         }
       }
 
-      logger.info(`📦 Loaded ${this.frameworks.size} framework configurations`);
+      // Only log summary, not individual framework loading
     } catch (error) {
       logger.error('❌ Failed to load framework configs:', error.message);
       throw error;

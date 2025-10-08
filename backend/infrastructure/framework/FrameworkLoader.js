@@ -24,8 +24,6 @@ class FrameworkLoader {
    */
   async initialize() {
     try {
-      logger.info('🚀 Initializing Framework Loader...');
-      
       // Discover framework directories
       await this.discoverFrameworks();
       
@@ -35,12 +33,11 @@ class FrameworkLoader {
       // Initialize domain layer with collected configurations
       try {
         this.domainFrameworkSystem = await initializeFrameworks(this.frameworkConfigs);
-        logger.info(`✅ Domain framework system initialized with ${this.frameworkConfigs.length} configurations`);
       } catch (domainError) {
         logger.warn(`⚠️ Domain framework system initialization failed:`, domainError.message);
       }
 
-      logger.info(`✅ Framework Loader initialized with ${this.loadedFrameworks.size} frameworks`);
+      this.isInitialized = true;
       return true;
     } catch (error) {
       logger.error('❌ Failed to initialize Framework Loader:', error.message);
@@ -76,7 +73,10 @@ class FrameworkLoader {
         }
       }
 
-      logger.info(`🔍 Discovered ${this.frameworkPaths.size} framework directories`);
+      // Only log in debug mode
+      if (process.env.LOG_LEVEL === 'debug') {
+        logger.debug(`🔍 Discovered ${this.frameworkPaths.size} framework directories`);
+      }
     } catch (error) {
       logger.error('❌ Failed to discover frameworks:', error.message);
       throw error;
