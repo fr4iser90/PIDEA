@@ -36,14 +36,12 @@ class QueueTaskExecutionService {
             // For task creation workflows, skip task validation since task doesn't exist yet
             let task = null;
             if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
-                this.logger.info('Task creation workflow detected, skipping task validation');
-                // Create a minimal task object for task creation workflows
-                task = {
-                    id: taskId,
-                    title: options.taskData?.title || 'New Task',
-                    type: { value: options.taskData?.type || 'feature' },
-                    description: options.taskData?.description || ''
-                };
+                // This is a task creation workflow with real task in database
+                this.logger.info('Task creation workflow detected, loading real task from database');
+                task = await this.taskRepository.findById(taskId);
+                if (!task) {
+                    throw new Error(`Task not found: ${taskId}`);
+                }
             } else {
                 // Validate task exists and belongs to project
                 task = await this.taskRepository.findById(taskId);
@@ -84,6 +82,7 @@ class QueueTaskExecutionService {
                 createGitBranch: options.createGitBranch || false,
                 branchName: options.branchName,
                 autoExecute: options.autoExecute || true,
+                taskData: options.taskData, // Pass taskData to context
                 ...options
             };
 

@@ -807,14 +807,33 @@ class WorkflowController {
                         throw new Error('Task description is required for task creation');
                     }
                     
-                    // Create a temporary task entry for workflow execution
-                    const tempTaskId = `temp-task-${Date.now()}`;
+                    // Create a real task entry in the database
+                    const realTask = await this.taskService.createTask(
+                        projectId,
+                        taskData.title || 'New Task', // Will be updated by AI
+                        taskData.description,
+                        taskData.priority || 'medium',
+                        taskData.type || 'feature',
+                        taskData.category || 'general',
+                        {
+                            creationMode: creationMode,
+                            originalDescription: taskData.description,
+                            status: 'pending_ai_creation' // Special status for AI to process
+                        }
+                    );
+                    
+                    this.logger.info('WorkflowController: Real task created in database', {
+                        taskId: realTask.id,
+                        title: realTask.title,
+                        description: realTask.description,
+                        creationMode
+                    });
                     
                     // Determine workflow based on creation mode
                     const taskMode = creationMode === 'normal' ? 'task-creation-workflow' : 'advanced-task-creation-workflow';
                     
                     // Add task to queue for proper workflow execution
-                    const queueResult = await this.taskService.queueTaskForExecution(tempTaskId, userId, {
+                    const queueResult = await this.taskService.queueTaskForExecution(realTask.id, userId, {
                         projectId: projectId,
                         projectPath: workspacePath,
                         priority: 'normal',
@@ -826,7 +845,7 @@ class WorkflowController {
                     });
                     
                     this.logger.info('WorkflowController: Task creation workflow queued', {
-                        tempTaskId,
+                        taskId: realTask.id,
                         queueItemId: queueResult.queueItemId,
                         position: queueResult.position,
                         creationMode
@@ -836,7 +855,7 @@ class WorkflowController {
                         success: true,
                         message: `Task creation workflow started successfully`,
                         data: {
-                            workflowId: tempTaskId,
+                            workflowId: realTask.id,
                             queueItemId: queueResult.queueItemId,
                             status: queueResult.status,
                             position: queueResult.position,

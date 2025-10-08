@@ -1489,7 +1489,9 @@ ${task.description}
       }
 
       // Combine task-create.md with task details
-      const finalPrompt = `${taskCreatePrompt}\n\n## Task Details:\n- **Title**: ${task.title}\n- **Description**: ${task.description || ''}\n- **Type**: ${task.type?.value || 'feature'}\n- **Priority**: ${task.priority?.value || 'medium'}\n- **Category**: ${task.category || 'general'}\n- **Project**: ${task.projectId || 'Current Project'}`;
+      // For task creation, use taskData from options if available, otherwise use task
+      const taskData = options.taskData || task;
+      const finalPrompt = `${taskCreatePrompt}\n\n## Task Details:\n- **Title**: ${taskData.title || ''}\n- **Description**: ${taskData.description || ''}\n- **Type**: ${taskData.type?.value || taskData.type || 'feature'}\n- **Priority**: ${taskData.priority?.value || taskData.priority || 'medium'}\n- **Category**: ${taskData.category || 'general'}\n- **Project**: ${taskData.projectId || task.projectId || 'Current Project'}`;
       
       logger.info('✅ [TaskService] Final task create prompt generated', {
         taskId: task.id,

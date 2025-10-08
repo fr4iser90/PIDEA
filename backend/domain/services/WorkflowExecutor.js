@@ -33,14 +33,13 @@ class WorkflowExecutor {
             // For task creation workflows, skip task loading since task doesn't exist yet
             let task = null;
             if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
-                this.logger.info('WorkflowExecutor: Task creation workflow detected, skipping task loading');
-                // Create a minimal task object for task creation workflows
-                task = {
-                    id: taskId,
-                    title: options.taskData?.title || 'New Task',
-                    type: { value: options.taskData?.type || 'feature' },
-                    description: options.taskData?.description || ''
-                };
+                // This is a task creation workflow with real task in database
+                this.logger.info('WorkflowExecutor: Task creation workflow detected, loading real task from database');
+                task = await this.loadTask(taskId);
+                if (!task) {
+                    throw new Error(`Task ${taskId} not found`);
+                }
+                this.logger.info('WorkflowExecutor: Real task loaded successfully', { taskId, taskTitle: task.title });
             } else {
                 // Load task from database for execution workflows
                 this.logger.info('WorkflowExecutor: Loading task from database', { taskId });
@@ -130,6 +129,15 @@ class WorkflowExecutor {
                                 this.logger.info('WorkflowExecutor: Built check-state prompt', {
                                     taskId: context.task.id,
                                     promptLength: stepMessage.length
+                                });
+                            } else if (context.taskMode === 'task-creation-workflow' || context.taskMode === 'advanced-task-creation-workflow') {
+                                // This is a task creation workflow with real task in database
+                                // The task already has the description, so use task creation prompt
+                                stepMessage = await this.taskService.buildTaskCreatePrompt(context.task, context);
+                                this.logger.info('WorkflowExecutor: Built task creation prompt', {
+                                    taskId: context.task.id,
+                                    promptLength: stepMessage.length,
+                                    hasDescription: !!context.task.description
                                 });
                             } else {
                                 stepMessage = await this.taskService.buildTaskExecutionPrompt(context.task);
