@@ -5,7 +5,8 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('AnalyzeCodeStructureStep');
 
 const config = {
   name: 'analyze_code_structure',
@@ -28,7 +29,6 @@ class AnalyzeCodeStructureStep {
     this.description = 'Analyze code structure and organization';
     this.category = 'analysis';
     this.dependencies = [];
-    this.logger = new Logger('AnalyzeCodeStructureStep');
   }
 
   static getConfig() {
@@ -37,7 +37,7 @@ class AnalyzeCodeStructureStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🔍 Starting code structure analysis...');
+      logger.info('🔍 Starting code structure analysis...');
       
       const projectPath = context.projectPath || process.cwd();
       const scanDepth = options.scanDepth || config.settings.scanDepth;
@@ -72,7 +72,7 @@ class AnalyzeCodeStructureStep {
       // Calculate metrics
       result.analysis.metrics = this.calculateMetrics(result.analysis);
       
-      this.logger.info(`✅ Code structure analysis completed`);
+      logger.info(`✅ Code structure analysis completed`);
       
       return {
         success: true,
@@ -84,7 +84,7 @@ class AnalyzeCodeStructureStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Code structure analysis failed:', error.message);
+      logger.error('❌ Code structure analysis failed:', error.message);
       return {
         success: false,
         error: error.message,

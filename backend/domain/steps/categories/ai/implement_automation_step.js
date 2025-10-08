@@ -3,7 +3,8 @@
  * Implement automated code generation and refactoring
  */
 
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('ImplementAutomationStep');
 
 const config = {
   name: 'implement_automation',
@@ -26,7 +27,6 @@ class ImplementAutomationStep {
     this.description = 'Implement automated code generation and refactoring';
     this.category = 'ai';
     this.dependencies = [];
-    this.logger = new Logger('ImplementAutomationStep');
   }
 
   static getConfig() {
@@ -35,7 +35,7 @@ class ImplementAutomationStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🤖 Starting automation implementation...');
+      logger.info('🤖 Starting automation implementation...');
       
       const autoApply = options.autoApply || config.settings.autoApply;
       const reviewRequired = options.reviewRequired || config.settings.reviewRequired;
@@ -65,7 +65,7 @@ class ImplementAutomationStep {
         result.status = 'pending-review';
       }
       
-      this.logger.info(`✅ Automation implementation completed. Status: ${result.status}`);
+      logger.info(`✅ Automation implementation completed. Status: ${result.status}`);
       
       return {
         success: true,
@@ -78,7 +78,7 @@ class ImplementAutomationStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Automation implementation failed:', error.message);
+      logger.error('❌ Automation implementation failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -169,7 +169,7 @@ class ImplementAutomationStep {
           changes.push(change);
         }
       } catch (error) {
-        this.logger.warn(`Failed to implement automation ${automation.title}: ${error.message}`);
+        logger.warn(`Failed to implement automation ${automation.title}: ${error.message}`);
       }
     }
     
@@ -203,7 +203,7 @@ class ImplementAutomationStep {
         change.operations = await this.implementRefactoring(automation);
         break;
       default:
-        this.logger.warn(`Unknown automation type: ${automation.type}`);
+        logger.warn(`Unknown automation type: ${automation.type}`);
         return null;
     }
     
@@ -241,7 +241,7 @@ class ImplementAutomationStep {
         break;
         
       default:
-        this.logger.warn(`Unknown template: ${automation.template}`);
+        logger.warn(`Unknown template: ${automation.template}`);
     }
     
     return operations;
@@ -270,7 +270,7 @@ class ImplementAutomationStep {
         break;
         
       default:
-        this.logger.warn(`Unknown template: ${automation.template}`);
+        logger.warn(`Unknown template: ${automation.template}`);
     }
     
     return operations;

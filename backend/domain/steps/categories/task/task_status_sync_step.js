@@ -7,6 +7,7 @@
 
 require('module-alias/register');
 const Logger = require('@logging/Logger');
+const logger = new Logger('TaskStatusSyncStep');
 
 class TaskStatusSyncStep {
   constructor() {
@@ -14,7 +15,6 @@ class TaskStatusSyncStep {
     this.description = 'Synchronizes task statuses across systems';
     this.category = 'task';
     this.dependencies = ['TaskRepository', 'TaskStatusTransitionService', 'EventBus'];
-    this.logger = new Logger('TaskStatusSyncStep');
   }
 
   static getConfig() {
@@ -47,7 +47,7 @@ class TaskStatusSyncStep {
    */
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🔄 Starting task status sync step...');
+      logger.info('🔄 Starting task status sync step...');
       
       const {
         operation = 'sync',
@@ -76,7 +76,7 @@ class TaskStatusSyncStep {
           throw new Error(`Unsupported operation: ${operation}`);
       }
     } catch (error) {
-      this.logger.error('❌ Task status sync failed:', error);
+      logger.error('❌ Task status sync failed:', error);
       throw error;
     }
   }
@@ -127,7 +127,7 @@ class TaskStatusSyncStep {
    * @returns {Promise<Object>} Sync result
    */
   async syncSingleTask(context, services, options) {
-    this.logger.info('🔄 Syncing single task...');
+    logger.info('🔄 Syncing single task...');
     
     const { taskId, targetStatus, sourceSystem, targetSystem } = options;
     
@@ -150,7 +150,7 @@ class TaskStatusSyncStep {
     // Perform sync
     const result = await this.performStatusSync(task, targetStatus, services, options);
     
-    this.logger.info(`✅ Single task sync completed: ${taskId} -> ${targetStatus}`);
+    logger.info(`✅ Single task sync completed: ${taskId} -> ${targetStatus}`);
     return result;
   }
 
@@ -162,7 +162,7 @@ class TaskStatusSyncStep {
    * @returns {Promise<Object>} Batch sync result
    */
   async syncBatchTasks(context, services, options) {
-    this.logger.info('🔄 Syncing batch tasks...');
+    logger.info('🔄 Syncing batch tasks...');
     
     const { taskIds, targetStatus, batchSize = 50 } = options;
     
@@ -196,7 +196,7 @@ class TaskStatusSyncStep {
             taskId,
             error: error.message
           });
-          this.logger.error(`❌ Batch sync failed for task ${taskId}:`, error);
+          logger.error(`❌ Batch sync failed for task ${taskId}:`, error);
         }
       }
     }
@@ -212,7 +212,7 @@ class TaskStatusSyncStep {
       timestamp: new Date().toISOString()
     };
 
-    this.logger.info(`✅ Batch sync completed: ${results.length} successful, ${errors.length} failed`);
+    logger.info(`✅ Batch sync completed: ${results.length} successful, ${errors.length} failed`);
     return batchResult;
   }
 
@@ -224,7 +224,7 @@ class TaskStatusSyncStep {
    * @returns {Promise<Object>} Validation result
    */
   async validateSync(context, services, options) {
-    this.logger.info('🔄 Validating sync operation...');
+    logger.info('🔄 Validating sync operation...');
     
     const { taskIds, targetStatus } = options;
     
@@ -275,7 +275,7 @@ class TaskStatusSyncStep {
       timestamp: new Date().toISOString()
     };
 
-    this.logger.info(`✅ Validation completed: ${validationResult.validTasks} valid, ${validationResult.invalidTasks} invalid`);
+    logger.info(`✅ Validation completed: ${validationResult.validTasks} valid, ${validationResult.invalidTasks} invalid`);
     return validationResult;
   }
 
@@ -287,7 +287,7 @@ class TaskStatusSyncStep {
    * @returns {Promise<Object>} Rollback result
    */
   async rollbackSync(context, services, options) {
-    this.logger.info('🔄 Rolling back sync operation...');
+    logger.info('🔄 Rolling back sync operation...');
     
     const { taskIds, previousStatus } = options;
     
@@ -340,7 +340,7 @@ class TaskStatusSyncStep {
       timestamp: new Date().toISOString()
     };
 
-    this.logger.info(`✅ Rollback completed: ${rollbackResult.successfulRollbacks} successful, ${rollbackResult.failedRollbacks} failed`);
+    logger.info(`✅ Rollback completed: ${rollbackResult.successfulRollbacks} successful, ${rollbackResult.failedRollbacks} failed`);
     return rollbackResult;
   }
 
@@ -425,11 +425,11 @@ class TaskStatusSyncStep {
           await services.statusTransitionService.moveTaskToCancelled(task.id, 'Task cancelled via sync');
           break;
         default:
-          this.logger.warn(`No specific transition method for status: ${newStatus}`);
+          logger.warn(`No specific transition method for status: ${newStatus}`);
           break;
       }
     } catch (error) {
-      this.logger.error(`Error moving files for task ${task.id}:`, error);
+      logger.error(`Error moving files for task ${task.id}:`, error);
       throw error;
     }
   }
@@ -455,9 +455,9 @@ class TaskStatusSyncStep {
       };
 
       await services.eventBus.emit(event);
-      this.logger.info(`📡 Sync event emitted for task ${task.id}`);
+      logger.info(`📡 Sync event emitted for task ${task.id}`);
     } catch (error) {
-      this.logger.error(`Error emitting sync event for task ${task.id}:`, error);
+      logger.error(`Error emitting sync event for task ${task.id}:`, error);
       // Don't throw error for event emission failures
     }
   }

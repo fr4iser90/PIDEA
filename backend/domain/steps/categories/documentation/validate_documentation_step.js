@@ -5,7 +5,8 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('ValidateDocumentationStep');
 
 const config = {
   name: 'validate_documentation',
@@ -28,7 +29,6 @@ class ValidateDocumentationStep {
     this.description = 'Validate documentation completeness and accuracy';
     this.category = 'documentation';
     this.dependencies = [];
-    this.logger = new Logger('ValidateDocumentationStep');
   }
 
   static getConfig() {
@@ -37,7 +37,7 @@ class ValidateDocumentationStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🔍 Starting documentation validation...');
+      logger.info('🔍 Starting documentation validation...');
       
       const projectPath = context.projectPath || process.cwd();
       const checkLinks = options.checkLinks || config.settings.checkLinks;
@@ -77,7 +77,7 @@ class ValidateDocumentationStep {
       // Calculate overall validation score
       result.validation = this.calculateOverallValidation(result.validation);
       
-      this.logger.info(`✅ Documentation validation completed. Score: ${result.validation.score}/100`);
+      logger.info(`✅ Documentation validation completed. Score: ${result.validation.score}/100`);
       
       return {
         success: true,
@@ -90,7 +90,7 @@ class ValidateDocumentationStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Documentation validation failed:', error.message);
+      logger.error('❌ Documentation validation failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -106,7 +106,7 @@ class ValidateDocumentationStep {
     try {
       await this.scanForDocumentation(projectPath, docFiles, docExtensions);
     } catch (error) {
-      this.logger.warn(`Warning: Could not scan for documentation files: ${error.message}`);
+      logger.warn(`Warning: Could not scan for documentation files: ${error.message}`);
     }
     
     return docFiles;
@@ -139,7 +139,7 @@ class ValidateDocumentationStep {
         }
       }
     } catch (error) {
-      this.logger.warn(`Warning: Could not scan directory ${dirPath}: ${error.message}`);
+      logger.warn(`Warning: Could not scan directory ${dirPath}: ${error.message}`);
     }
   }
 

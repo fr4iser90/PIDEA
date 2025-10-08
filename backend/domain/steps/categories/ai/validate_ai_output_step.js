@@ -3,7 +3,8 @@
  * Validate AI-generated code and suggestions
  */
 
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('ValidateAIOutputStep');
 
 const config = {
   name: 'validate_ai_output',
@@ -26,7 +27,6 @@ class ValidateAIOutputStep {
     this.description = 'Validate AI-generated code and suggestions';
     this.category = 'ai';
     this.dependencies = [];
-    this.logger = new Logger('ValidateAIOutputStep');
   }
 
   static getConfig() {
@@ -35,7 +35,7 @@ class ValidateAIOutputStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🔍 Starting AI output validation...');
+      logger.info('🔍 Starting AI output validation...');
       
       const runTests = options.runTests || config.settings.runTests;
       const checkQuality = options.checkQuality || config.settings.checkQuality;
@@ -73,7 +73,7 @@ class ValidateAIOutputStep {
       // Calculate overall validation score
       result.validation = this.calculateOverallValidation(result.validation);
       
-      this.logger.info(`✅ AI output validation completed. Score: ${result.validation.score}/100`);
+      logger.info(`✅ AI output validation completed. Score: ${result.validation.score}/100`);
       
       return {
         success: true,
@@ -86,7 +86,7 @@ class ValidateAIOutputStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ AI output validation failed:', error.message);
+      logger.error('❌ AI output validation failed:', error.message);
       return {
         success: false,
         error: error.message,

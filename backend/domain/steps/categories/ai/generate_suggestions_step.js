@@ -3,7 +3,8 @@
  * Generate AI-powered suggestions and recommendations
  */
 
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('GenerateSuggestionsStep');
 
 const config = {
   name: 'generate_suggestions',
@@ -26,7 +27,6 @@ class GenerateSuggestionsStep {
     this.description = 'Generate AI-powered suggestions and recommendations';
     this.category = 'ai';
     this.dependencies = [];
-    this.logger = new Logger('GenerateSuggestionsStep');
   }
 
   static getConfig() {
@@ -35,7 +35,7 @@ class GenerateSuggestionsStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('💡 Starting suggestion generation...');
+      logger.info('💡 Starting suggestion generation...');
       
       const suggestionTypes = options.suggestionTypes || config.settings.suggestionTypes;
       const maxSuggestions = options.maxSuggestions || config.settings.maxSuggestions;
@@ -63,7 +63,7 @@ class GenerateSuggestionsStep {
         .sort((a, b) => b.confidence - a.confidence)
         .slice(0, maxSuggestions);
       
-      this.logger.info(`✅ Generated ${result.suggestions.length} suggestions`);
+      logger.info(`✅ Generated ${result.suggestions.length} suggestions`);
       
       return {
         success: true,
@@ -75,7 +75,7 @@ class GenerateSuggestionsStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Suggestion generation failed:', error.message);
+      logger.error('❌ Suggestion generation failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -98,7 +98,7 @@ class GenerateSuggestionsStep {
         suggestions.push(...await this.generateOptimizationSuggestions(context, options));
         break;
       default:
-        this.logger.warn(`Unknown suggestion type: ${type}`);
+        logger.warn(`Unknown suggestion type: ${type}`);
     }
     
     return suggestions;

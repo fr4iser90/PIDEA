@@ -5,7 +5,8 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('GenerateCodeDocsStep');
 
 const config = {
   name: 'generate_code_docs',
@@ -28,7 +29,6 @@ class GenerateCodeDocsStep {
     this.description = 'Generate code documentation from AI analysis';
     this.category = 'documentation';
     this.dependencies = [];
-    this.logger = new Logger('GenerateCodeDocsStep');
   }
 
   static getConfig() {
@@ -37,7 +37,7 @@ class GenerateCodeDocsStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🤖 Starting code documentation generation...');
+      logger.info('🤖 Starting code documentation generation...');
       
       const projectPath = context.projectPath || process.cwd();
       const includeScreenshots = options.includeScreenshots || config.settings.includeScreenshots;
@@ -73,7 +73,7 @@ class GenerateCodeDocsStep {
         result.filesGenerated.push(outputPath);
       }
       
-      this.logger.info(`✅ Code documentation generated successfully. Analyzed ${result.filesAnalyzed.length} files.`);
+      logger.info(`✅ Code documentation generated successfully. Analyzed ${result.filesAnalyzed.length} files.`);
       
       return {
         success: true,
@@ -85,7 +85,7 @@ class GenerateCodeDocsStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Code documentation generation failed:', error.message);
+      logger.error('❌ Code documentation generation failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -101,7 +101,7 @@ class GenerateCodeDocsStep {
     try {
       await this.scanDirectory(projectPath, codeFiles, supportedExtensions);
     } catch (error) {
-      this.logger.warn(`Warning: Could not scan directory ${projectPath}: ${error.message}`);
+      logger.warn(`Warning: Could not scan directory ${projectPath}: ${error.message}`);
     }
     
     return codeFiles;
@@ -130,7 +130,7 @@ class GenerateCodeDocsStep {
         }
       }
     } catch (error) {
-      this.logger.warn(`Warning: Could not scan directory ${dirPath}: ${error.message}`);
+      logger.warn(`Warning: Could not scan directory ${dirPath}: ${error.message}`);
     }
   }
 
@@ -152,7 +152,7 @@ class GenerateCodeDocsStep {
         complexity: this.calculateComplexity(content)
       };
     } catch (error) {
-      this.logger.warn(`Warning: Could not analyze file ${filePath}: ${error.message}`);
+      logger.warn(`Warning: Could not analyze file ${filePath}: ${error.message}`);
       return {
         path: filePath,
         name: path.basename(filePath),
@@ -416,9 +416,9 @@ class GenerateCodeDocsStep {
       // Write file
       await fs.writeFile(fullPath, content, 'utf8');
       
-      this.logger.info(`📝 Code documentation written to: ${fullPath}`);
+      logger.info(`📝 Code documentation written to: ${fullPath}`);
     } catch (error) {
-      this.logger.error(`❌ Failed to write code documentation: ${error.message}`);
+      logger.error(`❌ Failed to write code documentation: ${error.message}`);
       throw error;
     }
   }

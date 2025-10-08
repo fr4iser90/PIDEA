@@ -5,7 +5,8 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('GenerateStructureDocsStep');
 
 const config = {
   name: 'generate_structure_docs',
@@ -27,7 +28,6 @@ class GenerateStructureDocsStep {
     this.description = 'Generate structure documentation from script';
     this.category = 'documentation';
     this.dependencies = [];
-    this.logger = new Logger('GenerateStructureDocsStep');
   }
 
   static getConfig() {
@@ -36,7 +36,7 @@ class GenerateStructureDocsStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('📝 Starting structure documentation generation...');
+      logger.info('📝 Starting structure documentation generation...');
       
       const projectPath = context.projectPath || process.cwd();
       const format = options.format || config.settings.format;
@@ -62,7 +62,7 @@ class GenerateStructureDocsStep {
         result.filesGenerated.push(outputPath);
       }
       
-      this.logger.info(`✅ Structure documentation generated successfully. Format: ${format}`);
+      logger.info(`✅ Structure documentation generated successfully. Format: ${format}`);
       
       return {
         success: true,
@@ -74,7 +74,7 @@ class GenerateStructureDocsStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Structure documentation generation failed:', error.message);
+      logger.error('❌ Structure documentation generation failed:', error.message);
       return {
         success: false,
         error: error.message,
@@ -125,7 +125,7 @@ class GenerateStructureDocsStep {
         }
       }
     } catch (error) {
-      this.logger.warn(`Warning: Could not analyze directory ${projectPath}: ${error.message}`);
+      logger.warn(`Warning: Could not analyze directory ${projectPath}: ${error.message}`);
     }
 
     return structure;
@@ -160,7 +160,7 @@ class GenerateStructureDocsStep {
         }
       }
     } catch (error) {
-      this.logger.warn(`Warning: Could not analyze directory ${dirPath}: ${error.message}`);
+      logger.warn(`Warning: Could not analyze directory ${dirPath}: ${error.message}`);
     }
 
     return structure;
@@ -309,9 +309,9 @@ class GenerateStructureDocsStep {
       // Write file
       await fs.writeFile(fullPath, content, 'utf8');
       
-      this.logger.info(`📝 Documentation written to: ${fullPath}`);
+      logger.info(`📝 Documentation written to: ${fullPath}`);
     } catch (error) {
-      this.logger.error(`❌ Failed to write documentation: ${error.message}`);
+      logger.error(`❌ Failed to write documentation: ${error.message}`);
       throw error;
     }
   }

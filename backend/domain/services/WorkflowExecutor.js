@@ -161,7 +161,8 @@ class WorkflowExecutor {
                         projectId: context.projectId,
                         projectPath: context.projectPath,
                         workspacePath: context.projectPath,
-                        activeIDE: context.activeIDE
+                        activeIDE: context.activeIDE,
+                        previousSteps: results // Add previous steps for task sync functionality
                     };
 
                     const stepResult = await this.stepRegistry.executeStep(step.step, stepContext);

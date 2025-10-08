@@ -8,6 +8,7 @@
 
 require('module-alias/register');
 const Logger = require('@logging/Logger');
+const logger = new Logger('TaskStatusUpdateStep');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -17,7 +18,6 @@ class TaskStatusUpdateStep {
     this.description = 'Updates task status and organizes files accordingly';
     this.category = 'task';
     this.dependencies = ['TaskRepository', 'TaskStatusTransitionService'];
-    this.logger = new Logger('TaskStatusUpdateStep');
   }
 
   static getConfig() {
@@ -49,7 +49,7 @@ class TaskStatusUpdateStep {
    */
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🔄 Starting task status update step...');
+      logger.info('🔄 Starting task status update step...');
       
       const {
         taskId,
@@ -110,11 +110,11 @@ class TaskStatusUpdateStep {
         timestamp: new Date().toISOString()
       };
 
-      this.logger.info(`✅ Task status updated successfully: ${taskId} -> ${newStatus}`);
+      logger.info(`✅ Task status updated successfully: ${taskId} -> ${newStatus}`);
       return result;
 
     } catch (error) {
-      this.logger.error('❌ Task status update failed:', error);
+      logger.error('❌ Task status update failed:', error);
       throw error;
     }
   }
@@ -153,7 +153,7 @@ class TaskStatusUpdateStep {
         completedAt: task.completedAt || task.completed_at
       };
     } catch (error) {
-      this.logger.error(`Error getting current task info for ${taskId}:`, error);
+      logger.error(`Error getting current task info for ${taskId}:`, error);
       throw error;
     }
   }
@@ -191,7 +191,7 @@ class TaskStatusUpdateStep {
    */
   async updateTaskStatus(taskId, newStatus, metadata, taskRepository) {
     try {
-      this.logger.info(`📊 Updating database record for task ${taskId}: status=${newStatus}`);
+      logger.info(`📊 Updating database record for task ${taskId}: status=${newStatus}`);
       
       const updateData = {
         status: newStatus,
@@ -201,10 +201,10 @@ class TaskStatusUpdateStep {
       };
       
       await taskRepository.update(taskId, updateData);
-      this.logger.info(`✅ Database updated successfully for task ${taskId}`);
+      logger.info(`✅ Database updated successfully for task ${taskId}`);
       
     } catch (error) {
-      this.logger.error(`Error updating database for task ${taskId}:`, error);
+      logger.error(`Error updating database for task ${taskId}:`, error);
       throw error;
     }
   }
@@ -219,7 +219,7 @@ class TaskStatusUpdateStep {
    */
   async moveTaskFiles(taskId, currentTask, newStatus, metadata, statusTransitionService) {
     try {
-      this.logger.info(`📁 Moving files for task ${taskId} to status: ${newStatus}`);
+      logger.info(`📁 Moving files for task ${taskId} to status: ${newStatus}`);
       
       // Use TaskStatusTransitionService for proper file movement
       switch (newStatus) {
@@ -236,14 +236,14 @@ class TaskStatusUpdateStep {
           await statusTransitionService.moveTaskToCancelled(taskId, metadata.reason || 'Task cancelled');
           break;
         default:
-          this.logger.warn(`No specific transition method for status: ${newStatus}`);
+          logger.warn(`No specific transition method for status: ${newStatus}`);
           break;
       }
       
-      this.logger.info(`✅ Files moved successfully for task ${taskId}`);
+      logger.info(`✅ Files moved successfully for task ${taskId}`);
       
     } catch (error) {
-      this.logger.error(`Error moving files for task ${taskId}:`, error);
+      logger.error(`Error moving files for task ${taskId}:`, error);
       throw error;
     }
   }
@@ -263,10 +263,10 @@ class TaskStatusUpdateStep {
       // - Phase files
       // - Related task files
       
-      this.logger.info(`📝 Would update file references for task ${taskId} with new status: ${newStatus}`);
+      logger.info(`📝 Would update file references for task ${taskId} with new status: ${newStatus}`);
       
     } catch (error) {
-      this.logger.error(`Error updating file references for task ${taskId}:`, error);
+      logger.error(`Error updating file references for task ${taskId}:`, error);
       throw error;
     }
   }

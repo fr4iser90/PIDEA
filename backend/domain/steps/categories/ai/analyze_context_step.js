@@ -5,7 +5,7 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
 const logger = new Logger('AnalyzeContextStep');
 
 const config = {

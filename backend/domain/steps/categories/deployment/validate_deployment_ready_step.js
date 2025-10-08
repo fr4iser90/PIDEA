@@ -3,7 +3,8 @@
  * Validate that the application is ready for deployment
  */
 
-const Logger = require('../../../../infrastructure/logging/Logger');
+const Logger = require('@logging/Logger');
+const logger = new Logger('ValidateDeploymentReadyStep');
 
 const config = {
   name: 'validate_deployment_ready',
@@ -26,7 +27,6 @@ class ValidateDeploymentReadyStep {
     this.description = 'Validate that the application is ready for deployment';
     this.category = 'deployment';
     this.dependencies = ['testRunner', 'qualityChecker'];
-    this.logger = new Logger('ValidateDeploymentReadyStep');
   }
 
   static getConfig() {
@@ -35,7 +35,7 @@ class ValidateDeploymentReadyStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('🚀 Starting deployment readiness validation...');
+      logger.info('🚀 Starting deployment readiness validation...');
       
       const runTests = options.runTests || config.settings.runTests;
       const checkQuality = options.checkQuality || config.settings.checkQuality;
@@ -73,7 +73,7 @@ class ValidateDeploymentReadyStep {
       // Calculate overall validation score
       result.validation = this.calculateOverallValidation(result.validation);
       
-      this.logger.info(`✅ Deployment readiness validation completed. Score: ${result.validation.score}/100`);
+      logger.info(`✅ Deployment readiness validation completed. Score: ${result.validation.score}/100`);
       
       return {
         success: true,
@@ -86,7 +86,7 @@ class ValidateDeploymentReadyStep {
         }
       };
     } catch (error) {
-      this.logger.error('❌ Deployment readiness validation failed:', error.message);
+      logger.error('❌ Deployment readiness validation failed:', error.message);
       return {
         success: false,
         error: error.message,

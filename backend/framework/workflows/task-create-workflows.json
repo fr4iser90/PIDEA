@@ -5,6 +5,17 @@
       "description": "Complete workflow for task creation: ide_send task-create.md → confirmation → task-review → git branch → task-execute",
       "steps": [
         {
+          "name": "create-file-snapshot",
+          "type": "file_snapshot_step",
+          "description": "Create snapshot of files before workflow starts",
+          "step": "file_snapshot_step",
+          "options": {
+            "workspacePath": "${options.projectPath}",
+            "snapshotType": "before_workflow"
+          },
+          "strict": true
+        },
+        {
           "name": "send-task-create-prompt",
           "type": "ide_send_message_step",
           "description": "Send task-create.md prompt to IDE for task planning",
@@ -22,6 +33,20 @@
             "clickNewChat": true
           },
           "strict": true
+        },
+        {
+          "name": "sync-task-after-create",
+          "type": "task_sync_step",
+          "description": "Sync task content from file using existing task system",
+          "step": "task_sync_step",
+          "options": {
+            "taskId": "${task.id}",
+            "projectId": "${options.projectId}",
+            "userId": "${userId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": true,
+          "condition": "previousStep.success && previousStep.result.success"
         },
         {
           "name": "new-chat-task-review",
@@ -42,6 +67,20 @@
             "clickNewChat": true
           },
           "strict": true
+        },
+        {
+          "name": "sync-task-after-review",
+          "type": "task_sync_step",
+          "description": "Sync task content from file using existing task system",
+          "step": "task_sync_step",
+          "options": {
+            "taskId": "${task.id}",
+            "projectId": "${options.projectId}",
+            "userId": "${userId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": true,
+          "condition": "previousStep.success && previousStep.result.success"
         },
         {
           "name": "confirm-task-review",
@@ -83,11 +122,12 @@
         {
           "name": "new-chat-task-execute",
           "type": "ide_send_message_step",
-          "description": "Start new chat session with task-execute.md prompt",
+          "description": "Start new chat session with task-execute.md prompt using synchronized task content",
           "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
             "taskMode": "task-execute",
+            "useSynchronizedTask": true,
             "waitForResponse": true,
             "timeout": 600000,
             "sessionId": "task-execute-${task.id}",
