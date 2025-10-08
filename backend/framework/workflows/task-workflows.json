@@ -1,5 +1,28 @@
 {
   "workflows": {
+    "task-check-state-workflow": {
+      "name": "Single Task Check State Workflow",
+      "description": "Check single task implementation status: Send Check State Message → Optional Confirmation",
+      "steps": [
+        {
+          "name": "send-check-state-message",
+          "type": "ide_send_message_step",
+          "description": "Send task check state prompt to IDE with auto IDE detection",
+          "step": "ide_send_message_step",
+          "options": {
+            "useTaskPrompt": true,
+            "message": "${checkStatePrompt}",
+            "waitForResponse": true,
+            "timeout": 300000,
+            "sessionId": "task-check-state-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "taskMode": "task-check-state"
+          }
+        }
+      ]
+    },
     "task-review-workflow": {
       "name": "Single Task Review Workflow",
       "description": "Review single task implementation status: Send Review Message → Optional Confirmation",
@@ -661,13 +684,5 @@
     "deployment": "standard-task-workflow",
     "manual": "standard-task-workflow",
     "default": "standard-task-workflow"
-  },
-  "prompts": {
-    "task-prompt.md": "Please implement the following task: {taskTitle}\n\nDescription: {taskDescription}\n\nRequirements:\n- Follow best practices\n- Write clean, maintainable code\n- Include appropriate comments\n- Ensure proper error handling\n\nPlease provide a complete implementation.",
-    "refactor-prompt.md": "Please refactor the following code according to these requirements: {taskDescription}\n\nFocus on:\n- Code quality improvements\n- Architecture optimization\n- Performance enhancements\n- Maintainability\n- Test coverage\n\nPlease provide the refactored implementation.",
-    "testing-prompt.md": "Please create comprehensive tests for: {taskDescription}\n\nRequirements:\n- Unit tests for all functions\n- Integration tests where appropriate\n- Edge case coverage\n- Mock external dependencies\n- Follow testing best practices\n\nPlease provide complete test implementation.",
-    "feature-prompt.md": "Please implement the following feature: {taskDescription}\n\nRequirements:\n- Follow project architecture\n- Implement proper error handling\n- Include input validation\n- Write comprehensive tests\n- Update documentation if needed\n\nPlease provide a complete feature implementation.",
-    "bugfix-prompt.md": "Please fix the following bug: {taskDescription}\n\nRequirements:\n- Identify the root cause\n- Implement a proper fix\n- Ensure no regressions\n- Add tests to prevent recurrence\n- Document the fix\n\nPlease provide the bug fix implementation.",
-    "analysis-prompt.md": "Please analyze the following: {taskDescription}\n\nRequirements:\n- Comprehensive analysis\n- Identify issues and opportunities\n- Provide actionable recommendations\n- Include metrics and insights\n- Suggest improvements\n\nPlease provide a detailed analysis report."
   }
 }

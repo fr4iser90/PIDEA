@@ -116,17 +116,17 @@ const TaskWorkflowProgress = ({
     };
 
     // Subscribe to events
-    eventBus.on('task-creation:progress', handleProgress);
-    eventBus.on('task-creation:completed', handleCompleted);
-    eventBus.on('task-creation:error', handleError);
-    eventBus.on('task-creation:cancelled', handleCancelled);
+    eventBus.on('task-create:progress', handleProgress);
+    eventBus.on('task-create:completed', handleCompleted);
+    eventBus.on('task-create:error', handleError);
+    eventBus.on('task-create:cancelled', handleCancelled);
 
     // Cleanup
     return () => {
-      eventBus.off('task-creation:progress', handleProgress);
-      eventBus.off('task-creation:completed', handleCompleted);
-      eventBus.off('task-creation:error', handleError);
-      eventBus.off('task-creation:cancelled', handleCancelled);
+      eventBus.off('task-create:progress', handleProgress);
+      eventBus.off('task-create:completed', handleCompleted);
+      eventBus.off('task-create:error', handleError);
+      eventBus.off('task-create:cancelled', handleCancelled);
     };
   }, [workflowId, eventBus, onComplete]);
 

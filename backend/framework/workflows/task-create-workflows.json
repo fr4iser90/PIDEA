@@ -1,6 +1,6 @@
 {
   "workflows": {
-    "task-creation-workflow": {
+    "task-create-workflow": {
       "name": "Task Creation Workflow",
       "description": "Complete workflow for task creation: ide_send task-create.md → confirmation → task-review → git branch → task-execute",
       "steps": [
@@ -30,6 +30,7 @@
           "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
+            "taskMode": "task-review",
             "waitForResponse": true,
             "timeout": 300000,
             "sessionId": "task-review-${task.id}",
@@ -85,6 +86,7 @@
           "step": "ide_send_message_step",
           "options": {
             "useTaskPrompt": true,
+            "taskMode": "task-execute",
             "waitForResponse": true,
             "timeout": 600000,
             "sessionId": "task-execute-${task.id}",
@@ -108,7 +110,7 @@
         "sourceBranch": "pidea-agent"
       }
     },
-    "quick-task-creation-workflow": {
+    "quick-task-create-workflow": {
       "name": "Quick Task Creation Workflow",
       "description": "Simplified workflow for quick task creation without extensive validation",
       "steps": [
@@ -151,7 +153,7 @@
         "timeout": 120000
       }
     },
-    "advanced-task-creation-workflow": {
+    "advanced-task-create-workflow": {
       "name": "Advanced Task Creation Workflow",
       "description": "Advanced workflow with comprehensive analysis and validation",
       "steps": [
@@ -188,7 +190,7 @@
           "options": {
             "title": "Advanced Task Creation Session",
             "metadata": {
-              "workflow": "advanced-task-creation-workflow",
+              "workflow": "advanced-task-create",
               "autoCreated": true,
               "taskType": "advanced-creation"
             }
@@ -276,16 +278,16 @@
     "security": "standard-task-workflow",
     "deployment": "standard-task-workflow",
     "manual": "standard-task-workflow",
-    "default": "task-creation-workflow"
+    "default": "task-create-workflow"
   },
   "contentLibrary": {
     "prompts": {
-      "task-creation": "content-library/prompts/task-management/task-create.md",
+      "task-create": "content-library/prompts/task-management/task-create.md",
       "quick-task": "content-library/prompts/task-management/task-create.md",
       "advanced-task": "content-library/prompts/task-management/task-create.md"
     },
     "templates": {
-      "task-creation": "content-library/templates/",
+      "task-create": "content-library/templates/",
       "implementation": "content-library/prompts/development/"
     }
   }

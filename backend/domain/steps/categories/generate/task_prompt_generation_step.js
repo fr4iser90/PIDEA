@@ -114,7 +114,7 @@ class TaskPromptGenerationStep {
         projectId, 
         workspacePath = process.cwd(), 
         taskData, 
-        promptType = 'task-creation',
+        promptType = 'task-create',
         options = {} 
       } = context;
 
@@ -182,12 +182,12 @@ class TaskPromptGenerationStep {
     try {
       // Define prompt paths based on type
       const promptPaths = {
-        'task-creation': 'content-library/prompts/task-management/task-create.md',
+        'task-create': 'content-library/prompts/task-management/task-create.md',
         'quick-task': 'content-library/prompts/task-management/task-create.md',
         'advanced-task': 'content-library/prompts/task-management/task-create.md'
       };
 
-      const promptPath = promptPaths[promptType] || promptPaths['task-creation'];
+      const promptPath = promptPaths[promptType] || promptPaths['task-create'];
       
       // Try to load via content library service first
       if (contentLibraryService) {

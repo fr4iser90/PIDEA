@@ -7,7 +7,7 @@ import TaskCreationService from '@/application/services/TaskCreationService';
 // Mock dependencies
 jest.mock('@/application/services/TaskCreationService');
 jest.mock('@/application/services/TaskReviewService');
-jest.mock('@/css/modal/task-creation-modal.css', () => ({}));
+jest.mock('@/css/modal/task-create-modal.css', () => ({}));
 
 describe('TaskCreationModal', () => {
   let mockOnClose;
@@ -363,7 +363,7 @@ describe('TaskCreationModal', () => {
       );
       
       // Mock being in progress state
-      const modal = screen.getByTestId('task-creation-modal');
+      const modal = screen.getByTestId('task-create-modal');
       modal.dataset.currentStep = 'progress';
       modal.dataset.workflowId = 'test-workflow-123';
       
@@ -394,7 +394,7 @@ describe('TaskCreationModal', () => {
       );
       
       // Mock review data
-      const modal = screen.getByTestId('task-creation-modal');
+      const modal = screen.getByTestId('task-create-modal');
       modal.dataset.reviewData = JSON.stringify({
         title: 'Test Task',
         description: 'Test description',
@@ -416,7 +416,7 @@ describe('TaskCreationModal', () => {
       );
       
       // Mock review modal open
-      const modal = screen.getByTestId('task-creation-modal');
+      const modal = screen.getByTestId('task-create-modal');
       modal.dataset.isReviewModalOpen = 'true';
       
       const executeButton = screen.getByRole('button', { name: /execute task/i });

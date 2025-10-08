@@ -29,26 +29,16 @@ class WorkflowController {
      * @deprecated This endpoint bypasses the new queue system. Use TaskController.enqueueTask() instead.
      * @deprecated This endpoint will be removed in a future version.
      * @deprecated Use POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution.
-     */
+     
     async executeWorkflow(req, res) {
         try {
             // Log deprecation warning
             this.logger.warn('🚨 [WorkflowController] executeWorkflow endpoint is DEPRECATED! Use TaskController.enqueueTask instead');
             
-            // Validate request
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    errors: errors.array(),
-                    deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
-                });
-            }
-
             const { projectId } = req.params;
             const {
                 projectPath,
-                mode = 'full',
+                workflow,
                 options = {},
                 aiModel = 'gpt-4',
                 autoExecute = true,
@@ -58,11 +48,21 @@ class WorkflowController {
                 clickNewChat = false
             } = req.body;
 
+            // Validate required fields
+            if (!workflow) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Workflow is required',
+                    message: 'Please specify which workflow to execute',
+                    deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
+                });
+            }
+
             // Debug logging
             this.logger.info('WorkflowController: Received request body', {
                 projectId,
                 projectPath,
-                mode,
+                workflow,
                 options,
                 task,
                 createGitBranch,
@@ -480,7 +480,7 @@ class WorkflowController {
                 optimizationService: this.application?.optimizationService,
                 cleanupService: this.application?.cleanupService,
                 restructureService: this.application?.restructureService,
-                modernizeService: this.application?.modernizeService,
+                workflowrnizeService: this.application?.workflowrnizeService,
                 testingService: this.application?.testingService,
                 deploymentService: this.application?.deploymentService,
                 customTaskService: this.application?.customTaskService,
@@ -496,12 +496,12 @@ class WorkflowController {
                 ...options
             };
 
-            // Map modes to Categories-based steps
-            if (mode === 'project-analysis') {
+            // Map workflows to Categories-based steps
+            if (workflow === 'project-analysis') {
                 stepName = 'ProjectAnalysisStep';
                 stepOptions.includeRepoStructure = true;
                 stepOptions.includeDependencies = true;
-            } else if (mode === 'architecture-analysis') {
+            } else if (workflow === 'architecture-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeArchitectureAnalysis(projectId, stepOptions);
@@ -517,7 +517,7 @@ class WorkflowController {
                     stepOptions.includeStructure = true;
                     stepOptions.includeRecommendations = true;
                 }
-            } else if (mode === 'code-quality-analysis') {
+            } else if (workflow === 'code-quality-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeCodeQualityAnalysis(projectId, stepOptions);
@@ -533,7 +533,7 @@ class WorkflowController {
                     stepOptions.includeIssues = true;
                     stepOptions.includeSuggestions = true;
                 }
-            } else if (mode === 'tech-stack-analysis') {
+            } else if (workflow === 'tech-stack-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeTechStackAnalysis(projectId, stepOptions);
@@ -549,7 +549,7 @@ class WorkflowController {
                     stepOptions.includeLibraries = true;
                     stepOptions.includeTools = true;
                 }
-            } else if (mode === 'manifest-analysis') {
+            } else if (workflow === 'manifest-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeManifestAnalysis(projectId, stepOptions);
@@ -566,7 +566,7 @@ class WorkflowController {
                     stepOptions.includeDockerFiles = true;
                     stepOptions.includeCIFiles = true;
                 }
-            } else if (mode === 'security-analysis') {
+            } else if (workflow === 'security-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeSecurityAnalysis(projectId, stepOptions);
@@ -582,7 +582,7 @@ class WorkflowController {
                     stepOptions.includeBestPractices = true;
                     stepOptions.includeDependencies = true;
                 }
-            } else if (mode === 'performance-analysis') {
+            } else if (workflow === 'performance-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executePerformanceAnalysis(projectId, stepOptions);
@@ -598,7 +598,7 @@ class WorkflowController {
                     stepOptions.includeOptimizations = true;
                     stepOptions.includeBottlenecks = true;
                 }
-            } else if (mode === 'dependency-analysis' || mode === 'dependencies-analysis') {
+            } else if (workflow === 'dependency-analysis' || workflow === 'dependencies-analysis') {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeDependencyAnalysis(projectId, stepOptions);
@@ -614,7 +614,7 @@ class WorkflowController {
                     stepOptions.includeVulnerabilities = true;
                     stepOptions.includeRecommendations = true;
                 }
-            } else if (mode === 'recommendations' || mode === 'recommendations-analysis') {
+            } else if (workflow === 'recommendations' || workflow === 'recommendations-analysis') {
                 // Automatisch alle Einzelanalysen ausführen und Ergebnisse sammeln
                 const analysisSteps = [
                     { key: 'codeQuality', name: 'CodeQualityAnalysisStep' },
@@ -646,7 +646,7 @@ class WorkflowController {
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 20;
                 stepOptions.analysis_results = analysis_results;
-            } else if (mode === 'individual-analysis') {
+            } else if (workflow === 'individual-analysis') {
                 // Execute individual analysis orchestrators separately
                 try {
                     const analysisOrchestrators = [
@@ -724,58 +724,58 @@ class WorkflowController {
                         error: `Failed to execute individual analysis: ${error.message}`
                     });
                 }
-            } else if (mode === 'security-recommendations' || mode === 'security-recommendations-analysis') {
+            } else if (workflow === 'security-recommendations' || workflow === 'security-recommendations-analysis') {
                 stepName = 'SecurityRecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 10;
-            } else if (mode === 'code-quality-recommendations' || mode === 'code-quality-recommendations-analysis') {
+            } else if (workflow === 'code-quality-recommendations' || workflow === 'code-quality-recommendations-analysis') {
                 stepName = 'CodeQualityRecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 10;
-            } else if (mode === 'architecture-recommendations' || mode === 'architecture-recommendations-analysis') {
+            } else if (workflow === 'architecture-recommendations' || workflow === 'architecture-recommendations-analysis') {
                 stepName = 'ArchitectureRecommendationsStep';
                 stepOptions.includePriority = true;
                 stepOptions.includeEffort = true;
                 stepOptions.includeImpact = true;
                 stepOptions.maxRecommendations = 10;
-            } else if (mode === 'auto-finish') {
+            } else if (workflow === 'auto-finish') {
                 stepName = 'AutoFinishStep';
                 stepOptions.maxConfirmationAttempts = 3;
                 stepOptions.confirmationTimeout = 10000;
                 stepOptions.fallbackDetectionEnabled = true;
                 stepOptions.autoContinueThreshold = 0.8;
-            } else if (mode === 'todo-parsing') {
+            } else if (workflow === 'todo-parsing') {
                 stepName = 'TodoParsingStep';
                 stepOptions.enableDependencyDetection = true;
                 stepOptions.enablePriorityDetection = true;
                 stepOptions.enableTypeDetection = true;
                 stepOptions.maxTasks = 50;
-            } else if (mode === 'confirmation') {
+            } else if (workflow === 'confirmation') {
                 stepName = 'ConfirmationStep';
                 stepOptions.maxConfirmationAttempts = 3;
                 stepOptions.confirmationTimeout = 10000;
                 stepOptions.autoContinueThreshold = 0.8;
                 stepOptions.enableMultiLanguage = true;
-            } else if (mode === 'completion-detection') {
+            } else if (workflow === 'completion-detection') {
                 stepName = 'CompletionDetectionStep';
                 stepOptions.confidenceThreshold = 0.6;
                 stepOptions.enableMultiStrategy = true;
                 stepOptions.enableContextAnalysis = true;
                 stepOptions.enableQualityIntegration = true;
-            } else if (mode === 'refactor') {
+            } else if (workflow === 'refactor') {
                 stepName = 'RefactoringStep';
                 stepOptions.includeCodeQuality = true;
                 stepOptions.includeArchitecture = true;
-            } else if (mode === 'test') {
+            } else if (workflow === 'test') {
                 stepName = 'TestingStep';
                 stepOptions.includeTestAnalysis = true;
                 stepOptions.includeTestGeneration = true;
                 stepOptions.includeTestFixing = true;
-            } else if (mode === 'task-creation') {
+            } else if (workflow === 'task-create-workflow') {
                 // 🚀 TASK CREATION WORKFLOW - FILE-FIRST APPROACH
                 // 
                 // 🔄 EXECUTION FLOW:
@@ -788,8 +788,8 @@ class WorkflowController {
                 // - Queue-based execution for reliability
                 //
                 // 📝 IMPLEMENTATION:
-                // Tasks are queued via TaskService.queueTaskForExecution() with taskMode: 'task-creation'
-                // QueueTaskExecutionService loads 'task-creation-workflow' from JSON
+                // Tasks are queued via TaskService.queueTaskForExecution() with taskMode: 'task-create'
+                // QueueTaskExecutionService loads 'task-create' from JSON
                 // WorkflowExecutor handles file creation and database parsing
                 
                 try {
@@ -829,8 +829,8 @@ class WorkflowController {
                         creationMode
                     });
                     
-                    // Determine workflow based on creation mode
-                    const taskMode = creationMode === 'normal' ? 'task-creation-workflow' : 'advanced-task-creation-workflow';
+                    // Determine workflow based on creation workflow
+                    const taskMode = creationMode === 'normal' ? 'task-create-workflow' : 'advanced-task-create-workflow';
                     
                     // Add task to queue for proper workflow execution
                     const queueResult = await this.taskService.queueTaskForExecution(realTask.id, userId, {
@@ -872,7 +872,7 @@ class WorkflowController {
                         error: `Task creation workflow failed: ${error.message}`
                     });
                 }
-            } else if (mode === 'task-review') {
+            } else if (workflow === 'task-review') {
                 // 📋 TASK REVIEW WORKFLOW - QUEUE-BASED EXECUTION
                 // 
                 // 🔄 EXECUTION FLOW:
@@ -1039,12 +1039,12 @@ class WorkflowController {
             this.logger.info('WorkflowController: Executing Categories-based step', {
                 stepName,
                 projectPath: workspacePath,
-                mode
+                workflow
             });
 
             // Validate that stepName is defined
             if (!stepName) {
-                throw new Error(`No step mapping found for mode: ${mode}`);
+                throw new Error(`No step mapping found for workflow: ${workflow}`);
             }
 
             // Execute the Categories-based step
@@ -1066,7 +1066,7 @@ class WorkflowController {
                             metadata: {
                                 stepName,
                                 projectPath: workspacePath,
-                                mode,
+                                workflow,
                                 executionMethod: 'categories',
                                 timestamp: new Date().toISOString(),
                                 executionTime: result.duration || null
@@ -1119,7 +1119,7 @@ class WorkflowController {
                         metadata: {
                             projectPath: workspacePath,
                             projectId,
-                            mode,
+                            workflow,
                             executionMethod: 'categories',
                             stepOptions: Object.keys(stepOptions)
                         }
@@ -1163,7 +1163,7 @@ class WorkflowController {
                     stepName,
                     result: result,
                     projectPath: workspacePath,
-                    mode,
+                    workflow,
                     executionMethod: 'categories'
                 }
             });
@@ -1191,7 +1191,7 @@ class WorkflowController {
             });
         }
     }
-
+    */
     /**
      * Get workflow status
      * GET /api/workflow/status
@@ -1232,7 +1232,7 @@ class WorkflowController {
             });
         }
     }
-
+    
     /**
      * Get workflow progress
      * GET /api/workflow/progress
@@ -1325,7 +1325,7 @@ class WorkflowController {
                 page = 1,
                 limit = 20,
                 status,
-                mode,
+                workflow,
                 startDate,
                 endDate
             } = req.query;
@@ -1337,7 +1337,7 @@ class WorkflowController {
                 limit: parseInt(limit),
                 filters: {
                     status,
-                    mode,
+                    workflow,
                     startDate,
                     endDate
                 },
@@ -1384,12 +1384,12 @@ class WorkflowController {
      */
     async getWorkflowStats(req, res) {
         try {
-            const { timeRange, mode } = req.query;
+            const { timeRange, workflow } = req.query;
             const userId = req.user?.id;
 
             const query = {
                 timeRange,
-                mode,
+                workflow,
                 userId
             };
 

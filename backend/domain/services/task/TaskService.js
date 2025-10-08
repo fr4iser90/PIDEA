@@ -908,8 +908,8 @@ Please fix the issues and let me know when you're done.`;
   async rollbackChanges(projectPath, branchName) {
     const { exec } = require('child_process');
     const util = require('util');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+    const Logger = require('@logging/Logger');
+    const logger = new Logger('Logger');
     const execAsync = util.promisify(exec);
 
     try {
@@ -1452,9 +1452,9 @@ ${task.description}
       return await this.buildTaskReviewPrompt(task, options);
     } else if (taskMode === 'task-check-state' || stepName?.includes('check-state') || stepName?.includes('checkstate')) {
       return await this.buildTaskCheckStatePrompt(task, options);
-    } else if (taskMode === 'task-creation-workflow' || taskMode === 'advanced-task-creation-workflow' || stepName?.includes('create') || stepName?.includes('task-create')) {
+    } else if (taskMode === 'task-create-workflow' || taskMode === 'advanced-task-create-workflow' || stepName?.includes('create') || stepName?.includes('task-create')) {
       return await this.buildTaskCreatePrompt(task, options);
-    } else if (stepName?.includes('execute') || stepName?.includes('task-execute')) {
+    } else if (taskMode === 'task-execute' || stepName?.includes('execute') || stepName?.includes('task-execute')) {
       return await this.buildTaskExecutionPrompt(task);
     } else {
       // Default to execution prompt

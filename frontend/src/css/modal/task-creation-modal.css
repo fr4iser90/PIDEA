@@ -1,7 +1,7 @@
 /* Task Creation Modal Styles */
 
 /* Modal overlay */
-.task-creation-modal-overlay {
+.task-create-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -16,7 +16,7 @@
 }
 
 /* Modal container */
-.task-creation-modal {
+.task-create-modal {
   background: #1e1e1e;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
@@ -29,7 +29,7 @@
   animation: modalSlideIn 0.3s ease-out;
 }
 
-.task-creation-modal-large {
+.task-create-modal-large {
   max-width: 900px;
   width: 95%;
 }
@@ -179,7 +179,7 @@
 }
 
 /* Form styles */
-.task-creation-form {
+.task-create-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -435,7 +435,7 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .task-creation-modal {
+  .task-create-modal {
     width: 95%;
     margin: 20px;
   }

@@ -35,7 +35,7 @@ class QueueTaskExecutionService {
 
             // For task creation workflows, skip task validation since task doesn't exist yet
             let task = null;
-            if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
+            if (options.taskMode === 'task-create-workflow' || options.taskMode === 'advanced-task-create-workflow') {
                 // This is a task creation workflow with real task in database
                 this.logger.info('Task creation workflow detected, loading real task from database');
                 task = await this.taskRepository.findById(taskId);
@@ -55,16 +55,11 @@ class QueueTaskExecutionService {
             const workflowLoader = new WorkflowLoaderService();
             await workflowLoader.loadWorkflows();
             
-            // Determine workflow based on options or task type
-            let workflowName = 'standard-task-workflow';
-            
-            if (options.taskMode === 'task-review') {
-                workflowName = 'task-review-workflow';
-            } else if (options.taskMode === 'task-check-state') {
-                workflowName = 'task-review-workflow'; // Use same workflow but different prompt
-            } else if (options.taskMode) {
-                workflowName = options.taskMode;
+            // Use workflow from options (set by frontend) - NO FALLBACKS!
+            if (!options.workflow) {
+                throw new Error('Workflow must be specified in options.workflow');
             }
+            const workflowName = options.workflow;
             
             // Get workflow
             const workflow = workflowLoader.getWorkflow(workflowName);

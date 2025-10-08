@@ -14,7 +14,7 @@ test.describe('Task Creation Modal E2E', () => {
     await page.click('[data-testid="create-task-button"]');
     
     // Verify modal is open
-    await expect(page.locator('[data-testid="task-creation-modal"]')).toBeVisible();
+    await expect(page.locator('[data-testid="task-create-modal"]')).toBeVisible();
     await expect(page.locator('text=🚀 Create New Task')).toBeVisible();
 
     // Step 2: Fill out the form
@@ -62,7 +62,7 @@ test.describe('Task Creation Modal E2E', () => {
     await page.click('[data-testid="modal-close-button"]');
     
     // Verify modal is closed
-    await expect(page.locator('[data-testid="task-creation-modal"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="task-create-modal"]')).not.toBeVisible();
   });
 
   test('form validation - required fields', async ({ page }) => {
@@ -130,7 +130,7 @@ test.describe('Task Creation Modal E2E', () => {
     
     // Test escape key closes modal
     await page.keyboard.press('Escape');
-    await expect(page.locator('[data-testid="task-creation-modal"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="task-create-modal"]')).not.toBeVisible();
   });
 
   test('modal overlay and click outside behavior', async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe('Task Creation Modal E2E', () => {
     await page.click('[data-testid="modal-overlay"]');
     
     // Verify modal closes
-    await expect(page.locator('[data-testid="task-creation-modal"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="task-create-modal"]')).not.toBeVisible();
   });
 
   test('workflow cancellation during execution', async ({ page }) => {
@@ -224,7 +224,7 @@ test.describe('Task Creation Modal E2E', () => {
     await page.click('[data-testid="create-task-button"]');
     
     // Verify modal is responsive
-    await expect(page.locator('[data-testid="task-creation-modal"]')).toBeVisible();
+    await expect(page.locator('[data-testid="task-create-modal"]')).toBeVisible();
     
     // Check form elements are properly sized
     const titleInput = page.locator('[data-testid="task-title-input"]');
@@ -353,7 +353,7 @@ test.describe('Task Creation Modal E2E', () => {
     await expect(page.locator('[data-testid="task-title-input"]')).toBeFocused();
     
     // Test screen reader support
-    await expect(page.locator('[data-testid="task-creation-modal"]')).toHaveAttribute('role', 'dialog');
-    await expect(page.locator('[data-testid="task-creation-modal"]')).toHaveAttribute('aria-labelledby');
+    await expect(page.locator('[data-testid="task-create-modal"]')).toHaveAttribute('role', 'dialog');
+    await expect(page.locator('[data-testid="task-create-modal"]')).toHaveAttribute('aria-labelledby');
   });
 }); 

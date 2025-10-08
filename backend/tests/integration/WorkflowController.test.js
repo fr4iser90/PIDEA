@@ -17,10 +17,12 @@ jest.mock('@logging/Logger', () => ({
 }));
 
 const WorkflowController = require('@/presentation/api/WorkflowController');
+const TaskController = require('@/presentation/api/TaskController');
 
 describe('WorkflowController - Task Review Mode', () => {
   let app;
   let workflowController;
+  let taskController;
   let mockStepRegistry;
   let mockLogger;
 
@@ -49,13 +51,19 @@ describe('WorkflowController - Task Review Mode', () => {
       stepRegistry: mockStepRegistry
     });
     
-    // Setup route
-    app.post('/api/projects/:projectId/workflow/execute', (req, res) => {
-      workflowController.executeWorkflow(req, res);
+    // Create TaskController instance
+    taskController = new TaskController({
+      logger: mockLogger,
+      stepRegistry: mockStepRegistry
+    });
+    
+    // Setup route (UPDATED - using new enqueue endpoint)
+    app.post('/api/projects/:projectId/tasks/enqueue', (req, res) => {
+      taskController.enqueueTask(req, res);
     });
   });
 
-  describe('POST /api/projects/:projectId/workflow/execute - task-review mode', () => {
+  describe('POST /api/projects/:projectId/tasks/enqueue - task-review mode', () => {
     const projectId = 'test-project-123';
     const workspacePath = '/path/to/workspace';
     const userId = 'test-user-456';
@@ -86,10 +94,10 @@ describe('WorkflowController - Task Review Mode', () => {
 
     it('successfully executes task review workflow', async () => {
       const response = await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -108,10 +116,10 @@ describe('WorkflowController - Task Review Mode', () => {
 
     it('processes tasks sequentially', async () => {
       await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -157,10 +165,10 @@ describe('WorkflowController - Task Review Mode', () => {
         .mockRejectedValueOnce(new Error('Step execution failed')); // Second task fails
 
       const response = await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -183,10 +191,10 @@ describe('WorkflowController - Task Review Mode', () => {
       mockStepRegistry.executeStep.mockRejectedValue(new Error('All tasks failed'));
 
       const response = await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -202,10 +210,10 @@ describe('WorkflowController - Task Review Mode', () => {
 
     it('handles empty tasks array', async () => {
       const response = await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: [],
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -220,10 +228,10 @@ describe('WorkflowController - Task Review Mode', () => {
 
     it('uses default workflow prompt when not provided', async () => {
       await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: [mockTasks[0]]
         })
         .expect(200);
@@ -239,10 +247,10 @@ describe('WorkflowController - Task Review Mode', () => {
       const customPrompt = 'custom-review-prompt.md';
       
       await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: [mockTasks[0]],
           options: {
             workflowPrompt: customPrompt
@@ -259,10 +267,10 @@ describe('WorkflowController - Task Review Mode', () => {
 
     it('logs execution details', async () => {
       await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -295,10 +303,10 @@ describe('WorkflowController - Task Review Mode', () => {
 
     it('logs individual task processing', async () => {
       await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -333,10 +341,10 @@ describe('WorkflowController - Task Review Mode', () => {
       mockStepRegistry.executeStep.mockRejectedValue(error);
 
       await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: [mockTasks[0]],
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -361,10 +369,10 @@ describe('WorkflowController - Task Review Mode', () => {
       mockStepRegistry.executeStep.mockRejectedValue(error);
 
       const response = await request(app)
-        .post(`/api/projects/${projectId}/workflow/execute`)
+        .post(`/api/projects/${projectId}/tasks/enqueue`)
         .send({
           projectPath: workspacePath,
-          mode: 'task-review',
+          workflow: 'task-review-workflow',
           tasks: mockTasks,
           options: {
             workflowPrompt: 'task-check-state.md',
@@ -390,10 +398,10 @@ describe('WorkflowController - Task Review Mode', () => {
   describe('Integration with other modes', () => {
     it('does not interfere with other workflow modes', async () => {
       const response = await request(app)
-        .post('/api/projects/test-project/workflow/execute')
+        .post('/api/projects/test-project/tasks/enqueue')
         .send({
           projectPath: '/path/to/workspace',
-          mode: 'analysis',
+          workflow: 'analysis',
           options: {}
         })
         .expect(200);

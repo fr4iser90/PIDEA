@@ -578,18 +578,16 @@ Please execute the task according to the review analysis and provide real-time p
         taskMode
       });
       
-      // ⚠️ DEPRECATED: This endpoint is deprecated and will be removed in a future version
-      // TODO: Migrate to POST /api/projects/:projectId/tasks/enqueue for proper queue-based execution
-      console.warn('🚨 [TaskReviewService] Using DEPRECATED workflow/execute endpoint. Please migrate to tasks/enqueue');
-      // Call WorkflowController.executeWorkflow() endpoint
-      const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
+      // Call TaskController.enqueueTask() endpoint
+      console.log('TaskReviewService: taskMode =', taskMode, 'workflow =', taskMode === 'task-check-state' ? 'task-check-state-workflow' : 'task-review-workflow');
+      const response = await apiCall(`/api/projects/${projectId}/tasks/enqueue`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           projectPath: projectPath,
-          mode: 'task-review',
+          workflow: taskMode === 'task-check-state' ? 'task-check-state-workflow' : 'task-review-workflow',
           tasks: selectedTasks,
           options: {
             taskMode: taskMode,

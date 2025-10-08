@@ -170,21 +170,14 @@ const TaskModeBadge = ({ type, size = 'medium', showIcon = true }) => {
             icon: '🎯',
             description: 'Completion detection'
         },
-        'task-creation': {
+        'task-create-workflow': {
             label: 'Task Creation',
             color: '#FF9800',
             bgColor: '#FFF3E0',
             icon: '➕',
             description: 'Task creation workflow'
         },
-        'task-creation-workflow': {
-            label: 'Normal Creation',
-            color: '#FF9800',
-            bgColor: '#FFF3E0',
-            icon: '📋',
-            description: 'Standard task creation workflow'
-        },
-        'advanced-task-creation-workflow': {
+        'advanced-task-create-workflow': {
             label: 'Advanced Creation',
             color: '#9C27B0',
             bgColor: '#F3E5F5',

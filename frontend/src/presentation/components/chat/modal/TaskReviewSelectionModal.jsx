@@ -25,6 +25,7 @@ const TaskReviewSelectionModal = ({
       setSelectedTasks(new Set());
       setSelectAll(false);
       setExpandedTasks(new Set());
+      setReviewMode('review'); // Reset to default mode
     }
   }, [isOpen, tasks]);
 
@@ -150,6 +151,7 @@ const TaskReviewSelectionModal = ({
   const handleStartReview = () => {
     const selectedTaskList = tasks.filter(task => selectedTasks.has(task.id));
     const taskMode = reviewMode === 'check-state' ? 'task-check-state' : 'task-review';
+    console.log('TaskReviewSelectionModal: reviewMode =', reviewMode, 'taskMode =', taskMode);
     onStartReview(selectedTaskList, taskMode);
   };
 
@@ -445,7 +447,10 @@ const TaskReviewSelectionModal = ({
               onClick={handleStartReview}
               disabled={selectedCount === 0 || isLoading}
             >
-              {isLoading ? 'Starting Review...' : `Start Review (${selectedCount})`}
+              {isLoading 
+                ? (reviewMode === 'check-state' ? 'Starting Check State...' : 'Starting Review...') 
+                : (reviewMode === 'check-state' ? `Start Check State (${selectedCount})` : `Start Review (${selectedCount})`)
+              }
             </button>
           </div>
         </div>

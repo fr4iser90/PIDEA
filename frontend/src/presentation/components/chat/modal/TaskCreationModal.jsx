@@ -226,8 +226,8 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
 
   return (
     <>
-      <div className="task-creation-modal-overlay" onClick={handleClose}>
-        <div className="task-creation-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="task-create-modal-overlay" onClick={handleClose}>
+        <div className="task-create-modal" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <h2>🚀 Create New Task</h2>
             <button className="modal-close-btn" onClick={handleClose}>×</button>

@@ -22,14 +22,14 @@ export default class TaskCreationService {
       // Get current project ID
       const projectId = await this.api.getCurrentProjectId();
       
-      // Use the new backend workflow endpoint
-      const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
+      // Use the new backend task enqueue endpoint
+      const response = await apiCall(`/api/projects/${projectId}/tasks/enqueue`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          mode: 'task-creation',
+          workflow: 'task-create-workflow',
           task: taskData,
           options: {
             creationMode: 'normal',
@@ -75,14 +75,14 @@ export default class TaskCreationService {
         // Get current project ID
         const projectId = await this.api.getCurrentProjectId();
 
-        // Use the new backend workflow endpoint
-        const response = await apiCall(`/api/projects/${projectId}/workflow/execute`, {
+        // Use the new backend task enqueue endpoint
+        const response = await apiCall(`/api/projects/${projectId}/tasks/enqueue`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            mode: 'task-creation',
+            workflow: 'task-create-workflow',
             task: taskData,
             options: {
               creationMode: 'advanced',
@@ -424,7 +424,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
 
       // Emit progress event
       if (window.eventBus) {
-        window.eventBus.emit('task-creation:progress', {
+        window.eventBus.emit('task-create:progress', {
           workflowId,
           ...progressData
         });
@@ -481,7 +481,7 @@ Format the response in Markdown with clear sections and actionable steps.`;
 
       // Emit cancellation event
       if (window.eventBus) {
-        window.eventBus.emit('task-creation:cancelled', {
+        window.eventBus.emit('task-create:cancelled', {
           workflowId,
           timestamp: new Date()
         });

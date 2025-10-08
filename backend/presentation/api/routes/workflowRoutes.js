@@ -29,8 +29,7 @@ class WorkflowRoutes {
     // WORKFLOW EXECUTION ROUTES - Workflow Operations
     // ========================================
     
-    // Execute workflow (DEPRECATED)
-    app.post('/api/projects/:projectId/workflow/execute', (req, res) => this.workflowController.executeWorkflow(req, res));
+    // Execute workflow (REMOVED - migrated to /api/projects/:projectId/tasks/enqueue)
     
     // Get workflow status
     app.get('/api/projects/:projectId/workflow/status', (req, res) => this.workflowController.getWorkflowStatus(req, res));

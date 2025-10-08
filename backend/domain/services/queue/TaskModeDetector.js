@@ -51,8 +51,8 @@ class TaskModeDetector {
       'task-check-state', 
       'task-execution',
       'task-validation',
-      'task-creation-workflow',
-      'advanced-task-creation-workflow',
+      'task-create-workflow',
+      'advanced-task-create-workflow',
       'analysis',
       'refactoring',
       'testing',
@@ -78,12 +78,12 @@ class TaskModeDetector {
         optional: ['git_step', 'test_step'],
         weight: 0.9
       },
-      'task-creation-workflow': {
+      'task-create-workflow': {
         required: ['ide_send_message_step'],
         optional: ['confirmation_step', 'git_create_branch', 'ide_send_message_step'],
         weight: 0.9
       },
-      'advanced-task-creation-workflow': {
+      'advanced-task-create-workflow': {
         required: ['ide_send_message_step', 'analysis_step'],
         optional: ['confirmation_step', 'validation_step', 'quality_assessment'],
         weight: 0.9

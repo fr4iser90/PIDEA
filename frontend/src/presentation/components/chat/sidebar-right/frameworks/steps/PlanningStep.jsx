@@ -99,17 +99,17 @@ function PlanningStep({ analysisResults, onTasksCreated, workflowData }) {
         <h4>📋 Task Creation Plan</h4>
         <p>The following tasks will be created in the database for project <strong>{workflowData.projectName}</strong>:</p>
         
-        <div className="task-creation-list">
+        <div className="task-create-list">
           {analysisResults.prioritizedTasks.map((task, index) => (
-            <div key={index} className="task-creation-item">
-              <div className="task-creation-header">
+            <div key={index} className="task-create-item">
+              <div className="task-create-header">
                 <span className="task-number">#{index + 1}</span>
                 <span className="task-title">{task.title}</span>
                 <span className={`priority-badge ${(task.priority?.value || task.priority || '').toLowerCase()}`}>
                   {task.priority?.value || task.priority}
                 </span>
               </div>
-              <div className="task-creation-details">
+              <div className="task-create-details">
                 <p className="task-description">{task.description}</p>
                 <div className="task-metadata">
                   <span className="meta-item">📂 {task.category}</span>

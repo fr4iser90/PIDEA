@@ -669,7 +669,7 @@
 }
 
 /* Task creation success notification */
-.task-creation-success {
+.task-create-success {
   display: flex;
   align-items: flex-start;
   gap: 12px;

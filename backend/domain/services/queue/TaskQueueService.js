@@ -47,7 +47,7 @@ class TaskQueueService {
         
         try {
             // For task creation workflows, skip task validation since task doesn't exist yet
-            if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
+            if (options.taskMode === 'task-create-workflow' || options.taskMode === 'advanced-task-create-workflow') {
                 this.logger.info('🔍 [TaskQueueService] Task creation workflow detected, skipping task validation');
             } else {
                 // Validate task exists for execution workflows
@@ -77,7 +77,8 @@ class TaskQueueService {
                     branchName: options.branchName,
                     autoExecute: options.autoExecute || true,
                     projectPath: options.projectPath,
-                    taskMode: options.taskMode  // ← WICHTIG: taskMode weitergeben!
+                    taskMode: options.taskMode,
+                    workflow: options.workflow  
                 }
             );
             

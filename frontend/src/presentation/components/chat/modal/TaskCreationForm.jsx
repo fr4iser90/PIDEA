@@ -137,7 +137,7 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors, creati
   }, [formData, validateForm]);
 
   // Data persistence
-  const STORAGE_KEY = 'task-creation-form-data';
+  const STORAGE_KEY = 'task-create-form-data';
 
   // Load saved data
   useEffect(() => {
@@ -229,7 +229,7 @@ const TaskCreationForm = ({ onSubmit, onCancel, isGeneratingPlan, errors, creati
         }
       </p>
       
-      <form onSubmit={handleSubmit} className="task-creation-form">
+      <form onSubmit={handleSubmit} className="task-create-form">
         {/* Task Title - Only show in advanced mode */}
         {creationMode === 'advanced' && (
           <div className="form-group">

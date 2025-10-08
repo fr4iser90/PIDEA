@@ -400,7 +400,7 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
           </div>
 
           {(workflowData.taskCount > 0 || workflowData.bulkResults) && (
-            <div className="task-creation-success">
+            <div className="task-create-success">
               <div className="success-icon">✅</div>
               <div className="success-content">
                 {workflowData.bulkResults ? (

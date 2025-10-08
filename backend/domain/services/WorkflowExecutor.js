@@ -32,7 +32,7 @@ class WorkflowExecutor {
 
             // For task creation workflows, skip task loading since task doesn't exist yet
             let task = null;
-            if (options.taskMode === 'task-creation-workflow' || options.taskMode === 'advanced-task-creation-workflow') {
+            if (options.taskMode === 'task-create-workflow' || options.taskMode === 'advanced-task-create-workflow') {
                 // This is a task creation workflow with real task in database
                 this.logger.info('WorkflowExecutor: Task creation workflow detected, loading real task from database');
                 task = await this.loadTask(taskId);
@@ -50,15 +50,11 @@ class WorkflowExecutor {
                 this.logger.info('WorkflowExecutor: Task loaded successfully', { taskId, taskTitle: task.title });
             }
 
-            // Determine workflow based on options
-            let workflowName = 'standard-task-workflow';
-            if (options.taskMode === 'task-review') {
-                workflowName = 'task-review-workflow';
-            } else if (options.taskMode === 'task-check-state') {
-                workflowName = 'task-review-workflow'; // Use same workflow but different prompt
-            } else if (options.taskMode) {
-                workflowName = options.taskMode;
+            // Use workflow from options
+            if (!options.workflow) {
+                throw new Error('Workflow must be specified in options.workflow');
             }
+            const workflowName = options.workflow;
             this.logger.info('WorkflowExecutor: Determined workflow name', { workflowName, taskMode: options.taskMode });
 
             // Load workflow definition
@@ -118,34 +114,21 @@ class WorkflowExecutor {
                     // Build prompt if useTaskPrompt is true
                     if (step.type === 'ide_send_message_step' && step.options?.useTaskPrompt && context.task) {
                         if (this.taskService) {
-                            if (context.taskMode === 'task-review') {
-                                stepMessage = await this.taskService.buildTaskReviewPrompt(context.task, context);
-                                this.logger.info('WorkflowExecutor: Built review prompt', {
-                                    taskId: context.task.id,
-                                    promptLength: stepMessage.length
-                                });
-                            } else if (context.taskMode === 'task-check-state') {
-                                stepMessage = await this.taskService.buildTaskCheckStatePrompt(context.task, context);
-                                this.logger.info('WorkflowExecutor: Built check-state prompt', {
-                                    taskId: context.task.id,
-                                    promptLength: stepMessage.length
-                                });
-                            } else if (context.taskMode === 'task-creation-workflow' || context.taskMode === 'advanced-task-creation-workflow') {
-                                // This is a task creation workflow with real task in database
-                                // The task already has the description, so use task creation prompt
-                                stepMessage = await this.taskService.buildTaskCreatePrompt(context.task, context);
-                                this.logger.info('WorkflowExecutor: Built task creation prompt', {
-                                    taskId: context.task.id,
-                                    promptLength: stepMessage.length,
-                                    hasDescription: !!context.task.description
-                                });
-                            } else {
-                                stepMessage = await this.taskService.buildTaskExecutionPrompt(context.task);
-                                this.logger.info('WorkflowExecutor: Built execution prompt', {
-                                    taskId: context.task.id,
-                                    promptLength: stepMessage.length
-                                });
-                            }
+                            // Use step-specific taskMode if available, otherwise use context taskMode
+                            const stepTaskMode = step.options?.taskMode || context.taskMode;
+                            
+                            // Use the smart router function that handles step-specific prompts
+                            stepMessage = await this.taskService.buildTaskPromptForStep(context.task, {
+                                taskMode: stepTaskMode,
+                                stepName: step.name,
+                                ...context
+                            });
+                            this.logger.info('WorkflowExecutor: Built prompt via router', {
+                                taskId: context.task.id,
+                                stepName: step.name,
+                                taskMode: stepTaskMode,
+                                promptLength: stepMessage.length
+                            });
                         } else {
                             this.logger.warn('WorkflowExecutor: TaskService not available for prompt building');
                         }

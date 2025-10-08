@@ -112,12 +112,12 @@ const API_CONFIG = {
         ai: (projectId) => `/api/projects/${projectId}/analysis/ai`
       },
       autoMode: {
-        start: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+        start: (projectId) => `/api/projects/${projectId}/tasks/enqueue`,
           stop: (projectId) => `/api/projects/${projectId}/workflow/stop`,
   status: (projectId) => `/api/projects/${projectId}/workflow/status`
       },
       autoRefactor: {
-        execute: (projectId) => `/api/projects/${projectId}/workflow/execute`
+        execute: (projectId) => `/api/projects/${projectId}/tasks/enqueue`
       },
       // 🆕 NEW: Task Status Sync endpoints
       syncManual: (projectId) => `/api/projects/${projectId}/tasks/sync-manual`,
@@ -132,9 +132,9 @@ const API_CONFIG = {
       report: (projectId) => `/api/projects/${projectId}/analysis/report`
     },
     vibecoder: {
-        analyze: (projectId) => `/api/projects/${projectId}/workflow/execute`,
-        refactor: (projectId) => `/api/projects/${projectId}/workflow/execute`,
-        mode: (projectId) => `/api/projects/${projectId}/workflow/execute`,
+        analyze: (projectId) => `/api/projects/${projectId}/tasks/enqueue`,
+        refactor: (projectId) => `/api/projects/${projectId}/tasks/enqueue`,
+        mode: (projectId) => `/api/projects/${projectId}/tasks/enqueue`,
         status: (projectId) => `/api/projects/${projectId}/workflow/status`,
         progress: (projectId) => `/api/projects/${projectId}/workflow/status`
     },
@@ -996,11 +996,11 @@ export default class APIChatRepository extends ChatRepository {
     
     const stepName = stepMapping[analysisType] || analysisType;
     
-    // Use workflow execution endpoint to run the specific step
-    return apiCall(`/api/projects/${currentProjectId}/workflow/execute`, {
+    // Use task enqueue endpoint to run the specific step
+    return apiCall(`/api/projects/${currentProjectId}/tasks/enqueue`, {
       method: 'POST',
       body: JSON.stringify({
-        mode: analysisType + '-analysis',
+        workflow: analysisType + '-analysis',
         steps: [stepName],
         projectPath: options.projectPath || '/home/fr4iser/Documents/Git/PIDEA',
         options: {

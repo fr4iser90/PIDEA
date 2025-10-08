@@ -629,7 +629,7 @@ class TaskController {
         try {
             const { projectId } = req.params;
             const {
-                mode = 'full',
+                workflow,
                 options = {},
                 autoExecute = true,
                 task,
@@ -640,7 +640,7 @@ class TaskController {
 
             this.logger.info('TaskController: Received task execution request', {
                 projectId,
-                mode,
+                workflow,
                 taskId: task?.id,
                 createGitBranch,
                 branchName,
@@ -785,8 +785,121 @@ class TaskController {
                 }
             }
 
+            // Handle bulk task check-state
+            if (workflow === 'task-check-state-workflow') {
+                try {
+                    const tasks = req.body.tasks || [];
+                    
+                    this.logger.info('TaskController: Starting bulk task check-state', {
+                        taskCount: tasks.length,
+                        projectId,
+                        userId
+                    });
+                    
+                    if (!tasks || tasks.length === 0) {
+                        throw new Error('No tasks provided for check-state');
+                    }
+                    
+                    // Add all tasks to queue for proper management
+                    const queueResults = [];
+                    
+                    for (let i = 0; i < tasks.length; i++) {
+                        const task = tasks[i];
+                        
+                        try {
+                            this.logger.info(`TaskController: Adding task ${i + 1}/${tasks.length} to check-state queue`, {
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                projectId,
+                                userId
+                            });
+                            
+                            // Queue task for execution using TaskApplicationService
+                            const queueResult = await this.taskApplicationService.executeTask(task.id, projectId, userId, {
+                                priority: 'normal',
+                                taskMode: 'task-check-state',
+                                autoExecute: true,
+                                createGitBranch: false,
+                                workflow: 'task-check-state-workflow'
+                            });
+                            
+                            queueResults.push({
+                                    taskId: task.id,
+                                    taskTitle: task.title || task.name,
+                                    success: true,
+                                    queueItemId: queueResult.queueItemId,
+                                    status: queueResult.status,
+                                    position: queueResult.position,
+                                    estimatedStartTime: queueResult.estimatedStartTime,
+                                    index: i + 1
+                                });
+                                
+                                this.logger.info(`TaskController: Task ${i + 1} added to check-state queue`, {
+                                    taskId: task.id,
+                                    queueItemId: queueResult.queueItemId,
+                                    position: queueResult.position
+                                });
+                            
+                        } catch (error) {
+                            this.logger.error(`TaskController: Failed to add task ${i + 1} to check-state queue`, {
+                                taskId: task.id,
+                                error: error.message,
+                                projectId,
+                                userId
+                            });
+                            
+                            queueResults.push({
+                                taskId: task.id,
+                                taskTitle: task.title || task.name,
+                                success: false,
+                                error: error.message,
+                                index: i + 1
+                            });
+                        }
+                    }
+                    
+                    const results = queueResults;
+                    const successCount = results.filter(r => r.success).length;
+                    const totalCount = results.length;
+                    
+                    this.logger.info('TaskController: Task check-state workflow completed', {
+                        totalTasks: totalCount,
+                        successfulTasks: successCount,
+                        failedTasks: totalCount - successCount,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(200).json({
+                        success: successCount > 0,
+                        message: `Task check-state completed: ${successCount}/${totalCount} tasks processed successfully`,
+                        data: {
+                            results,
+                            summary: {
+                                totalTasks: totalCount,
+                                completedTasks: successCount,
+                                failedTasks: totalCount - successCount,
+                                workflowPrompt: 'task-check-state.md'
+                            }
+                        }
+                    });
+                    
+                } catch (error) {
+                    this.logger.error('TaskController: Failed to execute task check-state workflow', {
+                        error: error.message,
+                        projectId,
+                        userId
+                    });
+                    
+                    return res.status(500).json({
+                        success: false,
+                        error: `Task check-state workflow failed: ${error.message}`
+                    });
+                }
+            }
+
             // Handle bulk task review
-            if (mode === 'task-review') {
+            if (workflow === 'task-review-workflow') {
                 try {
                     const tasks = req.body.tasks || [];
                     
@@ -819,7 +932,8 @@ class TaskController {
                                     priority: 'normal',
                                     taskMode: 'task-review',
                                     autoExecute: true,
-                                    createGitBranch: false
+                                    createGitBranch: false,
+                                    workflow: 'task-review-workflow'
                                 });
                             
                             queueResults.push({
@@ -896,11 +1010,11 @@ class TaskController {
                 }
             }
 
-            // For other modes, return not implemented
+            // For other workflows, return not implemented
             res.status(501).json({
                 success: false,
-                error: 'Mode not implemented',
-                message: `Mode '${mode}' is not yet implemented in TaskController`
+                error: 'Workflow not implemented',
+                message: `Workflow '${workflow}' is not yet implemented in TaskController`
             });
 
         } catch (error) {

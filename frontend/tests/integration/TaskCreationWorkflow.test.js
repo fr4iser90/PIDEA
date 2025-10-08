@@ -10,7 +10,7 @@ jest.mock('@/application/services/TaskCreationService');
 jest.mock('@/application/services/TaskReviewService');
 jest.mock('@/infrastructure/repositories/TaskWorkflowRepository');
 jest.mock('@/infrastructure/repositories/APIChatRepository');
-jest.mock('@/css/modal/task-creation-modal.css', () => ({}));
+jest.mock('@/css/modal/task-create-modal.css', () => ({}));
 jest.mock('@/css/modal/task-workflow-progress.css', () => ({}));
 
 // Mock event bus
@@ -155,7 +155,7 @@ describe('TaskCreationWorkflow Integration', () => {
         details: 'AI is analyzing the task requirements'
       };
 
-      mockEventBus.emit('task-creation:progress', progressEvent);
+      mockEventBus.emit('task-create:progress', progressEvent);
 
       await waitFor(() => {
         expect(screen.getByText(/ai planning & analysis/i)).toBeInTheDocument();
@@ -176,7 +176,7 @@ describe('TaskCreationWorkflow Integration', () => {
         }
       };
 
-      mockEventBus.emit('task-creation:completed', completionEvent);
+      mockEventBus.emit('task-create:completed', completionEvent);
 
       await waitFor(() => {
         expect(screen.getByText(/task processing complete/i)).toBeInTheDocument();
@@ -295,7 +295,7 @@ describe('TaskCreationWorkflow Integration', () => {
       });
 
       // Simulate progress to running state
-      mockEventBus.emit('task-creation:progress', {
+      mockEventBus.emit('task-create:progress', {
         workflowId: 'test-workflow-123',
         status: 'running',
         step: 'implementation',
@@ -316,7 +316,7 @@ describe('TaskCreationWorkflow Integration', () => {
       });
 
       // Simulate cancellation event
-      mockEventBus.emit('task-creation:cancelled', {
+      mockEventBus.emit('task-create:cancelled', {
         workflowId: 'test-workflow-123',
         status: 'cancelled',
         details: 'Task creation was cancelled'
@@ -423,10 +423,10 @@ describe('TaskCreationWorkflow Integration', () => {
       );
 
       // Verify event bus subscription
-      expect(mockEventBus.on).toHaveBeenCalledWith('task-creation:progress', expect.any(Function));
-      expect(mockEventBus.on).toHaveBeenCalledWith('task-creation:completed', expect.any(Function));
-      expect(mockEventBus.on).toHaveBeenCalledWith('task-creation:error', expect.any(Function));
-      expect(mockEventBus.on).toHaveBeenCalledWith('task-creation:cancelled', expect.any(Function));
+      expect(mockEventBus.on).toHaveBeenCalledWith('task-create:progress', expect.any(Function));
+      expect(mockEventBus.on).toHaveBeenCalledWith('task-create:completed', expect.any(Function));
+      expect(mockEventBus.on).toHaveBeenCalledWith('task-create:error', expect.any(Function));
+      expect(mockEventBus.on).toHaveBeenCalledWith('task-create:cancelled', expect.any(Function));
     });
 
     test('should emit progress events during workflow execution', async () => {
@@ -462,7 +462,7 @@ describe('TaskCreationWorkflow Integration', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(mockEventBus.emit).toHaveBeenCalledWith('task-creation:progress', expect.objectContaining({
+        expect(mockEventBus.emit).toHaveBeenCalledWith('task-create:progress', expect.objectContaining({
           workflowId: 'event-test-123',
           status: 'started'
         }));
@@ -578,10 +578,10 @@ describe('TaskCreationWorkflow Integration', () => {
       unmount();
 
       // Verify cleanup
-      expect(mockEventBus.off).toHaveBeenCalledWith('task-creation:progress', expect.any(Function));
-      expect(mockEventBus.off).toHaveBeenCalledWith('task-creation:completed', expect.any(Function));
-      expect(mockEventBus.off).toHaveBeenCalledWith('task-creation:error', expect.any(Function));
-      expect(mockEventBus.off).toHaveBeenCalledWith('task-creation:cancelled', expect.any(Function));
+      expect(mockEventBus.off).toHaveBeenCalledWith('task-create:progress', expect.any(Function));
+      expect(mockEventBus.off).toHaveBeenCalledWith('task-create:completed', expect.any(Function));
+      expect(mockEventBus.off).toHaveBeenCalledWith('task-create:error', expect.any(Function));
+      expect(mockEventBus.off).toHaveBeenCalledWith('task-create:cancelled', expect.any(Function));
     });
 
     test('should handle multiple rapid form submissions gracefully', async () => {
