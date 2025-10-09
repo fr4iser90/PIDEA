@@ -312,7 +312,8 @@ class TaskProcessor {
                             ...queueItem.options,
                             ...queueItem.context,
                             activeIDE: activeIDE,
-                            projectId: projectId,
+                            projectId: projectId, // Ensure projectId is set
+                            userId: queueItem.userId, // Ensure userId is set
                             projectPath: projectPath
                         };
                         

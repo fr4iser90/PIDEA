@@ -1036,12 +1036,12 @@ class TaskController {
                         description: taskData.description || '',
                         type: taskData.type || 'feature',
                         priority: taskData.priority || 'medium',
+                        status: 'pending', 
                         estimatedHours: taskData.estimatedHours || 1,
                         category: taskData.category || 'general',
                         metadata: {
                             creationMode: creationOptions.creationMode || 'normal',
-                            originalDescription: taskData.description,
-                            status: 'pending_ai_creation' // Special status for AI to process
+                            originalDescription: taskData.description
                         }
                     }, projectId, userId);
                     

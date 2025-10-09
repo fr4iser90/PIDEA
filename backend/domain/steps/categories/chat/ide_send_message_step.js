@@ -51,37 +51,8 @@ class IDESendMessageStep {
       this.validateContext(context);
       
       // Get message from context or options
-      let message = context.message || context.options?.message;
-      const { projectId, workspacePath, ideType, waitForResponse = false, timeout = null, activeIDE, useSynchronizedTask = false } = context;
-      
-      // If using synchronized task, get the task content from previous sync steps
-      if (useSynchronizedTask && context.previousSteps && Array.isArray(context.previousSteps)) {
-        const syncStep = context.previousSteps.find(step => 
-          step && step.name && step.name.includes('sync-task') && step.result?.success
-        );
-        
-        if (syncStep && syncStep.result?.data?.updatedTask) {
-          const synchronizedTask = syncStep.result.data.updatedTask;
-          logger.info('🔄 Using synchronized task content for message');
-          
-          // Use the actual task content instead of the initial prompt
-          if (synchronizedTask.content) {
-            message = synchronizedTask.content;
-          } else if (synchronizedTask.description) {
-            message = synchronizedTask.description;
-          }
-          
-          logger.info('📄 Synchronized task content:', {
-            title: synchronizedTask.title,
-            contentLength: synchronizedTask.content?.length || 0,
-            filePath: synchronizedTask.filePath
-          });
-        } else {
-          logger.warn('⚠️ [IDESendMessageStep] useSynchronizedTask=true but no sync step found in previousSteps');
-        }
-      } else if (useSynchronizedTask) {
-        logger.warn('⚠️ [IDESendMessageStep] useSynchronizedTask=true but previousSteps is not available or not an array');
-      }
+      const message = context.message || context.options?.message;
+      const { projectId, workspacePath, ideType, waitForResponse = false, timeout = null, activeIDE } = context;
       
       logger.info(`📤 Sending message to IDE for project ${projectId}${ideType ? ` (${ideType})` : ''}`);
       

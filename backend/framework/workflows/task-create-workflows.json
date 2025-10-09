@@ -56,7 +56,6 @@
           "options": {
             "useTaskPrompt": true,
             "taskMode": "task-review",
-            "useSynchronizedTask": true,
             "waitForResponse": true,
             "timeout": 300000,
             "sessionId": "task-review-${task.id}",
@@ -128,7 +127,6 @@
           "options": {
             "useTaskPrompt": true,
             "taskMode": "task-execute",
-            "useSynchronizedTask": true,
             "waitForResponse": true,
             "timeout": 600000,
             "sessionId": "task-execute-${task.id}",

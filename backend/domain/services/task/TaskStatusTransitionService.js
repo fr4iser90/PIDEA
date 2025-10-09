@@ -301,6 +301,7 @@ class TaskStatusTransitionService {
             .replace(/\s+Implementation\s*$/i, '') // Remove "Implementation" suffix
             .replace(/\s+Plan\s*$/i, '') // Remove "Plan" suffix
             .replace(/\s+Phase\s+\d+\s*$/i, '') // Remove "Phase X" suffix
+            .replace(/-task\s*$/i, '') // Remove "-task" suffix
             .trim();
         
         // Convert to kebab-case and clean up

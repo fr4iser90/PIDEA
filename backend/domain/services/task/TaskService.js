@@ -186,7 +186,8 @@ class TaskService {
       'task-create': '../content-library/prompts/task-management/task-create.md',
       'task-execute': '../content-library/prompts/task-management/task-execute.md',
       'task-analyze': '../content-library/prompts/task-management/task-analyze.md',
-      'task-review': '../content-library/prompts/task-management/task-review.md'
+      'task-review': '../content-library/prompts/task-management/task-review.md',
+      'task-check-state': '../content-library/prompts/task-management/task-check-state.md'
     };
     
     return promptPaths[promptType] || promptPaths['task-create'];
@@ -1447,18 +1448,42 @@ ${task.description}
       taskMode
     });
     
+    // ALWAYS load the SPECIFIC task from database by its ID - context.task might be outdated!
+    let currentTask = task;
+    if (this.taskRepository && task.id) {
+      try {
+        currentTask = await this.taskRepository.findById(task.id);
+        if (currentTask) {
+          logger.info('✅ [TaskService] Loaded SPECIFIC task from database', {
+            taskId: currentTask.id,
+            hasContent: !!currentTask.description,
+            contentLength: currentTask.description ? currentTask.description.length : 0,
+            syncedAt: currentTask.syncedAt || currentTask.lastSyncedAt
+          });
+        } else {
+          logger.warn('⚠️ [TaskService] SPECIFIC task not found in database, using context task', {
+            taskId: task.id
+          });
+          currentTask = task;
+        }
+      } catch (error) {
+        logger.error('❌ [TaskService] Error loading SPECIFIC task from database, using context task:', error);
+        currentTask = task;
+      }
+    }
+    
     // Determine prompt type based on step name and workflow type
     if (taskMode === 'task-review' || stepName?.includes('review')) {
-      return await this.buildTaskReviewPrompt(task, options);
+      return await this.buildTaskReviewPrompt(currentTask, options);
     } else if (taskMode === 'task-check-state' || stepName?.includes('check-state') || stepName?.includes('checkstate')) {
-      return await this.buildTaskCheckStatePrompt(task, options);
+      return await this.buildTaskCheckStatePrompt(currentTask, options);
     } else if (taskMode === 'task-create-workflow' || taskMode === 'advanced-task-create-workflow' || stepName?.includes('create') || stepName?.includes('task-create')) {
-      return await this.buildTaskCreatePrompt(task, options);
+      return await this.buildTaskCreatePrompt(currentTask, options);
     } else if (taskMode === 'task-execute' || stepName?.includes('execute') || stepName?.includes('task-execute')) {
-      return await this.buildTaskExecutionPrompt(task);
+      return await this.buildTaskExecutionPrompt(currentTask);
     } else {
       // Default to execution prompt
-      return await this.buildTaskExecutionPrompt(task);
+      return await this.buildTaskExecutionPrompt(currentTask);
     }
   }
 
@@ -1488,9 +1513,10 @@ ${task.description}
         taskCreatePrompt = 'Create a comprehensive development task plan:\n\n';
       }
 
-      // Combine task-create.md with task details
       // For task creation, use taskData from options if available, otherwise use task
       const taskData = options.taskData || task;
+      
+      // Combine task-create.md with task details
       const finalPrompt = `${taskCreatePrompt}\n\n## Task Details:\n- **Title**: ${taskData.title || ''}\n- **Description**: ${taskData.description || ''}\n- **Type**: ${taskData.type?.value || taskData.type || 'feature'}\n- **Priority**: ${taskData.priority?.value || taskData.priority || 'medium'}\n- **Category**: ${taskData.category || 'general'}\n- **Project**: ${taskData.projectId || task.projectId || 'Current Project'}`;
       
       logger.info('✅ [TaskService] Final task create prompt generated', {
@@ -1514,74 +1540,47 @@ ${task.description}
    */
   async buildTaskCheckStatePrompt(task, options = {}) {
     try {
-      // Read task-check-state.md content
-      const fs = require('fs');
-      const path = require('path');
-      
-      // Use projectPath from options or task.projectPath
-      const projectPath = options.projectPath || task.projectPath;
-      
-      if (!projectPath) {
-        throw new Error('Project path is required for task check state');
-      }
-      
-      const taskCheckStatePath = path.join(projectPath, 'content-library', 'prompts', 'task-management', 'task-check-state.md');
-      
-      let taskCheckStateContent = '';
+      // Load task-check-state.md prompt using dynamic path resolution
+      let taskCheckStatePrompt = '';
       try {
-        taskCheckStateContent = fs.readFileSync(taskCheckStatePath, 'utf8');
-        logger.info('🔍 [TaskService] Loaded task-check-state.md content', {
-          contentLength: taskCheckStateContent.length
-        });
+        logger.info('🔍 [TaskService] Loading task-check-state.md using dynamic path resolution...');
+        const taskCheckStatePath = this.getPromptPath('task-check-state');
+        const fullPath = path.join(process.cwd(), taskCheckStatePath);
+        taskCheckStatePrompt = fs.readFileSync(fullPath, 'utf8');
+        logger.info('✅ [TaskService] Successfully loaded task-check-state.md');
       } catch (error) {
-        logger.error('❌ [TaskService] Failed to read task-check-state.md', {
-          error: error.message,
-          path: taskCheckStatePath
-        });
-        throw new Error(`Failed to read task-check-state.md: ${error.message}`);
+        logger.error('❌ [TaskService] Error reading task-check-state.md from file:', error);
+        taskCheckStatePrompt = 'Check the current state of this task:\n\n';
       }
-      
-      // Read task's index.md content for context
+
+      // Use synchronized content from database
       let taskIndexContent = '';
-      try {
-        const taskIndexPath = path.join(projectPath, 'docs', '09_roadmap', 'pending', 'high', 'frontend', task.id, `${task.id}-index.md`);
-        if (fs.existsSync(taskIndexPath)) {
-          taskIndexContent = fs.readFileSync(taskIndexPath, 'utf8');
-          logger.info('🔍 [TaskService] Loaded task index content', {
-            taskId: task.id,
-            contentLength: taskIndexContent.length
-          });
-        } else {
-          logger.warn('⚠️ [TaskService] Task index file not found', {
-            taskId: task.id,
-            path: taskIndexPath
-          });
-        }
-      } catch (error) {
-        logger.warn('⚠️ [TaskService] Failed to read task index', {
+      if (task.description) {
+        taskIndexContent = task.description;
+        logger.info('✅ [TaskService] Using synchronized task content from database', {
           taskId: task.id,
-          error: error.message
+          contentLength: taskIndexContent.length,
+          syncedAt: task.syncedAt || task.lastSyncedAt
+        });
+      } else {
+        logger.warn('⚠️ [TaskService] No synchronized content in database', {
+          taskId: task.id
         });
       }
+
+      // Combine task-check-state.md with task content
+      const finalPrompt = `${taskCheckStatePrompt}\n\n${taskIndexContent}`;
       
-      // Combine task-check-state.md with task context
-      const fullPrompt = `${taskCheckStateContent}\n\n## Task Context:\n\n**Task ID:** ${task.id}\n**Task Title:** ${task.title}\n**Task Description:** ${task.description || 'No description available'}\n\n## Task Index Content:\n\n${taskIndexContent}\n\n## Instructions:\n\nPlease check the current state of this task and provide a comprehensive status analysis.`;
-      
-      logger.info('🔍 [TaskService] Built task check state prompt', {
+      logger.info('✅ [TaskService] Final task check state prompt generated', {
         taskId: task.id,
         projectId: task.projectId,
-        promptLength: fullPrompt.length,
-        hasTaskContext: !!taskIndexContent
+        promptLength: finalPrompt.length
       });
       
-      return fullPrompt;
+      return finalPrompt;
       
     } catch (error) {
-      logger.error('❌ [TaskService] Failed to build task check state prompt', {
-        taskId: task.id,
-        projectId: task.projectId,
-        error: error.message
-      });
+      logger.error('❌ [TaskService] Error building task check state prompt:', error);
       throw error;
     }
   }
@@ -1594,74 +1593,47 @@ ${task.description}
    */
   async buildTaskReviewPrompt(task, options = {}) {
     try {
-      // Read task-check-state.md content
-      const fs = require('fs');
-      const path = require('path');
-      
-      // Use projectPath from options or task.projectPath
-      const projectPath = options.projectPath || task.projectPath;
-      
-      if (!projectPath) {
-        throw new Error('Project path is required for task review');
-      }
-      
-      const taskReviewPath = path.join(projectPath, 'content-library', 'prompts', 'task-management', 'task-review.md');
-      
-      let taskReviewContent = '';
+      // Load task-review.md prompt using dynamic path resolution
+      let taskReviewPrompt = '';
       try {
-        taskReviewContent = fs.readFileSync(taskReviewPath, 'utf8');
-        logger.info('🔍 [TaskService] Loaded task-review.md content', {
-          contentLength: taskReviewContent.length
-        });
+        logger.info('🔍 [TaskService] Loading task-review.md using dynamic path resolution...');
+        const taskReviewPath = this.getPromptPath('task-review');
+        const fullPath = path.join(process.cwd(), taskReviewPath);
+        taskReviewPrompt = fs.readFileSync(fullPath, 'utf8');
+        logger.info('✅ [TaskService] Successfully loaded task-review.md');
       } catch (error) {
-        logger.error('❌ [TaskService] Failed to read task-review.md', {
-          error: error.message,
-          path: taskReviewPath
-        });
-        throw new Error(`Failed to read task-review.md: ${error.message}`);
+        logger.error('❌ [TaskService] Error reading task-review.md from file:', error);
+        taskReviewPrompt = 'Review this task:\n\n';
       }
-      
-      // Read task's index.md content for context
+
+      // Use synchronized content from database
       let taskIndexContent = '';
-      try {
-        const taskIndexPath = path.join(projectPath, 'docs', '09_roadmap', 'pending', 'high', 'frontend', task.id, `${task.id}-index.md`);
-        if (fs.existsSync(taskIndexPath)) {
-          taskIndexContent = fs.readFileSync(taskIndexPath, 'utf8');
-          logger.info('🔍 [TaskService] Loaded task index content', {
-            taskId: task.id,
-            contentLength: taskIndexContent.length
-          });
-        } else {
-          logger.warn('⚠️ [TaskService] Task index file not found', {
-            taskId: task.id,
-            path: taskIndexPath
-          });
-        }
-      } catch (error) {
-        logger.warn('⚠️ [TaskService] Failed to read task index', {
+      if (task.description) {
+        taskIndexContent = task.description;
+        logger.info('✅ [TaskService] Using synchronized task content from database', {
           taskId: task.id,
-          error: error.message
+          contentLength: taskIndexContent.length,
+          syncedAt: task.syncedAt || task.lastSyncedAt
+        });
+      } else {
+        logger.warn('⚠️ [TaskService] No synchronized content in database', {
+          taskId: task.id
         });
       }
+
+      // Combine task-review.md with task content
+      const finalPrompt = `${taskReviewPrompt}\n\n${taskIndexContent}`;
       
-      // Combine task-review.md with task context
-      const fullPrompt = `${taskReviewContent}\n\n## Task Context:\n\n**Task ID:** ${task.id}\n**Task Title:** ${task.title}\n**Task Description:** ${task.description || 'No description available'}\n\n## Task Index Content:\n\n${taskIndexContent}\n\n## Instructions:\n\nPlease analyze this task against the current codebase and provide a comprehensive status review.`;
-      
-      logger.info('🔍 [TaskService] Built task review prompt', {
+      logger.info('✅ [TaskService] Final task review prompt generated', {
         taskId: task.id,
         projectId: task.projectId,
-        promptLength: fullPrompt.length,
-        hasTaskContext: !!taskIndexContent
+        promptLength: finalPrompt.length
       });
       
-      return fullPrompt;
+      return finalPrompt;
       
     } catch (error) {
-      logger.error('❌ [TaskService] Failed to build task review prompt', {
-        taskId: task.id,
-        projectId: task.projectId,
-        error: error.message
-      });
+      logger.error('❌ [TaskService] Error building task review prompt:', error);
       throw error;
     }
   }

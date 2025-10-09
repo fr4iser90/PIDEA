@@ -40,6 +40,12 @@ class FileSnapshotStep {
     
     try {
       logger.info(`🔧 Executing ${this.name}...`);
+      logger.info(`📸 [FileSnapshotStep] Context received:`, {
+        hasWorkspacePath: !!context.workspacePath,
+        workspacePath: context.workspacePath,
+        hasSnapshotType: !!context.snapshotType,
+        snapshotType: context.snapshotType
+      });
       
       // Validate context
       this.validateContext(context);
@@ -57,7 +63,7 @@ class FileSnapshotStep {
       
       logger.info(`📸 Snapshot created with ${snapshot.size} files`);
 
-      return {
+      const result = {
         success: true,
         data: {
           snapshot,
@@ -66,6 +72,17 @@ class FileSnapshotStep {
           createdAt: new Date().toISOString()
         }
       };
+      
+      logger.info('📸 [FileSnapshotStep] Returning result:', {
+        success: result.success,
+        hasData: !!result.data,
+        hasSnapshot: !!result.data?.snapshot,
+        snapshotSize: result.data?.snapshot?.size,
+        resultKeys: Object.keys(result),
+        dataKeys: result.data ? Object.keys(result.data) : 'no data'
+      });
+
+      return result;
 
     } catch (error) {
       logger.error('❌ Error creating file snapshot:', error);
@@ -77,7 +94,7 @@ class FileSnapshotStep {
   }
 
   /**
-   * Create snapshot of all .md files in workspace
+   * Create snapshot of all .md files in workspace (recursive search)
    * @param {string} workspacePath - Workspace path
    * @returns {Promise<Set<string>>} Set of file paths
    */
@@ -93,20 +110,39 @@ class FileSnapshotStep {
     
     for (const searchDir of searchDirs) {
       try {
-        const files = await fs.readdir(searchDir);
-        const mdFiles = files.filter(f => f.endsWith('.md'));
-        
-        for (const file of mdFiles) {
-          const filePath = path.join(searchDir, file);
-          fileSet.add(filePath);
-        }
+        await this.searchDirectoryRecursively(searchDir, fileSet);
       } catch (error) {
-        // Skip directories that can't be read
-        logger.debug(`Skipping directory: ${searchDir}`);
+        logger.debug(`Skipping directory: ${searchDir} - ${error.message}`);
       }
     }
     
     return fileSet;
+  }
+
+  /**
+   * Recursively search directory for .md files
+   * @param {string} dirPath - Directory path to search
+   * @param {Set<string>} fileSet - Set to add files to
+   */
+  async searchDirectoryRecursively(dirPath, fileSet) {
+    try {
+      const entries = await fs.readdir(dirPath, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+        
+        if (entry.isDirectory()) {
+          // Recursively search subdirectories
+          await this.searchDirectoryRecursively(fullPath, fileSet);
+        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+          // Add .md files to the set
+          fileSet.add(fullPath);
+        }
+      }
+    } catch (error) {
+      // Skip directories that can't be read
+      logger.debug(`Cannot read directory ${dirPath}: ${error.message}`);
+    }
   }
 
   validateContext(context) {

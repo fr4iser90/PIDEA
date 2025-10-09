@@ -162,6 +162,7 @@ class WorkflowExecutor {
                         projectPath: context.projectPath,
                         workspacePath: context.projectPath,
                         activeIDE: context.activeIDE,
+                        taskId: context.task?.id, // Add taskId for synchronized task retrieval
                         previousSteps: results // Add previous steps for task sync functionality
                     };
 
@@ -181,6 +182,8 @@ class WorkflowExecutor {
                             stepName: step.step,
                             stepType: step.type
                         });
+                        
+                        // TaskService loads directly from DB - no context update needed
                     } else {
                         this.logger.error('WorkflowExecutor: Step FAILED - STOPPING WORKFLOW', {
                             stepName: step.step,

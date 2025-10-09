@@ -278,6 +278,31 @@ class PostgreSQLTaskRepository extends TaskRepository {
         let paramIndex = 1;
         
         // Build dynamic SQL for specific updates
+        if (taskOrUpdates.title !== undefined) {
+          updates.push(`title = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.title);
+        }
+        
+        if (taskOrUpdates.description !== undefined) {
+          updates.push(`description = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.description);
+        }
+        
+        if (taskOrUpdates.type !== undefined) {
+          updates.push(`type = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.type?.value || taskOrUpdates.type);
+        }
+        
+        if (taskOrUpdates.status !== undefined) {
+          updates.push(`status = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.status?.value || taskOrUpdates.status);
+        }
+        
+        if (taskOrUpdates.priority !== undefined) {
+          updates.push(`priority = $${paramIndex++}`);
+          updateParams.push(taskOrUpdates.priority?.value || taskOrUpdates.priority);
+        }
+        
         if (taskOrUpdates.createdAt !== undefined) {
           updates.push(`created_at = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.createdAt.toISOString());
@@ -296,11 +321,6 @@ class PostgreSQLTaskRepository extends TaskRepository {
         if (taskOrUpdates.metadata !== undefined) {
           updates.push(`metadata = $${paramIndex++}`);
           updateParams.push(JSON.stringify(taskOrUpdates.metadata));
-        }
-        
-        if (taskOrUpdates.status !== undefined) {
-          updates.push(`status = $${paramIndex++}`);
-          updateParams.push(taskOrUpdates.status?.value || taskOrUpdates.status);
         }
         
         if (updates.length === 0) {
