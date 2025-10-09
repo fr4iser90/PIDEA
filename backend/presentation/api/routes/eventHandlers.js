@@ -51,6 +51,11 @@ class EventHandlers {
       // ========================================
       this.setupTestEvents();
       
+      // ========================================
+      // VERSION EVENTS - Version Management
+      // ========================================
+      this.setupVersionEvents();
+      
     } else {
       this.logger.warn('No EventBus available for setting up event handlers');
     }
@@ -277,6 +282,19 @@ class EventHandlers {
         this.webSocketManager.broadcastToAll('playwright:config:failed', data);
       } else {
         this.logger.warn('WebSocket manager not available for playwright:config:failed broadcast');
+      }
+    });
+  }
+
+  setupVersionEvents() {
+    // AI Version Analysis Completed Event
+    this.eventBus.subscribe('ai-version-analysis-completed', (data) => {
+      this.logger.info('AI version analysis completed event:', '[REDACTED_ANALYSIS_DATA]');
+      if (this.webSocketManager) {
+        this.webSocketManager.broadcastToAll('ai-version-analysis-completed', data);
+        this.logger.info('Broadcasting ai-version-analysis-completed to all clients');
+      } else {
+        this.logger.warn('WebSocket manager not available for ai-version-analysis-completed broadcast');
       }
     });
   }

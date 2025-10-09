@@ -10,10 +10,22 @@ const VersionController = require('../controllers/VersionController');
 const Logger = require('@logging/Logger');
 
 class VersionRoutes {
-  constructor(authMiddleware) {
+  constructor(authMiddleware, serviceRegistry) {
     this.authMiddleware = authMiddleware;
+    this.serviceRegistry = serviceRegistry;
     this.logger = new Logger('VersionRoutes');
-    this.versionController = new VersionController();
+    
+    // Get VersionManagementHandler from DI container
+    const versionManagementHandler = serviceRegistry.getService('versionManagementHandler');
+    if (!versionManagementHandler) {
+      throw new Error('VersionManagementHandler not found in DI container');
+    }
+    
+    // Create VersionController with proper dependencies
+    this.versionController = new VersionController({
+      handler: versionManagementHandler,
+      logger: serviceRegistry.getService('logger')
+    });
   }
 
   /**
@@ -56,6 +68,10 @@ class VersionRoutes {
 
     app.post('/api/versions/determine-bump-type', (req, res) => {
       this.versionController.determineBumpType(req, res);
+    });
+
+    app.post('/api/versions/ai-analysis', (req, res) => {
+      this.versionController.getAIAnalysis(req, res);
     });
 
     app.get('/api/versions/latest', (req, res) => {

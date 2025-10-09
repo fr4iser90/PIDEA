@@ -159,6 +159,7 @@ function App() {
       eventBus.on('app-loading', handleLoading);
       eventBus.on('app-error', handleError);
       eventBus.on('app-ready', handleReady);
+      eventBus.on('ai-version-analysis-completed', handleAIAnalysisCompleted);
     }
   };
 
@@ -186,6 +187,11 @@ function App() {
 
   const handleReady = () => {
     logger.info('✅ App ready');
+  };
+
+  const handleAIAnalysisCompleted = (data) => {
+    logger.info('✅ AI version analysis completed via central event:', data);
+    // The VersionManagementComponent will handle the actual data processing
   };
 
   // Load active port ONLY after authentication

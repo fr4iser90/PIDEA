@@ -9,6 +9,9 @@
   background: #f8f9fa;
   border-radius: 8px;
   margin: 1rem 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Version Header */
@@ -101,7 +104,8 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  min-height: 400px;
+  height: 500px;
+  overflow-y: scroll;
 }
 
 .version-tab-content {

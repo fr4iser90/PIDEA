@@ -8,6 +8,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import '@/css/main/version-management.css';
 import VersionManagementRepository from '@/infrastructure/repositories/VersionManagementRepository.jsx';
 import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
+import AIRecommendationDisplay from './AIRecommendationDisplay.jsx';
 
 // Initialize repository
 const versionRepository = new VersionManagementRepository();
@@ -28,6 +30,7 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
   // Global state
   const activeIDE = useActiveIDE();
   const workspacePath = activeIDE.workspacePath;
+  const { aiVersionAnalysis } = useIDEStore();
 
   // Local state for UI
   const [activeTab, setActiveTab] = useState('current');
@@ -39,13 +42,105 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
   const [versionHistory, setVersionHistory] = useState([]);
   const [configuration, setConfiguration] = useState(null);
   const [bumpRecommendation, setBumpRecommendation] = useState(null);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   // Form state
   const [bumpForm, setBumpForm] = useState({
-    task: '',
+    changelog: '',
     bumpType: 'auto',
     customVersion: ''
   });
+
+  // Handle AI recommendation selection
+  const handleAIRecommendationSelect = useCallback((recommendation) => {
+    if (recommendation && recommendation.recommendedType) {
+      logger.info('🔍 handleAIRecommendationSelect called with:', recommendation);
+      logger.info('🔍 recommendation.newVersion:', recommendation.newVersion);
+      logger.info('🔍 recommendation.currentVersion:', recommendation.currentVersion);
+      
+      // Set the bump type and use the new version from backend
+      setBumpForm(prev => {
+        const newForm = { 
+          ...prev, 
+          bumpType: recommendation.recommendedType,
+          customVersion: recommendation.newVersion || '' // Use newVersion from backend
+        };
+        logger.info('🔍 Setting bumpForm to:', newForm);
+        return newForm;
+      });
+      setBumpRecommendation(recommendation);
+      
+      logger.info(`✅ AI recommendation selected: ${recommendation.recommendedType} → ${recommendation.newVersion} (confidence: ${recommendation.confidence})`);
+      
+      // Auto-fill changelog if empty and AI has generated one
+      if (!bumpForm.changelog.trim()) {
+        let autoDescription = '';
+        
+        // Priority 1: Use the new changelog field (user-friendly changelog)
+        if (recommendation.changelog && Array.isArray(recommendation.changelog)) {
+          autoDescription = recommendation.changelog.join('\n• ');
+          if (autoDescription) {
+            autoDescription = '• ' + autoDescription;
+          }
+          logger.info('✅ AI auto-filled changelog with user-friendly changelog:', autoDescription);
+        }
+        // Priority 2: Use factors array (analysis factors)
+        else if (recommendation.factors && Array.isArray(recommendation.factors)) {
+          autoDescription = recommendation.factors.join('\n• ');
+          if (autoDescription) {
+            autoDescription = '• ' + autoDescription;
+          }
+          logger.info('✅ AI auto-filled changelog with analysis factors:', autoDescription);
+        } 
+        // Priority 3: Fallback to reasoning if no structured data available
+        else if (recommendation.reasoning) {
+          autoDescription = recommendation.reasoning.length > 200 
+            ? recommendation.reasoning.substring(0, 200) + '...'
+            : recommendation.reasoning;
+          logger.info('✅ AI auto-filled changelog with reasoning fallback:', autoDescription);
+        }
+        
+        if (autoDescription) {
+          setBumpForm(prev => ({ 
+            ...prev, 
+            changelog: autoDescription,
+            bumpType: recommendation.recommendedType,
+            customVersion: recommendation.newVersion || '' // Use newVersion from backend
+          }));
+        }
+      }
+      
+      logger.info('✅ AI recommendation selected:', recommendation);
+    }
+  }, [bumpForm.changelog]);
+
+  // Get AI analysis (supports empty changelog for auto-detection)
+  const getAIAnalysis = useCallback(async (changelog) => {
+    if (!workspacePath) return;
+    
+    try {
+      setIsAnalyzing(true);
+      
+      // Start AI analysis via HTTP (triggers backend)
+      const result = await versionRepository.getAIAnalysis(changelog || '', workspacePath, {
+        autoDetectChanges: !changelog || !changelog.trim(),
+        analyzeGitDiff: true,
+        analyzeCommits: true,
+        analyzeDependencies: true,
+        bumpType: bumpForm.bumpType,
+        // Removed customVersion - backend handles version calculation
+      });
+      
+      // The result will come via Event System, not HTTP response
+      logger.info('✅ AI analysis started, waiting for event...');
+      
+    } catch (error) {
+      logger.error('❌ Error starting AI analysis:', error);
+      setAiAnalysis(null);
+      setIsAnalyzing(false);
+    }
+  }, [workspacePath, handleAIRecommendationSelect]);
 
   // Load initial data
   useEffect(() => {
@@ -55,6 +150,20 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
       loadConfiguration();
     }
   }, [workspacePath]);
+
+  // Listen for AI analysis from IDEStore
+  useEffect(() => {
+    if (aiVersionAnalysis && aiVersionAnalysis.recommendedType) {
+      logger.info('🔍 AI analysis received from IDEStore:', aiVersionAnalysis);
+      setAiAnalysis(aiVersionAnalysis);
+      setIsAnalyzing(false);
+      
+      // Automatically trigger the recommendation selection to fill the form
+      logger.info('🚀 Calling handleAIRecommendationSelect with:', aiVersionAnalysis);
+      logger.info('🔍 AI analysis has newVersion:', aiVersionAnalysis.newVersion);
+      handleAIRecommendationSelect(aiVersionAnalysis);
+    }
+  }, [aiVersionAnalysis, handleAIRecommendationSelect]);
 
   // Load current version
   const loadCurrentVersion = useCallback(async () => {
@@ -113,12 +222,12 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
   }, []);
 
   // Determine bump type
-  const determineBumpType = useCallback(async (task) => {
-    if (!workspacePath || !task.trim()) return;
+  const determineBumpType = useCallback(async (changelog) => {
+    if (!workspacePath || !changelog.trim()) return;
     
     try {
       setIsLoading(true);
-      const result = await versionRepository.determineBumpType(task, workspacePath);
+      const result = await versionRepository.determineBumpType(changelog, workspacePath);
       
       if (result.success) {
         setBumpRecommendation(result.data);
@@ -135,12 +244,15 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
     }
   }, [workspacePath]);
 
-  // Bump version
-  const handleBumpVersion = async () => {
-    if (!workspacePath || !bumpForm.task.trim()) {
-      setOperationResult({ type: 'error', message: 'Task description is required' });
+  // Bump version (with dry run support)
+  const handleBumpVersion = async (actualBump = false) => {
+    if (!workspacePath) {
+      setOperationResult({ type: 'error', message: 'Workspace path is required' });
       return;
     }
+
+    // Task description is now optional - AI will auto-detect changes
+    const changelogDescription = bumpForm.changelog.trim() || 'Auto-detected changes';
 
     try {
       setIsLoading(true);
@@ -149,28 +261,45 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
       const bumpType = bumpForm.bumpType === 'auto' ? null : bumpForm.bumpType;
       
       const result = await versionRepository.bumpVersion(
-        bumpForm.task,
+        changelogDescription,
         workspacePath,
         bumpType,
-        { customVersion: bumpForm.customVersion }
+        { 
+          // Removed customVersion - backend handles version calculation,
+          dryRun: !actualBump, // true = dry run, false = actual bump
+          autoDetectChanges: !bumpForm.changelog.trim(), // Auto-detect if no description provided
+          analyzeGitDiff: true,
+          analyzeCommits: true,
+          analyzeDependencies: true
+        }
       );
       
       if (result.success) {
-        setOperationResult({ type: 'success', message: result.message || 'Version bumped successfully!' });
-        
-        // Reload data
-        await Promise.all([
-          loadCurrentVersion(),
-          loadVersionHistory()
-        ]);
-        
-        // Reset form
-        setBumpForm({ task: '', bumpType: 'auto', customVersion: '' });
-        setBumpRecommendation(null);
-        
-        logger.info('✅ Version bumped successfully:', result.data);
+        if (actualBump) {
+          setOperationResult({ type: 'success', message: result.message || 'Version bumped successfully!' });
+          
+          // Reload data only for actual bump
+          await Promise.all([
+            loadCurrentVersion(),
+            loadVersionHistory()
+          ]);
+          
+          // Reset form only for actual bump
+          setBumpForm({ changelog: '', bumpType: 'auto', customVersion: '' });
+          setBumpRecommendation(null);
+          
+          logger.info('✅ Version bumped successfully:', result.data);
+        } else {
+          // Dry run - show preview
+          setOperationResult({ 
+            type: 'info', 
+            message: `Preview: Would bump to ${result.data.newVersion} (${result.data.bumpType})`,
+            preview: result.data
+          });
+          logger.info('🔍 Version bump preview:', result.data);
+        }
       } else {
-        setOperationResult({ type: 'error', message: result.error || 'Failed to bump version' });
+        setOperationResult({ type: 'error', message: result.error || 'Failed to analyze version bump' });
       }
     } catch (error) {
       logger.error('❌ Error bumping version:', error);
@@ -380,7 +509,7 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                         </span>
                       </div>
                       <div className="history-details">
-                        <div className="history-task">{entry.task || 'No description'}</div>
+                        <div className="history-changelog">{entry.changelog || 'No description'}</div>
                         <div className="history-bump-type">
                           Bump Type: <span className="bump-type-badge">{entry.bumpType}</span>
                         </div>
@@ -413,20 +542,24 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
               
               <div className="bump-form">
                 <div className="form-group">
-                  <label htmlFor="task">Task Description *</label>
+                  <label htmlFor="changelog">
+                    Changelog 
+                    <span className="optional-label">(Optional - AI will analyze your changes automatically)</span>
+                  </label>
                   <textarea
-                    id="task"
-                    value={bumpForm.task}
+                    id="changelog"
+                    value={bumpForm.changelog}
                     onChange={(e) => {
-                      setBumpForm(prev => ({ ...prev, task: e.target.value }));
-                      if (e.target.value.trim()) {
-                        determineBumpType(e.target.value);
-                      }
+                      setBumpForm(prev => ({ ...prev, changelog: e.target.value }));
+                      // No automatic analysis on typing - only when user clicks "Generate with AI"
                     }}
-                    placeholder="Describe what changes you made (e.g., 'Added user authentication', 'Fixed login bug')"
+                    placeholder="Describe what changes you made in this changelog (optional - leave empty for AI auto-detection)"
                     rows={3}
                     className="form-textarea"
                   />
+                  <div className="form-help">
+                    💡 <strong>Smart Tip:</strong> Leave empty to let AI automatically analyze your git changes!
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -437,7 +570,7 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                     onChange={(e) => setBumpForm(prev => ({ ...prev, bumpType: e.target.value }))}
                     className="form-select"
                   >
-                    <option value="auto">🤖 Auto (Recommended)</option>
+                    <option value="auto">🤖 Smart Detection (Recommended)</option>
                     <option value="patch">🔧 Patch (Bug fixes)</option>
                     <option value="minor">✨ Minor (New features)</option>
                     <option value="major">💥 Major (Breaking changes)</option>
@@ -447,9 +580,18 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                   </div>
                 </div>
 
-                {bumpRecommendation && (
+                {/* AI Analysis Display */}
+                <AIRecommendationDisplay
+                  recommendation={aiAnalysis}
+                  isLoading={isAnalyzing}
+                  onRecommendationSelect={handleAIRecommendationSelect}
+                  className="ai-analysis-section"
+                />
+
+                {/* Legacy Recommendation Display (fallback) */}
+                {bumpRecommendation && !aiAnalysis && (
                   <div className="bump-recommendation">
-                    <h5>🤖 AI Recommendation</h5>
+                    <h5>🤖 Smart Detection Result</h5>
                     <div className="recommendation-content">
                       <div className="recommended-type">
                         Recommended: <span className="recommended-badge">{bumpRecommendation.recommendedType}</span>
@@ -467,7 +609,9 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                 )}
 
                 <div className="form-group">
-                  <label htmlFor="customVersion">Custom Version (Optional)</label>
+                  <label htmlFor="customVersion">
+                    Custom Version (Optional){currentVersion ? ` - Current: ${typeof currentVersion === 'string' ? currentVersion : currentVersion.version || 'Unknown'}` : ''}
+                  </label>
                   <input
                     id="customVersion"
                     type="text"
@@ -480,8 +624,16 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
 
                 <div className="form-actions">
                   <button
-                    onClick={handleBumpVersion}
-                    disabled={isLoading || !bumpForm.task.trim()}
+                    onClick={() => getAIAnalysis(bumpForm.changelog)} // AI Analysis
+                    disabled={isAnalyzing}
+                    className="version-btn secondary"
+                  >
+                    {isAnalyzing ? '🤖 AI Analyzing...' : '🤖 Generate with AI'}
+                  </button>
+                  
+                  <button
+                    onClick={() => handleBumpVersion(true)} // true = actual bump
+                    disabled={isLoading}
                     className="version-btn primary"
                   >
                     {isLoading ? '⏳ Bumping...' : '🚀 Bump Version'}

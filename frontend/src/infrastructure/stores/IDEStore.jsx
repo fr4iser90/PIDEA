@@ -991,6 +991,11 @@ const useIDEStore = create(
               logger.info('IDE list updated event received via WebSocket - reloading available IDEs');
               get().loadAvailableIDEs();
             });
+            WebSocketService.on('ai-version-analysis-completed', (data) => {
+              logger.info('AI version analysis completed event received via WebSocket:', data);
+              // Store the AI analysis result for components to access
+              set({ aiVersionAnalysis: data.analysisResult });
+            });
             WebSocketService.on('activePortChanged', (data) => {
               const { port } = data;
               logger.info('Active port changed via WebSocket:', port);

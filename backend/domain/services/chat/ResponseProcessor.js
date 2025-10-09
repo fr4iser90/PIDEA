@@ -283,7 +283,7 @@ class ResponseProcessor {
               const isVisible = await element.isVisible();
               const text = await element.textContent();
               this.logger.info(`🔍 Debug: Completion indicator - text: "${text}", visible: ${isVisible}`);
-              if (isVisible && text && (text.includes('Review Changes') || text.includes('Review') || text.includes('Apply'))) {
+              if (isVisible && text && (text.includes('Review Changes') || text.includes('Review') || text.includes('Apply') || text.includes('Undo') || text.includes('codicon-review'))) {
                 this.logger.info('✅ Completion indicator visible with correct text - response is complete!');
                 return true;
               }
@@ -292,6 +292,28 @@ class ResponseProcessor {
         } catch (error) {
           this.logger.info(`🔍 Debug: Completion indicator selector failed: ${error.message}`);
         }
+      }
+      
+      // Check for hidden completion indicators (monaco-progress-container done)
+      try {
+        const hiddenDoneElements = await page.$$('.monaco-progress-container.done');
+        this.logger.info(`🔍 Debug: Found ${hiddenDoneElements.length} hidden done elements`);
+        
+        if (hiddenDoneElements.length > 0) {
+          for (const element of hiddenDoneElements) {
+            const isVisible = await element.isVisible();
+            const classes = await element.getAttribute('class');
+            this.logger.info(`🔍 Debug: Hidden done element - classes: "${classes}", visible: ${isVisible}`);
+            
+            // If we have hidden done elements, it might indicate completion
+            if (!isVisible && classes && classes.includes('done')) {
+              this.logger.info('✅ Hidden completion indicator found - response might be complete!');
+              // Don't return true immediately, but log it for debugging
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.info(`🔍 Debug: Hidden completion indicator check failed: ${error.message}`);
       }
       
       // Check if text has stopped growing and is substantial
@@ -329,6 +351,14 @@ class ResponseProcessor {
         // More lenient completion detection - if we have substantial content, consider it complete
         // This prevents the infinite loop issue
         if (hasSubstantialContent) {
+          // Check if this is a JSON response - if so, consider it complete when stable
+          const hasJsonStructure = currentText.includes('{') && currentText.includes('"recommendedType"') && currentText.includes('"factors"');
+          
+          if (hasJsonStructure) {
+            this.logger.info('📝 JSON response stable and substantial - appears complete');
+            return true;
+          }
+          
           this.logger.info('📝 Text stable and substantial - appears complete');
           return true;
         }
@@ -780,9 +810,33 @@ class ResponseProcessor {
             }
           }
           
+          // Enhanced completion detection with multiple fallback strategies
+          if (stableCheckCount >= 4) {
+            // Strategy 1: Check for JSON completion (for AI version analysis)
+            const hasJsonStructure = currentText.includes('{') && currentText.includes('"recommendedType"') && currentText.includes('"factors"');
+            if (hasJsonStructure && currentText.length > 200) {
+              this.logger.info('✅ JSON response detected and stable - considering complete');
+              break;
+            }
+            
+            // Strategy 2: Check for substantial content with natural endings
+            const hasNaturalEnding = currentText.match(/\.\s*$|!$|\?$|```\s*$/);
+            if (currentText.length > 300 && hasNaturalEnding) {
+              this.logger.info('✅ Response has natural ending and is substantial - considering complete');
+              break;
+            }
+            
+            // Strategy 3: Check for code blocks completion
+            const codeBlockCount = (currentText.match(/```/g) || []).length;
+            if (codeBlockCount > 0 && codeBlockCount % 2 === 0 && currentText.length > 200) {
+              this.logger.info('✅ Code blocks appear complete - considering complete');
+              break;
+            }
+          }
+          
           // Additional check: if response is substantial and stable for a reasonable time, consider it complete
-          if (stableCheckCount >= 5 && currentText.length > 500) {
-            this.logger.info('✅ Response substantial and stable for 5 checks - considering complete');
+          if (stableCheckCount >= 15 && currentText.length > 500) {
+            this.logger.info('✅ Response substantial and stable for 15 checks - considering complete');
             break;
           }
           

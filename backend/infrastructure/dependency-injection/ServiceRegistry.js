@@ -174,14 +174,39 @@ class ServiceRegistry {
             return new IDEWorkspaceDetectionService(ideManager, projectRepository);
         }, { singleton: true, dependencies: ['ideManager', 'projectRepository'] });
 
-        // Version Management Service
-        this.container.register('versionManagementService', (fileSystemService, logger) => {
+        // Version AI Integration
+        this.container.register('versionAIIntegration', () => {
+            const VersionAIIntegration = require('@infrastructure/external/VersionAIIntegration');
+            return new VersionAIIntegration();
+        }, { singleton: true });
+
+        // AI Version Analysis Service
+        this.container.register('aiVersionAnalysisService', (versionAIIntegration) => {
+            const AIVersionAnalysisService = require('@domain/services/version/AIVersionAnalysisService');
+            return new AIVersionAnalysisService({
+                aiIntegration: versionAIIntegration
+            });
+        }, { singleton: true, dependencies: ['versionAIIntegration'] });
+
+        // Version Management Service (without hybrid detector to avoid circular dependency)
+        this.container.register('versionManagementService', (fileSystemService, logger, aiVersionAnalysisService) => {
             const VersionManagementService = require('@domain/services/version/VersionManagementService');
             return new VersionManagementService({
                 fileSystemService,
-                logger
+                logger,
+                aiAnalysisService: aiVersionAnalysisService
+                // No hybridDetector to avoid circular dependency
             });
-        }, { singleton: true, dependencies: ['fileSystemService', 'logger'] });
+        }, { singleton: true, dependencies: ['fileSystemService', 'logger', 'aiVersionAnalysisService'] });
+
+        // Hybrid Version Detector (after versionManagementService is created)
+        this.container.register('hybridVersionDetector', (aiVersionAnalysisService, versionManagementService) => {
+            const HybridVersionDetector = require('@domain/services/version/HybridVersionDetector');
+            return new HybridVersionDetector({
+                aiAnalysisService: aiVersionAnalysisService,
+                versionManagementService: versionManagementService
+            });
+        }, { singleton: true, dependencies: ['aiVersionAnalysisService', 'versionManagementService'] });
 
         // IDE Services
         this.container.register('ideFactory', () => {
@@ -1712,13 +1737,8 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['eventBus'] });
                 break;
             case 'versionManagementService':
-                this.container.register('versionManagementService', (fileSystemService, logger) => {
-                    const VersionManagementService = require('@domain/services/version/VersionManagementService');
-                    return new VersionManagementService({
-                        fileSystemService,
-                        logger
-                    });
-                }, { singleton: true, dependencies: ['fileSystemService', 'logger'] });
+                // versionManagementService is already registered above with aiVersionAnalysisService dependency
+                // Skip duplicate registration to avoid overriding the correct one
                 break;
             default:
                 throw new Error(`Unknown domain service: ${serviceName}`);

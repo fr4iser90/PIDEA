@@ -10,19 +10,8 @@ const logger = new Logger('VersionManagementHandler');
 
 class VersionManagementHandler {
   constructor(dependencies = {}) {
-    // Create VersionManagementService with proper dependencies
-    if (dependencies.versionManagementService) {
-      this.versionManagementService = dependencies.versionManagementService;
-    } else {
-      // Create service directly with required dependencies
-      const FileSystemService = require('@infrastructure/external/FileSystemService');
-      const fileSystemService = new FileSystemService();
-      
-      this.versionManagementService = new VersionManagementService({
-        fileSystemService: fileSystemService,
-        logger: dependencies.logger || logger
-      });
-    }
+    // VersionManagementService MUST come from DI container - no direct instantiation!
+    this.versionManagementService = dependencies.versionManagementService;
     
     this.semanticVersioning = dependencies.semanticVersioning || new SemanticVersioningService();
     this.logger = dependencies.logger || logger;
@@ -363,6 +352,141 @@ class VersionManagementHandler {
   }
 
   /**
+   * Handle get AI analysis command with retry logic
+   * @param {Object} command - Get AI analysis command
+   * @returns {Promise<Object>} Command result
+   */
+  async handleGetAIAnalysis(command) {
+    const maxRetries = 3;
+    const retryDelay = 2000; // 2 seconds
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        this.logger.info(`Handling get AI analysis command (attempt ${attempt}/${maxRetries})`, {
+          task: command.task?.substring(0, 100) + '...',
+          projectPath: command.projectPath
+        });
+
+        const result = await this.versionManagementService.getAIAnalysis(
+          command.task,
+          command.projectPath,
+          command.context
+        );
+
+        // Validate the result
+        if (this.isValidAIResult(result)) {
+          this.logger.info(`✅ AI analysis completed successfully on attempt ${attempt}`);
+          return result;
+        } else {
+          this.logger.warn(`⚠️ Invalid AI result on attempt ${attempt}, retrying...`, {
+            hasRecommendedType: !!result?.recommendedType,
+            hasConfidence: typeof result?.confidence === 'number',
+            hasFactors: Array.isArray(result?.factors)
+          });
+          
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
+
+      } catch (error) {
+        this.logger.error(`Error handling get AI analysis command (attempt ${attempt}/${maxRetries})`, {
+          error: error.message,
+          command
+        });
+
+        if (attempt < maxRetries) {
+          this.logger.info(`Retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+      }
+    }
+
+    // All retries failed
+    this.logger.error('All AI analysis attempts failed');
+    return {
+      success: false,
+      error: 'AI analysis failed after all retry attempts',
+      timestamp: new Date()
+    };
+  }
+
+  /**
+   * Validate AI analysis result
+   * @param {Object} result - AI analysis result
+   * @returns {boolean} True if result is valid
+   */
+  isValidAIResult(result) {
+    if (!result) {
+      this.logger.warn('❌ No result provided for validation');
+      return false;
+    }
+
+    // Check if result has success field
+    if (result.success === false) {
+      this.logger.warn('❌ Result marked as unsuccessful');
+      return false;
+    }
+
+    // The analysis data is in result.data (VersionManagementService structure)
+    if (!result.data || !result.data.recommendedType) {
+      this.logger.warn('❌ No analysis data found in result.data', {
+        resultKeys: Object.keys(result),
+        hasData: !!result.data,
+        dataKeys: result.data ? Object.keys(result.data) : null
+      });
+      return false;
+    }
+    
+    const analysis = result.data;
+    this.logger.info('🔍 Using result.data for validation', {
+      analysisKeys: Object.keys(analysis),
+      recommendedType: analysis.recommendedType,
+      confidence: analysis.confidence,
+      factors: analysis.factors,
+      factorsType: typeof analysis.factors,
+      factorsIsArray: Array.isArray(analysis.factors)
+    });
+    
+    // Check for required fields
+    if (!analysis.recommendedType || !['major', 'minor', 'patch'].includes(analysis.recommendedType)) {
+      this.logger.warn('❌ Invalid or missing recommendedType', {
+        recommendedType: analysis.recommendedType,
+        validTypes: ['major', 'minor', 'patch']
+      });
+      return false;
+    }
+
+    if (typeof analysis.confidence !== 'number' || analysis.confidence < 0 || analysis.confidence > 1) {
+      this.logger.warn('❌ Invalid or missing confidence', {
+        confidence: analysis.confidence,
+        type: typeof analysis.confidence
+      });
+      return false;
+    }
+
+    // Check for required factors field
+    if (!Array.isArray(analysis.factors) || analysis.factors.length === 0) {
+      this.logger.warn('❌ Invalid or missing factors', {
+        factors: analysis.factors,
+        isArray: Array.isArray(analysis.factors),
+        length: analysis.factors?.length
+      });
+      return false;
+    }
+
+    this.logger.info('✅ AI result validation passed', {
+      recommendedType: analysis.recommendedType,
+      confidence: analysis.confidence,
+      factorsCount: analysis.factors.length
+    });
+
+    return true;
+  }
+
+  /**
    * Handle get configuration command
    * @param {Object} command - Get configuration command
    * @returns {Promise<Object>} Command result
@@ -383,6 +507,54 @@ class VersionManagementHandler {
 
     } catch (error) {
       this.logger.error('Error handling get configuration command', {
+        error: error.message,
+        command
+      });
+
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date()
+      };
+    }
+  }
+
+  /**
+   * Handle perform dry run command
+   * @param {Object} command - Perform dry run command
+   * @returns {Promise<Object>} Command result
+   */
+  async handlePerformDryRun(command) {
+    try {
+      this.logger.info('Handling perform dry run command', {
+        taskId: command.taskId,
+        projectPath: command.projectPath,
+        bumpType: command.bumpType
+      });
+
+      const result = await this.versionManagementService.performDryRun(
+        command.task,
+        command.projectPath,
+        command.bumpType,
+        command.context
+      );
+
+      return {
+        success: result.success,
+        data: result.success ? {
+          currentVersion: result.currentVersion,
+          newVersion: result.newVersion,
+          bumpType: result.bumpType,
+          wouldUpdateFiles: result.wouldUpdateFiles,
+          versionRecordPreview: result.versionRecordPreview,
+          dryRun: true
+        } : null,
+        error: result.error,
+        timestamp: new Date()
+      };
+
+    } catch (error) {
+      this.logger.error('Error handling perform dry run command', {
         error: error.message,
         command
       });
@@ -423,6 +595,10 @@ class VersionManagementHandler {
           return await this.handleUpdateConfiguration(command);
         case 'getConfiguration':
           return await this.handleGetConfiguration(command);
+        case 'getAIAnalysis':
+          return await this.handleGetAIAnalysis(command);
+        case 'performDryRun':
+          return await this.handlePerformDryRun(command);
         default:
           throw new Error(`Unknown command type: ${commandType}`);
       }

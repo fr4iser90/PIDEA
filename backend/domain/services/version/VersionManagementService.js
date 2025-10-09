@@ -5,6 +5,8 @@
 
 const Logger = require('@logging/Logger');
 const SemanticVersioningService = require('./SemanticVersioningService');
+const AIVersionAnalysisService = require('./AIVersionAnalysisService');
+const HybridVersionDetector = require('./HybridVersionDetector');
 const logger = new Logger('VersionManagementService');
 
 class VersionManagementService {
@@ -14,6 +16,10 @@ class VersionManagementService {
     this.gitService = dependencies.gitService;
     this.fileSystemService = dependencies.fileSystemService;
     this.logger = logger; // Always use our own logger with correct name
+    
+    // AI integration services - MUST come from DI container!
+    this.aiAnalysisService = dependencies.aiAnalysisService;
+    this.hybridDetector = dependencies.hybridDetector;
     
     // Cache system for version data
     this.versionCache = new Map();
@@ -156,6 +162,10 @@ class VersionManagementService {
    * @returns {Promise<Object>} Bump result
    */
   async bumpVersion(task, projectPath, bumpType, context = {}) {
+    // Check if this is a dry run
+    if (context.dryRun) {
+      return this.performDryRun(task, projectPath, bumpType, context);
+    }
     try {
       this.logger.info('Starting version bump', {
         taskId: task.id,
@@ -173,7 +183,7 @@ class VersionManagementService {
       }
 
       // Bump version
-      const newVersion = this.semanticVersioning.bumpVersion(currentVersion, bumpType);
+      const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, bumpType);
       
       // Update package files
       const updatedFiles = await this.updatePackageFiles(projectPath, newVersion);
@@ -195,7 +205,7 @@ class VersionManagementService {
 
       const result = {
         success: true,
-        currentVersion,
+        currentVersion: currentVersion.version,
         newVersion,
         bumpType,
         updatedFiles,
@@ -207,7 +217,7 @@ class VersionManagementService {
 
       this.logger.info('Version bump completed successfully', {
         taskId: task.id,
-        currentVersion,
+        currentVersion: currentVersion.version,
         newVersion,
         bumpType
       });
@@ -229,6 +239,94 @@ class VersionManagementService {
   }
 
   /**
+   * Determine bump type and calculate new version
+   * @param {Object} task - Task object
+   * @param {string} projectPath - Project path
+   * @param {Object} context - Additional context
+   * @returns {Promise<Object>} Object with recommendedType and newVersion
+   */
+  async determineBumpTypeAndVersion(task, projectPath, context = {}) {
+    try {
+      // Get current version first
+      const currentVersion = await this.getCurrentVersion(projectPath);
+      
+      // Use direct AI analysis to avoid circular dependency
+      if (context.useHybridDetection !== false) {
+        const changelog = task.description || task.title || '';
+        const hybridResult = await this.performDirectAIAnalysis(changelog, projectPath, context);
+        
+        this.logger.info('Hybrid detection result', {
+          recommendedType: hybridResult.recommendedType,
+          confidence: hybridResult.confidence,
+          sources: hybridResult.sources
+        });
+        
+        // Calculate new version based on current version and recommended type
+        const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, hybridResult.recommendedType);
+        
+        const completeResult = {
+          recommendedType: hybridResult.recommendedType,
+          newVersion: newVersion,
+          currentVersion: currentVersion,
+          confidence: hybridResult.confidence,
+          reasoning: hybridResult.reasoning,
+          factors: hybridResult.factors,
+          source: hybridResult.source || 'ai'
+        };
+
+        // Send event to frontend with complete result including newVersion
+        try {
+          const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
+          const container = getServiceContainer();
+          const eventBus = container.resolve('eventBus');
+          
+          if (eventBus) {
+            eventBus.publish('ai-version-analysis-completed', {
+              projectPath,
+              analysisResult: completeResult,
+              timestamp: new Date()
+            });
+            this.logger.info('✅ Complete AI analysis event sent to frontend via WebSocket');
+          }
+        } catch (error) {
+          this.logger.warn('Failed to send complete AI analysis event', { error: error.message });
+        }
+
+        return completeResult;
+      }
+
+      // Fallback to original rule-based detection
+      const bumpType = await this.determineBumpTypeRuleBased(task, projectPath, context);
+      const newVersion = this.semanticVersioning.bumpVersion(currentVersion, bumpType);
+      
+      return {
+        recommendedType: bumpType,
+        newVersion: newVersion,
+        currentVersion: currentVersion,
+        confidence: 0.5,
+        reasoning: 'Rule-based detection',
+        factors: ['Rule-based analysis'],
+        source: 'rule-based'
+      };
+
+    } catch (error) {
+      this.logger.warn('Error determining bump type, using patch', { error: error.message });
+      const currentVersion = await this.getCurrentVersion(projectPath);
+        const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, 'patch');
+      
+      return {
+        recommendedType: 'patch',
+        newVersion: newVersion,
+        currentVersion: currentVersion,
+        confidence: 0.3,
+        reasoning: 'Fallback to patch due to error',
+        factors: ['Error fallback'],
+        source: 'fallback'
+      };
+    }
+  }
+
+  /**
    * Determine bump type based on task and changes
    * @param {Object} task - Task object
    * @param {string} projectPath - Project path
@@ -236,6 +334,23 @@ class VersionManagementService {
    * @returns {Promise<string>} Bump type
    */
   async determineBumpType(task, projectPath, context = {}) {
+    try {
+      const result = await this.determineBumpTypeAndVersion(task, projectPath, context);
+      return result.recommendedType;
+    } catch (error) {
+      this.logger.warn('Error determining bump type, using patch', { error: error.message });
+      return 'patch';
+    }
+  }
+
+  /**
+   * Determine bump type using rule-based approach (original method)
+   * @param {Object} task - Task object
+   * @param {string} projectPath - Project path
+   * @param {Object} context - Additional context
+   * @returns {Promise<string>} Bump type
+   */
+  async determineBumpTypeRuleBased(task, projectPath, context = {}) {
     try {
       // Analyze task type and priority
       const taskType = task.type?.value || task.type;
@@ -270,8 +385,249 @@ class VersionManagementService {
       return bumpTypeMapping[taskType] || 'patch';
 
     } catch (error) {
-      this.logger.warn('Error determining bump type, using patch', { error: error.message });
+      this.logger.warn('Error in rule-based bump type determination, using patch', { error: error.message });
       return 'patch';
+    }
+  }
+
+  /**
+   * Perform dry run version bump analysis
+   * @param {Object} task - Task object
+   * @param {string} projectPath - Project path
+   * @param {string} bumpType - Bump type (major, minor, patch)
+   * @param {Object} context - Additional context
+   * @returns {Promise<Object>} Dry run result
+   */
+  async performDryRun(task, projectPath, bumpType, context = {}) {
+    try {
+      this.logger.info('Performing dry run version bump analysis', {
+        taskId: task.id,
+        projectPath,
+        bumpType
+      });
+
+      // Get current version
+      const currentVersionData = await this.getCurrentVersion(projectPath);
+      const currentVersion = currentVersionData.version;
+      
+      // Determine bump type if not provided (with dry run context)
+      if (!bumpType) {
+        const dryRunContext = { ...context, dryRun: true };
+        bumpType = await this.determineBumpType(task, projectPath, dryRunContext);
+      }
+
+      // Calculate new version without actually updating files
+      const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, bumpType);
+      
+      // Analyze what would be changed (without actually changing)
+      const wouldUpdateFiles = await this.analyzeFilesToUpdate(projectPath, newVersion);
+      
+      // Create version record preview
+      const versionRecordPreview = {
+        taskId: task.id,
+        currentVersion,
+        newVersion,
+        bumpType,
+        timestamp: new Date(),
+        dryRun: true
+      };
+
+      const result = {
+        success: true,
+        dryRun: true,
+        currentVersion: currentVersion.version,
+        newVersion,
+        bumpType,
+        wouldUpdateFiles,
+        versionRecordPreview,
+        message: `Dry run: Would bump version from ${currentVersion.version} to ${newVersion} (${bumpType})`,
+        timestamp: new Date()
+      };
+
+      this.logger.info('Dry run version bump analysis completed', {
+        taskId: task.id,
+        currentVersion: currentVersion.version,
+        newVersion,
+        bumpType
+      });
+
+      return result;
+
+    } catch (error) {
+      this.logger.error('Dry run version bump failed', {
+        taskId: task.id,
+        error: error.message
+      });
+
+      return {
+        success: false,
+        dryRun: true,
+        error: error.message,
+        timestamp: new Date()
+      };
+    }
+  }
+
+  /**
+   * Analyze which files would be updated (without actually updating)
+   * @param {string} projectPath - Project path
+   * @param {string} newVersion - New version
+   * @returns {Promise<Array>} Files that would be updated
+   */
+  async analyzeFilesToUpdate(projectPath, newVersion) {
+    try {
+      const filesToUpdate = [];
+      
+      for (const packageFile of this.config.packageFiles) {
+        const filePath = path.join(projectPath, packageFile);
+        try {
+          await this.fileSystemService.access(filePath);
+          filesToUpdate.push({
+            path: packageFile,
+            currentVersion: await this.getVersionFromFile(filePath),
+            newVersion: newVersion,
+            wouldUpdate: true
+          });
+        } catch (error) {
+          // File doesn't exist, skip
+        }
+      }
+      
+      return filesToUpdate;
+    } catch (error) {
+      this.logger.warn('Failed to analyze files to update', { error: error.message });
+      return [];
+    }
+  }
+
+  /**
+   * Get version from package file
+   * @param {string} filePath - File path
+   * @returns {Promise<string>} Current version
+   */
+  async getVersionFromFile(filePath) {
+    try {
+      const content = await this.fileSystemService.readFile(filePath, 'utf8');
+      const packageData = JSON.parse(content);
+      return packageData.version || 'unknown';
+    } catch (error) {
+      return 'unknown';
+    }
+  }
+
+  /**
+   * Get AI-powered version analysis
+   * @param {string} changelog - Task description
+   * @param {string} projectPath - Project path
+   * @param {Object} context - Additional context
+   * @returns {Promise<Object>} AI analysis result
+   */
+  async getAIAnalysis(changelog, projectPath, context = {}) {
+    try {
+      this.logger.info('Getting AI analysis for version bump', {
+        changelog: changelog.substring(0, 100) + '...',
+        projectPath
+      });
+
+      // Use the new method that calculates both bump type and new version
+      const task = { description: changelog, title: changelog };
+      const analysisResult = await this.determineBumpTypeAndVersion(task, projectPath, context);
+
+      return {
+        success: true,
+        data: analysisResult,
+        timestamp: new Date()
+      };
+
+    } catch (error) {
+      this.logger.error('AI analysis failed', {
+        error: error.message,
+        changelog: changelog.substring(0, 100) + '...'
+      });
+
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date()
+      };
+    }
+  }
+
+  /**
+   * Perform direct AI analysis without recursion
+   * @param {string} changelog - Task description
+   * @param {string} projectPath - Project path
+   * @param {Object} context - Additional context
+   * @returns {Promise<Object>} AI analysis result
+   */
+  async performDirectAIAnalysis(changelog, projectPath, context) {
+    try {
+      // Use AI analysis service directly to avoid recursion
+      if (this.aiAnalysisService) {
+        const aiResult = await this.aiAnalysisService.analyzeVersionBump(changelog, projectPath, context);
+        // Get current version to calculate new version
+        const currentVersionData = await this.getCurrentVersion(projectPath);
+        const currentVersion = currentVersionData.version;
+        const newVersion = this.semanticVersioning.bumpVersion(currentVersion, aiResult.recommendedType || 'patch');
+        
+        return {
+          recommendedType: aiResult.recommendedType || 'patch',
+          confidence: aiResult.confidence || 0.7,
+          reasoning: aiResult.reasoning || 'AI analysis completed',
+          factors: aiResult.factors || ['AI analysis completed'],
+          newVersion: newVersion,
+          currentVersion: currentVersion,
+          autoDetected: true,
+          sources: ['ai-analysis']
+        };
+      } else {
+        // Fallback to rule-based analysis if AI service not available
+        return this.getRuleBasedAnalysis(changelog);
+      }
+    } catch (error) {
+      this.logger.warn('Direct AI analysis failed, using rule-based fallback', { error: error.message });
+      return this.getRuleBasedAnalysis(changelog);
+    }
+  }
+
+  /**
+   * Get rule-based analysis as fallback
+   * @param {string} changelog - Task description
+   * @returns {Object} Rule-based analysis result
+   */
+  getRuleBasedAnalysis(changelog) {
+    if (changelog && changelog.includes('fix') || changelog.includes('bug')) {
+      return {
+        recommendedType: 'patch',
+        confidence: 0.8,
+        reasoning: 'Bug fix detected in task description',
+        autoDetected: true,
+        sources: ['rule-based']
+      };
+    } else if (changelog && changelog.includes('feat') || changelog.includes('add')) {
+      return {
+        recommendedType: 'minor',
+        confidence: 0.8,
+        reasoning: 'New feature detected in task description',
+        autoDetected: true,
+        sources: ['rule-based']
+      };
+    } else if (changelog && changelog.includes('refactor')) {
+      return {
+        recommendedType: 'patch',
+        confidence: 0.7,
+        reasoning: 'Refactoring detected in task description',
+        autoDetected: true,
+        sources: ['rule-based']
+      };
+    } else {
+      return {
+        recommendedType: 'patch',
+        confidence: 0.6,
+        reasoning: 'Default patch recommendation for auto-detected changes',
+        autoDetected: true,
+        sources: ['rule-based']
+      };
     }
   }
 

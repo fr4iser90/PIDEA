@@ -10,8 +10,13 @@ const logger = new Logger('VersionController');
 
 class VersionController {
   constructor(dependencies = {}) {
-    this.handler = dependencies.handler || new VersionManagementHandler(dependencies);
+    // VersionManagementHandler MUST come from DI container - no direct instantiation!
+    this.handler = dependencies.handler;
     this.logger = dependencies.logger || logger;
+    
+    if (!this.handler) {
+      throw new Error('VersionController requires handler dependency from DI container');
+    }
   }
 
   /**
@@ -20,32 +25,62 @@ class VersionController {
    */
   async bumpVersion(req, res) {
     try {
-      const { task, projectPath, bumpType, context } = req.body;
+      const { task = '', projectPath, bumpType, context = {} } = req.body;
 
-      // Validate required fields
-      if (!task || !projectPath) {
+      // Validate required fields (task is now optional)
+      if (!projectPath) {
         return res.status(400).json({
           success: false,
-          error: 'Task and projectPath are required',
+          error: 'Project path is required',
           timestamp: new Date()
         });
       }
 
-      // Create command
-      const command = VersionManagementCommand.bumpVersion({
-        task,
-        projectPath,
-        bumpType,
-        context: { ...context, userId: req.user?.id }
-      });
-
-      // Execute command
-      const result = await this.handler.handle(command);
-
-      if (result.success) {
-        res.status(200).json(result);
+      // Check if this is a dry run
+      const isDryRun = context.dryRun === true;
+      
+      if (isDryRun) {
+        // Create dry run command
+        const command = VersionManagementCommand.performDryRun({
+          task: task || 'Auto-detected changes',
+          projectPath,
+          bumpType,
+          context: { 
+            ...context, 
+            userId: req.user?.id,
+            autoDetectChanges: !task || !task.trim() // Auto-detect if no task provided
+          }
+        });
+        
+        // Execute dry run command
+        const result = await this.handler.handle(command);
+        
+        if (result.success) {
+          res.status(200).json(result);
+        } else {
+          res.status(400).json(result);
+        }
       } else {
-        res.status(400).json(result);
+        // Create normal bump version command
+        const command = VersionManagementCommand.bumpVersion({
+          task: task || 'Auto-detected changes',
+          projectPath,
+          bumpType,
+          context: { 
+            ...context, 
+            userId: req.user?.id,
+            autoDetectChanges: !task || !task.trim() // Auto-detect if no task provided
+          }
+        });
+
+        // Execute command
+        const result = await this.handler.handle(command);
+        
+        if (result.success) {
+          res.status(200).json(result);
+        } else {
+          res.status(400).json(result);
+        }
       }
 
     } catch (error) {
@@ -362,6 +397,71 @@ class VersionController {
     } catch (error) {
       this.logger.error('Error in getConfiguration endpoint', {
         error: error.message
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        timestamp: new Date()
+      });
+    }
+  }
+
+  /**
+   * Get AI-powered version analysis endpoint
+   * POST /api/versions/ai-analysis
+   */
+  async getAIAnalysis(req, res) {
+    try {
+      const { task = '', projectPath, context = {}, bumpType = '', customVersion = '' } = req.body;
+
+      if (!projectPath) {
+        return res.status(400).json({
+          success: false,
+          error: 'Project path is required',
+          timestamp: new Date()
+        });
+      }
+
+      // Check if everything is already provided - no AI needed
+      if (task && task.trim() && bumpType && bumpType !== 'auto') {
+        return res.status(200).json({
+          success: true,
+          data: {
+            recommendedType: bumpType,
+            confidence: 1.0,
+            reasoning: 'All information provided by user - no AI analysis needed',
+            autoDetected: false,
+            sources: ['user-input']
+          },
+          timestamp: new Date()
+        });
+      }
+
+      // Only use AI if something is missing
+      const command = VersionManagementCommand.getAIAnalysis({ 
+        task: task || '', // Allow empty task for auto-detection
+        projectPath, 
+        context: {
+          ...context,
+          autoDetectChanges: !task || !task.trim(), // Auto-detect if no task provided
+          fillMissingOnly: !!(task && task.trim()) // Only fill missing info if task provided
+        }
+      });
+
+      // Execute command
+      const result = await this.handler.handle(command);
+
+      if (result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(400).json(result);
+      }
+
+    } catch (error) {
+      this.logger.error('Error in getAIAnalysis endpoint', {
+        error: error.message,
+        body: req.body
       });
 
       res.status(500).json({

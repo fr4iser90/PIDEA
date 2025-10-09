@@ -474,7 +474,7 @@ class Application {
 
     // Version Management routes - Using modular route file
     const VersionRoutes = require('./presentation/api/routes/versionRoutes');
-    const versionRoutes = new VersionRoutes(this.authMiddleware);
+    const versionRoutes = new VersionRoutes(this.authMiddleware, this.serviceRegistry);
     versionRoutes.setupRoutes(this.app);
 
     // Test Management routes - Using modular route file

@@ -105,6 +105,33 @@ class VersionManagementCommand {
   }
 
   /**
+   * Create get AI analysis command
+   * @param {Object} params - Command parameters
+   * @returns {VersionManagementCommand} Command instance
+   */
+  static getAIAnalysis(params = {}) {
+    return new VersionManagementCommand('getAIAnalysis', {
+      task: params.task,
+      projectPath: params.projectPath,
+      context: params.context || {}
+    });
+  }
+
+  /**
+   * Create perform dry run command
+   * @param {Object} params - Command parameters
+   * @returns {VersionManagementCommand} Command instance
+   */
+  static performDryRun(params = {}) {
+    return new VersionManagementCommand('performDryRun', {
+      task: params.task,
+      projectPath: params.projectPath,
+      bumpType: params.bumpType,
+      context: params.context || {}
+    });
+  }
+
+  /**
    * Create get configuration command
    * @param {Object} params - Command parameters
    * @returns {VersionManagementCommand} Command instance
@@ -133,15 +160,13 @@ class VersionManagementCommand {
     // Type-specific validations
     switch (this.type) {
       case 'bumpVersion':
-        if (!this.task) {
-          errors.push('Task is required for bump version command');
-        }
         if (!this.projectPath) {
           errors.push('Project path is required for bump version command');
         }
         if (this.bumpType && !['major', 'minor', 'patch'].includes(this.bumpType)) {
           errors.push('Bump type must be major, minor, or patch');
         }
+        // Task is now optional - AI can auto-detect changes
         break;
 
       case 'getCurrentVersion':
@@ -181,6 +206,19 @@ class VersionManagementCommand {
         if (!this.projectPath) {
           errors.push('Project path is required for determine bump type command');
         }
+        break;
+
+      case 'getAIAnalysis':
+        if (!this.projectPath) {
+          errors.push('Project path is required for get AI analysis command');
+        }
+        if (this.task && typeof this.task !== 'string') {
+          errors.push('Task must be a string');
+        }
+        if (this.projectPath && typeof this.projectPath !== 'string') {
+          errors.push('Project path must be a string');
+        }
+        // Task is now optional - AI can auto-detect changes
         break;
 
       case 'updateConfiguration':

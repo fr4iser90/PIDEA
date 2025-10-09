@@ -320,21 +320,83 @@ class ServiceInitialization {
     const VersionManagementHandler = require('../../application/handlers/categories/version/VersionManagementHandler');
     const VersionManagementService = require('../../domain/services/version/VersionManagementService');
     
-    // Get or create versionManagementService
-    let versionManagementService;
-    try {
-      versionManagementService = serviceRegistry.getService('versionManagementService');
-    } catch (error) {
-      this.logger.warn('VersionManagementService not found in registry, creating directly');
-      versionManagementService = new VersionManagementService({
-        fileSystemService: serviceRegistry.getService('fileSystemService'),
-        logger: serviceRegistry.getService('logger')
+    // Get versionManagementService from DI container - MUST use DI!
+    const versionManagementService = serviceRegistry.getService('versionManagementService');
+    
+    // ENHANCED DEBUG: Comprehensive dependency chain analysis
+    if (!versionManagementService) {
+      this.logger.error('🚨 DI CONTAINER FAILURE ANALYSIS:');
+      
+      // 1. Check container state
+      const container = serviceRegistry.container;
+      this.logger.error('📊 Container State:', {
+        totalFactories: container.factories?.size || 0,
+        totalSingletons: container.singletons?.size || 0,
+        resolutionStack: Array.from(container.resolutionStack || []),
+        hasServices: !!container.services
       });
+      
+      // 2. Check all registered services
+      const allServices = Array.from(container.factories?.keys() || []);
+      this.logger.error('📋 All Registered Services:', allServices);
+      
+      // 3. Check specific dependency chain
+      this.logger.error('🔗 Dependency Chain Analysis:');
+      
+      // Check versionAIIntegration
+      const versionAIIntegration = serviceRegistry.getService('versionAIIntegration');
+      this.logger.error('  - versionAIIntegration:', versionAIIntegration ? '✅ EXISTS' : '❌ MISSING');
+      
+      // Check aiVersionAnalysisService
+      const aiVersionAnalysisService = serviceRegistry.getService('aiVersionAnalysisService');
+      this.logger.error('  - aiVersionAnalysisService:', aiVersionAnalysisService ? '✅ EXISTS' : '❌ MISSING');
+      
+      // Check fileSystemService
+      const fileSystemService = serviceRegistry.getService('fileSystemService');
+      this.logger.error('  - fileSystemService:', fileSystemService ? '✅ EXISTS' : '❌ MISSING');
+      
+      // Check logger
+      const logger = serviceRegistry.getService('logger');
+      this.logger.error('  - logger:', logger ? '✅ EXISTS' : '❌ MISSING');
+      
+      // 4. Try to resolve manually to see exact error
+      try {
+        this.logger.error('🔍 Attempting manual resolution...');
+        const manualResolve = container.resolve('versionManagementService');
+        this.logger.error('  - Manual resolution result:', manualResolve ? 'SUCCESS' : 'FAILED');
+      } catch (error) {
+        this.logger.error('  - Manual resolution error:', error.message);
+        this.logger.error('  - Error stack:', error.stack);
+      }
+      
+      // 5. Check dependency validation
+      try {
+        const validation = container.validateDependencies();
+        this.logger.error('📋 Dependency Validation:', validation);
+      } catch (error) {
+        this.logger.error('❌ Dependency validation failed:', error.message);
+      }
+      
+      throw new Error(`DI Container failed to resolve versionManagementService. Check logs above for detailed analysis.`);
     }
+    
+    // DEBUG: Check what we're actually passing to VersionManagementHandler
+    this.logger.info('🔍 Creating VersionManagementHandler with:', {
+      versionManagementServiceType: typeof versionManagementService,
+      versionManagementServiceMethods: versionManagementService ? Object.getOwnPropertyNames(Object.getPrototypeOf(versionManagementService)) : 'N/A',
+      loggerType: typeof serviceRegistry.getService('logger')
+    });
     
     const versionManagementHandler = new VersionManagementHandler({
       versionManagementService: versionManagementService,
       logger: serviceRegistry.getService('logger')
+    });
+    
+    // DEBUG: Check what VersionManagementHandler actually received
+    this.logger.info('🔍 VersionManagementHandler created. Internal state:', {
+      hasVersionManagementService: !!versionManagementHandler.versionManagementService,
+      versionManagementServiceType: typeof versionManagementHandler.versionManagementService,
+      versionManagementServiceMethods: versionManagementHandler.versionManagementService ? Object.getOwnPropertyNames(Object.getPrototypeOf(versionManagementHandler.versionManagementService)) : 'N/A'
     });
     serviceRegistry.container.register('versionManagementHandler', () => versionManagementHandler, { singleton: true });
 

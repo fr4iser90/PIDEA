@@ -275,6 +275,45 @@ class VersionManagementRepository {
   }
 
   /**
+   * Get AI-powered version analysis
+   * @param {string} task - Task description
+   * @param {string} projectPath - Project workspace path
+   * @param {Object} context - Additional context
+   * @returns {Promise<Object>} AI analysis result
+   */
+  async getAIAnalysis(task, projectPath, context = {}) {
+    try {
+      logger.info('🔍 [VersionManagementRepository] Getting AI analysis:', {
+        task: task.substring(0, 100) + '...',
+        projectPath,
+        contextKeys: Object.keys(context)
+      });
+      
+      const endpoint = `${this.baseURL}/versions/ai-analysis`;
+      
+      const data = await apiCall(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          task,
+          projectPath,
+          context,
+          bumpType: context.bumpType,
+          customVersion: context.customVersion
+        })
+      });
+
+      logger.info('✅ [VersionManagementRepository] AI analysis retrieved:', data);
+      return data;
+    } catch (error) {
+      logger.error('❌ [VersionManagementRepository] Error getting AI analysis:', error);
+      throw new Error(`Failed to get AI analysis: ${error.message}`);
+    }
+  }
+
+  /**
    * Health check for version management service
    * @returns {Promise<Object>} Health status
    */
