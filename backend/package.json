@@ -1,6 +1,6 @@
 {
   "name": "PIDEA-backend",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -183,7 +183,7 @@ class VersionManagementService {
       }
 
       // Bump version
-      const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, bumpType);
+      const newVersion = this.semanticVersioning.bumpVersion(currentVersion, bumpType);
       
       // Update package files
       const updatedFiles = await this.updatePackageFiles(projectPath, newVersion);
@@ -205,7 +205,7 @@ class VersionManagementService {
 
       const result = {
         success: true,
-        currentVersion: currentVersion.version,
+        currentVersion: currentVersion,
         newVersion,
         bumpType,
         updatedFiles,
@@ -217,7 +217,7 @@ class VersionManagementService {
 
       this.logger.info('Version bump completed successfully', {
         taskId: task.id,
-        currentVersion: currentVersion.version,
+        currentVersion: currentVersion,
         newVersion,
         bumpType
       });
@@ -248,7 +248,8 @@ class VersionManagementService {
   async determineBumpTypeAndVersion(task, projectPath, context = {}) {
     try {
       // Get current version first
-      const currentVersion = await this.getCurrentVersion(projectPath);
+      const currentVersionData = await this.getCurrentVersion(projectPath);
+      const currentVersion = currentVersionData.version;
       
       // Use direct AI analysis to avoid circular dependency
       if (context.useHybridDetection !== false) {
@@ -262,7 +263,7 @@ class VersionManagementService {
         });
         
         // Calculate new version based on current version and recommended type
-        const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, hybridResult.recommendedType);
+        const newVersion = this.semanticVersioning.bumpVersion(currentVersion, hybridResult.recommendedType);
         
         const completeResult = {
           recommendedType: hybridResult.recommendedType,
@@ -286,7 +287,11 @@ class VersionManagementService {
               analysisResult: completeResult,
               timestamp: new Date()
             });
-            this.logger.info('✅ Complete AI analysis event sent to frontend via WebSocket');
+            this.logger.info('✅ Complete AI analysis event sent to frontend via WebSocket', {
+              recommendedType: completeResult.recommendedType,
+              newVersion: completeResult.newVersion,
+              confidence: completeResult.confidence
+            });
           }
         } catch (error) {
           this.logger.warn('Failed to send complete AI analysis event', { error: error.message });
@@ -311,8 +316,9 @@ class VersionManagementService {
 
     } catch (error) {
       this.logger.warn('Error determining bump type, using patch', { error: error.message });
-      const currentVersion = await this.getCurrentVersion(projectPath);
-        const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, 'patch');
+      const currentVersionData = await this.getCurrentVersion(projectPath);
+      const currentVersion = currentVersionData.version;
+        const newVersion = this.semanticVersioning.bumpVersion(currentVersion, 'patch');
       
       return {
         recommendedType: 'patch',
@@ -417,7 +423,7 @@ class VersionManagementService {
       }
 
       // Calculate new version without actually updating files
-      const newVersion = this.semanticVersioning.bumpVersion(currentVersion.version, bumpType);
+      const newVersion = this.semanticVersioning.bumpVersion(currentVersion, bumpType);
       
       // Analyze what would be changed (without actually changing)
       const wouldUpdateFiles = await this.analyzeFilesToUpdate(projectPath, newVersion);
@@ -435,18 +441,18 @@ class VersionManagementService {
       const result = {
         success: true,
         dryRun: true,
-        currentVersion: currentVersion.version,
+        currentVersion: currentVersion,
         newVersion,
         bumpType,
         wouldUpdateFiles,
         versionRecordPreview,
-        message: `Dry run: Would bump version from ${currentVersion.version} to ${newVersion} (${bumpType})`,
+        message: `Dry run: Would bump version from ${currentVersion} to ${newVersion} (${bumpType})`,
         timestamp: new Date()
       };
 
       this.logger.info('Dry run version bump analysis completed', {
         taskId: task.id,
-        currentVersion: currentVersion.version,
+        currentVersion: currentVersion,
         newVersion,
         bumpType
       });

@@ -198,13 +198,15 @@ export const apiCall = async (endpoint, options = {}, projectId = null) => {
   const etagOptions = isAnalysisEndpoint ? etagManager.addETagHeaders(options, endpoint, projectId) : options;
   
   const config = {
+    method: options.method || 'GET', // Preserve method from options
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders,
       ...(etagOptions.headers || {})
     },
     credentials: 'include', // Include cookies with all requests
-    ...etagOptions
+    ...etagOptions,
+    ...options // Ensure options (including method) take precedence
   };
 
   logger.info('🔍 [APIChatRepository] Final headers:', config.headers);
