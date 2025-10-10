@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: var(--z-dropdown)0;
   backdrop-filter: blur(4px);
 }
 
@@ -50,18 +50,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: var(--space-md) 24px;
   border-bottom: 1px solid #333;
   background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-lg) 12px 0 0;
 }
 
 /* Creation Mode Toggle Styles */
 .creation-mode-toggle {
-  margin: 16px 24px;
-  padding: 16px;
+  margin: var(--space-md) 24px;
+  padding: var(--space-md);
   background: #2a2a2a;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid #404040;
 }
 
@@ -73,15 +73,15 @@
 }
 
 .toggle-text {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #e0e0e0;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .toggle-switch {
   display: flex;
   background: #1a1a1a;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 2px;
   border: 1px solid #404040;
 }
@@ -91,12 +91,12 @@
 }
 
 .toggle-option {
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #888;
   background: transparent;
   border: none;
@@ -117,7 +117,7 @@
 }
 
 .mode-description {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: #888;
   margin-top: 4px;
   font-style: italic;
@@ -127,17 +127,17 @@
   margin: 0;
   color: #fff;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .modal-close-btn {
   background: none;
   border: none;
   color: #888;
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
   transition: all 0.2s;
   width: 32px;
   height: 32px;
@@ -160,14 +160,14 @@
 .modal-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: var(--space-lg);
 }
 
 .modal-description {
   margin-bottom: 24px;
-  padding: 16px;
+  padding: var(--space-md);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid #333;
 }
 
@@ -194,7 +194,7 @@
 .form-label {
   color: #fff;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Voice input integration */
@@ -212,9 +212,9 @@
 .form-input,
 .form-textarea,
 .form-select {
-  padding: 12px;
+  padding: var(--space-sm);
   border: 1px solid #444;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #2a2a2a;
   color: #fff;
   font-size: 0.9rem;
@@ -271,10 +271,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   background: rgba(255, 107, 107, 0.1);
   border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: #ff6b6b;
   font-size: 0.85rem;
   margin-top: 4px;
@@ -284,10 +284,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   background: rgba(68, 170, 68, 0.1);
   border: 1px solid rgba(68, 170, 68, 0.3);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: #44aa44;
   font-size: 0.85rem;
   margin-top: 4px;
@@ -345,11 +345,11 @@
 /* Buttons */
 .btn-primary,
 .btn-secondary {
-  padding: 12px 24px;
+  padding: var(--space-sm) 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -437,11 +437,11 @@
 @media (max-width: 768px) {
   .task-create-modal {
     width: 95%;
-    margin: 20px;
+    margin: var(--space-md);
   }
   
   .modal-content {
-    padding: 16px;
+    padding: var(--space-md);
   }
   
   .form-actions {

@@ -16,7 +16,7 @@
 .analysis-buttons-header h3 {
   margin: 0 0 clamp(0.5rem, 1vw, 0.75rem) 0; /* 8px-12px responsive */
   font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #1a1a1a);
 }
 
@@ -29,23 +29,23 @@
 /* Run All Analysis Section */
 .run-all-section {
   margin-bottom: 24px;
-  padding: 16px;
+  padding: var(--space-md);
   background: var(--surface-secondary, #f8f9fa);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-light, #e9ecef);
 }
 
 .btn-run-all-analysis {
   width: 100%;
-  padding: 12px 20px;
+  padding: var(--space-sm) 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,7 +103,7 @@
   margin-top: 4px;
   font-size: 0.85rem;
   color: var(--text-secondary, #666);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Analysis Buttons Grid */
@@ -118,9 +118,9 @@
 .analysis-button-container {
   background: var(--surface-color, #ffffff);
   border: 2px solid var(--border-color, #e1e5e9);
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
 }
@@ -170,13 +170,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface-secondary, #f8f9fa);
 }
 
 .analysis-label {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #1a1a1a);
 }
 
@@ -215,7 +215,7 @@
 .analysis-progress .progress-text {
   font-size: 0.8rem;
   color: var(--text-secondary, #666);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Error Display */
@@ -224,10 +224,10 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   background: #ffebee;
   border: 1px solid #ffcdd2;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: #c62828;
   font-size: 0.85rem;
 }
@@ -250,13 +250,13 @@
 .btn-start-analysis,
 .btn-cancel-analysis,
 .btn-retry-analysis {
-  padding: 8px 16px;
+  padding: var(--space-sm) 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   flex: 1;
   min-width: 80px;
 }
@@ -299,16 +299,16 @@
 /* Active Analyses Summary */
 .active-analyses-summary {
   margin-top: 24px;
-  padding: 16px;
+  padding: var(--space-md);
   background: var(--surface-secondary, #f8f9fa);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-light, #e9ecef);
 }
 
 .active-analyses-summary h4 {
   margin: 0 0 12px 0;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #1a1a1a);
 }
 
@@ -322,15 +322,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   background: var(--surface-color, #ffffff);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, #e1e5e9);
   font-size: 0.9rem;
 }
 
 .step-type {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary, #1a1a1a);
   text-transform: capitalize;
 }
@@ -342,7 +342,7 @@
 }
 
 .step-progress {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--primary-color, #667eea);
   font-size: 0.85rem;
 }
@@ -350,7 +350,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .individual-analysis-buttons {
-    padding: 16px;
+    padding: var(--space-md);
     margin-bottom: 16px;
   }
   
@@ -360,7 +360,7 @@
   }
   
   .analysis-button-container {
-    padding: 16px;
+    padding: var(--space-md);
   }
   
   .analysis-button-header {
@@ -395,7 +395,7 @@
 
 @media (max-width: 480px) {
   .individual-analysis-buttons {
-    padding: 12px;
+    padding: var(--space-sm);
   }
   
   .analysis-buttons-header h3 {
@@ -403,7 +403,7 @@
   }
   
   .analysis-button-container {
-    padding: 12px;
+    padding: var(--space-sm);
   }
   
   .active-step-item {

@@ -53,7 +53,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 16px 24px; /* Feste Werte für mehr Abstand oben */
+  padding: var(--space-lg) 24px 16px 24px; /* Feste Werte für mehr Abstand oben */
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
@@ -266,10 +266,10 @@
   background: var(--accent-red);
   color: var(--text-primary);
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   transition: all 0.2s;
 }
 
@@ -341,7 +341,7 @@ input[type="checkbox"] {
 
 .priority-badge,
 .status-badge {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide); /* Modern design system variable */
 }
@@ -367,9 +367,9 @@ input[type="checkbox"] {
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   transition: all 0.2s;
 }
 

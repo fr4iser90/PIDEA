@@ -22,7 +22,7 @@
 
 .panel-title {
   font-size: clamp(1rem, 2.5vw, 1.1em); /* 16px-17.6px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--primary-color);
   margin: 0;
 }
@@ -38,7 +38,7 @@
 
 @media (max-width: 768px) {
   .panel-block {
-    padding: 12px 8px 8px 8px;
+    padding: var(--space-sm) 8px 8px 8px;
     margin-bottom: 12px;
   }
   .panel-header {
@@ -62,9 +62,9 @@ body.light-theme .panel-title {
 .category-badge, .status-badge, .priority-badge, .active-badge {
   display: inline-block;
   font-size: 0.75em;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   padding: 2px 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin-left: 4px;
   margin-right: 0;
   color: #fff;

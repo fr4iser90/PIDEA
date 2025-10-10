@@ -32,16 +32,16 @@
 }
 
 .pidea-agent-status-text {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--git-text-color, #495057);
 }
 
 .pidea-agent-branch-name {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   color: var(--git-muted-color, #6c757d);
   background: var(--git-badge-bg, #e9ecef);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .pidea-agent-actions {
@@ -51,7 +51,7 @@
 
 /* Pidea-Agent Controls */
 .pidea-agent-controls {
-  margin: 16px 0;
+  margin: var(--space-md) 0;
 }
 
 .pidea-agent-button-group {
@@ -64,15 +64,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   border: 1px solid var(--git-btn-border, #dee2e6);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--git-btn-bg, #ffffff);
   color: var(--git-btn-text, #495057);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   min-width: 120px;
   justify-content: center;
 }
@@ -92,7 +92,7 @@
 }
 
 .pidea-agent-btn .btn-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 .pidea-agent-btn .btn-text {
@@ -159,8 +159,8 @@
 
 .pidea-agent-status-details h4 {
   margin: 0 0 8px 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--git-text-color, #495057);
 }
 
@@ -172,12 +172,12 @@
   overflow-y: auto;
   background: var(--git-file-list-bg, #ffffff);
   border: 1px solid var(--git-border-color, #e9ecef);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .pidea-agent-status-details .file-item {
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: var(--space-xs) 8px;
+  font-size: var(--font-size-xs);
   border-bottom: 1px solid var(--git-border-color, #e9ecef);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
@@ -206,11 +206,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 12px 0;
-  font-size: 14px;
-  font-weight: 500;
+  padding: var(--space-sm) 12px;
+  border-radius: var(--radius-sm);
+  margin: var(--space-sm) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .operation-result.success {
@@ -226,7 +226,7 @@
 }
 
 .operation-result .result-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 /* Git Management Component Integration */
@@ -245,8 +245,8 @@
 
 .pidea-agent-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   color: var(--git-text-color, #495057);
 }
 
@@ -273,12 +273,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  border-radius: 8px;
+  z-index: var(--z-dropdown);
+  border-radius: var(--radius-md);
 }
 
 .loading-spinner {
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
   margin-bottom: 8px;
   animation: spin 1s linear infinite;
 }
@@ -304,7 +304,7 @@
 
 .diff-modal {
   background: var(--git-modal-bg, #ffffff);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   max-width: 90vw;
   max-height: 90vh;
@@ -317,26 +317,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: var(--space-md) 20px;
   border-bottom: 1px solid var(--git-border-color, #e9ecef);
 }
 
 .diff-header h3 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
   color: var(--git-text-color, #495057);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   cursor: pointer;
   color: var(--git-muted-color, #6c757d);
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
 }
 
 .close-btn:hover {
@@ -347,18 +347,18 @@
 .diff-content {
   flex: 1;
   overflow: auto;
-  padding: 20px;
+  padding: var(--space-md);
 }
 
 .diff-text {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-all;
   background: var(--git-diff-bg, #f8f9fa);
-  padding: 16px;
-  border-radius: 4px;
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--git-border-color, #e9ecef);
   max-height: 60vh;
   overflow: auto;
@@ -381,12 +381,12 @@
   }
   
   .diff-content {
-    padding: 12px;
+    padding: var(--space-sm);
   }
   
   .diff-text {
     font-size: 11px;
-    padding: 12px;
+    padding: var(--space-sm);
   }
 }
 

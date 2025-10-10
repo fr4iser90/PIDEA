@@ -15,7 +15,7 @@
 
 .test-runner-header h2 {
   font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--text-primary);
   margin: 0;
 }
@@ -30,13 +30,13 @@
 .test-configuration {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
 }
 
 .test-configuration h3 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
@@ -44,7 +44,7 @@
 .config-form,
 .project-form {
   background: var(--bg-tertiary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -67,7 +67,7 @@
 .project-form label {
   display: block;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
   margin-bottom: 0.25rem;
 }
@@ -79,7 +79,7 @@
   width: 100%;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.875rem;
@@ -98,11 +98,11 @@
 .project-form button {
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .config-form button[type="submit"],
@@ -131,7 +131,7 @@
 /* Test Projects List */
 .test-projects h4 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0 0 1.5rem 0;
   display: flex;
@@ -157,10 +157,10 @@
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
+  transition: all var(--transition-normal);
+  font-weight: var(--font-weight-medium);
 }
 
 .test-projects button:hover {
@@ -176,7 +176,7 @@
   position: relative;
   padding: 1.5rem;
   border: 2px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--bg-primary);
@@ -228,7 +228,7 @@
 .test-project-card .card-icon {
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
   display: flex;
   align-items: center;
@@ -240,7 +240,7 @@
 
 .test-project-card h5 {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;
   line-height: 1.3;
@@ -258,7 +258,7 @@
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   background: var(--bg-tertiary);
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border-left: 3px solid var(--accent-color);
   white-space: nowrap;
   overflow: hidden;
@@ -294,11 +294,11 @@
 
 .test-project-card .test-type {
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--accent-color);
   background: var(--accent-light);
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .test-project-card .status-indicator {
@@ -352,7 +352,7 @@
   border: none;
   border-radius: 10px;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -463,11 +463,11 @@
 .config-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   min-width: 280px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .config-card:hover {
@@ -488,7 +488,7 @@
 .config-card-icon {
   width: 1.5rem;
   height: 1.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--accent-color);
   display: flex;
   align-items: center;
@@ -500,7 +500,7 @@
 
 .config-card-title {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;
 }
@@ -512,12 +512,12 @@
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .config-card-header:hover {
   background: var(--bg-tertiary);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.5rem;
   margin: -0.5rem -0.5rem 0.75rem -0.5rem;
 }
@@ -587,14 +587,14 @@
 
 .config-label {
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .config-value {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   text-align: right;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -610,7 +610,7 @@
 .config-input,
 .config-select {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   background: var(--bg-tertiary);
   padding: 0.125rem 0.375rem;
@@ -648,11 +648,11 @@
   gap: 0.25rem;
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .save-button {
@@ -691,7 +691,7 @@
 /* Test Controls */
 .test-controls {
   background: var(--bg-tertiary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
@@ -704,11 +704,11 @@
 .test-controls button {
   padding: 0.5rem 1.5rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .test-controls button:disabled {
@@ -738,7 +738,7 @@
 .test-results {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
 }
 
@@ -759,13 +759,13 @@
 .results-tabs button {
   padding: 0.5rem 0.25rem;
   border-bottom: 2px solid transparent;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   font-size: 0.875rem;
   color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .results-tabs button:hover {
@@ -802,7 +802,7 @@
 
 .test-results h3 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0 0 1.5rem 0;
 }
@@ -816,7 +816,7 @@
 
 .results-overview .grid > div {
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-align: center;
 }
 
@@ -838,13 +838,13 @@
 
 .results-overview .text-2xl {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   margin-bottom: 0.25rem;
 }
 
 .results-overview .text-sm {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Status Badge */
@@ -854,7 +854,7 @@
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .status-badge.ready {
@@ -887,7 +887,7 @@
 
 .empty-state h3 {
   font-size: 1.125rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
@@ -923,7 +923,7 @@
 .error-state {
   background: var(--danger-light);
   border: 1px solid var(--danger-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
@@ -939,7 +939,7 @@
 
 .error-state h3 {
   font-size: 1.125rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--danger-color);
   margin: 0 0 0.25rem 0;
 }

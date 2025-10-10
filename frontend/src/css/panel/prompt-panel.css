@@ -13,7 +13,7 @@
   width: 100%;
 }
 .prompt-card-title {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #fff;
   font-size: clamp(0.875rem, 2vw, 0.97em); /* 14px-15.5px responsive */
   flex: 1 1 0;

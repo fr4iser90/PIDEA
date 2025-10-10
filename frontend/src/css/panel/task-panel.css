@@ -32,7 +32,7 @@
 
 .tasks-title {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin: 0;
   color: var(--text-primary);
 }
@@ -45,17 +45,17 @@
   padding: 0.25rem 0.5rem;
   background: var(--success-bg, #f0fdf4);
   border: 1px solid var(--success-border, #bbf7d0);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   color: var(--success-text, #166534);
 }
 
 .project-label {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .project-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--success-text-dark, #15803d);
 }
 
@@ -73,7 +73,7 @@
 .tasks-search-filter {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
@@ -85,7 +85,7 @@
 .search-input {
   flex: 1;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -94,7 +94,7 @@
 
 .filter-select {
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -104,13 +104,13 @@
 /* Completion Filter Button */
 .completion-filter-btn {
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--input-bg, #374151);
   border: 1px solid var(--border-color, #4b5563);
   color: var(--text-primary, #f9fafb);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -146,14 +146,14 @@
   width: 12rem;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   flex-shrink: 0;
 }
 
 .category-tabs-sidebar h4 {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-muted);
   margin-bottom: 0.75rem;
 }
@@ -168,9 +168,9 @@
   width: 100%;
   text-align: left;
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   border: none;
   cursor: pointer;
   background: var(--card-bg);
@@ -201,7 +201,7 @@
   font-size: 0.75rem;
   background: var(--border-color);
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
 }
 
@@ -210,7 +210,7 @@
   flex: 1;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   min-height: 300px;
   max-height: 500px;
@@ -277,9 +277,9 @@
   padding: 0.75rem;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .task-item:hover {
@@ -296,7 +296,7 @@
 
 .task-title {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   margin: 0;
   line-height: 1.4;
@@ -313,9 +313,9 @@
 .status-badge {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: white;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Enhanced Status Badge Styles */
@@ -372,13 +372,13 @@
 .vertical-action-buttons {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
 .vertical-action-buttons h4 {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-muted);
   margin-bottom: 0.75rem;
 }
@@ -393,9 +393,9 @@
   width: 100%;
   text-align: left;
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   border: none;
   cursor: pointer;
   background: var(--card-bg);

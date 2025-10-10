@@ -57,11 +57,11 @@
   background: none;
   border: none;
   color: #a0aec0;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 3px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,8 +84,8 @@
 .error-stack {
   background: #1a202c;
   border: 1px solid #2d3748;
-  border-radius: 4px;
-  padding: 8px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
   margin-bottom: 8px;
   overflow-x: auto;
 }
@@ -101,7 +101,7 @@
 
 .error-code,
 .error-timestamp {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: #a0aec0;
   margin-bottom: 4px;
 }
@@ -126,8 +126,8 @@
 
 /* Compact mode */
 .error-display.compact {
-  padding: 8px 12px;
-  margin: 4px 0;
+  padding: var(--space-sm) 12px;
+  margin: var(--space-xs) 0;
 }
 
 .error-display.compact .error-title {
@@ -136,15 +136,15 @@
 }
 
 .error-display.compact .error-message {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 /* Inline mode */
 .error-display.inline {
   display: inline-block;
   margin: 0 4px;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-sm);
 }
 
 .error-display.inline .error-header {
@@ -152,11 +152,11 @@
 }
 
 .error-display.inline .error-icon {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .error-display.inline .error-title {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   margin-bottom: 0;
 }
 
@@ -203,7 +203,7 @@
   }
   
   .error-icon {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
   }
   
   .error-title {
@@ -211,7 +211,7 @@
   }
   
   .error-message {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 }
 

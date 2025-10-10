@@ -45,9 +45,9 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 12px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-normal);
 }
 
 .chat-right-panel .tab-btn:hover {
@@ -76,14 +76,14 @@
 .chat-info, .quick-prompts {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
 .chat-info h4, .quick-prompts h4 {
   margin: 0 0 12px 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -91,7 +91,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: var(--space-xs) 0;
   font-size: 13px;
 }
 
@@ -101,7 +101,7 @@
 
 .info-item .value {
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .prompt-list {
@@ -111,14 +111,14 @@
 }
 
 .prompt-btn {
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   background: var(--button-bg);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-normal);
   text-align: left;
 }
 
@@ -137,24 +137,24 @@
 .file-upload, .attached-files {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
 .file-upload h4, .attached-files h4 {
   margin: 0 0 12px 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
 .upload-area {
   border: 2px dashed var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .upload-area:hover, .upload-area.drag-over {
@@ -177,11 +177,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   background: var(--button-bg);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
 }
 
 .file-item .file-icon {
@@ -201,9 +201,9 @@
   color: var(--danger-color);
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-normal);
 }
 
 .file-remove-btn:hover {
@@ -212,7 +212,7 @@
 }
 
 .no-files {
-  padding: 20px;
+  padding: var(--space-md);
   text-align: center;
   color: var(--text-secondary);
   font-style: italic;
@@ -228,14 +228,14 @@
 .setting-group {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
 .setting-group h4 {
   margin: 0 0 12px 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -243,7 +243,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: var(--space-sm) 0;
   font-size: 13px;
 }
 
@@ -265,11 +265,11 @@
   padding: 6px 12px;
   background: var(--button-bg);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-normal);
 }
 
 .theme-btn:hover {
@@ -288,7 +288,7 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 12px 18px 18px 18px;
+  padding: var(--space-sm) 18px 18px 18px;
   background: #23272e;
   border-top: 1px solid #23272e;
 }
@@ -298,11 +298,11 @@
   min-height: 32px;
   max-height: 90px;
   resize: vertical;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid #333;
   background: #20232a;
   color: #e6e6e6;
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   font-size: 1em;
 }
 
@@ -310,8 +310,8 @@
   background: #4e8cff;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) 18px;
   font-size: 1em;
   cursor: pointer;
   transition: background 0.2s;
@@ -325,7 +325,7 @@
 .panel-block {
   background: var(--card-bg);
   border: 1.5px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   margin-bottom: 18px;
   padding: 18px 18px 12px 18px;
   box-shadow: var(--shadow-sm);
@@ -353,10 +353,10 @@
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   font-size: 1rem;
   padding: 10px 16px;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) 8px 0 0;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -365,7 +365,7 @@
   background: var(--card-bg);
   color: var(--primary-color);
   border-bottom: 2.5px solid var(--primary-color);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .panel-content {
@@ -394,11 +394,11 @@
   
   .chat-right-panel .tab-btn {
     font-size: 11px;
-    padding: 4px 8px;
+    padding: var(--space-xs) 8px;
   }
   
   .chat-right-panel-content {
-    padding: 16px 18px 0 18px;
+    padding: var(--space-md) 18px 0 18px;
   }
 }
 
@@ -409,7 +409,7 @@
   }
   
   .chat-right-panel-content {
-    padding: 12px 14px 0 14px;
+    padding: var(--space-sm) 14px 0 14px;
   }
   
   .chat-right-panel .tab-btn {
@@ -422,12 +422,12 @@
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   color: #fff;
   border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: var(--space-sm) 20px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-slow);
   display: flex;
   align-items: center;
   gap: 8px;

@@ -63,8 +63,8 @@
     color: #8ca0b3;
     font-size: 1.2em;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: var(--space-xs) 8px;
+    border-radius: var(--radius-sm);
     transition: all 0.2s;
   }
   
@@ -92,7 +92,7 @@
   .ide-header h4 {
     margin: 0;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: #888888;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -111,7 +111,7 @@
     padding: 6px 16px;
     cursor: pointer;
     user-select: none;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: #cccccc;
     transition: background-color 0.1s;
     border-left: 3px solid transparent;
@@ -132,7 +132,7 @@
   }
   
   .ide-title {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     margin-bottom: 2px;
     display: flex;
     align-items: center;
@@ -141,12 +141,12 @@
   }
 
   .ide-icon {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     margin-right: 2px;
   }
 
   .ide-name {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: #4e8cff;
     font-size: 11px;
     text-transform: uppercase;
@@ -220,11 +220,11 @@
   .active-indicator {
     color: #4ec9b0;
     font-weight: bold;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
   
   .no-ides {
-    padding: 8px 16px;
+    padding: var(--space-sm) 16px;
     text-align: center;
     color: #888888;
     font-style: italic;
@@ -235,7 +235,7 @@
 .code-panel,
 .git-panel,
 .default-panel {
-  padding: 16px;
+  padding: var(--space-md);
   color: #cccccc;
   text-align: center;
   font-style: italic;
@@ -316,7 +316,7 @@
     }
     
     .sidebar-left-content {
-      padding: 12px;
+      padding: var(--space-sm);
     }
     
     .sidebar-header h3 {

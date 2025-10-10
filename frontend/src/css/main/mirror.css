@@ -16,7 +16,7 @@
     position: absolute;
     top: clamp(0.5rem, 1.5vh, 0.625rem); /* 8px-10px responsive */
     right: clamp(0.5rem, 1.5vw, 0.625rem); /* 8px-10px responsive */
-    z-index: 1000;
+    z-index: var(--z-dropdown);
     background: rgba(30, 30, 30, 0.9);
     border: 1px solid #404040;
     border-radius: var(--radius-md); /* Modern responsive radius */
@@ -154,7 +154,7 @@
 }
 
 .stat-label {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .stat-value {
@@ -193,7 +193,7 @@
     background: rgba(78, 140, 255, 0.1);
     pointer-events: auto;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-normal);
     border-radius: var(--radius-xs); /* Modern design system variable */
 }
 
@@ -219,7 +219,7 @@
     border: var(--space-xs) solid #007acc; /* Modern design system variable */
     border-radius: var(--radius-md); /* Modern design system variable */
     padding: var(--space-xl); /* Modern design system variable */
-    z-index: 1000;
+    z-index: var(--z-dropdown);
     color: #cccccc;
     text-align: center;
     backdrop-filter: blur(10px);

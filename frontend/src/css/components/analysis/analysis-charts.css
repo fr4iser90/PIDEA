@@ -28,7 +28,7 @@
 .charts-header h3 {
   margin: 0;
   font-size: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
 }
 
@@ -43,10 +43,10 @@
   background: var(--secondary-bg, #f3f4f6);
   color: var(--text-secondary, #6b7280);
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -73,7 +73,7 @@
   height: 400px;
   background: var(--chart-bg, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   overflow: hidden;
 }
@@ -100,7 +100,7 @@
   padding: 2rem;
   background: var(--secondary-bg, #f9fafb);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary, #6b7280);
   font-size: 0.875rem;
   text-align: center;
@@ -108,7 +108,7 @@
 
 /* Chart.js Customization */
 .chart-container .chartjs-render-monitor {
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 /* Responsive Design */
@@ -208,11 +208,11 @@
 
 /* Animation for chart transitions */
 .chart-container {
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .chart-btn {
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 /* Focus states for accessibility */

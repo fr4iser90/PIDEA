@@ -18,7 +18,7 @@
 
 .analysis-history-title {
   font-size: clamp(1rem, 3vw, 1.2rem); /* 16px-19.2px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -44,13 +44,13 @@
 
 .analysis-history-search-input {
   width: 100%;
-  padding: 8px 12px 8px 36px;
+  padding: var(--space-sm) 12px 8px 36px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .analysis-history-search-input:focus {
@@ -77,18 +77,18 @@
 .analysis-history-sort-label {
   font-size: 0.875rem;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .analysis-history-sort-select {
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .analysis-history-sort-select:focus {
@@ -97,13 +97,13 @@
 }
 
 .analysis-history-refresh {
-  padding: 8px;
+  padding: var(--space-sm);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -136,9 +136,9 @@
 .analysis-history-item {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-normal);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -165,7 +165,7 @@
 
 .analysis-history-item-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;
   flex: 1;
@@ -176,10 +176,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 20px;
+  padding: var(--space-xs) 12px;
+  border-radius: var(--radius-xl);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   flex-shrink: 0;
@@ -221,7 +221,7 @@
 .analysis-history-item-detail-label {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -229,14 +229,14 @@
 .analysis-history-item-detail-value {
   font-size: 0.875rem;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .analysis-history-item-summary {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 12px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
   font-size: 0.875rem;
   color: var(--text-primary);
   line-height: 1.5;
@@ -278,11 +278,11 @@
 
 .analysis-history-item-btn {
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   border: none;
   display: flex;
   align-items: center;
@@ -325,7 +325,7 @@
 
 .analysis-history-empty {
   text-align: center;
-  padding: 40px 20px;
+  padding: var(--space-xl) 20px;
   color: var(--text-secondary);
 }
 
@@ -337,7 +337,7 @@
 
 .analysis-history-empty-title {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 8px;
   color: var(--text-primary);
 }
@@ -349,7 +349,7 @@
 
 .analysis-history-loading {
   text-align: center;
-  padding: 40px 20px;
+  padding: var(--space-xl) 20px;
   color: var(--text-secondary);
 }
 
@@ -374,13 +374,13 @@
 }
 
 .analysis-history-pagination-btn {
-  padding: 8px 12px;
+  padding: var(--space-sm) 12px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-primary);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: 0.875rem;
   display: flex;
   align-items: center;
@@ -406,7 +406,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .analysis-history {
-    padding: 16px;
+    padding: var(--space-md);
   }
   
   .analysis-history-header {

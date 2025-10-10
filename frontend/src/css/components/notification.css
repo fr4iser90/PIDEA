@@ -18,7 +18,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   pointer-events: auto;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   animation: slideIn 0.3s ease-out;
   max-width: 100%;
 }
@@ -80,7 +80,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .notification-close:hover {

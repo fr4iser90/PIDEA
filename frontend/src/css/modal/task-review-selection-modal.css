@@ -2,10 +2,10 @@
 
 /* Review Mode Toggle Styles */
 .review-mode-toggle {
-  margin: 16px 0;
-  padding: 16px;
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
   background: #2a2a2a;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid #404040;
 }
 
@@ -17,15 +17,15 @@
 }
 
 .toggle-text {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #e0e0e0;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .toggle-switch {
   display: flex;
   background: #1a1a1a;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 2px;
   border: 1px solid #404040;
 }
@@ -35,12 +35,12 @@
 }
 
 .toggle-option {
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #888;
   background: transparent;
   border: none;
@@ -61,7 +61,7 @@
 }
 
 .mode-description {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: #888;
   margin-top: 4px;
   font-style: italic;
@@ -77,13 +77,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: var(--z-dropdown)0;
   backdrop-filter: blur(4px);
 }
 
 .task-review-selection-modal {
   background: #1e1e1e;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   width: 90%;
   max-width: 900px;
@@ -110,27 +110,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: var(--space-md) 24px;
   border-bottom: 1px solid #333;
   background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-lg) 12px 0 0;
 }
 
 .modal-header h2 {
   margin: 0;
   color: #fff;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .modal-close-btn {
   background: none;
   border: none;
   color: #888;
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
   transition: all 0.2s;
   width: 32px;
   height: 32px;
@@ -153,7 +153,7 @@
 .modal-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: var(--space-lg);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -161,9 +161,9 @@
 
 /* Summary section */
 .task-review-summary {
-  padding: 16px;
+  padding: var(--space-md);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid #333;
 }
 
@@ -184,7 +184,7 @@
 
 .selected-count {
   color: #007acc;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .total-count {
@@ -197,9 +197,9 @@
   flex-wrap: wrap;
   gap: 16px;
   align-items: center;
-  padding: 16px;
+  padding: var(--space-md);
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid #333;
 }
 
@@ -214,7 +214,7 @@
 .sort-group label {
   color: #ccc;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
 }
 
@@ -222,7 +222,7 @@
 .sort-group select {
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: #fff;
   padding: 6px 8px;
   font-size: 0.9rem;
@@ -239,7 +239,7 @@
 .sort-order-btn {
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: #fff;
   padding: 6px 8px;
   cursor: pointer;
@@ -255,9 +255,9 @@
 
 /* Select all controls */
 .select-all-controls {
-  padding: 12px 16px;
+  padding: var(--space-sm) 16px;
   background: rgba(0, 122, 204, 0.1);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(0, 122, 204, 0.3);
 }
 
@@ -267,7 +267,7 @@
   cursor: pointer;
   color: #fff;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .select-all-checkbox input[type="checkbox"] {
@@ -293,12 +293,12 @@
 
 .no-tasks {
   text-align: center;
-  padding: 40px 20px;
+  padding: var(--space-xl) 20px;
   color: #888;
 }
 
 .no-tasks p {
-  margin: 8px 0;
+  margin: var(--space-sm) 0;
   font-size: 1rem;
 }
 
@@ -306,7 +306,7 @@
 .task-item {
   background: #2a2a2a;
   border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all 0.2s;
 }
 
@@ -318,7 +318,7 @@
 .task-item-header {
   display: flex;
   align-items: center;
-  padding: 16px;
+  padding: var(--space-md);
   gap: 12px;
 }
 
@@ -340,7 +340,7 @@
 
 .task-title {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #fff;
   margin-bottom: 4px;
   word-wrap: break-word;
@@ -359,8 +359,8 @@
 .task-category,
 .task-date {
   padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -387,10 +387,10 @@
   background: none;
   border: none;
   color: #888;
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
   transition: all 0.2s;
   width: 28px;
   height: 28px;
@@ -437,9 +437,9 @@
 .btn-primary,
 .btn-secondary {
   padding: 10px 20px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 0.2s;
   border: none;

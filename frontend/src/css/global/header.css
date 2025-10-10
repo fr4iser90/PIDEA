@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
   background: var(--bg-tertiary);
   color: var(--text-primary);
   display: flex;
@@ -26,7 +26,7 @@
 
 .app-title {
   font-size: 1.2em;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.5px;
   margin: 0;
   white-space: nowrap;
@@ -63,9 +63,9 @@
   border: none;
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .layout-btn:hover {
@@ -79,7 +79,7 @@
 }
 
 .layout-btn .btn-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 .status-indicator {
@@ -116,8 +116,8 @@
   color: #e6e6e6;
   font-size: 1.2em;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-sm);
   transition: background 0.2s;
 }
 
@@ -131,9 +131,9 @@
   border: 1.5px solid #4e8cff;
   color: #4e8cff;
   font-size: 1em;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   padding: 6px 18px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
@@ -240,7 +240,7 @@ body.light-theme .mode-btn:not(.active):hover {
   }
   
   .mode-btn {
-    padding: 4px 12px;
+    padding: var(--space-xs) 12px;
     font-size: 0.9em;
   }
 }

@@ -8,7 +8,7 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: clamp(0.875rem, 2vw, 1rem); /* 14px-16px responsive */
   position: relative;
   user-select: none;
@@ -49,7 +49,7 @@
 }
 
 .status-text {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 
@@ -99,7 +99,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md); /* Modern design system variable */
@@ -120,7 +120,7 @@
 }
 
 .popup-title {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   font-size: 0.9em;
 }
@@ -148,7 +148,7 @@
 .popup-label {
   font-size: 0.8em;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .popup-value {

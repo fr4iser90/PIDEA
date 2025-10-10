@@ -24,7 +24,7 @@
 .filters-title h4 {
   margin: 0;
   font-size: clamp(0.875rem, 2.5vw, 1rem); /* 14px-16px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
 }
 
@@ -33,7 +33,7 @@
   color: var(--text-secondary, #6b7280);
   background: var(--secondary-bg, #f3f4f6);
   padding: 0.25rem 0.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .filters-controls {
@@ -47,10 +47,10 @@
   background: var(--secondary-bg, #f3f4f6);
   color: var(--text-secondary, #6b7280);
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.75rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-toggle-filters:hover {
@@ -63,10 +63,10 @@
   background: var(--error-bg, #fef2f2);
   color: var(--error-text, #dc2626);
   border: 1px solid var(--error-border, #fecaca);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.75rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-clear-filters:hover {
@@ -81,7 +81,7 @@
   padding: 1rem;
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .filter-group {
@@ -92,7 +92,7 @@
 
 .filter-label {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
 }
 
@@ -107,10 +107,10 @@
   background: var(--secondary-bg, #f3f4f6);
   color: var(--text-secondary, #6b7280);
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .filter-option:hover {
@@ -154,7 +154,7 @@
   gap: 0.5rem;
   padding: 1rem;
   background: var(--secondary-bg, #f9fafb);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color, #e5e7eb);
 }
 
@@ -167,12 +167,12 @@
 
 .summary-label {
   color: var(--text-secondary, #6b7280);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .summary-value {
   color: var(--text-primary, #111827);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Filters Preview */
@@ -180,7 +180,7 @@
   padding: 0.75rem;
   background: var(--secondary-bg, #f9fafb);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .preview-text {
@@ -193,7 +193,7 @@
   background: var(--primary-color, #3b82f6);
   color: white;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   margin-right: 0.5rem;
   font-size: 0.75rem;
 }
@@ -340,11 +340,11 @@
 
 /* Animation for filter transitions */
 .filter-option {
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .filters-content {
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 /* Focus states for accessibility */

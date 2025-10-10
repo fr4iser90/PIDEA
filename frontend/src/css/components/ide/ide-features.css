@@ -25,7 +25,7 @@
   margin: 0;
   color: #2c3e50;
   font-size: var(--font-size-lg); /* Modern design system variable */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .last-update {
@@ -101,7 +101,7 @@
   font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: var(--font-weight-medium); /* Modern design system variable */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: var(--space-sm); /* Modern design system variable */
@@ -206,7 +206,7 @@
   border: 1px solid #e1e5e9;
   border-radius: var(--radius-md); /* Modern design system variable */
   padding: var(--space-lg); /* Modern design system variable */
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   cursor: pointer;
 }
 
@@ -323,7 +323,7 @@
   font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: var(--font-weight-medium); /* Modern design system variable */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   width: 100%;
 }
 
@@ -364,7 +364,7 @@
   border-radius: var(--radius-sm); /* Modern design system variable */
   font-size: var(--font-size-xs); /* Modern design system variable */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   flex: 1;
   min-width: var(--space-2xl); /* Modern design system variable */
 }

@@ -22,7 +22,7 @@
   margin: 0;
   color: var(--text-primary);
   font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .security-score {
@@ -56,13 +56,13 @@
 .tab {
   background: none;
   border: none;
-  padding: 12px 16px;
-  border-radius: 8px 8px 0 0;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-md) 8px 0 0;
   cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   white-space: nowrap;
   border-bottom: 3px solid transparent;
 }
@@ -99,9 +99,9 @@
 .overview-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-normal);
 }
 
 .overview-card:hover {
@@ -122,7 +122,7 @@
 
 .card-title {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
 }
 
@@ -151,8 +151,8 @@
 .security-score-chart {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
 /* Security Vulnerabilities */
@@ -167,7 +167,7 @@
   margin: 0 0 16px 0;
   color: var(--text-primary);
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .severity-grid {
@@ -180,11 +180,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px;
-  border-radius: 8px;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .severity-card:hover {
@@ -219,7 +219,7 @@
 
 .severity-label {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
   margin-bottom: 4px;
 }
@@ -239,9 +239,9 @@
 .vulnerability-item {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-normal);
 }
 
 .vulnerability-item:hover {
@@ -256,10 +256,10 @@
 }
 
 .severity-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
@@ -286,12 +286,12 @@
 .scanner-name {
   font-size: 0.875rem;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .vulnerability-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin-bottom: 8px;
 }
@@ -357,7 +357,7 @@
   color: var(--text-secondary);
   font-size: 1rem;
   text-align: center;
-  padding: 20px;
+  padding: var(--space-md);
 }
 
 .error-icon,
@@ -371,12 +371,12 @@
 }
 
 .empty-description p {
-  margin: 8px 0;
+  margin: var(--space-sm) 0;
   line-height: 1.5;
 }
 
 .empty-description ul {
-  margin: 12px 0;
+  margin: var(--space-sm) 0;
   padding-left: 20px;
 }
 
@@ -423,8 +423,8 @@
 
 @media (max-width: 480px) {
   .security-dashboard {
-    padding: 16px;
-    margin: 16px 0;
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
   }
 
   .security-header h3 {

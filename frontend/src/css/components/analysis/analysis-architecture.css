@@ -43,7 +43,7 @@
   align-items: center;
   gap: 0.5rem;
   color: #e74c3c;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .analysis-architecture.error .error-icon {
@@ -71,7 +71,7 @@
 .architecture-title h3 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .architecture-summary {
@@ -92,7 +92,7 @@
   display: flex;
   gap: 0.25rem;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.25rem;
 }
 
@@ -101,10 +101,10 @@
   border: none;
   color: white;
   padding: 0.5rem 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.85rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   white-space: nowrap;
 }
 
@@ -114,7 +114,7 @@
 
 .tab-btn.active {
   background: rgba(255, 255, 255, 0.3);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Statistics */
@@ -136,30 +136,30 @@
   align-items: center;
   padding: 0.75rem;
   background: white;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border-left: 4px solid #3498db;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stat-item .stat-value.critical {
   color: #e74c3c;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .stat-item .stat-value.success {
   color: #27ae60;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .stat-label {
   font-size: 0.85rem;
   color: #6c757d;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .stat-value {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #2c3e50;
 }
 
@@ -181,7 +181,7 @@
   align-items: center;
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid #e9ecef;
 }
 
@@ -195,10 +195,10 @@
   background: white;
   border: 1px solid #dee2e6;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .zoom-btn:hover {
@@ -208,7 +208,7 @@
 
 .zoom-level {
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #495057;
   min-width: 50px;
   text-align: center;
@@ -219,7 +219,7 @@
   color: white;
   border: none;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
@@ -234,7 +234,7 @@
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
@@ -252,7 +252,7 @@
 .diagram-container {
   background: white;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: auto;
   min-height: 400px;
   position: relative;
@@ -315,7 +315,7 @@
 .mermaid-code {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 1rem;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.8rem;
@@ -355,8 +355,8 @@
   padding: 1.5rem;
   background: white;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
 }
 
 .metric-card:hover {
@@ -397,7 +397,7 @@
   align-items: center;
   justify-content: center;
   background: #f8f9fa;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .metric-content {
@@ -407,20 +407,20 @@
 .metric-label {
   font-size: 0.9rem;
   color: #6c757d;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   margin-bottom: 0.25rem;
 }
 
 .metric-value {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #2c3e50;
   margin-bottom: 0.25rem;
 }
 
 .metric-status {
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -449,7 +449,7 @@
 .recommendations-section {
   background: #e8f5e8;
   border: 1px solid #c3e6c3;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
 }
 
@@ -457,7 +457,7 @@
   margin: 0 0 1rem 0;
   color: #155724;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .recommendations-list {
@@ -469,7 +469,7 @@
 .recommendation-item {
   padding: 0.75rem;
   background: white;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border-left: 3px solid #27ae60;
 }
 
@@ -490,7 +490,7 @@
 .anti-patterns-section {
   background: white;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
 }
 
@@ -498,7 +498,7 @@
 .anti-patterns-section h4 {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #495057;
 }
 
@@ -515,8 +515,8 @@
   padding: 1rem;
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
 }
 
 .pattern-item:hover {
@@ -533,7 +533,7 @@
   align-items: center;
   justify-content: center;
   background: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .pattern-info {
@@ -543,7 +543,7 @@
 }
 
 .pattern-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #495057;
 }
 
@@ -572,7 +572,7 @@
   padding: 0.75rem;
   background: #fff3cd;
   border: 1px solid #ffeaa7;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .anti-pattern-icon {

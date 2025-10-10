@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: var(--z-dropdown)0;
   padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   backdrop-filter: blur(4px);
 }
@@ -45,7 +45,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: var(--space-md) 24px;
   border-bottom: 1px solid #333;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
 }
@@ -53,7 +53,7 @@
 .prompt-modal-title {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #007acc;
   line-height: 1.3;
   word-wrap: break-word;
@@ -65,9 +65,9 @@
   color: #888;
   font-size: 1.5rem;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
 }
 
 .prompt-modal-close-btn:hover {
@@ -79,14 +79,14 @@
 .prompt-modal-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: var(--space-lg);
 }
 
 .prompt-content {
   background-color: #1a202c;
   border: 1px solid #333;
-  border-radius: 6px;
-  padding: 16px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
   margin: 0;
   overflow-x: auto;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -121,7 +121,7 @@
   color: #ffffff;
   margin-top: 24px;
   margin-bottom: 16px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: 1.3;
 }
 
@@ -162,7 +162,7 @@
 .prompt-markdown-content blockquote {
   border-left: 4px solid #007acc;
   padding-left: 16px;
-  margin: 16px 0;
+  margin: var(--space-md) 0;
   color: #a0aec0;
   font-style: italic;
 }
@@ -171,7 +171,7 @@
   background-color: #2d3748;
   color: #e2e8f0;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.875em;
 }
@@ -179,9 +179,9 @@
 .prompt-markdown-content pre {
   background-color: #1a202c;
   border: 1px solid #333;
-  border-radius: 6px;
-  padding: 16px;
-  margin: 16px 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  margin: var(--space-md) 0;
   overflow-x: auto;
 }
 
@@ -202,7 +202,7 @@
   }
 
   .prompt-modal-header {
-    padding: 16px 20px;
+    padding: var(--space-md) 20px;
   }
 
   .prompt-modal-title {
@@ -210,7 +210,7 @@
   }
 
   .prompt-modal-content {
-    padding: 16px 20px;
+    padding: var(--space-md) 20px;
   }
 
   .prompt-markdown-content {
@@ -242,7 +242,7 @@
   }
 
   .prompt-modal-header {
-    padding: 12px 16px;
+    padding: var(--space-sm) 16px;
   }
 
   .prompt-modal-title {
@@ -250,7 +250,7 @@
   }
 
   .prompt-modal-content {
-    padding: 12px 16px;
+    padding: var(--space-sm) 16px;
   }
 
   .prompt-markdown-content {
@@ -272,7 +272,7 @@
 .prompt-modal-content::-webkit-scrollbar-thumb,
 .prompt-content::-webkit-scrollbar-thumb {
   background: #4a5568;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .prompt-modal-content::-webkit-scrollbar-thumb:hover,

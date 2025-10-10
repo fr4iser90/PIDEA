@@ -20,7 +20,7 @@
 
 .progress-title {
   font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;
 }
@@ -48,7 +48,7 @@
   width: 100%;
   height: 12px;
   background: var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: 8px;
 }
@@ -56,14 +56,14 @@
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #4488ff, #44aa44);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   transition: width 0.3s ease;
 }
 
 .progress-text {
   text-align: center;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
 }
 
@@ -75,14 +75,14 @@
   margin-bottom: 20px;
   padding: 15px;
   background: var(--bg-secondary);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .status-badge {
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -127,7 +127,7 @@
   padding: 15px;
   background: #fff5f5;
   border: 1px solid #ffcccc;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .error-icon {
@@ -156,9 +156,9 @@
   align-items: center;
   padding: 15px;
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .progress-step.active {
@@ -183,7 +183,7 @@
 
 .step-label {
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-align: center;
   color: var(--text-primary);
   margin-bottom: 5px;
@@ -192,15 +192,15 @@
 .step-progress {
   font-size: 0.7rem;
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Task Details */
 .task-details {
   margin-bottom: 25px;
-  padding: 20px;
+  padding: var(--space-md);
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border-left: 4px solid #4488ff;
 }
 
@@ -241,16 +241,16 @@
   max-height: 200px;
   overflow-y: auto;
   background: var(--bg-secondary);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 10px;
 }
 
 .log-entry {
   display: flex;
   gap: 10px;
-  padding: 8px;
+  padding: var(--space-sm);
   margin-bottom: 5px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
@@ -277,7 +277,7 @@
 
 .log-timestamp {
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   min-width: 80px;
 }
 
@@ -299,11 +299,11 @@
 .btn-danger {
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   min-width: 120px;
 }
 
@@ -346,7 +346,7 @@
   flex-direction: column;
   align-items: center;
   gap: 15px;
-  padding: 40px 20px;
+  padding: var(--space-xl) 20px;
 }
 
 .loading-spinner {

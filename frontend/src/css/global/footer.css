@@ -38,10 +38,10 @@
 }
 
 .git-branch {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #4e8cff;
   background: #181c24;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 2px 8px;
 }
 

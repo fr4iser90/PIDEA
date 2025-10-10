@@ -46,7 +46,7 @@
 
 .version-badge {
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   color: white;
   font-weight: bold;
   font-size: 0.875rem;
@@ -69,7 +69,7 @@
   gap: 0.25rem;
   margin-bottom: 1rem;
   background: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.25rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -79,11 +79,11 @@
   padding: 0.75rem 1rem;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #666;
 }
 
@@ -101,7 +101,7 @@
 /* Version Content */
 .version-content {
   background: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 500px;
@@ -127,7 +127,7 @@
 .version-info-card,
 .package-files-card {
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   border-left: 4px solid #3498db;
 }
@@ -154,13 +154,13 @@
 .detail-label {
   font-size: 0.875rem;
   color: #666;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .detail-value {
   font-size: 1rem;
   color: #2c3e50;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .package-files-list {
@@ -175,7 +175,7 @@
   align-items: center;
   padding: 0.75rem;
   background: white;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 0.5rem;
   border: 1px solid #e9ecef;
 }
@@ -206,7 +206,7 @@
 
 .history-entry {
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   border-left: 4px solid #27ae60;
   position: relative;
@@ -243,7 +243,7 @@
 }
 
 .history-task {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #2c3e50;
   margin-bottom: 0.5rem;
 }
@@ -257,7 +257,7 @@
   background: #3498db;
   color: white;
   padding: 0.25rem 0.5rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
   font-weight: bold;
   margin-left: 0.5rem;
@@ -289,7 +289,7 @@
 }
 
 .form-group label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #2c3e50;
   font-size: 0.875rem;
 }
@@ -299,7 +299,7 @@
 .form-input {
   padding: 0.75rem;
   border: 2px solid #e9ecef;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   transition: border-color 0.2s ease;
   background: white;
@@ -329,7 +329,7 @@
 .bump-recommendation {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   margin: 1rem 0;
 }
@@ -346,14 +346,14 @@
 }
 
 .recommended-type {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: 1.125rem;
 }
 
 .recommended-badge {
   background: rgba(255, 255, 255, 0.2);
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   margin-left: 0.5rem;
   font-weight: bold;
 }
@@ -378,11 +378,11 @@
 .version-btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -447,7 +447,7 @@
 
 .config-section {
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   border-left: 4px solid #9b59b6;
 }
@@ -471,12 +471,12 @@
 }
 
 .config-label {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #2c3e50;
 }
 
 .config-value {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #27ae60;
 }
 
@@ -496,11 +496,11 @@
 .operation-result {
   margin-top: 1rem;
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .operation-result.success {
@@ -535,7 +535,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
   color: white;
 }
 
@@ -556,7 +556,7 @@
   gap: 0.25rem;
   margin-bottom: 1rem;
   background: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.25rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -566,11 +566,11 @@
   padding: 0.75rem 1rem;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: #666;
 }
 
@@ -587,7 +587,7 @@
 
 .git-tab-content {
   background: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   min-height: 400px;

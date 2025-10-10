@@ -28,7 +28,7 @@
 .metrics-header h3 {
   margin: 0;
   font-size: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
 }
 
@@ -42,7 +42,7 @@
   color: var(--text-secondary, #6b7280);
   background: var(--secondary-bg, #f3f4f6);
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 /* Metrics Grid */
@@ -60,8 +60,8 @@
   padding: 1.25rem;
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
 }
@@ -112,12 +112,12 @@
 .metric-label {
   font-size: 0.875rem;
   color: var(--text-secondary, #6b7280);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .metric-value {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--text-primary, #111827);
   line-height: 1.2;
 }
@@ -130,14 +130,14 @@
 .analysis-types {
   background: var(--card-bg, #ffffff);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1.25rem;
 }
 
 .analysis-types h4 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
 }
 
@@ -153,18 +153,18 @@
   align-items: center;
   padding: 0.5rem 0.75rem;
   background: var(--secondary-bg, #f9fafb);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
 }
 
 .type-name {
   color: var(--text-primary, #374151);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .type-count {
   color: var(--text-secondary, #6b7280);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* No Data Messages */
@@ -176,7 +176,7 @@
   padding: 2rem;
   background: var(--secondary-bg, #f9fafb);
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary, #6b7280);
   font-size: 0.875rem;
   text-align: center;
@@ -309,7 +309,7 @@
 
 /* Animation for metric cards */
 .metric-card {
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .metric-card:hover {

@@ -72,7 +72,7 @@
   padding: 1rem;
   background: var(--error-bg, #fef2f2);
   border: 1px solid var(--error-border, #fecaca);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--error-text, #dc2626);
   font-size: 0.875rem;
 }
@@ -86,7 +86,7 @@
   background: var(--primary-color, #3b82f6);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.875rem;
   transition: background-color 0.2s ease;
@@ -106,7 +106,7 @@
 .analysis-title h2 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
 }
 
@@ -130,10 +130,10 @@
   background: var(--secondary-bg, #f3f4f6);
   color: var(--text-secondary, #6b7280);
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
   .btn-refresh:hover {
@@ -165,10 +165,10 @@
   background: var(--warning-bg, #fef3c7);
   color: var(--warning-text, #92400e);
   border: 1px solid var(--warning-border, #f59e0b);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-clear-cache:hover {
@@ -193,10 +193,10 @@
 /* Collapsible Sections */
 .analysis-section {
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin-bottom: 1rem;
   background: var(--bg-primary, #ffffff);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .analysis-section.expanded {
@@ -216,7 +216,7 @@
   border-bottom: 1px solid var(--border-color, #e5e7eb);
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) 8px 0 0;
 }
 
 .section-header:hover {
@@ -226,7 +226,7 @@
 .section-header h3 {
   margin: 0;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
   display: flex;
   align-items: center;
@@ -279,7 +279,7 @@
   color: var(--text-secondary, #6b7280);
   background: var(--placeholder-bg, #f9fafb);
   border: 2px dashed var(--border-color, #d1d5db);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .placeholder-section p {
@@ -289,7 +289,7 @@
 
 .placeholder-section p:first-child {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary, #374151);
 }
 

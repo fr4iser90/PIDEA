@@ -7,7 +7,7 @@
   border-radius: var(--radius-lg); /* Modern responsive radius */
   margin-bottom: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: var(--space-md) 20px;
   background: var(--bg-tertiary, #0f172a);
   border-bottom: 1px solid var(--border-color, #334155);
   cursor: pointer;
@@ -55,7 +55,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-accent, #334155);
 }
 
@@ -65,7 +65,7 @@
 
 .category-name {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #f8fafc);
   margin: 0 0 4px 0;
   line-height: 1.4;
@@ -145,14 +145,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: var(--space-sm) 16px;
   background: none;
   border: none;
   color: var(--text-secondary, #94a3b8);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   white-space: nowrap;
   position: relative;
   border-bottom: 2px solid transparent;
@@ -179,7 +179,7 @@
 }
 
 .tab-name {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .tab-indicator {
@@ -191,7 +191,7 @@
 
 /* Tab Content */
 .tab-content {
-  padding: 20px;
+  padding: var(--space-md);
   min-height: 200px;
 }
 
@@ -201,7 +201,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 40px 20px;
+  padding: var(--space-xl) 20px;
   color: var(--text-secondary, #94a3b8);
 }
 
@@ -221,7 +221,7 @@
 
 /* Category Footer */
 .category-footer {
-  padding: 12px 20px;
+  padding: var(--space-sm) 20px;
   background: var(--bg-tertiary, #0f172a);
   border-top: 1px solid var(--border-color, #334155);
 }
@@ -305,7 +305,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .category-header {
-    padding: 12px 16px;
+    padding: var(--space-sm) 16px;
   }
   
   .category-info {
@@ -337,7 +337,7 @@
   }
   
   .tab-content {
-    padding: 16px;
+    padding: var(--space-md);
   }
   
   .category-footer {

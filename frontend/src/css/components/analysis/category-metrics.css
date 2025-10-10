@@ -45,7 +45,7 @@
 .category-metrics-header h3 {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #f8fafc);
   display: flex;
   align-items: center;
@@ -63,12 +63,12 @@
   color: var(--text-secondary, #94a3b8);
   background: var(--bg-tertiary, #0f172a);
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color, #334155);
 }
 
 .category-summary-score {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--primary-color, #3b82f6);
 }
 
@@ -87,8 +87,8 @@
   padding: 1.25rem;
   background: var(--bg-secondary, #1e293b);
   border: 1px solid var(--border-color, #334155);
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -136,7 +136,7 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 1.5rem;
   flex-shrink: 0;
   background: var(--bg-accent, #334155);
@@ -171,7 +171,7 @@
 .category-metric-label {
   font-size: 0.875rem;
   color: var(--text-secondary, #94a3b8);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   margin-bottom: 0.25rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -179,7 +179,7 @@
 
 .category-metric-value {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--text-primary, #f8fafc);
   line-height: 1.2;
 }
@@ -187,7 +187,7 @@
 .category-metric-unit {
   font-size: 0.875rem;
   color: var(--text-secondary, #94a3b8);
-  font-weight: 400;
+  font-weight: var(--font-weight-normal);
   margin-left: 0.25rem;
 }
 
@@ -223,14 +223,14 @@
 .category-analysis-types {
   background: var(--bg-tertiary, #0f172a);
   border: 1px solid var(--border-color, #334155);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
 .category-analysis-types h4 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #f8fafc);
   display: flex;
   align-items: center;
@@ -250,8 +250,8 @@
   padding: 0.75rem;
   background: var(--bg-secondary, #1e293b);
   border: 1px solid var(--border-color, #334155);
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
 }
 
 .category-type-item:hover {
@@ -262,16 +262,16 @@
 .category-type-name {
   font-size: 0.875rem;
   color: var(--text-primary, #f8fafc);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .category-type-count {
   font-size: 0.875rem;
   color: var(--text-secondary, #94a3b8);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   background: var(--bg-accent, #334155);
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   min-width: 2rem;
   text-align: center;
 }
@@ -295,20 +295,20 @@
 .category-progress-label {
   font-size: 0.875rem;
   color: var(--text-primary, #f8fafc);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .category-progress-value {
   font-size: 0.875rem;
   color: var(--text-secondary, #94a3b8);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .category-progress-bar {
   width: 100%;
   height: 8px;
   background: var(--bg-accent, #334155);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   position: relative;
 }
@@ -316,7 +316,7 @@
 .category-progress-fill {
   height: 100%;
   background: var(--primary-color, #3b82f6);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: width 0.3s ease;
   position: relative;
 }
@@ -359,7 +359,7 @@
 .category-no-data-text,
 .category-error-text {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary, #f8fafc);
 }
 
@@ -374,7 +374,7 @@
   margin-top: 1.5rem;
   background: var(--bg-tertiary, #0f172a);
   border: 1px solid var(--border-color, #334155);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
@@ -387,7 +387,7 @@
 
 .category-comparison-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #f8fafc);
   margin: 0;
 }
@@ -403,7 +403,7 @@
   padding: 0.75rem;
   background: var(--bg-secondary, #1e293b);
   border: 1px solid var(--border-color, #334155);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .category-comparison-label {
@@ -416,7 +416,7 @@
 
 .category-comparison-value {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--text-primary, #f8fafc);
 }
 

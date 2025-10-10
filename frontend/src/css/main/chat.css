@@ -46,7 +46,7 @@
 
 .chat-header h2 {
   font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;
 }
@@ -55,7 +55,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 20px;
+  padding: var(--space-md);
   background: var(--bg-secondary);
   scroll-behavior: smooth;
 }
@@ -64,7 +64,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 20px;
+  padding: var(--space-md);
   background: var(--bg-secondary);
   scroll-behavior: smooth;
 }
@@ -103,7 +103,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: 0.875rem;
   flex-shrink: 0;
   background: linear-gradient(135deg, #223c6a 60%, #4e8cff 100%);
@@ -119,7 +119,7 @@
 
 .message-bubble {
   max-width: 70%;
-  padding: 16px 20px;
+  padding: var(--space-md) 20px;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
   position: relative;
@@ -147,7 +147,7 @@
   transform: translateY(10px);
   animation: typingSlideIn 0.3s ease-out forwards;
   background: #23272e;
-  padding: 16px 20px;
+  padding: var(--space-md) 20px;
   border-radius: var(--border-radius);
 }
 
@@ -187,7 +187,7 @@
   flex-shrink: 0;
   width: 100%;
   background: var(--bg-tertiary);
-  padding: 16px 24px;
+  padding: var(--space-md) 24px;
   border-top: 1px solid #23272e;
   box-sizing: border-box;
   position: static !important;
@@ -208,13 +208,13 @@
   resize: vertical;
   overflow-y: auto;
   font-size: 1rem;
-  padding: 16px 20px;
+  padding: var(--space-md) 20px;
   border: 1px solid #23272e;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: #181c20;
   color: #e6e6e6;
   font-family: inherit;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 #msgInput:focus {
@@ -233,13 +233,13 @@
 }
 
 .btn, .btn-primary, .btn-secondary {
-  padding: 16px 20px;
+  padding: var(--space-md) 20px;
   border: 1px solid #23272e;
   border-radius: var(--border-radius);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -271,7 +271,7 @@
 .message-bubble h1, .message-bubble h2, .message-bubble h3 {
   color: #fff;
   margin: 1em 0 0.5em 0;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .message-bubble h1 { font-size: 1.4em; }
@@ -297,13 +297,13 @@
   border-left: 4px solid #4e8cff;
   margin: 1em 0;
   padding: 0.75em 1em;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .message-bubble code {
   background: #23272e;
   color: #4e8cff;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 2px 6px;
   font-size: 0.9em;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -311,7 +311,7 @@
 
 .message-bubble pre {
   background: #181c20;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 1em;
   margin: 1em 0;
   overflow-x: auto;
@@ -333,7 +333,7 @@
 
 .code-block-wrapper {
   border: 1px solid #23272e;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #181c20;
 }
@@ -359,7 +359,7 @@
   color: white;
   border: none;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.7rem;
   cursor: pointer;
   transition: background 0.2s;
@@ -521,8 +521,8 @@ body.light-theme .message-bubble pre code {
 
 /* Modern Code Block Styles */
 .modern-code-block-wrapper {
-  margin: 16px 0;
-  border-radius: 8px;
+  margin: var(--space-md) 0;
+  border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   background: #23272e;
   overflow: hidden;
@@ -539,9 +539,9 @@ body.light-theme .message-bubble pre code {
   justify-content: space-between;
   background: #181b20;
   color: #b6c2e0;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 14px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-sm) 14px;
   cursor: pointer;
   border-bottom: 1px solid #23272e;
   user-select: none;
@@ -560,7 +560,7 @@ body.light-theme .message-bubble pre code {
   background: none;
   border: none;
   color: #b6c2e0;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   margin-left: 8px;
   cursor: pointer;
   transition: color 0.2s;
@@ -572,7 +572,7 @@ body.light-theme .message-bubble pre code {
   background: none;
   border: none;
   color: #b6c2e0;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   margin-left: 8px;
   cursor: pointer;
   transition: color 0.2s;
@@ -584,8 +584,8 @@ body.light-theme .message-bubble pre code {
   background: #23272e;
   color: #eaeaea;
   font-family: 'Fira Mono', 'Consolas', monospace;
-  font-size: 14px;
-  padding: 16px;
+  font-size: var(--font-size-sm);
+  padding: var(--space-md);
   margin: 0;
   border: none;
   border-radius: 0 0 8px 8px;
@@ -610,7 +610,7 @@ body.light-theme .message-bubble pre code {
   font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.4;
-  padding: 8px;
+  padding: var(--space-sm);
   outline: none;
   min-height: 20px;
   max-height: 120px;
@@ -653,7 +653,7 @@ body.light-theme .message-bubble pre code {
   }
 
   .chat-header {
-    padding: 16px 20px;
+    padding: var(--space-md) 20px;
   }
 
   .chat-header h2 {
@@ -661,7 +661,7 @@ body.light-theme .message-bubble pre code {
   }
 
   #messages {
-    padding: 16px;
+    padding: var(--space-md);
   }
 
   .message-bubble {
@@ -670,7 +670,7 @@ body.light-theme .message-bubble pre code {
   }
 
   .input-area {
-    padding: 16px 20px;
+    padding: var(--space-md) 20px;
   }
 
   .input-container {
@@ -679,7 +679,7 @@ body.light-theme .message-bubble pre code {
 
   #msgInput {
     padding: 14px 16px;
-    font-size: 16px;
+    font-size: var(--font-size-base);
   }
 
   .btn {
@@ -691,7 +691,7 @@ body.light-theme .message-bubble pre code {
 @media (max-width: 480px) {
   .message-bubble {
     max-width: 90%;
-    padding: 12px 14px;
+    padding: var(--space-sm) 14px;
   }
 
   .message-avatar {
@@ -705,6 +705,6 @@ body.light-theme .message-bubble pre code {
   }
 
   .btn {
-    padding: 12px 14px;
+    padding: var(--space-sm) 14px;
   }
 }

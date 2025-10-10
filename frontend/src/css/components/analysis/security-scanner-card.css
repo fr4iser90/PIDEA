@@ -4,7 +4,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg); /* Modern responsive radius */
   padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -56,12 +56,12 @@
   align-items: center;
   justify-content: center;
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .scanner-name {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -70,9 +70,9 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -108,10 +108,10 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 12px 8px;
+  padding: var(--space-sm) 8px;
   background: var(--bg-secondary);
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
 }
 
 .metric:hover {
@@ -129,7 +129,7 @@
 .metric-label {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -146,9 +146,9 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
   font-size: 1rem;
 }
 
@@ -186,7 +186,7 @@
 .details-section h5 {
   margin: 0 0 12px 0;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -197,7 +197,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--border-color-light);
 }
 
@@ -208,12 +208,12 @@
 .detail-label {
   font-size: 0.875rem;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .detail-value {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -239,9 +239,9 @@
 .vulnerability-item {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  transition: all var(--transition-normal);
 }
 
 .vulnerability-item:hover {
@@ -258,7 +258,7 @@
 
 .vulnerability-title {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin-bottom: 6px;
 }
@@ -271,13 +271,13 @@
 
 .more-vulnerabilities {
   text-align: center;
-  padding: 8px;
+  padding: var(--space-sm);
   color: var(--primary-color);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   font-style: italic;
   background: rgba(var(--primary-color-rgb), 0.05);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 /* Best Practices List */
@@ -290,9 +290,9 @@
 .best-practice-item {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  transition: all var(--transition-normal);
 }
 
 .best-practice-item:hover {
@@ -302,7 +302,7 @@
 
 .practice-title {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin-bottom: 6px;
 }
@@ -315,21 +315,21 @@
 
 .more-practices {
   text-align: center;
-  padding: 8px;
+  padding: var(--space-sm);
   color: var(--primary-color);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   font-style: italic;
   background: rgba(var(--primary-color-rgb), 0.05);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 /* Error Section */
 .details-section.error {
   background: rgba(244, 67, 54, 0.05);
   border: 1px solid rgba(244, 67, 54, 0.2);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
 }
 
 .error-message {
@@ -346,13 +346,13 @@
 .error-text {
   font-size: 0.875rem;
   color: #F44336;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .scanner-card {
-    padding: 12px;
+    padding: var(--space-sm);
   }
 
   .scanner-header {
@@ -375,7 +375,7 @@
     flex-direction: row;
     justify-content: space-between;
     text-align: left;
-    padding: 8px 12px;
+    padding: var(--space-sm) 12px;
   }
 
   .metric-value {
@@ -412,7 +412,7 @@
 
   .status-badge {
     font-size: 0.7rem;
-    padding: 4px 8px;
+    padding: var(--space-xs) 8px;
   }
 
   .metric-value {

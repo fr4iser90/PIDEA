@@ -9,7 +9,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
   backdrop-filter: blur(4px);
 }
 
@@ -37,7 +37,7 @@
 }
 
 .analysis-modal-header {
-  padding: 20px 24px;
+  padding: var(--space-md) 24px;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-primary);
   display: flex;
@@ -47,7 +47,7 @@
 
 .analysis-modal-title {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;
   display: flex;
@@ -66,9 +66,9 @@
   color: var(--text-secondary);
   font-size: 1.5rem;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,7 +80,7 @@
 }
 
 .analysis-modal-body {
-  padding: 24px;
+  padding: var(--space-lg);
   max-height: calc(90vh - 140px);
   overflow-y: auto;
 }
@@ -95,7 +95,7 @@
 
 .analysis-modal-section-title {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin-bottom: 12px;
   padding-bottom: 8px;
@@ -119,8 +119,8 @@
 
 .analysis-modal-metadata-item {
   background: var(--bg-primary);
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
 }
 
@@ -128,20 +128,20 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin-bottom: 4px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .analysis-modal-metadata-value {
   font-size: 1rem;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .analysis-modal-content-area {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
   margin-bottom: 20px;
 }
 
@@ -152,8 +152,8 @@
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.9rem;
   background: var(--bg-secondary);
-  padding: 16px;
-  border-radius: 6px;
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   max-height: 300px;
   overflow-y: auto;
@@ -168,15 +168,15 @@
 .content-section {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
 .content-section h4 {
   margin: 0 0 12px 0;
   color: var(--text-primary);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -185,8 +185,8 @@
 .json-pre {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 12px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.85rem;
   line-height: 1.4;
@@ -207,10 +207,10 @@
 
 .analysis-modal-btn {
   padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   border: none;
   font-size: 0.9rem;
 }
@@ -239,10 +239,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 20px;
+  padding: var(--space-xs) 12px;
+  border-radius: var(--radius-xl);
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -275,11 +275,11 @@
   }
   
   .analysis-modal-header {
-    padding: 16px 20px;
+    padding: var(--space-md) 20px;
   }
   
   .analysis-modal-body {
-    padding: 20px;
+    padding: var(--space-md);
     max-height: calc(95vh - 120px);
   }
   

@@ -40,7 +40,7 @@
   background: transparent;
   border-radius: calc(var(--border-radius) - var(--space-xs)); /* Modern design system variable */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: var(--font-weight-medium); /* Modern design system variable */
   color: var(--text-secondary);
@@ -90,7 +90,7 @@
 }
 
 .workspace-label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   white-space: nowrap;
 }
@@ -114,7 +114,7 @@
 }
 
 .git-status-text {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -151,7 +151,7 @@
   font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: var(--font-weight-semibold); /* Modern design system variable */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   min-width: var(--space-2xl); /* Modern design system variable */
   justify-content: center;
   box-shadow: var(--shadow-sm);
@@ -279,7 +279,7 @@
 .status-section h4 {
   margin: 0 0 var(--space-md) 0; /* Modern design system variable */
   font-size: var(--font-size-sm); /* Modern design system variable */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -365,7 +365,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
 }
 
 .diff-modal {
@@ -391,7 +391,7 @@
 .diff-header h3 {
   margin: 0;
   font-size: var(--font-size-lg); /* Modern design system variable */
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -403,7 +403,7 @@
   color: var(--text-secondary);
   padding: var(--space-sm); /* Modern design system variable */
   border-radius: var(--radius-md); /* Modern design system variable */
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .close-btn:hover {

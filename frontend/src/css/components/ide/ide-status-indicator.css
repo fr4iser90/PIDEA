@@ -8,7 +8,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md); /* Modern responsive radius */
   font-size: clamp(0.875rem, 2vw, 1rem); /* 14px-16px responsive */
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .ide-status-indicator.animating {
@@ -68,7 +68,7 @@
 }
 
 .status-text {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   font-size: 0.9em;
 }
@@ -87,12 +87,12 @@
 
 .port-info {
   font-family: monospace;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .loading-indicator,
 .error-indicator {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .loading-indicator {
@@ -108,9 +108,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px;
+  padding: var(--space-sm);
   background: var(--bg-primary);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
 }
 
@@ -127,20 +127,20 @@
 
 .metric-label {
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .metric-value {
   color: var(--text-primary);
   font-family: monospace;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Status History */
 .status-history {
-  padding: 8px;
+  padding: var(--space-sm);
   background: var(--bg-primary);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
 }
 
@@ -150,7 +150,7 @@
 
 .history-title {
   font-size: 0.8em;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
@@ -191,9 +191,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
+  padding: var(--space-xs) 8px;
   background: var(--bg-primary);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.75em;
 }
 
@@ -255,7 +255,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .ide-status-indicator {
-    padding: 8px;
+    padding: var(--space-sm);
     font-size: 0.8em;
   }
   
@@ -264,7 +264,7 @@
   }
   
   .status-icon {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     width: 18px;
     height: 18px;
   }

@@ -7,7 +7,7 @@
   padding: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-color, #e5e7eb);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow);
 }
 
 .analysis-recommendations:hover {
@@ -30,7 +30,7 @@
 .recommendations-title h3 {
   margin: 0 0 8px 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
   display: flex;
   align-items: center;
@@ -46,7 +46,7 @@
 .summary-text {
   font-size: 0.875rem;
   color: var(--text-secondary, #6b7280);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .recommendations-actions {
@@ -59,12 +59,12 @@
   background: var(--primary-color, #3b82f6);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -84,8 +84,8 @@
 /* Statistics Section */
 .recommendations-statistics {
   background: var(--bg-tertiary, #f9fafb);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
   margin-bottom: 20px;
   border: 1px solid var(--border-light, #f3f4f6);
 }
@@ -100,11 +100,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px;
+  padding: var(--space-sm);
   background: white;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-light, #f3f4f6);
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .stat-item:hover {
@@ -115,7 +115,7 @@
 .stat-label {
   font-size: 0.75rem;
   color: var(--text-secondary, #6b7280);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 4px;
@@ -123,7 +123,7 @@
 
 .stat-value {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--text-primary, #111827);
 }
 
@@ -150,9 +150,9 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 20px;
-  padding: 16px;
+  padding: var(--space-md);
   background: var(--bg-tertiary, #f9fafb);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-light, #f3f4f6);
 }
 
@@ -164,7 +164,7 @@
 
 .filter-label {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-secondary, #6b7280);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -173,12 +173,12 @@
 .filter-select {
   padding: 6px 12px;
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   background: white;
   color: var(--text-primary, #111827);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   min-width: 120px;
 }
 
@@ -195,11 +195,11 @@
 .filter-input {
   padding: 6px 12px;
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   background: white;
   color: var(--text-primary, #111827);
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   min-width: 200px;
 }
 
@@ -224,11 +224,11 @@
   color: white;
   border: none;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-clear:hover {
@@ -245,18 +245,18 @@
 
 .sort-label {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary, #6b7280);
 }
 
 .sort-button {
   background: none;
   border: 1px solid var(--border-color, #d1d5db);
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -283,9 +283,9 @@
 .recommendation-item {
   background: white;
   border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: 8px;
-  padding: 20px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-slow);
   cursor: pointer;
 }
 
@@ -327,10 +327,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -362,7 +362,7 @@
 .recommendation-title h4 {
   margin: 0 0 8px 0;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
   line-height: 1.4;
 }
@@ -378,9 +378,9 @@
   background: var(--bg-tertiary, #f3f4f6);
   color: var(--text-secondary, #6b7280);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: capitalize;
 }
 
@@ -389,9 +389,9 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .effort-badge.low {
@@ -414,9 +414,9 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   background: var(--bg-tertiary, #f3f4f6);
   color: var(--text-secondary, #6b7280);
 }
@@ -426,9 +426,9 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .status-badge.pending {
@@ -479,7 +479,7 @@
 
 .detail-label {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-secondary, #6b7280);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -488,7 +488,7 @@
 .detail-value {
   font-size: 0.875rem;
   color: var(--text-primary, #111827);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .recommendation-actions {
@@ -502,11 +502,11 @@
 .btn-action {
   padding: 6px 12px;
   border: 1px solid var(--border-color, #d1d5db);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   background: white;
   color: var(--text-primary, #111827);
   display: flex;
@@ -540,7 +540,7 @@
 
 .insights-title {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
   margin-bottom: 16px;
   display: flex;
@@ -557,9 +557,9 @@
 .insight-item {
   background: var(--bg-tertiary, #f9fafb);
   border: 1px solid var(--border-light, #f3f4f6);
-  border-radius: 6px;
-  padding: 12px;
-  transition: all 0.2s ease;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  transition: all var(--transition-normal);
 }
 
 .insight-item:hover {
@@ -577,16 +577,16 @@
 
 .insight-type {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary, #111827);
   text-transform: capitalize;
 }
 
 .insight-severity {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -652,7 +652,7 @@
   align-items: center;
   gap: 8px;
   color: var(--error-color, #dc2626);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .error-icon {
@@ -674,7 +674,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .analysis-recommendations {
-    padding: 16px;
+    padding: var(--space-md);
   }
   
   .recommendations-header {
