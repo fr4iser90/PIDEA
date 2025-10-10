@@ -1,44 +1,50 @@
-# CSS Architecture Cleanup - Phase 4: Cleanup and Documentation
+# CSS Architecture Modernization - Phase 4: Layout and Base Styles
 
 ## Phase Overview
-- **Phase**: 4 of 4
-- **Name**: Cleanup and Documentation
+- **Phase**: 4 of 7
+- **Name**: Layout and Base Styles (Foundation)
 - **Estimated Time**: 1 hour
 - **Status**: Planning
-- **Dependencies**: Phase 1 (Design System Consolidation), Phase 2 (Component System Implementation), Phase 3 (Migration and Integration)
-- **Created**: 2025-10-10T21:45:21.000Z
+- **Dependencies**: Phase 1 (Foundation Setup), Phase 2 (Design System Migration), Phase 3 (Component System Implementation)
+- **Created**: 2025-01-27T12:00:00.000Z
 
-## Objectives
-Remove deprecated CSS files, create comprehensive documentation for the new CSS architecture, and verify the complete implementation works correctly.
+## Objectives (Best Practice)
+Create base styles, layout components, and utility classes that provide the foundation for the entire application, including CSS reset, typography system, and layout components.
 
 ## Current State Analysis
-- **Files to Remove**: Deprecated CSS files no longer needed
-- **Documentation Needed**: CSS architecture guide and usage examples
-- **Verification Required**: Complete system testing and validation
+- **Missing Base Styles**: No organized base SCSS files
+- **No Layout System**: No systematic layout components
+- **Current Issues**:
+  - No CSS reset implementation
+  - No typography system
+  - No utility classes
+  - No layout components
 
-## Implementation Tasks
+## Implementation Tasks (Best Practice)
 
-### Task 4.1: Remove Deprecated CSS Files (15 minutes)
-- [ ] Delete `frontend/src/css/global/main.css`
-- [ ] Delete `frontend/src/css/global/layout-variables.css`
-- [ ] Delete `frontend/src/css/global/design-system.css`
-- [ ] Verify no broken imports
-- [ ] Test application functionality
+### Task 4.1: Create Base Styles (20 minutes)
+- [ ] Create `base/_reset.scss` with modern CSS reset
+- [ ] Create `base/_typography.scss` with typography system
+- [ ] Create `base/_utilities.scss` with utility classes
+- [ ] Create `base/_animations.scss` with keyframes
+- [ ] Implement responsive typography
+- [ ] Add accessibility base styles
 
-### Task 4.2: Create CSS Architecture Documentation (30 minutes)
-- [ ] Create `frontend/src/css/architecture-guide.md`
-- [ ] Document design system structure
-- [ ] Document component system usage
-- [ ] Create variable reference guide
-- [ ] Add migration examples
-- [ ] Include best practices
+### Task 4.2: Create Layout System (20 minutes)
+- [ ] Create `layout/_grid.scss` with CSS Grid system
+- [ ] Create `layout/_containers.scss` with container layouts
+- [ ] Create `layout/_header.scss` with header layout
+- [ ] Create `layout/_sidebar.scss` with sidebar layout
+- [ ] Create `layout/_footer.scss` with footer layout
+- [ ] Implement responsive layout system
 
-### Task 4.3: Update Component Documentation (15 minutes)
-- [ ] Update README files with CSS architecture info
-- [ ] Document component class usage
-- [ ] Add CSS variable reference
-- [ ] Include troubleshooting guide
-- [ ] Add performance optimization tips
+### Task 4.3: Create Utility Classes (20 minutes)
+- [ ] Create spacing utilities (margin, padding)
+- [ ] Create typography utilities (text alignment, font weights)
+- [ ] Create display utilities (flex, grid, block)
+- [ ] Create positioning utilities (absolute, relative, fixed)
+- [ ] Create color utilities (text colors, background colors)
+- [ ] Add responsive utility variants
 
 ## Technical Implementation
 
@@ -50,7 +56,7 @@ Remove deprecated CSS files, create comprehensive documentation for the new CSS 
 This document describes the CSS architecture for the PIDEA frontend application.
 
 ## Design System
-The design system is defined in `frontend/src/css/global/single-design-system.css` and contains:
+The design system is defined in `frontend/src/css/global/design-system.css` and contains:
 
 ### Color System
 - `--color-primary`: Primary brand color

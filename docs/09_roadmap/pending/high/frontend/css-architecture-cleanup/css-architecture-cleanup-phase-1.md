@@ -1,144 +1,210 @@
-# CSS Architecture Cleanup - Phase 1: Design System Consolidation
+# CSS Architecture Modernization - Phase 1: Foundation Setup
 
 ## Phase Overview
-- **Phase**: 1 of 4
-- **Name**: Design System Consolidation
-- **Estimated Time**: 2 hours
+- **Phase**: 1 of 7
+- **Name**: Foundation Setup (SCSS Tooling & Architecture)
+- **Estimated Time**: 3 hours
 - **Status**: Planning
 - **Dependencies**: None
-- **Created**: 2025-10-10T21:45:21.000Z
+- **Created**: 2025-01-27T12:00:00.000Z
 
-## Objectives
-Consolidate three conflicting CSS variable systems into a single, comprehensive design system file that serves as the one source of truth for all design tokens.
+## Objectives (Best Practice)
+Set up modern SCSS tooling and create the foundation for a scalable 7-1 SCSS architecture that follows industry best practices for CSS organization, performance, and maintainability.
 
 ## Current State Analysis
-- **Conflicting Files**: 
-  - `frontend/src/css/global/main.css` - Contains duplicate variables
-  - `frontend/src/css/global/design-system.css` - Partial design system
-  - `frontend/src/css/global/layout-variables.css` - Layout-specific variables
-- **Issues Identified**:
-  - Duplicate variable definitions (--bg-primary defined in multiple files)
-  - Inconsistent naming conventions (--accent-blue vs --color-primary)
-  - Missing variable relationships
-  - No single source of truth
+- **Tooling Issues**: 
+  - No SCSS compiler configured
+  - No CSS linting (Stylelint) setup
+  - No PostCSS configuration
+  - No build optimization pipeline
+- **Architecture Problems**:
+  - 69 fragmented CSS files with no organization
+  - Inline styles in JavaScript files
+  - No consistent naming methodology
+  - No separation of concerns
 
-## Implementation Tasks
+## Implementation Tasks (Best Practice)
 
-### Task 1.1: Create Single Design System File (30 minutes)
-- [ ] Create `frontend/src/css/global/single-design-system.css`
-- [ ] Define comprehensive variable structure
-- [ ] Add CSS custom property documentation
-- [ ] Include responsive design tokens
+### Task 1.1: Install SCSS Dependencies (30 minutes)
+- [ ] Install `sass` package for SCSS compilation
+- [ ] Install `postcss` and related plugins
+- [ ] Install `stylelint` for CSS quality checks
+- [ ] Install `autoprefixer` for vendor prefixes
+- [ ] Install `cssnano` for CSS minification
 
-### Task 1.2: Consolidate Color System (30 minutes)
-- [ ] Merge all color variables from three files
-- [ ] Standardize naming convention (--color-*)
-- [ ] Remove duplicate definitions
-- [ ] Add color relationship documentation
-- [ ] Include hover states and variants
+### Task 1.2: Configure Build Tools (45 minutes)
+- [ ] Configure Vite for SCSS processing
+- [ ] Set up PostCSS configuration
+- [ ] Configure Stylelint with SCSS rules
+- [ ] Set up CSS optimization pipeline
+- [ ] Configure source maps for debugging
 
-### Task 1.3: Consolidate Spacing System (20 minutes)
-- [ ] Merge spacing variables from all files
-- [ ] Standardize responsive spacing units
-- [ ] Remove hardcoded spacing values
-- [ ] Add spacing scale documentation
+### Task 1.3: Create 7-1 SCSS Architecture (60 minutes)
+- [ ] Create `frontend/src/styles/` directory structure
+- [ ] Create `abstracts/` folder with variables, mixins, functions
+- [ ] Create `base/` folder with reset, typography, utilities
+- [ ] Create `components/` folder for UI components
+- [ ] Create `layout/` folder for layout components
+- [ ] Create `pages/` folder for page-specific styles
+- [ ] Create `themes/` folder for theme variations
+- [ ] Create `vendors/` folder for third-party CSS
 
-### Task 1.4: Consolidate Typography System (20 minutes)
-- [ ] Merge typography variables
-- [ ] Standardize font size scale
-- [ ] Include line height variables
-- [ ] Add font weight system
+### Task 1.4: Create Main SCSS File (30 minutes)
+- [ ] Create `main.scss` import file
+- [ ] Set up proper import order (vendors → abstracts → base → layout → components → pages → themes)
+- [ ] Configure SCSS compilation settings
+- [ ] Test SCSS compilation pipeline
 
-### Task 1.5: Consolidate Layout System (20 minutes)
-- [ ] Merge layout variables from layout-variables.css
-- [ ] Include responsive breakpoints
-- [ ] Add container and grid variables
-- [ ] Include z-index system
+### Task 1.5: Set up Development Workflow (15 minutes)
+- [ ] Configure IDE for SCSS support
+- [ ] Set up CSS linting in development
+- [ ] Configure hot reload for SCSS changes
+- [ ] Test build pipeline
 
-## Technical Implementation
+## Technical Implementation (Best Practice)
 
-### File Structure
-```css
-/* frontend/src/css/global/single-design-system.css */
-:root {
-  /* Color System */
-  --color-primary: #4e8cff;
-  --color-primary-hover: #3d7be8;
-  --color-primary-light: rgba(78, 140, 255, 0.1);
-  
-  /* Background System */
-  --bg-primary: #15181c;
-  --bg-secondary: #1a1d23;
-  --bg-tertiary: #23272e;
-  
-  /* Spacing System */
-  --space-xs: clamp(0.25rem, 0.5vw, 0.375rem);
-  --space-sm: clamp(0.5rem, 1vw, 0.75rem);
-  --space-md: clamp(1rem, 2vw, 1.25rem);
-  
-  /* Typography System */
-  --font-size-xs: clamp(0.75rem, 1.5vw, 0.875rem);
-  --font-size-sm: clamp(0.875rem, 2vw, 1rem);
-  --font-size-base: clamp(1rem, 2.5vw, 1.125rem);
-  
-  /* Layout System */
-  --header-height: clamp(3.5rem, 8vh, 4.5rem);
-  --sidebar-left-width: clamp(15rem, 20vw, 18rem);
-  --sidebar-right-width: clamp(16rem, 22vw, 20rem);
+### Package.json Dependencies
+```json
+{
+  "devDependencies": {
+    "sass": "^1.69.0",
+    "postcss": "^8.4.0",
+    "postcss-preset-env": "^9.0.0",
+    "stylelint": "^15.0.0",
+    "stylelint-config-standard-scss": "^11.0.0",
+    "autoprefixer": "^10.4.0",
+    "cssnano": "^6.0.0"
+  }
 }
 ```
 
-### Variable Naming Convention
-- **Colors**: `--color-{name}` (primary, secondary, success, warning, danger, info)
-- **Backgrounds**: `--bg-{name}` (primary, secondary, tertiary, card, hover)
-- **Text**: `--text-{name}` (primary, secondary, tertiary, inverse)
-- **Spacing**: `--space-{size}` (xs, sm, md, lg, xl, 2xl)
-- **Typography**: `--font-{property}-{size}` (size-xs, weight-normal, line-height-tight)
-- **Layout**: `--{element}-{property}` (header-height, sidebar-width, container-padding)
+### Vite Configuration
+```javascript
+// vite.config.js
+export default {
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/abstracts/_variables.scss";`
+      }
+    },
+    postcss: {
+      plugins: [
+        require('autoprefixer'),
+        require('cssnano')({
+          preset: 'default'
+        })
+      ]
+    }
+  }
+}
+```
 
-## Quality Assurance
+### Stylelint Configuration
+```json
+// .stylelintrc.json
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "rules": {
+    "selector-class-pattern": "^[a-z]([a-z0-9-]+)?(__([a-z0-9]+-?)+)?(--([a-z0-9]+-?)+){0,2}$",
+    "scss/at-rule-no-unknown": true,
+    "scss/at-import-partial-extension": "never"
+  }
+}
+```
+
+### 7-1 SCSS Architecture Structure
+```
+frontend/src/styles/
+├── abstracts/
+│   ├── _variables.scss
+│   ├── _mixins.scss
+│   ├── _functions.scss
+│   └── _placeholders.scss
+├── base/
+│   ├── _reset.scss
+│   ├── _typography.scss
+│   ├── _utilities.scss
+│   └── _animations.scss
+├── components/
+│   ├── _buttons.scss
+│   ├── _cards.scss
+│   ├── _forms.scss
+│   ├── _modals.scss
+│   ├── _panels.scss
+│   └── _navigation.scss
+├── layout/
+│   ├── _header.scss
+│   ├── _sidebar.scss
+│   ├── _footer.scss
+│   ├── _grid.scss
+│   └── _containers.scss
+├── pages/
+│   ├── _home.scss
+│   ├── _analysis.scss
+│   └── _chat.scss
+├── themes/
+│   ├── _dark.scss
+│   ├── _light.scss
+│   └── _high-contrast.scss
+├── vendors/
+│   ├── _normalize.scss
+│   └── _prism.scss
+└── main.scss
+```
+
+## Quality Assurance (Best Practice)
 
 ### Validation Checklist
-- [ ] All variables from three source files included
-- [ ] No duplicate variable definitions
-- [ ] Consistent naming convention applied
-- [ ] Responsive units used where appropriate
-- [ ] CSS custom property syntax correct
-- [ ] Documentation comments added
+- [ ] All SCSS dependencies installed correctly
+- [ ] Vite configuration working with SCSS compilation
+- [ ] PostCSS plugins configured and working
+- [ ] Stylelint rules passing with zero errors
+- [ ] 7-1 SCSS architecture structure created
+- [ ] Main SCSS file imports working correctly
+- [ ] Build pipeline optimized and functional
 
 ### Testing Requirements
-- [ ] CSS file loads without errors
-- [ ] All variables accessible in browser dev tools
-- [ ] No console warnings about undefined variables
-- [ ] Visual consistency maintained
+- [ ] SCSS compilation successful without errors
+- [ ] CSS output optimized and minified
+- [ ] Source maps generated for debugging
+- [ ] Hot reload working for SCSS changes
+- [ ] Stylelint integration working in IDE
+- [ ] Build performance within acceptable limits
 
-## Risk Mitigation
-- **Risk**: Breaking existing styles during consolidation
-- **Mitigation**: Keep backup of original files, test incrementally
-- **Rollback Plan**: Restore original files if issues occur
+## Risk Mitigation (Best Practice)
+- **Risk**: Build pipeline issues with new SCSS tooling
+- **Mitigation**: Incremental setup with testing at each step
+- **Rollback Plan**: Git branch with easy rollback to previous state
+- **Risk**: Performance impact from new build process
+- **Mitigation**: Performance benchmarking before and after
 
-## Success Criteria
-- [ ] Single design system file created with all variables
-- [ ] No duplicate variable definitions
-- [ ] Consistent naming convention applied
-- [ ] All original functionality preserved
-- [ ] File size optimized
-- [ ] Documentation complete
+## Success Criteria (Best Practice)
+- [ ] SCSS tooling fully configured and working
+- [ ] 7-1 SCSS architecture structure created
+- [ ] Build pipeline optimized and functional
+- [ ] Stylelint integration working
+- [ ] Development workflow improved
+- [ ] Foundation ready for component migration
 
 ## Next Phase Preparation
-- [ ] Verify single design system file works correctly
-- [ ] Update main.jsx import to use new file
-- [ ] Prepare component system implementation
-- [ ] Document any issues for Phase 2
+- [ ] Verify SCSS compilation pipeline works correctly
+- [ ] Test build performance and optimization
+- [ ] Prepare design system migration strategy
+- [ ] Document any tooling issues for Phase 2
 
-## Files Modified
-- [ ] `frontend/src/css/global/single-design-system.css` - Created
-- [ ] `frontend/src/css/global/main.css` - Marked for deletion
-- [ ] `frontend/src/css/global/layout-variables.css` - Marked for deletion
-- [ ] `frontend/src/css/global/design-system.css` - Marked for deletion
+## Files Created
+- [ ] `frontend/src/styles/main.scss` - Main SCSS import file
+- [ ] `frontend/src/styles/abstracts/_variables.scss` - Design system variables
+- [ ] `frontend/src/styles/abstracts/_mixins.scss` - Reusable mixins
+- [ ] `frontend/src/styles/abstracts/_functions.scss` - SCSS functions
+- [ ] `frontend/package.json` - Updated with SCSS dependencies
+- [ ] `frontend/vite.config.js` - Updated with SCSS configuration
+- [ ] `frontend/.stylelintrc.json` - Stylelint configuration
+- [ ] `frontend/postcss.config.js` - PostCSS configuration
 
 ## Dependencies
-- **Input**: Three existing CSS files with variables
-- **Output**: Single consolidated design system file
-- **Tools**: CSS validator, browser dev tools
-- **Resources**: Existing variable definitions
+- **Input**: Existing CSS files and build configuration
+- **Output**: Modern SCSS tooling and architecture foundation
+- **Tools**: SCSS compiler, PostCSS, Stylelint, Vite
+- **Resources**: 7-1 SCSS pattern, industry best practices
