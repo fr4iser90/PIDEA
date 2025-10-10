@@ -2,8 +2,8 @@
 .ide-switch {
   background: #ffffff;
   border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -12,25 +12,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  padding-bottom: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
   border-bottom: 1px solid #e1e5e9;
 }
 
 .switch-header h3 {
   margin: 0;
   color: #2c3e50;
-  font-size: 18px;
+  font-size: clamp(1rem, 3vw, 1.125rem); /* 16px-18px responsive */
   font-weight: 600;
 }
 
 .switch-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+  border-radius: var(--radius-md); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: 500;
 }
 
@@ -53,31 +53,31 @@
 }
 
 .status-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base); /* Modern design system variable */
 }
 
 .status-text {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
 }
 
 .switch-controls {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: var(--space-md); /* Modern design system variable */
+  margin-bottom: var(--space-xl); /* Modern design system variable */
   flex-wrap: wrap;
 }
 
 .switch-button {
-  padding: 10px 16px;
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-md); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .switch-button.primary {
@@ -87,8 +87,8 @@
 
 .switch-button.primary:hover:not(:disabled) {
   background: #0056b3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  transform: translateY(calc(-1 * var(--space-xs))); /* Modern design system variable */
+  box-shadow: var(--shadow-md); /* Modern design system variable */
 }
 
 .switch-button.secondary {
@@ -98,7 +98,7 @@
 
 .switch-button.secondary:hover:not(:disabled) {
   background: #545b62;
-  transform: translateY(-1px);
+  transform: translateY(calc(-1 * var(--space-xs))); /* Modern design system variable */
 }
 
 .switch-button:disabled {
@@ -108,20 +108,20 @@
 }
 
 .switch-progress {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-xl); /* Modern design system variable */
 }
 
 .progress-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-md); /* Modern design system variable */
 }
 
 .progress-bar {
   flex: 1;
-  height: 8px;
+  height: var(--space-sm); /* Modern design system variable */
   background: #e9ecef;
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
   overflow: hidden;
   position: relative;
 }
@@ -129,7 +129,7 @@
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #007bff, #0056b3);
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
   transition: width 0.3s ease;
   position: relative;
 }
@@ -151,33 +151,33 @@
 }
 
 .progress-text {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
   color: #495057;
-  min-width: 40px;
+  min-width: var(--space-xl); /* Modern design system variable */
   text-align: right;
 }
 
 .switch-details {
   border-top: 1px solid #e1e5e9;
-  padding-top: 20px;
+  padding-top: var(--space-xl); /* Modern design system variable */
 }
 
 .switch-history h4 {
-  margin: 0 0 15px 0;
+  margin: 0 0 var(--space-lg) 0; /* Modern design system variable */
   color: #2c3e50;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-base); /* Modern design system variable */
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
 }
 
 .history-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  font-size: 14px;
+  gap: var(--space-md); /* Modern design system variable */
+  padding: var(--space-md); /* Modern design system variable */
+  margin-bottom: var(--space-sm); /* Modern design system variable */
+  border-radius: var(--radius-md); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   transition: background-color 0.2s ease;
 }
 
@@ -196,56 +196,56 @@
 }
 
 .history-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base); /* Modern design system variable */
   flex-shrink: 0;
 }
 
 .history-ports {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   color: #495057;
   flex: 1;
 }
 
 .history-time {
   color: #6c757d;
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  font-weight: var(--font-weight-normal); /* Modern design system variable */
 }
 
 .history-duration {
   color: #28a745;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
   background: #e8f5e8;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 8px;
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  margin-left: var(--space-sm); /* Modern design system variable */
 }
 
 .history-error {
   color: #dc3545;
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
   font-style: italic;
-  margin-left: 8px;
+  margin-left: var(--space-sm); /* Modern design system variable */
 }
 
 .history-empty {
   text-align: center;
   color: #6c757d;
   font-style: italic;
-  padding: 20px;
+  padding: var(--space-xl); /* Modern design system variable */
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .ide-switch {
-    padding: 15px;
+    padding: var(--space-lg); /* Modern design system variable */
   }
 
   .switch-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: var(--space-md); /* Modern design system variable */
   }
 
   .switch-controls {
@@ -260,7 +260,7 @@
   .progress-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: var(--space-sm); /* Modern design system variable */
   }
 
   .progress-text {
@@ -270,7 +270,7 @@
   .history-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-sm); /* Modern design system variable */
   }
 
   .history-ports,

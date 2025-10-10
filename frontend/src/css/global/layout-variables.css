@@ -1,20 +1,20 @@
 /* Layout Variables - Centralized Layout System */
 
 :root {
-  /* Layout Dimensions */
-  --header-height: 65px;
-  --footer-height: 40px;
-  --sidebar-strip-width: 20px;
+  /* Layout Dimensions - Modern responsive units */
+  --header-height: clamp(3.5rem, 8vh, 4.5rem); /* 56px-72px responsive */
+  --footer-height: clamp(2rem, 5vh, 2.5rem); /* 32px-40px responsive */
+  --sidebar-strip-width: clamp(1rem, 2vw, 1.25rem); /* 16px-20px responsive */
   
-  /* Sidebar Dimensions */
-  --sidebar-left-width: 17.5rem;  /* 280px equivalent, responsive */
-  --sidebar-right-width: 20rem;    /* 320px equivalent, responsive */
+  /* Sidebar Dimensions - Modern responsive units */
+  --sidebar-left-width: clamp(15rem, 20vw, 18rem);  /* 240px-288px responsive */
+  --sidebar-right-width: clamp(16rem, 22vw, 20rem);    /* 256px-320px responsive */
   --sidebar-left-width-collapsed: var(--sidebar-strip-width);
   --sidebar-right-width-collapsed: var(--sidebar-strip-width);
   
-  /* Main Content Area */
-  --main-content-min-width: 400px;
-  --main-content-max-width: 1200px;
+  /* Main Content Area - Modern responsive units */
+  --main-content-min-width: clamp(18.75rem, 30vw, 25rem); /* 300px-400px responsive */
+  --main-content-max-width: clamp(56.25rem, 80vw, 75rem); /* 900px-1200px responsive */
   
   /* Breakpoints */
   --breakpoint-sm: 640px;
@@ -23,10 +23,10 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
   
-  /* Container Padding */
-  --container-padding-sm: 1rem;
-  --container-padding-md: 1.5rem;
-  --container-padding-lg: 2rem;
+  /* Container Padding - Modern responsive units */
+  --container-padding-sm: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+  --container-padding-md: clamp(1rem, 3vw, 1.5rem); /* 16px-24px responsive */
+  --container-padding-lg: clamp(1.5rem, 4vw, 2rem); /* 24px-32px responsive */
   
   /* Grid System */
   --grid-columns: 12;

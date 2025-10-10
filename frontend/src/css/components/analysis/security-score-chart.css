@@ -2,18 +2,18 @@
 .security-score-chart {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
 }
 
 /* Score Display */
 .score-display {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 20px;
+  gap: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
 }
 
 .score-circle {
@@ -21,8 +21,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 140px;
-  height: 140px;
+  width: clamp(8rem, 15vw, 8.75rem); /* 128px-140px responsive */
+  height: clamp(8rem, 15vw, 8.75rem); /* 128px-140px responsive */
   flex-shrink: 0;
 }
 

@@ -15,7 +15,7 @@
 }
 
 /* Panel Header */
-.panel-header {
+.panel-base .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -128,15 +128,15 @@
   padding-left: var(--space-sm);
 }
 
-/* Panel Tabs */
-.panel-tabs {
+/* Panel Tabs - Only apply to general panels, not sidebar-right */
+.panel-base .panel-tabs {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
   margin-bottom: var(--space-md);
 }
 
-.panel-tab {
+.panel-base .panel-tab {
   padding: var(--space-sm) var(--space-md);
   background: transparent;
   border: none;
@@ -148,12 +148,12 @@
   white-space: nowrap;
 }
 
-.panel-tab:hover {
+.panel-base .panel-tab:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.panel-tab.active {
+.panel-base .panel-tab.active {
   background: var(--color-primary);
   color: var(--text-primary);
 }
@@ -247,12 +247,12 @@
     padding: var(--space-sm);
   }
   
-  .panel-tabs {
+  .panel-base .panel-tabs {
     flex-wrap: wrap;
     gap: var(--space-xs);
   }
   
-  .panel-tab {
+  .panel-base .panel-tab {
     flex: 1;
     text-align: center;
     padding: var(--space-xs) var(--space-sm);
@@ -276,11 +276,11 @@
     justify-content: center;
   }
   
-  .panel-tabs {
+  .panel-base .panel-tabs {
     flex-direction: column;
   }
   
-  .panel-tab {
+  .panel-base .panel-tab {
     border-radius: var(--radius-sm);
   }
 }

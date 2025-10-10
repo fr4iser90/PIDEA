@@ -48,21 +48,21 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.8);
   
-  /* Spacing System */
-  --space-xs: 0.25rem;   /* 4px */
-  --space-sm: 0.5rem;    /* 8px */
-  --space-md: 1rem;      /* 16px */
-  --space-lg: 1.5rem;    /* 24px */
-  --space-xl: 2rem;      /* 32px */
-  --space-2xl: 3rem;     /* 48px */
+  /* Spacing System - Modern responsive units */
+  --space-xs: clamp(0.25rem, 0.5vw, 0.375rem);   /* 4px-6px responsive */
+  --space-sm: clamp(0.5rem, 1vw, 0.75rem);       /* 8px-12px responsive */
+  --space-md: clamp(1rem, 2vw, 1.25rem);         /* 16px-20px responsive */
+  --space-lg: clamp(1.5rem, 3vw, 2rem);          /* 24px-32px responsive */
+  --space-xl: clamp(2rem, 4vw, 2.5rem);          /* 32px-40px responsive */
+  --space-2xl: clamp(3rem, 6vw, 4rem);           /* 48px-64px responsive */
   
-  /* Typography System */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;   /* 18px */
-  --font-size-xl: 1.25rem;    /* 20px */
-  --font-size-2xl: 1.5rem;    /* 24px */
+  /* Typography System - Modern responsive units */
+  --font-size-xs: clamp(0.75rem, 1.5vw, 0.875rem);    /* 12px-14px responsive */
+  --font-size-sm: clamp(0.875rem, 2vw, 1rem);         /* 14px-16px responsive */
+  --font-size-base: clamp(1rem, 2.5vw, 1.125rem);     /* 16px-18px responsive */
+  --font-size-lg: clamp(1.125rem, 3vw, 1.25rem);      /* 18px-20px responsive */
+  --font-size-xl: clamp(1.25rem, 3.5vw, 1.5rem);      /* 20px-24px responsive */
+  --font-size-2xl: clamp(1.5rem, 4vw, 2rem);          /* 24px-32px responsive */
   
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -73,11 +73,11 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
   
-  /* Border Radius System */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Border Radius System - Modern responsive units */
+  --radius-sm: clamp(0.25rem, 0.5vw, 0.375rem);   /* 4px-6px responsive */
+  --radius-md: clamp(0.5rem, 1vw, 0.75rem);      /* 8px-12px responsive */
+  --radius-lg: clamp(0.75rem, 1.5vw, 1rem);      /* 12px-16px responsive */
+  --radius-xl: clamp(1rem, 2vw, 1.25rem);        /* 16px-20px responsive */
   --radius-full: 9999px;
   
   /* Transition System */

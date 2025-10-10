@@ -2,8 +2,8 @@
 .scanner-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
@@ -12,7 +12,7 @@
 
 .scanner-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  transform: translateY(clamp(-0.125rem, -0.5vw, -0.25rem)); /* -2px to -4px responsive */
 }
 
 .scanner-card.selected {

@@ -1,9 +1,9 @@
 /* Security Dashboard Styles */
 .security-dashboard {
   background: var(--bg-secondary);
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  margin: clamp(1rem, 3vw, 1.25rem) 0; /* 16px-20px responsive */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-color);
 }
@@ -13,15 +13,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  padding-bottom: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
   border-bottom: 2px solid var(--border-color);
 }
 
 .security-header h3 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
   font-weight: 600;
 }
 

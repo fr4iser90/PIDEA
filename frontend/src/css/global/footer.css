@@ -1,15 +1,13 @@
 .app-footer {
-  height: 40px;
-  min-height: 32px;
-  max-height: 48px;
-  background: #23272f;
-  color: #e6e6e6;
+  height: var(--footer-height); /* Modern responsive height */
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  font-size: 0.95rem;
-  border-top: 1px solid #222;
+  padding: 0 clamp(1rem, 3vw, 1.5rem); /* 16px-24px responsive */
+  font-size: clamp(0.875rem, 2vw, 0.95rem); /* 14px-15px responsive */
+  border-top: 1px solid var(--border-color);
   z-index: 101;
   width: 100%;
   box-sizing: border-box;
@@ -22,7 +20,7 @@
 .footer-status {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: clamp(0.75rem, 2vw, 1.125rem); /* 12px-18px responsive */
   flex-wrap: wrap;
 }
 

@@ -9,7 +9,7 @@
   margin: 0;
   padding: 0 0 0 0; /* No extra padding outside, only inside if needed */
   position: relative;
-  min-height: 300px;
+  min-height: clamp(18.75rem, 40vh, 25rem); /* 300px-400px responsive */
   max-height: 100%;
   transition: all 0.3s ease;
   flex: 1 1 0;
@@ -21,8 +21,8 @@
 .port-config-input {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 200px;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  min-width: clamp(12.5rem, 20vw, 15rem); /* 200px-240px responsive */
 }
 
 .port-input-container {
@@ -39,8 +39,8 @@
 }
 
 .port-input-close {
-  width: 20px;
-  height: 20px;
+  width: clamp(1.125rem, 2vw, 1.25rem); /* 18px-20px responsive */
+  height: clamp(1.125rem, 2vw, 1.25rem); /* 18px-20px responsive */
   border: none;
   background: transparent;
   color: var(--text-secondary);

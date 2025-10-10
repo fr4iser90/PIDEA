@@ -1,10 +1,10 @@
 /* Task Workflow Progress Component Styles */
 
 .task-workflow-progress {
-  padding: 20px;
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   background: var(--modal-bg);
-  border-radius: 8px;
-  max-width: 800px;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  max-width: clamp(43.75rem, 70vw, 50rem); /* 700px-800px responsive */
   width: 100%;
 }
 
@@ -13,13 +13,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  padding-bottom: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
   border-bottom: 1px solid var(--border-color);
 }
 
 .progress-title {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -27,8 +27,8 @@
 
 .progress-meta {
   display: flex;
-  gap: 15px;
-  font-size: 0.9rem;
+  gap: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
+  font-size: clamp(0.875rem, 2vw, 1rem); /* 14px-16px responsive */
   color: var(--text-secondary);
 }
 

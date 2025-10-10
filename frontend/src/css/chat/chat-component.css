@@ -11,7 +11,7 @@
 
 /* Chat Header */
 .chat-header {
-  padding: 16px 20px;
+  padding: clamp(1rem, 2.5vw, 1.25rem) clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   border-bottom: 1px solid #333;
   background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
   display: flex;
@@ -21,7 +21,7 @@
 
 .chat-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
   font-weight: 600;
   color: #fff;
 }

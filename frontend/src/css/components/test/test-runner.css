@@ -1,20 +1,20 @@
 /* Test Runner Component Styles */
 .test-runner-container {
   background: var(--bg-primary);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 1.5rem;
-  margin: 1rem 0;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  box-shadow: var(--shadow-md); /* Modern shadow system */
+  padding: clamp(1rem, 3vw, 1.5rem); /* 16px-24px responsive */
+  margin: clamp(0.75rem, 2vw, 1rem) 0; /* 12px-16px responsive */
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
 }
 
 .test-runner-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1rem, 3vw, 1.5rem); /* 16px-24px responsive */
 }
 
 .test-runner-header h2 {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -23,7 +23,7 @@
 .test-runner-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: clamp(1rem, 3vw, 1.5rem); /* 16px-24px responsive */
 }
 
 /* Test Configuration Styles */

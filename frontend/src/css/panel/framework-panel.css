@@ -16,15 +16,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
   background: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
 }
 
 .framework-header-content h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
+  margin: 0 0 clamp(0.25rem, 0.5vw, 0.375rem) 0; /* 4px-6px responsive */
+  font-size: clamp(1rem, 2.5vw, 1.125rem); /* 16px-18px responsive */
   font-weight: 600;
   color: var(--text-primary);
 }

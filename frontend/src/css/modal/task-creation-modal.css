@@ -18,10 +18,10 @@
 /* Modal container */
 .task-create-modal {
   background: #1e1e1e;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  width: 90%;
-  max-width: 600px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  box-shadow: var(--shadow-xl); /* Modern shadow system */
+  width: clamp(85%, 10vw, 90%); /* 85%-90% responsive */
+  max-width: clamp(31.25rem, 50vw, 37.5rem); /* 500px-600px responsive */
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -30,14 +30,14 @@
 }
 
 .task-create-modal-large {
-  max-width: 900px;
-  width: 95%;
+  max-width: clamp(43.75rem, 70vw, 56.25rem); /* 700px-900px responsive */
+  width: clamp(90%, 15vw, 95%); /* 90%-95% responsive */
 }
 
 @keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: translateY(clamp(-1rem, -3vh, -1.25rem)) scale(0.95); /* -16px to -20px responsive */
   }
   to {
     opacity: 1;

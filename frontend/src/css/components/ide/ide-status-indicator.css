@@ -2,12 +2,12 @@
 .ide-status-indicator {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  padding: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.9em;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  font-size: clamp(0.875rem, 2vw, 1rem); /* 14px-16px responsive */
   transition: all 0.3s ease;
 }
 
@@ -19,16 +19,16 @@
 .status-main {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
 }
 
 .status-icon {
-  font-size: 16px;
+  font-size: clamp(1rem, 2vw, 1.125rem); /* 16px-18px responsive */
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: clamp(1.125rem, 2vw, 1.25rem); /* 18px-20px responsive */
+  height: clamp(1.125rem, 2vw, 1.25rem); /* 18px-20px responsive */
 }
 
 .status-icon.green {

@@ -3,9 +3,9 @@
 .pidea-agent-branch {
   background: var(--git-bg-color, #f8f9fa);
   border: 1px solid var(--git-border-color, #e9ecef);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 8px 0;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
+  margin: clamp(0.5rem, 1vw, 0.75rem) 0; /* 8px-12px responsive */
   font-family: var(--git-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
 }
 
@@ -14,20 +14,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+  padding-bottom: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
   border-bottom: 1px solid var(--git-border-color, #e9ecef);
 }
 
 .pidea-agent-status-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
   flex-wrap: wrap;
 }
 
 .pidea-agent-status-icon {
-  font-size: 18px;
+  font-size: clamp(1rem, 3vw, 1.125rem); /* 16px-18px responsive */
   font-weight: bold;
 }
 

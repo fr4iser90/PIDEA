@@ -15,19 +15,19 @@
   z-index: 20;
   background: var(--bg-primary, #181f2a);
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  padding-bottom: 8px;
+  padding-bottom: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
 }
 
 .analysis-content {
   flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
-  padding-bottom: 32px;
+  padding-bottom: clamp(1.5rem, 4vw, 2rem); /* 24px-32px responsive */
 }
 
 /* Optional: Passe die Sections an, falls nötig */
 .analysis-section {
-  margin-bottom: 24px;
+  margin-bottom: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
 }
 
 /* Loading State */

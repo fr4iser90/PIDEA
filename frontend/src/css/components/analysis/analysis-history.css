@@ -2,27 +2,27 @@
 .analysis-history {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
 }
 
 .analysis-history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   flex-wrap: wrap;
-  gap: 12px;
+  gap: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
 }
 
 .analysis-history-title {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 3vw, 1.2rem); /* 16px-19.2px responsive */
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
 }
 
 .analysis-history-title-icon {

@@ -2,8 +2,8 @@
 .ide-features {
   background: #ffffff;
   border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: var(--space-lg); /* Modern design system variable */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   height: 100%;
@@ -15,8 +15,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: var(--space-lg); /* Modern design system variable */
+  padding-bottom: var(--space-md); /* Modern design system variable */
   border-bottom: 1px solid #e1e5e9;
   flex-shrink: 0;
 }
@@ -24,22 +24,22 @@
 .features-header h3 {
   margin: 0;
   color: #2c3e50;
-  font-size: 18px;
+  font-size: var(--font-size-lg); /* Modern design system variable */
   font-weight: 600;
 }
 
 .last-update {
   color: #6c757d;
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
 }
 
 .feature-stats {
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding: 16px;
+  gap: var(--space-lg); /* Modern design system variable */
+  margin-bottom: var(--space-xl); /* Modern design system variable */
+  padding: var(--space-lg); /* Modern design system variable */
   background: #f8f9fa;
-  border-radius: 6px;
+  border-radius: var(--radius-md); /* Modern design system variable */
   flex-wrap: wrap;
   flex-shrink: 0;
 }
@@ -48,21 +48,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-width: 80px;
+  gap: var(--space-xs); /* Modern design system variable */
+  min-width: var(--space-2xl); /* Modern design system variable */
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
   color: #6c757d;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--letter-spacing-wide); /* Modern design system variable */
 }
 
 .stat-value {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--font-size-lg); /* Modern design system variable */
+  font-weight: var(--font-weight-bold); /* Modern design system variable */
   color: #495057;
 }
 
@@ -86,31 +86,31 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-xl); /* Modern design system variable */
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-md); /* Modern design system variable */
   flex-shrink: 0;
 }
 
 .refresh-button {
-  padding: 8px 16px;
+  padding: var(--space-sm) var(--space-lg); /* Modern design system variables */
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-md); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .refresh-button:hover:not(:disabled) {
   background: #0056b3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  transform: translateY(calc(-1 * var(--space-xs))); /* Modern design system variable */
+  box-shadow: var(--shadow-md); /* Modern design system variable */
 }
 
 .refresh-button:disabled {
@@ -122,23 +122,23 @@
 .active-features {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
   flex-wrap: wrap;
 }
 
 .active-label {
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
   color: #495057;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
 }
 
 .active-feature {
   background: #e8f5e8;
   color: #2d5a2d;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   border: 1px solid #c3e6c3;
 }
 
@@ -157,7 +157,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: var(--space-2xl) var(--space-lg); /* Modern design system variables */
   text-align: center;
   flex: 1;
 }
@@ -166,27 +166,27 @@
 .loading-icon,
 .empty-icon,
 .disconnected-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  font-size: var(--font-size-2xl); /* Modern design system variable */
+  margin-bottom: var(--space-lg); /* Modern design system variable */
 }
 
 .error-text,
 .loading-text,
 .empty-text,
 .disconnected-text {
-  font-size: 16px;
+  font-size: var(--font-size-base); /* Modern design system variable */
   color: #6c757d;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg); /* Modern design system variable */
 }
 
 .retry-button {
-  padding: 8px 16px;
+  padding: var(--space-sm) var(--space-lg); /* Modern design system variables */
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .retry-button:hover {
@@ -195,24 +195,24 @@
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--main-content-min-width), 1fr)); /* Modern design system variable */
+  gap: var(--space-lg); /* Modern design system variable */
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: var(--space-sm); /* Modern design system variable */
 }
 
 .feature-card {
   background: white;
   border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius-md); /* Modern design system variable */
+  padding: var(--space-lg); /* Modern design system variable */
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(calc(-1 * var(--space-xs))); /* Modern design system variable */
+  box-shadow: var(--shadow-lg); /* Modern design system variable */
 }
 
 .feature-card.available {
@@ -237,18 +237,18 @@
 .feature-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: var(--space-md); /* Modern design system variable */
+  margin-bottom: var(--space-md); /* Modern design system variable */
 }
 
 .feature-icon {
-  font-size: 24px;
+  font-size: var(--font-size-xl); /* Modern design system variable */
   flex-shrink: 0;
 }
 
 .feature-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-base); /* Modern design system variable */
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
   color: #2c3e50;
   flex: 1;
   text-transform: capitalize;
@@ -257,11 +257,11 @@
 .feature-status {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: var(--space-xs); /* Modern design system variable */
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   flex-shrink: 0;
 }
 
@@ -284,44 +284,44 @@
 }
 
 .feature-content {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-md); /* Modern design system variable */
 }
 
 .feature-description {
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
   color: #6c757d;
-  margin: 0 0 12px 0;
+  margin: 0 0 var(--space-md) 0; /* Modern design system variable */
   line-height: 1.4;
 }
 
 .feature-details {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: var(--space-sm); /* Modern design system variable */
+  margin-bottom: var(--space-md); /* Modern design system variable */
 }
 
 .detail-item {
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
   color: #495057;
   background: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  border-radius: var(--radius-sm); /* Modern design system variable */
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .feature-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .toggle-button {
-  padding: 8px 16px;
+  padding: var(--space-sm) var(--space-lg); /* Modern design system variables */
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-md); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -352,26 +352,26 @@
 
 .feature-action-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
   flex-wrap: wrap;
 }
 
 .action-button {
-  padding: 6px 12px;
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
   background: #6c757d;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
   flex: 1;
-  min-width: 80px;
+  min-width: var(--space-2xl); /* Modern design system variable */
 }
 
 .action-button:hover:not(:disabled) {
   background: #545b62;
-  transform: translateY(-1px);
+  transform: translateY(calc(-1 * var(--space-xs))); /* Modern design system variable */
 }
 
 .action-button:disabled {
@@ -382,13 +382,13 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .ide-features {
-    padding: 15px;
+    padding: var(--space-lg); /* Modern design system variable */
   }
 
   .features-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: var(--space-md); /* Modern design system variable */
   }
 
   .feature-stats {
@@ -416,7 +416,7 @@
   .feature-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-sm); /* Modern design system variable */
   }
 
   .feature-status {

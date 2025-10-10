@@ -2,13 +2,13 @@
   background: #2d3748;
   border: 1px solid #4a5568;
   border-left: 4px solid #e53e3e;
-  border-radius: 6px;
-  padding: 12px;
-  margin: 8px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: var(--space-md); /* Modern design system variable */
+  margin: var(--space-sm) 0; /* Modern design system variable */
+  box-shadow: var(--shadow-sm); /* Modern design system variable */
   animation: slideInError 0.3s ease-out;
   max-width: 100%;
-  font-size: 13px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .error-display:hover {
@@ -18,11 +18,11 @@
 .error-header {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .error-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base); /* Modern design system variable */
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -33,22 +33,22 @@
 }
 
 .error-title {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   color: #e2e8f0;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-xs); /* Modern design system variable */
 }
 
 .error-message {
   color: #cbd5e0;
-  line-height: 1.4;
+  line-height: var(--line-height-normal); /* Modern design system variable */
   word-wrap: break-word;
-  font-size: 13px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
 }
 
 .error-actions {
   display: flex;
-  gap: 4px;
+  gap: var(--space-xs); /* Modern design system variable */
   flex-shrink: 0;
 }
 

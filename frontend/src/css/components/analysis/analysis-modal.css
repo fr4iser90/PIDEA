@@ -15,11 +15,11 @@
 
 .analysis-modal-content {
   background: var(--bg-secondary);
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  box-shadow: var(--shadow-xl); /* Modern shadow system */
   max-width: 90vw;
   max-height: 90vh;
-  width: 800px;
+  width: clamp(43.75rem, 70vw, 50rem); /* 700px-800px responsive */
   overflow: hidden;
   border: 1px solid var(--border-color);
   animation: modalSlideIn 0.3s ease-out;

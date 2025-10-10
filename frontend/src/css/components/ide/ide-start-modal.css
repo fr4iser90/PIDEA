@@ -16,10 +16,10 @@
 .ide-start-modal {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 600px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  box-shadow: var(--shadow-lg); /* Modern shadow system */
+  width: clamp(85%, 10vw, 90%); /* 85%-90% responsive */
+  max-width: clamp(31.25rem, 50vw, 37.5rem); /* 500px-600px responsive */
   max-height: 90vh;
   overflow-y: auto;
   animation: slideIn 0.3s ease;
@@ -29,14 +29,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: clamp(1rem, 3vw, 1.25rem) clamp(1.25rem, 4vw, 1.5rem); /* 16px-24px responsive */
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-secondary);
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0; /* Modern responsive radius */
 }
 
 .modal-title {
-  font-size: 1.2em;
+  font-size: clamp(1rem, 3vw, 1.2em); /* 16px-19.2px responsive */
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;

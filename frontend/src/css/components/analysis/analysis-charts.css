@@ -3,7 +3,7 @@
 .analysis-charts {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: clamp(1rem, 3vw, 1.5rem); /* 16px-24px responsive */
 }
 
 /* Loading State */
@@ -11,9 +11,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: clamp(18.75rem, 40vh, 25rem); /* 300px-400px responsive */
   flex-direction: column;
-  gap: 1rem;
+  gap: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
 }
 
 /* Charts Header */
@@ -22,12 +22,12 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
 }
 
 .charts-header h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   font-weight: 600;
   color: var(--text-primary, #111827);
 }

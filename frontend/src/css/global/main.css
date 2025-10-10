@@ -10,15 +10,16 @@
   --accent-red: #ef4444;
   --user-bubble: #223c6a;
   --ai-bubble: #23272e;
-  --border-radius: 12px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.7);
+  --border-radius: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  --shadow-sm: 0 0.0625rem 0.1875rem rgba(0,0,0,0.4); /* 1px-3px */
+  --shadow-md: 0 0.25rem 0.75rem rgba(0,0,0,0.5); /* 4px-12px */
+  --shadow-lg: 0 0.5rem 1.5rem rgba(0,0,0,0.7); /* 8px-24px */
   
-  /* Layout variables */
-  --header-height: 65px;
-  --sidebar-left-width: 17.5rem; /* 280px equivalent, responsive */
-  --sidebar-right-width: 20rem; /* 320px equivalent, responsive */
+  /* Layout variables - Modern responsive units */
+  --header-height: clamp(3.5rem, 8vh, 4.5rem); /* 56px-72px responsive */
+  --sidebar-left-width: clamp(15rem, 20vw, 18rem); /* 240px-288px responsive */
+  --sidebar-right-width: clamp(16rem, 22vw, 20rem); /* 256px-320px responsive */
+  --footer-height: clamp(2rem, 5vh, 2.5rem); /* 32px-40px responsive */
   --sidebar-bg: #20232a;
   --sidebar-left-bg: #20232a;
   --sidebar-right-bg: #23272e;
@@ -51,44 +52,70 @@ body.light-theme {
   color: #23272e;
 }
 
-/* App Root Layout */
+/* App Root Layout - Fixed Flexbox with modern units */
 .app-root {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: var(--bg-primary);
+  overflow: hidden; /* Prevent body scroll */
 }
 
-/* Main Layout Container */
+/* Main Layout Container - Flexbox with modern units */
 .main-layout {
   display: flex;
+  flex: 1;
   padding-top: var(--header-height);
-  height: 100vh;
+  height: calc(100vh - var(--header-height) - var(--footer-height));
   overflow: hidden;
   background: var(--bg-primary);
 }
 
-/* Main Content Area - Almost full width, leave space for sidebar strip */
+/* Main Content Area - Scrollable container with fixed layout */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; /* Container doesn't scroll */
   background: var(--bg-secondary);
-  margin-left: 20px; /* Space for sidebar strip */
+  margin-left: clamp(1rem, 2vw, 1.25rem); /* 16px-20px responsive sidebar strip */
   margin-right: 0;
   min-width: 0;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
   transition: margin 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* Scrollable content within main-content */
+.main-content > * {
+  flex: 1;
+  overflow-y: auto; /* Content scrolls, not container */
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-blue) transparent;
+}
+
+/* Custom scrollbar styling */
+.main-content > *::-webkit-scrollbar {
+  width: clamp(0.25rem, 0.5vw, 0.5rem);
+}
+
+.main-content > *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content > *::-webkit-scrollbar-thumb {
+  background: var(--accent-blue);
+  border-radius: var(--border-radius);
+}
+
+.main-content > *::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-green);
 }
 
 /* Main-Content macht Platz wenn Sidebar expanded ist */
 .main-layout:has(.sidebar-left:hover) .main-content {
   margin-left: var(--sidebar-left-width);
-}
-
-body.light-theme .main-content {
-  background: #f8f9fa;
-  color: #23272e;
 }
 
 /* Hide left sidebar: main-content expands */
@@ -105,6 +132,11 @@ body.light-theme .main-content {
 .main-layout.sidebar-hidden.rightpanel-hidden .main-content {
   margin-left: 0;
   margin-right: 0;
+}
+
+body.light-theme .main-content {
+  background: #f8f9fa;
+  color: #23272e;
 }
 
 /* Split View Layout */
@@ -189,37 +221,56 @@ body.light-theme .main-content {
   gap: 8px;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  :root {
-    --sidebar-right-width: 280px;
+/* Modern Responsive Design with Container Queries */
+/* Large Desktop (1200px+) - Default grid layout */
+@media (min-width: 75rem) { /* 1200px */
+  .main-layout {
+    grid-template-columns: var(--sidebar-left-width) 1fr var(--sidebar-right-width);
   }
 }
 
-@media (max-width: 900px) {
-  .main-content {
-    margin-left: 0;
-    margin-right: 0;
+/* Desktop (1024px-1199px) - Smaller sidebars */
+@media (max-width: 74.9375rem) and (min-width: 64rem) { /* 1024px-1199px */
+  .main-layout {
+    grid-template-columns: clamp(12rem, 15vw, 15rem) 1fr clamp(14rem, 18vw, 16rem);
+  }
+}
+
+/* Tablet (768px-1023px) - Overlay sidebars */
+@media (max-width: 63.9375rem) and (min-width: 48rem) { /* 768px-1023px */
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: "main-content";
   }
   
-  .chat-sidebar, 
-  .code-sidebar, 
-  .chat-right-panel, 
-  .code-right-panel {
+  .sidebar-left,
+  .sidebar-right {
     position: fixed;
+    top: calc(var(--header-height) + var(--space-sm));
+    bottom: calc(var(--footer-height) + var(--space-sm));
     z-index: 1000;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
   }
   
-  .chat-sidebar.show, 
-  .code-sidebar.show, 
-  .chat-right-panel.show, 
-  .code-right-panel.show {
+  .sidebar-right {
+    right: var(--space-sm);
+    transform: translateX(100%);
+  }
+  
+  .sidebar-left {
+    left: var(--space-sm);
+  }
+  
+  .sidebar-left.show,
+  .sidebar-right.show {
     transform: translateX(0);
   }
   
-  /* Responsive Split View */
+  /* Split view becomes vertical */
   .main-layout.split-view .main-content {
     flex-direction: column;
   }
@@ -232,22 +283,42 @@ body.light-theme .main-content {
   }
 }
 
-@media (max-width: 768px) {
-  :root {
-    --sidebar-left-width: 200px;
-    --sidebar-right-width: 200px;
+/* Mobile (480px-767px) - Full overlay */
+@media (max-width: 47.9375rem) and (min-width: 30rem) { /* 480px-767px */
+  .main-layout {
+    grid-template-columns: 1fr;
   }
   
-  .main-layout.split-view .chat-container,
-  .main-layout.split-view .preview-container {
-    height: 50%;
+  .sidebar-left,
+  .sidebar-right {
+    width: 100%;
+    max-width: 20rem;
+    top: calc(var(--header-height) + var(--space-sm));
+    bottom: calc(var(--footer-height) + var(--space-sm));
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
   }
 }
 
-@media (max-width: 480px) {
+/* Small Mobile (<480px) - Compact layout */
+@media (max-width: 29.9375rem) { /* <480px */
   :root {
-    --sidebar-left-width: 160px;
-    --sidebar-right-width: 160px;
+    --header-height: clamp(3rem, 6vh, 3.5rem);
+    --footer-height: clamp(1.5rem, 4vh, 2rem);
+  }
+  
+  .main-layout {
+    gap: 0.25rem;
+  }
+  
+  .sidebar-left,
+  .sidebar-right {
+    width: 100%;
+    max-width: 16rem;
+    top: calc(var(--header-height) + var(--space-sm));
+    bottom: calc(var(--footer-height) + var(--space-sm));
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
   }
 }
 

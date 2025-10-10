@@ -2,7 +2,7 @@
 
 .analysis-issues {
   background: #ffffff;
-  border-radius: 8px;
+  border-radius: var(--radius-md); /* Modern responsive radius */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -14,18 +14,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  min-height: 200px;
+  padding: clamp(1.25rem, 3vw, 2rem); /* 20px-32px responsive */
+  min-height: clamp(12.5rem, 25vh, 15rem); /* 200px-240px responsive */
 }
 
 .analysis-issues.loading .loading-spinner {
-  width: 40px;
-  height: 40px;
+  width: clamp(2rem, 4vw, 2.5rem); /* 32px-40px responsive */
+  height: clamp(2rem, 4vw, 2.5rem); /* 32px-40px responsive */
   border: 4px solid #f3f3f3;
   border-top: 4px solid #3498db;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
 }
 
 @keyframes spin {

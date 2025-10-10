@@ -2,8 +2,8 @@
   background: var(--panel-bg);
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
-  padding: 20px;
-  margin: 16px;
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  margin: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
   box-shadow: var(--shadow-lg);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text-primary);
@@ -17,32 +17,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  padding-bottom: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
   border-bottom: 1px solid var(--border-color);
 }
 
 /* Git Tab Navigation */
 .git-tabs {
   display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
+  gap: clamp(0.25rem, 0.5vw, 0.375rem); /* 4px-6px responsive */
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
   background: var(--card-bg);
   border-radius: var(--border-radius);
-  padding: 4px;
+  padding: var(--space-xs); /* Modern design system variable */
   box-shadow: var(--shadow-sm);
 }
 
 .git-tab {
   flex: 1;
-  padding: 12px 16px;
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
   border: none;
   background: transparent;
-  border-radius: calc(var(--border-radius) - 2px);
+  border-radius: calc(var(--border-radius) - var(--space-xs)); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   color: var(--text-secondary);
 }
 
@@ -60,9 +60,9 @@
 .git-tab-content {
   background: var(--card-bg);
   border-radius: var(--border-radius);
-  padding: 20px;
+  padding: var(--space-xl); /* Modern design system variable */
   box-shadow: var(--shadow-sm);
-  min-height: 400px;
+  min-height: var(--space-2xl); /* Modern design system variable */
   flex: 1;
 }
 
@@ -72,7 +72,7 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(var(--space-md)); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -80,12 +80,12 @@
 .workspace-info {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 12px 16px;
+  gap: var(--space-md); /* Modern design system variable */
+  margin-bottom: var(--space-xl); /* Modern design system variable */
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
   background: var(--card-bg);
   border-radius: var(--border-radius);
-  font-size: 13px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
   border: 1px solid var(--border-color);
 }
 
@@ -98,19 +98,19 @@
 .workspace-path {
   color: var(--text-secondary);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
   word-break: break-all;
 }
 
 .git-status-info {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 14px;
+  gap: var(--space-md); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .git-status-icon {
-  font-size: 20px;
+  font-size: var(--font-size-xl); /* Modern design system variable */
 }
 
 .git-status-text {
@@ -122,37 +122,37 @@
   color: var(--text-secondary);
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   background: var(--card-bg);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  border-radius: var(--radius-md); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
   border: 1px solid var(--border-color);
 }
 
 /* Git Controls */
 .git-controls {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-xl); /* Modern design system variable */
 }
 
 .git-button-group {
   display: flex;
-  gap: 12px;
+  gap: var(--space-md); /* Modern design system variable */
   flex-wrap: wrap;
 }
 
 .git-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: var(--space-sm); /* Modern design system variable */
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   background: var(--button-bg);
   color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 100px;
+  min-width: var(--space-2xl); /* Modern design system variable */
   justify-content: center;
   box-shadow: var(--shadow-sm);
 }
@@ -165,7 +165,7 @@
 
 .git-btn:active:not(:disabled) {
   background: var(--card-bg);
-  transform: translateY(1px);
+  transform: translateY(var(--space-xs)); /* Modern design system variable */
 }
 
 .git-btn:disabled {
@@ -174,11 +174,11 @@
 }
 
 .btn-icon {
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .btn-text {
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
 }
 
 /* Button Variants */
@@ -223,37 +223,37 @@
 }
 
 .refresh-btn {
-  padding: 6px;
+  padding: var(--space-sm); /* Modern design system variable */
   min-width: auto;
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
 }
 
 /* Branch Selector */
 .branch-selector {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 16px;
+  gap: var(--space-md); /* Modern design system variable */
+  margin-bottom: var(--space-xl); /* Modern design system variable */
+  padding: var(--space-lg); /* Modern design system variable */
   background: var(--card-bg);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
 }
 
 .branch-label {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
   color: var(--text-primary);
   white-space: nowrap;
 }
 
 .branch-select {
   flex: 1;
-  padding: 8px 12px;
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-md); /* Modern design system variable */
   background: var(--bg-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   color: var(--text-primary);
 }
@@ -261,24 +261,24 @@
 .branch-select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.1);
+  box-shadow: var(--shadow-sm); /* Modern design system variable */
 }
 
 /* Git Status Details */
 .git-status-details {
   border-top: 1px solid var(--border-color);
-  padding-top: 20px;
+  padding-top: var(--space-xl); /* Modern design system variable */
   flex: 1;
   overflow-y: auto;
 }
 
 .status-section {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-xl); /* Modern design system variable */
 }
 
 .status-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 var(--space-md) 0; /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -287,7 +287,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 120px;
+  max-height: var(--space-xl); /* Modern design system variable */
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -295,13 +295,13 @@
 }
 
 .file-item {
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+  font-size: var(--font-size-xs); /* Modern design system variable */
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .file-item:last-child {
@@ -327,11 +327,11 @@
 .operation-result {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--space-md); /* Modern design system variable */
+  padding: var(--space-lg); /* Modern design system variable */
   border-radius: var(--border-radius);
-  margin-top: 16px;
-  font-size: 13px;
+  margin-top: var(--space-lg); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .operation-result.success {
@@ -347,7 +347,7 @@
 }
 
 .result-icon {
-  font-size: 16px;
+  font-size: var(--font-size-lg); /* Modern design system variable */
 }
 
 .result-message {
@@ -372,9 +372,9 @@
   background: var(--panel-bg);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-lg);
-  border: 2px solid var(--primary-color);
+  border: var(--space-xs) solid var(--primary-color); /* Modern design system variable */
   width: 90%;
-  max-width: 800px;
+  max-width: var(--space-2xl); /* Modern design system variable */
   max-height: 80vh;
   display: flex;
   flex-direction: column;
@@ -384,13 +384,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: var(--space-xl) var(--space-xl); /* Modern design system variables */
   border-bottom: 1px solid var(--border-color);
 }
 
 .diff-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-size-lg); /* Modern design system variable */
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -398,11 +398,11 @@
 .close-btn {
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: var(--font-size-xl); /* Modern design system variable */
   cursor: pointer;
   color: var(--text-secondary);
-  padding: 8px;
-  border-radius: 6px;
+  padding: var(--space-sm); /* Modern design system variable */
+  border-radius: var(--radius-md); /* Modern design system variable */
   transition: all 0.2s ease;
 }
 
@@ -414,21 +414,21 @@
 .diff-content {
   flex: 1;
   overflow: auto;
-  padding: 24px;
+  padding: var(--space-xl); /* Modern design system variable */
 }
 
 .diff-text {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 12px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
   line-height: 1.5;
   color: var(--text-primary);
   white-space: pre-wrap;
   margin: 0;
   background: var(--card-bg);
-  padding: 20px;
+  padding: var(--space-xl); /* Modern design system variable */
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  max-height: 400px;
+  max-height: var(--space-2xl); /* Modern design system variable */
   overflow-y: auto;
 }
 
@@ -444,14 +444,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--space-md); /* Modern design system variable */
   border-radius: var(--border-radius);
   z-index: 10;
   backdrop-filter: blur(2px);
 }
 
 .loading-spinner {
-  font-size: 24px;
+  font-size: var(--font-size-xl); /* Modern design system variable */
   animation: spin 1s linear infinite;
   color: var(--primary-color);
 }
@@ -478,26 +478,26 @@
   
   .diff-modal {
     width: 95%;
-    margin: 20px;
+    margin: var(--space-xl); /* Modern design system variable */
   }
 }
 
 /* Scrollbar Styling */
 .file-list::-webkit-scrollbar,
 .diff-text::-webkit-scrollbar {
-  width: 8px;
+  width: var(--space-sm); /* Modern design system variable */
 }
 
 .file-list::-webkit-scrollbar-track,
 .diff-text::-webkit-scrollbar-track {
   background: var(--bg-secondary);
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
 }
 
 .file-list::-webkit-scrollbar-thumb,
 .diff-text::-webkit-scrollbar-thumb {
   background: var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
 }
 
 .file-list::-webkit-scrollbar-thumb:hover,

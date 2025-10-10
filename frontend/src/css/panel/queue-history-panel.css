@@ -17,14 +17,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem); /* 12px-24px responsive */
     border-bottom: 1px solid var(--border-color, #e1e5e9);
     background: var(--header-bg, #f8f9fa);
 }
 
 .queue-history-header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
     font-weight: 600;
     color: var(--header-text, #2c3e50);
 }

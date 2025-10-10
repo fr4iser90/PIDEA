@@ -1,9 +1,9 @@
 .notification-system {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: var(--space-md); /* Modern design system variable */
+  right: var(--space-md); /* Modern design system variable */
   z-index: 9999;
-  max-width: 400px;
+  max-width: clamp(18.75rem, 30vw, 25rem); /* 300px-400px responsive */
   max-height: 80vh;
   overflow-y: auto;
   pointer-events: none;
@@ -12,9 +12,9 @@
 .notification {
   background: #2d3748;
   border: 1px solid #4a5568;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 8px;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
+  margin-bottom: var(--space-sm); /* Modern design system variable */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   pointer-events: auto;
   cursor: pointer;
@@ -24,7 +24,7 @@
 }
 
 .notification:hover {
-  transform: translateX(-4px);
+  transform: translateX(calc(-1 * var(--space-xs))); /* Modern design system variable */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -52,17 +52,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm); /* Modern design system variable */
 }
 
 .notification-icon {
-  font-size: 16px;
-  margin-right: 8px;
+  font-size: var(--font-size-base); /* Modern design system variable */
+  margin-right: var(--space-sm); /* Modern design system variable */
 }
 
 .notification-title {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   color: #e2e8f0;
   flex: 1;
 }
@@ -71,7 +71,7 @@
   background: none;
   border: none;
   color: #a0aec0;
-  font-size: 18px;
+  font-size: var(--font-size-lg); /* Modern design system variable */
   cursor: pointer;
   padding: 0;
   width: 20px;
@@ -89,14 +89,14 @@
 }
 
 .notification-message {
-  font-size: 13px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
   color: #cbd5e0;
   line-height: 1.4;
   word-wrap: break-word;
 }
 
 .notification-actions {
-  margin-top: 8px;
+  margin-top: var(--space-sm); /* Modern design system variable */
   display: flex;
   justify-content: flex-end;
 }
@@ -105,9 +105,9 @@
   background: #4a5568;
   border: none;
   color: #e2e8f0;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: var(--space-xs) var(--space-md); /* Modern design system variables */
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
   cursor: pointer;
   transition: background 0.2s ease;
 }

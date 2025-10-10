@@ -14,31 +14,31 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.25rem); /* 12px-20px responsive */
     background: #f8f9fa;
     border-bottom: 1px solid #e0e0e0;
-    min-height: 48px;
+    min-height: clamp(2.5rem, 5vh, 3rem); /* 40px-48px responsive */
 }
 
 .queue-panel-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: clamp(1rem, 2.5vw, 1.125rem); /* 16px-18px responsive */
     font-weight: 600;
     color: #333;
 }
 
 .queue-panel-controls {
     display: flex;
-    gap: 8px;
+    gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
 }
 
 .btn-refresh {
-    padding: 6px 12px;
+    padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.75rem, 2vw, 1rem); /* 6px-16px responsive */
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: var(--radius-sm); /* Modern responsive radius */
     background: #fff;
     cursor: pointer;
-    font-size: 12px;
+    font-size: clamp(0.75rem, 1.5vw, 0.875rem); /* 12px-14px responsive */
     transition: all 0.2s ease;
 }
 

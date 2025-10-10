@@ -4,8 +4,8 @@
 .category-analysis-section {
   background: var(--bg-secondary, #1e293b);
   border: 1px solid var(--border-color, #334155);
-  border-radius: 12px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  margin-bottom: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

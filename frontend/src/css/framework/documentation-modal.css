@@ -24,9 +24,9 @@
 
 .doc-framework-modal {
   background: var(--modal-bg);
-  border-radius: 12px;
-  width: 90vw;
-  max-width: 1200px;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  width: clamp(85%, 10vw, 90%); /* 85%-90% responsive */
+  max-width: clamp(56.25rem, 80vw, 75rem); /* 900px-1200px responsive */
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);

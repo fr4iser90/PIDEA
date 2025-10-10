@@ -2,8 +2,8 @@
 .ide-mirror {
   background: #ffffff;
   border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: var(--space-lg); /* Modern design system variable */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   height: 100%;
@@ -15,8 +15,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
+  margin-bottom: var(--space-lg); /* Modern design system variable */
+  padding-bottom: var(--space-md); /* Modern design system variable */
   border-bottom: 1px solid #e1e5e9;
   flex-shrink: 0;
 }
@@ -24,17 +24,17 @@
 .mirror-header h3 {
   margin: 0;
   color: #2c3e50;
-  font-size: 18px;
+  font-size: var(--font-size-lg); /* Modern design system variable */
   font-weight: 600;
 }
 
 .mirror-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
+  gap: var(--space-sm); /* Modern design system variable */
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   font-weight: 500;
 }
 
@@ -69,7 +69,7 @@
 }
 
 .status-icon {
-  font-size: 16px;
+  font-size: var(--font-size-base); /* Modern design system variable */
 }
 
 .status-text {
@@ -78,54 +78,54 @@
 
 .last-update {
   color: #6c757d;
-  font-size: 12px;
-  margin-left: 8px;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  margin-left: var(--space-sm); /* Modern design system variable */
 }
 
 .interaction-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 15px;
+  margin-bottom: var(--space-lg); /* Modern design system variable */
+  padding: var(--space-lg); /* Modern design system variable */
   background: #f8f9fa;
-  border-radius: 6px;
+  border-radius: var(--radius-md); /* Modern design system variable */
   flex-shrink: 0;
 }
 
 .mode-selector {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .mode-selector label {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
   color: #495057;
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .mode-selector select {
-  padding: 6px 12px;
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
   border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
   background: white;
   color: #495057;
 }
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm); /* Modern design system variable */
 }
 
 .action-buttons button {
-  padding: 6px 12px;
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
   border: 1px solid #ced4da;
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
   background: white;
   color: #495057;
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -155,7 +155,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: var(--space-xl) var(--space-lg); /* Modern design system variables */
   text-align: center;
   flex: 1;
 }
@@ -164,27 +164,27 @@
 .loading-icon,
 .empty-icon,
 .disconnected-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  font-size: var(--font-size-2xl); /* Modern design system variable */
+  margin-bottom: var(--space-lg); /* Modern design system variable */
 }
 
 .error-text,
 .loading-text,
 .empty-text,
 .disconnected-text {
-  font-size: 16px;
+  font-size: var(--font-size-base); /* Modern design system variable */
   color: #6c757d;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-lg); /* Modern design system variable */
 }
 
 .retry-button {
-  padding: 8px 16px;
+  padding: var(--space-sm) var(--space-lg); /* Modern design system variables */
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm); /* Modern design system variable */
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-sm); /* Modern design system variable */
 }
 
 .retry-button:hover {

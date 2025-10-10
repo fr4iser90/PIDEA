@@ -10,12 +10,12 @@
 
 .auth-card {
   background: rgba(255,255,255,0.95);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-  padding: 2.5rem 2rem 2rem 2rem;
-  max-width: 400px;
+  border-radius: var(--radius-xl); /* Modern responsive radius */
+  box-shadow: var(--shadow-lg); /* Modern shadow system */
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 3vw, 2rem) clamp(1.5rem, 3vw, 2rem) clamp(1.5rem, 3vw, 2rem); /* 24px-40px responsive */
+  max-width: clamp(18.75rem, 30vw, 25rem); /* 300px-400px responsive */
   width: 100%;
-  margin: 2rem auto;
+  margin: clamp(1.5rem, 3vw, 2rem) auto; /* 24px-32px responsive */
   transition: background 0.3s;
 }
 
