@@ -381,8 +381,12 @@ class TaskApplicationService {
       return 'task-analysis-workflow';
     }
     
-    // Default fallback
-    return 'task-execution-workflow';
+    // Manual tasks use task-execution-workflow
+    if (taskType.includes('manual') || category.includes('manual')) {
+      return 'task-execution-workflow';
+    }
+    
+    throw new Error(`Cannot determine workflow for task. Task type: '${taskType}', Category: '${category}', Description: '${description}'. Please specify a workflow explicitly.`);
   }
 
   /**

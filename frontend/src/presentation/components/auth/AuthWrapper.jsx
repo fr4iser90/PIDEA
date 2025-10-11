@@ -105,8 +105,8 @@ const AuthWrapper = ({ children }) => {
   // Show loading state while initializing or validating
   if (!isInitialized || isValidating) {
     return (
-      <div className="auth-container">
-        <div className="auth-loading">
+      <div className="auth">
+        <div className="auth__loading">
           <div className="loading-spinner"></div>
           <p>{!isInitialized ? 'Initializing...' : 'Validating authentication...'}</p>
         </div>
@@ -117,9 +117,9 @@ const AuthWrapper = ({ children }) => {
   // Show auth forms if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="auth-container">
+      <div className="auth">
         {validationError && (
-          <div className="auth-error-banner">
+          <div className="auth__error-banner">
             <span>⚠️ {validationError}</span>
           </div>
         )}

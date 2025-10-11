@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
-import '@/scss/base/_login.scss';;
+import '@/scss/components/_auth.scss';
 
 const LoginComponent = ({ onSwitchToRegister }) => {
   const { login, isLoading, error, clearError } = useAuthStore();
@@ -63,11 +63,11 @@ const LoginComponent = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <div className="auth-bg">
-      <div className="auth-card">
-        <h2 className="auth-title">Sign in to PIDEA</h2>
-        <p className="auth-subtitle">Access your secure development environment</p>
-        <form className="auth-form" onSubmit={handleSubmit}>
+    <div className="auth">
+      <div className="auth__card">
+        <h2 className="auth__title">Sign in to PIDEA</h2>
+        <p className="auth__subtitle">Access your secure development environment</p>
+        <form className="auth__form" onSubmit={handleSubmit}>
           <input
             id="email"
             name="email"
@@ -77,9 +77,10 @@ const LoginComponent = ({ onSwitchToRegister }) => {
             placeholder="Email address"
             value={formData.email}
             onChange={handleInputChange}
+            className="auth__input"
           />
           {validationErrors.email && (
-            <div className="auth-error">{validationErrors.email}</div>
+            <div className="auth__error">{validationErrors.email}</div>
           )}
           <input
             id="password"
@@ -90,24 +91,25 @@ const LoginComponent = ({ onSwitchToRegister }) => {
             placeholder="Password"
             value={formData.password}
             onChange={handleInputChange}
+            className="auth__input"
           />
           {validationErrors.password && (
-            <div className="auth-error">{validationErrors.password}</div>
+            <div className="auth__error">{validationErrors.password}</div>
           )}
           {error && (
-            <div className="auth-error">{error}</div>
+            <div className="auth__error">{error}</div>
           )}
           <button
             type="submit"
             disabled={isLoading}
-            className="auth-btn"
+            className="auth__button"
           >
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        {/* <div className="auth-footer">
+        {/* <div className="auth__footer">
           <span>Don't have an account? </span>
-          <span className="auth-link" onClick={onSwitchToRegister}>Sign up</span>
+          <span className="auth__link" onClick={onSwitchToRegister}>Sign up</span>
         </div> */}
       </div>
     </div>

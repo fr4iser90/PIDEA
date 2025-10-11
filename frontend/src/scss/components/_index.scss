@@ -2,6 +2,7 @@
 // =============================================================================
 
 // Import all component files
+@forward 'auth';
 @forward 'buttons';
 @forward 'cards';
 @forward 'forms';

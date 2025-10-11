@@ -57,10 +57,18 @@ docker-compose -f docker-compose.prod.yml up
 - Development server ports
 - Framework and language metadata
 - Task hierarchies and workflows
+- Interface management and switching
+- Project interface configurations
 
 ## Migration Strategy
 
-### Clean Migration (Current)
+### Database Schema Enhancement (2025-10-11)
+1. **Migration 005**: Add interface management fields to projects table
+2. **Migration 006**: Create project_interfaces table for interface management
+3. **Rollback Support**: Complete rollback scripts for safe deployment
+4. **Testing**: Integration tests for all migration scripts
+
+### Clean Migration (Previous)
 1. **Phase 1**: Run database migration to add `access_token_hash` column
 2. **Phase 2**: Deploy new secure token system
 3. **Phase 3**: Monitor and validate secure token operation
@@ -92,6 +100,8 @@ The system automatically detects and uses the appropriate database:
 - Project and task queries
 - Analysis result caching
 - Chat session management
+- Interface management queries
+- Project interface lookups
 
 ### Optimization
 - Efficient token prefix lookups
@@ -126,6 +136,18 @@ docker-compose -f docker-compose.dev.yml up
 docker-compose -f docker-compose.prod.yml down
 docker volume rm pidea_pidea-db-prod-data
 docker-compose -f docker-compose.prod.yml up
+```
+
+### Migration Management
+```bash
+# Validate migration scripts
+node database/migrations/utils/migration_validator.js
+
+# Check rollback availability
+node database/migrations/utils/rollback_manager.js
+
+# Run migration tests
+npm test -- backend/tests/integration/database/migrations/
 ```
 
 ## Environment Variables

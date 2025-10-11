@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
-import '@/scss/base/_login.scss';;
+import '@/scss/components/_auth.scss';
 
 const RegisterComponent = ({ onSwitchToLogin }) => {
   const { register, isLoading, error, clearError } = useAuthStore();
@@ -77,11 +77,11 @@ const RegisterComponent = ({ onSwitchToLogin }) => {
   };
 
   return (
-    <div className="auth-bg">
-      <div className="auth-card">
-        <h2 className="auth-title">Create your account</h2>
-        <p className="auth-subtitle">Join PIDEA for secure development</p>
-        <form className="auth-form" onSubmit={handleSubmit}>
+    <div className="auth">
+      <div className="auth__card">
+        <h2 className="auth__title">Create your account</h2>
+        <p className="auth__subtitle">Join PIDEA for secure development</p>
+        <form className="auth__form" onSubmit={handleSubmit}>
           <input
             id="username"
             name="username"
@@ -91,9 +91,10 @@ const RegisterComponent = ({ onSwitchToLogin }) => {
             placeholder="Username"
             value={formData.username}
             onChange={handleInputChange}
+            className="auth__input"
           />
           {validationErrors.username && (
-            <div className="auth-error">{validationErrors.username}</div>
+            <div className="auth__error">{validationErrors.username}</div>
           )}
           <input
             id="email"
@@ -104,9 +105,10 @@ const RegisterComponent = ({ onSwitchToLogin }) => {
             placeholder="Email address"
             value={formData.email}
             onChange={handleInputChange}
+            className="auth__input"
           />
           {validationErrors.email && (
-            <div className="auth-error">{validationErrors.email}</div>
+            <div className="auth__error">{validationErrors.email}</div>
           )}
           <input
             id="password"
@@ -117,9 +119,10 @@ const RegisterComponent = ({ onSwitchToLogin }) => {
             placeholder="Password"
             value={formData.password}
             onChange={handleInputChange}
+            className="auth__input"
           />
           {validationErrors.password && (
-            <div className="auth-error">{validationErrors.password}</div>
+            <div className="auth__error">{validationErrors.password}</div>
           )}
           <input
             id="confirmPassword"
@@ -130,24 +133,25 @@ const RegisterComponent = ({ onSwitchToLogin }) => {
             placeholder="Confirm Password"
             value={formData.confirmPassword}
             onChange={handleInputChange}
+            className="auth__input"
           />
           {validationErrors.confirmPassword && (
-            <div className="auth-error">{validationErrors.confirmPassword}</div>
+            <div className="auth__error">{validationErrors.confirmPassword}</div>
           )}
           {error && (
-            <div className="auth-error">{error}</div>
+            <div className="auth__error">{error}</div>
           )}
           <button
             type="submit"
             disabled={isLoading}
-            className="auth-btn"
+            className="auth__button"
           >
             {isLoading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
-        <div className="auth-footer">
+        <div className="auth__footer">
           <span>Already have an account? </span>
-          <span className="auth-link" onClick={onSwitchToLogin}>Sign in</span>
+          <span className="auth__link" onClick={onSwitchToLogin}>Sign in</span>
         </div>
       </div>
     </div>
