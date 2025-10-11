@@ -307,11 +307,19 @@ class TaskApplicationService {
       const projectPath = await this.getProjectWorkspacePath(projectId);
       this.logger.info(`✅ Resolved projectPath for ${projectId}: ${projectPath}`);
       
+      // Determine workflow based on task type if not provided
+      let workflow = options.workflow;
+      if (!workflow) {
+        workflow = this.determineWorkflowType(task);
+        this.logger.info(`🔧 Determined workflow type: ${workflow} for task: ${taskId}`);
+      }
+      
       // Queue task for execution using TaskQueueService
       const execution = await this.taskQueueService.enqueue(taskId, userId, {
         ...options,
         projectId,
-        projectPath  // ← WICHTIG: projectPath aus DB hinzufügen
+        projectPath,  // ← WICHTIG: projectPath aus DB hinzufügen
+        workflow      // ← WICHTIG: workflow hinzufügen
       });
       
       this.logger.info(`✅ Task queued successfully: ${taskId}`);
@@ -330,6 +338,51 @@ class TaskApplicationService {
       this.logger.error('❌ Task queueing failed:', error);
       throw new Error(`Task queueing failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Determine workflow type based on task properties
+   * @param {Object} task - Task object
+   * @returns {string} Workflow type
+   */
+  determineWorkflowType(task) {
+    const taskType = task.type?.value?.toLowerCase() || '';
+    const category = task.category?.toLowerCase() || '';
+    const description = task.description?.toLowerCase() || '';
+    
+    // Check for specific task types
+    if (taskType.includes('refactor') || taskType.includes('refactoring') || 
+        category.includes('refactor') || description.includes('refactor')) {
+      return 'task-refactoring-workflow';
+    }
+    
+    if (taskType.includes('test') || taskType.includes('testing') || 
+        category.includes('test') || description.includes('test')) {
+      return 'task-testing-workflow';
+    }
+    
+    if (taskType.includes('feature') || taskType.includes('development') || 
+        category.includes('feature') || description.includes('feature')) {
+      return 'task-development-workflow';
+    }
+    
+    if (taskType.includes('bug') || taskType.includes('fix') || 
+        category.includes('bug') || description.includes('bug')) {
+      return 'task-bugfix-workflow';
+    }
+    
+    if (taskType.includes('documentation') || taskType.includes('docs') || 
+        category.includes('documentation') || description.includes('documentation')) {
+      return 'task-documentation-workflow';
+    }
+    
+    if (taskType.includes('analysis') || taskType.includes('analyze') || 
+        category.includes('analysis') || description.includes('analysis')) {
+      return 'task-analysis-workflow';
+    }
+    
+    // Default fallback
+    return 'task-execution-workflow';
   }
 
   /**
