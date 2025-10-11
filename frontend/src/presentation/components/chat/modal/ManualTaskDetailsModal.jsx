@@ -194,73 +194,73 @@ Please execute this manual task with zero user input required.`;
   if (!isOpen) return null;
 
   return (
-    <div className="manual-task-details-modal-overlay">
-      <div className="manual-task-details-modal">
-        <div className="manual-task-details-modal-header">
-          <div className="manual-task-details-modal-title">
+    <div className="manual-task-details-modal__manual-task-details-modal-overlay">
+      <div className="manual-task-details-modal__manual-task-details-modal">
+        <div className="manual-task-details-modal__manual-task-details-modal-header">
+          <div className="manual-task-details-modal__manual-task-details-modal-title">
             <h2>Manual Task Details</h2>
             {taskDetails && (
-              <div className="manual-task-details-modal-meta">
-                <span className="manual-task-details-modal-priority" style={{ color: getPriorityColor(taskDetails.priority) }}>
+              <div className="manual-task-details-modal__manual-task-details-modal-meta">
+                <span className="manual-task-details-modal__manual-task-details-modal-priority" style={{ color: getPriorityColor(taskDetails.priority) }}>
                   {getPriorityText(taskDetails.priority)}
                 </span>
-                <span className="manual-task-details-modal-status" style={{ color: getStatusColor(taskDetails.status) }}>
+                <span className="manual-task-details-modal__manual-task-details-modal-status" style={{ color: getStatusColor(taskDetails.status) }}>
                   {getStatusText(taskDetails.status)}
                 </span>
                 {taskDetails.category && (
-                  <span className="manual-task-details-modal-category">
+                  <span className="manual-task-details-modal__manual-task-details-modal-category">
                     {getCategoryText(taskDetails.category)}
                   </span>
                 )}
               </div>
             )}
           </div>
-          <button className="manual-task-details-modal-close" onClick={handleClose}>
+          <button className="manual-task-details-modal__manual-task-details-modal-close" onClick={handleClose}>
             ×
           </button>
         </div>
 
-        <div className="manual-task-details-modal-content">
+        <div className="manual-task-details-modal__manual-task-details-modal-content">
           {isLoading ? (
-            <div className="manual-task-details-modal-loading">
+            <div className="manual-task-details-modal__manual-task-details-modal-loading">
               <div className="spinner"></div>
               <p>Loading task details...</p>
             </div>
           ) : taskDetails ? (
             <>
-              <div className="manual-task-details-modal-tabs">
+              <div className="manual-task-details-modal__manual-task-details-modal-tabs">
                 <button 
-                  className={`manual-task-details-modal-tab ${activeTab === 'rendered' ? 'active' : ''}`}
+                  className={`manual-task-details-modal__manual-task-details-modal-tab ${activeTab === 'rendered' ? 'active' : ''}`}
                   onClick={() => setActiveTab('rendered')}
                 >
                   Rendered
                 </button>
                 <button 
-                  className={`manual-task-details-modal-tab ${activeTab === 'raw' ? 'active' : ''}`}
+                  className={`manual-task-details-modal__manual-task-details-modal-tab ${activeTab === 'raw' ? 'active' : ''}`}
                   onClick={() => setActiveTab('raw')}
                 >
                   Raw
                 </button>
               </div>
 
-              <div className="manual-task-details-modal-body">
+              <div className="manual-task-details-modal__manual-task-details-modal-body">
                 {activeTab === 'rendered' ? (
                   <div 
-                    className="manual-task-details-modal-rendered"
+                    className="manual-task-details-modal__manual-task-details-modal-rendered"
                     dangerouslySetInnerHTML={{ __html: htmlContent }}
                   />
                 ) : (
-                  <pre className="manual-task-details-modal-raw">
+                  <pre className="manual-task-details-modal__manual-task-details-modal-raw">
                     {taskDetails.content || taskDetails.description || 'No content available'}
                   </pre>
                 )}
               </div>
 
-              <div className="manual-task-details-modal-footer">
-                <div className="manual-task-details-modal-actions">
+              <div className="manual-task-details-modal__manual-task-details-modal-footer">
+                <div className="manual-task-details-modal__manual-task-details-modal-actions">
                   {onSendToChat && (
-                    <div className="manual-task-details-modal-send-options">
-                      <label className="manual-task-details-modal-checkbox">
+                    <div className="manual-task-details-modal__manual-task-details-modal-send-options">
+                      <label className="manual-task-details-modal__manual-task-details-modal-checkbox">
                         <input
                           type="checkbox"
                           checked={includeExecutePrompt}
@@ -269,7 +269,7 @@ Please execute this manual task with zero user input required.`;
                         Include execution prompt
                       </label>
                       <button 
-                        className="manual-task-details-modal-button manual-task-details-modal-button-secondary"
+                        className="manual-task-details-modal__manual-task-details-modal-button manual-task-details-modal__manual-task-details-modal-button-secondary"
                         onClick={handleSendToChat}
                       >
                         Send to Chat
@@ -279,7 +279,7 @@ Please execute this manual task with zero user input required.`;
                   
                   {onExecuteTask && (
                     <button 
-                      className="manual-task-details-modal-button manual-task-details-modal-button-primary"
+                      className="manual-task-details-modal__manual-task-details-modal-button manual-task-details-modal__manual-task-details-modal-button-primary"
                       onClick={handleExecuteTask}
                       disabled={isExecuting}
                     >
@@ -288,15 +288,15 @@ Please execute this manual task with zero user input required.`;
                   )}
                 </div>
 
-                <div className="manual-task-details-modal-info">
-                  <div className="manual-task-details-modal-info-item">
+                <div className="manual-task-details-modal__manual-task-details-modal-info">
+                  <div className="manual-task-details-modal__manual-task-details-modal-info-item">
                     <strong>Created:</strong> {formatDate(taskDetails.createdAt)}
                   </div>
-                  <div className="manual-task-details-modal-info-item">
+                  <div className="manual-task-details-modal__manual-task-details-modal-info-item">
                     <strong>Updated:</strong> {formatDate(taskDetails.updatedAt)}
                   </div>
                   {taskDetails.metadata && (
-                    <div className="manual-task-details-modal-info-item">
+                    <div className="manual-task-details-modal__manual-task-details-modal-info-item">
                       <strong>Type:</strong> {getCategoryText(taskDetails.type) || 'Documentation'}
                     </div>
                   )}
@@ -304,7 +304,7 @@ Please execute this manual task with zero user input required.`;
               </div>
             </>
           ) : (
-            <div className="manual-task-details-modal-error">
+            <div className="manual-task-details-modal__manual-task-details-modal-error">
               <p>No task details available</p>
             </div>
           )}
