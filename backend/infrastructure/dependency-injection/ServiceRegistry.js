@@ -118,6 +118,22 @@ class ServiceRegistry {
             return new HandlerRegistry(this);
         }, { singleton: true });
 
+        // Interface management services
+        this.container.register('interfaceManager', (eventBus, logger) => {
+            const { InterfaceManager } = require('@domain/services/interface');
+            return new InterfaceManager({ eventBus, logger });
+        }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+
+        this.container.register('interfaceFactory', (interfaceManager, logger) => {
+            const { InterfaceFactory } = require('@domain/services/interface');
+            return new InterfaceFactory({ interfaceManager, logger });
+        }, { singleton: true, dependencies: ['interfaceManager', 'logger'] });
+
+        this.container.register('interfaceRegistry', (logger) => {
+            const { InterfaceRegistry } = require('@domain/services/interface');
+            return new InterfaceRegistry({ logger });
+        }, { singleton: true, dependencies: ['logger'] });
+
         this.registeredServices.add('infrastructure');
     }
 
@@ -1778,6 +1794,11 @@ class ServiceRegistry {
         this.addServiceDefinition('chatRepository', [], 'repositories');
         this.addServiceDefinition('getChatHistoryHandler', ['chatRepository', 'ideManager', 'serviceRegistry', 'chatCacheService'], 'handlers');
         this.addServiceDefinition('taskRepository', ['databaseConnection'], 'repositories');
+        
+        // Interface management services
+        this.addServiceDefinition('interfaceManager', ['eventBus', 'logger'], 'infrastructure');
+        this.addServiceDefinition('interfaceFactory', ['interfaceManager', 'logger'], 'infrastructure');
+        this.addServiceDefinition('interfaceRegistry', ['logger'], 'infrastructure');
         this.addServiceDefinition('taskExecutionRepository', [], 'repositories');
         this.addServiceDefinition('analysisRepository', ['databaseConnection'], 'repositories');
         this.addServiceDefinition('userRepository', ['databaseConnection'], 'repositories');
@@ -1842,7 +1863,7 @@ class ServiceRegistry {
 
         // 🚨 NEW APPLICATION SERVICES - Layer Boundary Violation Fixes
         this.addServiceDefinition('analysisApplicationService', ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'], 'application');
-        this.addServiceDefinition('projectApplicationService', ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'logger'], 'application');
+        this.addServiceDefinition('projectApplicationService', ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'interfaceManager', 'interfaceFactory', 'interfaceRegistry', 'logger'], 'application');
         this.addServiceDefinition('taskApplicationService', ['taskService', 'taskQueueService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'manualTasksImportService', 'logger'], 'application');
         this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'], 'application');
         this.addServiceDefinition('webChatApplicationService', ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'], 'application');

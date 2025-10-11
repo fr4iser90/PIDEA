@@ -14,6 +14,7 @@
  */
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
+const { InterfaceManager, InterfaceFactory, InterfaceRegistry } = require('@domain/services/interface');
 
 class ProjectApplicationService {
   constructor({
@@ -21,6 +22,9 @@ class ProjectApplicationService {
     ideManager,
     workspacePathDetector,
     projectMappingService,
+    interfaceManager,
+    interfaceFactory,
+    interfaceRegistry,
     logger
   }) {
     // Infrastructure repositories (accessed through domain interfaces)
@@ -30,6 +34,11 @@ class ProjectApplicationService {
     this.ideManager = ideManager;
     this.workspacePathDetector = workspacePathDetector;
     this.projectMappingService = projectMappingService;
+    
+    // Interface management services
+    this.interfaceManager = interfaceManager;
+    this.interfaceFactory = interfaceFactory;
+    this.interfaceRegistry = interfaceRegistry;
     
     // Application services
     this.logger = logger || new ServiceLogger('ProjectApplicationService');
@@ -462,6 +471,198 @@ class ProjectApplicationService {
     } catch (error) {
       this.logger.error('❌ Failed to update project port:', error);
       throw new Error(`Failed to update project port: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get project interfaces
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Array<Object>>} Project interfaces
+   */
+  async getProjectInterfaces(projectId) {
+    try {
+      this.logger.info(`Getting interfaces for project: ${projectId}`);
+      
+      if (!this.interfaceManager) {
+        this.logger.warn('Interface manager not available');
+        return [];
+      }
+      
+      // Get all interfaces and filter by project
+      const allInterfaces = this.interfaceManager.getAllInterfaces();
+      const projectInterfaces = allInterfaces.filter(interfaceInstance => {
+        const config = interfaceInstance.config || {};
+        return config.projectId === projectId;
+      });
+      
+      return projectInterfaces.map(interfaceInstance => ({
+        id: interfaceInstance.id,
+        type: interfaceInstance.type,
+        status: interfaceInstance.status,
+        config: interfaceInstance.config,
+        metadata: interfaceInstance.getMetadata()
+      }));
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to get project interfaces:', error);
+      throw new Error(`Failed to get project interfaces: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create interface for project
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceType - Interface type
+   * @param {Object} config - Interface configuration
+   * @returns {Promise<Object>} Created interface
+   */
+  async createProjectInterface(projectId, interfaceType, config = {}) {
+    try {
+      this.logger.info(`Creating interface for project: ${projectId}, type: ${interfaceType}`);
+      
+      if (!this.interfaceManager) {
+        throw new Error('Interface manager not available');
+      }
+      
+      // Get project information
+      const project = await this.projectRepository.findById(projectId);
+      if (!project) {
+        throw new Error(`Project not found: ${projectId}`);
+      }
+      
+      // Merge project-specific configuration
+      const interfaceConfig = {
+        ...config,
+        projectId,
+        workspacePath: project.workspacePath,
+        frontendPort: project.frontendPort,
+        backendPort: project.backendPort,
+        databasePort: project.databasePort
+      };
+      
+      // Create interface using factory if available
+      let interfaceInstance;
+      if (this.interfaceFactory) {
+        interfaceInstance = await this.interfaceFactory.createInterfaceByType(
+          interfaceType,
+          interfaceConfig
+        );
+      } else {
+        interfaceInstance = await this.interfaceManager.createInterface(
+          interfaceType,
+          interfaceConfig
+        );
+      }
+      
+      this.logger.info(`✅ Interface created for project ${projectId}: ${interfaceInstance.id}`);
+      
+      return {
+        id: interfaceInstance.id,
+        type: interfaceInstance.type,
+        status: interfaceInstance.status,
+        config: interfaceInstance.config,
+        metadata: interfaceInstance.getMetadata()
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to create project interface:', error);
+      throw new Error(`Failed to create project interface: ${error.message}`);
+    }
+  }
+
+  /**
+   * Remove interface from project
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<boolean>} True if interface was removed
+   */
+  async removeProjectInterface(projectId, interfaceId) {
+    try {
+      this.logger.info(`Removing interface ${interfaceId} from project: ${projectId}`);
+      
+      if (!this.interfaceManager) {
+        throw new Error('Interface manager not available');
+      }
+      
+      // Get interface instance
+      const interfaceInstance = this.interfaceManager.getInterface(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface not found: ${interfaceId}`);
+      }
+      
+      // Verify interface belongs to project
+      const config = interfaceInstance.config || {};
+      if (config.projectId !== projectId) {
+        throw new Error(`Interface ${interfaceId} does not belong to project ${projectId}`);
+      }
+      
+      // Remove interface
+      const removed = await this.interfaceManager.removeInterface(interfaceId);
+      
+      if (removed) {
+        this.logger.info(`✅ Interface ${interfaceId} removed from project ${projectId}`);
+      }
+      
+      return removed;
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to remove project interface:', error);
+      throw new Error(`Failed to remove project interface: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get available interface types for project
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<Array<string>>} Available interface types
+   */
+  async getAvailableInterfaceTypes(projectId) {
+    try {
+      this.logger.info(`Getting available interface types for project: ${projectId}`);
+      
+      if (!this.interfaceManager) {
+        this.logger.warn('Interface manager not available');
+        return [];
+      }
+      
+      // Get available types from manager
+      const availableTypes = this.interfaceManager.getAvailableTypes();
+      
+      // Filter types based on project context if registry is available
+      if (this.interfaceRegistry) {
+        const project = await this.projectRepository.findById(projectId);
+        if (project) {
+          // Filter types based on project framework and type
+          const filteredTypes = availableTypes.filter(type => {
+            const typeInfo = this.interfaceRegistry.getInterfaceType(type);
+            if (!typeInfo) return true;
+            
+            const constraints = typeInfo.constraints || {};
+            const supportedFrameworks = constraints.supportedFrameworks;
+            const supportedTypes = constraints.supportedTypes;
+            
+            // Check framework compatibility
+            if (supportedFrameworks && !supportedFrameworks.includes(project.framework)) {
+              return false;
+            }
+            
+            // Check project type compatibility
+            if (supportedTypes && !supportedTypes.includes(project.type)) {
+              return false;
+            }
+            
+            return true;
+          });
+          
+          return filteredTypes;
+        }
+      }
+      
+      return availableTypes;
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to get available interface types:', error);
+      throw new Error(`Failed to get available interface types: ${error.message}`);
     }
   }
 }

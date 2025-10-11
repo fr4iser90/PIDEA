@@ -78,6 +78,24 @@
       "description": "Execute task: Send Task Prompt → IDE → Validate Response → Complete Check",
       "steps": [
         {
+          "name": "create-git-branch",
+          "type": "git_create_branch",
+          "description": "Create git branch with source pidea-agent",
+          "step": "git_create_branch",
+          "options": {
+            "branchName": "task/{{task.title}}-{{timestamp}}",
+            "sourceBranch": "pidea-agent",
+            "createBranch": true,
+            "sessionId": "git-branch-${task.id}",
+            "requestedBy": "${userId}",
+            "userId": "${userId}",
+            "projectId": "${options.projectId}",
+            "workspacePath": "${options.projectPath}"
+          },
+          "strict": true,
+          "condition": "previousStep.success && previousStep.result.success"
+        },
+        {
           "name": "send-task-prompt",
           "type": "ide_send_message_step",
           "description": "Send task prompt to IDE with auto IDE detection",
