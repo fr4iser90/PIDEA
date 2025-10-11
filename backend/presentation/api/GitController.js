@@ -292,18 +292,18 @@ class GitController {
             const diff = await this.gitService.getDiff(projectPath, {
                 commit1: targetBranch,
                 commit2: sourceBranch
-            });
+            }, userId, projectId);
 
             // Get commit history for comparison
             const sourceHistory = await this.gitService.getCommitHistory(projectPath, {
                 branch: sourceBranch,
                 limit: 5
-            });
+            }, userId, projectId);
 
             const targetHistory = await this.gitService.getCommitHistory(projectPath, {
                 branch: targetBranch,
                 limit: 5
-            });
+            }, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:comparison:completed', {
@@ -378,18 +378,18 @@ class GitController {
             });
 
             // Check current branch
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath, userId, projectId);
             
             // Switch to target branch if needed
             if (currentBranch !== branch) {
-                await this.gitService.checkoutBranch(projectPath, branch);
+                await this.gitService.checkoutBranch(projectPath, branch, {}, userId, projectId);
             }
 
             // Pull changes
             const result = await this.gitService.pullChanges(projectPath, {
                 remote,
                 branch
-            });
+            }, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:pull:completed', {
@@ -459,7 +459,7 @@ class GitController {
                 userId 
             });
 
-            const result = await this.gitService.checkoutBranch(projectPath, branch);
+            const result = await this.gitService.checkoutBranch(projectPath, branch, {}, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:checkout:completed', {
@@ -528,18 +528,18 @@ class GitController {
             });
 
             // Check current branch
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath, userId, projectId);
             
             // Switch to target branch
             if (currentBranch !== targetBranch) {
-                await this.gitService.checkoutBranch(projectPath, targetBranch);
+                await this.gitService.checkoutBranch(projectPath, targetBranch, {}, userId, projectId);
             }
 
             // Pull latest changes
-            await this.gitService.pullChanges(projectPath, { branch: targetBranch });
+            await this.gitService.pullChanges(projectPath, { branch: targetBranch }, userId, projectId);
 
             // Merge source branch
-            const result = await this.gitService.mergeBranch(projectPath, sourceBranch);
+            const result = await this.gitService.mergeBranch(projectPath, sourceBranch, {}, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:merge:completed', {
@@ -613,7 +613,7 @@ class GitController {
 
             const result = await this.gitService.createBranch(projectPath, branchName, {
                 startPoint
-            });
+            }, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:branch:created', {
@@ -734,11 +734,11 @@ class GitController {
             });
 
             // Check current branch
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath, userId, projectId);
             
             // Switch to pidea-agent branch if needed
             if (currentBranch !== 'pidea-agent') {
-                await this.gitService.checkoutBranch(projectPath, 'pidea-agent');
+                await this.gitService.checkoutBranch(projectPath, 'pidea-agent', {}, userId, projectId);
             }
 
             // Pull changes from pidea-agent branch
@@ -746,7 +746,7 @@ class GitController {
                 remote,
                 branch: 'pidea-agent',
                 force
-            });
+            }, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:pidea-agent:pull:completed', {
@@ -818,18 +818,18 @@ class GitController {
             });
 
             // Check current branch
-            const currentBranch = await this.gitService.getCurrentBranch(projectPath);
+            const currentBranch = await this.gitService.getCurrentBranch(projectPath, userId, projectId);
             
             // Switch to pidea-agent branch
             if (currentBranch !== 'pidea-agent') {
-                await this.gitService.checkoutBranch(projectPath, 'pidea-agent');
+                await this.gitService.checkoutBranch(projectPath, 'pidea-agent', {}, userId, projectId);
             }
 
             // Pull latest changes from pidea-agent
-            await this.gitService.pullChanges(projectPath, { branch: 'pidea-agent' });
+            await this.gitService.pullChanges(projectPath, { branch: 'pidea-agent' }, userId, projectId);
 
             // Merge source branch into pidea-agent
-            const result = await this.gitService.mergeBranch(projectPath, sourceBranch);
+            const result = await this.gitService.mergeBranch(projectPath, sourceBranch, {}, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:pidea-agent:merge:completed', {
@@ -1003,7 +1003,7 @@ class GitController {
             });
 
             // Check if pidea-agent branch exists
-            const branchesResult = await this.gitService.getBranches(projectPath, { includeRemote: true, includeLocal: true });
+            const branchesResult = await this.gitService.getBranches(projectPath, { includeRemote: true, includeLocal: true }, userId, projectId);
             const branches = branchesResult && branchesResult.result && branchesResult.result.all ? branchesResult.result.all : [];
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
 
@@ -1019,18 +1019,18 @@ class GitController {
             const diff = await this.gitService.getDiff(projectPath, {
                 commit1: 'pidea-agent',
                 commit2: sourceBranch
-            });
+            }, userId, projectId);
 
             // Get commit history for comparison
             const sourceHistory = await this.gitService.getCommitHistory(projectPath, {
                 branch: sourceBranch,
                 limit: 5
-            });
+            }, userId, projectId);
 
             const pideaAgentHistory = await this.gitService.getCommitHistory(projectPath, {
                 branch: 'pidea-agent',
                 limit: 5
-            });
+            }, userId, projectId);
 
             if (this.eventBus) {
                 this.eventBus.publish('git:pidea-agent:comparison:completed', {

@@ -137,9 +137,11 @@ class GitService {
     /**
      * Get current branch using GIT_GET_CURRENT_BRANCH step
      * @param {string} repoPath - Repository path
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<string>} Current branch name
      */
-    async getCurrentBranch(repoPath) {
+    async getCurrentBranch(repoPath, userId, projectId) {
         try {
             // // this.logger.info('GitService: Getting current branch using step', { repoPath });
             
@@ -148,7 +150,9 @@ class GitService {
             }
 
             const stepContext = {
-                projectPath: repoPath
+                projectPath: repoPath,
+                userId: userId,
+                projectId: projectId
             };
 
             const result = await this.stepRegistry.executeStep('GitGetCurrentBranchStep', stepContext);
@@ -174,9 +178,11 @@ class GitService {
      * Get all branches using GIT_GET_BRANCHES step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Branch options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Array>} Branch list
      */
-    async getBranches(repoPath, options = {}) {
+    async getBranches(repoPath, options = {}, userId, projectId) {
         const { includeRemote = true, includeLocal = true } = options;
         
         try {
@@ -188,6 +194,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 includeRemote,
                 includeLocal
             };
@@ -220,9 +228,11 @@ class GitService {
      * @param {string} repoPath - Repository path
      * @param {string} branchName - Branch name
      * @param {Object} options - Branch options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Branch creation result
      */
-    async createBranch(repoPath, branchName, options = {}) {
+    async createBranch(repoPath, branchName, options = {}, userId, projectId) {
         const { checkout = true, startPoint = null } = options;
 
         try {
@@ -235,6 +245,8 @@ class GitService {
             const stepContext = {
                 projectPath: repoPath,
                 branchName,
+                userId: userId,
+                projectId: projectId,
                 checkout,
                 fromBranch: startPoint
             };
@@ -265,9 +277,11 @@ class GitService {
      * @param {string} repoPath - Repository path
      * @param {string} branchName - Branch name
      * @param {Object} options - Checkout options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Checkout result
      */
-    async checkoutBranch(repoPath, branchName, options = {}) {
+    async checkoutBranch(repoPath, branchName, options = {}, userId, projectId) {
         const { createIfNotExists = false } = options;
         
         try {
@@ -280,6 +294,8 @@ class GitService {
             const stepContext = {
                 projectPath: repoPath,
                 branchName,
+                userId: userId,
+                projectId: projectId,
                 createIfNotExists
             };
 
@@ -312,9 +328,11 @@ class GitService {
      * Get commit history using GIT_GET_COMMIT_HISTORY step
      * @param {string} repoPath - Repository path
      * @param {Object} options - History options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Array>} Commit history
      */
-    async getCommitHistory(repoPath, options = {}) {
+    async getCommitHistory(repoPath, options = {}, userId, projectId) {
         const { 
             limit = 10, 
             since = null, 
@@ -332,6 +350,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 limit,
                 since,
                 until,
@@ -358,9 +378,11 @@ class GitService {
     /**
      * Get last commit using GIT_GET_LAST_COMMIT step
      * @param {string} repoPath - Repository path
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Last commit info
      */
-    async getLastCommit(repoPath) {
+    async getLastCommit(repoPath, userId, projectId) {
         try {
             this.logger.info('GitService: Getting last commit using step', { repoPath });
             
@@ -369,7 +391,9 @@ class GitService {
             }
 
             const stepContext = {
-                projectPath: repoPath
+                projectPath: repoPath,
+                userId: userId,
+                projectId: projectId
             };
 
             const result = await this.stepRegistry.executeStep('GitGetLastCommitStep', stepContext);
@@ -392,9 +416,11 @@ class GitService {
      * Add files to staging using GIT_ADD_FILES step
      * @param {string} repoPath - Repository path
      * @param {Array<string>} files - Files to add
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Add result
      */
-    async addFiles(repoPath, files = []) {
+    async addFiles(repoPath, files = [], userId, projectId) {
         try {
             this.logger.info('GitService: Adding files using step', { repoPath, files });
             
@@ -404,6 +430,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 files: files.length === 0 ? '.' : files.join(' ')
             };
 
@@ -436,9 +464,11 @@ class GitService {
      * @param {string} repoPath - Repository path
      * @param {string} message - Commit message
      * @param {Object} options - Commit options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Commit result
      */
-    async commitChanges(repoPath, message, options = {}) {
+    async commitChanges(repoPath, message, options = {}, userId, projectId) {
         const { author = null, allowEmpty = false } = options;
 
         try {
@@ -451,6 +481,8 @@ class GitService {
             const stepContext = {
                 projectPath: repoPath,
                 message,
+                userId: userId,
+                projectId: projectId,
                 author,
                 files: '.'
             };
@@ -480,9 +512,11 @@ class GitService {
      * Push changes using GIT_PUSH step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Push options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Push result
      */
-    async pushChanges(repoPath, options = {}) {
+    async pushChanges(repoPath, options = {}, userId, projectId) {
         const { 
             remote = 'origin', 
             branch = null, 
@@ -500,6 +534,8 @@ class GitService {
             const stepContext = {
                 projectPath: repoPath,
                 branch,
+                userId: userId,
+                projectId: projectId,
                 remote,
                 setUpstream
             };
@@ -529,9 +565,11 @@ class GitService {
      * Pull changes using GIT_PULL_CHANGES step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Pull options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Pull result
      */
-    async pullChanges(repoPath, options = {}) {
+    async pullChanges(repoPath, options = {}, userId, projectId) {
         const { remote = 'origin', branch = null, rebase = false } = options;
 
         try {
@@ -543,6 +581,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 remote,
                 branch,
                 rebase
@@ -578,9 +618,11 @@ class GitService {
      * Get status using GIT_GET_STATUS step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Status options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Repository status
      */
-    async getStatus(repoPath, options = {}) {
+    async getStatus(repoPath, options = {}, userId, projectId) {
         const { porcelain = true } = options;
         
         try {
@@ -592,6 +634,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 porcelain
             };
 
@@ -617,9 +661,11 @@ class GitService {
      * Get remote URL using GIT_GET_REMOTE_URL step
      * @param {string} repoPath - Repository path
      * @param {string} remote - Remote name
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<string>} Remote URL
      */
-    async getRemoteUrl(repoPath, remote = 'origin') {
+    async getRemoteUrl(repoPath, remote = 'origin', userId, projectId) {
         try {
             this.logger.info('GitService: Getting remote URL using step', { repoPath, remote });
             
@@ -629,6 +675,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 remote
             };
 
@@ -654,9 +702,11 @@ class GitService {
      * @param {string} repoPath - Repository path
      * @param {string} name - Remote name
      * @param {string} url - Remote URL
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Add remote result
      */
-    async addRemote(repoPath, name, url) {
+    async addRemote(repoPath, name, url, userId, projectId) {
         try {
             this.logger.info('GitService: Adding remote using step', { repoPath, name, url });
             
@@ -666,6 +716,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 name,
                 url
             };
@@ -700,9 +752,11 @@ class GitService {
      * Get diff using GIT_GET_DIFF step
      * @param {string} repoPath - Repository path
      * @param {Object} options - Diff options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<string>} Diff output
      */
-    async getDiff(repoPath, options = {}) {
+    async getDiff(repoPath, options = {}, userId, projectId) {
         const { 
             staged = false, 
             file = null, 
@@ -719,6 +773,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 staged,
                 file,
                 commit1,
@@ -746,9 +802,11 @@ class GitService {
      * @param {string} repoPath - Repository path
      * @param {string} mode - Reset mode (soft, mixed, hard)
      * @param {string} commit - Commit to reset to
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Reset result
      */
-    async resetRepository(repoPath, mode = 'mixed', commit = 'HEAD') {
+    async resetRepository(repoPath, mode = 'mixed', commit = 'HEAD', userId, projectId) {
         try {
             this.logger.info('GitService: Resetting repository using step', { repoPath, mode, commit });
             
@@ -758,6 +816,8 @@ class GitService {
 
             const stepContext = {
                 projectPath: repoPath,
+                userId: userId,
+                projectId: projectId,
                 mode,
                 commit
             };
@@ -793,9 +853,11 @@ class GitService {
      * @param {string} repoPath - Repository path
      * @param {string} branchName - Branch to merge
      * @param {Object} options - Merge options
+     * @param {string} userId - User ID for step validation
+     * @param {string} projectId - Project ID for step validation
      * @returns {Promise<Object>} Merge result
      */
-    async mergeBranch(repoPath, branchName, options = {}) {
+    async mergeBranch(repoPath, branchName, options = {}, userId, projectId) {
         const { strategy = 'recursive', noFF = false } = options;
 
         try {
@@ -808,6 +870,8 @@ class GitService {
             const stepContext = {
                 projectPath: repoPath,
                 branchName,
+                userId: userId,
+                projectId: projectId,
                 strategy,
                 noFF
             };
