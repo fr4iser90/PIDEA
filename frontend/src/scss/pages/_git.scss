@@ -498,6 +498,276 @@
   color: var(--text-primary);
 }
 
+// =============================================================================
+// PIDEA-AGENT BRANCH COMPONENT
+// =============================================================================
+
+.pidea-agent-branch {
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.pidea-agent-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pidea-agent-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.pidea-agent-status-icon {
+  font-size: var(--font-size-lg);
+  margin-right: var(--space-sm);
+}
+
+.pidea-agent-status-text {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
+.pidea-agent-branch-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.pidea-agent-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.pidea-agent-btn {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  
+  &:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    border-color: var(--color-primary);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.refresh-btn {
+  padding: var(--space-sm);
+  min-width: auto;
+}
+
+.workspace-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.workspace-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.workspace-path {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  flex: 1;
+  word-break: break-all;
+}
+
+// File changes section
+.pidea-agent-file-changes {
+  margin-top: var(--space-md);
+}
+
+.file-changes-header {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-base);
+}
+
+.file-changes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.file-change-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.file-change-icon {
+  font-size: var(--font-size-sm);
+}
+
+.file-change-path {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+// Pidea-Agent controls
+.pidea-agent-controls {
+  margin-top: var(--space-md);
+}
+
+.pidea-agent-button-group {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.pull-btn,
+.compare-btn,
+.merge-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.btn-icon {
+  font-size: var(--font-size-sm);
+}
+
+.btn-text {
+  font-size: var(--font-size-sm);
+}
+
+// Status details
+.pidea-agent-status-details {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.status-section {
+  margin-bottom: var(--space-md);
+}
+
+.status-section h4 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.file-item {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  
+  &.modified {
+    border-left: 3px solid var(--color-warning);
+  }
+  
+  &.added {
+    border-left: 3px solid var(--color-success);
+  }
+  
+  &.deleted {
+    border-left: 3px solid var(--color-danger);
+  }
+}
+
+// Operation buttons
+.pidea-agent-operations {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.operation-btn {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  
+  &:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    border-color: var(--color-primary);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &.primary {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    
+    &:hover:not(:disabled) {
+      background: var(--color-primary-hover);
+      border-color: var(--color-primary-hover);
+    }
+  }
+  
+  &.danger {
+    background: var(--color-danger);
+    color: white;
+    border-color: var(--color-danger);
+    
+    &:hover:not(:disabled) {
+      background: var(--color-danger-hover);
+      border-color: var(--color-danger-hover);
+    }
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .git__git-button-group {

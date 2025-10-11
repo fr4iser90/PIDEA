@@ -244,15 +244,13 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     navigator.clipboard.writeText(code);
   };
 
-  // Render message bubble - EINFACH
+  // Render message bubble with simple one-liner code blocks
   const renderMessage = (message, index) => {
     const isUser = message.sender === 'user';
     const isAI = message.sender === 'assistant';
     let content = message.content || message.text || '';
     
-    // ✅ FIX: Debug logging entfernt - verursachte doppeltes Rendering
-    
-    // EINFACH: Code-Blöcke rendern
+    // Simple one-liner code blocks (no complex diff analysis)
     let bubbleContent;
     if (content.includes('```')) {
       const codeBlockRegex = /```(\w+)?\s*([\s\S]+?)```/g;
@@ -268,33 +266,35 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
       
       if (codeBlocks.length > 0) {
         bubbleContent = (
-          <div className="code-blocks-container">
+          <div className="chat__code-blocks-container">
             {codeBlocks.map((block, idx) => {
               const blockId = `${message.id}_${idx}`;
               const expanded = expandedBlocks[blockId] !== false;
               return (
-                <div key={blockId} className="modern-code-block-wrapper">
-                  <div className="modern-code-block-header" onClick={() => toggleBlock(blockId)}>
-                    <span className="modern-code-block-title">{block.language}</span>
-                    <button
-                      className="modern-code-block-toggle"
-                      title="Toggle"
-                      tabIndex={-1}
-                      onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
-                    >
-                      {expanded ? '▲' : '▼'}
-                    </button>
-                    <button
-                      className="modern-code-block-copy"
-                      title="Copy code"
-                      tabIndex={-1}
-                      onClick={e => { e.stopPropagation(); handleCopyClick(block.code); }}
-                    >
-                      📋
-                    </button>
+                <div key={blockId} className="chat__code-block-wrapper">
+                  <div className="chat__code-block-header" onClick={() => toggleBlock(blockId)}>
+                    <span className="chat__code-language">{block.language}</span>
+                    <div className="chat__code-actions">
+                      <button
+                        className="chat__code-toggle"
+                        title="Toggle"
+                        tabIndex={-1}
+                        onClick={e => { e.stopPropagation(); toggleBlock(blockId); }}
+                      >
+                        {expanded ? '▲' : '▼'}
+                      </button>
+                      <button
+                        className="chat__code-copy"
+                        title="Copy code"
+                        tabIndex={-1}
+                        onClick={e => { e.stopPropagation(); handleCopyClick(block.code); }}
+                      >
+                        📋
+                      </button>
+                    </div>
                   </div>
                   {expanded && (
-                    <pre className={`modern-code-block code-block ${block.language}`}>
+                    <pre className={`chat__code-block code-block ${block.language}`}>
                       <code>{block.code}</code>
                     </pre>
                   )}
