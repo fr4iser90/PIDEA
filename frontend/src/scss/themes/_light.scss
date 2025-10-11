@@ -1,0 +1,58 @@
+// =============================================================================
+// _LIGHT
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+[data-theme="light"] {
+  // Light theme color overrides
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: rgb(37 99 235 / 0.1);
+  --color-secondary: #64748b;
+  --color-secondary-hover: #475569;
+  --color-success: #059669;
+  --color-success-hover: #047857;
+  --color-warning: #d97706;
+  --color-warning-hover: #b45309;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-info: #2563eb;
+  --color-info-hover: #1d4ed8;
+  
+  // Light theme backgrounds
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-hover: #f1f5f9;
+  --bg-overlay: rgb(0 0 0 / 0.5);
+  
+  // Light theme text
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-inverse: #ffffff;
+  
+  // Light theme borders
+  --border-color: #e2e8f0;
+  --border-color-light: #f1f5f9;
+  --border-color-focus: var(--color-primary);
+  
+  // Light theme shadows
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.15);
+  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.2);
+  --shadow-xl: 0 20px 40px rgb(0 0 0 / 0.25);
+}
+
+// Light theme class
+.theme-light {
+  // Light theme specific classes
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}

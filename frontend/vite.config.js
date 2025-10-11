@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => {
       '@/components': path.resolve(__dirname, 'src/components'),
       '@/config': path.resolve(__dirname, 'src/config'),
       '@/css': path.resolve(__dirname, 'src/css'),
+      '@/scss': path.resolve(__dirname, 'src/scss'),
       '@/domain': path.resolve(__dirname, 'src/domain'),
       '@/hooks': path.resolve(__dirname, 'src/hooks'),
       '@/infrastructure': path.resolve(__dirname, 'src/infrastructure'),
@@ -86,6 +87,13 @@ export default defineConfig(({ mode }) => {
       '@/stores': path.resolve(__dirname, 'src/stores'),
       '@/utils': path.resolve(__dirname, 'src/utils'),
     },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/scss/abstracts/variables" as *;`
+      }
+    }
   },
     define: {
       'import.meta.env.VITE_BACKEND_URL': JSON.stringify(process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.DOMAIN}`),

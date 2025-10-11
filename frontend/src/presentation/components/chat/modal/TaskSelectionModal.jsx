@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
-import '@/css/modal/task-selection-modal.css';
+import '@/scss/components/_task-selection-modal.scss';;
 
 const TaskSelectionModal = ({ 
   isOpen, 

@@ -1,0 +1,330 @@
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* SidebarLeft Component Styles */
+
+/* Main Sidebar Container - Collapsed by default, show strip */
+.sidebar-left__sidebar-left {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: var(--footer-height);
+  height: calc(100vh - var(--header-height) - var(--footer-height));
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  width: var(--sidebar-left-width);
+  min-width: var(--sidebar-left-width);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+  transform: translateX(calc(-100% + clamp(1rem, 2vw, 1.25rem))); /* Show responsive strip */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Expand sidebar on hover */
+.sidebar-left:hover {
+  transform: translateX(0); /* Show full sidebar */
+  z-index: 100; /* Same level as main content */
+}
+
+/* Alternative class for when sidebar is wrapped */
+.sidebar-left__chat-sidebar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  height: calc(100vh - var(--header-height));
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  width: var(--sidebar-left-width);
+  min-width: var(--sidebar-left-width);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+  
+  .sidebar-left__sidebar-left-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+  
+  /* Sidebar Panel Container */
+.sidebar-left__sidebar-panel-container {
+  flex: 1;
+  overflow: hidden;
+}
+  
+  .sidebar-left__btn-icon {
+    background: none;
+    border: none;
+    color: #8ca0b3;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: var(--space-xs) 8px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+  }
+  
+  .btn-icon:hover {
+    background: #23272e;
+    color: #4e8cff;
+  }
+  
+  /* IDE Management Styles */
+  .sidebar-left__ide-management-section {
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-sm) 0;
+    margin-bottom: var(--space-md);
+    border-radius: var(--radius-sm);
+  }
+  
+  .sidebar-left__ide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-md) var(--space-sm) var(--space-md);
+  }
+  
+  .ide-header h4 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    color: #888888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .sidebar-left__ide-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    transition: max-height 0.3s;
+  }
+  
+  .sidebar-left__ide-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-size: var(--font-size-xs);
+    color: #cccccc;
+    transition: background-color 0.1s;
+    border-left: 3px solid transparent;
+  }
+  
+  .ide-item:hover {
+    background: #2a2d2e;
+  }
+  
+  .ide-item.sidebar-left__active {
+    background: #094771;
+    border-left-color: #007acc;
+  }
+  
+  .sidebar-left__ide-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .sidebar-left__ide-title {
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sidebar-left__ide-icon {
+    font-size: var(--font-size-sm);
+    margin-right: 2px;
+  }
+
+  .sidebar-left__ide-name {
+    font-weight: var(--font-weight-semibold);
+    color: #4e8cff;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .sidebar-left__ide-port {
+    color: #888888;
+    font-size: 10px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  }
+  
+  .sidebar-left__ide-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 10px;
+    color: #888888;
+  }
+  
+  .sidebar-left__ide-status {
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  
+  .ide-status.sidebar-left__running {
+    background: #2d5a2d;
+    color: #4ec9b0;
+  }
+  
+  .ide-status.sidebar-left__starting {
+    background: #5a5a2d;
+    color: #f7df1e;
+  }
+  
+  .sidebar-left__ide-source {
+    font-style: italic;
+  }
+  
+  .sidebar-left__ide-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  
+  .ide-switch-btn,
+  .ide-stop-btn,
+  .sidebar-left__ide-refresh-btn {
+    background: transparent;
+    border: none;
+    color: #cccccc;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 2px;
+    font-size: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  .ide-switch-btn:hover,
+  .ide-refresh-btn:hover {
+    background: #3c3c3c;
+    color: #007acc;
+  }
+  
+  .ide-stop-btn:hover {
+    background: #3c3c3c;
+    color: #ff6b6b;
+  }
+  
+  .sidebar-left__active-indicator {
+    color: #4ec9b0;
+    font-weight: bold;
+    font-size: var(--font-size-xs);
+  }
+  
+  .sidebar-left__no-ides {
+    padding: var(--space-sm) 16px;
+    text-align: center;
+    color: #888888;
+    font-style: italic;
+    font-size: 11px;
+  }
+  
+  /* Placeholder for other panels */
+.code-panel,
+.git-panel,
+.sidebar-left__default-panel {
+  padding: var(--space-md);
+  color: #cccccc;
+  text-align: center;
+  font-style: italic;
+}
+  
+  /* Light Theme Support */
+  body.light-theme .sidebar-left__sidebar-header {
+    border-bottom-color: #e1e5e9;
+  }
+  
+  body.light-theme .sidebar-left__chat-session-item {
+    background: #f8f9fa;
+    color: #495057;
+  }
+  
+  body.light-theme .chat-session-item:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+  }
+  
+  body.light-theme .chat-session-item.sidebar-left__active {
+    background: #e3f2fd;
+    border-color: #2196f3;
+  }
+  
+  body.light-theme .sidebar-left__session-meta {
+    color: #6c757d;
+  }
+  
+  body.light-theme .sidebar-left__session-delete-btn {
+    color: #adb5bd;
+  }
+  
+  body.light-theme .session-delete-btn:hover {
+    background: #dc3545;
+    color: white;
+  }
+  
+  body.light-theme .sidebar-left__sidebar-footer {
+    border-top-color: #e1e5e9;
+  }
+  
+  body.light-theme .quick-actions .sidebar-left__btn-secondary {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+  }
+  
+  body.light-theme .quick-actions .btn-secondary:hover {
+    background: #e9ecef;
+    border-color: #2196f3;
+    color: #2196f3;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .sidebar-left__sidebar-left {
+      width: 100%;
+      min-width: 100%;
+      left: 0;
+      right: 0;
+      bottom: 32px;
+    }
+    
+    .sidebar-left.sidebar-left__open {
+      transform: translateX(0);
+    }
+    
+    .sidebar-header h3 {
+      font-size: 1em;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .sidebar-left__sidebar-left {
+      width: 100%;
+      min-width: 100%;
+    }
+    
+    .sidebar-left__sidebar-left-content {
+      padding: var(--space-sm);
+    }
+    
+    .sidebar-header h3 {
+      font-size: 0.9em;
+    }
+  }

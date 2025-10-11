@@ -130,17 +130,17 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
 
   const renderOverview = () => (
     <div className="space-y-4">
-      <div className="panel-header flex items-center justify-between mb-4">
-        <div className="panel-title text-lg font-semibold text-white">Frameworks</div>
+      <div className="sidebar-right__panel-header flex items-center justify-between mb-4">
+        <div className="sidebar-right__panel-title text-lg font-semibold text-white">Frameworks</div>
         <input
           type="text"
-          className="search-input bg-gray-800 text-white rounded px-2 py-1"
+          className="sidebar-right__search-input bg-gray-800 text-white rounded px-2 py-1"
           placeholder="Search frameworks..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="frameworks-panel">
+      <div className="sidebar-right__frameworks-panel">
         {frameworks.map(fw => (
           <div
             key={fw.id}
@@ -152,7 +152,7 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-white">{fw.name}</span>
                 {isWorkflowFramework(fw.id) && (
-                  <span className="workflow-badge">Workflow</span>
+                  <span className="sidebar-right__workflow-badge">Workflow</span>
                 )}
               </div>
               <span className="text-gray-400 text-xs">{fw.id}</span>
@@ -253,18 +253,18 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
   };
 
   return (
-    <div className="frameworks-tab space-y-4 p-3">
-      <div className="panel-header flex items-center justify-between mb-4">
-        <div className="panel-title text-lg font-semibold text-white">Frameworks</div>
+    <div className="sidebar-right__frameworks-tab space-y-4 p-3">
+      <div className="sidebar-right__panel-header flex items-center justify-between mb-4">
+        <div className="sidebar-right__panel-title text-lg font-semibold text-white">Frameworks</div>
         <input
           type="text"
-          className="search-input bg-gray-800 text-white rounded px-2 py-1"
+          className="sidebar-right__search-input bg-gray-800 text-white rounded px-2 py-1"
           placeholder="Search frameworks..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="frameworks-panel grid gap-3">
+      <div className="sidebar-right__frameworks-panel grid gap-3">
         {frameworks.map(fw => (
           <div
             key={fw.id}
@@ -280,10 +280,10 @@ function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNa
               <div className="flex items-center gap-2">
                 <div className="font-semibold text-white text-base">{fw.name}</div>
                 {isWorkflowFramework(fw.id) && (
-                  <span className="workflow-badge">Workflow</span>
+                  <span className="sidebar-right__workflow-badge">Workflow</span>
                 )}
               </div>
-              <span className="category-badge framework">Framework</span>
+              <span className="sidebar-right__category-badge framework">Framework</span>
               <div className="text-xs text-gray-400">{fw.id}</div>
             </div>
           </div>

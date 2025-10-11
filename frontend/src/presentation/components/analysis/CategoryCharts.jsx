@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/css/components/analysis/category-charts.css';
+import '@/scss/components/_category-charts.scss';;
 
 const CategoryCharts = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
   if (loading) {

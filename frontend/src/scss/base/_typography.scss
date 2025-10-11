@@ -1,0 +1,265 @@
+// =============================================================================
+// TYPOGRAPHY
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// Base Typography
+// -----------------------------------------------------------------------------
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  background: $bg-primary;
+  overflow-x: hidden;
+  height: 100vh;
+}
+
+// Headings
+// -----------------------------------------------------------------------------
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  color: $text-primary;
+  margin-bottom: $space-sm;
+}
+
+h1 {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  margin-bottom: $space-md;
+}
+
+h2 {
+  font-size: $font-size-xl;
+  margin-bottom: $space-md;
+}
+
+h3 {
+  font-size: $font-size-lg;
+  margin-bottom: $space-sm;
+}
+
+h4 {
+  font-size: $font-size-base;
+  margin-bottom: $space-sm;
+}
+
+h5 {
+  font-size: $font-size-sm;
+  margin-bottom: $space-xs;
+}
+
+h6 {
+  font-size: $font-size-xs;
+  margin-bottom: $space-xs;
+}
+
+// Paragraphs
+// -----------------------------------------------------------------------------
+p {
+  margin-bottom: $space-md;
+  line-height: $line-height-relaxed;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Links
+// -----------------------------------------------------------------------------
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-normal;
+  
+  &:hover {
+    color: $color-primary-hover;
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+// Lists
+// -----------------------------------------------------------------------------
+ul,
+ol {
+  margin-bottom: $space-md;
+  padding-left: $space-lg;
+  
+  li {
+    margin-bottom: $space-xs;
+    line-height: $line-height-relaxed;
+  }
+}
+
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+// Code
+// -----------------------------------------------------------------------------
+code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  background: $bg-tertiary;
+  color: $color-primary;
+  padding: 0.125rem 0.25rem;
+  border-radius: $radius-sm;
+  border: 1px solid $border-color;
+}
+
+pre {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: $font-size-sm;
+  background: $bg-tertiary;
+  color: $text-primary;
+  padding: $space-md;
+  border-radius: $radius-md;
+  border: 1px solid $border-color;
+  overflow-x: auto;
+  margin-bottom: $space-md;
+  
+  code {
+    background: none;
+    padding: 0;
+    border: none;
+    color: inherit;
+  }
+}
+
+// Blockquotes
+// -----------------------------------------------------------------------------
+blockquote {
+  margin: $space-lg 0;
+  padding: $space-md $space-lg;
+  background: $bg-tertiary;
+  border-left: 4px solid $color-primary;
+  border-radius: 0 $radius-md $radius-md 0;
+  font-style: italic;
+  color: $text-secondary;
+  
+  p {
+    margin-bottom: 0;
+  }
+  
+  cite {
+    display: block;
+    margin-top: $space-sm;
+    font-size: $font-size-sm;
+    color: $text-tertiary;
+    font-style: normal;
+    
+    &::before {
+      content: '— ';
+    }
+  }
+}
+
+// Horizontal Rules
+// -----------------------------------------------------------------------------
+hr {
+  border: none;
+  height: 1px;
+  background: $border-color;
+  margin: $space-xl 0;
+}
+
+// Text Utilities
+// -----------------------------------------------------------------------------
+.text-xs { font-size: $font-size-xs; }
+.text-sm { font-size: $font-size-sm; }
+.text-base { font-size: $font-size-base; }
+.text-lg { font-size: $font-size-lg; }
+.text-xl { font-size: $font-size-xl; }
+.text-2xl { font-size: $font-size-2xl; }
+
+.font-normal { font-weight: $font-weight-normal; }
+.font-medium { font-weight: $font-weight-medium; }
+.font-semibold { font-weight: $font-weight-semibold; }
+.font-bold { font-weight: $font-weight-bold; }
+
+.leading-tight { line-height: $line-height-tight; }
+.leading-normal { line-height: $line-height-normal; }
+.leading-relaxed { line-height: $line-height-relaxed; }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+.text-primary { color: $text-primary; }
+.text-secondary { color: $text-secondary; }
+.text-tertiary { color: $text-tertiary; }
+
+.text-truncate {
+  @extend %text-truncate;
+}
+
+// Responsive Typography
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); }
+  h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); }
+  h3 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
+}
+
+@include respond-to(md) {
+  body {
+    font-size: $font-size-base;
+  }
+  
+  h1 { font-size: $font-size-2xl; }
+  h2 { font-size: $font-size-xl; }
+  h3 { font-size: $font-size-lg; }
+}
+
+// Print Styles
+// -----------------------------------------------------------------------------
+@media print {
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: #000;
+    page-break-after: avoid;
+  }
+  
+  p, blockquote {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  blockquote {
+    page-break-inside: avoid;
+  }
+  
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+  
+  code, pre {
+    background: #f5f5f5;
+    color: #000;
+  }
+}

@@ -17,7 +17,7 @@ import {
   getCompletionDisplayText,
   getCompletionColor 
 } from '@/utils/taskCompletionUtils';
-import '@/css/panel/task-panel.css';
+import '@/scss/components/_task-panel.scss';;
 
 // Import the SAME fetchPromptContent function that works everywhere
 async function fetchPromptContent(promptFile) {
@@ -47,7 +47,7 @@ async function fetchPromptContent(promptFile) {
 // Category Tabs Component for Left Sidebar
 const CategoryTabs = ({ categories, selectedCategory, onCategorySelect, taskCounts }) => {
   return (
-    <div className="category-tabs-sidebar w-48 bg-gray-800 rounded p-3">
+    <div className="task-panel__category-tabs-sidebar w-48 bg-gray-800 rounded p-3">
       <h4 className="text-sm font-semibold text-gray-300 mb-3">Categories</h4>
       <div className="space-y-2">
         {Object.entries(categories).map(([key, category]) => {
@@ -96,13 +96,13 @@ const VerticalActionButtons = ({
   ];
 
   return (
-    <div className="vertical-action-buttons bg-gray-800 rounded p-3">
+    <div className="task-panel__vertical-action-buttons bg-gray-800 rounded p-3">
       <h4 className="text-sm font-semibold text-gray-300 mb-3">Actions</h4>
       <div className="space-y-2">
         {categoryActions.map((action) => (
           <button
             key={action.id}
-            className="action-button w-full btn-secondary text-sm text-left"
+            className="task-panel__action-button w-full btn-secondary text-sm text-left"
             onClick={action.handler}
             title={action.label}
           >
@@ -674,21 +674,21 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   return (
-    <div className="tasks-tab">
+    <div className="task-panel__tasks-tab">
       {/* ✅ NEW: Enhanced Header with Project Context */}
-      <div className="tasks-header">
-        <div className="tasks-header-content">
-          <div className="tasks-title-section">
-            <h3 className="tasks-title">📋 Task Management</h3>
+      <div className="task-panel__tasks-header">
+        <div className="task-panel__tasks-header-content">
+          <div className="task-panel__tasks-title-section">
+            <h3 className="task-panel__tasks-title">📋 Task Management</h3>
             {projectName && (
-              <div className="project-context">
+              <div className="task-panel__project-context">
                 <span className="project-label">Project:</span>
                 <span className="project-name">{projectName}</span>
                 <span className="task-count">({taskCount} tasks)</span>
               </div>
             )}
           </div>
-          <div className="tasks-header-buttons">
+          <div className="task-panel__tasks-header-buttons">
             <button 
               className="btn-primary text-sm"
               onClick={handleCreateTask}
@@ -698,7 +698,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
               ➕ Create
             </button>
             <button 
-              className="btn-secondary text-sm"
+              className="task-panel__btn-secondary"
               onClick={handleSyncTasks}
               disabled={isLoadingManualTasks || !projectId}
               title={projectId ? "Sync tasks with backend" : "No project selected"}
@@ -706,7 +706,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
               {isLoadingManualTasks ? 'Syncing...' : '🔄 Sync'}
             </button>
             <button 
-              className="btn-secondary text-sm"
+              className="task-panel__btn-secondary"
               onClick={handleOpenReviewModal}
               disabled={isReviewLoading || !projectId || manualTasks.length === 0}
               title={projectId ? "Review selected tasks" : "No project selected"}
@@ -718,17 +718,17 @@ function TasksPanelComponent({ eventBus, activePort }) {
       </div>
 
       {/* Search and Filter */}
-      <div className="tasks-search-filter">
-        <div className="search-filter-content">
+      <div className="task-panel__tasks-search-filter">
+        <div className="task-panel__search-filter-content">
           <input 
             type="text" 
             placeholder="Search tasks..." 
-            className="search-input"
+            className="sidebar-right__search-input"
             value={taskSearch}
             onChange={(e) => setTaskSearch(e.target.value)}
           />
           <select 
-            className="filter-select"
+            className="task-panel__filter-select"
             value={taskFilter}
             onChange={(e) => setTaskFilter(e.target.value)}
           >
@@ -748,23 +748,23 @@ function TasksPanelComponent({ eventBus, activePort }) {
       </div>
 
       {/* Main Content Area - Category Tabs + Tasks List */}
-      <div className="tasks-main-content">
+      <div className="task-panel__tasks-main-content">
         {/* Category Tabs - Left Sidebar */}
-        <div className="category-tabs-sidebar">
+        <div className="task-panel__category-tabs-sidebar">
           <h4>Categories</h4>
-          <div className="category-tabs-list">
+          <div className="task-panel__category-tabs-list">
             {Object.entries(MAIN_CATEGORIES).map(([key, category]) => {
               const count = getCategoryTaskCounts()[key] || 0;
               const isActive = selectedCategory === key;
               return (
                 <button
                   key={key}
-                  className={`category-tab ${isActive ? 'active' : ''}`}
+                  className={`task-panel__category-tab ${isActive ? 'active' : ''}`}
                   onClick={() => setSelectedCategory(key)}
                 >
-                  <div className="category-tab-content">
-                    <span className="category-tab-text">{getCategoryIcon(key)} {category}</span>
-                    <span className="category-tab-count">{count}</span>
+                  <div className="task-panel__category-tab-content">
+                    <span className="task-panel__category-tab-text">{getCategoryIcon(key)} {category}</span>
+                    <span className="task-panel__category-tab-count">{count}</span>
                   </div>
                 </button>
               );
@@ -773,48 +773,48 @@ function TasksPanelComponent({ eventBus, activePort }) {
         </div>
         
         {/* Tasks List - Right Side */}
-        <div className="tasks-list-container">
+        <div className="task-panel__tasks-list-container">
           {isLoadingManualTasks ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <span className="loading-text">Loading tasks...</span>
+            <div className="task-panel__loading-container">
+              <div className="task-panel__loading-spinner"></div>
+              <span className="task-panel__loading-text">Loading tasks...</span>
             </div>
           ) : isWaitingForSync && !isInitialSyncComplete ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <span className="loading-text">Waiting for task sync to complete...</span>
+            <div className="task-panel__loading-container">
+              <div className="task-panel__loading-spinner"></div>
+              <span className="task-panel__loading-text">Waiting for task sync to complete...</span>
             </div>
           ) : filteredTasks.length > 0 ? (
-            <div className="tasks-list">
+            <div className="task-panel__tasks-list">
               {Object.entries(groupedTasks).map(([featureId, featureTasks]) => {
                 // Get the main task (index task) for display
                 const mainTask = featureTasks.find(task => task.isIndexTask) || featureTasks[0];
                 const featureName = mainTask?.name || featureId.replace(/_/g, ' ');
                 
                 return (
-                  <div key={featureId} className="category-group">
-                    <div className="category-header">
+                  <div key={featureId} className="task-panel__category-group">
+                    <div className="task-panel__category-header">
                       <TaskTypeBadge 
                         category={mainTask?.category || 'manual'}
                         size="small"
                         showSubcategory={false}
                       />
-                      <span className="category-count">
+                      <span className="task-panel__category-count">
                         {featureTasks.length} tasks
                       </span>
                     </div>
-                    <div className="category-tasks">
+                    <div className="task-panel__category-tasks">
                       {featureTasks.map((task) => (
                         <div
                           key={task.id}
-                          className="task-item"
+                          className="task-panel__task-item"
                           onClick={() => handleTaskClick(task)}
                         >
-                          <div className="task-header">
-                            <h4 className="task-title">{getTaskTitle(task)}</h4>
-                            <div className="task-badges">
+                          <div className="task-panel__task-header">
+                            <h4 className="task-panel__task-title">{getTaskTitle(task)}</h4>
+                            <div className="task-panel__task-badges">
                               <span 
-                                className="priority-badge"
+                                className="task-panel__priority-badge"
                                 style={{ backgroundColor: getPriorityColor(task.priority) }}
                               >
                                 {getPriorityText(task.priority)}
@@ -827,9 +827,9 @@ function TasksPanelComponent({ eventBus, activePort }) {
                               />
                             </div>
                           </div>
-                          <div className="task-footer">
-                            <span className="task-category">{task.category}</span>
-                            <span className="task-date">{formatDate(task.createdAt || task.created_at)}</span>
+                          <div className="task-panel__task-footer">
+                            <span className="task-panel__task-category">{task.category}</span>
+                            <span className="task-panel__task-date">{formatDate(task.createdAt || task.created_at)}</span>
                           </div>
                         </div>
                       ))}
@@ -839,7 +839,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
               })}
             </div>
           ) : (
-            <div className="no-tasks">
+            <div className="task-panel__no-tasks">
               {taskSearch || selectedCategory !== 'all' || taskFilter !== 'all' 
                 ? 'No tasks match your filters' 
                 : 'No tasks found'}
@@ -849,56 +849,56 @@ function TasksPanelComponent({ eventBus, activePort }) {
       </div>
 
       {/* Vertical Action Buttons - Bottom */}
-      <div className="vertical-action-buttons">
+      <div className="task-panel__vertical-action-buttons">
         <h4>Actions</h4>
-        <div className="action-buttons-list">
+        <div className="task-panel__action-buttons-list">
           <button
-            className="action-button"
+            className="task-panel__action-button"
             onClick={handleGenerateTasks}
             title="Generate"
           >
-            <span className="action-icon">⚡</span>
-            <span className="action-text">Generate</span>
+            <span className="task-panel__action-icon">⚡</span>
+            <span className="task-panel__action-text">Generate</span>
           </button>
           <button
-            className="action-button"
+            className="task-panel__action-button"
             onClick={handleRefactorTasks}
             title="Refactor"
           >
-            <span className="action-icon">🔧</span>
-            <span className="action-text">Refactor</span>
+            <span className="task-panel__action-icon">🔧</span>
+            <span className="task-panel__action-text">Refactor</span>
           </button>
           <button
-            className="action-button"
+            className="task-panel__action-button"
             onClick={handleTestTasks}
             title="Test"
           >
-            <span className="action-icon">🧪</span>
-            <span className="action-text">Test</span>
+            <span className="task-panel__action-icon">🧪</span>
+            <span className="task-panel__action-text">Test</span>
           </button>
           <button
-            className="action-button"
+            className="task-panel__action-button"
             onClick={handleDeployTasks}
             title="Deploy"
           >
-            <span className="action-icon">🚀</span>
-            <span className="action-text">Deploy</span>
+            <span className="task-panel__action-icon">🚀</span>
+            <span className="task-panel__action-text">Deploy</span>
           </button>
           <button
-            className="action-button"
+            className="task-panel__action-button"
             onClick={handleSecurityTasks}
             title="Security"
           >
-            <span className="action-icon">🔒</span>
-            <span className="action-text">Security</span>
+            <span className="task-panel__action-icon">🔒</span>
+            <span className="task-panel__action-text">Security</span>
           </button>
           <button
-            className="action-button"
+            className="task-panel__action-button"
             onClick={handleOptimizeTasks}
             title="Optimize"
           >
-            <span className="action-icon">⚡</span>
-            <span className="action-text">Optimize</span>
+            <span className="task-panel__action-icon">⚡</span>
+            <span className="task-panel__action-text">Optimize</span>
           </button>
         </div>
       </div>
@@ -932,7 +932,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
         onStartReview={handleStartReview}
         isLoading={isReviewLoading}
       />
-      {feedback && <div className="feedback-message">{feedback}</div>}
+      {feedback && <div className="task-panel__feedback-message">{feedback}</div>}
     </div>
   );
 }

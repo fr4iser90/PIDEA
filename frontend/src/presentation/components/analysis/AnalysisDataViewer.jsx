@@ -17,7 +17,7 @@ import {
 } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import CategoryAnalysisSection from './CategoryAnalysisSection';
 import IndividualAnalysisButtons from './IndividualAnalysisButtons';
-import '@/css/components/analysis/analysis-data-viewer.css';
+import '@/scss/components/_analysis-data-viewer.scss';;
 
 const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   // ✅ NEW: Use category-based selectors instead of legacy selectors

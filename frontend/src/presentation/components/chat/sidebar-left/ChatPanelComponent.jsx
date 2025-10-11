@@ -10,7 +10,7 @@
  * @class ChatPanelComponent
  */
 import React, { useState, useEffect } from 'react';
-import '@/css/panel/chat-panel.css';
+import '@/scss/components/_chat-panel.scss';;
 
 function ChatPanelComponent({ eventBus, currentSessionId, onSessionSelect }) {
   const [chatSessions, setChatSessions] = useState([]);
@@ -60,11 +60,11 @@ function ChatPanelComponent({ eventBus, currentSessionId, onSessionSelect }) {
   };
 
   return (
-    <div className="chat-panel">
-      <div className="panel-header">
+    <div className="chat-panel__chat-panel">
+      <div className="chat-panel__panel-header">
         <h3>💬 Chat Sessions</h3>
         <button 
-          className="btn-icon" 
+          className="chat-panel__btn-icon" 
           title="Neuer Chat" 
           onClick={handleNewChat}
         >
@@ -72,9 +72,9 @@ function ChatPanelComponent({ eventBus, currentSessionId, onSessionSelect }) {
         </button>
       </div>
       
-      <div className="chat-sessions-list">
+      <div className="chat-panel__chat-sessions-list">
         {chatSessions.length === 0 ? (
-          <div className="no-sessions">Keine Chats vorhanden</div>
+          <div className="chat-panel__no-sessions">Keine Chats vorhanden</div>
         ) : (
           chatSessions.map(session => (
             <div
@@ -86,19 +86,19 @@ function ChatPanelComponent({ eventBus, currentSessionId, onSessionSelect }) {
                 }
               }}
             >
-              <div className="session-info">
-                <div className="session-title">{session.title}</div>
-                <div className="session-meta">
-                  <span className="message-count">
+              <div className="chat-panel__session-info">
+                <div className="chat-panel__session-title">{session.title}</div>
+                <div className="chat-panel__session-meta">
+                  <span className="chat-panel__message-count">
                     {session.messageCount || 0} Nachrichten
                   </span>
-                  <span className="last-activity">
+                  <span className="chat-panel__last-activity">
                     {formatDate(session.lastActivity)}
                   </span>
                 </div>
               </div>
               <button
-                className="session-delete-btn"
+                className="chat-panel__session-delete-btn"
                 title="Chat löschen"
                 onClick={e => {
                   e.stopPropagation();

@@ -1,0 +1,170 @@
+// =============================================================================
+// _NOTIFICATION
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+.notification__notification-system {
+  position: fixed;
+  top: var(--space-md); /* Modern design system variable */
+  right: var(--space-md); /* Modern design system variable */
+  z-index: 9999;
+  max-width: clamp(18.75rem, 30vw, 25rem); /* 300px-400px responsive */
+  max-height: 80vh;
+  overflow-y: auto;
+  pointer-events: none;
+}
+
+.notification__notification {
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
+  margin-bottom: var(--space-sm); /* Modern design system variable */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all var(--transition-slow);
+  animation: slideIn 0.3s ease-out;
+  max-width: 100%;
+}
+
+.notification:hover {
+  transform: translateX(calc(-1 * var(--space-xs))); /* Modern design system variable */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification__notification-error {
+  border-left: 4px solid #e53e3e;
+  background: linear-gradient(135deg, #2d3748 0%, #2a2025 100%);
+}
+
+.notification__notification-warning {
+  border-left: 4px solid #d69e2e;
+  background: linear-gradient(135deg, #2d3748 0%, #2a2520 100%);
+}
+
+.notification__notification-success {
+  border-left: 4px solid #38a169;
+  background: linear-gradient(135deg, #2d3748 0%, #202a25 100%);
+}
+
+.notification__notification-info {
+  border-left: 4px solid #3182ce;
+  background: linear-gradient(135deg, #2d3748 0%, #20252a 100%);
+}
+
+.notification__notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm); /* Modern design system variable */
+}
+
+.notification__notification-icon {
+  font-size: var(--font-size-base); /* Modern design system variable */
+  margin-right: var(--space-sm); /* Modern design system variable */
+}
+
+.notification__notification-title {
+  font-weight: var(--font-weight-semibold); /* Modern design system variable */
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.notification__notification-close {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: var(--font-size-lg); /* Modern design system variable */
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-normal);
+}
+
+.notification-close:hover {
+  background: rgba(160, 174, 192, 0.2);
+  color: #e2e8f0;
+}
+
+.notification__notification-message {
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  color: #cbd5e0;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.notification__notification-actions {
+  margin-top: var(--space-sm); /* Modern design system variable */
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notification__notification-dismiss-btn {
+  background: #4a5568;
+  border: none;
+  color: #e2e8f0;
+  padding: var(--space-xs) var(--space-md); /* Modern design system variables */
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notification-dismiss-btn:hover {
+  background: #2d3748;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.notification.notification__removing {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .notification__notification-system {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .notification__notification {
+    margin-bottom: 6px;
+    padding: 10px 12px;
+  }
+} 

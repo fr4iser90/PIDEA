@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
-import '@/css/global/login.css';
+import '@/scss/base/_login.scss';;
 
 const RegisterComponent = ({ onSwitchToLogin }) => {
   const { register, isLoading, error, clearError } = useAuthStore();

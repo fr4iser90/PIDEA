@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
-import '@/css/modal/task-review-modal.css';
+import '@/scss/components/_task-review-modal.scss';;
 
 const TaskReviewModal = ({ 
   isOpen, 

@@ -2,8 +2,8 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
-import '@/css/panel/prompt-panel.css';
-import '@/css/modal/prompt-details-modal.css';
+import '@/scss/components/_prompt-panel.scss';;
+import '@/scss/components/_prompt-details-modal.scss';;
 
 function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: attachedPromptsProp, setAttachedPrompts: setAttachedPromptsProp }) {
   const [prompts, setPrompts] = useState([]);
@@ -144,8 +144,8 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: 
         if (!node[part]) node[part] = {};
         node = node[part];
       }
-      if (!node.__prompts) node.__prompts = [];
-      node.__prompts.push(prompt);
+      if (!node._prompts) node._prompts = [];
+      node._prompts.push(prompt);
     });
     return tree;
   }
@@ -155,7 +155,7 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: 
   // Rekursive Komponente zum Rendern der Gruppen
   function RenderPromptTree({ node, path = [] }) {
     return Object.entries(node).map(([key, value]) => {
-      if (key === "__prompts") {
+      if (key === "_prompts") {
         return value.map(prompt => (
           <div
             key={prompt.file}
@@ -191,11 +191,11 @@ function PromptsPanelComponent({ onPromptClick, onQuickPrompt, attachedPrompts: 
   return (
     <div className="prompts-tab space-y-4 p-3">
       <PromptDetailsModal open={modalOpen} onClose={() => setModalOpen(false)} title={modalTitle} content={modalContent} />
-      <div className="panel-header flex items-center justify-between mb-4">
-        <div className="panel-title text-lg font-semibold text-white">Prompts</div>
+      <div className="sidebar-right__panel-header flex items-center justify-between mb-4">
+        <div className="sidebar-right__panel-title text-lg font-semibold text-white">Prompts</div>
         <input
           type="text"
-          className="search-input bg-gray-800 text-white rounded px-2 py-1"
+          className="sidebar-right__search-input bg-gray-800 text-white rounded px-2 py-1"
           placeholder="Search prompts..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}

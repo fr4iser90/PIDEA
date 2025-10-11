@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import '@/css/main/git.css';
+import '@/scss/pages/_git.scss';;
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
 import VersionManagementComponent from '../version/VersionManagementComponent.jsx';
@@ -239,16 +239,16 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const localBranches = gitBranches.localBranches;
 
   return (
-    <div className="git-management">
+    <div className="git__git-management">
       {/* Git Status Header */}
-      <div className="git-status-header">
-        <div className="git-status-info">
-          <span className="git-status-icon">{getStatusIcon()}</span>
-          <span className="git-status-text">{getStatusText()}</span>
-          <span className="git-branch-name">branch: {currentBranch || 'Loading...'}</span>
+      <div className="git__git-status-header">
+        <div className="git__git-status-info">
+          <span className="git__git-status-icon">{getStatusIcon()}</span>
+          <span className="git__git-status-text">{getStatusText()}</span>
+          <span className="git__git-branch-name">branch: {currentBranch || 'Loading...'}</span>
         </div>
         
-        <div className="git-actions">
+        <div className="git__git-actions">
           <button
             onClick={async () => {
               logger.info('Refresh button clicked - refreshing git status');
@@ -262,7 +262,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
                 setIsLoading(false);
               }
             }}
-            className="git-btn refresh-btn"
+            className="git__git-btn git__refresh-btn"
             disabled={isLoading}
             title="Refresh Git status"
           >
@@ -272,15 +272,15 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       </div>
 
       {/* Git Tab Navigation */}
-      <div className="git-tabs">
+      <div className="git__git-tabs">
         <button
-          className={`git-tab ${activeGitTab === 'git-operations' ? 'active' : ''}`}
+          className={`git__git-tab ${activeGitTab === 'git-operations' ? 'git__active' : ''}`}
           onClick={() => setActiveGitTab('git-operations')}
         >
           🔧 Git Operations
         </button>
         <button
-          className={`git-tab ${activeGitTab === 'version-management' ? 'active' : ''}`}
+          className={`git__git-tab ${activeGitTab === 'version-management' ? 'git__active' : ''}`}
           onClick={() => setActiveGitTab('version-management')}
         >
           📦 Version Management
@@ -289,68 +289,68 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
 
       {/* Workspace Info */}
       {workspacePath && (
-        <div className="workspace-info">
-          <span className="workspace-label">Workspace:</span>
-          <span className="workspace-path">{workspacePath}</span>
+        <div className="git__workspace-info">
+          <span className="git__workspace-label">Workspace:</span>
+          <span className="git__workspace-path">{workspacePath}</span>
         </div>
       )}
 
       {/* Tab Content */}
-      <div className="git-tab-content">
+      <div className="git__git-tab-content">
         {/* Git Operations Tab */}
         {activeGitTab === 'git-operations' && (
           <div className="git-operations-content">
             {/* Git Management Buttons */}
-            <div className="git-controls">
-              <div className="git-button-group">
+            <div className="git__git-controls">
+              <div className="git__git-button-group">
                 <button
                   onClick={handleValidate}
-                  className="git-btn validate-btn"
+                  className="git__git-btn git__validate-btn"
                   disabled={isLoading}
                   title="Validate current changes"
                 >
-                  <span className="btn-icon">✅</span>
-                  <span className="btn-text">Validate</span>
+                  <span className="git__btn-icon">✅</span>
+                  <span className="git__btn-text">Validate</span>
                 </button>
 
                 <button
                   onClick={handleCompare}
-                  className="git-btn compare-btn"
+                  className="git__git-btn compare-btn"
                   disabled={isLoading}
                   title="Compare with main branch"
                 >
-                  <span className="btn-icon">🔍</span>
-                  <span className="btn-text">Compare</span>
+                  <span className="git__btn-icon">🔍</span>
+                  <span className="git__btn-text">Compare</span>
                 </button>
 
                 <button
                   onClick={handlePull}
-                  className="git-btn pull-btn"
+                  className="git__git-btn pull-btn"
                   disabled={isLoading}
                   title="Pull latest changes from main"
                 >
-                  <span className="btn-icon">⬇️</span>
-                  <span className="btn-text">Pull</span>
+                  <span className="git__btn-icon">⬇️</span>
+                  <span className="git__btn-text">Pull</span>
                 </button>
 
                 <button
                   onClick={handleMerge}
-                  className="git-btn merge-btn"
+                  className="git__git-btn merge-btn"
                   disabled={isLoading || currentBranch === 'main'}
                   title="Merge current branch into main"
                 >
-                  <span className="btn-icon">🔀</span>
-                  <span className="btn-text">Merge</span>
+                  <span className="git__btn-icon">🔀</span>
+                  <span className="git__btn-text">Merge</span>
                 </button>
 
                 <button
                   onClick={() => setShowPideaAgent(!showPideaAgent)}
-                  className="git-btn pidea-agent-toggle-btn"
+                  className="git__git-btn pidea-agent-toggle-btn"
                   disabled={isLoading}
                   title="Toggle Pidea-Agent branch management"
                 >
-                  <span className="btn-icon">🤖</span>
-                  <span className="btn-text">Pidea-Agent</span>
+                  <span className="git__btn-icon">🤖</span>
+                  <span className="git__btn-text">Pidea-Agent</span>
                 </button>
               </div>
             </div>
@@ -374,30 +374,30 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
 
             {/* Git Status Details */}
             {gitStatus.status && (
-              <div className="git-status-details">
-                <div className="status-section">
+              <div className="git__git-status-details">
+                <div className="git__status-section">
                   <h4>📝 Modified Files ({gitStatus.modifiedFiles.length})</h4>
-                  <ul className="file-list">
+                  <ul className="git__file-list">
                     {gitStatus.modifiedFiles.map(file => (
-                      <li key={file} className="file-item modified">{file}</li>
+                      <li key={file} className="git__file-item modified">{file}</li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="status-section">
+                <div className="git__status-section">
                   <h4>➕ Added Files ({gitStatus.addedFiles.length})</h4>
-                  <ul className="file-list">
+                  <ul className="git__file-list">
                     {gitStatus.addedFiles.map(file => (
-                      <li key={file} className="file-item added">{file}</li>
+                      <li key={file} className="git__file-item added">{file}</li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="status-section">
+                <div className="git__status-section">
                   <h4>🗑️ Deleted Files ({gitStatus.deletedFiles.length})</h4>
-                  <ul className="file-list">
+                  <ul className="git__file-list">
                     {gitStatus.deletedFiles.map(file => (
-                      <li key={file} className="file-item deleted">{file}</li>
+                      <li key={file} className="git__file-item deleted">{file}</li>
                     ))}
                   </ul>
                 </div>
@@ -420,28 +420,28 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       {/* Operation Result */}
       {operationResult && (
         <div className={`operation-result ${operationResult.type}`}>
-          <span className="result-icon">
+          <span className="git__result-icon">
             {operationResult.type === 'success' ? '✅' : '❌'}
           </span>
-          <span className="result-message">{operationResult.message}</span>
+          <span className="git__result-message">{operationResult.message}</span>
         </div>
       )}
 
       {/* Diff Modal */}
       {showDiff && (
-        <div className="diff-modal-overlay" onClick={() => setShowDiff(false)}>
-          <div className="diff-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="diff-header">
+        <div className="git__diff-modal-overlay" onClick={() => setShowDiff(false)}>
+          <div className="git__diff-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="git__diff-header">
               <h3>🔍 Changes vs Main Branch</h3>
               <button 
-                className="close-btn"
+                className="git__close-btn"
                 onClick={() => setShowDiff(false)}
               >
                 ✕
               </button>
             </div>
-            <div className="diff-content">
-              <pre className="diff-text">{diffContent}</pre>
+            <div className="git__diff-content">
+              <pre className="git__diff-text">{diffContent}</pre>
             </div>
           </div>
         </div>
@@ -449,11 +449,11 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
 
       {/* Pidea-Agent Branch Management */}
       {showPideaAgent && (
-        <div className="pidea-agent-section">
-          <div className="pidea-agent-header">
+        <div className="git__pidea-agent-section">
+          <div className="git__pidea-agent-header">
             <h3>🤖 Pidea-Agent Branch Management</h3>
             <button 
-              className="close-btn"
+              className="git__close-btn"
               onClick={() => setShowPideaAgent(false)}
             >
               ✕
@@ -474,8 +474,8 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">⏳</div>
+        <div className="git__loading-overlay">
+          <div className="git__loading-spinner">⏳</div>
           <span>Processing Git operation...</span>
         </div>
       )}

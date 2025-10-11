@@ -1,0 +1,490 @@
+// =============================================================================
+// _INDIVIDUAL-ANALYSIS-BUTTONS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Individual Analysis Buttons Component Styles */
+
+.individual-analysis-buttons__individual-analysis-buttons {
+  background: var(--surface-color, #ffffff);
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  padding: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
+  margin-bottom: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color, #e1e5e9);
+}
+
+.individual-analysis-buttons__analysis-buttons-header {
+  margin-bottom: clamp(1.25rem, 4vw, 1.5rem); /* 20px-24px responsive */
+}
+
+.analysis-buttons-header h3 {
+  margin: 0 0 clamp(0.5rem, 1vw, 0.75rem) 0; /* 8px-12px responsive */
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary, #1a1a1a);
+}
+
+.analysis-buttons-header p {
+  margin: 0 0 clamp(1rem, 3vw, 1.25rem) 0; /* 16px-20px responsive */
+  color: var(--text-secondary, #666);
+  font-size: clamp(0.875rem, 2.5vw, 0.95rem); /* 14px-15.2px responsive */
+}
+
+/* Run All Analysis Section */
+.individual-analysis-buttons__run-all-section {
+  margin-bottom: 24px;
+  padding: var(--space-md);
+  background: var(--surface-secondary, #f8f9fa);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light, #e9ecef);
+}
+
+.individual-analysis-buttons__btn-run-all-analysis {
+  width: 100%;
+  padding: var(--space-sm) 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-slow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-run-all-analysis:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-run-all-analysis:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-run-all-analysis .individual-analysis-buttons__loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.individual-analysis-buttons__run-all-progress {
+  margin-top: 12px;
+}
+
+.run-all-progress .individual-analysis-buttons__progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.run-all-progress .individual-analysis-buttons__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.3s ease;
+}
+
+.run-all-progress .individual-analysis-buttons__progress-text {
+  display: block;
+  text-align: center;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Analysis Buttons Grid */
+.individual-analysis-buttons__analysis-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Individual Analysis Button Containers */
+.individual-analysis-buttons__analysis-button-container {
+  background: var(--surface-color, #ffffff);
+  border: 2px solid var(--border-color, #e1e5e9);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  transition: all var(--transition-slow);
+  position: relative;
+  overflow: hidden;
+}
+
+.analysis-button-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color, #667eea);
+}
+
+.analysis-button-container.individual-analysis-buttons__blue {
+  border-left: 4px solid #2196F3;
+}
+
+.analysis-button-container.individual-analysis-buttons__red {
+  border-left: 4px solid #f44336;
+}
+
+.analysis-button-container.individual-analysis-buttons__green {
+  border-left: 4px solid #4CAF50;
+}
+
+.analysis-button-container.individual-analysis-buttons__purple {
+  border-left: 4px solid #9C27B0;
+}
+
+.analysis-button-container.individual-analysis-buttons__orange {
+  border-left: 4px solid #FF9800;
+}
+
+.analysis-button-container.individual-analysis-buttons__teal {
+  border-left: 4px solid #009688;
+}
+
+/* Button Header */
+.individual-analysis-buttons__analysis-button-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.individual-analysis-buttons__analysis-icon {
+  font-size: 1.5rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--surface-secondary, #f8f9fa);
+}
+
+.individual-analysis-buttons__analysis-label {
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary, #1a1a1a);
+}
+
+/* Button Content */
+.individual-analysis-buttons__analysis-button-content {
+  margin-bottom: 16px;
+}
+
+.individual-analysis-buttons__analysis-description {
+  margin: 0 0 16px 0;
+  color: var(--text-secondary, #666);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Progress Bar */
+.individual-analysis-buttons__analysis-progress {
+  margin-bottom: 12px;
+}
+
+.analysis-progress .individual-analysis-buttons__progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-secondary, #f8f9fa);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.analysis-progress .individual-analysis-buttons__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.3s ease;
+}
+
+.analysis-progress .individual-analysis-buttons__progress-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Error Display */
+.individual-analysis-buttons__analysis-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: var(--space-sm) 12px;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: var(--radius-sm);
+  color: #c62828;
+  font-size: 0.85rem;
+}
+
+.individual-analysis-buttons__error-icon {
+  font-size: 1rem;
+}
+
+.individual-analysis-buttons__error-text {
+  flex: 1;
+}
+
+/* Action Buttons */
+.individual-analysis-buttons__analysis-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-start-analysis,
+.btn-cancel-analysis,
+.individual-analysis-buttons__btn-retry-analysis {
+  padding: var(--space-sm) 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  flex: 1;
+  min-width: 80px;
+}
+
+.individual-analysis-buttons__btn-start-analysis {
+  background: var(--primary-color, #667eea);
+  color: white;
+}
+
+.btn-start-analysis:hover:not(:disabled) {
+  background: var(--primary-dark, #5a6fd8);
+  transform: translateY(-1px);
+}
+
+.btn-start-analysis:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.individual-analysis-buttons__btn-cancel-analysis {
+  background: var(--danger-color, #f44336);
+  color: white;
+}
+
+.btn-cancel-analysis:hover {
+  background: var(--danger-dark, #d32f2f);
+  transform: translateY(-1px);
+}
+
+.individual-analysis-buttons__btn-retry-analysis {
+  background: var(--warning-color, #ff9800);
+  color: white;
+}
+
+.btn-retry-analysis:hover {
+  background: var(--warning-dark, #f57c00);
+  transform: translateY(-1px);
+}
+
+/* Active Analyses Summary */
+.individual-analysis-buttons__active-analyses-summary {
+  margin-top: 24px;
+  padding: var(--space-md);
+  background: var(--surface-secondary, #f8f9fa);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light, #e9ecef);
+}
+
+.active-analyses-summary h4 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary, #1a1a1a);
+}
+
+.individual-analysis-buttons__active-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.individual-analysis-buttons__active-step-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) 12px;
+  background: var(--surface-color, #ffffff);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color, #e1e5e9);
+  font-size: 0.9rem;
+}
+
+.individual-analysis-buttons__step-type {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary, #1a1a1a);
+  text-transform: capitalize;
+}
+
+.individual-analysis-buttons__step-status {
+  color: var(--text-secondary, #666);
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.individual-analysis-buttons__step-progress {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-color, #667eea);
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .individual-analysis-buttons__individual-analysis-buttons {
+    padding: var(--space-md);
+    margin-bottom: 16px;
+  }
+  
+  .individual-analysis-buttons__analysis-buttons-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .individual-analysis-buttons__analysis-button-container {
+    padding: var(--space-md);
+  }
+  
+  .individual-analysis-buttons__analysis-button-header {
+    gap: 8px;
+  }
+  
+  .individual-analysis-buttons__analysis-icon {
+    font-size: 1.2rem;
+    width: 28px;
+    height: 28px;
+  }
+  
+  .individual-analysis-buttons__analysis-label {
+    font-size: 1rem;
+  }
+  
+  .individual-analysis-buttons__btn-run-all-analysis {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+  
+  .individual-analysis-buttons__analysis-actions {
+    flex-direction: column;
+  }
+  
+  .btn-start-analysis,
+  .btn-cancel-analysis,
+  .individual-analysis-buttons__btn-retry-analysis {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .individual-analysis-buttons__individual-analysis-buttons {
+    padding: var(--space-sm);
+  }
+  
+  .analysis-buttons-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .individual-analysis-buttons__analysis-button-container {
+    padding: var(--space-sm);
+  }
+  
+  .individual-analysis-buttons__active-step-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .individual-analysis-buttons__individual-analysis-buttons {
+    background: var(--surface-dark, #1a1a1a);
+    border-color: var(--border-dark, #333);
+  }
+  
+  .analysis-buttons-header h3 {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .analysis-buttons-header p {
+    color: var(--text-secondary-dark, #b0b0b0);
+  }
+  
+  .individual-analysis-buttons__run-all-section {
+    background: var(--surface-secondary-dark, #2a2a2a);
+    border-color: var(--border-light-dark, #444);
+  }
+  
+  .individual-analysis-buttons__analysis-button-container {
+    background: var(--surface-dark, #1a1a1a);
+    border-color: var(--border-dark, #333);
+  }
+  
+  .analysis-button-container:hover {
+    border-color: var(--primary-color, #667eea);
+  }
+  
+  .individual-analysis-buttons__analysis-label {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .individual-analysis-buttons__analysis-description {
+    color: var(--text-secondary-dark, #b0b0b0);
+  }
+  
+  .individual-analysis-buttons__analysis-icon {
+    background: var(--surface-secondary-dark, #2a2a2a);
+  }
+  
+  .individual-analysis-buttons__active-analyses-summary {
+    background: var(--surface-secondary-dark, #2a2a2a);
+    border-color: var(--border-light-dark, #444);
+  }
+  
+  .active-analyses-summary h4 {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .individual-analysis-buttons__active-step-item {
+    background: var(--surface-dark, #1a1a1a);
+    border-color: var(--border-dark, #333);
+  }
+  
+  .individual-analysis-buttons__step-type {
+    color: var(--text-primary-dark, #ffffff);
+  }
+  
+  .individual-analysis-buttons__step-status {
+    color: var(--text-secondary-dark, #b0b0b0);
+  }
+} 

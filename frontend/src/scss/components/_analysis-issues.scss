@@ -1,0 +1,606 @@
+// =============================================================================
+// _ANALYSIS-ISSUES
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Analysis Issues Component Styles */
+
+.analysis-issues__analysis-issues {
+  background: #ffffff;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Loading State */
+.analysis-issues.analysis-issues__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.25rem, 3vw, 2rem); /* 20px-32px responsive */
+  min-height: clamp(12.5rem, 25vh, 15rem); /* 200px-240px responsive */
+}
+
+.analysis-issues.loading .analysis-issues__loading-spinner {
+  width: clamp(2rem, 4vw, 2.5rem); /* 32px-40px responsive */
+  height: clamp(2rem, 4vw, 2.5rem); /* 32px-40px responsive */
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.analysis-issues.analysis-issues__error {
+  padding: 1rem;
+}
+
+.analysis-issues.error .analysis-issues__error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e74c3c;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-issues.error .analysis-issues__error-icon {
+  font-size: 1.2rem;
+}
+
+/* Header */
+.analysis-issues__issues-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e1e5e9;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.issues-title h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.analysis-issues__issues-summary {
+  margin-top: 0.5rem;
+}
+
+.analysis-issues__summary-text {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.analysis-issues__issues-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.analysis-issues__view-controls {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.analysis-issues__view-btn {
+  background: none;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.view-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.view-btn.analysis-issues__active {
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-issues__btn-export {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all var(--transition-normal);
+}
+
+.btn-export:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-export:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Statistics */
+.analysis-issues__issues-statistics {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.analysis-issues__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.analysis-issues__stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid #3498db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item.analysis-issues__critical {
+  border-left-color: #e74c3c;
+}
+
+.stat-item.analysis-issues__high {
+  border-left-color: #f39c12;
+}
+
+.stat-item.analysis-issues__medium {
+  border-left-color: #f1c40f;
+}
+
+.stat-item.analysis-issues__low {
+  border-left-color: #27ae60;
+}
+
+.analysis-issues__stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-issues__stat-value {
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: #2c3e50;
+}
+
+/* Filters */
+.analysis-issues__issues-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e5e9;
+  align-items: end;
+}
+
+.analysis-issues__filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 150px;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-medium);
+  color: #495057;
+}
+
+.filter-input,
+.analysis-issues__filter-select {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.analysis-issues__btn-clear-filters {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-clear-filters:hover {
+  background: #5a6268;
+}
+
+/* Table Container */
+.analysis-issues__issues-table-container {
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Table */
+.analysis-issues__issues-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.issues-table thead {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.issues-table th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.issues-table th.analysis-issues__sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.issues-table th.sortable:hover {
+  background: #e9ecef;
+}
+
+.issues-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: top;
+}
+
+/* Issue Rows */
+.analysis-issues__issue-row {
+  transition: background-color 0.2s ease;
+}
+
+.issue-row:hover {
+  background: #f8f9fa;
+}
+
+.issue-row.analysis-issues__critical {
+  background: rgba(231, 76, 60, 0.05);
+}
+
+.issue-row.analysis-issues__high {
+  background: rgba(243, 156, 18, 0.05);
+}
+
+.issue-row.analysis-issues__medium {
+  background: rgba(241, 196, 15, 0.05);
+}
+
+.issue-row.analysis-issues__low {
+  background: rgba(39, 174, 96, 0.05);
+}
+
+/* Severity Badge */
+.analysis-issues__severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severity-badge.analysis-issues__critical {
+  background: rgba(231, 76, 60, 0.1);
+  color: #c0392b;
+}
+
+.severity-badge.analysis-issues__high {
+  background: rgba(243, 156, 18, 0.1);
+  color: #d68910;
+}
+
+.severity-badge.analysis-issues__medium {
+  background: rgba(241, 196, 15, 0.1);
+  color: #b7950b;
+}
+
+.severity-badge.analysis-issues__low {
+  background: rgba(39, 174, 96, 0.1);
+  color: #229954;
+}
+
+.severity-badge.analysis-issues__neutral {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+/* Issue Type */
+.analysis-issues__issue-type {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  color: #495057;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+/* File Path */
+.analysis-issues__file-path {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.file-path:hover {
+  text-decoration: underline;
+}
+
+.analysis-issues__no-file {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Issue Message */
+.analysis-issues__issue-message {
+  color: #495057;
+  line-height: 1.4;
+}
+
+/* Source Badge */
+.analysis-issues__source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #e9ecef;
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  color: #495057;
+}
+
+/* Scanner Badge */
+.analysis-issues__scanner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #f8f9fa;
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  color: #495057;
+  border: 1px solid #e9ecef;
+}
+
+/* Actions */
+.analysis-issues__btn-expand {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.btn-expand:hover {
+  background: #e9ecef;
+}
+
+/* Issue Details */
+.analysis-issues__issue-details-row {
+  background: #f8f9fa;
+}
+
+.analysis-issues__details-cell {
+  padding: 1rem !important;
+}
+
+.analysis-issues__issue-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-semibold);
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.25rem;
+}
+
+.analysis-issues__full-message {
+  background: white;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid #667eea;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #495057;
+}
+
+.analysis-issues__file-path-full {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  color: #007bff;
+  margin: 0;
+  word-break: break-all;
+}
+
+.analysis-issues__line-number {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin: 0.25rem 0 0 0;
+}
+
+.analysis-issues__suggestion {
+  background: #e8f5e8;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid #27ae60;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #155724;
+}
+
+.analysis-issues__metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.analysis-issues__metadata-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: white;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e9ecef;
+}
+
+.analysis-issues__metadata-label {
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-medium);
+  color: #6c757d;
+}
+
+.analysis-issues__metadata-value {
+  font-size: 0.85rem;
+  color: #495057;
+  font-weight: var(--font-weight-medium);
+}
+
+/* No Issues Message */
+.analysis-issues__no-issues-message {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.no-issues-message p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Summary Footer */
+.analysis-issues__issues-summary-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e1e5e9;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analysis-issues__issues-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .analysis-issues__issues-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .analysis-issues__view-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .analysis-issues__issues-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .analysis-issues__filter-group {
+    min-width: auto;
+  }
+
+  .analysis-issues__stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .analysis-issues__issues-table {
+    font-size: 0.8rem;
+  }
+
+  .issues-table th,
+  .issues-table td {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .analysis-issues__metadata-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .analysis-issues__issues-table-container {
+    font-size: 0.75rem;
+  }
+
+  .severity-badge,
+  .analysis-issues__source-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .analysis-issues__issue-type {
+    font-size: 0.75rem;
+  }
+} 

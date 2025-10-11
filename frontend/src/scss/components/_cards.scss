@@ -1,0 +1,208 @@
+// =============================================================================
+// CARDS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// Card Base
+// -----------------------------------------------------------------------------
+.card {
+  @extend %card-base;
+}
+
+// Card Header
+// -----------------------------------------------------------------------------
+.card__header {
+  padding: $space-md;
+  background: $bg-tertiary;
+  border-bottom: 1px solid $border-color;
+}
+
+// Card Body
+// -----------------------------------------------------------------------------
+.card__body {
+  padding: $space-md;
+}
+
+// Card Footer
+// -----------------------------------------------------------------------------
+.card__footer {
+  padding: $space-md;
+  background: $bg-tertiary;
+  border-top: 1px solid $border-color;
+}
+
+// Card Variants
+// -----------------------------------------------------------------------------
+.card--elevated {
+  box-shadow: $shadow-md;
+  border: none;
+}
+
+.card--outlined {
+  box-shadow: none;
+  border: 2px solid $border-color;
+}
+
+.card--flat {
+  box-shadow: none;
+  border: none;
+  background: $bg-secondary;
+}
+
+// Card Sizes
+// -----------------------------------------------------------------------------
+.card--sm {
+  .card__header,
+  .card__body,
+  .card__footer {
+    padding: $space-sm;
+  }
+}
+
+.card--lg {
+  .card__header,
+  .card__body,
+  .card__footer {
+    padding: $space-lg;
+  }
+}
+
+// Card Actions
+// -----------------------------------------------------------------------------
+.card__actions {
+  display: flex;
+  gap: $space-sm;
+  padding: $space-md;
+  background: $bg-tertiary;
+  border-top: 1px solid $border-color;
+  
+  .btn {
+    flex: 1;
+  }
+}
+
+// Card Media
+// -----------------------------------------------------------------------------
+.card__media {
+  position: relative;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+// Card Title
+// -----------------------------------------------------------------------------
+.card__title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  margin-bottom: $space-sm;
+}
+
+// Card Subtitle
+// -----------------------------------------------------------------------------
+.card__subtitle {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin-bottom: $space-md;
+}
+
+// Card Content
+// -----------------------------------------------------------------------------
+.card__content {
+  color: $text-primary;
+  line-height: $line-height-relaxed;
+}
+
+// Card Interactive
+// -----------------------------------------------------------------------------
+.card--interactive {
+  cursor: pointer;
+  transition: all $transition-normal;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: $shadow-sm;
+  }
+}
+
+// Card Grid
+// -----------------------------------------------------------------------------
+.card-grid {
+  display: grid;
+  gap: $space-md;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.card-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.card-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.card-grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+// Responsive Cards
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-grid--2,
+  .card-grid--3,
+  .card-grid--4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .card__header,
+  .card__body,
+  .card__footer {
+    padding: $space-sm;
+  }
+}
+
+@include respond-to(md) {
+  .card-grid--2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .card-grid--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .card-grid--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@include respond-to(lg) {
+  .card-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .card-grid--4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@include respond-to(xl) {
+  .card-grid--4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

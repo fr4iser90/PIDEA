@@ -5,7 +5,7 @@
 
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import '@/css/main/version-management.css';
+import '@/scss/pages/_version-management.scss';;
 import VersionManagementRepository from '@/infrastructure/repositories/VersionManagementRepository.jsx';
 import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
@@ -362,30 +362,30 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
   };
 
   return (
-    <div className="version-management">
+    <div className="version-management__version-management">
       {/* Header */}
-      <div className="version-header">
-        <div className="version-title">
+      <div className="version-management__version-header">
+        <div className="version-management__version-title">
           <h3>📦 Version Management</h3>
           {currentVersion && (
-            <div className="current-version-display">
+            <div className="version-management__current-version-display">
               <span 
-                className="version-badge"
+                className="version-management__version-badge"
                 style={{ backgroundColor: getVersionTypeColor(currentVersion.version) }}
               >
                 {formatVersion(currentVersion.version)}
               </span>
-              <span className="version-status">
+              <span className={`version-management__version-status ${currentVersion.isValid ? 'version-management__status-valid' : 'version-management__status-invalid'}`}>
                 {currentVersion.isValid ? '✅ Valid' : '❌ Invalid'}
               </span>
             </div>
           )}
         </div>
         
-        <div className="version-actions">
+        <div className="version-management__version-actions">
           <button
             onClick={loadCurrentVersion}
-            className="version-btn refresh-btn"
+            className="version-management__action-btn"
             disabled={isLoading}
             title="Refresh version data"
           >
@@ -396,34 +396,34 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
 
       {/* Workspace Info */}
       {workspacePath && (
-        <div className="workspace-info">
-          <span className="workspace-label">Workspace:</span>
-          <span className="workspace-path">{workspacePath}</span>
+        <div className="version-management__workspace-info">
+          <span className="version-management__workspace-label">Workspace:</span>
+          <span className="version-management__workspace-path">{workspacePath}</span>
         </div>
       )}
 
       {/* Tab Navigation */}
-      <div className="version-tabs">
+      <div className="version-management__version-nav">
         <button
-          className={`version-tab ${activeTab === 'current' ? 'active' : ''}`}
+          className={`version-management__version-nav-item ${activeTab === 'current' ? 'active' : ''}`}
           onClick={() => setActiveTab('current')}
         >
           📍 Current
         </button>
         <button
-          className={`version-tab ${activeTab === 'history' ? 'active' : ''}`}
+          className={`version-management__version-nav-item ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
           📚 History
         </button>
         <button
-          className={`version-tab ${activeTab === 'bump' ? 'active' : ''}`}
+          className={`version-management__version-nav-item ${activeTab === 'bump' ? 'active' : ''}`}
           onClick={() => setActiveTab('bump')}
         >
           🚀 Bump
         </button>
         <button
-          className={`version-tab ${activeTab === 'config' ? 'active' : ''}`}
+          className={`version-management__version-nav-item ${activeTab === 'config' ? 'active' : ''}`}
           onClick={() => setActiveTab('config')}
         >
           ⚙️ Config
@@ -431,46 +431,43 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
       </div>
 
       {/* Tab Content */}
-      <div className="version-content">
+      <div className="version-management__version-content">
         {/* Current Version Tab */}
         {activeTab === 'current' && (
-          <div className="version-tab-content">
+          <div className="version-management__current-section">
             {currentVersion ? (
-              <div className="current-version-details">
-                <div className="version-info-card">
-                  <h4>Version Information</h4>
-                  <div className="version-details">
-                    <div className="version-detail">
-                      <span className="detail-label">Current Version:</span>
-                      <span className="detail-value">{formatVersion(currentVersion.version)}</span>
-                    </div>
-                    <div className="version-detail">
-                      <span className="detail-label">Package Files:</span>
-                      <span className="detail-value">{currentVersion.packageFiles || 0} files</span>
-                    </div>
-                    <div className="version-detail">
-                      <span className="detail-label">Last Updated:</span>
-                      <span className="detail-value">
-                        {currentVersion.lastUpdated ? new Date(currentVersion.lastUpdated).toLocaleString() : 'Unknown'}
-                      </span>
-                    </div>
-                    <div className="version-detail">
-                      <span className="detail-label">Git Tag:</span>
-                      <span className="detail-value">
-                        {currentVersion.gitTag ? `✅ ${currentVersion.gitTag}` : '❌ No tag'}
-                      </span>
-                    </div>
+              <div>
+                <div className="version-management__version-info">
+                  <div className="version-management__info-item">
+                    <span className="version-management__info-label">Current Version:</span>
+                    <span className="version-management__info-value">{formatVersion(currentVersion.version)}</span>
+                  </div>
+                  <div className="version-management__info-item">
+                    <span className="version-management__info-label">Package Files:</span>
+                    <span className="version-management__info-value">{currentVersion.packageFiles || 0} files</span>
+                  </div>
+                  <div className="version-management__info-item">
+                    <span className="version-management__info-label">Last Updated:</span>
+                    <span className="version-management__info-value">
+                      {currentVersion.lastUpdated ? new Date(currentVersion.lastUpdated).toLocaleString() : 'Unknown'}
+                    </span>
+                  </div>
+                  <div className="version-management__info-item">
+                    <span className="version-management__info-label">Git Tag:</span>
+                    <span className="version-management__info-value">
+                      {currentVersion.gitTag ? `✅ ${currentVersion.gitTag}` : '❌ No tag'}
+                    </span>
                   </div>
                 </div>
 
                 {currentVersion.packageFiles && currentVersion.packageFiles.length > 0 && (
-                  <div className="package-files-card">
+                  <div className="version-management__package-files-card">
                     <h4>Package Files</h4>
-                    <ul className="package-files-list">
+                    <ul className="version-management__package-files-list">
                       {currentVersion.packageFiles.map((file, index) => (
-                        <li key={index} className="package-file-item">
-                          <span className="file-path">{file.path}</span>
-                          <span className="file-version">{formatVersion(file.version)}</span>
+                        <li key={index} className="version-management__package-file-item">
+                          <span className="version-management__file-path">{file.path}</span>
+                          <span className="version-management__file-version">{formatVersion(file.version)}</span>
                         </li>
                       ))}
                     </ul>
@@ -540,11 +537,11 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
             <div className="version-bump">
               <h4>Bump Version</h4>
               
-              <div className="bump-form">
-                <div className="form-group">
-                  <label htmlFor="changelog">
+              <div className="version-management__bump-form">
+                <div className="version-management__form-group">
+                  <label htmlFor="changelog" className="version-management__form-label">
                     Changelog 
-                    <span className="optional-label">(Optional - AI will analyze your changes automatically)</span>
+                    <span className="version-management__optional-label">(Optional - AI will analyze your changes automatically)</span>
                   </label>
                   <textarea
                     id="changelog"
@@ -555,27 +552,27 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                     }}
                     placeholder="Describe what changes you made in this changelog (optional - leave empty for AI auto-detection)"
                     rows={3}
-                    className="form-textarea"
+                    className="version-management__form-textarea"
                   />
-                  <div className="form-help">
+                  <div className="version-management__form-help">
                     💡 <strong>Smart Tip:</strong> Leave empty to let AI automatically analyze your git changes!
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="bumpType">Bump Type</label>
+                <div className="version-management__form-group">
+                  <label htmlFor="bumpType" className="version-management__form-label">Bump Type</label>
                   <select
                     id="bumpType"
                     value={bumpForm.bumpType}
                     onChange={(e) => setBumpForm(prev => ({ ...prev, bumpType: e.target.value }))}
-                    className="form-select"
+                    className="version-management__form-select"
                   >
                     <option value="auto">🤖 Smart Detection (Recommended)</option>
                     <option value="patch">🔧 Patch (Bug fixes)</option>
                     <option value="minor">✨ Minor (New features)</option>
                     <option value="major">💥 Major (Breaking changes)</option>
                   </select>
-                  <div className="bump-type-description">
+                  <div className="version-management__bump-type-description">
                     {getBumpTypeDescription(bumpForm.bumpType)}
                   </div>
                 </div>
@@ -608,8 +605,8 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                   </div>
                 )}
 
-                <div className="form-group">
-                  <label htmlFor="customVersion">
+                <div className="version-management__form-group">
+                  <label htmlFor="customVersion" className="version-management__form-label">
                     Custom Version (Optional){currentVersion ? ` - Current: ${typeof currentVersion === 'string' ? currentVersion : currentVersion.version || 'Unknown'}` : ''}
                   </label>
                   <input
@@ -618,15 +615,15 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                     value={bumpForm.customVersion}
                     onChange={(e) => setBumpForm(prev => ({ ...prev, customVersion: e.target.value }))}
                     placeholder="e.g., 2.1.0-beta.1"
-                    className="form-input"
+                    className="version-management__form-input"
                   />
                 </div>
 
-                <div className="form-actions">
+                <div className="version-management__form-actions">
                   <button
                     onClick={() => getAIAnalysis(bumpForm.changelog)} // AI Analysis
                     disabled={isAnalyzing}
-                    className="version-btn secondary"
+                    className="version-management__analyze-btn"
                   >
                     {isAnalyzing ? '🤖 AI Analyzing...' : '🤖 Generate with AI'}
                   </button>
@@ -634,7 +631,7 @@ const VersionManagementComponent = ({ activePort, eventBus }) => {
                   <button
                     onClick={() => handleBumpVersion(true)} // true = actual bump
                     disabled={isLoading}
-                    className="version-btn primary"
+                    className="version-management__bump-btn"
                   >
                     {isLoading ? '⏳ Bumping...' : '🚀 Bump Version'}
                   </button>

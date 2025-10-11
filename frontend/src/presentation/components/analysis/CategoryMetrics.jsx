@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/css/components/analysis/category-metrics.css';
+import '@/scss/components/_category-metrics.scss';;
 
 const CategoryMetrics = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
   if (loading) {

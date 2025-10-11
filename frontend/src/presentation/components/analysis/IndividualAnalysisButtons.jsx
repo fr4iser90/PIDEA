@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
-import '@/css/components/analysis/individual-analysis-buttons.css';
+import '@/scss/components/_individual-analysis-buttons.scss';;
 
 const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalysisComplete = null }) => {
   const [activeSteps, setActiveSteps] = useState(new Map());

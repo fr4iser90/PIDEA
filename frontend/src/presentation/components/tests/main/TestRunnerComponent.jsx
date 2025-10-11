@@ -4,7 +4,7 @@ import TestConfiguration from './TestConfiguration';
 import TestResultsViewer from './TestResultsViewer';
 import TestStatusBadge from '../common/TestStatusBadge';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
-import '@/css/components/test/test-runner.css';
+import '@/scss/components/_test-runner.scss';;
 
 /**
  * TestRunnerComponent - Main test runner UI component
@@ -168,16 +168,16 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   };
 
   return (
-    <div className="test-runner-container bg-white rounded-lg shadow-lg p-6">
-      <div className="test-runner-header mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-2xl font-bold text-gray-800">🧪 Test Runner</h2>
+    <div className="test-runner__test-runner-container">
+      <div className="test-runner__test-runner-header">
+        <div className="test-runner__header-content">
+          <div className="test-runner__title-section">
+            <h2>🧪 Test Runner</h2>
           </div>
         </div>
       </div>
       
-      <div className="test-runner-content space-y-6">
+      <div className="test-runner__test-runner-content">
         {/* Test Configuration Section */}
         <TestConfiguration 
           onSelect={handleTestSelect}
@@ -191,15 +191,15 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
         />
         
         {/* Test Execution Controls */}
-        <div className="test-controls bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="test-runner__test-controls">
+          <div className="test-runner__controls-content">
+            <div className="test-runner__button-group">
               <button 
                 onClick={handleRunTest}
                 disabled={selectedTests.length === 0 || isRunning || !workspacePath}
-                className="run-button"
+                className="test-runner__run-button"
               >
-                <span className="button-icon">
+                <span className="test-runner__button-icon">
                   {isRunning ? '⏳' : '▶️'}
                 </span>
                 <span>{isRunning ? 'Running...' : `Run Tests (${selectedTests.length})`}</span>
@@ -208,15 +208,15 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
               {isRunning && (
                 <button 
                   onClick={handleStopTest}
-                  className="stop-button"
+                  className="test-runner__stop-button"
                 >
-                  <span className="button-icon">⏹️</span>
+                  <span className="test-runner__button-icon">⏹️</span>
                   <span>Stop Tests</span>
                 </button>
               )}
             </div>
             
-            <div className="text-sm text-gray-600">
+            <div className="test-runner__selection-info">
               {selectedTests.length > 0 ? `Selected: ${selectedTests.map(t => t.name).join(', ')}` : 'No tests selected'}
             </div>
           </div>

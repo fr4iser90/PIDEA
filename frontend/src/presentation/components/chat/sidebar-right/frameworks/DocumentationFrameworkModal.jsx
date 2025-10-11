@@ -3,7 +3,7 @@ import AnalysisStep from './steps/AnalysisStep.jsx';
 import PlanningStep from './steps/PlanningStep.jsx';
 import ExecutionStep from './steps/ExecutionStep.jsx';
 import TrackingStep from './steps/TrackingStep.jsx';
-import '@/css/framework/documentation-modal.css';
+import '@/scss/components/_documentation-modal.scss';;
 
 function DocumentationFrameworkModal({ isOpen, onClose, framework }) {
   const [currentStep, setCurrentStep] = useState(1);

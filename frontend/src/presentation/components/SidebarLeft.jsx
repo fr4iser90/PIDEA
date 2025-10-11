@@ -15,7 +15,7 @@ import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
 import IDEStartModal from './ide/IDEStartModal.jsx';
-import '@/css/global/sidebar-left.css';
+import '@/scss/base/_sidebar-left.scss';
 
 function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
   logger.info('🔍 SidebarLeft RENDERING!');

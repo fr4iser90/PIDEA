@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/css/components/analysis/security-scanner-card.css';
+import '@/scss/components/_security-scanner-card.scss';;
 
 const SecurityScannerCard = ({ scanner, data, isExpanded, isSelected, onExpand, onSelect }) => {
   const getScannerIcon = (scannerName) => {

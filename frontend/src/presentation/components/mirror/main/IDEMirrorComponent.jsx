@@ -5,7 +5,7 @@ import { StreamingService } from '@/application/services/StreamingService';
 import { useRefreshService } from '@/hooks/useRefreshService';
 import CanvasRenderer from './CanvasRenderer';
 import StreamingControls from './StreamingControls';
-import '@/css/main/mirror.css';
+import '@/scss/pages/_mirror.scss';;
 
 // Create streaming service instance
 const streamingService = new StreamingService(webSocketService);

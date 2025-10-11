@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '@/css/modal/task-review-selection-modal.css';
+import '@/scss/components/_task-review-selection-modal.scss';;
 
 const TaskReviewSelectionModal = ({ 
   isOpen, 

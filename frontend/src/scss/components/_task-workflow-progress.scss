@@ -1,0 +1,462 @@
+// =============================================================================
+// _TASK-WORKFLOW-PROGRESS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Task Workflow Progress Component Styles */
+
+.task-workflow-progress__task-workflow-progress {
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  background: var(--modal-bg);
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  max-width: clamp(43.75rem, 70vw, 50rem); /* 700px-800px responsive */
+  width: 100%;
+}
+
+/* Header */
+.task-workflow-progress__progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  padding-bottom: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
+  border-bottom: 1px solid var(--border-color);
+}
+
+.task-workflow-progress__progress-title {
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.task-workflow-progress__progress-meta {
+  display: flex;
+  gap: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
+  font-size: clamp(0.875rem, 2vw, 1rem); /* 14px-16px responsive */
+  color: var(--text-secondary);
+}
+
+.elapsed-time,
+.task-workflow-progress__estimated-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Progress Bar */
+.task-workflow-progress__progress-bar-container {
+  margin-bottom: 20px;
+}
+
+.task-workflow-progress__progress-bar {
+  width: 100%;
+  height: 12px;
+  background: var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.task-workflow-progress__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4488ff, #44aa44);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
+.task-workflow-progress__progress-text {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+/* Status Display */
+.task-workflow-progress__status-display {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.task-workflow-progress__status-badge {
+  padding: 6px 12px;
+  border-radius: var(--radius-xl);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.task-workflow-progress__status-starting {
+  background: #888888;
+  color: white;
+}
+
+.status-badge.task-workflow-progress__status-running {
+  background: #4488ff;
+  color: white;
+}
+
+.status-badge.task-workflow-progress__status-completed {
+  background: #44aa44;
+  color: white;
+}
+
+.status-badge.task-workflow-progress__status-error {
+  background: #ff4444;
+  color: white;
+}
+
+.status-badge.task-workflow-progress__status-cancelled {
+  background: #ffaa00;
+  color: white;
+}
+
+.task-workflow-progress__status-details {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+/* Error Display */
+.task-workflow-progress__error-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #fff5f5;
+  border: 1px solid #ffcccc;
+  border-radius: var(--radius-sm);
+}
+
+.task-workflow-progress__error-icon {
+  font-size: 1.2rem;
+  color: #ff4444;
+  margin-top: 2px;
+}
+
+.task-workflow-progress__error-message {
+  flex: 1;
+  color: #cc0000;
+  font-size: 0.9rem;
+}
+
+/* Progress Steps */
+.task-workflow-progress__progress-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.task-workflow-progress__progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  transition: all var(--transition-slow);
+}
+
+.progress-step.task-workflow-progress__active {
+  border-color: #4488ff;
+  background: #f0f8ff;
+  box-shadow: 0 2px 8px rgba(68, 136, 255, 0.2);
+}
+
+.progress-step.task-workflow-progress__completed {
+  border-color: #44aa44;
+  background: #f0fff0;
+}
+
+.progress-step.task-workflow-progress__upcoming {
+  opacity: 0.6;
+}
+
+.task-workflow-progress__step-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.task-workflow-progress__step-label {
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+
+.task-workflow-progress__step-progress {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Task Details */
+.task-workflow-progress__task-details {
+  margin-bottom: 25px;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 4px solid #4488ff;
+}
+
+.task-details h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.task-workflow-progress__task-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.task-workflow-progress__task-field {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.task-field strong {
+  color: var(--text-primary);
+  margin-right: 5px;
+}
+
+/* Workflow Logs */
+.task-workflow-progress__workflow-logs {
+  margin-bottom: 25px;
+}
+
+.workflow-logs h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.task-workflow-progress__logs-container {
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.task-workflow-progress__log-entry {
+  display: flex;
+  gap: 10px;
+  padding: var(--space-sm);
+  margin-bottom: 5px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.log-entry.task-workflow-progress__log-info {
+  background: #f0f8ff;
+  color: #0066cc;
+}
+
+.log-entry.task-workflow-progress__log-success {
+  background: #f0fff0;
+  color: #006600;
+}
+
+.log-entry.task-workflow-progress__log-warning {
+  background: #fff8f0;
+  color: #cc6600;
+}
+
+.log-entry.task-workflow-progress__log-error {
+  background: #fff0f0;
+  color: #cc0000;
+}
+
+.task-workflow-progress__log-timestamp {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  min-width: 80px;
+}
+
+.task-workflow-progress__log-message {
+  flex: 1;
+}
+
+/* Action Buttons */
+.task-workflow-progress__progress-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-primary,
+.btn-secondary,
+.task-workflow-progress__btn-danger {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 120px;
+}
+
+.task-workflow-progress__btn-primary {
+  background: #4488ff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3366cc;
+}
+
+.task-workflow-progress__btn-secondary {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.task-workflow-progress__btn-danger {
+  background: #ff4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #cc0000;
+}
+
+.btn-danger:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Loading Indicator */
+.task-workflow-progress__loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: var(--space-xl) 20px;
+}
+
+.task-workflow-progress__loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid #4488ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .task-workflow-progress__task-workflow-progress {
+    padding: 15px;
+  }
+
+  .task-workflow-progress__progress-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .task-workflow-progress__progress-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .task-workflow-progress__progress-steps {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .task-workflow-progress__task-info {
+    grid-template-columns: 1fr;
+  }
+
+  .task-workflow-progress__progress-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .task-workflow-progress__btn-danger {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .task-workflow-progress__task-workflow-progress {
+    background: var(--modal-bg-dark, #2a2a2a);
+  }
+
+  .task-workflow-progress__progress-step {
+    background: var(--bg-secondary-dark, #3a3a3a);
+  }
+
+  .progress-step.task-workflow-progress__active {
+    background: var(--bg-active-dark, #1a3a5a);
+  }
+
+  .progress-step.task-workflow-progress__completed {
+    background: var(--bg-completed-dark, #1a3a1a);
+  }
+
+  .task-workflow-progress__task-details {
+    background: var(--bg-secondary-dark, #3a3a3a);
+  }
+
+  .task-workflow-progress__logs-container {
+    background: var(--bg-secondary-dark, #3a3a3a);
+  }
+
+  .log-entry.task-workflow-progress__log-info {
+    background: var(--bg-info-dark, #1a2a3a);
+  }
+
+  .log-entry.task-workflow-progress__log-success {
+    background: var(--bg-success-dark, #1a2a1a);
+  }
+
+  .log-entry.task-workflow-progress__log-warning {
+    background: var(--bg-warning-dark, #3a2a1a);
+  }
+
+  .log-entry.task-workflow-progress__log-error {
+    background: var(--bg-error-dark, #3a1a1a);
+  }
+} 

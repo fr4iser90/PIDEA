@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import '@/css/components/ide/status-badge.css';
+import '@/scss/components/_status-badge.scss';;
 
 const StatusBadge = ({ 
   className = '', 

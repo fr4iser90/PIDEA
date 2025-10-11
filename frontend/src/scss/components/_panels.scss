@@ -1,0 +1,314 @@
+// =============================================================================
+// _PANELS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Panel Base
+// -----------------------------------------------------------------------------
+.panel {
+  @extend %panel-base;
+}
+
+// Panel Header
+// -----------------------------------------------------------------------------
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-md;
+  background: $bg-tertiary;
+  border-bottom: 1px solid $border-color;
+}
+
+.panel__title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  margin: 0;
+}
+
+.panel__subtitle {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin: 0;
+}
+
+.panel__actions {
+  display: flex;
+  gap: $space-sm;
+  align-items: center;
+}
+
+// Panel Body
+// -----------------------------------------------------------------------------
+.panel__body {
+  padding: $space-md;
+}
+
+// Panel Footer
+// -----------------------------------------------------------------------------
+.panel__footer {
+  padding: $space-md;
+  background: $bg-tertiary;
+  border-top: 1px solid $border-color;
+}
+
+// Panel Variants
+// -----------------------------------------------------------------------------
+.panel--elevated {
+  box-shadow: $shadow-md;
+  border: none;
+}
+
+.panel--outlined {
+  box-shadow: none;
+  border: 2px solid $border-color;
+}
+
+.panel--flat {
+  box-shadow: none;
+  border: none;
+  background: $bg-secondary;
+}
+
+.panel--bordered {
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+}
+
+// Panel Sizes
+// -----------------------------------------------------------------------------
+.panel--sm {
+  .panel__header,
+  .panel__body,
+  .panel__footer {
+    padding: $space-sm;
+  }
+}
+
+.panel--lg {
+  .panel__header,
+  .panel__body,
+  .panel__footer {
+    padding: $space-lg;
+  }
+}
+
+// Panel States
+// -----------------------------------------------------------------------------
+.panel--loading {
+  .panel__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+}
+
+.panel--empty {
+  .panel__body {
+    text-align: center;
+    color: $text-tertiary;
+    padding: $space-xl;
+  }
+}
+
+// Panel Collapsible
+// -----------------------------------------------------------------------------
+.panel--collapsible {
+  .panel__header {
+    cursor: pointer;
+    user-select: none;
+    
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+  
+  .panel__toggle {
+    background: none;
+    border: none;
+    color: $text-secondary;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: $space-xs;
+    border-radius: $radius-sm;
+    transition: all $transition-normal;
+    
+    &:hover {
+      background: $bg-hover;
+      color: $text-primary;
+    }
+  }
+  
+  .panel__body {
+    transition: all $animation-duration-normal $animation-ease-in-out;
+    overflow: hidden;
+  }
+  
+  &.panel--collapsed {
+    .panel__body {
+      display: none;
+    }
+    
+    .panel__toggle {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// Panel Draggable
+// -----------------------------------------------------------------------------
+.panel--draggable {
+  .panel__header {
+    cursor: move;
+    
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+}
+
+// Panel Resizable
+// -----------------------------------------------------------------------------
+.panel--resizable {
+  resize: both;
+  overflow: auto;
+  min-width: 200px;
+  min-height: 200px;
+}
+
+// Panel Grid
+// -----------------------------------------------------------------------------
+.panel-grid {
+  display: grid;
+  gap: $space-md;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.panel-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.panel-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.panel-grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+// Panel Stack
+// -----------------------------------------------------------------------------
+.panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+}
+
+// Panel Sidebar
+// -----------------------------------------------------------------------------
+.panel-sidebar {
+  display: flex;
+  gap: $space-md;
+  
+  .panel {
+    flex: 1;
+  }
+  
+  .panel--sidebar {
+    flex: 0 0 300px;
+    max-width: 300px;
+  }
+}
+
+// Panel Responsive
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .panel-grid--2,
+  .panel-grid--3,
+  .panel-grid--4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .panel__header,
+  .panel__body,
+  .panel__footer {
+    padding: $space-sm;
+  }
+  
+  .panel-sidebar {
+    flex-direction: column;
+    
+    .panel--sidebar {
+      flex: 1;
+      max-width: none;
+    }
+  }
+}
+
+@include respond-to(md) {
+  .panel-grid--2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .panel-grid--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .panel-grid--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@include respond-to(lg) {
+  .panel-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .panel-grid--4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@include respond-to(xl) {
+  .panel-grid--4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+// Panel Utilities
+// -----------------------------------------------------------------------------
+.panel--scrollable {
+  .panel__body {
+    max-height: 400px;
+    overflow-y: auto;
+    @include custom-scrollbar;
+  }
+}
+
+.panel--no-padding {
+  .panel__body {
+    padding: 0;
+  }
+}
+
+.panel--no-header {
+  .panel__header {
+    display: none;
+  }
+}
+
+.panel--no-footer {
+  .panel__footer {
+    display: none;
+  }
+}

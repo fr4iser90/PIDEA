@@ -1,0 +1,360 @@
+// =============================================================================
+// _ANALYSIS-MODAL
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Analysis Modal Styles */
+.analysis-modal__analysis-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-dropdown);
+  backdrop-filter: blur(4px);
+}
+
+.analysis-modal__analysis-modal-content {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  box-shadow: var(--shadow-xl); /* Modern shadow system */
+  max-width: 90vw;
+  max-height: 90vh;
+  width: clamp(43.75rem, 70vw, 50rem); /* 700px-800px responsive */
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.analysis-modal__analysis-modal-header {
+  padding: var(--space-md) 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.analysis-modal__analysis-modal-title {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analysis-modal__analysis-modal-title-icon {
+  font-size: 1.25rem;
+  color: var(--accent-color);
+}
+
+.analysis-modal__analysis-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analysis-modal-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.analysis-modal__analysis-modal-body {
+  padding: var(--space-lg);
+  max-height: calc(90vh - 140px);
+  overflow-y: auto;
+}
+
+.analysis-modal__analysis-modal-section {
+  margin-bottom: 24px;
+}
+
+.analysis-modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.analysis-modal__analysis-modal-section-title {
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-modal__analysis-modal-section-icon {
+  color: var(--accent-color);
+  font-size: 1rem;
+}
+
+.analysis-modal__analysis-modal-metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.analysis-modal__analysis-modal-metadata-item {
+  background: var(--bg-primary);
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.analysis-modal__analysis-modal-metadata-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-modal__analysis-modal-metadata-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.analysis-modal__analysis-modal-content-area {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: 20px;
+}
+
+.analysis-modal__analysis-modal-content-text {
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9rem;
+  background: var(--bg-secondary);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.analysis-modal__content-structured {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.analysis-modal__content-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.content-section h4 {
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analysis-modal__json-pre {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.analysis-modal__analysis-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.analysis-modal__analysis-modal-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  border: none;
+  font-size: 0.9rem;
+}
+
+.analysis-modal__analysis-modal-btn-primary {
+  background: var(--accent-color);
+  color: white;
+}
+
+.analysis-modal-btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.analysis-modal__analysis-modal-btn-secondary {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.analysis-modal-btn-secondary:hover {
+  background: var(--bg-primary);
+}
+
+.analysis-modal__analysis-modal-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-xs) 12px;
+  border-radius: var(--radius-xl);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analysis-modal-status.analysis-modal__completed {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.analysis-modal-status.analysis-modal__processing {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+.analysis-modal-status.analysis-modal__failed {
+  background: var(--error-bg);
+  color: var(--error-color);
+}
+
+.analysis-modal-status.analysis-modal__pending {
+  background: var(--info-bg);
+  color: var(--info-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analysis-modal__analysis-modal-content {
+    width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .analysis-modal__analysis-modal-header {
+    padding: var(--space-md) 20px;
+  }
+  
+  .analysis-modal__analysis-modal-body {
+    padding: var(--space-md);
+    max-height: calc(95vh - 120px);
+  }
+  
+  .analysis-modal__analysis-modal-title {
+    font-size: 1.25rem;
+  }
+  
+  .analysis-modal__analysis-modal-metadata {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .analysis-modal__analysis-modal-actions {
+    flex-direction: column;
+  }
+  
+  .analysis-modal__analysis-modal-btn {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Enhancements */
+@media (prefers-color-scheme: dark) {
+  .analysis-modal__analysis-modal {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .analysis-modal__analysis-modal-content {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Accessibility */
+.analysis-modal:focus {
+  outline: none;
+}
+
+.analysis-modal-content:focus {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Loading State */
+.analysis-modal.loading .analysis-modal__analysis-modal-content {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.analysis-modal.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--accent-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

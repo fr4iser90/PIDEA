@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
-import '@/css/components/analysis/analysis-issues.css';
+import '@/scss/components/_analysis-issues.scss';;
 
 const AnalysisIssues = ({ issues, loading, error, category = null }) => {
   const [activeView, setActiveView] = useState('all');

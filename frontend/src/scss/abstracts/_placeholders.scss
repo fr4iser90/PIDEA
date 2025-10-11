@@ -1,0 +1,531 @@
+// =============================================================================
+// PLACEHOLDERS
+// =============================================================================
+
+@use 'variables' as *;
+@use 'sass:color';
+
+// Responsive Breakpoints Mixin (inline to avoid circular imports)
+// -----------------------------------------------------------------------------
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: #{$breakpoint-sm}) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: #{$breakpoint-md}) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: #{$breakpoint-lg}) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: #{$breakpoint-xl}) {
+      @content;
+    }
+  } @else if $breakpoint == 2xl {
+    @media (min-width: #{$breakpoint-2xl}) {
+      @content;
+    }
+  }
+}
+
+// Focus Ring Mixin (inline to avoid circular imports)
+// -----------------------------------------------------------------------------
+@mixin focus-ring($color: $color-primary) {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  
+  &:focus-visible {
+    outline: 2px solid $color;
+    outline-offset: 2px;
+  }
+}
+
+// Button Variant Mixin (inline to avoid circular imports)
+// -----------------------------------------------------------------------------
+@mixin button-variant($bg-color, $text-color, $hover-bg, $border-color: $bg-color) {
+  background: $bg-color;
+  color: $text-color;
+  border-color: $border-color;
+  
+  &:hover:not(:disabled) {
+    background: $hover-bg;
+    border-color: $hover-bg;
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: $shadow-xs;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Custom Scrollbar Mixin (inline to avoid circular imports)
+// -----------------------------------------------------------------------------
+@mixin custom-scrollbar($width: clamp(0.25rem, 0.5vw, 0.5rem), $color: $color-primary) {
+  scrollbar-width: thin;
+  scrollbar-color: $color transparent;
+  
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $color;
+    border-radius: $radius-sm;
+    
+    &:hover {
+      background: color.adjust($color, $lightness: -10%);
+    }
+  }
+}
+
+// Keyframes Mixin (inline to avoid circular imports)
+// -----------------------------------------------------------------------------
+@mixin keyframes($name) {
+  @keyframes #{$name} {
+    @content;
+  }
+}
+
+// Flexbox Utilities Mixin (inline to avoid circular imports)
+// -----------------------------------------------------------------------------
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Button Base
+// -----------------------------------------------------------------------------
+%btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-sm $space-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-tight;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-normal;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// Form Input Base
+// -----------------------------------------------------------------------------
+%form-input-base {
+  display: block;
+  width: 100%;
+  padding: $space-sm $space-md;
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-sm;
+  transition: border-color $transition-normal;
+  
+  &:focus {
+    outline: none;
+    border-color: $border-color-focus;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+  }
+  
+  &::placeholder {
+    color: $text-tertiary;
+  }
+}
+
+// Card Base
+// -----------------------------------------------------------------------------
+%card-base {
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+}
+
+// Panel Base
+// -----------------------------------------------------------------------------
+%panel-base {
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+// Flexbox Utilities
+// -----------------------------------------------------------------------------
+%flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+%flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+%flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+%flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+// Text Utilities
+// -----------------------------------------------------------------------------
+%text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+%text-center {
+  text-align: center;
+}
+
+%text-left {
+  text-align: left;
+}
+
+%text-right {
+  text-align: right;
+}
+
+// Font Utilities
+// -----------------------------------------------------------------------------
+%font-mono {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+%font-bold {
+  font-weight: $font-weight-bold;
+}
+
+%font-semibold {
+  font-weight: $font-weight-semibold;
+}
+
+%font-medium {
+  font-weight: $font-weight-medium;
+}
+
+// Color Utilities
+// -----------------------------------------------------------------------------
+%text-primary {
+  color: $text-primary;
+}
+
+%text-secondary {
+  color: $text-secondary;
+}
+
+%text-tertiary {
+  color: $text-tertiary;
+}
+
+%bg-primary {
+  background: $bg-primary;
+}
+
+%bg-secondary {
+  background: $bg-secondary;
+}
+
+%bg-tertiary {
+  background: $bg-tertiary;
+}
+
+%bg-card {
+  background: $bg-card;
+}
+
+// Border Utilities
+// -----------------------------------------------------------------------------
+%border {
+  border: 1px solid $border-color;
+}
+
+%border-light {
+  border: 1px solid $border-color-light;
+}
+
+// Border Radius Utilities
+// -----------------------------------------------------------------------------
+%rounded {
+  border-radius: $radius-sm;
+}
+
+%rounded-md {
+  border-radius: $radius-md;
+}
+
+%rounded-lg {
+  border-radius: $radius-lg;
+}
+
+%rounded-xl {
+  border-radius: $radius-xl;
+}
+
+%rounded-full {
+  border-radius: $radius-full;
+}
+
+// Shadow Utilities
+// -----------------------------------------------------------------------------
+%shadow-sm {
+  box-shadow: $shadow-sm;
+}
+
+%shadow-md {
+  box-shadow: $shadow-md;
+}
+
+%shadow-lg {
+  box-shadow: $shadow-lg;
+}
+
+// Transition Utilities
+// -----------------------------------------------------------------------------
+%transition {
+  transition: all $transition-normal;
+}
+
+%transition-fast {
+  transition: all $transition-fast;
+}
+
+%transition-slow {
+  transition: all $transition-slow;
+}
+
+// Loading States
+// -----------------------------------------------------------------------------
+%loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba($color-primary, 0.2);
+  border-top: 4px solid $color-primary;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+%loading-skeleton {
+  background: linear-gradient(90deg, $bg-hover 25%, $bg-tertiary 50%, $bg-hover 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+// Error States
+// -----------------------------------------------------------------------------
+%error-message {
+  background: rgba($color-danger, 0.1);
+  border: 1px solid $color-danger;
+  color: $color-danger;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  margin: $space-md 0;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+// Success States
+// -----------------------------------------------------------------------------
+%success-message {
+  background: rgba($color-success, 0.1);
+  border: 1px solid $color-success;
+  color: $color-success;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  margin: $space-md 0;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+// Warning States
+// -----------------------------------------------------------------------------
+%warning-message {
+  background: rgba($color-warning, 0.1);
+  border: 1px solid $color-warning;
+  color: $color-warning;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  margin: $space-md 0;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+// Info States
+// -----------------------------------------------------------------------------
+%info-message {
+  background: rgba($color-info, 0.1);
+  border: 1px solid $color-info;
+  color: $color-info;
+  padding: $space-sm $space-md;
+  border-radius: $radius-sm;
+  margin: $space-md 0;
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+// Hover Effects
+// -----------------------------------------------------------------------------
+%hover-lift {
+  transition: transform $transition-normal, box-shadow $transition-normal;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+%hover-scale {
+  transition: transform $transition-normal;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Focus States
+// -----------------------------------------------------------------------------
+%focus-ring {
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+  }
+}
+
+%focus-ring-danger {
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba($color-danger, 0.2);
+  }
+}
+
+// Scrollbar Styling
+// -----------------------------------------------------------------------------
+%custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: $color-primary transparent;
+  
+  &::-webkit-scrollbar {
+    width: clamp(0.25rem, 0.5vw, 0.5rem);
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $color-primary;
+    border-radius: $radius-sm;
+    
+    &:hover {
+      background: $color-success;
+    }
+  }
+}
+
+// Responsive Hide/Show
+// -----------------------------------------------------------------------------
+%hide-on-mobile {
+  @include respond-to(md) {
+    display: none;
+  }
+}
+
+%show-on-mobile {
+  display: block;
+  
+  @include respond-to(md) {
+    display: none;
+  }
+}
+
+%hide-on-desktop {
+  display: none;
+  
+  @include respond-to(md) {
+    display: block;
+  }
+}
+
+%show-on-desktop {
+  display: none;
+  
+  @include respond-to(md) {
+    display: block;
+  }
+}
+
+// Animation Keyframes
+// -----------------------------------------------------------------------------
+%keyframes-spin {
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+
+%keyframes-loading {
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+%keyframes-fade-in {
+  @keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+}
+
+%keyframes-slide-up {
+  @keyframes slide-up {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+}
+
+%keyframes-slide-down {
+  @keyframes slide-down {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+}

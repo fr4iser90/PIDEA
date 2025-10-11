@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/css/components/analysis/security-score-chart.css';
+import '@/scss/components/_security-score-chart.scss';;
 
 const SecurityScoreChart = ({ score }) => {
   const getScoreColor = (score) => {

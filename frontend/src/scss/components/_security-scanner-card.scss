@@ -1,0 +1,477 @@
+// =============================================================================
+// _SECURITY-SCANNER-CARD
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Security Scanner Card Styles */
+.security-scanner-card__scanner-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
+  transition: all var(--transition-slow);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(clamp(-0.125rem, -0.5vw, -0.25rem)); /* -2px to -4px responsive */
+}
+
+.scanner-card.security-scanner-card__selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.scanner-card.security-scanner-card__success {
+  border-left: 4px solid #4CAF50;
+}
+
+.scanner-card.security-scanner-card__error {
+  border-left: 4px solid #F44336;
+}
+
+.scanner-card.security-scanner-card__warning {
+  border-left: 4px solid #FF9800;
+}
+
+/* Scanner Header */
+.security-scanner-card__scanner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.security-scanner-card__scanner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.security-scanner-card__scanner-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.security-scanner-card__scanner-name {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.security-scanner-card__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-xl);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.security-scanner-card__success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.status-badge.security-scanner-card__error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+  border: 1px solid rgba(244, 67, 54, 0.2);
+}
+
+.status-badge.security-scanner-card__warning {
+  background: rgba(255, 152, 0, 0.1);
+  color: #FF9800;
+  border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+/* Scanner Metrics */
+.security-scanner-card__scanner-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.security-scanner-card__metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-sm) 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+}
+
+.metric:hover {
+  background: var(--bg-hover);
+  transform: scale(1.05);
+}
+
+.security-scanner-card__metric-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.security-scanner-card__metric-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Scanner Actions */
+.security-scanner-card__scanner-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.security-scanner-card__expand-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  font-size: 1rem;
+}
+
+.expand-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Scanner Details */
+.security-scanner-card__scanner-details {
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.security-scanner-card__details-section {
+  margin-bottom: 20px;
+}
+
+.details-section:last-child {
+  margin-bottom: 0;
+}
+
+.details-section h5 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-scanner-card__detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.security-scanner-card__detail-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.security-scanner-card__detail-value {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.detail-value.security-scanner-card__success {
+  color: #4CAF50;
+}
+
+.detail-value.security-scanner-card__error {
+  color: #F44336;
+}
+
+.detail-value.security-scanner-card__warning {
+  color: #FF9800;
+}
+
+/* Vulnerabilities List */
+.security-scanner-card__vulnerabilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.security-scanner-card__vulnerability-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  transition: all var(--transition-normal);
+}
+
+.vulnerability-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color-hover);
+}
+
+.security-scanner-card__vulnerability-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.security-scanner-card__vulnerability-title {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.security-scanner-card__vulnerability-description {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.security-scanner-card__more-vulnerabilities {
+  text-align: center;
+  padding: var(--space-sm);
+  color: var(--primary-color);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  font-style: italic;
+  background: rgba(var(--primary-color-rgb), 0.05);
+  border-radius: var(--radius-sm);
+}
+
+/* Best Practices List */
+.security-scanner-card__best-practices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.security-scanner-card__best-practice-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  transition: all var(--transition-normal);
+}
+
+.best-practice-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-color-hover);
+}
+
+.security-scanner-card__practice-title {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.security-scanner-card__practice-description {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.security-scanner-card__more-practices {
+  text-align: center;
+  padding: var(--space-sm);
+  color: var(--primary-color);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  font-style: italic;
+  background: rgba(var(--primary-color-rgb), 0.05);
+  border-radius: var(--radius-sm);
+}
+
+/* Error Section */
+.details-section.security-scanner-card__error {
+  background: rgba(244, 67, 54, 0.05);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+}
+
+.security-scanner-card__error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-scanner-card__error-icon {
+  font-size: 1rem;
+  color: #F44336;
+}
+
+.security-scanner-card__error-text {
+  font-size: 0.875rem;
+  color: #F44336;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .security-scanner-card__scanner-card {
+    padding: var(--space-sm);
+  }
+
+  .security-scanner-card__scanner-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .security-scanner-card__scanner-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .security-scanner-card__scanner-metrics {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .security-scanner-card__metric {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+    padding: var(--space-sm) 12px;
+  }
+
+  .security-scanner-card__metric-value {
+    margin-bottom: 0;
+  }
+
+  .security-scanner-card__detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .security-scanner-card__vulnerability-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .security-scanner-card__scanner-card {
+    padding: 10px;
+  }
+
+  .security-scanner-card__scanner-name {
+    font-size: 1rem;
+  }
+
+  .security-scanner-card__scanner-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.25rem;
+  }
+
+  .security-scanner-card__status-badge {
+    font-size: 0.7rem;
+    padding: var(--space-xs) 8px;
+  }
+
+  .security-scanner-card__metric-value {
+    font-size: 1.125rem;
+  }
+
+  .security-scanner-card__metric-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .security-scanner-card__scanner-card {
+    background: var(--bg-primary-dark, #2a2a2a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .scanner-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .security-scanner-card__scanner-icon {
+    background: var(--bg-secondary-dark, #1a1a1a);
+  }
+
+  .security-scanner-card__metric {
+    background: var(--bg-secondary-dark, #1a1a1a);
+  }
+
+  .metric:hover {
+    background: var(--bg-hover-dark, #333);
+  }
+
+  .vulnerability-item,
+  .security-scanner-card__best-practice-item {
+    background: var(--bg-secondary-dark, #1a1a1a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .vulnerability-item:hover,
+  .best-practice-item:hover {
+    background: var(--bg-hover-dark, #333);
+  }
+
+  .details-section.security-scanner-card__error {
+    background: rgba(244, 67, 54, 0.1);
+    border-color: rgba(244, 67, 54, 0.3);
+  }
+} 

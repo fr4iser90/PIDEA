@@ -1,0 +1,30 @@
+// MAIN SCSS FILE - 7-1 ARCHITECTURE
+// =============================================================================
+
+// 1. ABSTRACTS
+// Variables, functions, mixins, placeholders
+@use 'abstracts/index' as abstracts;
+
+// 2. VENDORS
+// Third-party CSS (Bootstrap, jQuery UI, etc.)
+// @use 'vendors/index' as vendors;
+
+// 3. BASE
+// Reset, typography, etc.
+@use 'base/index' as base;
+
+// 4. LAYOUT
+// Header, footer, navigation, grid system
+@use 'layout/index' as layout;
+
+// 5. COMPONENTS
+// Buttons, cards, modals, etc.
+@use 'components/index' as components;
+
+// 6. PAGES
+// Page-specific styles
+@use 'pages/index' as pages;
+
+// 7. THEMES
+// Theme-specific styles
+@use 'themes/index' as themes;

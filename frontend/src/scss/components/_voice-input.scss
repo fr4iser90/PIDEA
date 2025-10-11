@@ -1,0 +1,306 @@
+// =============================================================================
+// _VOICE-INPUT
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Voice Input Component Styles */
+
+.voice-input__voice-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.25rem, 0.5vw, 0.375rem); /* 4px-6px responsive */
+  position: relative;
+}
+
+/* Voice Input Button */
+.voice-input__voice-input-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+}
+
+.voice-input-button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.4);
+}
+
+.voice-input-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Button sizes */
+.voice-input__voice-input-button-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.voice-input__voice-input-button-md {
+  width: 40px;
+  height: 40px;
+}
+
+.voice-input__voice-input-button-lg {
+  width: 48px;
+  height: 48px;
+}
+
+/* Icon sizes */
+.voice-input-button-sm .voice-input__voice-input-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.voice-input-button-md .voice-input__voice-input-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.voice-input-button-lg .voice-input__voice-input-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Button states */
+.voice-input__voice-input-button-recording {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+.voice-input-button-recording:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.voice-input__voice-input-button-processing {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  animation: spin 1s linear infinite;
+}
+
+.voice-input__voice-input-button-disabled {
+  background: #666;
+  color: #999;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.voice-input-button-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Recording indicator */
+.voice-input__voice-input-recording-indicator {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.voice-input__recording-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: recordingPulse 1.4s ease-in-out infinite;
+}
+
+.recording-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.recording-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.recording-dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+/* Status indicator */
+.voice-input__voice-input-status {
+  font-size: 0.75rem;
+  color: #007acc;
+  text-align: center;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: rgba(0, 122, 204, 0.1);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Error message */
+.voice-input__voice-input-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  text-align: center;
+  margin-top: 4px;
+  padding: var(--space-xs) 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  max-width: 200px;
+  word-wrap: break-word;
+}
+
+/* Animations */
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes recordingPulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .voice-input__voice-input-button-md {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .voice-input-button-md .voice-input__voice-input-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .voice-input-status,
+  .voice-input__voice-input-error {
+    font-size: 0.7rem;
+  }
+}
+
+/* Integration with input fields */
+.input-with-voice .voice-input__voice-input-container {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.input-with-voice .voice-input-status,
+.input-with-voice .voice-input__voice-input-error {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  margin-top: 8px;
+}
+
+/* Tooltip styles */
+.voice-input__voice-input-container {
+  position: relative;
+}
+
+.voice-input__voice-input-button {
+  position: relative;
+}
+
+.voice-input-button:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 20;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.voice-input-button:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+  margin-bottom: 4px;
+  pointer-events: none;
+}
+
+/* Focus styles for accessibility */
+.voice-input-button:focus {
+  outline: 2px solid #007acc;
+  outline-offset: 2px;
+}
+
+.voice-input-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .voice-input__voice-input-button {
+    border: 2px solid currentColor;
+  }
+  
+  .voice-input__voice-input-button-recording {
+    border-color: #ef4444;
+  }
+  
+  .voice-input__voice-input-button-processing {
+    border-color: #f59e0b;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .voice-input__voice-input-button {
+    transition: none;
+  }
+  
+  .voice-input__voice-input-button-recording {
+    animation: none;
+  }
+  
+  .voice-input__recording-dot {
+    animation: none;
+  }
+  
+  .voice-input__voice-input-button-processing {
+    animation: none;
+  }
+} 

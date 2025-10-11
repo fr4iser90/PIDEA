@@ -1,0 +1,116 @@
+// =============================================================================
+// BUTTONS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// Button Base
+// -----------------------------------------------------------------------------
+.btn {
+  @extend %btn-base;
+}
+
+// Button Variants
+// -----------------------------------------------------------------------------
+.btn--primary {
+  @include button-variant($color-primary, $text-primary, $color-primary-hover);
+}
+
+.btn--secondary {
+  @include button-variant($bg-hover, $text-secondary, $bg-tertiary, $border-color);
+}
+
+.btn--success {
+  @include button-variant($color-success, $text-primary, $color-success-hover);
+}
+
+.btn--danger {
+  @include button-variant($color-danger, $text-primary, $color-danger-hover);
+}
+
+.btn--warning {
+  @include button-variant($color-warning, $text-primary, $color-warning-hover);
+}
+
+.btn--info {
+  @include button-variant($color-info, $text-primary, $color-info-hover);
+}
+
+// Button Sizes
+// -----------------------------------------------------------------------------
+.btn--sm {
+  padding: $space-xs $space-sm;
+  font-size: $font-size-xs;
+}
+
+.btn--lg {
+  padding: $space-md $space-lg;
+  font-size: $font-size-lg;
+}
+
+// Icon Button
+// -----------------------------------------------------------------------------
+.btn--icon {
+  background: none;
+  border: none;
+  color: $text-secondary;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: $space-xs $space-sm;
+  border-radius: $radius-sm;
+  transition: all $transition-normal;
+  
+  &:hover {
+    background: $bg-hover;
+    color: $color-primary;
+  }
+}
+
+// Button States
+// -----------------------------------------------------------------------------
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+// Button Groups
+// -----------------------------------------------------------------------------
+.btn-group {
+  display: inline-flex;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  
+  .btn {
+    border-radius: 0;
+    border-right: 1px solid $border-color;
+    
+    &:first-child {
+      border-top-left-radius: $radius-sm;
+      border-bottom-left-radius: $radius-sm;
+    }
+    
+    &:last-child {
+      border-right: none;
+      border-top-right-radius: $radius-sm;
+      border-bottom-right-radius: $radius-sm;
+    }
+  }
+}
+
+// Responsive Buttons
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .btn {
+    padding: $space-sm $space-md;
+    font-size: $font-size-sm;
+  }
+}
+
+@include respond-to(md) {
+  .btn {
+    padding: $space-sm $space-md;
+    font-size: $font-size-sm;
+  }
+}

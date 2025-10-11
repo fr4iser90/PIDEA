@@ -1,0 +1,328 @@
+// =============================================================================
+// _CHAT-PANEL
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+// @import './panel-block.css'; // Removed - panel-block styles integrated
+
+/* ChatPanelComponent Styles */
+
+.chat-panel__chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+/* Panel Header */
+.chat-panel__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.25rem); /* 12px-20px responsive */
+  border-bottom: 1px solid #3c3c3c;
+  background: #2d2d2d;
+}
+
+.chat-panel__panel-header h3 {
+  margin: 0;
+  font-size: clamp(1rem, 2.5vw, 1.1em); /* 16px-17.6px responsive */
+  font-weight: var(--font-weight-semibold);
+  color: #4e8cff;
+}
+
+.chat-panel__btn-icon {
+  background: none;
+  border: none;
+  color: #4e8cff;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.chat-panel__btn-icon:hover {
+  background: rgba(78, 140, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Chat Sessions List */
+.chat-panel__chat-sessions-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
+}
+
+.chat-panel__chat-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+  margin-bottom: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  background: #2d2d2d;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.chat-session-item:hover {
+  background: #3c3c3c;
+  border-color: #4e8cff;
+  transform: translateY(-1px);
+}
+
+.chat-session-item.chat-panel__active {
+  background: #094771;
+  border-color: #007acc;
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+}
+
+.chat-panel__session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-panel__session-title {
+  font-weight: var(--font-weight-medium);
+  color: #cccccc;
+  margin-bottom: 4px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-panel__session-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #888888;
+}
+
+.chat-session-item.active .chat-panel__session-meta {
+  color: #4ec9b0;
+}
+
+.chat-panel__message-count {
+  font-weight: var(--font-weight-medium);
+}
+
+.chat-panel__last-activity {
+  font-style: italic;
+}
+
+.chat-panel__session-delete-btn {
+  background: none;
+  border: none;
+  color: #666666;
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  padding: var(--space-xs) 8px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  opacity: 0;
+  margin-left: 8px;
+}
+
+.chat-session-item:hover .chat-panel__session-delete-btn {
+  opacity: 1;
+}
+
+.session-delete-btn:hover {
+  background: #ff4444;
+  color: white;
+  transform: scale(1.1);
+}
+
+.chat-panel__no-sessions {
+  text-align: center;
+  color: #888888;
+  font-style: italic;
+  padding: var(--space-md);
+  font-size: var(--font-size-xs);
+}
+
+/* Panel Footer */
+.chat-panel__panel-footer {
+  padding: var(--space-md);
+  border-top: 1px solid #3c3c3c;
+  background: #2d2d2d;
+}
+
+.chat-panel__quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-actions .chat-panel__btn-secondary {
+  flex: 1;
+  padding: var(--space-sm) 12px;
+  background: #404040;
+  border: 1px solid #555555;
+  color: #cccccc;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-actions .btn-secondary:hover {
+  background: #555555;
+  border-color: #4e8cff;
+  color: #4e8cff;
+  transform: translateY(-1px);
+}
+
+/* Button Styles */
+.chat-panel__btn-icon {
+  background: none;
+  border: none;
+  color: #8ca0b3;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: #3c3c3c;
+  color: #4e8cff;
+  transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-panel__panel-header {
+    padding: var(--space-sm) 12px;
+  }
+  
+  .panel-header h3 {
+    font-size: 1em;
+  }
+  
+  .chat-panel__chat-sessions-list {
+    padding: var(--space-sm);
+  }
+  
+  .chat-panel__chat-session-item {
+    padding: 10px;
+    margin-bottom: 6px;
+  }
+  
+  .chat-panel__session-title {
+    font-size: var(--font-size-xs);
+  }
+  
+  .chat-panel__session-meta {
+    font-size: 10px;
+  }
+  
+  .chat-panel__panel-footer {
+    padding: var(--space-sm);
+  }
+  
+  .quick-actions .chat-panel__btn-secondary {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-panel__chat-panel {
+    min-height: 300px;
+  }
+  
+  .chat-panel__session-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .chat-panel__quick-actions {
+    flex-direction: column;
+  }
+}
+
+/* Light Theme Support */
+body.light-theme .chat-panel__chat-panel {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+body.light-theme .chat-panel__panel-header {
+  background: #e9ecef;
+  border-bottom-color: #dee2e6;
+}
+
+body.light-theme .panel-header h3 {
+  color: #2196f3;
+}
+
+body.light-theme .chat-panel__chat-session-item {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+body.light-theme .chat-session-item:hover {
+  background: #e9ecef;
+  border-color: #2196f3;
+}
+
+body.light-theme .chat-session-item.chat-panel__active {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+body.light-theme .chat-panel__session-meta {
+  color: #6c757d;
+}
+
+body.light-theme .chat-session-item.active .chat-panel__session-meta {
+  color: #28a745;
+}
+
+body.light-theme .chat-panel__session-delete-btn {
+  color: #adb5bd;
+}
+
+body.light-theme .session-delete-btn:hover {
+  background: #dc3545;
+  color: white;
+}
+
+body.light-theme .chat-panel__panel-footer {
+  background: #e9ecef;
+  border-top-color: #dee2e6;
+}
+
+body.light-theme .quick-actions .chat-panel__btn-secondary {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+body.light-theme .quick-actions .btn-secondary:hover {
+  background: #e9ecef;
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+body.light-theme .chat-panel__btn-icon {
+  color: #6c757d;
+}
+
+body.light-theme .btn-icon:hover {
+  background: #e9ecef;
+  color: #2196f3;
+}

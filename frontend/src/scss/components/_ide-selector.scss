@@ -1,0 +1,479 @@
+// =============================================================================
+// _IDE-SELECTOR
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* IDE Selector Component Styles */
+
+.ide-selector__ide-selector {
+  position: relative;
+  display: inline-block;
+  min-width: var(--main-content-min-width); /* Modern design system variable */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ide-selector.ide-selector__compact {
+  min-width: var(--sidebar-left-width); /* Modern design system variable */
+}
+
+/* Main Selector Button */
+.ide-selector__ide-selector-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+  background: #2a2e35;
+  border: 1px solid #404040;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-height: var(--header-height); /* Modern design system variable */
+}
+
+.ide-selector-button:hover {
+  background: #3a3e45;
+  border-color: #505050;
+}
+
+.ide-selector-button.ide-selector__open {
+  background: #3a3e45;
+  border-color: #4e8cff;
+  box-shadow: 0 0 0 2px rgba(78, 140, 255, 0.2);
+}
+
+.ide-selector-button.ide-selector__has-selection {
+  background: #2a2e35;
+}
+
+/* Selected IDE Display */
+.ide-selector__selected-ide {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm); /* Modern design system variable */
+  flex: 1;
+  min-width: 0;
+}
+
+.ide-selector__ide-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.ide-selector__ide-name {
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
+  color: #e6e6e6;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ide-selector__ide-details {
+  display: flex;
+  gap: var(--space-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  color: #999;
+  margin-top: var(--space-xs); /* Modern design system variable */
+}
+
+.ide-selector__ide-port {
+  color: #4e8cff;
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
+}
+
+.ide-selector__ide-workspace {
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: var(--sidebar-left-width); /* Modern design system variable */
+}
+
+/* No Selection State */
+.ide-selector__no-selection {
+  color: #999;
+  font-style: italic;
+}
+
+/* Dropdown Arrow */
+.ide-selector__dropdown-arrow {
+  color: #999;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  transition: transform 0.2s ease;
+  margin-left: var(--space-sm); /* Modern design system variable */
+}
+
+.ide-selector-button.open .ide-selector__dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Status Indicators */
+.ide-selector__ide-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-md); /* Modern design system variable */
+  height: var(--space-md); /* Modern design system variable */
+  border-radius: 50%;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  flex-shrink: 0;
+}
+
+.ide-status-indicator.ide-selector__running {
+  color: #28a745;
+}
+
+.ide-status-indicator.ide-selector__starting {
+  color: #ffc107;
+}
+
+.ide-status-indicator.stopped,
+.ide-status-indicator.ide-selector__error {
+  color: #dc3545;
+}
+
+.ide-status-indicator.ide-selector__unknown {
+  color: #6c757d;
+}
+
+.ide-status-indicator.ide-selector__active {
+  box-shadow: 0 0 0 2px rgba(78, 140, 255, 0.3);
+}
+
+/* Feature Badges */
+.ide-selector__ide-feature-badges {
+  display: flex;
+  gap: var(--space-xs); /* Modern design system variable */
+  flex-shrink: 0;
+}
+
+.ide-selector__feature-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-xl); /* Modern design system variable */
+  height: var(--space-xl); /* Modern design system variable */
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  cursor: help;
+  transition: all var(--transition-normal);
+}
+
+.feature-badge.ide-selector__blue {
+  background: rgba(78, 140, 255, 0.2);
+  color: #4e8cff;
+}
+
+.feature-badge.ide-selector__green {
+  background: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.feature-badge.ide-selector__orange {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.feature-badge.ide-selector__purple {
+  background: rgba(111, 66, 193, 0.2);
+  color: #6f42c1;
+}
+
+.feature-badge.ide-selector__cyan {
+  background: rgba(23, 162, 184, 0.2);
+  color: #17a2b8;
+}
+
+.feature-badge.ide-selector__more {
+  background: rgba(108, 117, 125, 0.2);
+  color: #6c757d;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  font-weight: bold;
+}
+
+.feature-badge:hover {
+  transform: scale(1.1);
+}
+
+/* Dropdown Menu */
+.ide-selector__ide-selector-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #2a2e35;
+  border: 1px solid #404040;
+  border-radius: var(--radius-md); /* Modern design system variable */
+  box-shadow: var(--shadow-lg); /* Modern design system variable */
+  z-index: var(--z-dropdown);
+  margin-top: var(--space-xs); /* Modern design system variable */
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ide-selector__dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
+  border-bottom: 1px solid #404040;
+}
+
+.dropdown-header h4 {
+  margin: 0;
+  color: #e6e6e6;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
+}
+
+.ide-selector__new-ide-btn {
+  background: #4e8cff;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.new-ide-btn:hover {
+  background: #3d7be8;
+}
+
+.new-ide-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* IDE List */
+.ide-selector__ide-list {
+  padding: var(--space-sm) 0; /* Modern design system variables */
+}
+
+.ide-selector__ide-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md); /* Modern design system variable */
+  padding: var(--space-md) var(--space-lg); /* Modern design system variables */
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid #404040;
+}
+
+.ide-option:last-child {
+  border-bottom: none;
+}
+
+.ide-option:hover {
+  background: #3a3e45;
+}
+
+.ide-option.ide-selector__selected {
+  background: rgba(78, 140, 255, 0.1);
+  border-left: 3px solid #4e8cff;
+}
+
+.ide-option.ide-selector__running {
+  border-left: 3px solid #28a745;
+}
+
+.ide-selector__ide-option-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ide-selector__ide-option-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm); /* Modern design system variable */
+  font-weight: var(--font-weight-medium); /* Modern design system variable */
+  color: #e6e6e6;
+  font-size: var(--font-size-sm); /* Modern design system variable */
+}
+
+.ide-selector__active-indicator {
+  color: #4e8cff;
+  font-weight: bold;
+}
+
+.ide-selector__ide-option-details {
+  display: flex;
+  gap: var(--space-md); /* Modern design system variable */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  color: #999;
+  margin-top: var(--space-xs); /* Modern design system variable */
+}
+
+.ide-selector__ide-option-actions {
+  display: flex;
+  gap: var(--space-sm); /* Modern design system variable */
+  flex-shrink: 0;
+}
+
+.ide-selector__switch-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.switch-btn:hover {
+  background: #218838;
+}
+
+/* No IDEs State */
+.ide-selector__no-ides {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md); /* Modern design system variable */
+  padding: var(--space-xl) var(--space-lg); /* Modern design system variables */
+  color: #999;
+  text-align: center;
+}
+
+.ide-selector__create-ide-btn {
+  background: #4e8cff;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  padding: var(--space-sm) var(--space-lg); /* Modern design system variables */
+  font-size: var(--font-size-sm); /* Modern design system variable */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.create-ide-btn:hover {
+  background: #3d7be8;
+}
+
+/* Loading States */
+.ide-selector.ide-selector__loading {
+  pointer-events: none;
+}
+
+.ide-selector__ide-selector-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm); /* Modern design system variable */
+  padding: var(--space-md); /* Modern design system variable */
+  color: #999;
+}
+
+.ide-selector__loading-spinner {
+  width: var(--space-md); /* Modern design system variable */
+  height: var(--space-md); /* Modern design system variable */
+  border: 2px solid #404040;
+  border-top: 2px solid #4e8cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ide-selector__ide-selector-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(42, 46, 53, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md); /* Modern design system variable */
+  z-index: 1;
+}
+
+/* Error States */
+.ide-selector.ide-selector__error {
+  border-color: #dc3545;
+}
+
+.ide-selector__ide-selector-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm); /* Modern design system variable */
+  padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+  color: #dc3545;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+}
+
+.ide-selector__retry-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm); /* Modern design system variable */
+  padding: var(--space-xs) var(--space-sm); /* Modern design system variables */
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #c82333;
+}
+
+.ide-selector__dropdown-error {
+  padding: var(--space-sm) var(--space-lg); /* Modern design system variables */
+  color: #dc3545;
+  font-size: var(--font-size-xs); /* Modern design system variable */
+  border-top: 1px solid #404040;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ide-selector__ide-selector {
+    min-width: 100%;
+  }
+  
+  .ide-selector__ide-details {
+    flex-direction: column;
+    gap: var(--space-xs); /* Modern design system variable */
+  }
+  
+  .ide-selector__ide-option-details {
+    flex-direction: column;
+    gap: var(--space-xs); /* Modern design system variable */
+  }
+  
+  .ide-selector__ide-feature-badges {
+    display: none;
+  }
+}
+
+/* Compact Mode */
+.ide-selector.compact .ide-selector__ide-details {
+  display: none;
+}
+
+.ide-selector.compact .ide-selector__ide-feature-badges {
+  display: none;
+}
+
+.ide-selector.compact .ide-selector__ide-option-details {
+  display: none;
+}
+
+.ide-selector.compact .ide-selector__ide-feature-badges {
+  display: none;
+} 

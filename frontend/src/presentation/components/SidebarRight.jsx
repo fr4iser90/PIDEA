@@ -18,7 +18,7 @@ import PromptsPanelComponent from './chat/sidebar-right/PromptsPanelComponent.js
 import TemplatesPanelComponent from './chat/sidebar-right/TemplatesPanelComponent.jsx';
 import TasksPanelComponent from './chat/sidebar-right/TasksPanelComponent.jsx';
 import QueueManagementPanel from './queue/QueueManagementPanel.jsx';
-import '@/css/global/sidebar-right.css';
+import '@/scss/base/_sidebar-right.scss';
 
 function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePort }) {
   const [currentTab, setCurrentTab] = useState('tasks');
@@ -40,7 +40,7 @@ function SidebarRight({ eventBus, attachedPrompts, setAttachedPrompts, activePor
                 <button className={`tab-btn${currentTab === 'analysis' ? ' active' : ''}`} onClick={() => setCurrentTab('analysis')}>📊 Analysis</button>
                 <button className={`tab-btn${currentTab === 'settings' ? ' active' : ''}`} onClick={() => setCurrentTab('settings')}>⚙️ Settings</button>
               </div>
-              <button id="toggleSidebarRightBtn" className="btn-icon" title="Panel ein-/ausblenden" onClick={() => setIsVisible(v => !v)}>◀</button>
+              
             </div>
             <div className="panel-content">
               {currentTab === 'tasks' && <TasksPanelComponent eventBus={eventBus} activePort={activePort} />}

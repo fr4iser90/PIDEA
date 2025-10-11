@@ -1,0 +1,21 @@
+// =============================================================================
+// _DARK
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Dark theme is the default theme, so most styles are already defined
+// This file can be used for dark theme specific overrides or variations
+
+[data-theme="dark"] {
+  // Dark theme specific overrides can go here
+  // Currently using the default dark theme from variables
+}
+
+// Dark theme variations
+.theme-dark {
+  // Additional dark theme classes if needed
+}

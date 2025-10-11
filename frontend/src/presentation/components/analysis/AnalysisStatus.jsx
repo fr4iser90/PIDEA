@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import '@/css/components/analysis/analysis-status.css';
+import '@/scss/components/_analysis-status.scss';;
 
 const AnalysisStatus = ({ status, onStartAnalysis, loading }) => {
   const [timeRemaining, setTimeRemaining] = useState(null);

@@ -1,0 +1,285 @@
+// =============================================================================
+// _MIRROR
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* IDE Mirror Component - Streaming Styles */
+
+.mirror__ide-mirror-container {
+    position: relative;
+    width: 100vw;  /* Volle Viewport-Breite */
+    height: 100vh;
+    overflow: hidden;
+    background: rgb(30, 30, 30);
+    margin-left: calc(-1 * var(--sidebar-width));  /* Kompensiert die Sidebar */
+    margin-right: calc(-1 * var(--right-panel-width));  /* Kompensiert das rechte Panel */
+  }
+  
+
+/* Streaming Controls Overlay */
+.mirror__streaming-controls-overlay {
+    position: absolute;
+    top: clamp(0.5rem, 1.5vh, 0.625rem); /* 8px-10px responsive */
+    right: clamp(0.5rem, 1.5vw, 0.625rem); /* 8px-10px responsive */
+    z-index: var(--z-dropdown);
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid #404040;
+    border-radius: var(--radius-md); /* Modern responsive radius */
+    padding: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Canvas Renderer */
+.mirror__streaming-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #1e1e1e;
+}
+
+/* Fallback Content */
+.mirror__fallback-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cccccc;
+    font-size: var(--font-size-lg); /* Modern design system variable */
+}
+
+/* Loading Overlay */
+.mirror__loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 30, 30, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    color: #cccccc;
+}
+
+.mirror__loading-spinner {
+    width: var(--space-xl); /* Modern design system variable */
+    height: var(--space-xl); /* Modern design system variable */
+    border: var(--space-xs) solid #404040; /* Modern design system variable */
+    border-top: var(--space-xs) solid #007acc; /* Modern design system variable */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-lg); /* Modern design system variable */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error Overlay */
+.mirror__error-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 30, 30, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    color: #ff6b6b;
+    text-align: center;
+    padding: var(--space-xl); /* Modern design system variable */
+}
+
+.mirror__retry-btn {
+    background: #007acc;
+    color: white;
+    border: none;
+    padding: var(--space-md) var(--space-xl); /* Modern design system variables */
+    border-radius: var(--radius-sm); /* Modern design system variable */
+    cursor: pointer;
+    font-size: var(--font-size-sm); /* Modern design system variable */
+    margin-top: var(--space-lg); /* Modern design system variable */
+    transition: background-color 0.2s;
+}
+
+.retry-btn:hover {
+    background: #005a9e;
+}
+
+/* Streaming Status Indicators */
+.mirror__streaming-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm); /* Modern design system variable */
+    margin-bottom: var(--space-sm); /* Modern design system variable */
+    font-size: var(--font-size-xs); /* Modern design system variable */
+    color: #cccccc;
+}
+
+.mirror__streaming-status-indicator {
+    width: var(--space-sm); /* Modern design system variable */
+    height: var(--space-sm); /* Modern design system variable */
+    border-radius: 50%;
+    background: #28a745;
+    animation: pulse 2s infinite;
+}
+
+.streaming-status-indicator.mirror__inactive {
+    background: #6c757d;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Stats Display */
+.mirror__streaming-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm); /* Modern design system variable */
+    margin-top: var(--space-sm); /* Modern design system variable */
+    font-size: var(--font-size-xs); /* Modern design system variable */
+    color: #999999;
+}
+
+.mirror__stat-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+.mirror__stat-label {
+    font-weight: var(--font-weight-medium);
+}
+
+.mirror__stat-value {
+    color: #cccccc;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mirror__streaming-controls-overlay {
+        top: var(--space-xs); /* Modern design system variable */
+        right: var(--space-xs); /* Modern design system variable */
+        padding: var(--space-sm); /* Modern design system variable */
+        font-size: var(--font-size-xs); /* Modern design system variable */
+    }
+    
+    .mirror__streaming-stats {
+        grid-template-columns: 1fr;
+        gap: var(--space-xs); /* Modern design system variable */
+    }
+}
+
+/* Legacy Screenshot Overlay Styles (for fallback) */
+.mirror__screenshot-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.mirror__clickable-zone {
+    position: absolute;
+    border: var(--space-xs) solid rgba(78, 140, 255, 0.8); /* Modern design system variable */
+    background: rgba(78, 140, 255, 0.1);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    border-radius: var(--radius-xs); /* Modern design system variable */
+}
+
+.clickable-zone:hover {
+    border-color: rgba(78, 140, 255, 1);
+    background: rgba(78, 140, 255, 0.2);
+    transform: scale(1.02);
+}
+
+.clickable-zone.mirror__active {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.2);
+    box-shadow: var(--shadow-lg); /* Modern design system variable */
+}
+
+/* Typing Mode Styles */
+.mirror__typing-mode {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(30, 30, 30, 0.95);
+    border: var(--space-xs) solid #007acc; /* Modern design system variable */
+    border-radius: var(--radius-md); /* Modern design system variable */
+    padding: var(--space-xl); /* Modern design system variable */
+    z-index: var(--z-dropdown);
+    color: #cccccc;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.mirror__typing-indicator {
+    position: fixed;
+    top: var(--space-xl); /* Modern design system variable */
+    right: var(--space-xl); /* Modern design system variable */
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid #404040;
+    border-radius: var(--radius-md); /* Modern design system variable */
+    padding: var(--space-sm) var(--space-md); /* Modern design system variables */
+    color: #cccccc;
+    font-size: var(--font-size-sm); /* Modern design system variable */
+    z-index: 1001;
+    transition: opacity 0.3s ease;
+}
+
+/* Loading Message Styles */
+.mirror__loading-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #cccccc;
+    text-align: center;
+}
+
+.loading-message p {
+    margin-top: var(--space-lg); /* Modern design system variable */
+    font-size: var(--font-size-lg); /* Modern design system variable */
+}
+
+/* Error Message Styles */
+.mirror__error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #ff6b6b;
+    text-align: center;
+    padding: var(--space-xl); /* Modern design system variable */
+}
+
+.error-message p {
+    margin-bottom: var(--space-lg); /* Modern design system variable */
+    font-size: var(--font-size-lg); /* Modern design system variable */
+} 

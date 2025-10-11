@@ -12,7 +12,7 @@ import {
   Title
 } from 'chart.js';
 import { processTechStackData } from '@/utils/analysisDataProcessor';
-import '@/css/components/analysis/analysis-techstack.css';
+import '@/scss/components/_analysis-techstack.scss';;
 
 // Register Chart.js components
 ChartJS.register(

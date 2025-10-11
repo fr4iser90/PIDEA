@@ -1,0 +1,484 @@
+// =============================================================================
+// _SECURITY-DASHBOARD
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Security Dashboard Styles */
+.security-dashboard__security-dashboard {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  padding: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  margin: clamp(1rem, 3vw, 1.25rem) 0; /* 16px-20px responsive */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+}
+
+/* Security Header */
+.security-dashboard__security-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(1rem, 3vw, 1.25rem); /* 16px-20px responsive */
+  padding-bottom: clamp(0.875rem, 2.5vw, 0.9375rem); /* 14px-15px responsive */
+  border-bottom: 2px solid var(--border-color);
+}
+
+.security-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* 20px-24px responsive */
+  font-weight: var(--font-weight-semibold);
+}
+
+.security-dashboard__security-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.security-dashboard__score-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.security-dashboard__score-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Security Tabs */
+.security-dashboard__security-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.security-dashboard__tab {
+  background: none;
+  border: none;
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-md) 8px 0 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.tab.security-dashboard__active {
+  background: var(--primary-color);
+  color: white;
+  border-bottom-color: var(--primary-color);
+}
+
+/* Security Content */
+.security-dashboard__security-content {
+  min-height: 300px;
+}
+
+/* Security Overview */
+.security-dashboard__security-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.security-dashboard__overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.security-dashboard__overview-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-normal);
+}
+
+.overview-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.security-dashboard__card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.security-dashboard__card-icon {
+  font-size: 1.25rem;
+}
+
+.security-dashboard__card-title {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.security-dashboard__card-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.card-value.security-dashboard__success {
+  color: #4CAF50;
+}
+
+.card-value.security-dashboard__warning {
+  color: #FF9800;
+}
+
+.card-value.security-dashboard__error {
+  color: #F44336;
+}
+
+.card-value.security-dashboard__neutral {
+  color: var(--text-primary);
+}
+
+.security-dashboard__security-score-chart {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+/* Security Vulnerabilities */
+.security-dashboard__security-vulnerabilities {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vulnerabilities-summary h4,
+.vulnerabilities-list h4 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.security-dashboard__severity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.security-dashboard__severity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-normal);
+}
+
+.severity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.severity-card.security-dashboard__critical {
+  border-color: #D32F2F;
+  background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+}
+
+.severity-card.security-dashboard__high {
+  border-color: #F44336;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+}
+
+.severity-card.security-dashboard__medium {
+  border-color: #FF9800;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+}
+
+.severity-card.security-dashboard__low {
+  border-color: #4CAF50;
+  background: linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%);
+}
+
+.security-dashboard__severity-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.security-dashboard__severity-label {
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.security-dashboard__severity-count {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.security-dashboard__vulnerabilities-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.security-dashboard__vulnerability-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-normal);
+}
+
+.vulnerability-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.security-dashboard__vulnerability-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.security-dashboard__severity-badge {
+  padding: var(--space-xs) 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.severity-badge.security-dashboard__critical {
+  background: #D32F2F;
+  color: white;
+}
+
+.severity-badge.security-dashboard__high {
+  background: #F44336;
+  color: white;
+}
+
+.severity-badge.security-dashboard__medium {
+  background: #FF9800;
+  color: white;
+}
+
+.severity-badge.security-dashboard__low {
+  background: #4CAF50;
+  color: white;
+}
+
+.security-dashboard__scanner-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.security-dashboard__vulnerability-title {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.security-dashboard__vulnerability-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Security Scanners */
+.security-dashboard__security-scanners {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.security-dashboard__scanners-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* Loading and Error States */
+.security-dashboard.loading,
+.security-dashboard.error,
+.security-dashboard.security-dashboard__empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.security-dashboard__loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.loading-spinner::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message,
+.security-dashboard__empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  text-align: center;
+  padding: var(--space-md);
+}
+
+.error-icon,
+.security-dashboard__empty-icon {
+  font-size: 2rem;
+}
+
+.security-dashboard__empty-description {
+  max-width: 500px;
+  text-align: left;
+}
+
+.empty-description p {
+  margin: var(--space-sm) 0;
+  line-height: 1.5;
+}
+
+.empty-description ul {
+  margin: var(--space-sm) 0;
+  padding-left: 20px;
+}
+
+.empty-description li {
+  margin: 6px 0;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .security-dashboard__security-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .security-dashboard__security-tabs {
+    flex-wrap: wrap;
+  }
+
+  .security-dashboard__tab {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .security-dashboard__overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .security-dashboard__severity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .security-dashboard__scanners-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .security-dashboard__vulnerability-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .security-dashboard__security-dashboard {
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+  }
+
+  .security-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .security-dashboard__score-value {
+    font-size: 1.5rem;
+  }
+
+  .security-dashboard__severity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .security-dashboard__security-dashboard {
+    background: var(--bg-secondary-dark, #1a1a1a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .overview-card,
+  .severity-card,
+  .security-dashboard__vulnerability-item {
+    background: var(--bg-primary-dark, #2a2a2a);
+    border-color: var(--border-color-dark, #333);
+  }
+
+  .severity-card.security-dashboard__critical {
+    background: linear-gradient(135deg, #3d1a1a 0%, #4d1f1f 100%);
+  }
+
+  .severity-card.security-dashboard__high {
+    background: linear-gradient(135deg, #3d2a1a 0%, #4d331f 100%);
+  }
+
+  .severity-card.security-dashboard__medium {
+    background: linear-gradient(135deg, #3d2f1a 0%, #4d381f 100%);
+  }
+
+  .severity-card.security-dashboard__low {
+    background: linear-gradient(135deg, #1a3d1a 0%, #1f4d1f 100%);
+  }
+} 

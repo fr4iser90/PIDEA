@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState } from 'react';
-import '@/css/components/analysis/analysis-history.css';
+import '@/scss/components/_analysis-history.scss';;
 
 const AnalysisHistory = ({ history, onAnalysisSelect, loading }) => {
   const [sortBy, setSortBy] = useState('timestamp');

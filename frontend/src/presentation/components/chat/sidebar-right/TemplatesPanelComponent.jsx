@@ -102,18 +102,18 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
   const categories = [...new Set(templates.map(t => t.category).filter(Boolean))];
 
   return (
-    <div className="templates-tab space-y-4 p-3">
-      <div className="panel-header flex items-center justify-between mb-4">
-        <div className="panel-title text-lg font-semibold text-white">Templates</div>
+    <div className="sidebar-right__templates-tab space-y-4 p-3">
+      <div className="sidebar-right__panel-header flex items-center justify-between mb-4">
+        <div className="sidebar-right__panel-title text-lg font-semibold text-white">Templates</div>
         <input
           type="text"
-          className="search-input bg-gray-800 text-white rounded px-2 py-1"
+          className="sidebar-right__search-input bg-gray-800 text-white rounded px-2 py-1"
           placeholder="Search templates..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="templates-panel grid gap-3">
+      <div className="sidebar-right__templates-panel grid gap-3">
         {templates.map(template => (
           <div
             key={template.path}
@@ -125,7 +125,7 @@ function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
           >
             <div className="flex justify-between items-center mb-2">
               <div className="font-semibold text-white text-base mb-1">{template.name}</div>
-              <span className="category-badge template">Template</span>
+              <span className="sidebar-right__category-badge template">Template</span>
             </div>
             <div className="text-xs text-gray-400 mb-1">{template.category}</div>
             <div className="text-xs text-gray-500 font-mono">{template.path}</div>

@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
-import '@/css/modal/manual-task-details-modal.css';
+import '@/scss/components/_manual-task-details-modal.scss';;
 
 /**
  * Modal component for displaying manual task details

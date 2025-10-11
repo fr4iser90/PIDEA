@@ -1,0 +1,60 @@
+// =============================================================================
+// _PROMPT-PANEL
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+// @import './panel-block.css'; // Removed - panel-block styles integrated
+
+/* Prompt Panel specific styles (add below) */
+
+.prompt-panel__prompt-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  min-height: clamp(1.5rem, 3vh, 1.75rem); /* 24px-28px responsive */
+  margin-bottom: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  width: 100%;
+}
+.prompt-panel__prompt-card-title {
+  font-weight: var(--font-weight-medium);
+  color: #fff;
+  font-size: clamp(0.875rem, 2vw, 0.97em); /* 14px-15.5px responsive */
+  flex: 1 1 0;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prompt-panel__prompt-card-view-btn {
+  margin-left: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+  padding: clamp(0.25rem, 0.5vw, 0.375rem); /* 4px-6px responsive */
+  background: transparent;
+  border: none;
+  color: #4e8cff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  transition: background 0.15s, color 0.15s;
+}
+.prompt-card-view-btn:hover {
+  background: #23272e;
+  color: #fff;
+}
+
+.prompt-card.prompt-panel__active {
+  background: #22c55e; /* Tailwind: bg-green-500 */
+  color: #fff;
+  border-color: #16a34a;
+}

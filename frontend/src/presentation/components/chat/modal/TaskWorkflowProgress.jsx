@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import '@/css/modal/task-workflow-progress.css';
+import '@/scss/components/_task-workflow-progress.scss';;
 
 const TaskWorkflowProgress = ({ 
   workflowId, 

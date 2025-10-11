@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
-import '@/css/main/pidea-agent-git.css';
+import '@/scss/pages/_pidea-agent-git.scss';;
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {

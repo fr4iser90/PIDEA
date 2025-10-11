@@ -1,0 +1,319 @@
+// =============================================================================
+// FUNCTIONS
+// =============================================================================
+
+@use 'variables' as *;
+
+// Color Functions
+// -----------------------------------------------------------------------------
+@function lighten-color($color, $percentage) {
+  @return lighten($color, $percentage);
+}
+
+@function darken-color($color, $percentage) {
+  @return darken($color, $percentage);
+}
+
+@function rgba-color($color, $alpha) {
+  @return rgba($color, $alpha);
+}
+
+// Spacing Functions
+// -----------------------------------------------------------------------------
+@function space($multiplier: 1) {
+  @return $space-md * $multiplier;
+}
+
+@function space-xs($multiplier: 1) {
+  @return $space-xs * $multiplier;
+}
+
+@function space-sm($multiplier: 1) {
+  @return $space-sm * $multiplier;
+}
+
+@function space-lg($multiplier: 1) {
+  @return $space-lg * $multiplier;
+}
+
+@function space-xl($multiplier: 1) {
+  @return $space-xl * $multiplier;
+}
+
+@function space-2xl($multiplier: 1) {
+  @return $space-2xl * $multiplier;
+}
+
+// Typography Functions
+// -----------------------------------------------------------------------------
+@function font-size($size: base) {
+  @if $size == xs {
+    @return $font-size-xs;
+  } @else if $size == sm {
+    @return $font-size-sm;
+  } @else if $size == base {
+    @return $font-size-base;
+  } @else if $size == lg {
+    @return $font-size-lg;
+  } @else if $size == xl {
+    @return $font-size-xl;
+  } @else if $size == 2xl {
+    @return $font-size-2xl;
+  } @else {
+    @return $font-size-base;
+  }
+}
+
+@function font-weight($weight: normal) {
+  @if $weight == normal {
+    @return $font-weight-normal;
+  } @else if $weight == medium {
+    @return $font-weight-medium;
+  } @else if $weight == semibold {
+    @return $font-weight-semibold;
+  } @else if $weight == bold {
+    @return $font-weight-bold;
+  } @else {
+    @return $font-weight-normal;
+  }
+}
+
+@function line-height($height: normal) {
+  @if $height == tight {
+    @return $line-height-tight;
+  } @else if $height == normal {
+    @return $line-height-normal;
+  } @else if $height == relaxed {
+    @return $line-height-relaxed;
+  } @else {
+    @return $line-height-normal;
+  }
+}
+
+// Border Radius Functions
+// -----------------------------------------------------------------------------
+@function radius($size: md) {
+  @if $size == sm {
+    @return $radius-sm;
+  } @else if $size == md {
+    @return $radius-md;
+  } @else if $size == lg {
+    @return $radius-lg;
+  } @else if $size == xl {
+    @return $radius-xl;
+  } @else if $size == full {
+    @return $radius-full;
+  } @else {
+    @return $radius-md;
+  }
+}
+
+// Shadow Functions
+// -----------------------------------------------------------------------------
+@function shadow($size: md) {
+  @if $size == xs {
+    @return $shadow-xs;
+  } @else if $size == sm {
+    @return $shadow-sm;
+  } @else if $size == md {
+    @return $shadow-md;
+  } @else if $size == lg {
+    @return $shadow-lg;
+  } @else if $size == xl {
+    @return $shadow-xl;
+  } @else {
+    @return $shadow-md;
+  }
+}
+
+// Z-Index Functions
+// -----------------------------------------------------------------------------
+@function z-index($layer) {
+  @if $layer == sidebar {
+    @return $z-sidebar;
+  } @else if $layer == header {
+    @return $z-header;
+  } @else if $layer == modal {
+    @return $z-modal;
+  } @else if $layer == tooltip {
+    @return $z-tooltip;
+  } @else if $layer == dropdown {
+    @return $z-dropdown;
+  } @else if $layer == sticky {
+    @return $z-sticky;
+  } @else if $layer == fixed {
+    @return $z-fixed;
+  } @else if $layer == modal-backdrop {
+    @return $z-modal-backdrop;
+  } @else if $layer == popover {
+    @return $z-popover;
+  } @else {
+    @return 1;
+  }
+}
+
+// Breakpoint Functions
+// -----------------------------------------------------------------------------
+@function breakpoint($size) {
+  @if $size == sm {
+    @return $breakpoint-sm;
+  } @else if $size == md {
+    @return $breakpoint-md;
+  } @else if $size == lg {
+    @return $breakpoint-lg;
+  } @else if $size == xl {
+    @return $breakpoint-xl;
+  } @else if $size == 2xl {
+    @return $breakpoint-2xl;
+  } @else {
+    @return $breakpoint-md;
+  }
+}
+
+// Animation Functions
+// -----------------------------------------------------------------------------
+@function transition($speed: normal) {
+  @if $speed == fast {
+    @return $transition-fast;
+  } @else if $speed == normal {
+    @return $transition-normal;
+  } @else if $speed == slow {
+    @return $transition-slow;
+  } @else if $speed == slower {
+    @return $transition-slower;
+  } @else {
+    @return $transition-normal;
+  }
+}
+
+@function animation-duration($speed: normal) {
+  @if $speed == fast {
+    @return $animation-duration-fast;
+  } @else if $speed == normal {
+    @return $animation-duration-normal;
+  } @else if $speed == slow {
+    @return $animation-duration-slow;
+  } @else {
+    @return $animation-duration-normal;
+  }
+}
+
+@function animation-ease($type: out) {
+  @if $type == in {
+    @return $animation-ease-in;
+  } @else if $type == out {
+    @return $animation-ease-out;
+  } @else if $type == in-out {
+    @return $animation-ease-in-out;
+  } @else {
+    @return $animation-ease-out;
+  }
+}
+
+// Utility Functions
+// -----------------------------------------------------------------------------
+@function strip-unit($value) {
+  @return $value / ($value * 0 + 1);
+}
+
+@function rem($pixels, $context: 16) {
+  @return (strip-unit($pixels) / strip-unit($context)) * 1rem;
+}
+
+@function em($pixels, $context: 16) {
+  @return (strip-unit($pixels) / strip-unit($context)) * 1em;
+}
+
+// Color Palette Functions
+// -----------------------------------------------------------------------------
+@function color($name, $variant: base) {
+  @if $name == primary {
+    @if $variant == hover {
+      @return $color-primary-hover;
+    } @else if $variant == light {
+      @return $color-primary-light;
+    } @else {
+      @return $color-primary;
+    }
+  } @else if $name == secondary {
+    @if $variant == hover {
+      @return $color-secondary-hover;
+    } @else {
+      @return $color-secondary;
+    }
+  } @else if $name == success {
+    @if $variant == hover {
+      @return $color-success-hover;
+    } @else {
+      @return $color-success;
+    }
+  } @else if $name == warning {
+    @if $variant == hover {
+      @return $color-warning-hover;
+    } @else {
+      @return $color-warning;
+    }
+  } @else if $name == danger {
+    @if $variant == hover {
+      @return $color-danger-hover;
+    } @else {
+      @return $color-danger;
+    }
+  } @else if $name == info {
+    @if $variant == hover {
+      @return $color-info-hover;
+    } @else {
+      @return $color-info;
+    }
+  } @else {
+    @return $color-primary;
+  }
+}
+
+// Background Functions
+// -----------------------------------------------------------------------------
+@function bg($variant: primary) {
+  @if $variant == primary {
+    @return $bg-primary;
+  } @else if $variant == secondary {
+    @return $bg-secondary;
+  } @else if $variant == tertiary {
+    @return $bg-tertiary;
+  } @else if $variant == card {
+    @return $bg-card;
+  } @else if $variant == hover {
+    @return $bg-hover;
+  } @else if $variant == overlay {
+    @return $bg-overlay;
+  } @else {
+    @return $bg-primary;
+  }
+}
+
+// Text Color Functions
+// -----------------------------------------------------------------------------
+@function text-color($variant: primary) {
+  @if $variant == primary {
+    @return $text-primary;
+  } @else if $variant == secondary {
+    @return $text-secondary;
+  } @else if $variant == tertiary {
+    @return $text-tertiary;
+  } @else if $variant == inverse {
+    @return $text-inverse;
+  } @else {
+    @return $text-primary;
+  }
+}
+
+// Border Functions
+// -----------------------------------------------------------------------------
+@function border-color($variant: base) {
+  @if $variant == light {
+    @return $border-color-light;
+  } @else if $variant == focus {
+    @return $border-color-focus;
+  } @else {
+    @return $border-color;
+  }
+}

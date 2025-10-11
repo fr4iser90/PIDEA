@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MicrophoneIcon, StopIcon } from '@heroicons/react/24/solid';
-import '@/css/common/voice-input.css';
+import '@/scss/components/_voice-input.scss';;
 
 const VoiceInput = ({ 
   onTextReceived, 

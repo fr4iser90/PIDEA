@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
-import '@/css/components/test/test-runner.css';
+import '@/scss/components/_test-runner.scss';;
 
 /**
  * TestConfiguration - Test configuration and project management UI
@@ -246,29 +246,27 @@ const TestConfiguration = ({
   };
 
   return (
-    <div className="test-configuration bg-white border rounded-lg p-6">
+    <div className="test-runner__config-section">
       {/* Top Section with Configuration Cards */}
-      <div className="flex gap-6 mb-6">
+      <div className="test-runner__config-header">
         {/* Test Configuration Card */}
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Test Configuration</h3>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setIsEditingConfig(!isEditingConfig)}
-                className="config-button"
-              >
-                <span className="button-icon">⚙️</span>
-                <span>{isEditingConfig ? 'Cancel' : 'Edit Config'}</span>
-              </button>
-              <button
-                onClick={() => setShowProjectForm(!showProjectForm)}
-                className="create-button"
-              >
-                <span className="button-icon">➕</span>
-                <span>{showProjectForm ? 'Hide Test Form' : 'Create New Test'}</span>
-              </button>
-            </div>
+        <div className="test-runner__config-title-section">
+          <h3 className="test-runner__config-title">Test Configuration</h3>
+          <div className="test-runner__config-actions">
+            <button
+              onClick={() => setIsEditingConfig(!isEditingConfig)}
+              className="test-runner__config-btn"
+            >
+              <span className="test-runner__button-icon">⚙️</span>
+              <span>{isEditingConfig ? 'Cancel' : 'Edit Config'}</span>
+            </button>
+            <button
+              onClick={() => setShowProjectForm(!showProjectForm)}
+              className="test-runner__config-btn"
+            >
+              <span className="test-runner__button-icon">➕</span>
+              <span>{showProjectForm ? 'Hide Test Form' : 'Create New Test'}</span>
+            </button>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React from 'react';
-import '@/css/components/analysis/analysis-metrics.css';
+import '@/scss/components/_analysis-metrics.scss';;
 
 const AnalysisMetrics = ({ metrics, loading }) => {
   const formatNumber = (num) => {

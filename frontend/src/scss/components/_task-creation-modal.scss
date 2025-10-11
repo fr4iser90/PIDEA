@@ -1,0 +1,498 @@
+// =============================================================================
+// _TASK-CREATION-MODAL
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Task Creation Modal Styles */
+
+/* Modal overlay */
+.task-creation-modal__task-create-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dropdown)0;
+  backdrop-filter: blur(4px);
+}
+
+/* Modal container */
+.task-creation-modal__task-create-modal {
+  background: #1e1e1e;
+  border-radius: var(--radius-lg); /* Modern responsive radius */
+  box-shadow: var(--shadow-xl); /* Modern shadow system */
+  width: clamp(85%, 10vw, 90%); /* 85%-90% responsive */
+  max-width: clamp(31.25rem, 50vw, 37.5rem); /* 500px-600px responsive */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #333;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.task-creation-modal__task-create-modal-large {
+  max-width: clamp(43.75rem, 70vw, 56.25rem); /* 700px-900px responsive */
+  width: clamp(90%, 15vw, 95%); /* 90%-95% responsive */
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(clamp(-1rem, -3vh, -1.25rem)) scale(0.95); /* -16px to -20px responsive */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal header */
+.task-creation-modal__modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 24px;
+  border-bottom: 1px solid #333;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+  border-radius: var(--radius-lg) 12px 0 0;
+}
+
+/* Creation Mode Toggle Styles */
+.task-creation-modal__creation-mode-toggle {
+  margin: var(--space-md) 24px;
+  padding: var(--space-md);
+  background: #2a2a2a;
+  border-radius: var(--radius-md);
+  border: 1px solid #404040;
+}
+
+.task-creation-modal__toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.task-creation-modal__toggle-text {
+  font-weight: var(--font-weight-semibold);
+  color: #e0e0e0;
+  font-size: var(--font-size-sm);
+}
+
+.task-creation-modal__toggle-switch {
+  display: flex;
+  background: #1a1a1a;
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  border: 1px solid #404040;
+}
+
+.toggle-switch input[type="radio"] {
+  display: none;
+}
+
+.task-creation-modal__toggle-option {
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: #888;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toggle-switch input[type="radio"]:checked + .task-creation-modal__toggle-option {
+  background: #007acc;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 122, 204, 0.3);
+}
+
+.toggle-switch input[type="radio"]:hover + .task-creation-modal__toggle-option {
+  background: #333;
+  color: #e0e0e0;
+}
+
+.task-creation-modal__mode-description {
+  font-size: var(--font-size-xs);
+  color: #888;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.task-creation-modal__modal-title {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.task-creation-modal__modal-close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal content */
+.task-creation-modal__modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+}
+
+.task-creation-modal__modal-description {
+  margin-bottom: 24px;
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  border: 1px solid #333;
+}
+
+.modal-description p {
+  margin: 0;
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Form styles */
+.task-creation-modal__task-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.task-creation-modal__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-creation-modal__form-label {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Voice input integration */
+.task-creation-modal__input-with-voice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.input-with-voice .form-input,
+.input-with-voice .task-creation-modal__form-textarea {
+  flex: 1;
+}
+
+.form-input,
+.form-textarea,
+.task-creation-modal__form-select {
+  padding: var(--space-sm);
+  border: 1px solid #444;
+  border-radius: var(--radius-sm);
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.form-input:disabled,
+.form-textarea:disabled,
+.form-select:disabled {
+  background: #1a1a1a;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #666;
+}
+
+.task-creation-modal__form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.task-creation-modal__form-select {
+  cursor: pointer;
+}
+
+/* Error states */
+.form-input-error,
+.task-creation-modal__form-textarea-error {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+}
+
+/* Success states */
+.form-input-success,
+.task-creation-modal__form-textarea-success {
+  border-color: #44aa44;
+  box-shadow: 0 0 0 2px rgba(68, 170, 68, 0.2);
+}
+
+.task-creation-modal__error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-sm) 12px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: var(--radius-sm);
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.task-creation-modal__success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-sm) 12px;
+  background: rgba(68, 170, 68, 0.1);
+  border: 1px solid rgba(68, 170, 68, 0.3);
+  border-radius: var(--radius-sm);
+  color: #44aa44;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.task-creation-modal__error-icon {
+  font-size: 1rem;
+}
+
+/* Character count */
+.task-creation-modal__char-count {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.char-count.task-creation-modal__warning {
+  color: #ffaa00;
+}
+
+.char-count.task-creation-modal__error {
+  color: #ff6b6b;
+}
+
+/* Form rows */
+.task-creation-modal__form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .task-creation-modal__form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Optional label */
+.task-creation-modal__optional-label {
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
+/* Form actions */
+.task-creation-modal__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+}
+
+/* Buttons */
+.btn-primary,
+.task-creation-modal__btn-secondary {
+  padding: var(--space-sm) 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.task-creation-modal__btn-primary {
+  background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #005a9e 0%, #004080 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #444;
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.task-creation-modal__btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  border: 1px solid #444;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: #666;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+.task-creation-modal__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modal complete state */
+.task-creation-modal__modal-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.task-creation-modal__complete-content {
+  text-align: center;
+  color: #fff;
+}
+
+.complete-content h2 {
+  margin: 0 0 16px 0;
+  color: #44aa44;
+}
+
+.complete-content p {
+  margin: 0 0 24px 0;
+  color: #ccc;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .task-creation-modal__task-create-modal {
+    width: 95%;
+    margin: var(--space-md);
+  }
+  
+  .task-creation-modal__modal-content {
+    padding: var(--space-md);
+  }
+  
+  .task-creation-modal__form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .task-creation-modal__btn-secondary {
+    width: 100%;
+  }
+}
+
+/* Voice input specific styles */
+.input-with-voice .task-creation-modal__voice-input-container {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Ensure voice button aligns properly with textarea */
+.input-with-voice .task-creation-modal__form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Voice button hover effects */
+.input-with-voice button:hover {
+  transform: scale(1.05);
+}
+
+/* Voice recording animation */
+.input-with-voice button.task-creation-modal__recording {
+  animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+} 

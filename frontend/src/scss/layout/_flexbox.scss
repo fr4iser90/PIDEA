@@ -1,0 +1,169 @@
+// =============================================================================
+// FLEXBOX
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// Flex Container
+// -----------------------------------------------------------------------------
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+
+// Flex Direction
+// -----------------------------------------------------------------------------
+.flex-row { flex-direction: row; }
+.flex-row-reverse { flex-direction: row-reverse; }
+.flex-col { flex-direction: column; }
+.flex-col-reverse { flex-direction: column-reverse; }
+
+// Flex Wrap
+// -----------------------------------------------------------------------------
+.flex-wrap { flex-wrap: wrap; }
+.flex-wrap-reverse { flex-wrap: wrap-reverse; }
+.flex-nowrap { flex-wrap: nowrap; }
+
+// Justify Content
+// -----------------------------------------------------------------------------
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+.justify-evenly { justify-content: space-evenly; }
+
+// Align Items
+// -----------------------------------------------------------------------------
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.items-center { align-items: center; }
+.items-baseline { align-items: baseline; }
+.items-stretch { align-items: stretch; }
+
+// Align Content
+// -----------------------------------------------------------------------------
+.content-start { align-content: flex-start; }
+.content-end { align-content: flex-end; }
+.content-center { align-content: center; }
+.content-between { align-content: space-between; }
+.content-around { align-content: space-around; }
+.content-evenly { align-content: space-evenly; }
+
+// Align Self
+// -----------------------------------------------------------------------------
+.self-auto { align-self: auto; }
+.self-start { align-self: flex-start; }
+.self-end { align-self: flex-end; }
+.self-center { align-self: center; }
+.self-stretch { align-self: stretch; }
+.self-baseline { align-self: baseline; }
+
+// Flex Grow
+// -----------------------------------------------------------------------------
+.flex-grow { flex-grow: 1; }
+.flex-grow-0 { flex-grow: 0; }
+
+// Flex Shrink
+// -----------------------------------------------------------------------------
+.flex-shrink { flex-shrink: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+// Flex Basis
+// -----------------------------------------------------------------------------
+.flex-basis-auto { flex-basis: auto; }
+.flex-basis-0 { flex-basis: 0; }
+.flex-basis-full { flex-basis: 100%; }
+
+// Flex
+// -----------------------------------------------------------------------------
+.flex-1 { flex: 1 1 0%; }
+.flex-auto { flex: 1 1 auto; }
+.flex-initial { flex: 0 1 auto; }
+.flex-none { flex: none; }
+
+// Gap
+// -----------------------------------------------------------------------------
+.gap-0 { gap: 0; }
+.gap-xs { gap: $space-xs; }
+.gap-sm { gap: $space-sm; }
+.gap-md { gap: $space-md; }
+.gap-lg { gap: $space-lg; }
+.gap-xl { gap: $space-xl; }
+
+// Row Gap
+// -----------------------------------------------------------------------------
+.gap-x-0 { row-gap: 0; }
+.gap-x-xs { row-gap: $space-xs; }
+.gap-x-sm { row-gap: $space-sm; }
+.gap-x-md { row-gap: $space-md; }
+.gap-x-lg { row-gap: $space-lg; }
+.gap-x-xl { row-gap: $space-xl; }
+
+// Column Gap
+// -----------------------------------------------------------------------------
+.gap-y-0 { column-gap: 0; }
+.gap-y-xs { column-gap: $space-xs; }
+.gap-y-sm { column-gap: $space-sm; }
+.gap-y-md { column-gap: $space-md; }
+.gap-y-lg { column-gap: $space-lg; }
+.gap-y-xl { column-gap: $space-xl; }
+
+// Order
+// -----------------------------------------------------------------------------
+.order-1 { order: 1; }
+.order-2 { order: 2; }
+.order-3 { order: 3; }
+.order-4 { order: 4; }
+.order-5 { order: 5; }
+.order-6 { order: 6; }
+.order-7 { order: 7; }
+.order-8 { order: 8; }
+.order-9 { order: 9; }
+.order-10 { order: 10; }
+.order-11 { order: 11; }
+.order-12 { order: 12; }
+.order-first { order: -9999; }
+.order-last { order: 9999; }
+.order-none { order: 0; }
+
+// Responsive Flexbox
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .sm\:flex { display: flex; }
+  .sm\:flex-col { flex-direction: column; }
+  .sm\:flex-row { flex-direction: row; }
+  .sm\:justify-center { justify-content: center; }
+  .sm\:justify-between { justify-content: space-between; }
+  .sm\:items-center { align-items: center; }
+  .sm\:flex-1 { flex: 1; }
+}
+
+@include respond-to(md) {
+  .md\:flex { display: flex; }
+  .md\:flex-col { flex-direction: column; }
+  .md\:flex-row { flex-direction: row; }
+  .md\:justify-center { justify-content: center; }
+  .md\:justify-between { justify-content: space-between; }
+  .md\:items-center { align-items: center; }
+  .md\:flex-1 { flex: 1; }
+}
+
+@include respond-to(lg) {
+  .lg\:flex { display: flex; }
+  .lg\:flex-col { flex-direction: column; }
+  .lg\:flex-row { flex-direction: row; }
+  .lg\:justify-center { justify-content: center; }
+  .lg\:justify-between { justify-content: space-between; }
+  .lg\:items-center { align-items: center; }
+  .lg\:flex-1 { flex: 1; }
+}
+
+@include respond-to(xl) {
+  .xl\:flex { display: flex; }
+  .xl\:flex-col { flex-direction: column; }
+  .xl\:flex-row { flex-direction: row; }
+  .xl\:justify-center { justify-content: center; }
+  .xl\:justify-between { justify-content: space-between; }
+  .xl\:items-center { align-items: center; }
+  .xl\:flex-1 { flex: 1; }
+}

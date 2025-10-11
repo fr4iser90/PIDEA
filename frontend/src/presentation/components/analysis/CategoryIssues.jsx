@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '@/css/components/analysis/category-issues.css';
+import '@/scss/components/_category-issues.scss';;
 
 const CategoryIssues = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
   const [selectedSeverity, setSelectedSeverity] = useState('all');

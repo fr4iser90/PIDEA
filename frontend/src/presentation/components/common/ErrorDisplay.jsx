@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import TimeoutConfig from '@/config/timeout-config.js';
-import '@/css/components/error-display.css';
+import '@/scss/components/_error-display.scss';;
 
 const ErrorDisplay = ({ 
   error, 

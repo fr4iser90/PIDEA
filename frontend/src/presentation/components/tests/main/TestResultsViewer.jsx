@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '@/css/components/test/test-runner.css';
+import '@/scss/components/_test-runner.scss';;
 
 /**
  * TestResultsViewer - Test results display component

@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/css/components/analysis/category-overview.css';
+import '@/scss/components/_category-overview.scss';;
 
 const CategoryOverview = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
   // DEBUG: Log the data being passed

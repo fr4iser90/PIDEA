@@ -5,7 +5,7 @@ import CategoryIssues from './CategoryIssues';
 import CategoryRecommendations from './CategoryRecommendations';
 import CategoryMetrics from './CategoryMetrics';
 import CategoryCharts from './CategoryCharts';
-import '@/css/components/analysis/category-analysis-section.css';
+import '@/scss/components/_category-analysis-section.scss';;
 
 const CategoryAnalysisSection = ({ 
   category, 

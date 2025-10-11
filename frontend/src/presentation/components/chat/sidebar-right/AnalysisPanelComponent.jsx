@@ -153,15 +153,15 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="sidebar-right__analysis-panel">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Analysis Results</h3>
+      <div className="sidebar-right__analysis-header">
+        <div className="sidebar-right__analysis-header-content">
+          <h3>Analysis Results</h3>
           <button
             onClick={generateReport}
             disabled={loading}
-            className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:opacity-50"
+            className="sidebar-right__generate-report-btn"
           >
             {loading ? 'Generating...' : 'Generate Report'}
           </button>

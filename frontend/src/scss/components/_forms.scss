@@ -1,0 +1,193 @@
+// =============================================================================
+// _FORMS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Form Input
+// -----------------------------------------------------------------------------
+.form-input {
+  @extend %form-input-base;
+}
+
+// Form Label
+// -----------------------------------------------------------------------------
+.form-label {
+  display: block;
+  margin-bottom: $space-xs;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $text-primary;
+}
+
+// Form Group
+// -----------------------------------------------------------------------------
+.form-group {
+  margin-bottom: $space-md;
+}
+
+// Form Textarea
+// -----------------------------------------------------------------------------
+.form-textarea {
+  @extend %form-input-base;
+
+  min-height: 120px;
+  resize: vertical;
+}
+
+// Form Select
+// -----------------------------------------------------------------------------
+.form-select {
+  @extend %form-input-base;
+
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right $space-sm center;
+  background-repeat: no-repeat;
+  background-size: 16px 12px;
+  padding-right: $space-xl;
+  appearance: none;
+}
+
+// Form Checkbox
+// -----------------------------------------------------------------------------
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  cursor: pointer;
+  
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: $color-primary;
+    cursor: pointer;
+  }
+  
+  .form-checkbox__label {
+    font-size: $font-size-sm;
+    color: $text-primary;
+    cursor: pointer;
+  }
+}
+
+// Form Radio
+// -----------------------------------------------------------------------------
+.form-radio {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  cursor: pointer;
+  
+  input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: $color-primary;
+    cursor: pointer;
+  }
+  
+  .form-radio__label {
+    font-size: $font-size-sm;
+    color: $text-primary;
+    cursor: pointer;
+  }
+}
+
+// Form Error
+// -----------------------------------------------------------------------------
+.form-error {
+  display: block;
+  margin-top: $space-xs;
+  font-size: $font-size-xs;
+  color: $color-danger;
+}
+
+// Form Help
+// -----------------------------------------------------------------------------
+.form-help {
+  display: block;
+  margin-top: $space-xs;
+  font-size: $font-size-xs;
+  color: $text-tertiary;
+}
+
+// Form Fieldset
+// -----------------------------------------------------------------------------
+.form-fieldset {
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  padding: $space-md;
+  margin-bottom: $space-md;
+  
+  .form-fieldset__legend {
+    padding: 0 $space-sm;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $text-secondary;
+  }
+}
+
+// Form Validation States
+// -----------------------------------------------------------------------------
+.form-input--error {
+  border-color: $color-danger;
+  
+  &:focus {
+    border-color: $color-danger;
+    box-shadow: 0 0 0 2px rgba($color-danger, 0.1);
+  }
+}
+
+.form-input--success {
+  border-color: $color-success;
+  
+  &:focus {
+    border-color: $color-success;
+    box-shadow: 0 0 0 2px rgba($color-success, 0.1);
+  }
+}
+
+.form-input--warning {
+  border-color: $color-warning;
+  
+  &:focus {
+    border-color: $color-warning;
+    box-shadow: 0 0 0 2px rgba($color-warning, 0.1);
+  }
+}
+
+// Form Layout
+// -----------------------------------------------------------------------------
+.form-row {
+  display: flex;
+  gap: $space-md;
+  margin-bottom: $space-md;
+  
+  .form-group {
+    flex: 1;
+    margin-bottom: 0;
+  }
+}
+
+.form-col {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+// Responsive Forms
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .form-row {
+    flex-direction: column;
+    gap: $space-sm;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-select {
+    font-size: 16px; // Prevent zoom on iOS
+  }
+}

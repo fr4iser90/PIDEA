@@ -1,0 +1,268 @@
+// =============================================================================
+// _TABS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Tabs Container
+// -----------------------------------------------------------------------------
+.tabs {
+  display: flex;
+  border-bottom: 1px solid $border-color;
+  overflow-x: auto;
+  @include custom-scrollbar;
+}
+
+// Tab Button
+// -----------------------------------------------------------------------------
+.tab {
+  padding: $space-sm $space-md;
+  background: transparent;
+  border: none;
+  color: $text-secondary;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  border-radius: $radius-sm $radius-sm 0 0;
+  transition: all $transition-normal;
+  white-space: nowrap;
+  position: relative;
+  
+  &:hover {
+    background: $bg-hover;
+    color: $text-primary;
+  }
+  
+  &.tab--active {
+    background: $color-primary;
+    color: $text-primary;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: $color-primary;
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// Tab Panel
+// -----------------------------------------------------------------------------
+.tab-panel {
+  display: none;
+  padding: $space-lg;
+  
+  &.tab-panel--active {
+    display: block;
+  }
+}
+
+// Tab Content
+// -----------------------------------------------------------------------------
+.tab-content {
+  .tab-panel {
+    animation: fade-in $animation-duration-normal $animation-ease-out;
+  }
+}
+
+// Tab Variants
+// -----------------------------------------------------------------------------
+.tabs--pills {
+  .tab {
+    border-radius: $radius-full;
+    margin-right: $space-xs;
+    margin-bottom: $space-xs;
+    
+    &.tab--active {
+      background: $color-primary;
+      color: $text-primary;
+      
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
+
+.tabs--underline {
+  .tab {
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    
+    &.tab--active {
+      background: transparent;
+      border-bottom-color: $color-primary;
+      
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
+
+.tabs--vertical {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: 1px solid $border-color;
+  
+  .tab {
+    border-radius: $radius-sm 0 0 $radius-sm;
+    text-align: left;
+    justify-content: flex-start;
+    
+    &.tab--active {
+      &::after {
+        top: 0;
+        bottom: 0;
+        left: -1px;
+        right: auto;
+        width: 2px;
+        height: auto;
+      }
+    }
+  }
+}
+
+// Tab Sizes
+// -----------------------------------------------------------------------------
+.tabs--sm {
+  .tab {
+    padding: $space-xs $space-sm;
+    font-size: $font-size-xs;
+  }
+  
+  .tab-panel {
+    padding: $space-md;
+  }
+}
+
+.tabs--lg {
+  .tab {
+    padding: $space-md $space-lg;
+    font-size: $font-size-base;
+  }
+  
+  .tab-panel {
+    padding: $space-xl;
+  }
+}
+
+// Tab Icons
+// -----------------------------------------------------------------------------
+.tab--with-icon {
+  display: flex;
+  align-items: center;
+  gap: $space-xs;
+  
+  .tab__icon {
+    font-size: 1.2em;
+  }
+}
+
+// Tab Badge
+// -----------------------------------------------------------------------------
+.tab--with-badge {
+  position: relative;
+  
+  .tab__badge {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+    background: $color-danger;
+    color: $text-primary;
+    font-size: $font-size-xs;
+    padding: 2px 6px;
+    border-radius: $radius-full;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Tab Responsive
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tab {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+  
+  .tabs--vertical {
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid $border-color;
+    
+    .tab {
+      border-radius: $radius-sm $radius-sm 0 0;
+      text-align: center;
+      justify-content: center;
+      
+      &.tab--active {
+        &::after {
+          top: auto;
+          bottom: -1px;
+          left: 0;
+          right: 0;
+          width: auto;
+          height: 2px;
+        }
+      }
+    }
+  }
+  
+  .tab-panel {
+    padding: $space-md;
+  }
+}
+
+// Tab Animations
+// -----------------------------------------------------------------------------
+@include keyframes(fade-in) {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+// Tab Utilities
+// -----------------------------------------------------------------------------
+.tabs--scrollable {
+  .tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+.tabs--centered {
+  .tabs {
+    justify-content: center;
+  }
+}
+
+.tabs--full-width {
+  .tab {
+    flex: 1;
+    text-align: center;
+  }
+}

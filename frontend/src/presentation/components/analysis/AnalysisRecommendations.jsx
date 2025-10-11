@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useMemo } from 'react';
-import '@/css/components/analysis/analysis-recommendations.css';
+import '@/scss/components/_analysis-recommendations.scss';;
 
 const AnalysisRecommendations = ({ recommendations, loading, error, category = null }) => {
   const [activeView, setActiveView] = useState('all');

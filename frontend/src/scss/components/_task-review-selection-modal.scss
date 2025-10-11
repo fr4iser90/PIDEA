@@ -1,0 +1,539 @@
+// =============================================================================
+// _TASK-REVIEW-SELECTION-MODAL
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Task Review Selection Modal Styles */
+
+/* Review Mode Toggle Styles */
+.task-review-selection-modal__review-mode-toggle {
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
+  background: #2a2a2a;
+  border-radius: var(--radius-md);
+  border: 1px solid #404040;
+}
+
+.task-review-selection-modal__toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.task-review-selection-modal__toggle-text {
+  font-weight: var(--font-weight-semibold);
+  color: #e0e0e0;
+  font-size: var(--font-size-sm);
+}
+
+.task-review-selection-modal__toggle-switch {
+  display: flex;
+  background: #1a1a1a;
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  border: 1px solid #404040;
+}
+
+.toggle-switch input[type="radio"] {
+  display: none;
+}
+
+.task-review-selection-modal__toggle-option {
+  padding: var(--space-sm) 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  color: #888;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toggle-switch input[type="radio"]:checked + .task-review-selection-modal__toggle-option {
+  background: #007acc;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 122, 204, 0.3);
+}
+
+.toggle-switch input[type="radio"]:hover + .task-review-selection-modal__toggle-option {
+  background: #333;
+  color: #e0e0e0;
+}
+
+.task-review-selection-modal__mode-description {
+  font-size: var(--font-size-xs);
+  color: #888;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.task-review-selection-modal__task-review-selection-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dropdown)0;
+  backdrop-filter: blur(4px);
+}
+
+.task-review-selection-modal__task-review-selection-modal {
+  background: #1e1e1e;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #333;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal header */
+.task-review-selection-modal__modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 24px;
+  border-bottom: 1px solid #333;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+  border-radius: var(--radius-lg) 12px 0 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.task-review-selection-modal__modal-close-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal content */
+.task-review-selection-modal__modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Summary section */
+.task-review-selection-modal__task-review-summary {
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  border: 1px solid #333;
+}
+
+.task-review-summary p {
+  margin: 0 0 12px 0;
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.task-review-selection-modal__selection-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.task-review-selection-modal__selected-count {
+  color: #007acc;
+  font-weight: var(--font-weight-semibold);
+}
+
+.task-review-selection-modal__total-count {
+  color: #888;
+}
+
+/* Controls section */
+.task-review-selection-modal__task-review-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  border: 1px solid #333;
+}
+
+.filter-group,
+.task-review-selection-modal__sort-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-group label,
+.sort-group label {
+  color: #ccc;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.filter-group select,
+.sort-group select {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.filter-group select:focus,
+.sort-group select:focus {
+  outline: none;
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+}
+
+.task-review-selection-modal__sort-order-btn {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  min-width: 32px;
+}
+
+.sort-order-btn:hover {
+  background: #333;
+  border-color: #555;
+}
+
+/* Select all controls */
+.task-review-selection-modal__select-all-controls {
+  padding: var(--space-sm) 16px;
+  background: rgba(0, 122, 204, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 122, 204, 0.3);
+}
+
+.task-review-selection-modal__select-all-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.select-all-checkbox input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+
+.select-all-checkbox:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Task list */
+.task-review-selection-modal__task-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.task-review-selection-modal__no-tasks {
+  text-align: center;
+  padding: var(--space-xl) 20px;
+  color: #888;
+}
+
+.no-tasks p {
+  margin: var(--space-sm) 0;
+  font-size: 1rem;
+}
+
+/* Task item */
+.task-review-selection-modal__task-item {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.task-item:hover {
+  border-color: #444;
+  background: #2d2d2d;
+}
+
+.task-review-selection-modal__task-item-header {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+  gap: 12px;
+}
+
+.task-review-selection-modal__task-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.task-checkbox input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+.task-review-selection-modal__task-info {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.task-review-selection-modal__task-title {
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  color: #fff;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+}
+
+.task-review-selection-modal__task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.task-priority,
+.task-status,
+.task-category,
+.task-review-selection-modal__task-date {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.task-review-selection-modal__task-priority {
+  background: rgba(255, 68, 68, 0.2);
+}
+
+.task-review-selection-modal__task-status {
+  background: rgba(0, 122, 204, 0.2);
+}
+
+.task-review-selection-modal__task-category {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.task-review-selection-modal__task-date {
+  background: rgba(255, 255, 255, 0.05);
+  color: #888;
+}
+
+.task-review-selection-modal__expand-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Task details */
+.task-review-selection-modal__task-details {
+  padding: 0 16px 16px 16px;
+  border-top: 1px solid #333;
+  margin-top: 8px;
+  padding-top: 12px;
+}
+
+.task-review-selection-modal__task-description {
+  color: #ccc;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  word-wrap: break-word;
+}
+
+.task-review-selection-modal__task-estimated-hours {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* Modal actions */
+.task-review-selection-modal__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #333;
+}
+
+.btn-primary,
+.task-review-selection-modal__btn-secondary {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.task-review-selection-modal__btn-primary {
+  background: #007acc;
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #005a9e;
+}
+
+.btn-primary:disabled {
+  background: #444;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.task-review-selection-modal__btn-secondary {
+  background: #444;
+  color: #fff;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #555;
+}
+
+.btn-secondary:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .task-review-selection-modal__task-review-selection-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .task-review-selection-modal__task-review-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group,
+  .task-review-selection-modal__sort-group {
+    justify-content: space-between;
+  }
+
+  .task-review-selection-modal__task-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .task-review-selection-modal__modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .task-review-selection-modal__btn-secondary {
+    width: 100%;
+  }
+}
+
+/* Scrollbar styling */
+.task-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.task-list::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+.task-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

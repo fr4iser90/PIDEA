@@ -1,0 +1,81 @@
+// =============================================================================
+// GRID
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// Grid Container
+// -----------------------------------------------------------------------------
+.grid {
+  display: grid;
+  gap: $grid-gap;
+}
+
+// Grid Columns
+// -----------------------------------------------------------------------------
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+.grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+.grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+
+// Grid Column Span
+// -----------------------------------------------------------------------------
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+.col-span-5 { grid-column: span 5; }
+.col-span-6 { grid-column: span 6; }
+.col-span-12 { grid-column: span 12; }
+
+// Grid Gaps
+// -----------------------------------------------------------------------------
+.gap-0 { gap: 0; }
+.gap-xs { gap: $grid-gap-sm; }
+.gap-sm { gap: $grid-gap; }
+.gap-md { gap: $grid-gap; }
+.gap-lg { gap: $grid-gap-lg; }
+
+// Grid Auto
+// -----------------------------------------------------------------------------
+.grid-auto-cols-min { grid-template-columns: repeat(auto-fit, minmax(0, min-content)); }
+.grid-auto-cols-max { grid-template-columns: repeat(auto-fit, minmax(0, max-content)); }
+.grid-auto-cols-fr { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+
+// Grid Areas
+// -----------------------------------------------------------------------------
+.grid-area-header { grid-area: header; }
+.grid-area-sidebar { grid-area: sidebar; }
+.grid-area-main { grid-area: main; }
+.grid-area-footer { grid-area: footer; }
+
+// Responsive Grid
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .grid-cols-2 { grid-template-columns: repeat(1, 1fr); }
+  .grid-cols-3 { grid-template-columns: repeat(1, 1fr); }
+  .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-5 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-6 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@include respond-to(md) {
+  .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-5 { grid-template-columns: repeat(3, 1fr); }
+  .grid-cols-6 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@include respond-to(lg) {
+  .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-cols-5 { grid-template-columns: repeat(4, 1fr); }
+  .grid-cols-6 { grid-template-columns: repeat(4, 1fr); }
+}
+
+@include respond-to(xl) {
+  .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+}

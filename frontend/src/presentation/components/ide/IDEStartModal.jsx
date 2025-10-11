@@ -9,7 +9,7 @@ import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import IDERequirementService from '@/infrastructure/services/IDERequirementService.jsx';
-import '@/css/components/ide/ide-start-modal.css';
+import '@/scss/components/_ide-start-modal.scss';;
 
 const IDEStartModal = ({ 
   isOpen, 

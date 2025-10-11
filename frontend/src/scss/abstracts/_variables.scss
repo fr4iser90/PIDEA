@@ -1,0 +1,231 @@
+// =============================================================================
+
+// Color System
+// -----------------------------------------------------------------------------
+$color-primary: #4e8cff;
+$color-primary-hover: #3d7be8;
+$color-primary-light: rgba(78, 140, 255, 0.1);
+
+$color-secondary: #8ca0b3;
+$color-secondary-hover: #6b7c8a;
+
+$color-success: #10b981;
+$color-success-hover: #059669;
+
+$color-warning: #f59e0b;
+$color-warning-hover: #d97706;
+
+$color-danger: #ef4444;
+$color-danger-hover: #dc2626;
+
+$color-info: #3b82f6;
+$color-info-hover: #2563eb;
+
+// Background System
+// -----------------------------------------------------------------------------
+$bg-primary: #15181c;
+$bg-secondary: #1a1d23;
+$bg-tertiary: #23272e;
+$bg-card: #2a2e35;
+$bg-hover: #3a3f47;
+$bg-overlay: rgba(0, 0, 0, 0.5);
+
+// Text System
+// -----------------------------------------------------------------------------
+$text-primary: #e6e6e6;
+$text-secondary: #8ca0b3;
+$text-tertiary: #6b7c8a;
+$text-inverse: #15181c;
+
+// Border System
+// -----------------------------------------------------------------------------
+$border-color: #333;
+$border-color-light: #404040;
+$border-color-focus: $color-primary;
+
+// Shadow System
+// -----------------------------------------------------------------------------
+$shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+$shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.8);
+
+// Spacing System - Modern responsive units
+// -----------------------------------------------------------------------------
+$space-xs: clamp(0.25rem, 0.5vw, 0.375rem);   // 4px-6px responsive
+$space-sm: clamp(0.5rem, 1vw, 0.75rem);       // 8px-12px responsive
+$space-md: clamp(1rem, 2vw, 1.25rem);         // 16px-20px responsive
+$space-lg: clamp(1.5rem, 3vw, 2rem);          // 24px-32px responsive
+$space-xl: clamp(2rem, 4vw, 2.5rem);          // 32px-40px responsive
+$space-2xl: clamp(3rem, 6vw, 4rem);           // 48px-64px responsive
+
+// Typography System - Modern responsive units
+// -----------------------------------------------------------------------------
+$font-size-xs: clamp(0.75rem, 1.5vw, 0.875rem);    // 12px-14px responsive
+$font-size-sm: clamp(0.875rem, 2vw, 1rem);         // 14px-16px responsive
+$font-size-base: clamp(1rem, 2.5vw, 1.125rem);     // 16px-18px responsive
+$font-size-lg: clamp(1.125rem, 3vw, 1.25rem);      // 18px-20px responsive
+$font-size-xl: clamp(1.25rem, 3.5vw, 1.5rem);      // 20px-24px responsive
+$font-size-2xl: clamp(1.5rem, 4vw, 2rem);          // 24px-32px responsive
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// Border Radius System - Modern responsive units
+// -----------------------------------------------------------------------------
+$radius-sm: clamp(0.25rem, 0.5vw, 0.375rem);   // 4px-6px responsive
+$radius-md: clamp(0.5rem, 1vw, 0.75rem);      // 8px-12px responsive
+$radius-lg: clamp(0.75rem, 1.5vw, 1rem);      // 12px-16px responsive
+$radius-xl: clamp(1rem, 2vw, 1.25rem);        // 16px-20px responsive
+$radius-full: 9999px;
+
+// Layout Dimensions - Modern responsive units
+// -----------------------------------------------------------------------------
+$header-height: clamp(3.5rem, 8vh, 4.5rem); // 56px-72px responsive
+$footer-height: clamp(2rem, 5vh, 2.5rem); // 32px-40px responsive
+$sidebar-strip-width: clamp(1rem, 2vw, 1.25rem); // 16px-20px responsive
+
+// Sidebar Dimensions - Modern responsive units
+// -----------------------------------------------------------------------------
+$sidebar-left-width: clamp(15rem, 20vw, 18rem);  // 240px-288px responsive
+$sidebar-right-width: clamp(16rem, 22vw, 20rem);    // 256px-320px responsive
+$sidebar-left-width-collapsed: $sidebar-strip-width;
+$sidebar-right-width-collapsed: $sidebar-strip-width;
+
+// Main Content Area - Modern responsive units
+// -----------------------------------------------------------------------------
+$main-content-min-width: clamp(18.75rem, 30vw, 25rem); // 300px-400px responsive
+$main-content-max-width: clamp(56.25rem, 80vw, 75rem); // 900px-1200px responsive
+
+// Breakpoints
+// -----------------------------------------------------------------------------
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Container Padding - Modern responsive units
+// -----------------------------------------------------------------------------
+$container-padding-sm: clamp(0.75rem, 2vw, 1rem); // 12px-16px responsive
+$container-padding-md: clamp(1rem, 3vw, 1.5rem); // 16px-24px responsive
+$container-padding-lg: clamp(1.5rem, 4vw, 2rem); // 24px-32px responsive
+
+// Grid System
+// -----------------------------------------------------------------------------
+$grid-columns: 12;
+$grid-gap: 1rem;
+$grid-gap-sm: 0.5rem;
+$grid-gap-lg: 1.5rem;
+
+// Layout Z-Index
+// -----------------------------------------------------------------------------
+$z-sidebar: 100;
+$z-header: 200;
+$z-modal: 1000;
+$z-tooltip: 1100;
+
+// Animation Durations
+// -----------------------------------------------------------------------------
+$animation-duration-fast: 0.15s;
+$animation-duration-normal: 0.3s;
+$animation-duration-slow: 0.5s;
+
+// Animation Easing
+// -----------------------------------------------------------------------------
+$animation-ease-in: cubic-bezier(0.4, 0, 1, 1);
+$animation-ease-out: cubic-bezier(0, 0, 0.2, 1);
+$animation-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+// Transition System
+// -----------------------------------------------------------------------------
+$transition-fast: 0.15s ease;
+$transition-normal: 0.2s ease;
+$transition-slow: 0.3s ease;
+$transition-slower: 0.5s ease;
+
+// Z-Index System
+// -----------------------------------------------------------------------------
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;
+
+// CSS Custom Properties (CSS Variables)
+// -----------------------------------------------------------------------------
+:root {
+  // Colors
+  --color-primary: #{$color-primary};
+  --color-primary-hover: #{$color-primary-hover};
+  --color-success: #{$color-success};
+  --color-warning: #{$color-warning};
+  --color-danger: #{$color-danger};
+  --color-info: #{$color-info};
+  
+  // Backgrounds
+  --bg-primary: #{$bg-primary};
+  --bg-secondary: #{$bg-secondary};
+  --bg-tertiary: #{$bg-tertiary};
+  --bg-card: #{$bg-card};
+  --bg-hover: #{$bg-hover};
+  
+  // Text
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-tertiary: #{$text-tertiary};
+  
+  // Borders
+  --border-color: #{$border-color};
+  --border-color-light: #{$border-color-light};
+  --border-color-focus: #{$border-color-focus};
+  
+  // Shadows
+  --shadow-xs: #{$shadow-xs};
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  
+  // Spacing
+  --space-xs: #{$space-xs};
+  --space-sm: #{$space-sm};
+  --space-md: #{$space-md};
+  --space-lg: #{$space-lg};
+  --space-xl: #{$space-xl};
+  --space-2xl: #{$space-2xl};
+  
+  // Typography
+  --font-size-xs: #{$font-size-xs};
+  --font-size-sm: #{$font-size-sm};
+  --font-size-base: #{$font-size-base};
+  --font-size-lg: #{$font-size-lg};
+  --font-size-xl: #{$font-size-xl};
+  --font-size-2xl: #{$font-size-2xl};
+  
+  --font-weight-normal: #{$font-weight-normal};
+  --font-weight-medium: #{$font-weight-medium};
+  --font-weight-semibold: #{$font-weight-semibold};
+  --font-weight-bold: #{$font-weight-bold};
+  
+  // Border Radius
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --radius-xl: #{$radius-xl};
+  --radius-full: #{$radius-full};
+  
+  // Transitions
+  --transition-fast: #{$transition-fast};
+  --transition-normal: #{$transition-normal};
+  --transition-slow: #{$transition-slow};
+}

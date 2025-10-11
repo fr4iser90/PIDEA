@@ -10,7 +10,7 @@ import React, { useState, useMemo } from 'react';
 import { processSecurityData } from '@/utils/analysisDataProcessor';
 import SecurityScannerCard from './SecurityScannerCard';
 import SecurityScoreChart from './SecurityScoreChart';
-import '@/css/components/analysis/security-dashboard.css';
+import '@/scss/components/_security-dashboard.scss';;
 
 const SecurityDashboard = ({ securityData, loading, error }) => {
   const [expandedScanners, setExpandedScanners] = useState(new Set());

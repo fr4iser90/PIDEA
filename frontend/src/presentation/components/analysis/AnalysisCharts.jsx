@@ -14,7 +14,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
-import '@/css/components/analysis/analysis-charts.css';
+import '@/scss/components/_analysis-charts.scss';;
 
 // Register Chart.js components
 ChartJS.register(

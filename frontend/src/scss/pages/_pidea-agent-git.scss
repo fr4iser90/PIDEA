@@ -1,0 +1,442 @@
+// =============================================================================
+// _PIDEA-AGENT-GIT
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Pidea-Agent Git Management Styles */
+
+.pidea-agent-git__pidea-agent-branch {
+  background: var(--git-bg-color, #f8f9fa);
+  border: 1px solid var(--git-border-color, #e9ecef);
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  padding: clamp(1rem, 2.5vw, 1.25rem); /* 16px-20px responsive */
+  margin: clamp(0.5rem, 1vw, 0.75rem) 0; /* 8px-12px responsive */
+  font-family: var(--git-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+}
+
+/* Pidea-Agent Status Header */
+.pidea-agent-git__pidea-agent-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+  padding-bottom: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  border-bottom: 1px solid var(--git-border-color, #e9ecef);
+}
+
+.pidea-agent-git__pidea-agent-status-info {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  flex-wrap: wrap;
+}
+
+.pidea-agent-git__pidea-agent-status-icon {
+  font-size: clamp(1rem, 3vw, 1.125rem); /* 16px-18px responsive */
+  font-weight: bold;
+}
+
+.pidea-agent-git__pidea-agent-status-text {
+  font-weight: var(--font-weight-semibold);
+  color: var(--git-text-color, #495057);
+}
+
+.pidea-agent-git__pidea-agent-branch-name {
+  font-size: var(--font-size-sm);
+  color: var(--git-muted-color, #6c757d);
+  background: var(--git-badge-bg, #e9ecef);
+  padding: 2px 8px;
+  border-radius: var(--radius-lg);
+}
+
+.pidea-agent-git__pidea-agent-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Pidea-Agent Controls */
+.pidea-agent-git__pidea-agent-controls {
+  margin: var(--space-md) 0;
+}
+
+.pidea-agent-git__pidea-agent-button-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pidea-agent-git__pidea-agent-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-sm) 12px;
+  border: 1px solid var(--git-btn-border, #dee2e6);
+  border-radius: var(--radius-sm);
+  background: var(--git-btn-bg, #ffffff);
+  color: var(--git-btn-text, #495057);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 120px;
+  justify-content: center;
+}
+
+.pidea-agent-btn:hover:not(:disabled) {
+  background: var(--git-btn-hover-bg, #f8f9fa);
+  border-color: var(--git-btn-hover-border, #adb5bd);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pidea-agent-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pidea-agent-btn .pidea-agent-git__btn-icon {
+  font-size: var(--font-size-base);
+}
+
+.pidea-agent-btn .pidea-agent-git__btn-text {
+  font-size: 13px;
+}
+
+/* Pidea-Agent Button Variants */
+.pidea-agent-btn.pidea-agent-git__pull-btn {
+  background: var(--git-pull-bg, #d1ecf1);
+  border-color: var(--git-pull-border, #bee5eb);
+  color: var(--git-pull-text, #0c5460);
+}
+
+.pidea-agent-btn.pull-btn:hover:not(:disabled) {
+  background: var(--git-pull-hover-bg, #c1e7e9);
+  border-color: var(--git-pull-hover-border, #a6d8e8);
+}
+
+.pidea-agent-btn.pidea-agent-git__compare-btn {
+  background: var(--git-compare-bg, #fff3cd);
+  border-color: var(--git-compare-border, #ffeaa7);
+  color: var(--git-compare-text, #856404);
+}
+
+.pidea-agent-btn.compare-btn:hover:not(:disabled) {
+  background: var(--git-compare-hover-bg, #ffeaa7);
+  border-color: var(--git-compare-hover-border, #fdcb6e);
+}
+
+.pidea-agent-btn.pidea-agent-git__merge-btn {
+  background: var(--git-merge-bg, #d4edda);
+  border-color: var(--git-merge-border, #c3e6cb);
+  color: var(--git-merge-text, #155724);
+}
+
+.pidea-agent-btn.merge-btn:hover:not(:disabled) {
+  background: var(--git-merge-hover-bg, #c3e6cb);
+  border-color: var(--git-merge-hover-border, #a8e6cf);
+}
+
+.pidea-agent-btn.pidea-agent-git__refresh-btn {
+  background: var(--git-refresh-bg, #f8f9fa);
+  border-color: var(--git-refresh-border, #e9ecef);
+  color: var(--git-refresh-text, #6c757d);
+  min-width: auto;
+  padding: 6px 8px;
+}
+
+.pidea-agent-btn.refresh-btn:hover:not(:disabled) {
+  background: var(--git-refresh-hover-bg, #e9ecef);
+  border-color: var(--git-refresh-hover-border, #dee2e6);
+}
+
+/* Pidea-Agent Status Details */
+.pidea-agent-git__pidea-agent-status-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--git-border-color, #e9ecef);
+}
+
+.pidea-agent-status-details .pidea-agent-git__status-section {
+  margin-bottom: 16px;
+}
+
+.pidea-agent-status-details h4 {
+  margin: 0 0 8px 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--git-text-color, #495057);
+}
+
+.pidea-agent-status-details .pidea-agent-git__file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 120px;
+  overflow-y: auto;
+  background: var(--git-file-list-bg, #ffffff);
+  border: 1px solid var(--git-border-color, #e9ecef);
+  border-radius: var(--radius-sm);
+}
+
+.pidea-agent-status-details .pidea-agent-git__file-item {
+  padding: var(--space-xs) 8px;
+  font-size: var(--font-size-xs);
+  border-bottom: 1px solid var(--git-border-color, #e9ecef);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.pidea-agent-status-details .file-item:last-child {
+  border-bottom: none;
+}
+
+.pidea-agent-status-details .file-item.pidea-agent-git__modified {
+  color: var(--git-modified-color, #856404);
+  background: var(--git-modified-bg, #fff3cd);
+}
+
+.pidea-agent-status-details .file-item.pidea-agent-git__added {
+  color: var(--git-added-color, #155724);
+  background: var(--git-added-bg, #d4edda);
+}
+
+.pidea-agent-status-details .file-item.pidea-agent-git__deleted {
+  color: var(--git-deleted-color, #721c24);
+  background: var(--git-deleted-bg, #f8d7da);
+}
+
+/* Operation Result */
+.pidea-agent-git__operation-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-sm) 12px;
+  border-radius: var(--radius-sm);
+  margin: var(--space-sm) 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.operation-result.pidea-agent-git__success {
+  background: var(--git-success-bg, #d4edda);
+  border: 1px solid var(--git-success-border, #c3e6cb);
+  color: var(--git-success-text, #155724);
+}
+
+.operation-result.pidea-agent-git__error {
+  background: var(--git-error-bg, #f8d7da);
+  border: 1px solid var(--git-error-border, #f5c6cb);
+  color: var(--git-error-text, #721c24);
+}
+
+.operation-result .pidea-agent-git__result-icon {
+  font-size: var(--font-size-base);
+}
+
+/* Git Management Component Integration */
+.pidea-agent-git__pidea-agent-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid var(--git-border-color, #e9ecef);
+}
+
+.pidea-agent-git__pidea-agent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.pidea-agent-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--git-text-color, #495057);
+}
+
+.pidea-agent-git__pidea-agent-toggle-btn {
+  background: var(--git-pidea-agent-bg, #e3f2fd) !important;
+  border-color: var(--git-pidea-agent-border, #bbdefb) !important;
+  color: var(--git-pidea-agent-text, #1565c0) !important;
+}
+
+.pidea-agent-toggle-btn:hover:not(:disabled) {
+  background: var(--git-pidea-agent-hover-bg, #bbdefb) !important;
+  border-color: var(--git-pidea-agent-hover-border, #90caf9) !important;
+}
+
+/* Loading States */
+.pidea-agent-git__loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dropdown);
+  border-radius: var(--radius-md);
+}
+
+.pidea-agent-git__loading-spinner {
+  font-size: var(--font-size-2xl);
+  margin-bottom: 8px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Diff Modal */
+.pidea-agent-git__diff-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.pidea-agent-git__diff-modal {
+  background: var(--git-modal-bg, #ffffff);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pidea-agent-git__diff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) 20px;
+  border-bottom: 1px solid var(--git-border-color, #e9ecef);
+}
+
+.diff-header h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--git-text-color, #495057);
+}
+
+.pidea-agent-git__close-btn {
+  background: none;
+  border: none;
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+  color: var(--git-muted-color, #6c757d);
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+}
+
+.close-btn:hover {
+  background: var(--git-btn-hover-bg, #f8f9fa);
+  color: var(--git-text-color, #495057);
+}
+
+.pidea-agent-git__diff-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-md);
+}
+
+.pidea-agent-git__diff-text {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--git-diff-bg, #f8f9fa);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--git-border-color, #e9ecef);
+  max-height: 60vh;
+  overflow: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pidea-agent-git__pidea-agent-button-group {
+    flex-direction: column;
+  }
+  
+  .pidea-agent-git__pidea-agent-btn {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .pidea-agent-git__diff-modal {
+    width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .pidea-agent-git__diff-content {
+    padding: var(--space-sm);
+  }
+  
+  .pidea-agent-git__diff-text {
+    font-size: 11px;
+    padding: var(--space-sm);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .pidea-agent-git__pidea-agent-branch {
+    background: var(--git-dark-bg, #2d3748);
+    border-color: var(--git-dark-border, #4a5568);
+    color: var(--git-dark-text, #e2e8f0);
+  }
+  
+  .pidea-agent-git__pidea-agent-status-text {
+    color: var(--git-dark-text, #e2e8f0);
+  }
+  
+  .pidea-agent-git__pidea-agent-branch-name {
+    background: var(--git-dark-badge-bg, #4a5568);
+    color: var(--git-dark-muted, #a0aec0);
+  }
+  
+  .pidea-agent-git__pidea-agent-btn {
+    background: var(--git-dark-btn-bg, #4a5568);
+    border-color: var(--git-dark-btn-border, #718096);
+    color: var(--git-dark-btn-text, #e2e8f0);
+  }
+  
+  .pidea-agent-btn:hover:not(:disabled) {
+    background: var(--git-dark-btn-hover-bg, #718096);
+    border-color: var(--git-dark-btn-hover-border, #a0aec0);
+  }
+  
+  .pidea-agent-git__diff-modal {
+    background: var(--git-dark-modal-bg, #2d3748);
+  }
+  
+  .pidea-agent-git__diff-text {
+    background: var(--git-dark-diff-bg, #1a202c);
+    border-color: var(--git-dark-border, #4a5568);
+    color: var(--git-dark-text, #e2e8f0);
+  }
+} 

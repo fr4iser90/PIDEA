@@ -1,0 +1,370 @@
+// =============================================================================
+// _IDE-STATUS-INDICATOR
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* IDEStatusIndicator Component Styles */
+.ide-status-indicator__ide-status-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+  padding: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  font-size: clamp(0.875rem, 2vw, 1rem); /* 14px-16px responsive */
+  transition: all var(--transition-slow);
+}
+
+.ide-status-indicator.ide-status-indicator__animating {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ide-status-indicator__status-main {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 0.75rem); /* 8px-12px responsive */
+}
+
+.ide-status-indicator__status-icon {
+  font-size: clamp(1rem, 2vw, 1.125rem); /* 16px-18px responsive */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(1.125rem, 2vw, 1.25rem); /* 18px-20px responsive */
+  height: clamp(1.125rem, 2vw, 1.25rem); /* 18px-20px responsive */
+}
+
+.status-icon.ide-status-indicator__green {
+  color: var(--accent-green);
+}
+
+.status-icon.ide-status-indicator__yellow {
+  color: var(--accent-yellow);
+}
+
+.status-icon.ide-status-indicator__red {
+  color: var(--accent-red);
+}
+
+.status-icon.ide-status-indicator__gray {
+  color: var(--text-secondary);
+}
+
+/* Status Icon Animations */
+.status-icon.ide-status-indicator__pulse {
+  animation: pulse 2s infinite;
+}
+
+.status-icon.ide-status-indicator__spin {
+  animation: spin 1s linear infinite;
+}
+
+.status-icon.ide-status-indicator__shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.ide-status-indicator__status-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ide-status-indicator__status-text {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  font-size: 0.9em;
+}
+
+.ide-status-indicator__status-details {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+}
+
+.ide-status-indicator__ide-name {
+  text-transform: capitalize;
+}
+
+.ide-status-indicator__port-info {
+  font-family: monospace;
+  font-weight: var(--font-weight-medium);
+}
+
+.loading-indicator,
+.ide-status-indicator__error-indicator {
+  font-size: var(--font-size-xs);
+}
+
+.ide-status-indicator__loading-indicator {
+  color: var(--accent-yellow);
+}
+
+.ide-status-indicator__error-indicator {
+  color: var(--accent-red);
+}
+
+/* Metrics Display */
+.ide-status-indicator__status-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.ide-status-indicator__metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+.metric-item.ide-status-indicator__error {
+  color: var(--accent-red);
+}
+
+.ide-status-indicator__metric-label {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.ide-status-indicator__metric-value {
+  color: var(--text-primary);
+  font-family: monospace;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Status History */
+.ide-status-indicator__status-history {
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.ide-status-indicator__history-header {
+  margin-bottom: 6px;
+}
+
+.ide-status-indicator__history-title {
+  font-size: 0.8em;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.ide-status-indicator__history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ide-status-indicator__history-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75em;
+  padding: 2px 0;
+}
+
+.ide-status-indicator__history-status {
+  font-size: 10px;
+  width: 12px;
+  text-align: center;
+}
+
+.ide-status-indicator__history-text {
+  flex: 1;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.ide-status-indicator__history-time {
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.7em;
+}
+
+/* Last Update */
+.ide-status-indicator__last-update {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) 8px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75em;
+}
+
+.ide-status-indicator__update-label {
+  color: var(--text-secondary);
+}
+
+.ide-status-indicator__update-time {
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+/* Status-specific styling */
+.ide-status-indicator.ide-status-indicator__running {
+  border-color: var(--accent-green);
+  background: rgba(var(--accent-green-rgb), 0.05);
+}
+
+.ide-status-indicator.ide-status-indicator__starting {
+  border-color: var(--accent-yellow);
+  background: rgba(var(--accent-yellow-rgb), 0.05);
+}
+
+.ide-status-indicator.stopped,
+.ide-status-indicator.ide-status-indicator__error {
+  border-color: var(--accent-red);
+  background: rgba(var(--accent-red-rgb), 0.05);
+}
+
+.ide-status-indicator.disconnected,
+.ide-status-indicator.ide-status-indicator__unknown {
+  border-color: var(--text-secondary);
+  background: rgba(var(--text-secondary-rgb), 0.05);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ide-status-indicator__ide-status-indicator {
+    padding: var(--space-sm);
+    font-size: 0.8em;
+  }
+  
+  .ide-status-indicator__status-main {
+    gap: 6px;
+  }
+  
+  .ide-status-indicator__status-icon {
+    font-size: var(--font-size-sm);
+    width: 18px;
+    height: 18px;
+  }
+  
+  .status-metrics,
+  .ide-status-indicator__status-history {
+    padding: 6px;
+  }
+  
+  .metric-item,
+  .ide-status-indicator__history-item {
+    font-size: 0.75em;
+  }
+}
+
+@media (max-width: 480px) {
+  .ide-status-indicator__ide-status-indicator {
+    padding: 6px;
+    font-size: 0.75em;
+  }
+  
+  .ide-status-indicator__status-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  
+  .ide-status-indicator__status-metrics {
+    display: none; /* Hide metrics on very small screens */
+  }
+  
+  .ide-status-indicator__status-history {
+    display: none; /* Hide history on very small screens */
+  }
+}
+
+/* Compact mode */
+.ide-status-indicator.ide-status-indicator__compact {
+  padding: 6px 8px;
+  font-size: 0.8em;
+}
+
+.ide-status-indicator.compact .status-metrics,
+.ide-status-indicator.compact .ide-status-indicator__status-history {
+  display: none;
+}
+
+.ide-status-indicator.compact .ide-status-indicator__last-update {
+  display: none;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .ide-status-indicator__ide-status-indicator {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .ide-status-indicator__ide-status-indicator {
+    border-width: 2px;
+  }
+  
+  .ide-status-indicator__status-icon {
+    font-weight: bold;
+  }
+  
+  .ide-status-indicator__status-text {
+    font-weight: bold;
+  }
+}
+
+/* Print styles */
+@media print {
+  .ide-status-indicator__ide-status-indicator {
+    background: white;
+    border: 1px solid black;
+    color: black;
+  }
+  
+  .ide-status-indicator__status-icon {
+    color: black;
+  }
+  
+  .status-metrics,
+  .ide-status-indicator__status-history {
+    background: white;
+    border: 1px solid black;
+  }
+}

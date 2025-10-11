@@ -1,0 +1,119 @@
+// =============================================================================
+// _HOME
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Home page specific styles
+.home-page {
+  min-height: 100vh;
+  background: $bg-primary;
+  color: $text-primary;
+}
+
+.home-hero {
+  @include flex-center;
+
+  min-height: 60vh;
+  text-align: center;
+  padding: $space-2xl $space-md;
+  
+  .home-hero__title {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    margin-bottom: $space-lg;
+    color: $text-primary;
+  }
+  
+  .home-hero__subtitle {
+    font-size: $font-size-lg;
+    color: $text-secondary;
+    margin-bottom: $space-xl;
+    max-width: 600px;
+  }
+  
+  .home-hero__actions {
+    display: flex;
+    gap: $space-md;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+.home-features {
+  padding: $space-2xl $space-md;
+  background: $bg-secondary;
+  
+  .home-features__title {
+    text-align: center;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $space-xl;
+    color: $text-primary;
+  }
+  
+  .home-features__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: $space-lg;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .home-feature {
+    @extend %card-base;
+
+    padding: $space-lg;
+    text-align: center;
+    
+    .home-feature__icon {
+      font-size: 3rem;
+      color: $color-primary;
+      margin-bottom: $space-md;
+    }
+    
+    .home-feature__title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      margin-bottom: $space-sm;
+      color: $text-primary;
+    }
+    
+    .home-feature__description {
+      color: $text-secondary;
+      line-height: $line-height-relaxed;
+    }
+  }
+}
+
+// Responsive home page
+@include respond-to(sm) {
+  .home-hero {
+    padding: $space-xl $space-sm;
+    
+    .home-hero__title {
+      font-size: $font-size-xl;
+    }
+    
+    .home-hero__subtitle {
+      font-size: $font-size-base;
+    }
+    
+    .home-hero__actions {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+  
+  .home-features {
+    padding: $space-xl $space-sm;
+    
+    .home-features__grid {
+      grid-template-columns: 1fr;
+      gap: $space-md;
+    }
+  }
+}

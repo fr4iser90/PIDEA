@@ -4,7 +4,7 @@ import TaskWorkflowProgress from './TaskWorkflowProgress';
 import TaskReviewModal from './TaskReviewModal';
 import TaskCreationService from '@/application/services/TaskCreationService';
 import TaskReviewService from '@/application/services/TaskReviewService';
-import '@/css/modal/task-creation-modal.css';
+import '@/scss/components/_task-creation-modal.scss';;
 
 const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
   const [currentStep, setCurrentStep] = useState('form'); // 'form', 'create', 'review', 'progress', 'complete'

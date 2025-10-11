@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import { useRefreshService } from '@/hooks/useRefreshService';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import '@/css/components/ide/ide-status-indicator.css';
+import '@/scss/components/_ide-status-indicator.scss';;
 
 const IDEStatusIndicator = ({ 
   className = '',

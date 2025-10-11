@@ -1,0 +1,743 @@
+// =============================================================================
+// _ANALYSIS-TECHSTACK
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Auto-generated from CSS migration
+// TODO: Review and optimize this component
+
+/* Analysis Tech Stack Component Styles */
+
+.analysis-techstack__analysis-techstack {
+  background: #ffffff;
+  border-radius: var(--radius-md); /* Modern responsive radius */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Loading State */
+.analysis-techstack.analysis-techstack__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.25rem, 3vw, 2rem); /* 20px-32px responsive */
+  min-height: clamp(12.5rem, 25vh, 15rem); /* 200px-240px responsive */
+}
+
+.analysis-techstack.loading .analysis-techstack__loading-spinner {
+  width: clamp(2rem, 4vw, 2.5rem); /* 32px-40px responsive */
+  height: clamp(2rem, 4vw, 2.5rem); /* 32px-40px responsive */
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem); /* 12px-16px responsive */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.analysis-techstack.analysis-techstack__error {
+  padding: 1rem;
+}
+
+.analysis-techstack.error .analysis-techstack__error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e74c3c;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-techstack.error .analysis-techstack__error-icon {
+  font-size: 1.2rem;
+}
+
+/* No Data State */
+.analysis-techstack.analysis-techstack__no-data {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+/* Confidence Level Styles */
+.analysis-techstack__high-confidence {
+  color: #4CAF50 !important;
+}
+
+.analysis-techstack__medium-confidence {
+  color: #FF9800 !important;
+}
+
+.analysis-techstack__low-confidence {
+  color: #F44336 !important;
+}
+
+.analysis-techstack__unknown-confidence {
+  color: #9E9E9E !important;
+}
+
+/* Technologies View Styles */
+.analysis-techstack__technologies-view {
+  padding: 1.5rem;
+}
+
+.analysis-techstack__filters-section {
+  margin-bottom: 2rem;
+}
+
+.analysis-techstack__filter-group {
+  margin-bottom: 1rem;
+}
+
+.filter-group label {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.analysis-techstack__filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.analysis-techstack__filter-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: #495057;
+}
+
+.filter-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.filter-btn.analysis-techstack__active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.analysis-techstack__technologies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analysis-techstack__technology-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transition: all var(--transition-normal);
+}
+
+.technology-item:hover {
+  background: #ffffff;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.analysis-techstack__technology-info {
+  flex: 1;
+}
+
+.analysis-techstack__technology-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.analysis-techstack__technology-name {
+  font-weight: var(--font-weight-semibold);
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.analysis-techstack__confidence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.confidence-badge.analysis-techstack__high-confidence {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+.confidence-badge.analysis-techstack__medium-confidence {
+  background: rgba(255, 152, 0, 0.1);
+  color: #FF9800;
+}
+
+.confidence-badge.analysis-techstack__low-confidence {
+  background: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+}
+
+.analysis-techstack__technology-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.analysis-techstack__technology-version {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-techstack__technology-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f3e5f5;
+  color: #7b1fa2;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+  text-transform: capitalize;
+}
+
+.analysis-techstack__outdated-badge {
+  background: #fff3e0;
+  color: #f57c00;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-techstack__technology-description {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0.5rem 0 0 0;
+}
+
+.analysis-techstack__technology-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.analysis-techstack__action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #667eea;
+  text-decoration: none;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+}
+
+.action-link:hover {
+  background: rgba(102, 126, 234, 0.1);
+  text-decoration: none;
+}
+
+/* Header */
+.analysis-techstack__techstack-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e1e5e9;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.techstack-title h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.analysis-techstack__techstack-summary {
+  margin-top: 0.5rem;
+}
+
+.analysis-techstack__summary-text {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.analysis-techstack__techstack-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.analysis-techstack__view-controls {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+}
+
+.analysis-techstack__view-btn {
+  background: none;
+  border: none;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.view-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.view-btn.analysis-techstack__active {
+  background: rgba(255, 255, 255, 0.3);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Statistics */
+.analysis-techstack__techstack-statistics {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.analysis-techstack__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.analysis-techstack__stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: var(--radius-sm);
+  border-left: 4px solid #3498db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item .stat-value.analysis-techstack__outdated {
+  color: #e74c3c;
+  font-weight: var(--font-weight-semibold);
+}
+
+.analysis-techstack__stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: var(--font-weight-medium);
+}
+
+.analysis-techstack__stat-value {
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: #2c3e50;
+}
+
+/* Content */
+.analysis-techstack__techstack-content {
+  padding: 1.5rem;
+}
+
+/* Overview View */
+.analysis-techstack__overview-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.analysis-techstack__charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.analysis-techstack__chart-container {
+  background: #f8f9fa;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.chart-container h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: #495057;
+  text-align: center;
+}
+
+.analysis-techstack__chart-wrapper {
+  height: 300px;
+  position: relative;
+}
+
+.analysis-techstack__no-chart-data {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Outdated Section */
+.analysis-techstack__outdated-section {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+}
+
+.outdated-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: var(--font-weight-semibold);
+  color: #856404;
+}
+
+.analysis-techstack__outdated-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analysis-techstack__outdated-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid #f39c12;
+}
+
+.analysis-techstack__package-name {
+  font-weight: var(--font-weight-medium);
+  color: #495057;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.analysis-techstack__version-info {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.analysis-techstack__more-outdated {
+  text-align: center;
+  padding: 0.5rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Dependencies View */
+.analysis-techstack__dependencies-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.analysis-techstack__category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: var(--radius-md);
+  border: 1px solid #e9ecef;
+}
+
+.analysis-techstack__category-btn {
+  background: white;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.category-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.category-btn.analysis-techstack__active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.analysis-techstack__dependencies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.analysis-techstack__dependency-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+}
+
+.dependency-item:hover {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.analysis-techstack__dependency-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.analysis-techstack__package-name {
+  font-weight: var(--font-weight-medium);
+  color: #495057;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.analysis-techstack__package-version {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.analysis-techstack__dependency-status {
+  display: flex;
+  align-items: center;
+}
+
+.analysis-techstack__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.analysis-techstack__up-to-date {
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+}
+
+.status-badge.analysis-techstack__outdated {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+/* Files View */
+.analysis-techstack__files-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analysis-techstack__file-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.analysis-techstack__file-type-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+}
+
+.file-type-item:hover {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-techstack__file-type-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: var(--radius-md);
+}
+
+.analysis-techstack__file-type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.analysis-techstack__file-type-name {
+  font-weight: var(--font-weight-semibold);
+  color: #495057;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.analysis-techstack__file-type-count {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* No Data Message */
+.analysis-techstack__no-data-message {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.no-data-message p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analysis-techstack__techstack-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .analysis-techstack__view-controls {
+    justify-content: center;
+  }
+
+  .analysis-techstack__charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-techstack__stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .analysis-techstack__category-filter {
+    flex-direction: column;
+  }
+
+  .analysis-techstack__category-btn {
+    text-align: center;
+  }
+
+  .analysis-techstack__file-types-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .analysis-techstack__dependency-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .analysis-techstack__dependency-status {
+    align-self: flex-end;
+  }
+
+  /* Technologies view responsive */
+  .analysis-techstack__filter-buttons {
+    flex-direction: column;
+  }
+
+  .analysis-techstack__filter-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .analysis-techstack__technology-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .analysis-techstack__technology-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .analysis-techstack__technology-actions {
+    flex-direction: column;
+  }
+
+  .analysis-techstack__action-link {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .analysis-techstack__techstack-content {
+    padding: 1rem;
+  }
+
+  .analysis-techstack__chart-wrapper {
+    height: 250px;
+  }
+
+  .analysis-techstack__file-types-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-techstack__file-type-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .analysis-techstack__view-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+} 

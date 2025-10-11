@@ -11,7 +11,7 @@
   line-height: 1.4;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
 }
 
 /* Header */
@@ -166,7 +166,7 @@
 .command-input:focus {
   outline: none;
   border-color: #4dabf7;
-  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+  box-shadow: 0 0 0 2px rgb(77 171 247 / 0.2);
 }
 
 /* Error Display */
@@ -196,7 +196,7 @@
 }
 
 .terminal-log-error button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(255 255 255 / 0.1);
   border-radius: 2px;
 }
 

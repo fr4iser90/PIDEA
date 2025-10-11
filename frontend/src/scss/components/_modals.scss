@@ -1,0 +1,242 @@
+// =============================================================================
+// _MODALS
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+// =============================================================================
+
+// Modal Backdrop
+// -----------------------------------------------------------------------------
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $bg-overlay;
+  z-index: z-index(modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-md;
+  animation: fade-in $animation-duration-normal $animation-ease-out;
+}
+
+// Modal Container
+// -----------------------------------------------------------------------------
+.modal {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slide-up $animation-duration-normal $animation-ease-out;
+  z-index: z-index(modal);
+}
+
+// Modal Sizes
+// -----------------------------------------------------------------------------
+.modal--sm {
+  width: 400px;
+  max-width: 90vw;
+}
+
+.modal--md {
+  width: 600px;
+  max-width: 90vw;
+}
+
+.modal--lg {
+  width: 800px;
+  max-width: 90vw;
+}
+
+.modal--xl {
+  width: 1200px;
+  max-width: 90vw;
+}
+
+.modal--full {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+}
+
+// Modal Header
+// -----------------------------------------------------------------------------
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-lg;
+  border-bottom: 1px solid $border-color;
+  background: $bg-tertiary;
+}
+
+.modal__title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  margin: 0;
+}
+
+.modal__close {
+  background: none;
+  border: none;
+  color: $text-secondary;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: $space-xs;
+  border-radius: $radius-sm;
+  transition: all $transition-normal;
+  
+  &:hover {
+    background: $bg-hover;
+    color: $text-primary;
+  }
+}
+
+// Modal Body
+// -----------------------------------------------------------------------------
+.modal__body {
+  padding: $space-lg;
+  overflow-y: auto;
+  flex: 1;
+  @include custom-scrollbar;
+}
+
+// Modal Footer
+// -----------------------------------------------------------------------------
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $space-sm;
+  padding: $space-lg;
+  border-top: 1px solid $border-color;
+  background: $bg-tertiary;
+}
+
+// Modal Actions
+// -----------------------------------------------------------------------------
+.modal__actions {
+  display: flex;
+  gap: $space-sm;
+  
+  .btn {
+    min-width: 80px;
+  }
+}
+
+// Modal Variants
+// -----------------------------------------------------------------------------
+.modal--centered {
+  .modal__body {
+    text-align: center;
+  }
+}
+
+.modal--scrollable {
+  .modal__body {
+    max-height: 60vh;
+  }
+}
+
+// Modal States
+// -----------------------------------------------------------------------------
+.modal--loading {
+  .modal__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+}
+
+// Modal Animations
+// -----------------------------------------------------------------------------
+@include keyframes(fade-in) {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@include keyframes(slide-up) {
+  0% { 
+    transform: translateY(20px); 
+    opacity: 0; 
+  }
+  100% { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+// Modal Responsive
+// -----------------------------------------------------------------------------
+@include respond-to(sm) {
+  .modal-backdrop {
+    padding: $space-sm;
+  }
+  
+  .modal {
+    width: 100%;
+    max-width: none;
+    max-height: 100vh;
+    border-radius: $radius-lg $radius-lg 0 0;
+  }
+  
+  .modal--sm,
+  .modal--md,
+  .modal--lg,
+  .modal--xl {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .modal__header,
+  .modal__body,
+  .modal__footer {
+    padding: $space-md;
+  }
+  
+  .modal__footer {
+    flex-direction: column;
+    
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+// Modal Utilities
+// -----------------------------------------------------------------------------
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-enter {
+  .modal-backdrop {
+    animation: fade-in $animation-duration-normal $animation-ease-out;
+  }
+  
+  .modal {
+    animation: slide-up $animation-duration-normal $animation-ease-out;
+  }
+}
+
+.modal-exit {
+  .modal-backdrop {
+    animation: fade-in $animation-duration-normal $animation-ease-out reverse;
+  }
+  
+  .modal {
+    animation: slide-up $animation-duration-normal $animation-ease-out reverse;
+  }
+}

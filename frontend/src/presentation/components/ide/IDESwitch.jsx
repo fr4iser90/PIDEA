@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useIDESwitchOptimizationStore from '@/infrastructure/stores/IDESwitchOptimizationStore';
-import '@/css/components/ide/ide-switch.css';
+import '@/scss/components/_ide-switch.scss';;
 
 /**
  * IDE Switch Component

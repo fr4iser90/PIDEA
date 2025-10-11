@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
-import '@/css/components/notification.css';
+import '@/scss/components/_notification.scss';;
 
 const NotificationSystem = () => {
   const { notifications, dismissNotification } = useNotificationStore();

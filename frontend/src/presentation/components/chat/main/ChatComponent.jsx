@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import VoiceInput from '../../common/VoiceInput';
-import '@/css/main/chat.css';
+import '@/scss/pages/_chat.scss';;
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import { useChatMessages, useProjectDataActions, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
@@ -304,12 +304,12 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
           </div>
         );
       } else {
-        bubbleContent = <div className="message-bubble">{escapeHtml(content)}</div>;
+        bubbleContent = <div className="chat__message-bubble">{escapeHtml(content)}</div>;
       }
     } else {
       // Regular text content
       bubbleContent = (
-        <div className="message-bubble" dangerouslySetInnerHTML={{ __html: window.marked ? window.marked.parse(content) : escapeHtml(content) }} />
+        <div className="chat__message-bubble" dangerouslySetInnerHTML={{ __html: window.marked ? window.marked.parse(content) : escapeHtml(content) }} />
       );
     }
     
@@ -319,33 +319,33 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     
     return (
       <div className={`message ${isUser ? 'user' : 'ai'}`} key={uniqueKey} data-index={index}>
-        <div className="message-avatar">{isUser ? 'U' : 'AI'}</div>
+        <div className="chat__message-avatar">{isUser ? 'U' : 'AI'}</div>
         {bubbleContent}
       </div>
     );
   };
 
   return (
-    <div ref={containerRef} className="chat-container">
-      <div className="messages-container" id="messages" onScroll={handleScroll}>
+    <div ref={containerRef} className="chat__chat-container">
+      <div className="chat__messages-container" id="messages" onScroll={handleScroll}>
         {messages.map(renderMessage).filter(Boolean)}
         {isTyping && (
-          <div className="typing-indicator show">
-            <div className="message-avatar">AI</div>
-            <div className="message-bubble">
-              <div className="typing-dots">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
+          <div className="chat__typing-indicator show">
+            <div className="chat__message-avatar">AI</div>
+            <div className="chat__message-bubble">
+              <div className="chat__typing-dots">
+                <div className="chat__typing-dot"></div>
+                <div className="chat__typing-dot"></div>
+                <div className="chat__typing-dot"></div>
               </div>
             </div>
           </div>
         )}
-        {error && <div className="error-message"><span>⚠️</span><span>{error}</span></div>}
+        {error && <div className="chat__error-message"><span>⚠️</span><span>{error}</span></div>}
         <div ref={messagesEndRef} />
       </div>
-      <div className="input-area">
-        <div className="input-container">
+      <div className="chat__input-area">
+        <div className="chat__input-container">
           <button id="fileUploadBtn" title="Datei hochladen" onClick={handleFileUploadClick}>📎</button>
           <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
           <div className="input-with-voice">

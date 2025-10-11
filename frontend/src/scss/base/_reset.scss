@@ -1,0 +1,130 @@
+// =============================================================================
+// RESET
+// =============================================================================
+
+@use '../abstracts/variables' as *;
+
+// Modern CSS Reset
+// -----------------------------------------------------------------------------
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  height: 100%;
+  line-height: $line-height-normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+#root,
+#__next {
+  isolation: isolate;
+  height: 100%;
+}
+
+// Remove default button styles
+// -----------------------------------------------------------------------------
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+// Remove default list styles
+// -----------------------------------------------------------------------------
+ul,
+ol {
+  list-style: none;
+}
+
+// Remove default link styles
+// -----------------------------------------------------------------------------
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+// Remove default table styles
+// -----------------------------------------------------------------------------
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+// Remove default form styles
+// -----------------------------------------------------------------------------
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+// Remove default textarea resize
+// -----------------------------------------------------------------------------
+textarea {
+  resize: vertical;
+}
+
+// Remove default focus outline (will be replaced with custom focus styles)
+// -----------------------------------------------------------------------------
+:focus {
+  outline: none;
+}
+
+// Remove default selection styles
+// -----------------------------------------------------------------------------
+::selection {
+  background: rgba($color-primary, 0.2);
+  color: $text-primary;
+}
+
+::-moz-selection {
+  background: rgba($color-primary, 0.2);
+  color: $text-primary;
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '@/css/components/analysis/category-recommendations.css';
+import '@/scss/components/_category-recommendations.scss';;
 
 const CategoryRecommendations = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
   const [selectedPriority, setSelectedPriority] = useState('all');

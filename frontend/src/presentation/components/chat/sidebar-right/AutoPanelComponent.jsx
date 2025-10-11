@@ -312,9 +312,9 @@ function AutoPanelComponent({ eventBus }) {
   };
 
   return (
-    <div className="auto-tab space-y-4 p-3">
+    <div className="sidebar-right__auto-tab space-y-4 p-3">
       {/* Auto Status */}
-      <div className="panel-block">
+      <div className="sidebar-right__panel-block">
         <div className="font-semibold mb-2">Auto Mode Status</div>
         <div className="flex items-center gap-2 mb-3">
           <div className={`w-3 h-3 rounded-full ${autoStatus === 'running' ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -323,19 +323,19 @@ function AutoPanelComponent({ eventBus }) {
       </div>
 
       {/* Auto Controls */}
-      <div className="panel-block">
+      <div className="sidebar-right__panel-block">
         <div className="font-semibold mb-2">Auto Features</div>
         <div className="flex gap-2 flex-wrap mb-3">
-          <button className="btn-vibecoder" onClick={handleVibeCoderStart}>VibeCoder Mode Start</button>
-          <button className="btn-vibecoder" onClick={handleAutoAnalyze}>Auto Analyze</button>
-          <button className="btn-vibecoder" onClick={handleAutoRefactor}>Auto Refactor</button>
-          <button className="btn-vibecoder" onClick={handleAutoTest}>Auto Test Fix</button>
-          <button className="btn-danger" onClick={handleAutoStop}>Stop</button>
+          <button className="sidebar-right__btn-vibecoder" onClick={handleVibeCoderStart}>VibeCoder Mode Start</button>
+          <button className="sidebar-right__btn-vibecoder" onClick={handleAutoAnalyze}>Auto Analyze</button>
+          <button className="sidebar-right__btn-vibecoder" onClick={handleAutoRefactor}>Auto Refactor</button>
+          <button className="sidebar-right__btn-vibecoder" onClick={handleAutoTest}>Auto Test Fix</button>
+          <button className="sidebar-right__btn-danger" onClick={handleAutoStop}>Stop</button>
         </div>
       </div>
 
       {/* Auto Logs */}
-      <div className="panel-block">
+      <div className="sidebar-right__panel-block">
         <div className="font-semibold mb-2">Auto Logs</div>
         <div className="bg-gray-900 rounded p-3 min-h-[150px] max-h-[200px] overflow-y-auto">
           <div className="text-gray-400 text-sm">Auto mode logs will appear here</div>
@@ -343,7 +343,7 @@ function AutoPanelComponent({ eventBus }) {
       </div>
 
       {/* Auto Settings */}
-      <div className="panel-block">
+      <div className="sidebar-right__panel-block">
         <div className="font-semibold mb-2">Auto Settings</div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">

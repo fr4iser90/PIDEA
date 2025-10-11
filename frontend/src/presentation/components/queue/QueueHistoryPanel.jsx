@@ -9,7 +9,7 @@ import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import TaskModeBadge from './TaskModeBadge.jsx';
-import '@/css/panel/queue-history-panel.css';
+import '@/scss/components/_queue-history-panel.scss';;
 
 const QueueHistoryPanel = ({ eventBus, activePort }) => {
     const [historyItems, setHistoryItems] = useState([]);

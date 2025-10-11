@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
-import '@/css/components/analysis/analysis-filters.css';
+import '@/scss/components/_analysis-filters.scss';;
 
 const AnalysisFilters = ({ filters, onFilterChange, projectId }) => {
   const [availableTypes, setAvailableTypes] = useState([]);

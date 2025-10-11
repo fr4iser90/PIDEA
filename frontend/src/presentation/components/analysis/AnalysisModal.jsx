@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
-import '@/css/components/analysis/analysis-modal.css';
+import '@/scss/components/_analysis-modal.scss';;
 
 const AnalysisModal = ({ analysis, onClose, projectId }) => {
   const [analysisContent, setAnalysisContent] = useState(null);

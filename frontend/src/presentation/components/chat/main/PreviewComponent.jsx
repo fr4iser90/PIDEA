@@ -5,7 +5,7 @@ import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.j
 import PortConfigInput from './PortConfigInput.jsx';
 import ProjectCommandButtons from './ProjectCommandButtons.jsx';
 import { usePortConfiguration } from '@/hooks/usePortConfiguration.js';
-import '@/css/main/preview.css';
+import '@/scss/pages/_preview.scss';;
 
 function PreviewComponent({ eventBus, activePort, projectId = null }) {
   // ✅ NEW: Integrate with RefreshService

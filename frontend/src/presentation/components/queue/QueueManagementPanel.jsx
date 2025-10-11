@@ -14,7 +14,7 @@ import QueueItem from './QueueItem.jsx';
 import QueueControls from './QueueControls.jsx';
 import StepTimeline from './StepTimeline.jsx';
 import QueueHistoryPanel from './QueueHistoryPanel.jsx';
-import '@/css/panel/queue-panel.css';
+import '@/scss/components/_queue-panel.scss';;
 
 const QueueManagementPanel = ({ eventBus, activePort }) => {
     const [queueStatus, setQueueStatus] = useState(null);
@@ -479,11 +479,11 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
     if (loading && !queueStatus) {
         return (
-            <div className="queue-panel">
-                <div className="queue-panel-header">
+            <div className="queue-panel__queue-panel">
+                <div className="queue-panel__queue-panel-header">
                     <h3>🔄 Queue Management</h3>
                 </div>
-                <div className="queue-panel-content">
+                <div className="queue-panel__queue-panel-content">
                     <div className="loading-spinner">Loading queue status...</div>
                 </div>
             </div>
@@ -492,11 +492,11 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
     if (error) {
         return (
-            <div className="queue-panel">
-                <div className="queue-panel-header">
+            <div className="queue-panel__queue-panel">
+                <div className="queue-panel__queue-panel-header">
                     <h3>🔄 Queue Management</h3>
                 </div>
-                <div className="queue-panel-content">
+                <div className="queue-panel__queue-panel-content">
                     <div className="error-message">
                         <p>❌ Error loading queue status: {error}</p>
                         <button onClick={loadQueueStatus} className="btn-retry">
@@ -513,13 +513,13 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
     const statistics = queueStatus?.statistics || {};
 
     return (
-        <div className="queue-panel">
-            <div className="queue-panel-header">
+        <div className="queue-panel__queue-panel">
+            <div className="queue-panel__queue-panel-header">
                 <h3>🔄 Queue Management</h3>
-                <div className="queue-panel-controls">
+                <div className="queue-panel__queue-panel-controls">
                     <button 
                         onClick={handleRefresh} 
-                        className="btn-refresh"
+                        className="queue-panel__btn-refresh"
                         title="Refresh queue status"
                     >
                         🔄
@@ -528,17 +528,17 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                 </div>
             </div>
 
-            <div className="queue-panel-content">
+            <div className="queue-panel__queue-panel-content">
                 {/* Tab Navigation */}
-                <div className="queue-tabs">
+                <div className="queue-panel__queue-tabs">
                     <button 
-                        className={`queue-tab ${activeTab === 'active' ? 'active' : ''}`}
+                        className={`queue-panel__queue-tab ${activeTab === 'active' ? 'active' : ''}`}
                         onClick={() => setActiveTab('active')}
                     >
                         🟢 Active Tasks
                     </button>
                     <button 
-                        className={`queue-tab ${activeTab === 'history' ? 'active' : ''}`}
+                        className={`queue-panel__queue-tab ${activeTab === 'history' ? 'active' : ''}`}
                         onClick={() => setActiveTab('history')}
                     >
                         📚 History
@@ -549,38 +549,38 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                 {activeTab === 'active' && (
                     <>
                         {/* Queue Statistics */}
-                        <div className="queue-statistics">
-                            <div className="stat-item">
-                                <span className="stat-label">Total:</span>
-                                <span className="stat-value">{statistics.totalItems || 0}</span>
+                        <div className="queue-panel__queue-statistics">
+                            <div className="queue-panel__stat-item">
+                                <span className="queue-panel__stat-label">Total:</span>
+                                <span className="queue-panel__stat-value">{statistics.totalItems || 0}</span>
                             </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Running:</span>
-                                <span className="stat-value running">{statistics.running || 0}</span>
+                            <div className="queue-panel__stat-item">
+                                <span className="queue-panel__stat-label">Running:</span>
+                                <span className="queue-panel__stat-value running">{statistics.running || 0}</span>
                             </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Queued:</span>
-                                <span className="stat-value queued">{statistics.queued || 0}</span>
+                            <div className="queue-panel__stat-item">
+                                <span className="queue-panel__stat-label">Queued:</span>
+                                <span className="queue-panel__stat-value queued">{statistics.queued || 0}</span>
                             </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Completed:</span>
-                                <span className="stat-value completed">{statistics.completedCount || 0}</span>
+                            <div className="queue-panel__stat-item">
+                                <span className="queue-panel__stat-label">Completed:</span>
+                                <span className="queue-panel__stat-value completed">{statistics.completedCount || 0}</span>
                             </div>
-                            <div className="stat-item">
-                                <span className="stat-label">Failed:</span>
-                                <span className="stat-value failed">{statistics.failed || 0}</span>
+                            <div className="queue-panel__stat-item">
+                                <span className="queue-panel__stat-label">Failed:</span>
+                                <span className="queue-panel__stat-value failed">{statistics.failed || 0}</span>
                             </div>
                         </div>
 
                         {/* Active Tasks */}
-                        <div className="queue-section">
+                        <div className="queue-panel__queue-section">
                             <h4>🟢 Active Tasks ({activeItems.length})</h4>
                             {activeItems.length === 0 ? (
-                                <div className="empty-state">
+                                <div className="queue-panel__empty-state">
                                     <p>No active tasks</p>
                                 </div>
                             ) : (
-                                <div className="queue-items">
+                                <div className="queue-panel__queue-items">
                                     {activeItems.map((item) => (
                                         <ActiveTaskItem
                                             key={item.id}
@@ -597,7 +597,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
                         {/* Selected Task Step Progress */}
                         {selectedTask && stepProgress && (
-                            <div className="queue-section">
+                            <div className="queue-panel__queue-section">
                                 <h4>📊 Step Progress: {selectedTask.workflow?.name || selectedTask.id}</h4>
                                 <StepTimeline
                                     stepProgress={stepProgress}
@@ -611,7 +611,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
                         {/* Completed Tasks */}
                         {completedItems.length > 0 && (
-                            <div className="queue-section">
+                            <div className="queue-panel__queue-section">
                                 <div className="section-header">
                                     <h4>✅ Completed Tasks ({completedItems.length})</h4>
                                     <button 
@@ -622,7 +622,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
                                         🗑️ Clear
                                     </button>
                                 </div>
-                                <div className="queue-items">
+                                <div className="queue-panel__queue-items">
                                     {completedItems.slice(0, 5).map((item) => (
                                         <QueueItem
                                             key={item.id}
