@@ -226,18 +226,18 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
 
   return (
     <>
-      <div className="task-create-modal-overlay" onClick={handleClose}>
-        <div className="task-create-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="modal-header">
+      <div className="task-creation-modal__task-create-modal-overlay" onClick={handleClose}>
+        <div className="task-creation-modal__task-create-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="task-creation-modal__modal-header">
             <h2>🚀 Create New Task</h2>
-            <button className="modal-close-btn" onClick={handleClose}>×</button>
+            <button className="task-creation-modal__modal-close-btn" onClick={handleClose}>×</button>
           </div>
           
           {/* Creation Mode Toggle */}
-          <div className="creation-mode-toggle">
-            <label className="toggle-label">
-              <span className="toggle-text">Mode:</span>
-              <div className="toggle-switch">
+          <div className="task-creation-modal__creation-mode-toggle">
+            <label className="task-creation-modal__toggle-label">
+              <span className="task-creation-modal__toggle-text">Mode:</span>
+              <div className="task-creation-modal__toggle-switch">
               <input
                 type="radio"
                 name="creationMode"
@@ -246,7 +246,7 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
                 onChange={(e) => setCreationMode(e.target.value)}
                 id="mode-normal"
               />
-              <label htmlFor="mode-normal" className="toggle-option">
+              <label htmlFor="mode-normal" className="task-creation-modal__toggle-option">
                 📋 Normal Creation
               </label>
 
@@ -258,12 +258,12 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
                 onChange={(e) => setCreationMode(e.target.value)}
                 id="mode-advanced"
               />
-              <label htmlFor="mode-advanced" className="toggle-option">
+              <label htmlFor="mode-advanced" className="task-creation-modal__toggle-option">
                 🔬 Advanced Creation
               </label>
               </div>
             </label>
-            <div className="mode-description">
+            <div className="task-creation-modal__mode-description">
             {creationMode === 'normal'
               ? 'AI analyzes your description and automatically determines title, category, priority, and creates files.'
               : 'You manually configure all task details including title, category, priority, and type.'
@@ -271,7 +271,7 @@ const TaskCreationModal = ({ isOpen, onClose, onTaskCreated }) => {
             </div>
           </div>
           
-          <div className="modal-content">
+          <div className="task-creation-modal__modal-content">
             {renderContent()}
           </div>
         </div>

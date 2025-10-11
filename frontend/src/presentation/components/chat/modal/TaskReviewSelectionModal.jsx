@@ -250,27 +250,27 @@ const TaskReviewSelectionModal = ({
   const totalCount = sortedTasks.length;
 
   return (
-    <div className="task-review-selection-modal-overlay" onClick={onClose}>
-      <div className="task-review-selection-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="task-review-selection-modal__task-review-selection-modal-overlay" onClick={onClose}>
+      <div className="task-review-selection-modal__task-review-selection-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="task-review-selection-modal__modal-header">
           <h2>📋 Select Tasks for Review</h2>
-          <button className="modal-close-btn" onClick={onClose}>×</button>
+          <button className="task-review-selection-modal__modal-close-btn" onClick={onClose}>×</button>
         </div>
         
-        <div className="modal-content">
+        <div className="task-review-selection-modal__modal-content">
           {/* Summary */}
-          <div className="task-review-summary">
+          <div className="task-review-selection-modal__task-review-summary">
             <p>Select tasks to review. Completed tasks are automatically excluded.</p>
-            <div className="selection-info">
-              <span className="selected-count">{selectedCount}</span> of <span className="total-count">{totalCount}</span> tasks selected
+            <div className="task-review-selection-modal__selection-info">
+              <span className="task-review-selection-modal__selected-count">{selectedCount}</span> of <span className="task-review-selection-modal__total-count">{totalCount}</span> tasks selected
             </div>
           </div>
 
           {/* Review Mode Toggle */}
-          <div className="review-mode-toggle">
-            <label className="toggle-label">
-              <span className="toggle-text">Mode:</span>
-              <div className="toggle-switch">
+          <div className="task-review-selection-modal__review-mode-toggle">
+            <label className="task-review-selection-modal__toggle-label">
+              <span className="task-review-selection-modal__toggle-text">Mode:</span>
+              <div className="task-review-selection-modal__toggle-switch">
                 <input
                   type="radio"
                   name="reviewMode"
@@ -279,7 +279,7 @@ const TaskReviewSelectionModal = ({
                   onChange={(e) => setReviewMode(e.target.value)}
                   id="mode-review"
                 />
-                <label htmlFor="mode-review" className="toggle-option">
+                <label htmlFor="mode-review" className="task-review-selection-modal__toggle-option">
                   📋 Review
                 </label>
                 
@@ -291,12 +291,12 @@ const TaskReviewSelectionModal = ({
                   onChange={(e) => setReviewMode(e.target.value)}
                   id="mode-check-state"
                 />
-                <label htmlFor="mode-check-state" className="toggle-option">
+                <label htmlFor="mode-check-state" className="task-review-selection-modal__toggle-option">
                   🔍 Check State
                 </label>
               </div>
             </label>
-            <div className="mode-description">
+            <div className="task-review-selection-modal__mode-description">
               {reviewMode === 'review' ? (
                 <span>📋 Comprehensive review: Validates plan against codebase, creates missing files, analyzes implementation status, updates plan</span>
               ) : (
@@ -306,7 +306,7 @@ const TaskReviewSelectionModal = ({
           </div>
 
           {/* Filters and Sorting */}
-          <div className="task-review-controls">
+          <div className="task-review-selection-modal__task-review-controls">
             <div className="filter-group">
               <label>Category:</label>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
@@ -356,8 +356,8 @@ const TaskReviewSelectionModal = ({
           </div>
 
           {/* Select All */}
-          <div className="select-all-controls">
-            <label className="select-all-checkbox">
+          <div className="task-review-selection-modal__select-all-controls">
+            <label className="task-review-selection-modal__select-all-checkbox">
               <input
                 type="checkbox"
                 checked={selectAll}
@@ -369,17 +369,17 @@ const TaskReviewSelectionModal = ({
           </div>
 
           {/* Task List */}
-          <div className="task-list">
+          <div className="task-review-selection-modal__task-list">
             {totalCount === 0 ? (
-              <div className="no-tasks">
+              <div className="task-review-selection-modal__no-tasks">
                 <p>No reviewable tasks found.</p>
                 <p>All tasks may be completed or filtered out.</p>
               </div>
             ) : (
               sortedTasks.map(task => (
-                <div key={task.id} className="task-item">
-                  <div className="task-item-header">
-                    <label className="task-checkbox">
+                <div key={task.id} className="task-review-selection-modal__task-item">
+                  <div className="task-review-selection-modal__task-item-header">
+                    <label className="task-review-selection-modal__task-checkbox">
                       <input
                         type="checkbox"
                         checked={selectedTasks.has(task.id)}
@@ -387,28 +387,28 @@ const TaskReviewSelectionModal = ({
                       />
                     </label>
                     
-                    <div className="task-info" onClick={() => toggleTaskExpansion(task.id)}>
-                      <div className="task-title">{task.title || task.name || 'Untitled Task'}</div>
-                      <div className="task-meta">
+                    <div className="task-review-selection-modal__task-info" onClick={() => toggleTaskExpansion(task.id)}>
+                      <div className="task-review-selection-modal__task-title">{task.title || task.name || 'Untitled Task'}</div>
+                      <div className="task-review-selection-modal__task-meta">
                         <span 
-                          className="task-priority" 
+                          className="task-review-selection-modal__task-priority" 
                           style={{ color: getPriorityColor(task.priority) }}
                         >
                           {getPriorityText(task.priority)}
                         </span>
                         <span 
-                          className="task-status" 
+                          className="task-review-selection-modal__task-status" 
                           style={{ color: getStatusColor(task.status) }}
                         >
                           {getStatusText(task.status)}
                         </span>
-                        <span className="task-category">{task.category?.value || task.category || 'Uncategorized'}</span>
-                        <span className="task-date">{formatDate(task.createdAt || task.created_at)}</span>
+                        <span className="task-review-selection-modal__task-category">{task.category?.value || task.category || 'Uncategorized'}</span>
+                        <span className="task-review-selection-modal__task-date">{formatDate(task.createdAt || task.created_at)}</span>
                       </div>
                     </div>
 
                     <button 
-                      className="expand-btn"
+                      className="task-review-selection-modal__expand-btn"
                       onClick={() => toggleTaskExpansion(task.id)}
                       title={expandedTasks.has(task.id) ? 'Collapse' : 'Expand'}
                     >
@@ -417,12 +417,12 @@ const TaskReviewSelectionModal = ({
                   </div>
 
                   {expandedTasks.has(task.id) && (
-                    <div className="task-details">
-                      <div className="task-description">
+                    <div className="task-review-selection-modal__task-details">
+                      <div className="task-review-selection-modal__task-description">
                         {task.description || 'No description available'}
                       </div>
                       {task.estimatedHours && (
-                        <div className="task-estimated-hours">
+                        <div className="task-review-selection-modal__task-estimated-hours">
                           <strong>Estimated:</strong> {task.estimatedHours} hours
                         </div>
                       )}
@@ -434,16 +434,16 @@ const TaskReviewSelectionModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="modal-actions">
+          <div className="task-review-selection-modal__modal-actions">
             <button 
-              className="btn-secondary"
+              className="task-review-selection-modal__btn-secondary"
               onClick={onClose}
               disabled={isLoading}
             >
               Cancel
             </button>
             <button 
-              className="btn-primary"
+              className="task-review-selection-modal__btn-primary"
               onClick={handleStartReview}
               disabled={selectedCount === 0 || isLoading}
             >

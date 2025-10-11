@@ -137,99 +137,99 @@ const TaskReviewModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="task-review-modal-overlay" onClick={handleClose}>
-      <div className="task-review-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="task-review-modal__task-review-modal-overlay" onClick={handleClose}>
+      <div className="task-review-modal__task-review-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="task-review-modal__modal-header">
           <h2>📋 Review AI-Generated Plan</h2>
-          <button className="modal-close-btn" onClick={handleClose}>×</button>
+          <button className="task-review-modal__modal-close-btn" onClick={handleClose}>×</button>
         </div>
 
-        <div className="modal-content">
+        <div className="task-review-modal__modal-content">
           {planSummary && (
-            <div className="plan-summary">
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-label">Phases</span>
-                  <span className="summary-value">{planSummary.phases}</span>
+            <div className="task-review-modal__plan-summary">
+              <div className="task-review-modal__summary-grid">
+                <div className="task-review-modal__summary-item">
+                  <span className="task-review-modal__summary-label">Phases</span>
+                  <span className="task-review-modal__summary-value">{planSummary.phases}</span>
                 </div>
-                <div className="summary-item">
-                  <span className="summary-label">Est. Hours</span>
-                  <span className="summary-value">{planSummary.estimatedHours}h</span>
+                <div className="task-review-modal__summary-item">
+                  <span className="task-review-modal__summary-label">Est. Hours</span>
+                  <span className="task-review-modal__summary-value">{planSummary.estimatedHours}h</span>
                 </div>
-                <div className="summary-item">
-                  <span className="summary-label">Files to Modify</span>
-                  <span className="summary-value">{planSummary.filesToModify}</span>
+                <div className="task-review-modal__summary-item">
+                  <span className="task-review-modal__summary-label">Files to Modify</span>
+                  <span className="task-review-modal__summary-value">{planSummary.filesToModify}</span>
                 </div>
-                <div className="summary-item">
-                  <span className="summary-label">Files to Create</span>
-                  <span className="summary-value">{planSummary.filesToCreate}</span>
+                <div className="task-review-modal__summary-item">
+                  <span className="task-review-modal__summary-label">Files to Create</span>
+                  <span className="task-review-modal__summary-value">{planSummary.filesToCreate}</span>
                 </div>
-                <div className="summary-item">
-                  <span className="summary-label">Priority</span>
-                  <span className={`summary-value priority-${planSummary.priority}`}>
+                <div className="task-review-modal__summary-item">
+                  <span className="task-review-modal__summary-label">Priority</span>
+                  <span className={`task-review-modal__summary-value task-review-modal__priority-${planSummary.priority}`}>
                     {planSummary.priority}
                   </span>
                 </div>
-                <div className="summary-item">
-                  <span className="summary-label">Category</span>
-                  <span className="summary-value">{planSummary.category}</span>
+                <div className="task-review-modal__summary-item">
+                  <span className="task-review-modal__summary-label">Category</span>
+                  <span className="task-review-modal__summary-value">{planSummary.category}</span>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="review-tabs">
+          <div className="task-review-modal__review-tabs">
             <button 
-              className={`tab-button ${activeTab === 'plan' ? 'active' : ''}`}
+              className={`task-review-modal__tab-button ${activeTab === 'plan' ? 'active' : ''}`}
               onClick={() => setActiveTab('plan')}
             >
               📋 Implementation Plan
             </button>
             <button 
-              className={`tab-button ${activeTab === 'preview' ? 'active' : ''}`}
+              className={`task-review-modal__tab-button ${activeTab === 'preview' ? 'active' : ''}`}
               onClick={() => setActiveTab('preview')}
             >
               👁️ Task Preview
             </button>
             <button 
-              className={`tab-button ${activeTab === 'files' ? 'active' : ''}`}
+              className={`task-review-modal__tab-button ${activeTab === 'files' ? 'active' : ''}`}
               onClick={() => setActiveTab('files')}
             >
               📁 File Changes
             </button>
           </div>
 
-          <div className="tab-content">
+          <div className="task-review-modal__tab-content">
             {activeTab === 'plan' && (
-              <div className="plan-content">
+              <div className="task-review-modal__plan-content">
                 <div 
-                  className="plan-html"
+                  className="task-review-modal__plan-html"
                   dangerouslySetInnerHTML={{ __html: htmlContent }}
                 />
               </div>
             )}
 
             {activeTab === 'preview' && (
-              <div className="preview-content">
-                <div className="task-preview">
+              <div className="task-review-modal__preview-content">
+                <div className="task-review-modal__task-preview">
                   <h3>Task Details</h3>
-                  <div className="preview-section">
+                  <div className="task-review-modal__preview-section">
                     <label>Description:</label>
                     <p>{reviewData?.taskData?.description || 'No description provided'}</p>
                   </div>
-                  <div className="preview-section">
+                  <div className="task-review-modal__preview-section">
                     <label>Category:</label>
-                    <span className={`category-badge ${reviewData?.taskData?.category || 'feature'}`}>
+                    <span className={`task-review-modal__category-badge task-review-modal__${reviewData?.taskData?.category || 'feature'}`}>
                       {reviewData?.taskData?.category || 'feature'}
                     </span>
                   </div>
-                  <div className="preview-section">
+                  <div className="task-review-modal__preview-section">
                     <label>Priority:</label>
-                    <span className={`priority-badge ${reviewData?.taskData?.priority || 'medium'}`}>
+                    <span className={`task-review-modal__priority-badge task-review-modal__${reviewData?.taskData?.priority || 'medium'}`}>
                       {reviewData?.taskData?.priority || 'medium'}
                     </span>
                   </div>
-                  <div className="preview-section">
+                  <div className="task-review-modal__preview-section">
                     <label>Estimated Hours:</label>
                     <span>{reviewData?.taskData?.estimatedHours || 0} hours</span>
                   </div>
@@ -238,29 +238,29 @@ const TaskReviewModal = ({
             )}
 
             {activeTab === 'files' && (
-              <div className="files-content">
-                <div className="files-preview">
+              <div className="task-review-modal__files-content">
+                <div className="task-review-modal__files-preview">
                   <h3>File Changes Preview</h3>
-                  <div className="files-list">
+                  <div className="task-review-modal__files-list">
                     {reviewData?.filesToCreate?.map((file, index) => (
-                      <div key={index} className="file-item create">
-                        <span className="file-icon">📄</span>
-                        <span className="file-path">{file}</span>
-                        <span className="file-action">Create</span>
+                      <div key={index} className="task-review-modal__file-item task-review-modal__create">
+                        <span className="task-review-modal__file-icon">📄</span>
+                        <span className="task-review-modal__file-path">{file}</span>
+                        <span className="task-review-modal__file-action">Create</span>
                       </div>
                     ))}
                     {reviewData?.filesToModify?.map((file, index) => (
-                      <div key={index} className="file-item modify">
-                        <span className="file-icon">✏️</span>
-                        <span className="file-path">{file}</span>
-                        <span className="file-action">Modify</span>
+                      <div key={index} className="task-review-modal__file-item task-review-modal__modify">
+                        <span className="task-review-modal__file-icon">✏️</span>
+                        <span className="task-review-modal__file-path">{file}</span>
+                        <span className="task-review-modal__file-action">Modify</span>
                       </div>
                     ))}
                     {reviewData?.filesToDelete?.map((file, index) => (
-                      <div key={index} className="file-item delete">
-                        <span className="file-icon">🗑️</span>
-                        <span className="file-path">{file}</span>
-                        <span className="file-action">Delete</span>
+                      <div key={index} className="task-review-modal__file-item task-review-modal__delete">
+                        <span className="task-review-modal__file-icon">🗑️</span>
+                        <span className="task-review-modal__file-path">{file}</span>
+                        <span className="task-review-modal__file-action">Delete</span>
                       </div>
                     ))}
                   </div>
@@ -269,10 +269,10 @@ const TaskReviewModal = ({
             )}
           </div>
 
-          <div className="modal-actions">
-            <div className="action-buttons">
+          <div className="task-review-modal__modal-actions">
+            <div className="task-review-modal__action-buttons">
               <button 
-                className="action-btn modify-btn"
+                className="task-review-modal__action-btn task-review-modal__modify-btn"
                 onClick={handleModify}
                 disabled={isProcessing}
               >
@@ -280,7 +280,7 @@ const TaskReviewModal = ({
               </button>
               
               <button 
-                className="action-btn split-btn"
+                className="task-review-modal__action-btn task-review-modal__split-btn"
                 onClick={handleSplit}
                 disabled={isProcessing}
               >
@@ -288,7 +288,7 @@ const TaskReviewModal = ({
               </button>
               
               <button 
-                className="action-btn execute-btn"
+                className="task-review-modal__action-btn task-review-modal__execute-btn"
                 onClick={handleExecute}
                 disabled={isProcessing}
               >
@@ -296,8 +296,8 @@ const TaskReviewModal = ({
               </button>
             </div>
             
-            <div className="action-info">
-              <p className="info-text">
+            <div className="task-review-modal__action-info">
+              <p className="task-review-modal__info-text">
                 <strong>Modify:</strong> Edit the plan before execution<br/>
                 <strong>Split:</strong> Break into smaller, manageable tasks<br/>
                 <strong>Execute:</strong> Start immediate implementation
