@@ -45,15 +45,15 @@ class ProjectInterfaceController {
       }
       
       // Create interface within project context
-      const interface = await this.interfaceManager.createInterface(projectId, {
+      const interfaceInstance = await this.interfaceManager.createInterface(projectId, {
         name,
         type,
         configuration,
         projectId
       });
       
-      this.logger.info('Interface created:', { projectId, interfaceId: interface.id, name });
-      res.status(201).json({ interface });
+      this.logger.info('Interface created:', { projectId, interfaceId: interfaceInstance.id, name });
+      res.status(201).json({ interface: interfaceInstance });
       
     } catch (error) {
       this.logger.error('Failed to create interface:', error);
@@ -68,13 +68,13 @@ class ProjectInterfaceController {
   async getInterface(req, res) {
     try {
       const { projectId, interfaceId } = req.params;
-      const interface = await this.interfaceManager.getInterface(projectId, interfaceId);
+      const interfaceInstance = await this.interfaceManager.getInterface(projectId, interfaceId);
       
-      if (!interface) {
+      if (!interfaceInstance) {
         return res.status(404).json({ error: 'Interface not found' });
       }
       
-      res.json({ interface });
+      res.json({ interface: interfaceInstance });
       
     } catch (error) {
       this.logger.error('Failed to get interface:', error);
@@ -97,14 +97,14 @@ class ProjectInterfaceController {
         return res.status(400).json({ error: validation.errors });
       }
       
-      const interface = await this.interfaceManager.updateInterface(projectId, interfaceId, updates);
+      const interfaceInstance = await this.interfaceManager.updateInterface(projectId, interfaceId, updates);
       
-      if (!interface) {
+      if (!interfaceInstance) {
         return res.status(404).json({ error: 'Interface not found' });
       }
       
       this.logger.info('Interface updated:', { projectId, interfaceId, updates });
-      res.json({ interface });
+      res.json({ interface: interfaceInstance });
       
     } catch (error) {
       this.logger.error('Failed to update interface:', error);
@@ -279,7 +279,32 @@ class ProjectInterfaceController {
   }
 
   /**
-   * Get available IDE types
+   * Get available IDE types (general - without projectId)
+   * GET /api/interfaces/available-ides
+   */
+  async getAvailableIDEsGeneral(req, res) {
+    try {
+      this.logger.info('Getting available IDEs (general detection)');
+      
+      // Get available IDEs from IDE handler
+      const availableIDEs = await this.interfaceManager.getAvailableIDEs();
+      
+      res.json({
+        success: true,
+        data: availableIDEs
+      });
+      
+    } catch (error) {
+      this.logger.error('Failed to get available IDEs:', error);
+      res.status(500).json({
+        error: 'Failed to get available IDEs',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Get available IDE types (project-specific)
    * GET /api/projects/:projectId/interfaces/available-ides
    */
   async getAvailableIDEs(req, res) {

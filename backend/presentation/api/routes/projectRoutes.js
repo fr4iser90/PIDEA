@@ -19,8 +19,7 @@ class ProjectRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all project routes
-    app.use('/api/projects', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // PROJECT CRUD ROUTES - Basic Project Operations

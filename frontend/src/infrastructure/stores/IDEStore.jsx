@@ -209,22 +209,33 @@ const useIDEStore = create(
           
           // CACHE FIRST: Always check cache before API
           
-          // Check if user is authenticated before making API call
-          const { isAuthenticated } = useAuthStore.getState();
-          if (!isAuthenticated) {
-            logger.info('User not authenticated, skipping IDE load');
-            performanceLogger.end(operationId, { skipped: true, reason: 'not_authenticated' });
-            return [];
-          }
+          // Authentication check is now centralized in apiCall
           
           set({ isLoading: true, error: null });
           logger.info('Loading available IDEs...');
       
-          // NO CACHE - ALWAYS FETCH FRESH DATA
-          logger.info('🔄 Fetching fresh IDE data from API (no cache)');
+          // Check cache first
+          const cacheKey = 'store_load_available_ides';
+          const cached = cacheService.get(cacheKey);
+          if (cached) {
+            logger.info('Using cached IDE data');
+            const { selectedPort } = get();
+            const availableIDEsWithActive = cached.map(ide => ({
+              ...ide,
+              active: ide.port === selectedPort
+            }));
+            set({ availableIDEs: availableIDEsWithActive, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'cache', 
+              ideCount: cached.length 
+            });
+            return;
+          }
+          
+          logger.info('🔄 Fetching fresh IDE data from API (cache miss)');
           
           const apiStart = performance.now();
-          const result = await apiCall('/api/ide/available');
+          const result = await apiCall('/api/interfaces/available-ides');
           const apiDuration = performance.now() - apiStart;
           
           if (result.success) {
@@ -235,6 +246,9 @@ const useIDEStore = create(
               ...ide,
               active: ide.port === selectedPort
             }));
+            
+            // Cache the result
+            cacheService.set(cacheKey, result.data, 'ide', 'ideStore');
             
             set({ availableIDEs: availableIDEsWithActive, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
             performanceLogger.end(operationId, { 

@@ -188,15 +188,15 @@ class Application {
       // Middleware setup - Using modular setup file
       const MiddlewareSetup = require('./infrastructure/MiddlewareSetup');
       const middlewareSetup = new MiddlewareSetup(this.autoSecurityManager, this.logger);
-      middlewareSetup.setupMiddleware(this.app);
+      middlewareSetup.setupMiddleware(this.app, this.authMiddleware);
       
       this.setupRoutes();
 
       // Create HTTP server
       this.server = http.createServer(this.app);
 
-      // Initialize WebSocket manager with auth
-      this.webSocketManager = new WebSocketManager(this.server, this.eventBus, this.authMiddleware);
+      // Initialize WebSocket manager with auth middleware instance
+      this.webSocketManager = new WebSocketManager(this.server, this.eventBus, this.authMiddlewareInstance);
       this.webSocketManager.initialize();
 
       // Initialize EventEmissionService for refresh coordination
@@ -425,8 +425,8 @@ class Application {
     projectRoutes.setupRoutes(this.app);
 
     // Interface routes - Using modular route file (NEW PROJECT-CENTRIC API)
-    const InterfaceRoutes = require('./presentation/api/routes/interfaceRoutes');
-    const interfaceRoutes = new InterfaceRoutes(this.interfaceController, this.authMiddlewareInstance);
+    const InterfaceRoutes = require('./presentation/routes/interfaceRoutes');
+    const interfaceRoutes = new InterfaceRoutes(this.interfaceManager, this.projectApplicationService, this.authMiddlewareInstance);
     interfaceRoutes.setupRoutes(this.app);
 
     // Legacy IDE routes removed - now using project-centric API via /api/projects/:projectId/interfaces/*

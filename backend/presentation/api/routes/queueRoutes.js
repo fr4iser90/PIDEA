@@ -19,8 +19,7 @@ class QueueRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all queue routes
-    app.use('/api/projects/:projectId/queue', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // QUEUE STATUS ROUTES - Queue Monitoring

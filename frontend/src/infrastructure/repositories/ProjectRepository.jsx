@@ -166,9 +166,24 @@ class ProjectRepository {
    * @returns {Promise<Object>} Detected projects
    */
   async detectProjects() {
-    return apiCall(PROJECT_API_CONFIG.endpoints.projects.detect, {
-      method: 'POST'
-    });
+    // Get available IDEs and extract workspace paths
+    const ideResponse = await apiCall('/api/interfaces/available-ides');
+    if (ideResponse.success && ideResponse.data) {
+      const projects = ideResponse.data
+        .filter(ide => ide.workspacePath && ide.active)
+        .map(ide => ({
+          name: ide.workspacePath.split('/').pop(),
+          path: ide.workspacePath,
+          port: ide.port,
+          ide: ide.name
+        }));
+      
+      return {
+        success: true,
+        data: projects
+      };
+    }
+    return { success: false, error: 'No active IDEs found' };
   }
 
   /**

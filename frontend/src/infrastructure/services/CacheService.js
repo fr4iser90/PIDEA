@@ -730,7 +730,7 @@ export class CacheService {
     const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
     
     try {
-      const result = await apiCall('/api/ide/available');
+      const result = await apiCall('/api/interfaces/available-ides');
       
       // Cache the result if successful
       if (result.success) {
@@ -843,7 +843,7 @@ export class CacheService {
     
     try {
       // Get projectId from port
-      const ideResponse = await apiCall('/api/ide/available');
+      const ideResponse = await apiCall('/api/interfaces/available-ides');
       if (!ideResponse.success) {
         return { success: false, error: 'Failed to get IDE data' };
       }

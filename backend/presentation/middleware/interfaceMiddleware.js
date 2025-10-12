@@ -42,13 +42,13 @@ class InterfaceMiddleware {
       }
       
       // Check if interface exists within project context
-      const interface = await this.interfaceManager.getInterface(projectId, interfaceId);
-      if (!interface) {
+      const interfaceInstance = await this.interfaceManager.getInterface(projectId, interfaceId);
+      if (!interfaceInstance) {
         return res.status(404).json({ error: 'Interface not found' });
       }
       
       // Add interface and project to request for downstream middleware
-      req.interface = interface;
+      req.interface = interfaceInstance;
       req.project = project;
       req.projectId = projectId;
       req.interfaceId = interfaceId;

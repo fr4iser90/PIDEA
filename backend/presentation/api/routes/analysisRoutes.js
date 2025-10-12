@@ -21,8 +21,7 @@ class AnalysisRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all analysis routes
-    app.use('/api/projects/:projectId/analysis', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // EXECUTION ROUTES - Workflow-based Analysis

@@ -115,10 +115,10 @@ class ServiceRegistry {
         }, { singleton: true });
 
         // Interface management services
-        this.container.register('interfaceManager', (eventBus, logger) => {
+        this.container.register('interfaceManager', (eventBus, logger, ideHandler) => {
             const InterfaceManager = require('@domain/services/interface/InterfaceManager');
-            return new InterfaceManager({ eventBus, logger });
-        }, { singleton: true, dependencies: ['eventBus', 'logger'] });
+            return new InterfaceManager({ eventBus, logger, ideHandler });
+        }, { singleton: true, dependencies: ['eventBus', 'logger', 'ideHandler'] });
 
         this.container.register('interfaceFactory', (interfaceManager, logger) => {
             const InterfaceFactory = require('@domain/services/interface/InterfaceFactory');

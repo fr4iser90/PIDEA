@@ -36,11 +36,12 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
   }, [projects, searchQuery]);
 
   // Auto-refresh projects on mount
-  useEffect(() => {
-    if (Object.keys(projects).length === 0 && !isLoading) {
-      refresh();
-    }
-  }, [projects, isLoading, refresh]);
+  // Removed automatic project loading - projects should be loaded manually
+  // useEffect(() => {
+  //   if (Object.keys(projects).length === 0 && !isLoading) {
+  //     refresh();
+  //   }
+  // }, [projects, isLoading, refresh]);
 
 
   const handleProjectSelect = (projectId) => {

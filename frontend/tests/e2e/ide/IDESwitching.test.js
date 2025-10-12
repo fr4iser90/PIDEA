@@ -34,7 +34,7 @@ test.describe('IDE Switching E2E Tests', () => {
 
   test('should allow selecting target IDE', async ({ page }) => {
     // Mock available IDEs
-    await page.route('/api/ide/available', async route => {
+    await page.route('/api/interfaces/available-ides', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

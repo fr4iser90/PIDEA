@@ -20,8 +20,7 @@ class TaskRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all task routes
-    app.use('/api/projects/:projectId/tasks', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // CRUD ROUTES - Basic Task Operations
@@ -82,8 +81,7 @@ class TaskRoutes {
     // SCRIPT GENERATION ROUTES - Task Scripts
     // ========================================
     
-    // Apply authentication middleware to script routes
-    app.use('/api/projects/:projectId/scripts', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
     
     // Generate script from task
     app.post('/api/projects/:projectId/scripts/generate', (req, res) => this.taskController.generateScript(req, res));

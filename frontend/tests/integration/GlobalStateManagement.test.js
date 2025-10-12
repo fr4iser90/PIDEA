@@ -110,7 +110,7 @@ describe('Global State Management Integration', () => {
       ];
 
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: mockIDEs }) // /api/ide/available
+        .mockResolvedValueOnce({ success: true, data: mockIDEs }) // /api/interfaces/available-ides
         .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } }) // git status
         .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } }); // analysis status
 

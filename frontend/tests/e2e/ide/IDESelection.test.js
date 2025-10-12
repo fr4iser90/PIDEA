@@ -15,7 +15,7 @@ test.describe('IDE Selection E2E Tests', () => {
 
   test('should show available IDEs in dropdown', async ({ page }) => {
     // Mock the API response for available IDEs
-    await page.route('/api/ide/available', async route => {
+    await page.route('/api/interfaces/available-ides', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -41,7 +41,7 @@ test.describe('IDE Selection E2E Tests', () => {
 
   test('should display IDE status indicators', async ({ page }) => {
     // Mock the API response
-    await page.route('/api/ide/available', async route => {
+    await page.route('/api/interfaces/available-ides', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -62,7 +62,7 @@ test.describe('IDE Selection E2E Tests', () => {
 
   test('should allow IDE selection from dropdown', async ({ page }) => {
     // Mock API responses
-    await page.route('/api/ide/available', async route => {
+    await page.route('/api/interfaces/available-ides', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -115,7 +115,7 @@ test.describe('IDE Selection E2E Tests', () => {
 
   test('should handle IDE switching', async ({ page }) => {
     // Mock API responses
-    await page.route('/api/ide/available', async route => {
+    await page.route('/api/interfaces/available-ides', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -330,7 +330,7 @@ test.describe('IDE Selection E2E Tests', () => {
 
   test('should handle multiple IDE instances', async ({ page }) => {
     // Mock multiple IDEs
-    await page.route('/api/ide/available', async route => {
+    await page.route('/api/interfaces/available-ides', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

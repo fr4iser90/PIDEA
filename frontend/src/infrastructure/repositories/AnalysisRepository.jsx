@@ -255,16 +255,6 @@ class AnalysisRepository {
   // ============================================================================
 
   /**
-   * Get analysis metrics
-   * @param {string} projectId - Project ID (optional)
-   * @returns {Promise<Object>} Analysis metrics
-   */
-  async getAnalysisMetrics(projectId = null) {
-    const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`, {}, currentProjectId);
-  }
-
-  /**
    * Get analysis status
    * @param {string} projectId - Project ID (optional)
    * @returns {Promise<Object>} Analysis status
@@ -296,16 +286,6 @@ class AnalysisRepository {
   }
 
   /**
-   * Get analysis issues (enhanced)
-   * @param {string} projectId - Project ID (optional)
-   * @returns {Promise<Object>} Analysis issues
-   */
-  async getAnalysisIssues(projectId = null) {
-    const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/issues`, {}, currentProjectId);
-  }
-
-  /**
    * Get analysis tech stack (enhanced)
    * @param {string} projectId - Project ID (optional)
    * @returns {Promise<Object>} Analysis tech stack
@@ -323,16 +303,6 @@ class AnalysisRepository {
   async getAnalysisArchitecture(projectId = null) {
     const currentProjectId = projectId || await this.getCurrentProjectId();
     return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`, {}, currentProjectId);
-  }
-
-  /**
-   * Get analysis recommendations (enhanced)
-   * @param {string} projectId - Project ID (optional)
-   * @returns {Promise<Object>} Analysis recommendations
-   */
-  async getAnalysisRecommendations(projectId = null) {
-    const currentProjectId = projectId || await this.getCurrentProjectId();
-    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
   }
 
   /**

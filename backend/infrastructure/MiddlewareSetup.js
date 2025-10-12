@@ -25,11 +25,28 @@ class MiddlewareSetup {
    * Setup all middleware
    * @param {Express.Router} app - Express app instance
    */
-  setupMiddleware(app) {
+  setupMiddleware(app, authMiddleware = null) {
     this.logger.info('Setting up middleware...');
-
+    
     // Import centralized security configuration
     const securityConfig = require('../config/security-config');
+
+    // ========================================
+    // BODY PARSING MIDDLEWARE - Must be first
+    // ========================================
+    this.setupBodyParsing(app, securityConfig);
+    
+    // Global auth middleware for all API routes except login/register (if provided)
+    if (authMiddleware) {
+      app.use('/api', (req, res, next) => {
+        // Skip auth for login and register routes
+        if (req.path === '/auth/login' || req.path === '/auth/register') {
+          return next();
+        }
+        return authMiddleware(req, res, next);
+      });
+      this.logger.info('Global auth middleware applied to all /api routes except login/register');
+    }
 
     // ========================================
     // SECURITY MIDDLEWARE - Security Configuration
@@ -42,9 +59,8 @@ class MiddlewareSetup {
     this.setupRateLimiting(app, securityConfig);
 
     // ========================================
-    // BODY PARSING - Request Processing
+    // BODY PARSING - Request Processing (already done above)
     // ========================================
-    this.setupBodyParsing(app, securityConfig);
 
     // ========================================
     // STATIC FILES - File Serving

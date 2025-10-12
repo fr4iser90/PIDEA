@@ -19,8 +19,7 @@ class SessionRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all session routes
-    app.use('/api/session', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // SESSION MANAGEMENT ROUTES - Core Session Operations

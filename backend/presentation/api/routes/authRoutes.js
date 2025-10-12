@@ -36,10 +36,7 @@ class AuthRoutes {
     // PROTECTED AUTH ROUTES - Authentication Required
     // ========================================
     
-    // Apply authentication middleware to protected routes
-    app.use('/api/auth/profile', this.authMiddleware.authenticate());
-    app.use('/api/auth/sessions', this.authMiddleware.authenticate());
-    app.use('/api/auth/logout', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // Profile management
     app.get('/api/auth/profile', (req, res) => this.authController.getProfile(req, res));

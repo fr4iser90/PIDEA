@@ -208,6 +208,15 @@ const useAuthStore = create(
 
       logout: async () => {
         try {
+          // SECURITY: Disconnect WebSocket before logout
+          try {
+            const { default: webSocketService } = await import('@/infrastructure/services/WebSocketService.jsx');
+            webSocketService.disconnect();
+            logger.info('✅ [AuthStore] WebSocket disconnected during logout');
+          } catch (error) {
+            logger.warn('⚠️ [AuthStore] WebSocket disconnect failed during logout:', error.message);
+          }
+          
           // Stop session monitoring services
           await get().stopSessionMonitoring();
           
@@ -326,6 +335,15 @@ const useAuthStore = create(
         // The frontend state might be stale while backend cookies have expired
         logger.info('🔐 [AuthStore] Clearing authentication state due to backend auth failure');
         
+        // SECURITY: Disconnect WebSocket on auth failure
+        try {
+          const { default: webSocketService } = await import('@/infrastructure/services/WebSocketService.jsx');
+          webSocketService.disconnect();
+          logger.info('✅ [AuthStore] WebSocket disconnected due to auth failure');
+        } catch (error) {
+          logger.warn('⚠️ [AuthStore] WebSocket disconnect failed during auth failure:', error.message);
+        }
+
         // Clear all authentication state immediately
         set({ 
           isAuthenticated: false, 
@@ -400,6 +418,16 @@ const useAuthStore = create(
           
           // Setup event listeners
           get().setupSessionEventListeners();
+          
+          // SECURITY: Start WebSocket connection after successful authentication
+          try {
+            const { default: webSocketService } = await import('@/infrastructure/services/WebSocketService.jsx');
+            await webSocketService.connect();
+            logger.info('✅ [AuthStore] WebSocket connection established after login');
+          } catch (error) {
+            logger.warn('⚠️ [AuthStore] WebSocket connection failed after login:', error.message);
+            // Don't fail login if WebSocket fails
+          }
           
           set({ sessionMonitoringActive: true });
           

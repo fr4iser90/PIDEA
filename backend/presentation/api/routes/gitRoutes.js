@@ -19,8 +19,7 @@ class GitRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all Git routes
-    app.use('/api/projects/:projectId/git', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // REPOSITORY ROUTES - Basic Git Operations

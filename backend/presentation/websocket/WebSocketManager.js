@@ -77,10 +77,10 @@ class WebSocketManager {
 
         logger.info(`User connected (${this.getUserConnectionCount(userId)} connections)`);
       } else {
-        // Register as anonymous connection
-        this.registerAnonymousConnection(ws);
-        logger.info('Anonymous connection established');
-        logger.debug('Total clients after anonymous connection:', this.wss.clients.size);
+        // SECURITY: No anonymous connections allowed
+        logger.error('❌ WebSocketManager: Authentication failed - rejecting connection');
+        ws.close(1008, 'Authentication required');
+        return;
       }
 
       // Setup message handling
@@ -187,18 +187,7 @@ class WebSocketManager {
     this.connectionCount++;
   }
 
-  registerAnonymousConnection(ws) {
-    // Store anonymous connection info
-    this.userConnections.set(ws, { userId: null, sessionId: null });
-    this.connectionCount++;
-    logger.debug('Anonymous connection registered. Total connections:', this.connectionCount);
-  }
-
-  handleAnonymousDisconnect(ws, code, reason) {
-    logger.info(`Anonymous connection disconnected (code: ${code}, reason: ${reason})`);
-    this.userConnections.delete(ws);
-    this.connectionCount--;
-  }
+  // SECURITY: Anonymous connections removed - authentication required for all connections
 
   handleDisconnect(ws, userId, code, reason) {
           logger.info(`User disconnected (code: ${code}, reason: ${reason})`);

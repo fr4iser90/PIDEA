@@ -22,8 +22,7 @@ class WorkflowRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all workflow routes
-    app.use('/api/projects/:projectId/workflow', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // WORKFLOW EXECUTION ROUTES - Workflow Operations

@@ -45,7 +45,7 @@ describe('IDEStartModal Component', () => {
     
     // Mock successful API responses
     mockApiCall.mockImplementation((url) => {
-      if (url === '/api/ide/available') {
+      if (url === '/api/interfaces/available-ides') {
         return Promise.resolve({
           success: true,
           data: { ides: [] }

@@ -77,7 +77,7 @@ describe('Request Deduplication Integration', () => {
         json: async () => mockResponse
       });
 
-      const requestFn = () => fetch('/api/ide/available');
+      const requestFn = () => fetch('/api/interfaces/available-ides');
 
       // First request
       const result1 = await requestDeduplicationService.execute('ide-available', requestFn, {

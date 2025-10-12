@@ -19,9 +19,7 @@ class TestRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all test routes
-    app.use('/api/projects/:projectId/tests/playwright', this.authMiddleware.authenticate());
-    app.use('/api/tests/browser-environment', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // PLAYWRIGHT CONFIGURATION ROUTES - Test Configuration

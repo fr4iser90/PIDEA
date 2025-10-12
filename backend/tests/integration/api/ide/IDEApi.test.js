@@ -255,7 +255,7 @@ describe('IDE API Integration Tests', () => {
     });
   });
 
-  describe('GET /api/ide/available', () => {
+  describe('GET /api/interfaces/available-ides', () => {
     it('should return available IDEs', async () => {
       const mockAvailable = [
         { port: 9222, name: 'VS Code', status: 'running' },
@@ -265,7 +265,7 @@ describe('IDE API Integration Tests', () => {
       mockIDESelectionService.getAvailableIDEs.mockResolvedValue(mockAvailable);
 
       const response = await request(app)
-        .get('/api/ide/available')
+        .get('/api/interfaces/available-ides')
         .expect(200);
 
       expect(response.body).toEqual({

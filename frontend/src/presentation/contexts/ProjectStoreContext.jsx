@@ -8,6 +8,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import useProjectStore from '@/infrastructure/stores/ProjectStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
+import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import { useProjectStoreIntegration } from '@/hooks/useProjectStoreIntegration';
 
 // Create context
@@ -51,7 +52,15 @@ export const ProjectStoreProvider = ({ children, options = {} }) => {
       try {
         logger.info('Initializing ProjectStore context...');
         
-        // Load initial data
+        // SECURITY: Check authentication before loading data
+        const authState = useAuthStore.getState();
+        if (!authState.isInitialized || !authState.isAuthenticated) {
+          logger.info('User not authenticated or store not initialized, skipping data loading');
+          setIsInitialized(true);
+          return;
+        }
+        
+        // Load initial data - ONLY if authenticated
         if (Object.keys(projectStore.projects).length === 0) {
           await projectStore.loadProjects();
         }

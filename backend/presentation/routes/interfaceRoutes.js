@@ -6,7 +6,7 @@
  */
 const express = require('express');
 const ProjectInterfaceController = require('../api/projects/ProjectInterfaceController');
-const interfaceMiddleware = require('../middleware/interfaceMiddleware');
+const InterfaceMiddleware = require('../middleware/interfaceMiddleware');
 
 class InterfaceRoutes {
   constructor(interfaceManager, projectApplicationService, authMiddleware) {
@@ -15,7 +15,7 @@ class InterfaceRoutes {
     this.authMiddleware = authMiddleware;
     
     this.interfaceController = new ProjectInterfaceController(interfaceManager, projectApplicationService);
-    this.interfaceMiddleware = interfaceMiddleware;
+    this.interfaceMiddleware = new InterfaceMiddleware(interfaceManager, projectApplicationService);
   }
 
   /**
@@ -23,8 +23,7 @@ class InterfaceRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all interface routes
-    app.use('/api/projects/:projectId/interfaces', this.authMiddleware.authenticate());
+    // Authentication is already handled globally in MiddlewareSetup.js
 
     // ========================================
     // INTERFACE CRUD ROUTES - Interface Operations
@@ -92,7 +91,11 @@ class InterfaceRoutes {
     // IDE-SPECIFIC ROUTES - IDE Features
     // ========================================
     
-    // Get available IDEs
+    // Get available IDEs (without projectId - for general IDE detection)
+    app.get('/api/interfaces/available-ides', 
+      (req, res) => this.interfaceController.getAvailableIDEsGeneral(req, res));
+    
+    // Get available IDEs (with projectId - for project-specific IDE detection)
     app.get('/api/projects/:projectId/interfaces/available-ides', 
       (req, res) => this.interfaceController.getAvailableIDEs(req, res));
     

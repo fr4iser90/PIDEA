@@ -19,11 +19,19 @@ class WebSocketService {
     }
 
     if (this.connectionPromise) {
-      return this.connectionPromise;
+return this.connectionPromise;
     }
 
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
+        // SECURITY: Check authentication before connecting
+        const { isAuthenticated } = useAuthStore.getState();
+        if (!isAuthenticated) {
+          logger.info('🔐 WebSocketService: User not authenticated, skipping connection');
+          reject(new Error('User not authenticated'));
+          return;
+        }
+
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         
         // Extract authentication token from cookies
@@ -35,9 +43,13 @@ class WebSocketService {
         };
         
         const accessToken = getCookie('accessToken');
-        const wsUrl = accessToken 
-          ? `${protocol}//${location.host}/ws?token=${encodeURIComponent(accessToken)}`
-          : `${protocol}//${location.host}/ws`;
+        if (!accessToken) {
+          logger.error('🔐 WebSocketService: No access token found in cookies');
+          reject(new Error('No access token found'));
+          return;
+        }
+        
+        const wsUrl = `${protocol}//${location.host}/ws?token=${encodeURIComponent(accessToken)}`;
         
         logger.info('🔌 WebSocketService: Connecting to:', wsUrl.replace(/token=[^&]+/, 'token=***'));
         

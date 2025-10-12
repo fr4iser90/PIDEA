@@ -15,7 +15,7 @@ const IDE_API_CONFIG = {
   baseURL: import.meta.env.VITE_BACKEND_URL,
   endpoints: {
     ide: {
-      list: '/api/ide/available',
+      list: '/api/interfaces/available-ides',
       userAppUrl: '/api/ide/user-app-url',
       userAppUrlForPort: (port) => `/api/ide/user-app-url/${port}`,
       monitorTerminal: '/api/ide/monitor-terminal',

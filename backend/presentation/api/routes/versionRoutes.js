@@ -37,8 +37,7 @@ class VersionRoutes {
     // VERSION MANAGEMENT ROUTES - Version Control
     // ========================================
     
-    // Apply authentication middleware to version routes
-    app.use('/api/versions', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
     
     // Health check endpoint
     app.get('/api/versions/health', (req, res) => {

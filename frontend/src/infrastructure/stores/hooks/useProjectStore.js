@@ -6,6 +6,7 @@
 
 import { useEffect, useCallback, useMemo } from 'react';
 import useProjectStoreCore from '../ProjectStore.jsx';
+import useAuthStore from '../AuthStore.jsx';
 import { logger } from '@/infrastructure/logging/Logger';
 
 /**
@@ -33,9 +34,11 @@ export const useProjectManagement = (autoLoad = true) => {
     refresh
   } = useProjectStoreCore();
 
-  // Auto-load projects on mount
+  // Auto-load projects on mount - ONLY if authenticated
   useEffect(() => {
-    if (autoLoad && Object.keys(projects).length === 0 && !isLoading) {
+    // Wait for auth store to be initialized
+    const authState = useAuthStore.getState();
+    if (autoLoad && authState.isInitialized && authState.isAuthenticated && Object.keys(projects).length === 0 && !isLoading) {
       loadProjects();
     }
   }, [autoLoad, projects, isLoading, loadProjects]);

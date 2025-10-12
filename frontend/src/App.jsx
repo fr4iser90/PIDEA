@@ -336,18 +336,21 @@ function App() {
     <AuthWrapper>
       <IDEProvider eventBus={eventBus}>
         <div ref={containerRef} className="app-root">
-          <Header 
-            eventBus={eventBus}
-            currentView={currentView}
-            onNavigationClick={handleNavigationClick}
-            onLeftSidebarToggle={handleLeftSidebarToggle}
-            onRightSidebarToggle={handleRightSidebarToggle}
-          />
+          {/* Header - ONLY show when authenticated */}
+          {isAuthenticated && (
+            <Header 
+              eventBus={eventBus}
+              currentView={currentView}
+              onNavigationClick={handleNavigationClick}
+              onLeftSidebarToggle={handleLeftSidebarToggle}
+              onRightSidebarToggle={handleRightSidebarToggle}
+            />
+          )}
 
           {/* Main Content */}
           <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isLeftSidebarVisible ? ' sidebar-hidden' : ''}${!isRightSidebarVisible ? ' rightpanel-hidden' : ''}`}>
-            {/* Left Sidebar */}
-            {isLeftSidebarVisible && (
+            {/* Left Sidebar - ONLY show when authenticated */}
+            {isAuthenticated && isLeftSidebarVisible && (
               <SidebarLeft 
                 eventBus={eventBus} 
                 activePort={activePort} 
@@ -363,16 +366,19 @@ function App() {
               {isSplitView && <PreviewComponent eventBus={eventBus} activePort={activePort} />}
             </div>
             
-            {/* Right Sidebar */}
-            {isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} activePort={activePort} />}
+            {/* Right Sidebar - ONLY show when authenticated */}
+            {isAuthenticated && isRightSidebarVisible && <SidebarRight eventBus={eventBus} attachedPrompts={attachedPrompts} setAttachedPrompts={setAttachedPrompts} activePort={activePort} />}
           </main>
 
-          <Footer 
-            eventBus={eventBus}
-            activePort={activePort}
-            version="1.0.3"
-            message="Welcome to PIDEA! Your AI development assistant is ready to help."
-          />
+          {/* Footer - ONLY show when authenticated */}
+          {isAuthenticated && (
+            <Footer 
+              eventBus={eventBus}
+              activePort={activePort}
+              version="1.0.3"
+              message="Welcome to PIDEA! Your AI development assistant is ready to help."
+            />
+          )}
 
           {/* Global Notification System */}
           <NotificationSystem />

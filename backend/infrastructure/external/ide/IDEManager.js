@@ -213,8 +213,8 @@ class IDEManager {
         logger.info(`[IDEManager] Detected ${existingIDEs.length} IDEs: ${ideList}`);
       }
       
-      // Initialize port manager
-      await this.portManager.initialize();
+      // Port manager removed - using InterfaceManager instead
+      // await this.portManager.initialize();
       
       // Set initial active port
       if (existingIDEs.length > 0) {
@@ -672,14 +672,9 @@ class IDEManager {
       throw new Error(`IDE on port ${port} is not responding`);
     }
     
-    // Use port manager to validate and set active port
-    const success = await this.portManager.setActivePort(port);
-    if (!success) {
-      // Clean up stale IDE entry if switching failed
-      logger.info(`Switching to port ${port} failed, cleaning up stale entry`);
-      await this.cleanupStaleIDEs(port);
-      throw new Error(`Failed to switch to IDE on port ${port}`);
-    }
+    // Port manager removed - using InterfaceManager instead
+    // Directly set active port without validation
+    this.activePort = port;
     
     // Update local state - use the port we just set
     this.activePort = port;
@@ -1309,16 +1304,8 @@ class IDEManager {
     }
   }
   getActivePort() {
-    // Use port manager as primary source
-    if (this.portManager) {
-      const portManagerPort = this.portManager.getActivePort();
-      if (portManagerPort) {
-        this.activePort = portManagerPort;
-        return this.activePort;
-      }
-    }
-    
-    // Fallback to local state
+    // Port manager removed - using InterfaceManager instead
+    // Use local state directly
     if (!this.activePort) {
       for (const [port, status] of this.ideStatus) {
         if (status === 'active') {

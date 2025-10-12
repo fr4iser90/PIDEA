@@ -23,12 +23,7 @@ class IDERequirementService {
    */
   async hasRunningIDE(maxRetries = TimeoutConfig.getRetryConfig('IDE').maxAttempts, retryDelay = TimeoutConfig.getRetryConfig('IDE').initialDelay) {
     try {
-      // ✅ FIX: Check authentication before making API call
-      const { isAuthenticated } = useAuthStore.getState();
-      if (!isAuthenticated) {
-        logger.warn('User not authenticated, cannot check IDE status');
-        return false;
-      }
+      // Authentication check is now centralized in apiCall
 
       // Poll for IDE detection to complete
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -83,12 +78,7 @@ class IDERequirementService {
    */
   async getIDEConfigurations() {
     try {
-      // ✅ FIX: Check authentication before making API call
-      const { isAuthenticated } = useAuthStore.getState();
-      if (!isAuthenticated) {
-        logger.warn('User not authenticated, cannot get IDE configurations');
-        return [];
-      }
+      // Authentication check is now centralized in apiCall
 
       const cacheKey = 'ide_configurations';
       const cached = this.getCached(cacheKey);

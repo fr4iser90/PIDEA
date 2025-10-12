@@ -19,10 +19,7 @@ class ChatRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all chat routes
-    app.use('/api/chat', this.authMiddleware.authenticate());
-    app.use('/api/settings', this.authMiddleware.authenticate());
-    app.use('/api/prompts', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // CHAT MESSAGE ROUTES - Message Operations

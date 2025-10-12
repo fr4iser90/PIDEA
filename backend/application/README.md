@@ -406,7 +406,7 @@ GET    /api/projects/:projectId/workflow/health     // Workflow Health Check
 backend/presentation/api/IDEController.js
 
 // ✅ Endpoints (IDE-SPECIFIC):
-GET    /api/ide/available                    // Verfügbare IDEs
+GET    /api/interfaces/available-ides                    // Verfügbare IDEs
 GET    /api/ide/features                     // IDE Features
 POST   /api/ide/start                        // IDE starten
 POST   /api/ide/switch/:port                 // IDE wechseln
@@ -683,7 +683,7 @@ ChatController = Chat + IDE + Workflow (zu viel!)
 /api/projects/:projectId/git/status         // Git Controller
 
 // ✅ RICHTIG (IDE-Specific):
-/api/ide/available                          // IDE Controller
+/api/interfaces/available-ides                          // IDE Controller
 /api/ide-mirror/connect                     // IDE Mirror Controller
 
 // ✅ RICHTIG (Global):

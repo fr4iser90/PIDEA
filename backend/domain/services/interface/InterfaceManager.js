@@ -1026,7 +1026,8 @@ class InterfaceManager {
    */
   async getAvailableIDEs() {
     try {
-      const ideHandler = this.getHandler('ide');
+      // Use IDE handler from dependencies (ServiceRegistry)
+      const ideHandler = this.dependencies?.ideHandler;
       if (!ideHandler) {
         throw new Error('IDE handler not available');
       }

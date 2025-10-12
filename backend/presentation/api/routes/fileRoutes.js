@@ -20,8 +20,7 @@ class FileRoutes {
    * @param {Express.Router} app - Express app instance
    */
   setupRoutes(app) {
-    // Apply authentication middleware to all file routes
-    app.use('/api/files', this.authMiddleware.authenticate());
+    // Authentication handled by global middleware
 
     // ========================================
     // FILE EXPLORER ROUTES - File System Operations
