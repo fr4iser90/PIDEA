@@ -846,9 +846,6 @@ class IDEManager {
             // Store workspace path in ideWorkspaces Map
             this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
             
-            
-            await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
-            
             return workspaceInfo.workspacePath;
           }
         } catch (cdpError) {
@@ -1142,59 +1139,6 @@ class IDEManager {
     }
   }
 
-  /**
-   * Automatisch Projekt in der DB erstellen
-   * @param {string} workspacePath - Workspace path
-   * @param {number} port - IDE port
-   */
-  async createProjectInDatabase(workspacePath, port) {
-    try {
-      // Use injected project repository
-      if (!this.projectRepository) {
-        logger.warn('No project repository available, skipping project creation');
-        return;
-      }
-
-      // Extract project name from workspace path
-      const path = require('path');
-      const projectName = path.basename(workspacePath);
-      
-      // Generate project ID - Keep original case
-      const projectId = projectName.replace(/[^a-zA-Z0-9]/g, '_');
-      
-      // Prüfe, ob das Projekt existiert
-      let project = await this.projectRepository.findByWorkspacePath(workspacePath);
-      let created = false;
-      if (!project) {
-        // Don't log individual project creation - will be logged in batch
-        created = true;
-      }
-    
-      // Get IDE type for this port
-      const ideType = this.ideTypes.get(port) || 'cursor';
-      
-      // Create project using findOrCreateByWorkspacePath
-      project = await this.projectRepository.findOrCreateByWorkspacePath(workspacePath, {
-        id: projectId,
-        name: projectName,
-        description: `Project detected at ${workspacePath}`,
-        type: 'development',
-        ideType: ideType,
-        port: port,
-        metadata: {
-          detectedBy: 'IDEManager',
-          port: port,
-          ideType: ideType,
-          detectedAt: new Date().toISOString()
-        }
-      });
-      
-      // Don't log individual project status - will be logged in batch
-      
-    } catch (error) {
-      logger.error('Failed to create project in database:', error.message);
-    }
-  }
 
   /**
    * Get manager statistics
