@@ -136,7 +136,8 @@ class ProjectController {
       });
       
       res.json({ 
-        projects: result.projects, 
+        success: true,
+        data: result.projects,
         pagination: { 
           page: parseInt(page), 
           limit: parseInt(limit), 

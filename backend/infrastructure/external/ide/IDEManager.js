@@ -270,7 +270,7 @@ class IDEManager {
         ...ide,
         source: 'detected',
         workspacePath: null, // Will be detected on demand
-        ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
+        type: ide.ideType || 'unknown',
         healthStatus: this.healthMonitor && typeof this.healthMonitor.getIDEHealthStatus === 'function' 
           ? this.healthMonitor.getIDEHealthStatus(ide.port) 
           : null
@@ -282,7 +282,7 @@ class IDEManager {
         ...ide,
         source: 'started',
         workspacePath: null, // Will be detected on demand
-        ideType: this.ideTypes.get(ide.port) || ide.ideType || 'cursor',
+        type: ide.ideType || 'unknown',
         healthStatus: this.healthMonitor && typeof this.healthMonitor.getIDEHealthStatus === 'function' 
           ? this.healthMonitor.getIDEHealthStatus(ide.port) 
           : null
@@ -321,6 +321,7 @@ class IDEManager {
           
           const ideData = {
             ...ide,
+            type: ide.type || 'unknown',
             workspacePath: finalWorkspacePath,
             version: finalVersion
           };
@@ -336,6 +337,7 @@ class IDEManager {
           logger.warn(`Failed to detect workspace/version for port ${ide.port}:`, error.message);
           const errorData = {
             ...ide,
+            type: ide.type || 'unknown',
             workspacePath: null,
             version: null
           };
@@ -844,7 +846,7 @@ class IDEManager {
             // Store workspace path in ideWorkspaces Map
             this.ideWorkspaces.set(port, workspaceInfo.workspacePath);
             
-            // Automatisch Projekt in der DB erstellen (silent)
+            
             await this.createProjectInDatabase(workspaceInfo.workspacePath, port);
             
             return workspaceInfo.workspacePath;

@@ -20,6 +20,7 @@ import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
 import ProjectRepository from '@/infrastructure/repositories/ProjectRepository.jsx';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
 import refreshService from '@/infrastructure/services/RefreshService';
+import IDESelectionModal from '@/presentation/components/project/IDESelectionModal.jsx';
 import '@/scss/components/_project-add-modal.scss';
 
 function App() {
@@ -44,6 +45,50 @@ function App() {
   // Project add modal state
   const [showProjectAddModal, setShowProjectAddModal] = useState(false);
   
+  // IDE selection modal state
+  const [showIDESelectionModal, setShowIDESelectionModal] = useState(false);
+  
+  // Project form state
+  const [projectFormData, setProjectFormData] = useState({
+    name: '',
+    description: '',
+    workspacePath: '',
+    type: 'development',
+    framework: '',
+    language: '',
+    packageManager: ''
+  });
+  
+  // IDE selection handler
+  const handleIDESelected = (selectedIDE) => {
+    logger.info('✅ IDE selected:', selectedIDE);
+    
+    // Extract project name from workspace path
+    const projectName = selectedIDE.workspacePath.split('/').pop();
+    
+    // Update form data with selected IDE information
+    setProjectFormData({
+      name: projectName,
+      description: '',
+      workspacePath: selectedIDE.workspacePath,
+      type: 'development',
+      framework: '',
+      language: '',
+      packageManager: ''
+    });
+    
+    // Close IDE selection modal
+    setShowIDESelectionModal(false);
+    
+    logger.info('✅ Form data updated with IDE selection');
+  };
+
+  // Handle IDE detection button click
+  const handleDetectFromIDE = () => {
+    logger.info('🔍 Opening IDE selection modal...');
+    setShowIDESelectionModal(true);
+  };
+
   // Use IDEStore for port management
   const {
     activePort,
@@ -409,6 +454,8 @@ function App() {
                         id="project-name"
                         type="text"
                         placeholder="Enter project name"
+                        value={projectFormData.name}
+                        onChange={(e) => setProjectFormData(prev => ({ ...prev, name: e.target.value }))}
                         required
                       />
                     </div>
@@ -419,6 +466,8 @@ function App() {
                         id="project-description"
                         placeholder="Brief description of the project"
                         rows="3"
+                        value={projectFormData.description}
+                        onChange={(e) => setProjectFormData(prev => ({ ...prev, description: e.target.value }))}
                       />
                     </div>
                     
@@ -428,50 +477,7 @@ function App() {
                         <button 
                           type="button"
                           className="project-add-modal__detect-btn"
-                          onClick={async () => {
-                            try {
-                              console.log('🔍 Detecting projects from open IDE ports...');
-                              
-                              // Use ProjectRepository for project detection
-                              const apiRepo = new ProjectRepository();
-                              const result = await apiRepo.detectProjects();
-                              
-                              if (result.success) {
-                                const detectedProjects = result.data || [];
-                                console.log('✅ Detected projects:', detectedProjects);
-                                
-                                if (detectedProjects.length > 0) {
-                                  // Auto-fill form with first detected project
-                                  const project = detectedProjects[0];
-                                  document.getElementById('workspace-path').value = project.workspacePath || '';
-                                  document.getElementById('project-name').value = project.name || '';
-                                  document.getElementById('project-description').value = project.description || '';
-                                  
-                                  // Auto-detect configuration
-                                  if (project.type) {
-                                    document.getElementById('project-type').value = project.type;
-                                  }
-                                  if (project.framework) {
-                                    document.getElementById('framework').value = project.framework;
-                                  }
-                                  if (project.language) {
-                                    document.getElementById('language').value = project.language;
-                                  }
-                                  if (project.packageManager) {
-                                    document.getElementById('package-manager').value = project.packageManager;
-                                  }
-                                  
-                                  console.log('✅ Form auto-filled with detected project');
-                                } else {
-                                  console.log('ℹ️ No projects detected from open IDE ports');
-                                }
-                              } else {
-                                console.error('❌ Detection failed:', result.error || 'Unknown error');
-                              }
-                            } catch (error) {
-                              console.error('❌ Detection error:', error);
-                            }
-                          }}
+                          onClick={handleDetectFromIDE}
                         >
                           🔍 Detect from IDE
                         </button>
@@ -480,6 +486,8 @@ function App() {
                         id="workspace-path"
                         type="text"
                         placeholder="/path/to/project"
+                        value={projectFormData.workspacePath}
+                        onChange={(e) => setProjectFormData(prev => ({ ...prev, workspacePath: e.target.value }))}
                         required
                       />
                     </div>
@@ -487,7 +495,11 @@ function App() {
                     <div className="form-row">
                       <div className="form-group">
                         <label htmlFor="project-type">Type</label>
-                        <select id="project-type">
+                        <select 
+                          id="project-type"
+                          value={projectFormData.type}
+                          onChange={(e) => setProjectFormData(prev => ({ ...prev, type: e.target.value }))}
+                        >
                           <option value="development">Development</option>
                           <option value="research">Research</option>
                           <option value="production">Production</option>
@@ -496,7 +508,11 @@ function App() {
                       
                       <div className="form-group">
                         <label htmlFor="framework">Framework</label>
-                        <select id="framework">
+                        <select 
+                          id="framework"
+                          value={projectFormData.framework}
+                          onChange={(e) => setProjectFormData(prev => ({ ...prev, framework: e.target.value }))}
+                        >
                           <option value="">Select Framework</option>
                           <option value="react">React</option>
                           <option value="vue">Vue.js</option>
@@ -509,7 +525,11 @@ function App() {
                     <div className="form-row">
                       <div className="form-group">
                         <label htmlFor="language">Language</label>
-                        <select id="language">
+                        <select 
+                          id="language"
+                          value={projectFormData.language}
+                          onChange={(e) => setProjectFormData(prev => ({ ...prev, language: e.target.value }))}
+                        >
                           <option value="javascript">JavaScript</option>
                           <option value="typescript">TypeScript</option>
                           <option value="python">Python</option>
@@ -519,7 +539,11 @@ function App() {
                       
                       <div className="form-group">
                         <label htmlFor="package-manager">Package Manager</label>
-                        <select id="package-manager">
+                        <select 
+                          id="package-manager"
+                          value={projectFormData.packageManager}
+                          onChange={(e) => setProjectFormData(prev => ({ ...prev, packageManager: e.target.value }))}
+                        >
                           <option value="npm">npm</option>
                           <option value="yarn">Yarn</option>
                           <option value="pnpm">pnpm</option>
@@ -549,6 +573,13 @@ function App() {
               </div>
             </div>
           )}
+          
+          {/* IDE Selection Modal */}
+          <IDESelectionModal
+            isOpen={showIDESelectionModal}
+            onClose={() => setShowIDESelectionModal(false)}
+            onIDESelected={handleIDESelected}
+          />
         </div>
       </IDEProvider>
     </AuthWrapper>

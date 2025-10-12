@@ -83,8 +83,8 @@ class IDEWorkspaceDetectionService {
         
         logger.info(`Port ${port}: ${workspaceInfo.workspace}`);
         
-        // AUTOMATISCH Projekt in der DB erstellen
-        await this.createProjectInDatabase(workspaceInfo.workspace, port);
+        // REMOVED: Automatic project creation - projects should only be created manually
+        // await this.createProjectInDatabase(workspaceInfo.workspace, port);
         
         return workspaceInfo;
         

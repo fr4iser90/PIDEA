@@ -79,8 +79,9 @@ class CursorDetector {
           try {
             const json = JSON.parse(data);
             if (json.Browser && json.webSocketDebuggerUrl) {
-              // Check if it's Cursor (not VSCode)
-              if (!json.Browser.includes('VS Code') && !json.Browser.includes('Code')) {
+              // Check if it's Cursor by looking at User-Agent
+              const userAgent = json['User-Agent'] || '';
+              if (userAgent.includes('Cursor')) {
                 resolve({
                   version: json.Browser,
                   webSocketUrl: json.webSocketDebuggerUrl,

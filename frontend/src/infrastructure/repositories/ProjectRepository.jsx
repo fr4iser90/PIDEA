@@ -170,12 +170,17 @@ class ProjectRepository {
     const ideResponse = await apiCall('/api/interfaces/available-ides');
     if (ideResponse.success && ideResponse.data) {
       const projects = ideResponse.data
-        .filter(ide => ide.workspacePath && ide.active)
+        .filter(ide => ide.workspacePath && (ide.status === 'active' || ide.status === 'running'))
         .map(ide => ({
           name: ide.workspacePath.split('/').pop(),
-          path: ide.workspacePath,
+          workspacePath: ide.workspacePath,
           port: ide.port,
-          ide: ide.name
+          type: ide.type || 'development',
+          framework: ide.framework || '',
+          language: ide.language || '',
+          packageManager: ide.packageManager || '',
+          description: ide.description || '',
+          ide: ide.name || this.getIDEDisplayName(ide.type || 'unknown')
         }));
       
       return {
@@ -184,6 +189,50 @@ class ProjectRepository {
       };
     }
     return { success: false, error: 'No active IDEs found' };
+  }
+
+  /**
+   * Get available IDEs for selection modal
+   * @returns {Promise<Object>} Available IDEs with workspace paths
+   */
+  async getAvailableIDEs() {
+    const ideResponse = await apiCall('/api/interfaces/available-ides');
+    if (ideResponse.success && ideResponse.data) {
+      const ides = ideResponse.data
+        .filter(ide => ide.workspacePath)
+        .map(ide => ({
+          port: ide.port,
+          type: ide.type || 'unknown',
+          name: ide.name || this.getIDEDisplayName(ide.type || 'unknown'),
+          workspacePath: ide.workspacePath,
+          status: ide.status || 'unknown',
+          version: ide.version || 'unknown'
+        }));
+      
+      return {
+        success: true,
+        data: ides
+      };
+    }
+    return { success: false, error: 'Failed to get available IDEs' };
+  }
+
+  /**
+   * Get display name for IDE type
+   * @param {string} ideType - IDE type
+   * @returns {string} Display name
+   */
+  getIDEDisplayName(ideType) {
+    const ideNames = {
+      'cursor': 'Cursor IDE',
+      'vscode': 'Visual Studio Code',
+      'windsurf': 'Windsurf IDE',
+      'jetbrains': 'JetBrains IDE',
+      'sublime': 'Sublime Text',
+      'unknown': 'Unknown IDE'
+    };
+    
+    return ideNames[ideType] || ideNames['unknown'];
   }
 
   /**

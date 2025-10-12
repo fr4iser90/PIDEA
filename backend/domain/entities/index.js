@@ -3,6 +3,7 @@ module.exports = {
   ChatMessage: require('./ChatMessage'),
   ChatSession: require('./ChatSession'),
   GeneratedScript: require('./GeneratedScript'),
+  Project: require('./Project'),
   Task: require('./Task'),
   TaskExecution: require('./TaskExecution'),
   TaskTemplate: require('./TaskTemplate'),

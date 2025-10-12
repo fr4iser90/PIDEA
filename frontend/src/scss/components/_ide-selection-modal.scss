@@ -1,0 +1,367 @@
+/**
+ * IDE Selection Modal Styles
+ * 
+ * Provides styling for the IDE selection modal component,
+ * following the existing dark theme and modal design patterns in the application.
+ */
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/placeholders' as *;
+
+.ide-selection-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-backdrop);
+  backdrop-filter: blur(2px);
+  animation: fade-in var(--transition-normal) ease-out;
+}
+
+.ide-selection-modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  animation: slide-up var(--transition-normal) ease-out;
+}
+
+.ide-selection-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  
+  h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+  }
+}
+
+.ide-selection-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+}
+
+.ide-selection-modal-content {
+  flex: 1;
+  padding: var(--space-lg);
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.ide-selection-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--text-secondary);
+  
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-md);
+  }
+  
+  p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ide-selection-error {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-danger);
+  
+  p {
+    margin: 0 0 var(--space-md) 0;
+    font-size: var(--font-size-sm);
+  }
+  
+  .retry-button {
+    background: var(--color-primary);
+    color: var(--text-inverse);
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    transition: background-color var(--transition-normal);
+    
+    &:hover {
+      background: var(--color-primary-hover);
+    }
+  }
+}
+
+.ide-selection-empty {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--text-secondary);
+  
+  p {
+    margin: 0 0 var(--space-sm) 0;
+    font-size: var(--font-size-sm);
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.ide-selection-instruction {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.ide-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ide-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: var(--bg-card);
+  
+  &:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    background: var(--bg-hover);
+  }
+  
+  &.selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.ide-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.ide-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  
+  strong {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .ide-type {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 2px var(--space-xs);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.status-badge {
+  font-size: var(--font-size-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  
+  &.active, &.running {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--color-success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  
+  &.stopped, &.inactive {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  
+  &.unknown {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    border: 1px solid var(--border-color);
+  }
+}
+
+.ide-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+}
+
+.ide-workspace, .ide-port, .ide-version {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  
+  .label {
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    min-width: 80px;
+  }
+  
+  .path {
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: var(--font-size-xs);
+    background: var(--bg-tertiary);
+    padding: 2px var(--space-xs);
+    border-radius: var(--radius-sm);
+    flex: 1;
+    word-break: break-all;
+    border: 1px solid var(--border-color);
+  }
+  
+  .port, .version {
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: var(--font-size-xs);
+    background: var(--bg-tertiary);
+    padding: 2px var(--space-xs);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+  }
+}
+
+.ide-selection-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+}
+
+.btn-cancel, .btn-confirm {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  border: 1px solid transparent;
+  min-width: 80px;
+}
+
+.btn-cancel {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  
+  &:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color-light);
+  }
+}
+
+.btn-confirm {
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  
+  &:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+  }
+  
+  &:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    border-color: var(--border-color);
+  }
+}
+
+// Modal animations
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { 
+    transform: translateY(20px); 
+    opacity: 0; 
+  }
+  100% { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+// Responsive design
+@include respond-to(sm) {
+  .ide-selection-modal {
+    width: 95%;
+    margin: var(--space-md);
+  }
+  
+  .ide-selection-modal-header,
+  .ide-selection-modal-content,
+  .ide-selection-modal-footer {
+    padding: var(--space-md);
+  }
+  
+  .ide-item-details {
+    .ide-workspace {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-xs);
+      
+      .label {
+        min-width: auto;
+      }
+    }
+  }
+}

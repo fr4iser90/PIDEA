@@ -169,7 +169,8 @@ class IDEHandler {
       
       return availableIDEs.map(ide => ({
         port: ide.port,
-        type: ide.type,
+        type: ide.type || 'unknown',
+        name: this.getIDEDisplayName(ide.type || 'unknown'),
         version: ide.version,
         workspacePath: ide.workspacePath,
         status: ide.status
@@ -179,6 +180,24 @@ class IDEHandler {
       this.logger.error('Failed to get available IDEs:', error);
       throw new Error(`Failed to get available IDEs: ${error.message}`);
     }
+  }
+
+  /**
+   * Get display name for IDE type
+   * @param {string} ideType - IDE type
+   * @returns {string} Display name
+   */
+  getIDEDisplayName(ideType) {
+    const ideNames = {
+      'cursor': 'Cursor IDE',
+      'vscode': 'Visual Studio Code',
+      'windsurf': 'Windsurf IDE',
+      'jetbrains': 'JetBrains IDE',
+      'sublime': 'Sublime Text',
+      'unknown': 'Unknown IDE'
+    };
+    
+    return ideNames[ideType] || ideNames['unknown'];
   }
 
   /**

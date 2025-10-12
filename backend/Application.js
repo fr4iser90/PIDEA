@@ -95,6 +95,10 @@ class Application {
   }
 
   async initialize() {
+    // Initialize logging FIRST to catch all crashes
+    const { getLogger } = require('@logging/Logger');
+    this.logger = getLogger('Application');
+    
     try {
       // Initialize database connection
       const DatabaseInitialization = require('./infrastructure/database/DatabaseInitialization');
