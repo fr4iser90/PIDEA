@@ -13,7 +13,7 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 // Mock dependencies
 jest.mock('@/infrastructure/services/IDERequirementService.jsx');
 jest.mock('@/infrastructure/stores/IDEStore.jsx');
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: jest.fn()
 }));
 
@@ -327,7 +327,7 @@ describe('IDEStartModal', () => {
       const mockOnClose = jest.fn();
 
       // Mock API call
-      const { apiCall } = require('@/infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = require('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockResolvedValueOnce({
         success: true,
         data: { port: 9222, ideType: 'cursor' }
@@ -415,7 +415,7 @@ describe('IDEStartModal', () => {
 
   describe('Error Handling', () => {
     it('should display API errors', async () => {
-      const { apiCall } = require('@/infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = require('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockRejectedValueOnce(new Error('Failed to start IDE'));
 
       render(

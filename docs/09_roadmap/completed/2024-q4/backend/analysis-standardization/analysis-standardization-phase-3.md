@@ -16,7 +16,7 @@ Remove all legacy analysis step files and update the AnalysisController and fron
 ## Deliverables
 - Legacy files removed: `code_quality_analysis_step.js`, `architecture_analysis_step_OLD.js`, etc.
 - File: `backend/presentation/api/AnalysisController.js` - Updated controller
-- File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Updated repository
+- File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Updated repository
 - Validation: Complete integration testing
 - Documentation: Updated API references and migration guides
 
@@ -116,7 +116,7 @@ async getCategoryIssues(req, res, category) {
 
 ### Frontend Repository Updates
 ```javascript
-// frontend/src/infrastructure/repositories/APIChatRepository.jsx
+// frontend/src/infrastructure/repositories/ChatRepository.jsx
 async getCategoryAnalysis(category, endpoint, projectId = null) {
   try {
     const currentProjectId = projectId || await this.getCurrentProjectId();

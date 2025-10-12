@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
 
 function ExecutionStep({ tasks, onTaskProgress, workflowData }) {
   const [taskStatuses, setTaskStatuses] = useState({});
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionError, setExecutionError] = useState(null);
-  const api = new APIChatRepository();
+  const api = new TaskRepository();
 
   useEffect(() => {
     // Initialize task statuses

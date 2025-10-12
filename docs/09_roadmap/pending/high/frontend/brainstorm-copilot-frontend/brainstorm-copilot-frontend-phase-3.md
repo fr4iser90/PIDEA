@@ -22,7 +22,7 @@ Integrate the brainstorm interface with existing systems and add final polish in
 - File: `frontend/src/presentation/components/brainstorm/BrainstormContext.jsx` - Context display component
 - File: `frontend/src/presentation/components/brainstorm/BrainstormControls.jsx` - Control buttons component (follows existing button patterns)
 - File: `frontend/src/css/brainstorm/brainstorm-history.css` - History styles (follows existing chat styles)
-- File: `frontend/src/infrastructure/repositories/BrainstormRepository.js` - Repository layer (follows APIChatRepository pattern)
+- File: `frontend/src/infrastructure/repositories/BrainstormRepository.js` - Repository layer (follows ChatRepository pattern)
 
 ## Dependencies
 - Requires: Phase 2 completion (Settings & Configuration)

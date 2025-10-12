@@ -45,7 +45,7 @@ app.use('/api/projects/:projectId/interfaces', interfaceRoutes);
 ```
 
 ### Task 3.2: Update All Frontend API Calls (45 minutes)
-- [ ] Update `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- [ ] Update `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 - [ ] Replace all IDE API calls with project-centric calls
 - [ ] Update API endpoint URLs
 - [ ] Update request/response data structures

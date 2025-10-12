@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
 import { useSelectedIDE, useProjectTasks, useProjectDataActions, useSelectedProject } from '@/infrastructure/stores/selectors/ProjectSelectors';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
@@ -116,7 +116,7 @@ const VerticalActionButtons = ({
 };
 
 function TasksPanelComponent({ eventBus, activePort }) {
-  const api = new APIChatRepository();
+  const api = new TaskRepository();
   
   // ✅ NEW: Use project-specific selectors
   const selectedIDE = useSelectedIDE();

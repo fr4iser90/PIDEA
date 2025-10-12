@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 // Create IDE Context

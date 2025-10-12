@@ -3,7 +3,7 @@
  * Uses category-based API routes for cleaner data access
  */
 
-import { apiCall } from './APIChatRepository.jsx';
+import { apiCall } from './ChatRepository.jsx';
 
 class AnalysisRepository {
   constructor(baseURL = '/api') {
@@ -248,6 +248,418 @@ class AnalysisRepository {
       console.error(`🔍 [FRONTEND] Error fetching security recommendations:`, error);
       return [];
     }
+  }
+
+  // ============================================================================
+  // ENHANCED ANALYSIS METHODS (merged from ChatRepository)
+  // ============================================================================
+
+  /**
+   * Get analysis metrics
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis metrics
+   */
+  async getAnalysisMetrics(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis status
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis status
+   */
+  async getAnalysisStatus(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/status`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis charts
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} type - Chart type (default: trends)
+   * @returns {Promise<Object>} Analysis charts
+   */
+  async getAnalysisCharts(projectId = null, type = 'trends') {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/charts/${type}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis history
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis history
+   */
+  async getAnalysisHistory(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/history`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis issues (enhanced)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis issues
+   */
+  async getAnalysisIssues(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/issues`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis tech stack (enhanced)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis tech stack
+   */
+  async getAnalysisTechStack(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis architecture (enhanced)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis architecture
+   */
+  async getAnalysisArchitecture(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis recommendations (enhanced)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis recommendations
+   */
+  async getAnalysisRecommendations(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
+  }
+
+  /**
+   * Get current project ID (delegates to ProjectRepository)
+   * @returns {Promise<string>} Current project ID
+   */
+  async getCurrentProjectId() {
+    const { default: ProjectRepository } = await import('./ProjectRepository.jsx');
+    const projectRepo = new ProjectRepository();
+    return projectRepo.getCurrentProjectId();
+  }
+
+  /**
+   * Execute analysis step
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} analysisType - Analysis type
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeAnalysisStep(projectId = null, analysisType, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    // Map frontend analysis types to backend route names
+    const routeMapping = {
+      'code-quality': 'code-quality',
+      'security': 'security',
+      'performance': 'performance',
+      'architecture': 'architecture',
+      'tech-stack': 'tech-stack',
+      'manifest': 'manifest',
+      'dependencies': 'dependencies',
+      'recommendations': 'recommendations',
+      'security-recommendations': 'security-recommendations',
+      'code-quality-recommendations': 'code-quality-recommendations',
+      'architecture-recommendations': 'architecture-recommendations'
+    };
+    
+    const routeName = routeMapping[analysisType] || analysisType;
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/${routeName}`, {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  /**
+   * Start analysis
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} analysisType - Analysis type
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async startAnalysis(projectId = null, analysisType, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    // Map frontend analysis types to backend step names
+    const stepMapping = {
+      'code-quality': 'CodeQualityAnalysisOrchestrator',
+      'security': 'SecurityAnalysisOrchestrator',
+      'performance': 'PerformanceAnalysisOrchestrator',
+      'architecture': 'ArchitectureAnalysisOrchestrator',
+      'tech-stack': 'TechStackAnalysisOrchestrator',
+      'manifest': 'ManifestAnalysisOrchestrator',
+      'dependencies': 'DependencyAnalysisOrchestrator',
+      'recommendations': 'RecommendationsStep'
+    };
+    
+    const stepName = stepMapping[analysisType] || analysisType;
+    
+    // Use task enqueue endpoint to run the specific step
+    return apiCall(`/api/projects/${currentProjectId}/tasks/enqueue`, {
+      method: 'POST',
+      body: JSON.stringify({
+        workflow: analysisType + '-analysis',
+        steps: [stepName],
+        projectPath: options.projectPath || '/home/fr4iser/Documents/Git/PIDEA',
+        options: {
+          ...options,
+          analysisType: analysisType
+        }
+      })
+    }, currentProjectId);
+  }
+
+  /**
+   * Get analysis data directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} analysisType - Analysis type (optional)
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis data
+   */
+  async getAnalysisData(projectId = null, analysisType = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    // Map analysis types to specific endpoints
+    const endpointMapping = {
+      'security': 'issues',
+      'code-quality': 'issues',
+      'architecture': 'architecture',
+      'tech-stack': 'techstack',
+      'recommendations': 'recommendations',
+      'charts': 'charts'
+    };
+    
+    const endpoint = endpointMapping[analysisType] || 'issues';
+    
+    if (endpoint === 'issues') {
+      return this.getAnalysisIssuesDirect(currentProjectId, analysisType);
+    } else if (endpoint === 'charts') {
+      return this.getAnalysisChartsDirect(currentProjectId, options.chartType || 'trends');
+    } else {
+      const methodName = `getAnalysis${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}Direct`;
+      return this[methodName]?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+    }
+  }
+
+  /**
+   * Get analysis status directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis status
+   */
+  async getAnalysisStatusDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/status`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis metrics directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis metrics
+   */
+  async getAnalysisMetricsDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/metrics`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis history directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @param {Object} options - History options
+   * @returns {Promise<Object>} Analysis history
+   */
+  async getAnalysisHistoryDirect(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    const queryParams = new URLSearchParams();
+    if (options.limit) queryParams.append('limit', options.limit);
+    if (options.offset) queryParams.append('offset', options.offset);
+    if (options.types) queryParams.append('types', options.types);
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/history?${queryParams}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis issues directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} type - Issue type (default: code-quality)
+   * @returns {Promise<Object>} Analysis issues
+   */
+  async getAnalysisIssuesDirect(projectId = null, type = 'code-quality') {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/issues?type=${type}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis tech stack directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis tech stack
+   */
+  async getAnalysisTechStackDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/techstack`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis architecture directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis architecture
+   */
+  async getAnalysisArchitectureDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/architecture`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis recommendations directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis recommendations
+   */
+  async getAnalysisRecommendationsDirect(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/recommendations`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis charts directly (fast, no workflow)
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} type - Chart type (default: trends)
+   * @returns {Promise<Object>} Analysis charts
+   */
+  async getAnalysisChartsDirect(projectId = null, type = 'trends') {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/charts/${type}`, {}, currentProjectId);
+  }
+
+  /**
+   * Execute analysis workflow (for complex runs like "Run All Analysis")
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} analysisType - Analysis type
+   * @param {Object} options - Analysis options
+   * @returns {Promise<Object>} Analysis result
+   */
+  async executeAnalysisWorkflow(projectId = null, analysisType, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    
+    return apiCall(`/api/projects/${currentProjectId}/analysis/execute`, {
+      method: 'POST',
+      body: JSON.stringify({
+        analysisType,
+        options
+      })
+    }, currentProjectId);
+  }
+
+  /**
+   * Get analysis steps
+   * @param {string} projectId - Project ID (optional)
+   * @param {Object} options - Step options
+   * @returns {Promise<Object>} Analysis steps
+   */
+  async getAnalysisSteps(projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    const queryParams = new URLSearchParams(options).toString();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps?${queryParams}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get analysis step by ID
+   * @param {string} stepId - Step ID
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis step
+   */
+  async getAnalysisStep(stepId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${stepId}`, {}, currentProjectId);
+  }
+
+  /**
+   * Get active analysis steps
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Active analysis steps
+   */
+  async getActiveAnalysisSteps(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/active`, {}, currentProjectId);
+  }
+
+  /**
+   * Cancel analysis step
+   * @param {string} stepId - Step ID
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Cancel result
+   */
+  async cancelAnalysisStep(stepId, projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${stepId}/cancel`, {
+      method: 'POST'
+    }, currentProjectId);
+  }
+
+  /**
+   * Retry analysis step
+   * @param {string} stepId - Step ID
+   * @param {string} projectId - Project ID (optional)
+   * @param {Object} options - Retry options
+   * @returns {Promise<Object>} Retry result
+   */
+  async retryAnalysisStep(stepId, projectId = null, options = {}) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/${stepId}/retry`, {
+      method: 'POST',
+      body: JSON.stringify(options)
+    }, currentProjectId);
+  }
+
+  /**
+   * Get analysis step statistics
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Analysis step statistics
+   */
+  async getAnalysisStepStats(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/analysis/steps/stats`, {}, currentProjectId);
+  }
+
+  /**
+   * Get completion status
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Completion status
+   */
+  async getCompletionStatus(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/completion/status`, {}, currentProjectId);
+  }
+
+  /**
+   * Get completion history
+   * @param {string} projectId - Project ID (optional)
+   * @returns {Promise<Object>} Completion history
+   */
+  async getCompletionHistory(projectId = null) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/completion/history`, {}, currentProjectId);
+  }
+
+  /**
+   * Cancel completion workflow
+   * @param {string} projectId - Project ID (optional)
+   * @param {string} sessionId - Session ID
+   * @returns {Promise<Object>} Cancel result
+   */
+  async cancelCompletionWorkflow(projectId = null, sessionId) {
+    const currentProjectId = projectId || await this.getCurrentProjectId();
+    return apiCall(`/api/projects/${currentProjectId}/completion/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ sessionId })
+    }, currentProjectId);
   }
 }
 

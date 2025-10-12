@@ -6,14 +6,14 @@ Implement centralized request deduplication in the frontend to prevent duplicate
 ## Objectives
 - [ ] Create centralized RequestDeduplicationService
 - [ ] Implement React hook for easy deduplication usage
-- [ ] Integrate deduplication with APIChatRepository
+- [ ] Integrate deduplication with ChatRepository
 - [ ] Enhance IDEStore with deduplication support
 - [ ] Test basic deduplication functionality
 
 ## Deliverables
 - File: `frontend/src/infrastructure/services/RequestDeduplicationService.js` - Central deduplication service
 - File: `frontend/src/hooks/useRequestDeduplication.js` - React hook for deduplication
-- File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Enhanced with deduplication
+- File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Enhanced with deduplication
 - File: `frontend/src/infrastructure/stores/IDEStore.jsx` - Integrated with deduplication service
 - Test: `tests/unit/infrastructure/services/RequestDeduplicationService.test.js` - Unit tests
 
@@ -27,7 +27,7 @@ Implement centralized request deduplication in the frontend to prevent duplicate
 ## Success Criteria
 - [ ] RequestDeduplicationService prevents duplicate API calls
 - [ ] React hook provides easy-to-use deduplication interface
-- [ ] APIChatRepository uses deduplication for all API calls
+- [ ] ChatRepository uses deduplication for all API calls
 - [ ] IDEStore integrates with deduplication service
 - [ ] Unit tests pass with 90%+ coverage
 - [ ] No breaking changes to existing functionality
@@ -66,8 +66,8 @@ Implement centralized request deduplication in the frontend to prevent duplicate
 - `cancelRequest()` - Cancel current request
 - `getStats()` - Get deduplication statistics
 
-### 3. APIChatRepository.jsx Enhancements
-**Location**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+### 3. ChatRepository.jsx Enhancements
+**Location**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 
 **Enhancements**:
 - Import and initialize RequestDeduplicationService
@@ -110,7 +110,7 @@ Implement centralized request deduplication in the frontend to prevent duplicate
 
 ### Integration Tests
 **Test Cases**:
-- APIChatRepository with deduplication
+- ChatRepository with deduplication
 - IDEStore integration
 - React hook usage in components
 - Cache invalidation scenarios
@@ -161,7 +161,7 @@ Implement centralized request deduplication in the frontend to prevent duplicate
 - [ ] No memory leaks detected
 
 ### Integration
-- [ ] APIChatRepository enhanced successfully
+- [ ] ChatRepository enhanced successfully
 - [ ] IDEStore integration complete
 - [ ] Existing functionality preserved
 - [ ] Performance improved

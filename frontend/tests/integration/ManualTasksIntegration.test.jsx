@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SidebarRight from '../../src/presentation/components/SidebarRight';
 import ManualTaskDetailsModal from '../../src/presentation/components/chat/modal/ManualTaskDetailsModal';
-import APIChatRepository from '../../src/infrastructure/repositories/APIChatRepository';
+import ChatRepository from '../../src/infrastructure/repositories/ChatRepository';
 
 // Mock the API repository
-jest.mock('../../src/infrastructure/repositories/APIChatRepository');
+jest.mock('../../src/infrastructure/repositories/ChatRepository');
 
 // Mock the marked library
 jest.mock('marked', () => ({
@@ -40,8 +40,8 @@ describe('ManualTasks Integration Tests', () => {
       emit: jest.fn()
     };
 
-    // Mock the APIChatRepository constructor
-    APIChatRepository.mockImplementation(() => mockApi);
+    // Mock the ChatRepository constructor
+    ChatRepository.mockImplementation(() => mockApi);
   });
 
   afterEach(() => {

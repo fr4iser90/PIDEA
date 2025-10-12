@@ -29,7 +29,7 @@ docs/09_roadmap/tasks/performance/request-deduplication/
 - [x] `frontend/src/infrastructure/services/RequestDeduplicationService.js` - Fully implemented with TTL caching
 - [x] `frontend/src/hooks/useRequestDeduplication.js` - React hook with abort controller support
 - [x] `backend/infrastructure/services/RequestQueuingService.js` - Request queuing service implemented
-- [x] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Enhanced with deduplication
+- [x] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Enhanced with deduplication
 - [x] `frontend/src/infrastructure/stores/IDEStore.jsx` - Integrated with deduplication service
 - [x] `backend/tests/integration/request-deduplication.test.js` - Comprehensive integration tests
 
@@ -63,7 +63,7 @@ docs/09_roadmap/tasks/performance/request-deduplication/
 ## 🔍 Current State Analysis
 
 ### ✅ Existing Components Found:
-- **Frontend**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Basic API calls
+- **Frontend**: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Basic API calls
 - **Frontend**: `frontend/src/infrastructure/stores/IDEStore.jsx` - IDE state management with basic caching
 - **Frontend**: `frontend/src/infrastructure/stores/IDESwitchOptimizationStore.jsx` - Progress tracking
 - **Backend**: `backend/application/services/IDEApplicationService.js` - Request deduplication partially implemented
@@ -80,7 +80,7 @@ docs/09_roadmap/tasks/performance/request-deduplication/
 - **Required**: Central service to prevent duplicate API calls
 
 #### 2. Incomplete Frontend Deduplication
-- **Location**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- **Location**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 - **Issue**: No request deduplication logic
 - **Impact**: Multiple simultaneous requests cause delays
 
@@ -108,7 +108,7 @@ docs/09_roadmap/tasks/performance/request-deduplication/
 - [ ] `frontend/src/hooks/useRequestDeduplication.js` - React hook for deduplication
 
 #### Files to Modify:
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add deduplication logic
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Add deduplication logic
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Integrate with deduplication service
 
 ### Phase 2: Backend Protection Enhancement (1 hour)
@@ -132,7 +132,7 @@ docs/09_roadmap/tasks/performance/request-deduplication/
 - [ ] `backend/infrastructure/services/RequestAnalyticsService.js` - Backend analytics
 
 #### Files to Modify:
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add React Query integration
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Add React Query integration
 - [ ] `backend/infrastructure/logging/RequestLogger.js` - Enhanced request logging
 
 ### Phase 4: Testing & Documentation (1 hour)
@@ -150,7 +150,7 @@ docs/09_roadmap/tasks/performance/request-deduplication/
 The request deduplication system follows a layered architecture:
 
 1. **Frontend Layer**: RequestDeduplicationService + React Hook
-2. **API Layer**: Enhanced APIChatRepository with deduplication
+2. **API Layer**: Enhanced ChatRepository with deduplication
 3. **Backend Layer**: RequestQueuingService + IDE-specific rate limiting
 4. **Monitoring Layer**: Request analytics and performance tracking
 
@@ -262,7 +262,7 @@ The request deduplication system follows a layered architecture:
 ### Week 1: Phase 1 (Frontend Deduplication)
 - Day 1-2: Implement RequestDeduplicationService
 - Day 3-4: Implement useRequestDeduplication hook
-- Day 5: Integrate with APIChatRepository
+- Day 5: Integrate with ChatRepository
 
 ### Week 2: Phase 2 (Backend Protection)
 - Day 1-2: Implement RequestQueuingService
@@ -308,7 +308,7 @@ The request deduplication system follows a layered architecture:
 ### 🚀 Next Steps
 1. Start Phase 1: Implement RequestDeduplicationService
 2. Create React hook for easy integration
-3. Enhance APIChatRepository with deduplication
+3. Enhance ChatRepository with deduplication
 4. Begin backend protection implementation
 
 ### 📋 Task Splitting Recommendations

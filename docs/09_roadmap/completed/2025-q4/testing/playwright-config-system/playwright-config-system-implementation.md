@@ -25,7 +25,7 @@
 - [x] `frontend/src/presentation/components/tests/main/TestConfiguration.jsx` - Fix save button database integration, add configuration loading - ✅ Done
 - [x] `backend/application/services/PlaywrightTestApplicationService.js` - Add configuration saving during execution - ✅ Done
 - [x] `backend/tests/playwright/tests/login.test.js` - Load configuration from database instead of environment - ✅ Done
-- [x] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Enhance Playwright API methods if needed - ✅ Done
+- [x] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Enhance Playwright API methods if needed - ✅ Done
 
 #### Files to Create:
 - [x] `backend/tests/unit/PlaywrightConfigService.test.js` - Unit tests for configuration service - ✅ Done

@@ -14,7 +14,7 @@
 - [x] `frontend/src/infrastructure/services/RequestDeduplicationService.js` - Fully implemented with TTL caching
 - [x] `frontend/src/hooks/useRequestDeduplication.js` - React hook with abort controller support
 - [x] `backend/infrastructure/services/RequestQueuingService.js` - Request queuing service implemented
-- [x] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Enhanced with deduplication
+- [x] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Enhanced with deduplication
 - [x] `frontend/src/infrastructure/stores/IDEStore.jsx` - Integrated with deduplication service
 - [x] `backend/tests/integration/request-deduplication.test.js` - Comprehensive integration tests
 
@@ -81,7 +81,7 @@
 - `tests/unit/infrastructure/services/RequestDeduplicationService.test.js` - Comprehensive unit tests
 
 #### ✅ Files Enhanced:
-- `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Added deduplication to key methods
+- `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Added deduplication to key methods
 - `frontend/src/infrastructure/stores/IDEStore.jsx` - Integrated with deduplication service
 
 #### ✅ Features Implemented:
@@ -183,7 +183,7 @@ The Request Deduplication system is now fully implemented with:
 1. **Frontend Layer**:
    - `RequestDeduplicationService`: Central deduplication with TTL caching
    - `useRequestDeduplication`: React hook with abort controller support
-   - Enhanced `APIChatRepository` and `IDEStore` with deduplication
+   - Enhanced `ChatRepository` and `IDEStore` with deduplication
 
 2. **Backend Layer**:
    - `RequestQueuingService`: Concurrent request management (NO rate limiting)
@@ -244,7 +244,7 @@ The Request Deduplication system is now fully implemented with:
 ### 🚀 Next Steps
 1. ✅ Phase 1: RequestDeduplicationService implemented
 2. ✅ React hook created for easy integration
-3. ✅ APIChatRepository enhanced with deduplication
+3. ✅ ChatRepository enhanced with deduplication
 4. ✅ IDEStore integrated with deduplication service
 5. ✅ Phase 2: RequestQueuingService implemented (NO rate limiting)
 6. ✅ Phase 3: Advanced monitoring and analytics implemented
@@ -261,7 +261,7 @@ The Request Deduplication system is now fully implemented with:
 ## Current State Analysis
 
 ### ✅ Existing Components Found:
-- **Frontend**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Basic API calls (1140 lines, comprehensive)
+- **Frontend**: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Basic API calls (1140 lines, comprehensive)
 - **Frontend**: `frontend/src/infrastructure/stores/IDEStore.jsx` - IDE state management with basic caching (736 lines, well-structured)
 - **Frontend**: `frontend/src/infrastructure/stores/IDESwitchOptimizationStore.jsx` - Progress tracking
 - **Backend**: `backend/application/services/IDEApplicationService.js` - Request deduplication partially implemented (179 lines, has pendingRequests Map)
@@ -277,7 +277,7 @@ The Request Deduplication system is now fully implemented with:
 - **Required**: Central service to prevent duplicate API calls
 
 #### 2. Incomplete Frontend Deduplication
-- **Location**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- **Location**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 - **Issue**: No request deduplication logic (1140 lines, no deduplication)
 - **Impact**: Multiple simultaneous requests cause delays
 
@@ -297,7 +297,7 @@ The Request Deduplication system is now fully implemented with:
 ### 🔍 Codebase Analysis Results
 
 #### Frontend Analysis
-- **APIChatRepository.jsx**: 1140 lines, comprehensive API layer with 50+ methods
+- **ChatRepository.jsx**: 1140 lines, comprehensive API layer with 50+ methods
 - **IDEStore.jsx**: 736 lines, well-structured Zustand store with caching
 - **Missing**: RequestDeduplicationService, useRequestDeduplication hook
 
@@ -351,7 +351,7 @@ The Request Deduplication system is now fully implemented with:
 #### High Priority (Phase 1)
 1. **RequestDeduplicationService.js** - Foundation service
 2. **useRequestDeduplication.js** - React integration
-3. **APIChatRepository.jsx** - Frontend deduplication
+3. **ChatRepository.jsx** - Frontend deduplication
 4. **IDEStore.jsx** - Store integration
 
 #### Medium Priority (Phase 2)
@@ -389,7 +389,7 @@ The Request Deduplication system is now fully implemented with:
 ### 🔄 Integration Points
 
 #### Frontend Integration
-- **APIChatRepository.jsx**: Add deduplication to all API methods
+- **ChatRepository.jsx**: Add deduplication to all API methods
 - **IDEStore.jsx**: Integrate with deduplication service
 - **Existing hooks**: Extend with deduplication capabilities
 - **Error handling**: Use existing error patterns
@@ -431,7 +431,7 @@ The Request Deduplication system is now fully implemented with:
 #### Week 1: Phase 1 (Frontend Deduplication) - 2 hours
 - Day 1-2: Implement RequestDeduplicationService ✅ Achievable
 - Day 3-4: Implement useRequestDeduplication hook ✅ Achievable
-- Day 5: Integrate with APIChatRepository ✅ Achievable
+- Day 5: Integrate with ChatRepository ✅ Achievable
 
 #### Week 2: Phase 2 (Backend Protection) - 1 hour
 - Day 1-2: Implement RequestQueuingService ✅ Achievable
@@ -475,7 +475,7 @@ The Request Deduplication system is now fully implemented with:
 #### Immediate Actions
 1. **Start Phase 1**: Implement RequestDeduplicationService
 2. **Create React hook**: useRequestDeduplication
-3. **Enhance APIChatRepository**: Add deduplication logic
+3. **Enhance ChatRepository**: Add deduplication logic
 4. **Integrate with IDEStore**: Use existing patterns
 
 #### Success Factors

@@ -6,7 +6,7 @@
 - **Priority**: High
 - **Estimated Analysis Time**: 4 hours
 - **Scope**: CDP message handling, frontend message fetching, WebSocket communication, chat history management
-- **Related Components**: CDPConnectionManager, WebSocketManager, ChatComponent, IDEStore, APIChatRepository
+- **Related Components**: CDPConnectionManager, WebSocketManager, ChatComponent, IDEStore, ChatRepository
 - **Analysis Date**: 2025-01-27T10:30:00.000Z
 
 ## Current State Assessment
@@ -77,14 +77,14 @@
 
 ### Files Needing Refactoring:
 - [ ] `backend/domain/services/chat/ChatHistoryExtractor.js` - Add CDP integration
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add WebSocket support
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Add WebSocket support
 
 ## Technical Debt Assessment
 
 ### Code Quality Issues:
 - [ ] **Complexity**: ChatComponent has complex message rendering logic
 - [ ] **Duplication**: Message type detection duplicated across components
-- [ ] **Dead Code**: Unused chat-related methods in APIChatRepository
+- [ ] **Dead Code**: Unused chat-related methods in ChatRepository
 - [ ] **Inconsistent Patterns**: Mixed CDP and API approaches for message handling
 
 ### Architecture Issues:

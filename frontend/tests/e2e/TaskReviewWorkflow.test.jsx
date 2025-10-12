@@ -62,7 +62,7 @@ jest.mock('@/infrastructure/logging/Logger', () => ({
   }
 }));
 
-jest.mock('@/infrastructure/repositories/APIChatRepository', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository', () => ({
   __esModule: true,
   default: jest.fn(),
   apiCall: jest.fn()
@@ -94,7 +94,7 @@ describe('Task Review Button - End-to-End Workflow', () => {
     
     // Mock API calls
     mockApiCall = jest.fn();
-    require('@/infrastructure/repositories/APIChatRepository').apiCall = mockApiCall;
+    require('@/infrastructure/repositories/ChatRepository').apiCall = mockApiCall;
     
     // Mock successful API responses
     mockApiCall.mockResolvedValue({

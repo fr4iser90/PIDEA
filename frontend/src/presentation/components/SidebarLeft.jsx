@@ -214,6 +214,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
             onProjectSelect={setActiveProject}
             showAddModal={showProjectAddModal}
             onCloseAddModal={() => onShowProjectAddModal(false)}
+            onOpenAddModal={onShowProjectAddModal}
           />
         );
       case 'interfaces':
@@ -245,16 +246,6 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
           <div className="nav-section">
             <div className="nav-section-header">
               <h3>Meta Layer</h3>
-              <button 
-                className="nav-add-btn"
-                onClick={() => {
-                  logger.info('🔍 Add Project button clicked');
-                  onShowProjectAddModal(true);
-                }}
-                title="Add new project"
-              >
-                + Add
-              </button>
             </div>
             <button 
               className={`nav-btn ${currentView === 'projects' ? 'active' : ''}`}

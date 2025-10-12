@@ -3,10 +3,10 @@
  */
 
 import IDEStartService from '@/infrastructure/services/IDEStartService.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 
 // Mock the API call
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: jest.fn()
 }));
 

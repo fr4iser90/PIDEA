@@ -3,7 +3,7 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import TestConfiguration from './TestConfiguration';
 import TestResultsViewer from './TestResultsViewer';
 import TestStatusBadge from '../common/TestStatusBadge';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TestRepository from '@/infrastructure/repositories/TestRepository.jsx';
 import '@/scss/components/_test-runner.scss';;
 
 /**
@@ -24,7 +24,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const [status, setStatus] = useState('ready');
   
   const { availableIDEs, activePort: storeActivePort } = useIDEStore();
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new TestRepository();
 
   useEffect(() => {
     const loadWorkspaceInfo = async () => {

@@ -1,10 +1,12 @@
-import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository';
 import TaskWorkflowRepository from '@/infrastructure/repositories/TaskWorkflowRepository';
+import ChatRepository from '@/infrastructure/repositories/ChatRepository';
 
 class TaskReviewService {
   constructor() {
-    this.apiChatRepository = new APIChatRepository();
+    this.TaskRepository = new TaskRepository();
     this.taskWorkflowRepository = new TaskWorkflowRepository();
+    this.ChatRepository = new ChatRepository();
   }
 
   /**
@@ -16,7 +18,7 @@ class TaskReviewService {
     try {
       const prompt = await this.buildReviewPrompt(taskData);
       
-      const response = await this.apiChatRepository.sendMessage(prompt);
+      const response = await this.TaskRepository.sendMessage(prompt);
 
       const plan = response.content;
       const analysis = this.analyzePlan(plan, taskData);
@@ -204,7 +206,7 @@ Always provide structured, well-formatted responses in Markdown.`;
     try {
       const prompt = this.buildSplitPrompt(reviewData);
       
-      const response = await this.apiChatRepository.sendMessage(prompt);
+      const response = await this.TaskRepository.sendMessage(prompt);
 
       const subtasks = this.parseSubtasks(response.content);
       
@@ -347,7 +349,7 @@ Provide structured, actionable subtasks that can be executed independently.`;
     try {
       const prompt = this.buildModifyPrompt(reviewData, modificationRequest);
       
-      const response = await this.apiChatRepository.sendMessage(prompt);
+      const response = await this.TaskRepository.sendMessage(prompt);
 
       const modifiedPlan = response.content;
       const updatedAnalysis = this.analyzePlan(modifiedPlan, reviewData.taskData);

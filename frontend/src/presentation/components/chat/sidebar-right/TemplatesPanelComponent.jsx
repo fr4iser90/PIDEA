@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import FrameworkRepository from '@/infrastructure/repositories/FrameworkRepository.jsx';
 
 function TemplatesPanelComponent({ onTemplateClick, onTemplateUse }) {
   const [templates, setTemplates] = useState([]);

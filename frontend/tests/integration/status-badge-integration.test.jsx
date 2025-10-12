@@ -11,7 +11,7 @@ import SidebarLeft from '@/presentation/components/SidebarLeft.jsx';
 import StatusBadge from '@/presentation/components/ide/StatusBadge.jsx';
 import IDEStartModal from '@/presentation/components/ide/IDEStartModal.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 
 // Mock dependencies
 jest.mock('@/infrastructure/stores/IDEStore.jsx', () => ({
@@ -19,7 +19,7 @@ jest.mock('@/infrastructure/stores/IDEStore.jsx', () => ({
   default: jest.fn()
 }));
 
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: jest.fn()
 }));
 

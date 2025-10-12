@@ -3,7 +3,7 @@
  * Handles all version management API calls with proper error handling and data transformation
  */
 
-import { apiCall } from './APIChatRepository.jsx';
+import { apiCall } from './ChatRepository.jsx';
 import { logger } from '@/infrastructure/logging/Logger';
 
 class VersionManagementRepository {

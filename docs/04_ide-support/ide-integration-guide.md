@@ -266,7 +266,7 @@ Create custom API integration:
 
 ```jsx
 // src/services/IDEService.js
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository';
 
 export class IDEService {
   static async getAvailableIDEs() {

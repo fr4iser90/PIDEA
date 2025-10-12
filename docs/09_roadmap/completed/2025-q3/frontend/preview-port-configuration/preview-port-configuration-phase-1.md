@@ -60,7 +60,7 @@ Set up the foundational components and structure for the port configuration feat
   - Loading states and error handling
   - Real-time execution status
   - **Integration with existing terminal execution services**
-  - **Use existing APIChatRepository patterns for API calls**
+  - **Use existing ChatRepository patterns for API calls**
   - **Follow existing component patterns from PreviewComponent.jsx**
 
 ### 5. Set Up Basic Styling Structure
@@ -121,7 +121,7 @@ const usePortConfiguration = () => {
 // Basic component structure following existing patterns
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
 
 const ProjectCommandButtons = ({ 
   projectId, 
@@ -186,7 +186,7 @@ clearCustomPort: () => {
 
 // New project command methods (optional - can use existing terminal services)
 getProjectCommands: async (projectId) => {
-  // Use existing APIChatRepository patterns
+  // Use existing ChatRepository patterns
   return apiCall(`/api/projects/${projectId}/commands`);
 },
 
@@ -255,7 +255,7 @@ executeProjectCommand: async (projectId, commandType) => {
 - [x] usePortConfiguration hook created and tested ✅
 - [x] ProjectCommandButtons component created and functional ✅
 - [x] IDEStore extended with port and command methods ✅
-- [x] APIChatRepository extended with port and command methods ✅
+- [x] ChatRepository extended with port and command methods ✅
 - [x] Basic styling structure in place ✅
 - [x] Unit tests created and mostly passing (13/23) ✅
 - [x] Integration tests created ✅
@@ -290,7 +290,7 @@ executeProjectCommand: async (projectId, commandType) => {
 ### Codebase Analysis
 - **PreviewComponent.jsx**: ✅ Exists at correct path with proper structure
 - **IDEStore.jsx**: ✅ Exists with Zustand store pattern and comprehensive port management
-- **APIChatRepository.jsx**: ✅ Exists with proper API configuration and extensive endpoint structure
+- **ChatRepository.jsx**: ✅ Exists with proper API configuration and extensive endpoint structure
 - **preview.css**: ✅ Exists with comprehensive styling system and CSS variables
 - **hooks/ directory**: ✅ Exists with proper patterns (useAnalysisCache.js provides good reference)
 - **Import aliases**: ✅ `@/` alias correctly configured in vite.config.js
@@ -311,7 +311,7 @@ executeProjectCommand: async (projectId, commandType) => {
 ### Critical Implementation Notes
 1. **IDEStore Integration**: Leverage existing `validatePort()` and `isValidPortRange()` methods
 2. **Persistence**: Use existing port preferences system for custom port storage
-3. **API Patterns**: Follow existing APIChatRepository patterns for new endpoints
+3. **API Patterns**: Follow existing ChatRepository patterns for new endpoints
 4. **Terminal Services**: Backend has extensive terminal execution infrastructure available
 5. **Component Patterns**: Follow PreviewComponent.jsx patterns for consistency
 

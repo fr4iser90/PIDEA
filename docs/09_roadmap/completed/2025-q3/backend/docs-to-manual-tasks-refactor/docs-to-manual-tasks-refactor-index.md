@@ -133,7 +133,7 @@ docs/09_roadmap/tasks/backend/docs-to-manual-tasks-refactor/
 - [x] File: `backend/application/handlers/categories/workflow/ManualTasksHandler.js` - Status: Working as expected
 - [x] File: `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` - Status: Component exists and functional
 - [x] File: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Status: Integration working correctly
-- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: API methods implemented correctly
+- [x] File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Status: API methods implemented correctly
 - [x] File: `frontend/src/css/modal/manual-task-details-modal.css` - Status: CSS file exists with proper classes
 - [x] File: `frontend/src/css/global/sidebar-right.css` - Status: CSS classes implemented correctly
 - [x] File: `backend/application/services/IDEApplicationService.js` - Status: ManualTasksHandler integration working

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
+import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 import { 
@@ -72,7 +72,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     techStack: false
   });
 
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new AnalysisRepository();
   const { showNotification } = useNotificationStore();
 
   // ✅ NEW: Load only basic analysis status when component mounts (no detailed data)

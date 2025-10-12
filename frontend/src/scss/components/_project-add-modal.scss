@@ -121,6 +121,13 @@
   flex-direction: column;
   gap: 0.5rem;
   
+  &.form-group-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
   label {
     font-size: 0.9rem;
     font-weight: 500;
@@ -184,6 +191,31 @@
   padding: 1.5rem 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0%, rgba(78, 140, 255, 0.05) 100%);
+}
+
+.project-add-modal__detect-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(78, 140, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(78, 140, 255, 0.1);
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  
+  &:hover {
+    background: rgba(78, 140, 255, 0.2);
+    border-color: rgba(78, 140, 255, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .project-add-modal__btn {

@@ -1,14 +1,14 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import '@/scss/pages/_git.scss';;
-import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import GitRepository from '@/infrastructure/repositories/GitRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
 import VersionManagementComponent from '../version/VersionManagementComponent.jsx';
 import { useGitStatus, useGitBranches, useSelectedIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 
 // Initialize API repository
-const apiRepository = new APIChatRepository();
+const apiRepository = new GitRepository();
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {

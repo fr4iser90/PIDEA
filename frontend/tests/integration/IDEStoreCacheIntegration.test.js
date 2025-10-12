@@ -19,7 +19,7 @@ jest.mock('@/infrastructure/logging/Logger', () => ({
   }
 }));
 
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: jest.fn()
 }));
 
@@ -56,7 +56,7 @@ describe('IDEStore Cache Integration', () => {
   let mockCacheService;
 
   beforeEach(() => {
-    mockApiCall = require('@/infrastructure/repositories/APIChatRepository.jsx').apiCall;
+    mockApiCall = require('@/infrastructure/repositories/ChatRepository.jsx').apiCall;
     mockCacheService = require('@/infrastructure/services/CacheService').cacheService;
     
     jest.clearAllMocks();

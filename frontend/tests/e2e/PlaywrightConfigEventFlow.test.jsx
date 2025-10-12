@@ -11,8 +11,8 @@ jest.mock('@/infrastructure/services/WebSocketService.jsx', () => ({
   off: jest.fn()
 }));
 
-// Mock APIChatRepository
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => {
+// Mock ChatRepository
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => {
   return jest.fn().mockImplementation(() => ({
     updatePlaywrightTestConfig: jest.fn(),
     getBrowserEnvironment: jest.fn().mockResolvedValue({
@@ -163,7 +163,7 @@ describe('Playwright Config Event Flow E2E', () => {
   describe('Configuration Save Flow', () => {
     it('should initiate configuration save without manual notifications', async () => {
       // Arrange
-      const mockApiRepository = require('@/infrastructure/repositories/APIChatRepository.jsx');
+      const mockApiRepository = require('@/infrastructure/repositories/ChatRepository.jsx');
       const mockUpdateConfig = jest.fn().mockResolvedValue({ success: true });
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,
@@ -200,7 +200,7 @@ describe('Playwright Config Event Flow E2E', () => {
 
     it('should handle API errors gracefully', async () => {
       // Arrange
-      const mockApiRepository = require('@/infrastructure/repositories/APIChatRepository.jsx');
+      const mockApiRepository = require('@/infrastructure/repositories/ChatRepository.jsx');
       const mockUpdateConfig = jest.fn().mockResolvedValue({ 
         success: false, 
         error: 'Validation failed' 
@@ -340,7 +340,7 @@ describe('Playwright Config Event Flow E2E', () => {
   describe('Performance', () => {
     it('should handle multiple rapid configuration saves', async () => {
       // Arrange
-      const mockApiRepository = require('@/infrastructure/repositories/APIChatRepository.jsx');
+      const mockApiRepository = require('@/infrastructure/repositories/ChatRepository.jsx');
       const mockUpdateConfig = jest.fn().mockResolvedValue({ success: true });
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall, API_CONFIG } from '@/infrastructure/repositories/ChatRepository.jsx';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import VoiceInput from '../../common/VoiceInput';
 import '@/scss/pages/_chat.scss';;

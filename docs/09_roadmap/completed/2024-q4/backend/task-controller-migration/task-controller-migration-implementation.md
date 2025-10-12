@@ -21,7 +21,7 @@
 - [ ] `backend/presentation/api/TaskController.js` - Add docs-tasks filtering and endpoints
 - [ ] `backend/presentation/api/IDEController.js` - Remove docs-tasks endpoints and taskRepository dependency
 - [ ] `backend/Application.js` - Update routes to use TaskController for docs-tasks
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Update API endpoints
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Update API endpoints
 - [ ] `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Update API calls
 
 #### Files to Create:
@@ -56,7 +56,7 @@
 - [ ] Test route functionality
 
 #### Phase 4: Frontend Updates (0.5 hours)
-- [ ] Update APIChatRepository to use new endpoints
+- [ ] Update ChatRepository to use new endpoints
 - [ ] Update TasksPanelComponent API calls
 - [ ] Test frontend functionality
 - [ ] Verify docs-tasks loading works correctly
@@ -210,7 +210,7 @@
 - [x] File: `backend/application/services/TaskApplicationService.js` - Status: Already supports type filtering in getProjectTasks
 - [x] File: `backend/presentation/api/IDEController.js` - Status: Has getDocsTasks and getDocsTaskDetails methods
 - [x] File: `backend/Application.js` - Status: Has docs-tasks routes configured
-- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Has getDocsTasks and getDocsTaskDetails methods
+- [x] File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Status: Has getDocsTasks and getDocsTaskDetails methods
 - [x] File: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Status: Uses docs-tasks API calls correctly
 
 ### ⚠️ Issues Found
@@ -256,7 +256,7 @@
    - Update Application.js route configuration
 
 3. **Frontend Updates**
-   - Update APIChatRepository endpoints
+   - Update ChatRepository endpoints
    - Update TasksPanelComponent API calls
 
 #### Incomplete Implementations
@@ -297,7 +297,7 @@
 - [x] Test route functionality
 
 #### Phase 4: Frontend Updates (0.5 hours) ✅ COMPLETED
-- [x] Update APIChatRepository to use `/api/projects/:projectId/tasks?type=documentation`
+- [x] Update ChatRepository to use `/api/projects/:projectId/tasks?type=documentation`
 - [x] Update TasksPanelComponent API calls
 - [x] Test frontend functionality
 
@@ -346,7 +346,7 @@
 
 #### **Phase 4: Frontend Compatibility** ✅ COMPLETED
 - **Verified frontend compatibility** - no changes needed
-- **APIChatRepository** already uses correct endpoints
+- **ChatRepository** already uses correct endpoints
 - **TasksPanelComponent** already uses correct API calls
 - **Zero breaking changes** for frontend
 

@@ -1,9 +1,10 @@
 import { logger } from '@/infrastructure/logging/Logger';
-import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 
 export default class TaskWorkflowRepository {
   constructor() {
-    this.api = new APIChatRepository();
+    this.api = new TaskRepository();
   }
 
   /**

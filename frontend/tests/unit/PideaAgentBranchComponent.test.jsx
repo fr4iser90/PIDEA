@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import PideaAgentBranchComponent from '@/presentation/components/PideaAgentBranchComponent';
 
 // Mock the API repository
-jest.mock('@/infrastructure/repositories/APIChatRepository', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository', () => ({
   pullPideaAgentBranch: jest.fn(),
   mergePideaAgentBranch: jest.fn(),
   getPideaAgentStatus: jest.fn(),
@@ -90,7 +90,7 @@ describe('PideaAgentBranchComponent', () => {
 
   describe('Pull Operation', () => {
     it('handles successful pull operation', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockResolvedValue({
         success: true,
         message: 'Successfully pulled changes',
@@ -114,7 +114,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('handles pull operation error', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockRejectedValue(new Error('Pull failed'));
 
       render(
@@ -135,7 +135,7 @@ describe('PideaAgentBranchComponent', () => {
 
   describe('Merge Operation', () => {
     it('handles successful merge operation', async () => {
-      const { mergePideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { mergePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       mergePideaAgentBranch.mockResolvedValue({
         success: true,
         message: 'Successfully merged changes',
@@ -159,7 +159,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('handles merge operation error', async () => {
-      const { mergePideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { mergePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       mergePideaAgentBranch.mockRejectedValue(new Error('Merge failed'));
 
       render(
@@ -180,7 +180,7 @@ describe('PideaAgentBranchComponent', () => {
 
   describe('Compare Operation', () => {
     it('handles successful compare operation', async () => {
-      const { comparePideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { comparePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       comparePideaAgentBranch.mockResolvedValue({
         success: true,
         differences: [
@@ -205,7 +205,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('handles compare operation error', async () => {
-      const { comparePideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { comparePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       comparePideaAgentBranch.mockRejectedValue(new Error('Compare failed'));
 
       render(
@@ -226,7 +226,7 @@ describe('PideaAgentBranchComponent', () => {
 
   describe('Loading States', () => {
     it('shows loading state during pull operation', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
       render(
@@ -244,7 +244,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('shows loading state during merge operation', async () => {
-      const { mergePideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { mergePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       mergePideaAgentBranch.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
       render(
@@ -262,7 +262,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('shows loading state during compare operation', async () => {
-      const { comparePideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { comparePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       comparePideaAgentBranch.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
       render(
@@ -282,7 +282,7 @@ describe('PideaAgentBranchComponent', () => {
 
   describe('Error Handling', () => {
     it('handles network errors gracefully', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockRejectedValue(new Error('Network error'));
 
       render(
@@ -301,7 +301,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('handles API response errors', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockResolvedValue({
         success: false,
         error: 'API error message'
@@ -325,7 +325,7 @@ describe('PideaAgentBranchComponent', () => {
 
   describe('Callbacks', () => {
     it('calls onStatusUpdate with correct status', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockResolvedValue({
         success: true,
         message: 'Success',
@@ -348,7 +348,7 @@ describe('PideaAgentBranchComponent', () => {
     });
 
     it('calls onError with correct error message', async () => {
-      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/APIChatRepository');
+      const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockRejectedValue(new Error('Test error'));
 
       render(

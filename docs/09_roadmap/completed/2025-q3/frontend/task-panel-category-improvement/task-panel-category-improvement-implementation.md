@@ -5,7 +5,7 @@
 - **Priority**: High
 - **Category**: frontend
 - **Estimated Time**: 4 hours
-- **Dependencies**: Existing TasksPanelComponent, APIChatRepository, backend task APIs, TaskType system
+- **Dependencies**: Existing TasksPanelComponent, ChatRepository, backend task APIs, TaskType system
 - **Related Issues**: Improve user experience, implement hierarchical task categories, add more action buttons, fix category display issue
 
 ## 2. Technical Requirements

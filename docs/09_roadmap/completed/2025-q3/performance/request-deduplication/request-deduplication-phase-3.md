@@ -13,7 +13,7 @@ Implement advanced features including React Query integration, request monitorin
 ## Deliverables
 - File: `frontend/src/infrastructure/services/RequestMonitoringService.js` - Request analytics
 - File: `backend/infrastructure/services/RequestAnalyticsService.js` - Backend analytics
-- File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - React Query integration
+- File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - React Query integration
 - File: `backend/infrastructure/logging/RequestLogger.js` - Enhanced request logging
 - Test: `tests/unit/infrastructure/services/RequestMonitoringService.test.js` - Unit tests
 
@@ -72,8 +72,8 @@ Implement advanced features including React Query integration, request monitorin
 - `getAnalytics()` - Get comprehensive analytics
 - `exportReport(format)` - Export analytics reports
 
-### 3. APIChatRepository.jsx React Query Integration
-**Location**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+### 3. ChatRepository.jsx React Query Integration
+**Location**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 
 **Enhancements**:
 - Integrate React Query for automatic caching and deduplication
@@ -119,7 +119,7 @@ Implement advanced features including React Query integration, request monitorin
 
 ### Integration Tests
 **Test Cases**:
-- React Query integration with APIChatRepository
+- React Query integration with ChatRepository
 - Request monitoring with real API calls
 - Analytics service with backend requests
 - Logging integration with request flow

@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import { create } from 'zustand';
 import useNotificationStore from './NotificationStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 import sessionMonitorService from '../services/SessionMonitorService.jsx';
 import activityTrackerService from '../services/ActivityTrackerService.jsx';
 import crossTabSyncService from '../services/CrossTabSyncService.jsx';

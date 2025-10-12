@@ -17,7 +17,7 @@ Rename all frontend components, CSS classes, and API methods from "docs tasks" t
 - [x] ✅ File: `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` - Renamed from DocsTaskDetailsModal
 - [x] ✅ File: `frontend/src/css/modal/manual-task-details-modal.css` - Renamed from task-docs-details-modal.css
 - [x] ✅ Updated: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Updated all references
-- [x] ✅ Updated: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Added new manual task methods
+- [x] ✅ Updated: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Added new manual task methods
 - [x] ✅ Updated: All CSS classes from docs-task-* to manual-task-*
 - [x] ✅ Updated: All variable names from docsTasks to manualTasks
 - [x] ✅ Updated: All UI text from "Documentation Tasks" to "Manual Tasks"

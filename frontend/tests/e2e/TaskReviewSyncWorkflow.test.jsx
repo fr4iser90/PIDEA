@@ -9,10 +9,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import TasksPanelComponent from '@/presentation/components/chat/sidebar-right/TasksPanelComponent';
 import TaskReviewSelectionModal from '@/presentation/components/chat/modal/TaskReviewSelectionModal';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository';
 
 // Mock dependencies
-jest.mock('@/infrastructure/repositories/APIChatRepository', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository', () => ({
   __esModule: true,
   default: jest.fn(),
   apiCall: jest.fn()

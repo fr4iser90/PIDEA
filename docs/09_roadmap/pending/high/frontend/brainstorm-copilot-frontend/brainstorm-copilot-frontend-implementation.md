@@ -120,7 +120,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/pendi
 - [ ] `frontend/src/css/brainstorm/brainstorm-settings.css` - Settings styles (follows existing panel styles)
 - [ ] `frontend/src/css/brainstorm/brainstorm-history.css` - History styles (follows existing chat styles)
 - [ ] `frontend/src/hooks/useBrainstorm.js` - Custom hook (follows existing hook patterns)
-- [ ] `frontend/src/infrastructure/repositories/BrainstormRepository.js` - Repository layer (follows APIChatRepository pattern)
+- [ ] `frontend/src/infrastructure/repositories/BrainstormRepository.js` - Repository layer (follows ChatRepository pattern)
 
 #### Files to Delete:
 - [ ] None identified

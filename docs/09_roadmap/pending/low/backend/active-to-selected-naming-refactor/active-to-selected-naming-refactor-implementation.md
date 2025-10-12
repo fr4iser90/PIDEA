@@ -45,7 +45,7 @@
 - [ ] `frontend/src/presentation/components/ide/IDESelector.jsx` - `activeIDEChanged`, `isActive`
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - `activePort`, `setActivePort`, `loadActivePort`
 - [ ] `frontend/src/infrastructure/services/WebSocketService.jsx` - `activeIDEChanged`
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - `activeIDE`
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - `activeIDE`
 - [ ] `frontend/src/hooks/usePortConfiguration.js` - `setActivePort`
 - [ ] `frontend/src/presentation/components/Footer.jsx` - `activePort`, `activeIDE`
 - [ ] `frontend/src/presentation/components/git/pidea-agent/PideaAgentBranchComponent.jsx` - `activePort`, `activeIDE`

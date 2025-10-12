@@ -13,7 +13,7 @@ import ProjectItemComponent from './ProjectItemComponent.jsx';
 import ProjectAddComponent from './ProjectAddComponent.jsx';
 import '@/scss/components/_project-management.scss';
 
-const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onCloseAddModal }) => {
+const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onCloseAddModal, onOpenAddModal }) => {
   logger.info('🔍 ProjectListComponent RENDERING!', { showAddModal });
   
   const { projects, isLoading, error, refresh } = useProjectManagement();
@@ -85,7 +85,7 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
       <div className="project-list-header">
         <h3>Projects</h3>
         <button 
-          onClick={() => setShowAddForm(true)}
+          onClick={() => onOpenAddModal && onOpenAddModal(true)}
           className="btn btn-primary btn-sm"
           title="Add new project"
         >

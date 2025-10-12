@@ -1,6 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ProjectRepository from '@/infrastructure/repositories/ProjectRepository.jsx';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
 
 /**
  * ProjectCommandButtons Component
@@ -25,7 +26,7 @@ const ProjectCommandButtons = ({
   const [commandStatus, setCommandStatus] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new TaskRepository();
 
   // Load project commands on mount
   useEffect(() => {

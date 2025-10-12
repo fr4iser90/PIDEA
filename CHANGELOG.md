@@ -135,7 +135,7 @@
 - 31e81c3 Refactor Naming Conventions from 'Active' to 'Selected' Across Backend and Frontend
 - c10c5d4 Refactor ChatHistoryHandler and Update WebChatApplicationService for Enhanced Message Retrieval
 - 4ab919a Remove deprecated cookies.txt file and refactor GetChatHistoryHandler for improved message retrieval. Enhanced logging for better traceability and streamlined chat history handling by combining database and live messages. Updated WebChatApplicationService to utilize the new handler pattern for fetching chat history, ensuring efficient data retrieval. Adjusted ChatCacheService to return empty arrays instead of null for cache misses, preventing cascading failures.
-- d532b52 Refactor GitApplicationService and APIChatRepository for Direct Command Execution
+- d532b52 Refactor GitApplicationService and ChatRepository for Direct Command Execution
 - 0cd30d3 Enhance Step Registry and Analysis API with Parallel Execution and Direct Data Fetching
 - a6aaca7 Update Step Registry Documentation with Validation Results and Task Analysis
 - c41d10d Enhance GitApplicationService with Request Deduplication and Combined Info Retrieval
@@ -146,7 +146,7 @@
 - ce88bbe Implement Memory Management Enhancements in AnalysisApplicationService
 - eeb1590 Refactor Analysis and Task Management Components
 - e1c306c Implement session cleanup in AuthService to enhance security
-- 0c3dcff Update APIChatRepository to Modify Manual Tasks API Endpoint
+- 0c3dcff Update ChatRepository to Modify Manual Tasks API Endpoint
 - 8d2d620 Refactor PostgreSQL Task Repository SQL Queries
 - 96286e6 Enhance Token Management and Security Features
 - 7985dfd Update Test Cases to Use Dummy JWT Tokens

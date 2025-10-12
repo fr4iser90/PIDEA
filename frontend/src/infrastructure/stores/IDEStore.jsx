@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import performanceLogger from '@/infrastructure/services/PerformanceLogger';
@@ -1438,7 +1438,7 @@ const useIDEStore = create(
 
       // Project command methods (optional - can use existing terminal services)
       getProjectCommands: async (projectId) => {
-        // Use existing APIChatRepository patterns
+        // Use existing ChatRepository patterns
         return apiCall(`/api/projects/${projectId}/commands`);
       },
 

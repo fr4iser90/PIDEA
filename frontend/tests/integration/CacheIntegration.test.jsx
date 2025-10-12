@@ -158,7 +158,7 @@ describe('Cache Integration', () => {
       const switchResult = { success: true, port };
       cacheService.set(switchKey, switchResult, 'ide', 'ide');
       
-      // APIChatRepository should be able to access same cache
+      // ChatRepository should be able to access same cache
       const cachedResult = cacheService.get(switchKey);
       expect(cachedResult).toEqual(switchResult);
     });

@@ -84,7 +84,7 @@ Complete comprehensive testing and documentation for the port configuration feat
   - JSDoc comments for usePortConfiguration hook ✅
   - JSDoc comments for ProjectCommandButtons component ✅
   - JSDoc comments for new IDEStore methods ✅
-  - JSDoc comments for new APIChatRepository methods ✅
+  - JSDoc comments for new ChatRepository methods ✅
   - Component usage examples ✅
 
 ### 7. Create User Guide
@@ -185,7 +185,7 @@ describe('PreviewComponent Integration', () => {
 - **Command Types**: start, dev, build, test, stop ✅
 
 ### Test Environment Setup
-- **Mock Services**: APIChatRepository, IDEStore ✅
+- **Mock Services**: ChatRepository, IDEStore ✅
 - **Test Database**: Isolated test data ✅
 - **Network Simulation**: Success/failure scenarios ✅
 - **Browser Testing**: Chrome, Firefox compatibility ✅
@@ -293,7 +293,7 @@ The Preview Port Configuration feature allows users to manually configure the po
 - **Component Documentation**: ✅ JSDoc comments in all components
 - **Hook Documentation**: ✅ JSDoc comments in usePortConfiguration
 - **Store Documentation**: ✅ JSDoc comments in IDEStore methods
-- **API Documentation**: ✅ JSDoc comments in APIChatRepository methods
+- **API Documentation**: ✅ JSDoc comments in ChatRepository methods
 - **User Guide**: ✅ Comprehensive documentation in phase files
 - **Implementation Guide**: ✅ Detailed implementation documentation
 

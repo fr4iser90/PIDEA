@@ -473,7 +473,7 @@ export default taskModeBadge;
 
 ### Enhanced QueueRepository
 ```javascript
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository';
 
 class QueueRepository {
   constructor() {
@@ -1129,14 +1129,14 @@ describe('taskModeBadge', () => {
 - [x] File: `frontend/src/presentation/components/queue/StepTimeline.jsx` - Status: Step timeline component exists
 - [x] File: `frontend/src/presentation/components/queue/ActiveTaskItem.jsx` - Status: Active task component exists
 - [x] File: `frontend/src/css/panel/queue-panel.css` - Status: Queue panel styling exists
-- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: API client infrastructure exists
+- [x] File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Status: API client infrastructure exists
 
 ### ⚠️ Issues Found
 
 #### 1. **Missing API Client Import**
 - [ ] **File**: Enhanced QueueRepository implementation - Status: Uses incorrect import
   - **Current**: `import { apiClient } from '@/infrastructure/api/apiClient';`
-  - **Correct**: `import { apiCall } from '@/infrastructure/repositories/APIChatRepository';`
+  - **Correct**: `import { apiCall } from '@/infrastructure/repositories/ChatRepository';`
   - **Impact**: Import will fail, component won't work
 
 #### 2. **Missing Hook Dependencies**
@@ -1161,7 +1161,7 @@ describe('taskModeBadge', () => {
 - [ ] **Impact**: Service layer abstraction missing
 
 ### 🔧 Improvements Made
-- Updated QueueRepository to use correct `apiCall` import from APIChatRepository
+- Updated QueueRepository to use correct `apiCall` import from ChatRepository
 - Corrected file paths to match actual project structure
 - Added proper error handling patterns consistent with existing codebase
 - Updated workflow type mapping to match backend expectations

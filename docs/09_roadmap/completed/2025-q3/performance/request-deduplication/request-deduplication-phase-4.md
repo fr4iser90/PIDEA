@@ -111,7 +111,7 @@ describe('RequestDeduplicationService', () => {
 ```javascript
 describe('Request Deduplication Integration', () => {
   test('should prevent duplicate IDE switches', async () => {
-    const apiRepository = new APIChatRepository();
+    const apiRepository = new ChatRepository();
     
     const switchPromises = Array.from({ length: 5 }, () => 
       apiRepository.switchIDE(9222)
@@ -126,7 +126,7 @@ describe('Request Deduplication Integration', () => {
   });
 
   test('should respect rate limits', async () => {
-    const apiRepository = new APIChatRepository();
+    const apiRepository = new ChatRepository();
     
     // Make many rapid requests
     const requests = Array.from({ length: 20 }, () => 
@@ -142,7 +142,7 @@ describe('Request Deduplication Integration', () => {
   });
 
   test('should handle concurrent requests properly', async () => {
-    const apiRepository = new APIChatRepository();
+    const apiRepository = new ChatRepository();
     
     // Simulate concurrent requests
     const concurrentRequests = Array.from({ length: 10 }, (_, i) => 

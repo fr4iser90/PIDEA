@@ -6,7 +6,7 @@
 - **Priority**: High
 - **Estimated Analysis Time**: 4 hours
 - **Scope**: Frontend API calls, Backend request handling, IDE switching performance
-- **Related Components**: APIChatRepository, IDEStore, IDEApplicationService, ConnectionPool
+- **Related Components**: ChatRepository, IDEStore, IDEApplicationService, ConnectionPool
 
 ## 2. Current State Assessment
 - **Codebase Health**: Good - but missing professional request deduplication
@@ -21,7 +21,7 @@
 ### Critical Gaps (High Priority):
 
 - [ ] **Missing Request Deduplication Layer**: No centralized request deduplication
-  - **Location**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+  - **Location**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
   - **Required Functionality**: Prevent duplicate API calls for same endpoint
   - **Dependencies**: Zustand stores, React components
   - **Estimated Effort**: 2 hours
@@ -44,7 +44,7 @@
 - [ ] **Missing React Query Integration**: No modern data fetching library
   - **Current Issues**: Manual API calls, no automatic caching
   - **Proposed Solution**: Implement React Query for automatic deduplication
-  - **Files to Modify**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+  - **Files to Modify**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
   - **Estimated Effort**: 3 hours
 
 - [ ] **No Request Queuing**: Backend doesn't handle concurrent requests properly
@@ -70,12 +70,12 @@
 - [ ] `frontend/src/hooks/useRequestDeduplication.js` - React hook for deduplication
 
 ### Files Incomplete:
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Missing request deduplication logic
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Missing request deduplication logic
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Missing proper request handling
 - [ ] `backend/application/services/IDEApplicationService.js` - Missing request queuing
 
 ### Files Needing Refactoring:
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add proper request deduplication
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Add proper request deduplication
 - [ ] `backend/presentation/api/IDEController.js` - Add rate limiting middleware
 
 ## 5. Technical Debt Assessment
@@ -183,13 +183,13 @@
 ### Missing Performance Features:
 - [ ] **Request Caching**: No intelligent caching of requests
   - **Implementation**: Cache successful requests
-  - **Files to Modify**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+  - **Files to Modify**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
   - **Estimated Effort**: 1 hour
 
 ## 11. Recommended Action Plan
 
 ### Immediate Actions (Next Sprint):
-- [ ] **Action**: Implement basic request deduplication in APIChatRepository
+- [ ] **Action**: Implement basic request deduplication in ChatRepository
   - **Priority**: High
   - **Effort**: 2 hours
   - **Dependencies**: None
@@ -277,7 +277,7 @@
 
 ### Phase 1: Basic Request Deduplication (2 hours)
 1. Create `RequestDeduplicationService` in frontend
-2. Modify `APIChatRepository` to use deduplication
+2. Modify `ChatRepository` to use deduplication
 3. Test with IDE switching
 
 ### Phase 2: Backend Protection (1 hour)
@@ -303,7 +303,7 @@ infrastructure/
 ├── services/
 │   └── RequestDeduplicationService.js  # Central deduplication
 ├── repositories/
-│   └── APIChatRepository.jsx           # Uses deduplication
+│   └── ChatRepository.jsx           # Uses deduplication
 └── hooks/
     └── useRequestDeduplication.js      # React hook
 ```

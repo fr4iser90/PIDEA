@@ -148,7 +148,7 @@ describe('CacheService', () => {
   describe('Cache Warming', () => {
     beforeEach(() => {
       // Mock apiCall for warming tests
-      jest.doMock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+      jest.doMock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
         apiCall: jest.fn()
       }));
     });
@@ -162,7 +162,7 @@ describe('CacheService', () => {
       const projectId = 'project123';
       
       // Mock successful API responses
-      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockImplementation((url) => {
         if (url.includes('/tasks')) {
           return Promise.resolve({ success: true, data: [{ id: 1, title: 'Task 1' }] });
@@ -188,7 +188,7 @@ describe('CacheService', () => {
       const projectId = 'project123';
       
       // Mock API failure
-      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockRejectedValue(new Error('API Error'));
       
       const results = await cacheService.warmCache(patterns, port, projectId);

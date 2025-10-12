@@ -31,7 +31,7 @@
 - [x] ✅ `backend/application/services/IDEApplicationService.js` - Updated handler reference ✅ COMPLETED
 
 #### Frontend Files:
-- [x] ✅ `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Added new manual task methods ✅ COMPLETED
+- [x] ✅ `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Added new manual task methods ✅ COMPLETED
 - [x] ✅ `frontend/src/presentation/components/chat/modal/DocsTaskDetailsModal.jsx` - Renamed to ManualTaskDetailsModal ✅ COMPLETED
 - [x] ✅ `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Updated component references ✅ COMPLETED
 - [x] ✅ `frontend/src/css/global/sidebar-right.css` - Updated CSS classes ✅ COMPLETED
@@ -294,7 +294,7 @@
 - [x] ✅ File: `backend/application/handlers/categories/workflow/ManualTasksHandler.js` - Status: Working as expected ✅ COMPLETED
 - [x] ✅ File: `frontend/src/presentation/components/chat/modal/ManualTaskDetailsModal.jsx` - Status: Component exists and functional ✅ COMPLETED
 - [x] ✅ File: `frontend/src/presentation/components/chat/sidebar-right/TasksPanelComponent.jsx` - Status: Integration working correctly ✅ COMPLETED
-- [x] ✅ File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: API methods implemented correctly ✅ COMPLETED
+- [x] ✅ File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Status: API methods implemented correctly ✅ COMPLETED
 - [x] ✅ File: `frontend/src/css/modal/manual-task-details-modal.css` - Status: CSS file exists with proper classes ✅ COMPLETED
 - [x] ✅ File: `frontend/src/css/global/sidebar-right.css` - Status: CSS classes implemented correctly ✅ COMPLETED
 - [x] ✅ File: `backend/application/services/IDEApplicationService.js` - Status: ManualTasksHandler integration working ✅ COMPLETED
@@ -353,7 +353,7 @@
 
 2. **Frontend Dependencies**
    - TasksPanelComponent correctly imports ManualTaskDetailsModal ✅ COMPLETED
-   - APIChatRepository has all required API methods ✅ COMPLETED
+   - ChatRepository has all required API methods ✅ COMPLETED
    - CSS classes are properly implemented ✅ COMPLETED
 
 ### 🎯 Implementation Success

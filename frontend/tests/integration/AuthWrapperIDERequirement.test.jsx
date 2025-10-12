@@ -175,7 +175,7 @@ describe('AuthWrapper IDE Requirement Integration', () => {
       startButton.click();
 
       // Mock successful IDE start
-      const { apiCall } = require('@/infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = require('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockResolvedValueOnce({
         success: true,
         data: { port: 9222, ideType: 'cursor' }

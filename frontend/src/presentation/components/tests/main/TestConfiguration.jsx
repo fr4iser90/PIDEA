@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TestRepository from '@/infrastructure/repositories/TestRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import '@/scss/components/_test-runner.scss';;
 
@@ -37,7 +37,7 @@ const TestConfiguration = ({
   const [projectForm, setProjectForm] = useState({ name: '', description: '' });
   const [savingConfig, setSavingConfig] = useState(false);
   const [configMessage, setConfigMessage] = useState('');
-  const apiRepository = new APIChatRepository(); // ✅ API REPOSITORY VERWENDEN!
+  const apiRepository = new TestRepository(); // ✅ API REPOSITORY VERWENDEN!
 
   // Load browser environment and configuration on component mount
   useEffect(() => {

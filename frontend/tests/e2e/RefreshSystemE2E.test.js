@@ -7,7 +7,7 @@ import refreshService from '@/infrastructure/services/RefreshService';
 
 // Mock all dependencies
 jest.mock('@/infrastructure/services/RefreshService');
-jest.mock('@/infrastructure/repositories/APIChatRepository');
+jest.mock('@/infrastructure/repositories/ChatRepository');
 jest.mock('@/infrastructure/repositories/QueueRepository');
 jest.mock('@/infrastructure/stores/selectors/ProjectSelectors');
 jest.mock('@/infrastructure/services/WebSocketService');

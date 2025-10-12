@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
+import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
 import '@/scss/components/_analysis-modal.scss';;
 
 const AnalysisModal = ({ analysis, onClose, projectId }) => {
@@ -9,7 +9,7 @@ const AnalysisModal = ({ analysis, onClose, projectId }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('content');
 
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new AnalysisRepository();
 
   useEffect(() => {
     if (analysis) {

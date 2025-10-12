@@ -28,7 +28,7 @@
 #### Files to Modify:
 - [x] `frontend/src/presentation/components/git/main/GitManagementComponent.jsx` - ✅ EXISTS - Add version management section
 - [x] `backend/presentation/api/GitController.js` - ✅ EXISTS - Add 6 version endpoints
-- [x] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - ✅ EXISTS - Add version API calls
+- [x] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - ✅ EXISTS - Add version API calls
 - [x] `frontend/src/css/main/git.css` - ✅ EXISTS - Add styling for version UI
 
 #### Files to Create (ONLY 4 COMPONENTS):
@@ -61,7 +61,7 @@
 
 #### Phase 2: Integration & API (4 hours)
 - [ ] Add 6 version endpoints to existing GitController
-- [ ] Add version API calls to APIChatRepository
+- [ ] Add version API calls to ChatRepository
 - [ ] Integrate VersionManagementSection into GitManagementComponent
 - [ ] Add styling to git.css
 - [ ] Test integration with existing backend services
@@ -493,7 +493,7 @@ docs/09_roadmap/
 - **Existing Changelog Generation**: ✅ GitChangelogGenerationStep implemented
 - **Existing Git Tag Creation**: ✅ GitReleaseTagStep implemented
 - **Existing Frontend Git UI**: ✅ GitManagementComponent with full functionality
-- **Existing API Repository**: ✅ APIChatRepository with git methods
+- **Existing API Repository**: ✅ ChatRepository with git methods
 
 ### ⚠️ Gap Analysis Results
 - **Missing Frontend Components**: 4 components need creation

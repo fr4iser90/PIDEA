@@ -1,11 +1,12 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import TestFixTaskModal from '../modal/TestFixTaskModal.jsx';
 
 function AutoPanelComponent({ eventBus }) {
-  const api = new APIChatRepository();
+  const api = new TaskRepository();
   
   // Auto mode state
   const [autoStatus, setAutoStatus] = useState('stopped');

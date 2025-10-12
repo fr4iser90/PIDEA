@@ -23,7 +23,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 - **Priority**: High
 - **Category**: frontend
 - **Estimated Time**: 4 hours
-- **Dependencies**: Existing PreviewComponent, IDEStore, APIChatRepository
+- **Dependencies**: Existing PreviewComponent, IDEStore, ChatRepository
 - **Related Issues**: Port detection currently returns null when package.json ports are removed
 
 ### 📝 Updated Technical Requirements
@@ -32,7 +32,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 - [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Add port input field and configuration logic
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - **Extend existing** custom port management functionality
 - [ ] `frontend/src/css/main/preview.css` - Add styling for port configuration UI
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - **Optional**: Add port validation method (or use IDEStore)
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - **Optional**: Add port validation method (or use IDEStore)
 
 #### Backend Changes (Updated)
 - [ ] **Optional**: Create project commands endpoint
@@ -53,7 +53,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 - [ ] `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Add port input field and configuration logic
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - Add custom port management functionality
 - [ ] `frontend/src/css/main/preview.css` - Add styling for port configuration UI
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Add port validation method and project command methods
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Add port validation method and project command methods
 
 #### Files to Create:
 - [ ] `frontend/src/presentation/components/chat/main/PortConfigInput.jsx` - Reusable port input component
@@ -128,7 +128,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 #### Unit Tests:
 - [ ] Test file: `tests/unit/PortConfigInput.test.jsx`
 - [ ] Test cases: Port validation, input formatting, error states
-- [ ] Mock requirements: IDEStore, APIChatRepository
+- [ ] Mock requirements: IDEStore, ChatRepository
 
 #### Integration Tests:
 - [ ] Test file: `tests/integration/PreviewComponent.test.jsx`
@@ -243,7 +243,7 @@ Create new Plan/Implementation [Name]-implementation.md in docs/09_roadmap/tasks
 
 ### 15. References & Resources
 - **Technical Documentation**: Existing PreviewComponent.jsx, IDEStore.jsx
-- **API References**: APIChatRepository.jsx for port validation
+- **API References**: ChatRepository.jsx for port validation
 - **Design Patterns**: React hooks pattern, Zustand state management
 - **Best Practices**: React component composition, error handling patterns
 - **Similar Implementations**: Existing port management in IDEStore
@@ -269,7 +269,7 @@ The component uses existing project data from the database:
 // ProjectCommandButtons.jsx
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
 
 const ProjectCommandButtons = ({ 
   projectId, 
@@ -288,7 +288,7 @@ const ProjectCommandButtons = ({
 
 ### API Integration
 ```javascript
-// New methods in APIChatRepository.jsx
+// New methods in ChatRepository.jsx
 async getProjectCommands(projectId = null) {
   const currentProjectId = projectId || await this.getCurrentProjectId();
   return apiCall(`/api/projects/${currentProjectId}/commands`);
@@ -326,21 +326,21 @@ The component will be integrated into the PreviewComponent header alongside the 
 ### ✅ Completed Items
 - [x] File: `frontend/src/presentation/components/chat/main/PreviewComponent.jsx` - Status: Exists and properly structured with header component pattern
 - [x] File: `frontend/src/infrastructure/stores/IDEStore.jsx` - Status: Exists with Zustand store pattern and comprehensive port management
-- [x] File: `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Status: Exists with proper API configuration and extensive endpoint structure
+- [x] File: `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Status: Exists with proper API configuration and extensive endpoint structure
 - [x] File: `frontend/src/css/main/preview.css` - Status: Exists with comprehensive styling system and CSS variables
 - [x] Directory: `frontend/src/hooks/` - Status: Exists and follows project patterns (useAnalysisCache.js provides good reference)
 - [x] Import Pattern: `@/` alias imports - Status: Correctly configured in vite.config.js
 - [x] Database Schema: Projects table with command fields - Status: Exists with start_command, dev_command, build_command, test_command
 - [x] Terminal Services: Existing execution infrastructure - Status: Available in backend with comprehensive terminal execution services
 - [x] IDEStore Port Management: Status: Already has `validatePort`, `isValidPortRange`, and port preference system
-- [x] APIChatRepository Structure: Status: Has extensive endpoint configuration and project-based API patterns
+- [x] ChatRepository Structure: Status: Has extensive endpoint configuration and project-based API patterns
 
 ### ⚠️ Issues Found
 - [ ] File: `frontend/src/presentation/components/chat/main/PortConfigInput.jsx` - Status: Not found, needs creation
 - [ ] File: `frontend/src/hooks/usePortConfiguration.js` - Status: Not found, needs creation
 - [ ] File: `frontend/src/presentation/components/chat/main/ProjectCommandButtons.jsx` - Status: Not found, needs creation
-- [ ] API Endpoint: Port validation endpoint - Status: Not implemented in APIChatRepository (but IDEStore has validation)
-- [ ] API Endpoint: Project command execution endpoints - Status: Not implemented in APIChatRepository
+- [ ] API Endpoint: Port validation endpoint - Status: Not implemented in ChatRepository (but IDEStore has validation)
+- [ ] API Endpoint: Project command execution endpoints - Status: Not implemented in ChatRepository
 - [ ] Backend API: Project commands endpoint - Status: Not found in backend API structure
 - [ ] Backend API: Command execution endpoint - Status: Not found in backend API structure
 
@@ -349,7 +349,7 @@ The component will be integrated into the PreviewComponent header alongside the 
 - Corrected import patterns to use `@/` alias consistently
 - Added proper integration with existing IDEStore methods (leverage existing `validatePort` and `isValidPortRange`)
 - Aligned with existing component patterns and styling
-- Updated to use existing APIChatRepository patterns
+- Updated to use existing ChatRepository patterns
 - **Added ProjectCommandButtons component** for start/stop functionality
 - **Integrated with existing database schema** for project commands
 - **Leveraged existing terminal execution services** for command execution
@@ -366,8 +366,8 @@ The component will be integrated into the PreviewComponent header alongside the 
 
 ### 🚀 Next Steps
 1. Create missing files: `PortConfigInput.jsx`, `usePortConfiguration.js`, `ProjectCommandButtons.jsx`
-2. Add port validation method to APIChatRepository (or use existing IDEStore validation)
-3. Add project command execution methods to APIChatRepository
+2. Add port validation method to ChatRepository (or use existing IDEStore validation)
+3. Add project command execution methods to ChatRepository
 4. Extend IDEStore with custom port methods (build on existing validation)
 5. Update PreviewComponent with port input and command button integration
 6. Add CSS styles for port configuration and command buttons UI

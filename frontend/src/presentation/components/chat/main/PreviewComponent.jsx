@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef } from 'react';
 import { useRefreshService } from '@/hooks/useRefreshService';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
 import PortConfigInput from './PortConfigInput.jsx';
 import ProjectCommandButtons from './ProjectCommandButtons.jsx';
 import { usePortConfiguration } from '@/hooks/usePortConfiguration.js';
@@ -44,7 +44,7 @@ function PreviewComponent({ eventBus, activePort, projectId = null }) {
   const [showPortInput, setShowPortInput] = useState(false);
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new ChatRepository();
   
   // Port configuration hook
   const { customPort, setCustomPort, validatePort } = usePortConfiguration();

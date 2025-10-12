@@ -42,7 +42,7 @@ This phase focuses on refactoring all frontend naming from 'active' to 'selected
 ### Infrastructure (3 files):
 - [ ] `frontend/src/infrastructure/stores/IDEStore.jsx` - `activePort` → `selectedIDE`, `setActivePort` → `setSelectedIDE`, `loadActivePort` → `loadSelectedIDE`
 - [ ] `frontend/src/infrastructure/services/WebSocketService.jsx` - `activeIDEChanged` → `ideSelectedChanged`
-- [ ] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - `activeIDE` → `selectedIDE`
+- [ ] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - `activeIDE` → `selectedIDE`
 
 ### Hooks and Utilities (2 files):
 - [ ] `frontend/src/hooks/usePortConfiguration.js` - `setActivePort` → `setSelectedIDE`
@@ -97,7 +97,7 @@ This phase focuses on refactoring all frontend naming from 'active' to 'selected
    - `activeIDEChanged` → `ideSelectedChanged`
    - Update event handling methods
 
-2. Update `APIChatRepository.jsx`:
+2. Update `ChatRepository.jsx`:
    - `activeIDE` → `selectedIDE`
 
 3. Update `usePortConfiguration.js`:

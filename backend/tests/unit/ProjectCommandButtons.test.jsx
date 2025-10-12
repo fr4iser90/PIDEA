@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ProjectCommandButtons from '../../frontend/src/presentation/components/chat/main/ProjectCommandButtons.jsx';
 
-// Mock the APIChatRepository
-jest.mock('../../frontend/src/infrastructure/repositories/APIChatRepository.jsx', () => {
+// Mock the ChatRepository
+jest.mock('../../frontend/src/infrastructure/repositories/ChatRepository.jsx', () => {
   return jest.fn().mockImplementation(() => ({
     getProjectCommands: jest.fn(),
     executeProjectCommand: jest.fn()
@@ -32,9 +32,9 @@ describe('ProjectCommandButtons', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Get the mocked APIChatRepository instance
-    const APIChatRepository = require('../../frontend/src/infrastructure/repositories/APIChatRepository.jsx');
-    mockApiRepository = new APIChatRepository();
+    // Get the mocked ChatRepository instance
+    const ChatRepository = require('../../frontend/src/infrastructure/repositories/ChatRepository.jsx');
+    mockApiRepository = new ChatRepository();
   });
 
   test('renders command buttons', () => {

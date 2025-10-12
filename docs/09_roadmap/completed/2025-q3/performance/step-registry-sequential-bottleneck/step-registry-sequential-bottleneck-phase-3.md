@@ -49,7 +49,7 @@ POST /api/projects/:projectId/analysis/execute
 
 ### 3. **Frontend Changes**
 
-#### **APIChatRepository Enhancements**
+#### **ChatRepository Enhancements**
 ```javascript
 // ✅ NEW: Direct API methods (fast, no StepRegistry)
 async getAnalysisStatusDirect(projectId)

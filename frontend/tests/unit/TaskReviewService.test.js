@@ -1,7 +1,7 @@
 import TaskReviewService from '@/application/services/TaskReviewService';
 
 // Mock dependencies
-jest.mock('@/infrastructure/repositories/APIChatRepository', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository', () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     sendMessage: jest.fn(),
@@ -37,7 +37,7 @@ describe('TaskReviewService', () => {
     mockApiCall = jest.fn();
     
     taskReviewService = new TaskReviewService();
-    taskReviewService.apiChatRepository.apiCall = mockApiCall;
+    taskReviewService.ChatRepository.apiCall = mockApiCall;
   });
 
   afterEach(() => {
@@ -285,8 +285,8 @@ describe('TaskReviewService', () => {
         content: 'Mock review plan content'
       };
 
-      taskReviewService.apiChatRepository.sendMessage = jest.fn().mockResolvedValue(mockApiResponse);
-      taskReviewService.apiChatRepository.apiCall = jest.fn().mockResolvedValue({
+      taskReviewService.ChatRepository.sendMessage = jest.fn().mockResolvedValue(mockApiResponse);
+      taskReviewService.ChatRepository.apiCall = jest.fn().mockResolvedValue({
         success: true,
         content: 'Mock prompt content'
       });
@@ -314,7 +314,7 @@ describe('TaskReviewService', () => {
       };
 
       taskReviewService.taskWorkflowRepository.executeWorkflow = jest.fn().mockResolvedValue(mockWorkflowResult);
-      taskReviewService.apiChatRepository.apiCall = jest.fn().mockResolvedValue({
+      taskReviewService.ChatRepository.apiCall = jest.fn().mockResolvedValue({
         success: true,
         content: 'Mock execute prompt content'
       });

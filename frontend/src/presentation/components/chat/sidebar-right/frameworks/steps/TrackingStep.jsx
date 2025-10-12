@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
 
 function TrackingStep({ tasks, analysisResults, workflowData }) {
   const [projectTasks, setProjectTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [trackingError, setTrackingError] = useState(null);
-  const api = new APIChatRepository();
+  const api = new TaskRepository();
 
   useEffect(() => {
     loadProjectTasks();

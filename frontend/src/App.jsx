@@ -16,7 +16,8 @@ import NotificationSystem from '@/presentation/components/common/NotificationSys
 import SessionWarningModal from '@/presentation/components/auth/SessionWarningModal.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
+import ProjectRepository from '@/infrastructure/repositories/ProjectRepository.jsx';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
 import refreshService from '@/infrastructure/services/RefreshService';
 import '@/scss/components/_project-add-modal.scss';
@@ -416,7 +417,59 @@ function App() {
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor="workspace-path">Workspace Path *</label>
+                      <div className="form-group-header">
+                        <label htmlFor="workspace-path">Workspace Path *</label>
+                        <button 
+                          type="button"
+                          className="project-add-modal__detect-btn"
+                          onClick={async () => {
+                            try {
+                              console.log('🔍 Detecting projects from open IDE ports...');
+                              
+                              // Use ProjectRepository for project detection
+                              const apiRepo = new ProjectRepository();
+                              const result = await apiRepo.detectProjects();
+                              
+                              if (result.success) {
+                                const detectedProjects = result.data || [];
+                                console.log('✅ Detected projects:', detectedProjects);
+                                
+                                if (detectedProjects.length > 0) {
+                                  // Auto-fill form with first detected project
+                                  const project = detectedProjects[0];
+                                  document.getElementById('workspace-path').value = project.workspacePath || '';
+                                  document.getElementById('project-name').value = project.name || '';
+                                  document.getElementById('project-description').value = project.description || '';
+                                  
+                                  // Auto-detect configuration
+                                  if (project.type) {
+                                    document.getElementById('project-type').value = project.type;
+                                  }
+                                  if (project.framework) {
+                                    document.getElementById('framework').value = project.framework;
+                                  }
+                                  if (project.language) {
+                                    document.getElementById('language').value = project.language;
+                                  }
+                                  if (project.packageManager) {
+                                    document.getElementById('package-manager').value = project.packageManager;
+                                  }
+                                  
+                                  console.log('✅ Form auto-filled with detected project');
+                                } else {
+                                  console.log('ℹ️ No projects detected from open IDE ports');
+                                }
+                              } else {
+                                console.error('❌ Detection failed:', result.error || 'Unknown error');
+                              }
+                            } catch (error) {
+                              console.error('❌ Detection error:', error);
+                            }
+                          }}
+                        >
+                          🔍 Detect from IDE
+                        </button>
+                      </div>
                       <input
                         id="workspace-path"
                         type="text"

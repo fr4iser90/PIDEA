@@ -25,7 +25,7 @@ Integrate port configuration and command execution into the existing preview sys
   - Follow existing header component patterns
 
 ### 2. Implement Port Validation Logic
-- [ ] **File**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- [ ] **File**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 - [ ] **Time**: 20 minutes
 - [ ] **Description**: Add port validation method to API repository
 - [ ] **Requirements**:
@@ -73,7 +73,7 @@ Integrate port configuration and command execution into the existing preview sys
   - Responsive design considerations
 
 ### 6. Add Project Command Execution Functionality
-- [ ] **File**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- [ ] **File**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 - [ ] **Time**: 20 minutes
 - [ ] **Description**: Add project command execution methods
 - [ ] **Requirements**:
@@ -119,9 +119,9 @@ const PreviewHeader = ({ project, port, onPortChange, onCommandExecute }) => {
 };
 ```
 
-### APIChatRepository Port Validation
+### ChatRepository Port Validation
 ```javascript
-// Optional: New method in APIChatRepository.jsx (if backend endpoint exists)
+// Optional: New method in ChatRepository.jsx (if backend endpoint exists)
 async validatePort(port) {
   try {
     // Use existing IDEStore validation instead of backend call
@@ -192,7 +192,7 @@ clearCustomPort: () => {
 
 ### Project Command Execution
 ```javascript
-// New methods in APIChatRepository.jsx following existing patterns
+// New methods in ChatRepository.jsx following existing patterns
 async getProjectCommands(projectId = null) {
   const currentProjectId = projectId || await this.getCurrentProjectId();
   // Use existing apiCall pattern
@@ -222,7 +222,7 @@ async executeProjectCommand(projectId = null, commandType, options = {}) {
   - Command execution status updates
 
 ### API Tests
-- [ ] **File**: `tests/integration/APIChatRepository.test.js`
+- [ ] **File**: `tests/integration/ChatRepository.test.js`
 - [ ] **Test Cases**:
   - Port validation method works
   - Project command retrieval works
@@ -233,7 +233,7 @@ async executeProjectCommand(projectId = null, commandType, options = {}) {
 
 ### Code Documentation
 - [ ] Update PreviewComponent JSDoc with new props
-- [ ] Document new APIChatRepository methods
+- [ ] Document new ChatRepository methods
 - [ ] Document new IDEStore methods
 - [ ] Component integration examples
 
@@ -255,20 +255,20 @@ async executeProjectCommand(projectId = null, commandType, options = {}) {
 - **Port Input Integration**: ✅ Already integrated in PreviewComponent header
 - **Command Execution**: ✅ Already integrated with ProjectCommandButtons component
 - **Port Validation**: ✅ Uses existing IDEStore validation methods
-- **API Integration**: ✅ All required methods exist in APIChatRepository
+- **API Integration**: ✅ All required methods exist in ChatRepository
 - **Store Integration**: ✅ All required methods exist in IDEStore
 - **CSS Styling**: ✅ Already implemented in preview.css
 
 ### Key Findings
 1. **All functionality already implemented**: The port configuration and command execution features were already fully integrated into the PreviewComponent
-2. **Existing infrastructure leveraged**: Uses existing IDEStore validation and APIChatRepository patterns
+2. **Existing infrastructure leveraged**: Uses existing IDEStore validation and ChatRepository patterns
 3. **No additional code needed**: The integration was already complete from Phase 1
 4. **Tests created**: Integration tests for PreviewComponent created and ready for execution
 
 ### Technical Details
 - **PreviewComponent.jsx**: Already has port input field and command buttons integrated
 - **IDEStore.jsx**: Already has all required port management methods
-- **APIChatRepository.jsx**: Already has all required command execution methods
+- **ChatRepository.jsx**: Already has all required command execution methods
 - **CSS Styling**: Already implemented for port configuration and command buttons
 - **Integration Tests**: Created for comprehensive testing coverage
 
@@ -308,7 +308,7 @@ async executeProjectCommand(projectId = null, commandType, options = {}) {
 
 ## 🎯 Deliverables
 1. Enhanced `PreviewComponent.jsx` - Port input and command button integration
-2. Extended `APIChatRepository.jsx` - Port validation and command execution methods
+2. Extended `ChatRepository.jsx` - Port validation and command execution methods
 3. Enhanced `IDEStore.jsx` - Custom port management functionality
 4. Integration tests for port configuration and command execution
 5. Updated documentation and examples
@@ -324,7 +324,7 @@ async executeProjectCommand(projectId = null, commandType, options = {}) {
 ### Codebase Analysis
 - **PreviewComponent.jsx**: ✅ Exists with proper header structure (`preview-header`, `preview-title`, `preview-actions`)
 - **IDEStore.jsx**: ✅ Has comprehensive port management (`validatePort`, `isValidPortRange`, port preferences)
-- **APIChatRepository.jsx**: ✅ Has extensive endpoint structure and `apiCall` helper function
+- **ChatRepository.jsx**: ✅ Has extensive endpoint structure and `apiCall` helper function
 - **CSS Structure**: ✅ `preview.css` has comprehensive styling for header components
 - **Header Integration**: ✅ Existing header pattern supports additional components
 

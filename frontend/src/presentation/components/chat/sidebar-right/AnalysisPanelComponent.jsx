@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '../../../../infrastructure/repositories/APIChatRepository';
+import AnalysisRepository from '../../../../infrastructure/repositories/AnalysisRepository';
 
 const AnalysisPanelComponent = ({ projectId = null }) => {
   const [analysisHistory, setAnalysisHistory] = useState([]);
@@ -10,7 +10,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('history');
 
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new AnalysisRepository();
 
   useEffect(() => {
     loadAnalysisHistory();

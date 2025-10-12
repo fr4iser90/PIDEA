@@ -6,10 +6,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act } from '@testing-library/react';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 
 // Mock dependencies
-vi.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+vi.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: vi.fn()
 }));
 

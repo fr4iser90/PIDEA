@@ -40,7 +40,7 @@ The Preview Port Configuration feature allows users to manually configure the po
 
 ### Infrastructure
 - [x] `frontend/src/infrastructure/stores/IDEStore.jsx` - Extended with custom port management
-- [x] `frontend/src/infrastructure/repositories/APIChatRepository.jsx` - Added port validation methods
+- [x] `frontend/src/infrastructure/repositories/ChatRepository.jsx` - Added port validation methods
 - [x] `frontend/src/css/main/preview.css` - Styling for port configuration UI
 
 ### Testing
@@ -105,7 +105,7 @@ The feature follows the existing project architecture:
 ### Key Integration Points
 - **IDEStore**: Extended with custom port management functionality
 - **PreviewComponent**: Seamlessly integrated port configuration
-- **APIChatRepository**: Added port validation and command execution methods
+- **ChatRepository**: Added port validation and command execution methods
 - **Existing Error Handling**: Leverages existing error display patterns
 - **Existing Fallback Logic**: Uses existing preview fallback mechanisms
 

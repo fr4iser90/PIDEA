@@ -6,7 +6,7 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 
 // Mock dependencies
 jest.mock('@/infrastructure/stores/IDEStore.jsx');
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => {
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => {
   return jest.fn().mockImplementation(() => ({
     getUserAppUrl: jest.fn().mockResolvedValue({
       success: true,

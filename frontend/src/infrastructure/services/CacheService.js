@@ -676,7 +676,7 @@ export class CacheService {
   async loadDataForPattern(pattern, port, projectId) {
     try {
       // Import apiCall dynamically to avoid circular dependencies
-      const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+      const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
       
       switch (pattern.dataType) {
         case 'tasks':
@@ -727,7 +727,7 @@ export class CacheService {
     }
     
     // Import apiCall dynamically to avoid circular dependencies
-    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
     
     try {
       const result = await apiCall('/api/ide/available');
@@ -770,7 +770,7 @@ export class CacheService {
     }
     
     // Import apiCall dynamically
-    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
     
     try {
       const result = await apiCall(`/api/projects/${projectId}/git/status`, { 
@@ -806,7 +806,7 @@ export class CacheService {
     }
     
     // Import apiCall dynamically
-    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
     
     try {
       const result = await apiCall(`/api/chat/port/${port}/history`);
@@ -839,7 +839,7 @@ export class CacheService {
     }
     
     // Import apiCall dynamically
-    const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
+    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
     
     try {
       // Get projectId from port

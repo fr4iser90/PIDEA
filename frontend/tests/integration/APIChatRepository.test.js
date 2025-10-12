@@ -13,10 +13,10 @@ jest.mock('@/infrastructure/stores/AuthStore.jsx', () => ({
   }
 }));
 
-import * as APIChatRepoModule from '@/infrastructure/repositories/APIChatRepository.jsx';
-const { default: APIChatRepository } = APIChatRepoModule;
+import * as APIChatRepoModule from '@/infrastructure/repositories/ChatRepository.jsx';
+const { default: ChatRepository } = APIChatRepoModule;
 
-describe('APIChatRepository - Phase Operations', () => {
+describe('ChatRepository - Phase Operations', () => {
   let apiRepository;
 
   beforeEach(() => {
@@ -34,7 +34,7 @@ describe('APIChatRepository - Phase Operations', () => {
       return Promise.resolve(mockResponse);
     });
     
-    apiRepository = new APIChatRepository();
+    apiRepository = new ChatRepository();
     apiRepository.getCurrentProjectId = jest.fn().mockResolvedValue('test-project');
   });
 

@@ -9,7 +9,7 @@ import TaskWorkflowRepository from '@/infrastructure/repositories/TaskWorkflowRe
 jest.mock('@/application/services/TaskCreationService');
 jest.mock('@/application/services/TaskReviewService');
 jest.mock('@/infrastructure/repositories/TaskWorkflowRepository');
-jest.mock('@/infrastructure/repositories/APIChatRepository');
+jest.mock('@/infrastructure/repositories/ChatRepository');
 jest.mock('@/css/modal/task-create-modal.css', () => ({}));
 jest.mock('@/css/modal/task-workflow-progress.css', () => ({}));
 

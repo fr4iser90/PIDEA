@@ -7,7 +7,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import IDEStartModal from '@/presentation/components/ide/IDEStartModal.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 
 // Mock the IDEStore
 jest.mock('@/infrastructure/stores/IDEStore.jsx', () => ({
@@ -16,7 +16,7 @@ jest.mock('@/infrastructure/stores/IDEStore.jsx', () => ({
 }));
 
 // Mock the API call
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: jest.fn()
 }));
 

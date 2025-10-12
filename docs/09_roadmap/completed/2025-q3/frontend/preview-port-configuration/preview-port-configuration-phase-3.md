@@ -37,7 +37,7 @@ Test and validate the complete port configuration system with proper error handl
   - Log errors appropriately for debugging - **Use existing logger patterns**
 
 ### 3. Validate Port Input with Backend Endpoints
-- [ ] **File**: `frontend/src/infrastructure/repositories/APIChatRepository.jsx`
+- [ ] **File**: `frontend/src/infrastructure/repositories/ChatRepository.jsx`
 - [ ] **Time**: 10 minutes
 - [ ] **Description**: Test port validation with actual backend endpoints
 - [ ] **Requirements**:
@@ -186,7 +186,7 @@ const refreshPreview = async (portToUse) => {
 
 ### API Error Handling
 ```javascript
-// Enhanced error handling in APIChatRepository - leveraging existing patterns
+// Enhanced error handling in ChatRepository - leveraging existing patterns
 async validatePort(port) {
   try {
     // Use existing IDEStore validation instead of backend call
@@ -317,7 +317,7 @@ async executeProjectCommand(projectId, commandType) {
 - **Error Handling**: ✅ Uses existing error state and ErrorDisplay component patterns
 - **Fallback Behavior**: ✅ Uses existing loadPreviewData fallback logic and IDEStore fallback strategies
 - **Command Execution**: ✅ Uses existing terminal execution services and API patterns
-- **API Integration**: ✅ Uses existing APIChatRepository patterns and error handling
+- **API Integration**: ✅ Uses existing ChatRepository patterns and error handling
 - **Store Integration**: ✅ Uses existing IDEStore validation and persistence patterns
 
 ### Key Integration Points Validated
@@ -325,7 +325,7 @@ async executeProjectCommand(projectId, commandType) {
 2. **Command Buttons**: Already integrated with ProjectCommandButtons component
 3. **Error Handling**: Uses existing error state management and display patterns
 4. **Port Validation**: Uses existing IDEStore validatePort method
-5. **Command Execution**: Uses existing APIChatRepository executeProjectCommand method
+5. **Command Execution**: Uses existing ChatRepository executeProjectCommand method
 6. **Persistence**: Uses existing IDEStore persistence system
 7. **Fallback Logic**: Uses existing loadPreviewData fallback mechanisms
 
@@ -340,7 +340,7 @@ async executeProjectCommand(projectId, commandType) {
 ### Integration Tests Created
 - **PreviewComponent.test.jsx**: Comprehensive integration tests for port configuration and command execution
 - **Test Coverage**: Port input, command execution, error handling, fallback behavior
-- **Mock Integration**: Proper mocking of IDEStore and APIChatRepository
+- **Mock Integration**: Proper mocking of IDEStore and ChatRepository
 - **Event Handling**: Tests for IDE change events and user app URL events
 
 ### Next Steps
@@ -374,7 +374,7 @@ async executeProjectCommand(projectId, commandType) {
 ### Codebase Analysis
 - **PreviewComponent.jsx**: ✅ Exists with comprehensive error handling (`error` state, `ErrorDisplay` component, `handleRefresh` method)
 - **IDEStore.jsx**: ✅ Has comprehensive port management (`validatePort`, `isValidPortRange`, port preferences, fallback strategies)
-- **APIChatRepository.jsx**: ✅ Has extensive endpoint structure and `apiCall` helper function with error handling
+- **ChatRepository.jsx**: ✅ Has extensive endpoint structure and `apiCall` helper function with error handling
 - **Error Handling**: ✅ Comprehensive error handling patterns throughout codebase
 - **Terminal Services**: ✅ Extensive backend terminal execution infrastructure available
 
@@ -413,7 +413,7 @@ The backend has extensive terminal execution infrastructure:
 #### Integration Points
 1. **PreviewComponent**: Extend existing `handleRefresh` method for port configuration
 2. **IDEStore**: Add custom port management to existing port management system
-3. **APIChatRepository**: Use existing terminal execution endpoints instead of creating new ones
+3. **ChatRepository**: Use existing terminal execution endpoints instead of creating new ones
 4. **Error Display**: Use existing error display patterns and components
 
 ### Backend Integration

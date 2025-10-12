@@ -16,7 +16,7 @@ vi.mock('@/infrastructure/logging/Logger', () => ({
   }
 }));
 
-vi.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+vi.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: vi.fn()
 }));
 
@@ -56,7 +56,7 @@ describe('ProjectStore Cache Integration', () => {
     vi.clearAllMocks();
     
     // Setup mocks
-    mockApiCall = vi.mocked(await import('@/infrastructure/repositories/APIChatRepository.jsx')).apiCall;
+    mockApiCall = vi.mocked(await import('@/infrastructure/repositories/ChatRepository.jsx')).apiCall;
     mockCacheService = vi.mocked(await import('@/infrastructure/services/CacheService')).cacheService;
     mockLogger = vi.mocked(await import('@/infrastructure/logging/Logger')).logger;
     

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import GitRepository from '@/infrastructure/repositories/GitRepository.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import '@/scss/pages/_pidea-agent-git.scss';;
 

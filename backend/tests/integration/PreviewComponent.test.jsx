@@ -3,11 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import PreviewComponent from '@/presentation/components/chat/main/PreviewComponent.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository.jsx';
+import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
 
 // Mock dependencies
 vi.mock('@/infrastructure/stores/IDEStore.jsx');
-vi.mock('@/infrastructure/repositories/APIChatRepository.jsx');
+vi.mock('@/infrastructure/repositories/ChatRepository.jsx');
 vi.mock('@/hooks/usePortConfiguration.js', () => ({
   usePortConfiguration: () => ({
     customPort: 3000,
@@ -43,7 +43,7 @@ describe('PreviewComponent Integration Tests', () => {
 
     useIDEStore.mockReturnValue(mockIDEStore);
 
-    // Mock APIChatRepository
+    // Mock ChatRepository
     mockAPIRepository = {
       getUserAppUrl: vi.fn().mockResolvedValue({
         success: true,
@@ -68,7 +68,7 @@ describe('PreviewComponent Integration Tests', () => {
       })
     };
 
-    APIChatRepository.mockImplementation(() => mockAPIRepository);
+    ChatRepository.mockImplementation(() => mockAPIRepository);
   });
 
   afterEach(() => {

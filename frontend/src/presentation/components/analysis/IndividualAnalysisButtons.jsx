@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
+import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
 import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import '@/scss/components/_individual-analysis-buttons.scss';;
 
@@ -12,7 +12,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const [runAllLoading, setRunAllLoading] = useState(false);
   const [runAllProgress, setRunAllProgress] = useState(0);
 
-  const apiRepository = new APIChatRepository();
+  const apiRepository = new AnalysisRepository();
   
   // ✅ FIX: Use useSelectedIDE to get the correct projectId
   const { projectId: activeProjectId } = useSelectedIDE();

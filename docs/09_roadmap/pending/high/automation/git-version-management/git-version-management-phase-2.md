@@ -120,8 +120,8 @@ const ReleaseManager = ({ projectPath }) => {
 
 ### API Integration
 ```javascript
-// Add to APIChatRepository.jsx
-class APIChatRepository {
+// Add to ChatRepository.jsx
+class ChatRepository {
   // Version management methods
   async bumpVersion(projectId, projectPath, bumpType, message) {
     return await this.apiCall(`/api/projects/${projectId}/git/version/bump`, 'POST', {
@@ -222,7 +222,7 @@ class APIChatRepository {
 
 ## Dependencies
 - Existing git management component
-- APIChatRepository
+- ChatRepository
 - Backend API endpoints from Phase 1
 
 ## Next Phase

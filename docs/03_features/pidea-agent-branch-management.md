@@ -188,9 +188,9 @@ GET /api/git/pidea-agent/compare
 #### Pull Changes
 
 ```javascript
-import { APIChatRepository } from '@/infrastructure/repositories/APIChatRepository';
+import { ChatRepository } from '@/infrastructure/repositories/ChatRepository';
 
-const api = new APIChatRepository();
+const api = new ChatRepository();
 const result = await api.pullPideaAgentBranch();
 ```
 
@@ -320,7 +320,7 @@ const config = {
 npm test PideaAgentBranchComponent.test.jsx
 
 # Run API tests
-npm test APIChatRepository.test.js
+npm test ChatRepository.test.js
 ```
 
 ### Integration Tests

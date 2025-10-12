@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import { apiCall, API_CONFIG } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import FrameworkRepository from '@/infrastructure/repositories/FrameworkRepository.jsx';
 import PromptDetailsModal from '../modal/PromptDetailsModal.jsx';
 import '@/scss/components/_prompt-panel.scss';;
 import '@/scss/components/_prompt-details-modal.scss';;

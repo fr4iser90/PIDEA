@@ -23,7 +23,7 @@ const ErrorDisplayTest = () => {
         message: 'Failed to fetch data from server',
         code: ERROR_CODES.NETWORK_TIMEOUT,
         title: 'Network Error',
-        stack: 'TypeError: Failed to fetch\n    at fetch (index.js:15)\n    at APIChatRepository.jsx:67'
+        stack: 'TypeError: Failed to fetch\n    at fetch (index.js:15)\n    at ChatRepository.jsx:67'
       },
       validation: {
         message: 'Please provide a valid email address',

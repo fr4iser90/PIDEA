@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import GitManagementComponent from '@/presentation/components/GitManagementComponent';
 import PideaAgentBranchComponent from '@/presentation/components/PideaAgentBranchComponent';
-import { APIChatRepository } from '@/infrastructure/repositories/APIChatRepository';
+import { ChatRepository } from '@/infrastructure/repositories/ChatRepository';
 
 // Mock the API repository
-jest.mock('@/infrastructure/repositories/APIChatRepository');
+jest.mock('@/infrastructure/repositories/ChatRepository');
 
 describe('PIDEA Agent Branch Integration Tests', () => {
   let mockAPIRepository;
@@ -23,7 +23,7 @@ describe('PIDEA Agent Branch Integration Tests', () => {
       pushChanges: jest.fn(),
       commitChanges: jest.fn()
     };
-    APIChatRepository.mockImplementation(() => mockAPIRepository);
+    ChatRepository.mockImplementation(() => mockAPIRepository);
   });
 
   describe('GitManagementComponent Integration', () => {

@@ -25,7 +25,7 @@ jest.mock('@/infrastructure/stores/selectors/ProjectSelectors', () => ({
 }));
 
 // Mock the API repository
-jest.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   __esModule: true,
   default: jest.fn(),
   apiCall: jest.fn()

@@ -11,7 +11,7 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { useGitStatus, useAnalysisStatus, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 // Mock dependencies
-vi.mock('@/infrastructure/repositories/APIChatRepository.jsx', () => ({
+vi.mock('@/infrastructure/repositories/ChatRepository.jsx', () => ({
   apiCall: vi.fn()
 }));
 
@@ -87,7 +87,7 @@ describe('Global State Management Integration', () => {
     vi.clearAllMocks();
     
     // Mock API responses
-    mockApiCall = vi.mocked(require('@/infrastructure/repositories/APIChatRepository.jsx').apiCall);
+    mockApiCall = vi.mocked(require('@/infrastructure/repositories/ChatRepository.jsx').apiCall);
   });
 
   afterEach(() => {

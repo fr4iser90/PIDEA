@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 

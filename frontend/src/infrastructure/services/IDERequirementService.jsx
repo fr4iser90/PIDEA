@@ -5,7 +5,7 @@
  */
 
 import { cacheService } from '@/infrastructure/services/CacheService';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import IDERepository from '@/infrastructure/repositories/IDERepository.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import TimeoutConfig from '@/config/timeout-config.js';
 

@@ -19,7 +19,7 @@ graph TB
     subgraph Frontend["⚛️ Frontend Services"]
         ChatService[("ChatService<br/>✅ IMPLEMENTED")]
         EventBus[("EventBus<br/>✅ IMPLEMENTED")]
-        APIRepo[("APIChatRepository<br/>✅ IMPLEMENTED")]
+        APIRepo[("ChatRepository<br/>✅ IMPLEMENTED")]
     end
 
     %% API Gateway
@@ -216,7 +216,7 @@ graph TB
 - **Framework Panel**: Context and prompt management
 - **ChatService**: Frontend chat logic
 - **EventBus**: Event-driven communication
-- **APIChatRepository**: API communication
+- **ChatRepository**: API communication
 - **WebChatController**: Message handling
 - **WebSocket Server**: Real-time communication
 - **SendMessageHandler**: Message processing
@@ -295,7 +295,7 @@ graph TB
 ### ⚛️ Frontend Services
 - **ChatService**: Frontend chat logic
 - **EventBus**: Event-driven communication
-- **APIChatRepository**: API communication
+- **ChatRepository**: API communication
 
 ### 🌐 API Gateway
 - **Controllers**: Handle HTTP requests

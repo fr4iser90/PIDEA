@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import AnalysisDataViewer from '@/presentation/components/analysis/AnalysisDataViewer';
 
 // Mock dependencies
-jest.mock('@/infrastructure/repositories/APIChatRepository');
+jest.mock('@/infrastructure/repositories/ChatRepository');
 jest.mock('@/hooks/useAnalysisCache');
 jest.mock('@/infrastructure/logging/Logger', () => ({
   logger: {
@@ -89,15 +89,15 @@ jest.mock('@/presentation/components/analysis/AnalysisRecommendations', () => {
 });
 
 describe('AnalysisDataViewer', () => {
-  let mockAPIChatRepository;
+  let mockChatRepository;
   let mockUseAnalysisCache;
 
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
 
-    // Mock APIChatRepository
-    mockAPIChatRepository = {
+    // Mock ChatRepository
+    mockChatRepository = {
       getCurrentProjectId: jest.fn().mockResolvedValue('test-project'),
       getAnalysisMetrics: jest.fn().mockResolvedValue({ success: true, data: { totalAnalyses: 5 } }),
       getAnalysisStatus: jest.fn().mockResolvedValue({ success: true, data: { isRunning: false } }),
@@ -116,8 +116,8 @@ describe('AnalysisDataViewer', () => {
     };
 
     // Setup mocks
-    const { default: APIChatRepository } = require('@/infrastructure/repositories/APIChatRepository');
-    APIChatRepository.mockImplementation(() => mockAPIChatRepository);
+    const { default: ChatRepository } = require('@/infrastructure/repositories/ChatRepository');
+    ChatRepository.mockImplementation(() => mockChatRepository);
 
     const useAnalysisCache = require('@/hooks/useAnalysisCache').default;
     useAnalysisCache.mockReturnValue(mockUseAnalysisCache);
@@ -192,14 +192,14 @@ describe('AnalysisDataViewer', () => {
       render(<AnalysisDataViewer />);
       
       await waitFor(() => {
-        expect(mockAPIChatRepository.getCurrentProjectId).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisMetrics).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisStatus).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisHistory).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisIssues).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisTechStack).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisArchitecture).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisRecommendations).toHaveBeenCalled();
+        expect(mockChatRepository.getCurrentProjectId).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisMetrics).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisStatus).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisHistory).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisIssues).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisTechStack).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisArchitecture).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisRecommendations).toHaveBeenCalled();
       });
     });
 
@@ -211,7 +211,7 @@ describe('AnalysisDataViewer', () => {
       
       await waitFor(() => {
         expect(mockUseAnalysisCache.getCachedData).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisMetrics).not.toHaveBeenCalled(); // Should use cache
+        expect(mockChatRepository.getAnalysisMetrics).not.toHaveBeenCalled(); // Should use cache
       });
     });
 
@@ -227,7 +227,7 @@ describe('AnalysisDataViewer', () => {
   describe('Loading States', () => {
     it('should show loading spinner during initial load', () => {
       // Mock loading state
-      mockAPIChatRepository.getAnalysisMetrics.mockImplementation(() => 
+      mockChatRepository.getAnalysisMetrics.mockImplementation(() => 
         new Promise(resolve => setTimeout(() => resolve({ success: true, data: {} }), 100))
       );
       
@@ -253,7 +253,7 @@ describe('AnalysisDataViewer', () => {
 
   describe('Error Handling', () => {
     it('should display error message when API call fails', async () => {
-      mockAPIChatRepository.getAnalysisMetrics.mockRejectedValue(new Error('API Error'));
+      mockChatRepository.getAnalysisMetrics.mockRejectedValue(new Error('API Error'));
       
       render(<AnalysisDataViewer />);
       
@@ -264,7 +264,7 @@ describe('AnalysisDataViewer', () => {
     });
 
     it('should retry loading when retry button is clicked', async () => {
-      mockAPIChatRepository.getAnalysisMetrics.mockRejectedValueOnce(new Error('API Error'));
+      mockChatRepository.getAnalysisMetrics.mockRejectedValueOnce(new Error('API Error'));
       
       render(<AnalysisDataViewer />);
       
@@ -273,7 +273,7 @@ describe('AnalysisDataViewer', () => {
       });
       
       // Mock successful response for retry
-      mockAPIChatRepository.getAnalysisMetrics.mockResolvedValue({ success: true, data: {} });
+      mockChatRepository.getAnalysisMetrics.mockResolvedValue({ success: true, data: {} });
       
       fireEvent.click(screen.getByText('Retry'));
       
@@ -289,14 +289,14 @@ describe('AnalysisDataViewer', () => {
       
       // Wait for initial load
       await waitFor(() => {
-        expect(mockAPIChatRepository.getAnalysisMetrics).toHaveBeenCalledTimes(1);
+        expect(mockChatRepository.getAnalysisMetrics).toHaveBeenCalledTimes(1);
       });
       
       // Click refresh
       fireEvent.click(screen.getByText('🔄 Refresh'));
       
       await waitFor(() => {
-        expect(mockAPIChatRepository.getAnalysisMetrics).toHaveBeenCalledTimes(2);
+        expect(mockChatRepository.getAnalysisMetrics).toHaveBeenCalledTimes(2);
       });
     });
   });
@@ -306,7 +306,7 @@ describe('AnalysisDataViewer', () => {
       render(<AnalysisDataViewer projectId="custom-project" />);
       
       await waitFor(() => {
-        expect(mockAPIChatRepository.getAnalysisMetrics).toHaveBeenCalledWith('custom-project');
+        expect(mockChatRepository.getAnalysisMetrics).toHaveBeenCalledWith('custom-project');
       });
     });
 
@@ -314,8 +314,8 @@ describe('AnalysisDataViewer', () => {
       render(<AnalysisDataViewer />);
       
       await waitFor(() => {
-        expect(mockAPIChatRepository.getCurrentProjectId).toHaveBeenCalled();
-        expect(mockAPIChatRepository.getAnalysisMetrics).toHaveBeenCalledWith('test-project');
+        expect(mockChatRepository.getCurrentProjectId).toHaveBeenCalled();
+        expect(mockChatRepository.getAnalysisMetrics).toHaveBeenCalledWith('test-project');
       });
     });
   });

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
+import IDERepository from '@/infrastructure/repositories/IDERepository.jsx';
 import '@/scss/components/_ide-mirror.scss';;
 
 /**
