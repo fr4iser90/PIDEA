@@ -489,6 +489,19 @@ CREATE TABLE IF NOT EXISTS task_distribution_rules (
 -- DATABASE PERFORMANCE OPTIMIZATION TABLES
 -- ============================================================================
 
+-- QUERY CACHE (Query result caching)
+CREATE TABLE IF NOT EXISTS query_cache (
+    id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    cache_key TEXT NOT NULL UNIQUE,
+    query_hash TEXT NOT NULL,
+    result_data TEXT NOT NULL,
+    cache_hit_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    last_accessed TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT DEFAULT '{}'
+);
+
 -- PERFORMANCE METRICS (Database performance monitoring)
 CREATE TABLE IF NOT EXISTS performance_metrics (
     id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
@@ -634,6 +647,12 @@ CREATE TABLE IF NOT EXISTS optimization_history (
 -- ============================================================================
 -- PERFORMANCE OPTIMIZATION INDEXES
 -- ============================================================================
+
+-- Query cache indexes
+CREATE INDEX IF NOT EXISTS idx_query_cache_key ON query_cache(cache_key);
+CREATE INDEX IF NOT EXISTS idx_query_cache_hash ON query_cache(query_hash);
+CREATE INDEX IF NOT EXISTS idx_query_cache_expires_at ON query_cache(expires_at);
+CREATE INDEX IF NOT EXISTS idx_query_cache_last_accessed ON query_cache(last_accessed);
 
 -- Performance metrics indexes
 CREATE INDEX IF NOT EXISTS idx_performance_metrics_type ON performance_metrics(metric_type);

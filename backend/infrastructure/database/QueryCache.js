@@ -350,12 +350,13 @@ class QueryCache extends EventEmitter {
    */
   async getFromDatabaseCache(cacheKey) {
     try {
+      this.logger.debug(`QueryCache using database type: ${this.databaseConnection.getType()}`);
       const sql = 'SELECT * FROM query_cache WHERE cache_key = $1 AND expires_at > $2';
       const params = [cacheKey, new Date().toISOString()];
       
       // Use direct database connection to avoid infinite loop
       const result = await this.databaseConnection.dbConnection.query(sql, params);
-      if (result.rows.length === 0) return null;
+      if (!result || !result.rows || result.rows.length === 0) return null;
       
       const entry = result.rows[0];
       
@@ -366,6 +367,7 @@ class QueryCache extends EventEmitter {
       
     } catch (error) {
       this.logger.error('Error getting from database cache:', error.message);
+      this.logger.error('Full error:', error);
       return null;
     }
   }
@@ -398,6 +400,7 @@ class QueryCache extends EventEmitter {
       
     } catch (error) {
       this.logger.error('Error setting in database cache:', error.message);
+      this.logger.error('Full error:', error);
     }
   }
 
@@ -439,7 +442,7 @@ class QueryCache extends EventEmitter {
       const params = [cacheKey, new Date().toISOString()];
       
       const result = await this.databaseConnection.dbConnection.query(sql, params);
-      return result.rows.length > 0;
+      return result && result.rows && result.rows.length > 0;
       
     } catch (error) {
       this.logger.error('Error checking database cache:', error.message);
