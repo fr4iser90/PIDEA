@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository, { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
-import { useActiveIDE, useProjectTasks, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors';
+import { useSelectedIDE, useProjectTasks, useProjectDataActions, useSelectedProject } from '@/infrastructure/stores/selectors/ProjectSelectors';
 import TaskSelectionModal from '../modal/TaskSelectionModal.jsx';
 import ManualTaskDetailsModal from '../modal/ManualTaskDetailsModal.jsx';
 import TaskCreationModal from '../modal/TaskCreationModal.jsx';
@@ -119,9 +119,14 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const api = new APIChatRepository();
   
   // ✅ NEW: Use project-specific selectors
-  const { activeIDE, projectId, projectName } = useActiveIDE();
+  const selectedIDE = useSelectedIDE();
+  const selectedProject = useSelectedProject();
   const { tasks: manualTasks, hasTasks, taskCount, lastUpdate } = useProjectTasks();
   const { loadProjectTasks } = useProjectDataActions();
+  
+  // Derive projectId and projectName from selectedProject
+  const projectId = selectedProject?.id;
+  const projectName = selectedProject?.name;
   
   // Helper functions
   const getTaskFilename = (task) => {
@@ -215,7 +220,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
 
   // ✅ NEW: Load tasks on component mount and when project changes
   useEffect(() => {
-    if (projectId && activeIDE?.workspacePath) {
+    if (projectId && selectedIDE?.workspacePath) {
       // ✅ CRITICAL FIX: Always load tasks when component mounts or project changes
       loadTasks(true); // Force load
       
@@ -228,7 +233,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       
       return () => clearTimeout(initialDelay);
     }
-  }, [projectId, activeIDE?.workspacePath]); // Auto-reload when project changes
+  }, [projectId, selectedIDE?.workspacePath]); // Auto-reload when project changes
 
   // Listen for task sync events from WebSocket
   useEffect(() => {
@@ -256,7 +261,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   const loadTasksThrottle = 5000; // 5 seconds
 
   const loadTasks = async (force = false) => {
-    if (!projectId || !activeIDE?.workspacePath) {
+    if (!projectId || !selectedIDE?.workspacePath) {
       logger.debug('No project ID or workspace path available, skipping task load');
       return;
     }
@@ -272,8 +277,8 @@ function TasksPanelComponent({ eventBus, activePort }) {
     setIsLoadingManualTasks(true);
     try {
       // ✅ CRITICAL FIX: Force load tasks and wait for completion
-      logger.info('🔄 Loading tasks for workspace:', activeIDE.workspacePath);
-      const taskData = await loadProjectTasks(activeIDE.workspacePath);
+      logger.info('🔄 Loading tasks for workspace:', selectedIDE?.workspacePath);
+      const taskData = await loadProjectTasks(selectedIDE?.workspacePath);
       setLastLoadTime(now);
       
       logger.info('✅ Tasks loaded, checking result:', { 
@@ -304,7 +309,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleSyncTasks = async () => {
-    if (!projectId || !activeIDE?.workspacePath) {
+    if (!projectId || !selectedIDE?.workspacePath) {
       setFeedback('No project selected for task sync');
       return;
     }
@@ -315,7 +320,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       // ✅ FIXED: Call backend sync endpoint to import tasks from workspace
       const response = await apiCall(`/api/projects/${projectId}/tasks/sync-manual`, {
         method: 'POST',
-        body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+        body: JSON.stringify({ projectPath: selectedIDE?.workspacePath })
       });
       
       if (response && response.success) {
@@ -339,7 +344,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
         }
 
         // Reload tasks after sync
-        await loadProjectTasks(activeIDE.workspacePath);
+        await loadProjectTasks(selectedIDE?.workspacePath);
         setLastLoadTime(Date.now());
         setIsInitialSyncComplete(true);
         setIsWaitingForSync(false);
@@ -362,7 +367,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleCleanTasks = async () => {
-    if (!projectId || !activeIDE?.workspacePath) {
+    if (!projectId || !selectedIDE?.workspacePath) {
       setFeedback('No project selected for task cleaning');
       return;
     }
@@ -372,12 +377,12 @@ function TasksPanelComponent({ eventBus, activePort }) {
       // ✅ FIXED: Use project-specific task cleaning
       const response = await apiCall(`/api/projects/${projectId}/tasks/clean-manual`, {
         method: 'POST',
-        body: JSON.stringify({ projectPath: activeIDE.workspacePath })
+        body: JSON.stringify({ projectPath: selectedIDE?.workspacePath })
       });
       
       if (response && response.success) {
         // Reload tasks after cleaning
-        await loadProjectTasks(activeIDE.workspacePath);
+        await loadProjectTasks(selectedIDE?.workspacePath);
         setFeedback('Tasks cleaned successfully');
       } else {
         setFeedback('Task cleaning failed');
@@ -391,7 +396,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleOpenReviewModal = async () => {
-    if (!projectId || !activeIDE?.workspacePath) {
+    if (!projectId || !selectedIDE?.workspacePath) {
       setFeedback('No project selected for task review');
       return;
     }
@@ -419,7 +424,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleStartReview = async (selectedTasks, taskMode = 'task-review') => {
-    if (!projectId || !activeIDE?.workspacePath) {
+    if (!projectId || !selectedIDE?.workspacePath) {
       setFeedback('No project selected for task review');
       return;
     }
@@ -431,7 +436,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
       const result = await taskReviewService.executeTaskReviewWorkflow(
         selectedTasks, 
         projectId, 
-        activeIDE.workspacePath,
+        selectedIDE?.workspacePath,
         taskMode
       );
       
@@ -603,7 +608,7 @@ function TasksPanelComponent({ eventBus, activePort }) {
   };
 
   const handleTaskSubmit = async (taskData) => {
-    if (!projectId || !activeIDE?.workspacePath) {
+    if (!projectId || !selectedIDE?.workspacePath) {
       setFeedback('No project selected for task creation');
       return;
     }
@@ -614,13 +619,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
         method: 'POST',
         body: JSON.stringify({
           ...taskData,
-          projectPath: activeIDE.workspacePath
+          projectPath: selectedIDE.workspacePath
         })
       });
       
       if (response && response.success) {
         // Reload tasks after creation
-        await loadProjectTasks(activeIDE.workspacePath);
+        await loadProjectTasks(selectedIDE?.workspacePath);
         setFeedback('Task created successfully');
         setShowTaskCreationModal(false);
       } else {

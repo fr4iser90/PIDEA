@@ -358,6 +358,57 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       createdBy: row.created_by
     };
   }
+
+  /**
+   * Find all projects with pagination and search
+   * @param {Object} options - Query options
+   * @param {number} options.limit - Number of projects to return
+   * @param {number} options.offset - Number of projects to skip
+   * @param {string} options.search - Search term for project name or description
+   * @returns {Promise<Array<Object>>} Array of projects
+   */
+  async findAll(options = {}) {
+    const { limit = 10, offset = 0, search } = options;
+    
+    let query = `
+      SELECT * FROM ${this.tableName}
+    `;
+    
+    const params = [];
+    
+    if (search) {
+      query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
+      params.push(`%${search}%`);
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(limit, offset);
+    
+    const result = await this.databaseConnection.query(query, params);
+    
+    return result.rows.map(row => this.mapRowToProject(row));
+  }
+
+  /**
+   * Count projects with optional search filter
+   * @param {Object} options - Query options
+   * @param {string} options.search - Search term for project name or description
+   * @returns {Promise<number>} Number of projects
+   */
+  async count(options = {}) {
+    const { search } = options;
+    
+    let query = `SELECT COUNT(*) FROM ${this.tableName}`;
+    const params = [];
+    
+    if (search) {
+      query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
+      params.push(`%${search}%`);
+    }
+    
+    const result = await this.databaseConnection.query(query, params);
+    return parseInt(result.rows[0].count);
+  }
 }
 
 module.exports = PostgreSQLProjectRepository; 

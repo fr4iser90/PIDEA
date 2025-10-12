@@ -4,7 +4,7 @@ import '@/scss/pages/_git.scss';;
 import { apiCall, APIChatRepository } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
 import VersionManagementComponent from '../version/VersionManagementComponent.jsx';
-import { useGitStatus, useGitBranches, useActiveIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useGitStatus, useGitBranches, useSelectedIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 
 // Initialize API repository
@@ -26,14 +26,14 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   // ✅ REFACTORED: Use global state selectors instead of local state
   const gitStatus = useGitStatus();
   const gitBranches = useGitBranches();
-  const activeIDE = useActiveIDE();
+  const selectedIDE = useSelectedIDE();
   const { refreshGitStatus } = useProjectDataActions();
 
   // ✅ DISABLED: RefreshService for git - NO MORE AUTOMATIC POLLING!
   // const { forceRefresh, getStats } = useRefreshService('git', {
   //   fetchData: async () => {
-  //     if (activeIDE.workspacePath) {
-  //       const projectId = getProjectIdFromWorkspace(activeIDE.workspacePath);
+  //     if (selectedIDE.workspacePath) {
+  //       const projectId = getProjectIdFromWorkspace(selectedIDE.workspacePath);
   //       return await apiRepository.getGitStatus(projectId);
   //     }
   //     return null;
@@ -57,10 +57,10 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
 
   // ✅ FIXED: No more manual data loading - global state handles it automatically
   useEffect(() => {
-    if (activeIDE.workspacePath) {
-      logger.info('GitManagementComponent: active IDE changed to:', activeIDE.workspacePath);
+    if (selectedIDE.workspacePath) {
+      logger.info('GitManagementComponent: active IDE changed to:', selectedIDE.workspacePath);
     }
-  }, [activeIDE.workspacePath]);
+  }, [selectedIDE.workspacePath]);
 
   // ✅ REFACTORED: Setup WebSocket listeners for real-time updates
   useEffect(() => {
@@ -99,7 +99,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     const MIN_REFRESH_INTERVAL = 2000; // Minimum 2 seconds between refreshes
 
     const handleVisibilityChange = () => {
-      if (!document.hidden && activeIDE.workspacePath) {
+      if (!document.hidden && selectedIDE.workspacePath) {
         const now = Date.now();
         if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
           logger.info('Tab became visible, refreshing git status');
@@ -112,7 +112,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     };
 
     const handleFocus = () => {
-      if (activeIDE.workspacePath) {
+      if (selectedIDE.workspacePath) {
         const now = Date.now();
         if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
           logger.info('Window focused, refreshing git status');
@@ -134,14 +134,14 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [activeIDE.workspacePath, refreshGitStatus]);
+  }, [selectedIDE.workspacePath, refreshGitStatus]);
 
   // ✅ REMOVED: Old periodic refresh - now handled by RefreshService
 
   // ✅ REFACTORED: Use global state instead of local state
   const currentBranch = gitStatus.currentBranch;
   const branches = gitBranches.branches;
-  const workspacePath = activeIDE.workspacePath;
+  const workspacePath = selectedIDE.workspacePath;
 
   const handleGitOperation = async (operation, options = {}) => {
     try {

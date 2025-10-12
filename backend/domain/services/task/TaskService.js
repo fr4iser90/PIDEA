@@ -79,11 +79,11 @@ const path = require('path');
  * Enhanced with GitWorkflowManager integration
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, cursorIDEService = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null, fileSystemService = null, eventBus = null, serviceRegistry = null) {
+  constructor(taskRepository, aiService, projectAnalyzer, interfaceManager = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null, fileSystemService = null, eventBus = null, serviceRegistry = null) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
-    this.cursorIDEService = cursorIDEService;
+    this.interfaceManager = interfaceManager;
     this.autoFinishSystem = autoFinishSystem;
     this.workflowGitService = workflowGitService;
     this.queueTaskExecutionService = queueTaskExecutionService;
@@ -657,7 +657,7 @@ class TaskService {
       const aiPrompt = await this.buildTaskExecutionPrompt(task);
       
       // Use Auto-Finish System if available
-      if (this.autoFinishSystem && this.cursorIDEService) {
+      if (this.autoFinishSystem && this.interfaceManager) {
         logger.info('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
         
         // Create temporary task for Auto-Finish processing
@@ -700,11 +700,7 @@ class TaskService {
           timestamp: new Date(),
           autoFinishResult: autoFinishResult
         };
-        
-      } else {
-        // Fallback to original simple approach
-        logger.info('⚠️ [TaskService] Auto-Finish System not available, using fallback approach...');
-        return await this.executeAIRefactoring(task);
+
       }
     } catch (error) {
       throw new Error(`AI refactoring with Auto-Finish failed: ${error.message}`);
@@ -1297,7 +1293,7 @@ ${task.description}
 
       // Send message to IDE using IDESendMessageStep (with proper waitForResponse support)
       let stepResult;
-      if (this.cursorIDEService) {
+      if (this.interfaceManager) {
         logger.info('📤 [TaskService] Sending review message via IDESendMessageStep');
         
         // Get project path from options
@@ -1305,11 +1301,11 @@ ${task.description}
         let targetPort = null;
         
         // Step 1: Find correct IDE port for this project and switch BrowserManager
-        if (this.cursorIDEService.browserManager) {
+        if (this.interfaceManager) {
           logger.info('🔍 [TaskService] Looking for IDE port for project:', projectPath);
           
           // Find IDE port that matches this project path
-          const availableIDEs = await this.cursorIDEService.ideManager?.getAvailableIDEs();
+          const availableIDEs = await this.interfaceManager.getAvailableIDEs?.();
           
           if (availableIDEs && projectPath) {
             // Look for IDE with matching workspace path
@@ -1328,12 +1324,12 @@ ${task.description}
           
           if (targetPort) {
             logger.info('🔄 [TaskService] Switching BrowserManager to port:', targetPort);
-            await this.cursorIDEService.browserManager.switchToPort(targetPort);
+            await this.interfaceManager.switchToPort?.(targetPort);
           }
           
           // Step 2: Click New Chat for each task (CRITICAL!)
           logger.info('🆕 [TaskService] Clicking New Chat before task review');
-          await this.cursorIDEService.browserManager.clickNewChat();
+          await this.interfaceManager.clickNewChat?.();
         }
         
         // Step 3: Use IDESendMessageStep with waitForResponse via StepRegistry
@@ -1342,7 +1338,7 @@ ${task.description}
         }
         
         // Get active IDE information for context
-        const activeIDE = await this.cursorIDEService?.ideManager?.getActiveIDE?.();
+        const activeIDE = await this.interfaceManager?.getActiveIDE?.();
         const port = targetPort || activeIDE?.port;
         
         const stepData = {

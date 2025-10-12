@@ -1,0 +1,399 @@
+/**
+ * Interface Management Component Styles
+ * Styles for interface management components in the sidebar
+ */
+
+// Interface Manager Component
+.interface-manager {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.interface-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+  }
+}
+
+.project-info {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  
+  .project-name {
+    margin: 0 0 var(--space-xs) 0;
+    font-size: 0.9rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+  }
+  
+  .project-path {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.interface-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-sm);
+}
+
+.interface-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  border-left: 4px solid transparent;
+  
+  &:hover {
+    background: var(--hover-bg);
+    border-color: var(--border-color);
+  }
+  
+  &.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    
+    .interface-status {
+      color: white;
+    }
+    
+    .interface-path {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+  
+  // Status-based left border colors
+  &.status-running {
+    border-left-color: var(--accent-green);
+  }
+  
+  &.status-stopped {
+    border-left-color: var(--accent-red);
+  }
+  
+  &.status-starting {
+    border-left-color: var(--warning-color, #f7df1e);
+  }
+  
+  &.status-stopping {
+    border-left-color: var(--warning-color, #f7df1e);
+  }
+  
+  &.status-error {
+    border-left-color: var(--accent-red);
+  }
+}
+
+.interface-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.interface-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.interface-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.interface-title {
+  flex: 1;
+  min-width: 0;
+  
+  h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: var(--font-weight-semibold);
+    color: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.interface-meta {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: 2px;
+}
+
+.interface-status {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: var(--font-weight-medium);
+  
+  &.status-running {
+    background: var(--accent-green);
+    color: white;
+  }
+  
+  &.status-stopped {
+    background: var(--accent-red);
+    color: white;
+  }
+  
+  &.status-starting {
+    background: var(--warning-color, #f7df1e);
+    color: var(--bg-primary);
+  }
+  
+  &.status-stopping {
+    background: var(--warning-color, #f7df1e);
+    color: var(--bg-primary);
+  }
+  
+  &.status-error {
+    background: var(--accent-red);
+    color: white;
+  }
+  
+  &.status-default {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+}
+
+.interface-port {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.interface-details {
+  margin-top: var(--space-xs);
+}
+
+.interface-path {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.interface-version {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.interface-actions {
+  display: flex;
+  gap: var(--space-xs);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  
+  &.visible {
+    opacity: 1;
+  }
+}
+
+.btn-action {
+  background: none;
+  border: none;
+  padding: var(--space-xs);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: var(--hover-bg);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-start:hover {
+  background: var(--accent-green);
+  color: white;
+}
+
+.btn-stop:hover {
+  background: var(--accent-red);
+  color: white;
+}
+
+.btn-restart:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+// Empty State
+.interface-manager-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  
+  .empty-state {
+    text-align: center;
+    padding: var(--space-lg);
+    color: var(--text-secondary);
+    
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Loading State
+.interface-manager-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  color: var(--text-secondary);
+  
+  .loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-md);
+  }
+  
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
+// Error State
+.interface-manager-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  color: var(--accent-red);
+  
+  .error-icon {
+    font-size: 2rem;
+    margin-bottom: var(--space-md);
+  }
+  
+  p {
+    margin: 0 0 var(--space-md) 0;
+    font-size: 0.9rem;
+  }
+}
+
+// Animations
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// Smooth transitions for all interactive elements
+.interface-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.interface-list {
+  animation: slideIn 0.3s ease-out;
+}
+
+// Enhanced hover effects
+.interface-item {
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.btn-action {
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Status animations
+.interface-item.status-starting {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.interface-item.status-stopping {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .interface-actions {
+    opacity: 1; // Always show on mobile
+  }
+  
+  .interface-item {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  .interface-actions {
+    align-self: flex-end;
+  }
+}

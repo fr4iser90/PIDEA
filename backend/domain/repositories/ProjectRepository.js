@@ -67,6 +67,28 @@ class ProjectRepository {
   }
 
   /**
+   * Find all projects with pagination and search
+   * @param {Object} options - Query options
+   * @param {number} options.limit - Number of projects to return
+   * @param {number} options.offset - Number of projects to skip
+   * @param {string} options.search - Search term for project name or description
+   * @returns {Promise<Array<Project>>} Array of projects
+   */
+  async findAll(options = {}) {
+    throw new Error('findAll method must be implemented');
+  }
+
+  /**
+   * Count projects with optional search filter
+   * @param {Object} options - Query options
+   * @param {string} options.search - Search term for project name or description
+   * @returns {Promise<number>} Number of projects
+   */
+  async count(options = {}) {
+    throw new Error('count method must be implemented');
+  }
+
+  /**
    * Delete project
    * @param {string} id - Project ID
    * @returns {Promise<boolean>} Success

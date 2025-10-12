@@ -381,6 +381,95 @@ CREATE INDEX IF NOT EXISTS idx_task_sessions_created_at ON task_sessions(created
 
 
 -- ============================================================================
+-- LAYER ARCHITECTURE TABLES
+-- ============================================================================
+
+-- LAYER DEFINITIONS (Architectural layers)
+CREATE TABLE IF NOT EXISTS layers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    layer_type TEXT NOT NULL, -- 'domain', 'application', 'infrastructure', 'presentation'
+    order_index INTEGER NOT NULL DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    metadata TEXT, -- JSON for layer-specific configuration
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT NOT NULL DEFAULT 'me',
+    FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+-- LAYER TASK MAPPING (Tasks assigned to specific layers)
+CREATE TABLE IF NOT EXISTS layer_tasks (
+    id TEXT PRIMARY KEY,
+    layer_id TEXT NOT NULL,
+    task_id TEXT NOT NULL,
+    assignment_type TEXT NOT NULL DEFAULT 'direct', -- 'direct', 'inherited', 'distributed'
+    priority INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'in_progress', 'completed', 'failed'
+    assigned_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TEXT,
+    completed_at TEXT,
+    metadata TEXT, -- JSON for assignment metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
+    UNIQUE(layer_id, task_id)
+);
+
+-- LAYER DEPENDENCIES (Layer dependency relationships)
+CREATE TABLE IF NOT EXISTS layer_dependencies (
+    id TEXT PRIMARY KEY,
+    source_layer_id TEXT NOT NULL,
+    target_layer_id TEXT NOT NULL,
+    dependency_type TEXT NOT NULL DEFAULT 'depends_on', -- 'depends_on', 'blocks', 'requires'
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    metadata TEXT, -- JSON for dependency metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (source_layer_id) REFERENCES layers (id) ON DELETE CASCADE,
+    FOREIGN KEY (target_layer_id) REFERENCES layers (id) ON DELETE CASCADE,
+    UNIQUE(source_layer_id, target_layer_id)
+);
+
+-- LAYER STATUS COORDINATION (Status synchronization between layers)
+CREATE TABLE IF NOT EXISTS layer_status_coordination (
+    id TEXT PRIMARY KEY,
+    layer_id TEXT NOT NULL,
+    task_id TEXT NOT NULL,
+    status TEXT NOT NULL, -- 'pending', 'in_progress', 'completed', 'failed', 'blocked'
+    coordination_type TEXT NOT NULL DEFAULT 'sync', -- 'sync', 'async', 'manual'
+    source_layer_id TEXT, -- Layer that initiated the status change
+    target_layers TEXT, -- JSON array of target layer IDs
+    coordination_status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'success', 'failed', 'partial'
+    error_message TEXT,
+    metadata TEXT, -- JSON for coordination metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (layer_id) REFERENCES layers (id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
+    FOREIGN KEY (source_layer_id) REFERENCES layers (id) ON DELETE SET NULL
+);
+
+-- TASK DISTRIBUTION RULES (Rules for distributing tasks across layers)
+CREATE TABLE IF NOT EXISTS task_distribution_rules (
+    id TEXT PRIMARY KEY,
+    rule_name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    rule_type TEXT NOT NULL, -- 'automatic', 'manual', 'conditional'
+    conditions TEXT NOT NULL, -- JSON conditions for rule application
+    target_layers TEXT NOT NULL, -- JSON array of target layer IDs
+    priority INTEGER DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    metadata TEXT, -- JSON for rule metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT NOT NULL DEFAULT 'me',
+    FOREIGN KEY (created_by) REFERENCES users (id)
+);
+
+-- ============================================================================
 -- COMMENTS
 -- ============================================================================
 
@@ -390,4 +479,203 @@ CREATE INDEX IF NOT EXISTS idx_task_sessions_created_at ON task_sessions(created
 -- Tasks are organized by project and can have complex hierarchies
 -- Analysis results are stored per project and analysis type
 -- Chat sessions provide context-aware conversations
--- Workflows enable automation of common development tasks 
+-- Workflows enable automation of common development tasks
+-- Layer architecture enables multi-layer task orchestration and coordination
+
+-- ============================================================================
+-- DATABASE PERFORMANCE OPTIMIZATION TABLES
+-- ============================================================================
+
+-- PERFORMANCE METRICS (Database performance monitoring)
+CREATE TABLE IF NOT EXISTS performance_metrics (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    metric_type TEXT NOT NULL, -- 'query', 'index', 'connection', 'cache', 'memory'
+    metric_name TEXT NOT NULL,
+    metric_value REAL NOT NULL,
+    metric_unit TEXT, -- 'ms', 'bytes', 'count', 'percentage'
+    threshold_value REAL,
+    threshold_type TEXT, -- 'warning', 'error', 'critical'
+    is_exceeded INTEGER DEFAULT 0,
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- QUERY PERFORMANCE (Query execution monitoring)
+CREATE TABLE IF NOT EXISTS query_performance (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    query_hash TEXT NOT NULL, -- Hash of normalized query
+    query_text TEXT NOT NULL, -- Original query text
+    normalized_query TEXT NOT NULL, -- Normalized query for analysis
+    execution_time REAL NOT NULL, -- Execution time in milliseconds
+    rows_affected INTEGER,
+    rows_returned INTEGER,
+    query_plan TEXT, -- JSON query execution plan
+    optimization_suggestions TEXT, -- JSON optimization suggestions
+    performance_score REAL, -- Performance score (0-100)
+    is_optimized INTEGER DEFAULT 0,
+    optimization_applied TEXT, -- JSON applied optimizations
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    executed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- INDEX USAGE (Index utilization monitoring)
+CREATE TABLE IF NOT EXISTS index_usage (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    table_name TEXT NOT NULL,
+    index_name TEXT NOT NULL,
+    index_type TEXT NOT NULL, -- 'btree', 'hash', 'gin', 'gist', 'brin'
+    usage_count INTEGER DEFAULT 0,
+    last_used TEXT,
+    is_used INTEGER DEFAULT 0,
+    is_recommended INTEGER DEFAULT 0,
+    recommendation_reason TEXT,
+    performance_impact REAL, -- Performance impact score
+    maintenance_cost REAL, -- Maintenance cost score
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- PARTITION PERFORMANCE (Table partitioning monitoring)
+CREATE TABLE IF NOT EXISTS partition_performance (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    table_name TEXT NOT NULL,
+    partition_name TEXT NOT NULL,
+    partition_type TEXT NOT NULL, -- 'range', 'list', 'hash'
+    partition_key TEXT NOT NULL,
+    partition_value TEXT,
+    row_count INTEGER DEFAULT 0,
+    size_bytes INTEGER DEFAULT 0,
+    access_frequency INTEGER DEFAULT 0,
+    last_accessed TEXT,
+    performance_score REAL, -- Performance score (0-100)
+    is_active INTEGER DEFAULT 1,
+    is_recommended INTEGER DEFAULT 0,
+    recommendation_reason TEXT,
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- MATERIALIZED VIEW PERFORMANCE (Materialized view monitoring)
+CREATE TABLE IF NOT EXISTS materialized_view_performance (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    view_name TEXT NOT NULL,
+    view_schema TEXT NOT NULL DEFAULT 'main',
+    refresh_count INTEGER DEFAULT 0,
+    last_refresh TEXT,
+    refresh_time REAL, -- Refresh time in milliseconds
+    row_count INTEGER DEFAULT 0,
+    size_bytes INTEGER DEFAULT 0,
+    access_frequency INTEGER DEFAULT 0,
+    last_accessed TEXT,
+    performance_score REAL, -- Performance score (0-100)
+    is_active INTEGER DEFAULT 1,
+    is_recommended INTEGER DEFAULT 0,
+    recommendation_reason TEXT,
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- OPTIMIZATION RECOMMENDATIONS (Database optimization suggestions)
+CREATE TABLE IF NOT EXISTS optimization_recommendations (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    recommendation_type TEXT NOT NULL, -- 'index', 'query', 'partition', 'materialized_view'
+    recommendation_name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    priority TEXT NOT NULL DEFAULT 'medium', -- 'low', 'medium', 'high', 'critical'
+    estimated_impact REAL, -- Estimated performance impact (0-100)
+    implementation_cost REAL, -- Implementation cost score (0-100)
+    risk_level TEXT DEFAULT 'low', -- 'low', 'medium', 'high'
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected', 'implemented'
+    implementation_plan TEXT, -- JSON implementation plan
+    validation_results TEXT, -- JSON validation results
+    applied_at TEXT,
+    applied_by TEXT,
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (applied_by) REFERENCES users (id)
+);
+
+-- OPTIMIZATION HISTORY (Optimization implementation history)
+CREATE TABLE IF NOT EXISTS optimization_history (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    optimization_type TEXT NOT NULL, -- 'index', 'query', 'partition', 'materialized_view'
+    optimization_name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    implementation_sql TEXT, -- SQL used for implementation
+    rollback_sql TEXT, -- SQL for rollback
+    status TEXT NOT NULL, -- 'implemented', 'rolled_back', 'failed'
+    performance_before REAL, -- Performance before optimization
+    performance_after REAL, -- Performance after optimization
+    performance_improvement REAL, -- Performance improvement percentage
+    implementation_time REAL, -- Implementation time in milliseconds
+    error_message TEXT,
+    context TEXT, -- JSON context information
+    metadata TEXT, -- JSON additional metadata
+    implemented_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    implemented_by TEXT NOT NULL DEFAULT 'me',
+    FOREIGN KEY (implemented_by) REFERENCES users (id)
+);
+
+-- ============================================================================
+-- PERFORMANCE OPTIMIZATION INDEXES
+-- ============================================================================
+
+-- Performance metrics indexes
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_type ON performance_metrics(metric_type);
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_name ON performance_metrics(metric_name);
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded_at ON performance_metrics(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_exceeded ON performance_metrics(is_exceeded);
+
+-- Query performance indexes
+CREATE INDEX IF NOT EXISTS idx_query_performance_hash ON query_performance(query_hash);
+CREATE INDEX IF NOT EXISTS idx_query_performance_execution_time ON query_performance(execution_time);
+CREATE INDEX IF NOT EXISTS idx_query_performance_executed_at ON query_performance(executed_at);
+CREATE INDEX IF NOT EXISTS idx_query_performance_optimized ON query_performance(is_optimized);
+CREATE INDEX IF NOT EXISTS idx_query_performance_score ON query_performance(performance_score);
+
+-- Index usage indexes
+CREATE INDEX IF NOT EXISTS idx_index_usage_table ON index_usage(table_name);
+CREATE INDEX IF NOT EXISTS idx_index_usage_name ON index_usage(index_name);
+CREATE INDEX IF NOT EXISTS idx_index_usage_used ON index_usage(is_used);
+CREATE INDEX IF NOT EXISTS idx_index_usage_recommended ON index_usage(is_recommended);
+CREATE INDEX IF NOT EXISTS idx_index_usage_last_used ON index_usage(last_used);
+
+-- Partition performance indexes
+CREATE INDEX IF NOT EXISTS idx_partition_performance_table ON partition_performance(table_name);
+CREATE INDEX IF NOT EXISTS idx_partition_performance_name ON partition_performance(partition_name);
+CREATE INDEX IF NOT EXISTS idx_partition_performance_active ON partition_performance(is_active);
+CREATE INDEX IF NOT EXISTS idx_partition_performance_recommended ON partition_performance(is_recommended);
+CREATE INDEX IF NOT EXISTS idx_partition_performance_score ON partition_performance(performance_score);
+
+-- Materialized view performance indexes
+CREATE INDEX IF NOT EXISTS idx_materialized_view_performance_name ON materialized_view_performance(view_name);
+CREATE INDEX IF NOT EXISTS idx_materialized_view_performance_schema ON materialized_view_performance(view_schema);
+CREATE INDEX IF NOT EXISTS idx_materialized_view_performance_active ON materialized_view_performance(is_active);
+CREATE INDEX IF NOT EXISTS idx_materialized_view_performance_recommended ON materialized_view_performance(is_recommended);
+CREATE INDEX IF NOT EXISTS idx_materialized_view_performance_last_refresh ON materialized_view_performance(last_refresh);
+
+-- Optimization recommendations indexes
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_type ON optimization_recommendations(recommendation_type);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_priority ON optimization_recommendations(priority);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_status ON optimization_recommendations(status);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_impact ON optimization_recommendations(estimated_impact);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_created_at ON optimization_recommendations(created_at);
+
+-- Optimization history indexes
+CREATE INDEX IF NOT EXISTS idx_optimization_history_type ON optimization_history(optimization_type);
+CREATE INDEX IF NOT EXISTS idx_optimization_history_status ON optimization_history(status);
+CREATE INDEX IF NOT EXISTS idx_optimization_history_implemented_at ON optimization_history(implemented_at);
+CREATE INDEX IF NOT EXISTS idx_optimization_history_implemented_by ON optimization_history(implemented_by);
+CREATE INDEX IF NOT EXISTS idx_optimization_history_improvement ON optimization_history(performance_improvement); 

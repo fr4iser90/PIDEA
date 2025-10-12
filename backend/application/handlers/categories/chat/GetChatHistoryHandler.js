@@ -118,17 +118,8 @@ class GetChatHistoryHandler {
       if (this.serviceRegistry) {
         let service = null;
         
-        switch (ideType) {
-          case IDETypes.CURSOR:
-            service = this.serviceRegistry.getService('cursorIDEService');
-            break;
-          case IDETypes.VSCODE:
-            service = this.serviceRegistry.getService('vscodeIDEService');
-            break;
-          case IDETypes.WINDSURF:
-            service = this.serviceRegistry.getService('windsurfIDEService');
-            break;
-        }
+        // All IDE services removed - using interfaceManager instead
+        service = this.serviceRegistry.getService('interfaceManager');
         
         if (service) {
           logger.info(`✅ Found IDE service: ${service.constructor.name}`);

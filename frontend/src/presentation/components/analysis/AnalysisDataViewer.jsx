@@ -4,7 +4,7 @@ import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 import { 
-  useActiveIDE, 
+  useSelectedIDE, 
   useProjectDataActions,
   useCategoryAnalysisLoading,
   useSecurityAnalysis,
@@ -21,16 +21,16 @@ import '@/scss/components/_analysis-data-viewer.scss';;
 
 const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
   // ✅ NEW: Use category-based selectors instead of legacy selectors
-  const activeIDE = useActiveIDE();
+  const selectedIDE = useSelectedIDE();
   const { loadCategoryAnalysisData } = useProjectDataActions();
   const categoryLoading = useCategoryAnalysisLoading();
   
   // ✅ NEW: Integrate with RefreshService
   const { forceRefresh, getStats } = useRefreshService('analysis', {
     fetchData: async () => {
-      if (activeIDE.projectId) {
+      if (selectedIDE.projectId) {
         try {
-          await loadCategoryAnalysisData(activeIDE.projectId);
+          await loadCategoryAnalysisData(selectedIDE.projectId);
           return { success: true };
         } catch (error) {
           logger.error('Failed to fetch analysis data:', error);
@@ -77,12 +77,12 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
 
   // ✅ NEW: Load only basic analysis status when component mounts (no detailed data)
   useEffect(() => {
-    if (activeIDE?.workspacePath) {
-      logger.info('AnalysisDataViewer: Loading basic analysis status for workspace:', activeIDE.workspacePath);
+    if (selectedIDE?.workspacePath) {
+      logger.info('AnalysisDataViewer: Loading basic analysis status for workspace:', selectedIDE.workspacePath);
       // Only load basic status, not detailed category data
-      loadCategoryAnalysisData(activeIDE.workspacePath, 'status-only');
+      loadCategoryAnalysisData(selectedIDE.workspacePath, 'status-only');
     }
-  }, [activeIDE?.workspacePath, loadCategoryAnalysisData]);
+  }, [selectedIDE?.workspacePath, loadCategoryAnalysisData]);
 
   // ✅ NEW: Handle category section toggle with lazy loading
   const handleCategoryToggle = useCallback((category) => {
@@ -94,22 +94,22 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     }));
     
     // Only load data when expanding (not when collapsing)
-    if (isExpanding && activeIDE?.workspacePath) {
+    if (isExpanding && selectedIDE?.workspacePath) {
       // Check if data is already loaded for this category
       const hasData = categoryLoading.loadedCategories.includes(category);
       
       if (!hasData) {
-        logger.info(`🔄 Lazy loading ${category} data for workspace:`, activeIDE.workspacePath);
-        loadCategoryAnalysisData(activeIDE.workspacePath, category);
+        logger.info(`🔄 Lazy loading ${category} data for workspace:`, selectedIDE.workspacePath);
+        loadCategoryAnalysisData(selectedIDE.workspacePath, category);
       } else {
         logger.info(`✅ ${category} data already loaded, skipping API call`);
       }
     }
-  }, [activeIDE?.workspacePath, categoryLoading.loadedCategories, loadCategoryAnalysisData, expandedCategories]);
+  }, [selectedIDE?.workspacePath, categoryLoading.loadedCategories, loadCategoryAnalysisData, expandedCategories]);
 
   // ✅ NEW: Handle analysis execution
   const handleAnalysisExecute = useCallback(async (analysisType, options = {}) => {
-    if (!activeIDE?.workspacePath) {
+    if (!selectedIDE?.workspacePath) {
       showNotification('No active workspace found', 'error');
       return;
     }
@@ -118,7 +118,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     setError(null);
 
     try {
-      logger.info(`Executing ${analysisType} analysis for workspace:`, activeIDE.workspacePath);
+      logger.info(`Executing ${analysisType} analysis for workspace:`, selectedIDE.workspacePath);
       
       const result = await apiRepository.executeAnalysisStep(null, analysisType, options);
       
@@ -126,7 +126,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
         showNotification(`${analysisType} analysis completed successfully`, 'success');
         
         // Reload the specific category data
-        await loadCategoryAnalysisData(activeIDE.workspacePath, analysisType);
+        await loadCategoryAnalysisData(selectedIDE.workspacePath, analysisType);
       } else {
         throw new Error(result.error || 'Analysis failed');
       }
@@ -137,7 +137,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     } finally {
       setLoading(false);
     }
-  }, [activeIDE?.workspacePath, apiRepository, loadCategoryAnalysisData, showNotification]);
+  }, [selectedIDE?.workspacePath, apiRepository, loadCategoryAnalysisData, showNotification]);
 
   // ✅ NEW: Handle analysis selection
   const handleAnalysisSelect = useCallback((analysis) => {
@@ -204,7 +204,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     }
   ];
 
-  if (!activeIDE?.workspacePath) {
+  if (!selectedIDE?.workspacePath) {
     return (
       <div className="analysis-data-viewer">
         <div className="analysis-header">

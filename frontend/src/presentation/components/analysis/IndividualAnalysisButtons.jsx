@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import APIChatRepository from '@/infrastructure/repositories/APIChatRepository';
-import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import '@/scss/components/_individual-analysis-buttons.scss';;
 
 const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalysisComplete = null }) => {
@@ -14,8 +14,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const apiRepository = new APIChatRepository();
   
-  // ✅ FIX: Use useActiveIDE to get the correct projectId
-  const { projectId: activeProjectId } = useActiveIDE();
+  // ✅ FIX: Use useSelectedIDE to get the correct projectId
+  const { projectId: activeProjectId } = useSelectedIDE();
 
   // Core Analysis Types - Only the main analysis steps
   const analysisTypes = [

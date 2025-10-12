@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGitStatus, useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useGitStatus, useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 
 function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to PIDEA!' }) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -7,7 +7,7 @@ function Footer({ eventBus, activePort, version = 'dev', message = 'Welcome to P
   
   // ✅ REFACTORED: Use global state selectors instead of local state
   const gitStatus = useGitStatus();
-  const activeIDE = useActiveIDE();
+  const selectedIDE = useSelectedIDE();
 
   useEffect(() => {
     const timeInterval = setInterval(() => {

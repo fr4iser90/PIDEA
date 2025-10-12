@@ -115,10 +115,10 @@ class ProjectApplicationService {
   /**
    * Create new project
    * @param {Object} projectData - Project creation data
-   * @param {string} userId - User identifier
+   * @param {string} userId - User identifier (optional for API calls)
    * @returns {Promise<Object>} Created project
    */
-  async createProject(projectData, userId) {
+  async createProject(projectData, userId = null) {
     try {
       this.logger.info(`Creating project for user: ${userId}`);
       
@@ -146,10 +146,10 @@ class ProjectApplicationService {
         workspacePath,
         type: type || detectedWorkspace?.type || 'unknown',
         framework: framework || detectedWorkspace?.framework || null,
-        userId,
+        userId: userId || 'system', // Default to system if no user provided
         metadata: {
           detectedWorkspace,
-          createdBy: userId,
+          createdBy: userId || 'system',
           createdAt: new Date().toISOString()
         }
       });
@@ -663,6 +663,119 @@ class ProjectApplicationService {
     } catch (error) {
       this.logger.error('❌ Failed to get available interface types:', error);
       throw new Error(`Failed to get available interface types: ${error.message}`);
+    }
+  }
+
+  /**
+   * List projects with pagination and search
+   * @param {Object} options - Query options
+   * @returns {Promise<Object>} List of projects with pagination info
+   */
+  async listProjects(options = {}) {
+    try {
+      const { page = 1, limit = 10, search } = options;
+      const offset = (page - 1) * limit;
+      
+      this.logger.info(`Listing projects with pagination: page=${page}, limit=${limit}, search=${search}`);
+      
+      // Get projects with pagination
+      const projects = await this.projectRepository.findAll({
+        limit,
+        offset,
+        search
+      });
+      
+      // Get total count for pagination
+      const total = await this.projectRepository.count({ search });
+      
+      return {
+        projects: projects.map(project => ({
+          id: project.id,
+          name: project.name,
+          description: project.description,
+          workspacePath: project.workspacePath,
+          type: project.type,
+          framework: project.framework,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt
+        })),
+        total
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to list projects:', error);
+      throw new Error(`Failed to list projects: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update project
+   * @param {string} projectId - Project identifier
+   * @param {Object} updateData - Project update data
+   * @returns {Promise<Object>} Updated project
+   */
+  async updateProject(projectId, updateData) {
+    try {
+      this.logger.info(`Updating project: ${projectId}`);
+      
+      // Validate project exists
+      const existingProject = await this.projectRepository.findById(projectId);
+      if (!existingProject) {
+        throw new Error(`Project not found: ${projectId}`);
+      }
+      
+      // Update project
+      const updatedProject = await this.projectRepository.update(projectId, {
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      });
+      
+      this.logger.info(`✅ Project updated: ${projectId}`);
+      
+      return {
+        id: updatedProject.id,
+        name: updatedProject.name,
+        description: updatedProject.description,
+        workspacePath: updatedProject.workspacePath,
+        type: updatedProject.type,
+        framework: updatedProject.framework,
+        createdAt: updatedProject.createdAt,
+        updatedAt: updatedProject.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to update project:', error);
+      throw new Error(`Failed to update project: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete project
+   * @param {string} projectId - Project identifier
+   * @returns {Promise<boolean>} True if project was deleted
+   */
+  async deleteProject(projectId) {
+    try {
+      this.logger.info(`Deleting project: ${projectId}`);
+      
+      // Validate project exists
+      const existingProject = await this.projectRepository.findById(projectId);
+      if (!existingProject) {
+        return false;
+      }
+      
+      // Delete project
+      const deleted = await this.projectRepository.delete(projectId);
+      
+      if (deleted) {
+        this.logger.info(`✅ Project deleted: ${projectId}`);
+      }
+      
+      return deleted;
+      
+    } catch (error) {
+      this.logger.error('❌ Failed to delete project:', error);
+      throw new Error(`Failed to delete project: ${error.message}`);
     }
   }
 }

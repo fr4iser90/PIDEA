@@ -21,6 +21,9 @@ COPY backend/ ./backend/
 # Copy environment file
 COPY .env ./
 
+# Copy database migration files
+COPY database/migrations/ ./database/migrations/
+
 # Set working directory to backend
 WORKDIR /app/backend
 

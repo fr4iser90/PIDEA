@@ -17,38 +17,37 @@ class InterfaceRoutes {
     this.interfaceController = interfaceController;
     this.authMiddleware = authMiddleware;
     this.router = express.Router();
-    
-    this.setupRoutes();
   }
 
   /**
    * Set up all interface routes
+   * @param {Express.App} app - Express app instance
    * @returns {void}
    */
-  setupRoutes() {
+  setupRoutes(app) {
     // Apply authentication middleware if provided
-    if (this.authMiddleware) {
-      this.router.use(this.authMiddleware);
+    if (this.authMiddleware && typeof this.authMiddleware === 'function') {
+      app.use('/api/interfaces', this.authMiddleware);
     }
 
     // Interface management routes
-    this.router.get('/', this.interfaceController.getAllInterfaces.bind(this.interfaceController));
-    this.router.get('/types', this.interfaceController.getAvailableTypes.bind(this.interfaceController));
-    this.router.get('/stats', this.interfaceController.getStats.bind(this.interfaceController));
-    this.router.post('/', this.interfaceController.createInterface.bind(this.interfaceController));
+    app.get('/api/interfaces/', this.interfaceController.getAllInterfaces.bind(this.interfaceController));
+    app.get('/api/interfaces/types', this.interfaceController.getAvailableTypes.bind(this.interfaceController));
+    app.get('/api/interfaces/stats', this.interfaceController.getStats.bind(this.interfaceController));
+    app.post('/api/interfaces/', this.interfaceController.createInterface.bind(this.interfaceController));
     
     // Interface-specific routes
-    this.router.get('/:interfaceId', this.interfaceController.getInterface.bind(this.interfaceController));
-    this.router.delete('/:interfaceId', this.interfaceController.removeInterface.bind(this.interfaceController));
-    this.router.post('/:interfaceId/start', this.interfaceController.startInterface.bind(this.interfaceController));
-    this.router.post('/:interfaceId/stop', this.interfaceController.stopInterface.bind(this.interfaceController));
-    this.router.post('/:interfaceId/restart', this.interfaceController.restartInterface.bind(this.interfaceController));
+    app.get('/api/interfaces/:interfaceId', this.interfaceController.getInterface.bind(this.interfaceController));
+    app.delete('/api/interfaces/:interfaceId', this.interfaceController.removeInterface.bind(this.interfaceController));
+    app.post('/api/interfaces/:interfaceId/start', this.interfaceController.startInterface.bind(this.interfaceController));
+    app.post('/api/interfaces/:interfaceId/stop', this.interfaceController.stopInterface.bind(this.interfaceController));
+    app.post('/api/interfaces/:interfaceId/restart', this.interfaceController.restartInterface.bind(this.interfaceController));
     
     // Project-specific interface routes
-    this.router.get('/project/:projectId', this.interfaceController.getProjectInterfaces.bind(this.interfaceController));
-    this.router.post('/project/:projectId', this.interfaceController.createProjectInterface.bind(this.interfaceController));
-    this.router.delete('/project/:projectId/:interfaceId', this.interfaceController.removeProjectInterface.bind(this.interfaceController));
-    this.router.get('/project/:projectId/types', this.interfaceController.getAvailableTypesForProject.bind(this.interfaceController));
+    app.get('/api/interfaces/project/:projectId', this.interfaceController.getProjectInterfaces.bind(this.interfaceController));
+    app.post('/api/interfaces/project/:projectId', this.interfaceController.createProjectInterface.bind(this.interfaceController));
+    app.delete('/api/interfaces/project/:projectId/:interfaceId', this.interfaceController.removeProjectInterface.bind(this.interfaceController));
+    app.get('/api/interfaces/project/:projectId/types', this.interfaceController.getAvailableTypesForProject.bind(this.interfaceController));
   }
 
   /**

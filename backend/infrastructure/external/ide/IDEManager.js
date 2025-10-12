@@ -9,7 +9,7 @@ const IDEDetectorFactory = require('./IDEDetectorFactory');
 const IDEStarterFactory = require('./IDEStarterFactory');
 const IDEConfigManager = require('./IDEConfigManager');
 const IDEHealthMonitor = require('./IDEHealthMonitor');
-const IDEPortManager = require('@domain/services/ide/IDEPortManager');
+// IDEPortManager removed - using InterfaceManager instead
 const path = require('path');
 const CDPConnectionManager = require('../cdp/CDPConnectionManager');
 const CDPWorkspaceDetector = require('@services/workspace/CDPWorkspaceDetector');
@@ -30,8 +30,7 @@ class IDEManager {
     this.configManager = new IDEConfigManager();
     this.healthMonitor = new IDEHealthMonitor(this.configManager);
     
-    // Initialize port manager
-    this.portManager = new IDEPortManager(this, eventBus);
+    // Port manager removed - using InterfaceManager instead
     
     // Initialize version manager
     this.versionManager = new SelectorVersionManager();

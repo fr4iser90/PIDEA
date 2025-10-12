@@ -11,10 +11,8 @@ class IDEMirrorController {
     this.logger = dependencies.logger || console;
     this.serviceRegistry = dependencies.serviceRegistry;
     
-    // Get IDE-specific services
-    this.cursorIDEService = this.serviceRegistry?.getService('cursorIDEService');
-    this.vscodeIDEService = this.serviceRegistry?.getService('vscodeIDEService');
-    this.windsurfIDEService = this.serviceRegistry?.getService('windsurfIDEService');
+    // All IDE-specific services removed - using interfaceManager instead
+    this.interfaceManager = this.serviceRegistry?.getService('interfaceManager');
     
     // Mirror state
     this.mirrorState = new Map(); // port -> mirror state
@@ -380,16 +378,8 @@ class IDEMirrorController {
 
     const ideType = targetIDE.ideType || 'cursor';
     
-    switch (ideType) {
-      case 'cursor':
-        return this.cursorIDEService;
-      case 'vscode':
-        return this.vscodeIDEService;
-      case 'windsurf':
-        return this.windsurfIDEService;
-      default:
-        return this.cursorIDEService; // Default fallback
-    }
+    // All IDE services removed - using interfaceManager instead
+    return this.interfaceManager;
   }
 
   /**

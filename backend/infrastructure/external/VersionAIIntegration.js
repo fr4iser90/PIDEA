@@ -4,13 +4,12 @@
  */
 
 const Logger = require('@logging/Logger');
-const CursorIDEService = require('@domain/services/ide/CursorIDEService');
 const axios = require('axios');
 
 class VersionAIIntegration {
   constructor(dependencies = {}) {
     this.logger = new Logger('VersionAIIntegration');
-    this.cursorIDEService = dependencies.cursorIDEService || new CursorIDEService();
+    // CursorIDEService removed - using InterfaceManager instead
     
     // Configuration for both IDE Chat and External APIs
     this.config = {

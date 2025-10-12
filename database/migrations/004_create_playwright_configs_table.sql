@@ -1,7 +1,7 @@
 -- Migration: Create playwright_configs table
 -- This table stores Playwright test configurations for each project
 
-CREATE TABLE playwright_configs (
+CREATE TABLE IF NOT EXISTS playwright_configs (
     id SERIAL PRIMARY KEY,
     project_id VARCHAR(255) NOT NULL UNIQUE,
     base_url VARCHAR(500) NOT NULL,

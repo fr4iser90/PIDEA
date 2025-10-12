@@ -10,7 +10,6 @@ import { logger } from '@/infrastructure/logging/Logger';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import useAuthStore from './AuthStore.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
-import useIDESwitchOptimizationStore from './IDESwitchOptimizationStore.jsx';
 import performanceLogger from '@/infrastructure/services/PerformanceLogger';
 
 // Using CacheService for caching instead of RequestDeduplicationService
@@ -28,7 +27,7 @@ const useIDEStore = create(
   persist(
     (set, get) => ({
       // State
-      activePort: null,
+      selectedPort: null,
       portPreferences: [],
       availableIDEs: [],
       isLoading: false,
@@ -61,7 +60,7 @@ const useIDEStore = create(
       },
 
       // Actions
-      setActivePort: async (port) => {
+      setSelectedPort: async (port) => {
         try {
           set({ isLoading: true, error: null });
           logger.info('Setting active port:', port);
@@ -81,7 +80,7 @@ const useIDEStore = create(
           }
 
           // Update state
-          set({ activePort: port });
+          set({ selectedPort: port });
 
           // Update preferences
           const { portPreferences } = get();
@@ -139,20 +138,20 @@ const useIDEStore = create(
           const { isLoading } = get();
           if (isLoading) {
             logger.info('Port load already in progress, skipping');
-            return get().activePort;
+            return get().selectedPort;
           }
           
           set({ isLoading: true, error: null });
           logger.info('Loading active port...');
 
           // Strategy 1: Try previously active port (use cached data)
-          const { activePort, portPreferences, availableIDEs: cachedIDEs } = get();
-          if (activePort) {
-            const ide = cachedIDEs.find(ide => ide.port === activePort);
+          const { selectedPort, portPreferences, availableIDEs: cachedIDEs } = get();
+          if (selectedPort) {
+            const ide = cachedIDEs.find(ide => ide.port === selectedPort);
             if (ide && ide.status === 'running') {
-              logger.info('Using previously active port:', activePort);
+              logger.info('Using previously active port:', selectedPort);
               set({ isLoading: false });
-              return activePort;
+              return selectedPort;
             }
           }
 
@@ -165,7 +164,7 @@ const useIDEStore = create(
             const ide = cachedIDEs.find(ide => ide.port === preference.port);
             if (ide && ide.status === 'running') {
               logger.info('Using preferred port:', preference.port);
-              set({ activePort: preference.port, isLoading: false });
+              set({ selectedPort: preference.port, isLoading: false });
               return preference.port;
             }
           }
@@ -177,7 +176,7 @@ const useIDEStore = create(
           if (availableIDEs.length > 0) {
             const firstIDE = availableIDEs[0];
             logger.info('Using first available port:', firstIDE.port);
-            set({ activePort: firstIDE.port, isLoading: false });
+            set({ selectedPort: firstIDE.port, isLoading: false });
             return firstIDE.port;
           }
 
@@ -229,12 +228,12 @@ const useIDEStore = create(
           const apiDuration = performance.now() - apiStart;
           
           if (result.success) {
-            const { activePort } = get();
+            const { selectedPort } = get();
             
             // Add active status to fresh data
             const availableIDEsWithActive = result.data.map(ide => ({
               ...ide,
-              active: ide.port === activePort
+              active: ide.port === selectedPort
             }));
             
             set({ availableIDEs: availableIDEsWithActive, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
@@ -268,8 +267,8 @@ const useIDEStore = create(
           if (!projectId) return;
           
           // Get active port from state
-          const { activePort, projectData } = get();
-          if (!activePort) {
+          const { selectedPort, projectData } = get();
+          if (!selectedPort) {
             logger.warn('No active port available for loading project data');
             return;
           }
@@ -294,14 +293,14 @@ const useIDEStore = create(
             return; // Data is recent, no need to reload
           }
           
-          logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId, 'activePort:', activePort);
+          logger.info('Loading project data for workspace:', workspacePath, 'projectId:', projectId, 'selectedPort:', selectedPort);
           
           // Load git and chat data in parallel (analysis only when AnalysisView is opened)
           const [gitResult, chatResult] = await Promise.allSettled([
             // Use CacheService for git status
             cacheService.getGitData(workspacePath, projectId),
             // Use CacheService for chat history  
-            cacheService.getChatData(activePort)
+            cacheService.getChatData(selectedPort)
           ]);
           
           const gitData = {
@@ -630,16 +629,16 @@ const useIDEStore = create(
           const projectId = getProjectIdFromWorkspace(workspacePath);
           if (!projectId) return;
           
-          const { activePort } = get();
-          if (!activePort) {
+          const { selectedPort } = get();
+          if (!selectedPort) {
             logger.warn('No active port available for task loading');
             return;
           }
           
-          logger.info('Loading project tasks for workspace:', workspacePath, 'projectId:', projectId, 'port:', activePort);
+          logger.info('Loading project tasks for workspace:', workspacePath, 'projectId:', projectId, 'port:', selectedPort);
           
           // ✅ CRITICAL FIX: Check cache first using hierarchical key
-          const cacheKey = cacheService.generateHierarchicalKey('tasks', activePort, projectId, 'data');
+          const cacheKey = cacheService.generateHierarchicalKey('tasks', selectedPort, projectId, 'data');
           const cachedTasks = cacheService.get(cacheKey);
           
           if (cachedTasks) {
@@ -649,7 +648,7 @@ const useIDEStore = create(
               logger.info('✅ Using cached tasks data:', { 
                 workspacePath, 
                 projectId, 
-                port: activePort, 
+                port: selectedPort, 
                 taskCount: taskCount 
               });
               
@@ -672,7 +671,7 @@ const useIDEStore = create(
             }
           }
           
-          logger.info('Cache miss for tasks, loading from API:', { workspacePath, projectId, port: activePort });
+          logger.info('Cache miss for tasks, loading from API:', { workspacePath, projectId, port: selectedPort });
           
           // Load tasks from API
           const response = await apiCall(`/api/projects/${projectId}/tasks`);
@@ -688,7 +687,7 @@ const useIDEStore = create(
             logger.info('💾 Cached tasks data:', { 
               workspacePath, 
               projectId, 
-              port: activePort, 
+              port: selectedPort, 
               taskCount: taskData.tasks.length 
             });
           } else {
@@ -724,16 +723,16 @@ const useIDEStore = create(
         }
         
         try {
-          const { activePort } = get();
-          if (!activePort) {
+          const { selectedPort } = get();
+          if (!selectedPort) {
             logger.warn('No active port available for loading chat data');
             return;
           }
           
-          logger.info('Loading chat data for workspace:', targetWorkspacePath, 'activePort:', activePort);
+          logger.info('Loading chat data for workspace:', targetWorkspacePath, 'selectedPort:', selectedPort);
           
           // Use CacheService for chat history instead of direct API call
-          const response = await cacheService.getChatData(activePort);
+          const response = await cacheService.getChatData(selectedPort);
           
           const chatData = {
             messages: response && response.success ? (response.data?.messages || []) : [],
@@ -799,7 +798,7 @@ const useIDEStore = create(
           logger.info('Loading task data for workspace:', targetWorkspacePath, 'projectId:', projectId);
           
           // Use CacheService for tasks instead of direct API call
-          const response = await cacheService.getTaskData(activePort);
+          const response = await cacheService.getTaskData(selectedPort);
           
           const taskData = {
             tasks: response && response.success ? (Array.isArray(response.data) ? response.data : []) : [],
@@ -996,11 +995,11 @@ const useIDEStore = create(
               // Store the AI analysis result for components to access
               set({ aiVersionAnalysis: data.analysisResult });
             });
-            WebSocketService.on('activePortChanged', (data) => {
+            WebSocketService.on('selectedPortChanged', (data) => {
               const { port } = data;
               logger.info('Active port changed via WebSocket:', port);
               // Update active port in store
-              set({ activePort: port });
+              set({ selectedPort: port });
               // Update active status for all IDEs
               const { availableIDEs } = get();
               const updatedIDEs = availableIDEs.map(ide => ({
@@ -1226,8 +1225,8 @@ const useIDEStore = create(
           set({ portPreferences: updatedPreferences });
           
           // If this was the active port, select a new one
-          const { activePort } = get();
-          if (activePort === port) {
+          const { selectedPort } = get();
+          if (selectedPort === port) {
             logger.info('Active port failed, selecting new port');
             const newPort = await get().loadActivePort();
             return newPort;
@@ -1241,74 +1240,34 @@ const useIDEStore = create(
       },
 
       switchIDE: async (port, reason = 'manual') => {
-        const optimizationStore = useIDESwitchOptimizationStore.getState();
-        const startTime = Date.now();
         
         try {
           set({ isLoading: true, error: null });
           logger.info('Switching to IDE:', port, reason);
 
-          // Start optimization tracking
-          optimizationStore.startSwitch(port);
-
           // Check cache first using CacheService
-          logger.info(`IDEStore: Starting switchIDE for port ${port}, cache enabled: ${optimizationStore.cacheEnabled}`);
-          if (optimizationStore.cacheEnabled) {
-            const key = `switch_ide_${port}`; // SAME KEY as APIChatRepository!
-            const cached = cacheService.get(key);
-            logger.info(`IDEStore: Cache check for key: ${key}, cached: ${!!cached}`);
-            if (cached) {
-              logger.info('Using cached switch result for port:', port);
-              optimizationStore.updateProgress(50, 'Using cached result...');
-              await get().setActivePort(port);
-              optimizationStore.completeSwitch(true, Date.now() - startTime);
-              return true;
-            }
-          } else {
-            logger.warn(`IDEStore: Cache disabled - cacheEnabled: ${optimizationStore.cacheEnabled}`);
+          const cacheKey = `switch_ide_${port}`;
+          const cached = cacheService.get(cacheKey);
+          if (cached) {
+            logger.info('Using cached switch result for port:', port);
+            await get().setActivePort(port);
+            return true;
           }
 
-          // Optimistic update
-          if (optimizationStore.optimisticUpdates) {
-            const previousPort = get().activePort;
-            set({ activePort: port });
-            
-            // Also update availableIDEs optimistically
-            const { availableIDEs } = get();
-            const updatedIDEs = availableIDEs.map(ide => ({
-              ...ide,
-              active: ide.port === port
-            }));
-            set({ availableIDEs: updatedIDEs });
-            
-            optimizationStore.updateProgress(25, 'Updating UI optimistically...');
-          }
-
-          optimizationStore.updateProgress(50, 'Connecting to IDE...');
-          
           // Use CacheService for IDE switching
-          const key = `switch_ide_${port}`; // SAME KEY as APIChatRepository!
-          logger.info(`IDEStore: Attempting IDE switch to port ${port} with key: ${key}`);
-          
-          let result;
-          try {
-            logger.info(`IDEStore: Making API call for IDE switch to port ${port}`);
-            result = await apiCall(`/api/ide/switch/${port}`, {
-              method: 'POST'
-            });
-            
-            // Cache the result
-            if (result.success) {
-              cacheService.set(key, result, 'ide', 'ide');
-            }
-          } catch (executeError) {
-            logger.error(`IDEStore: API call failed:`, executeError.message, executeError.stack);
-            throw executeError;
-          }
+          const result = await cacheService.fetchWithCache(
+            cacheKey,
+            () => apiCall(`/api/ides/switch/${port}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reason })
+            }),
+            'ideSwitch',
+            'ideStore',
+            30000 // 30 second TTL
+          );
           
           logger.info(`IDEStore: Switch result:`, result);
-
-          optimizationStore.updateProgress(75, 'Finalizing switch...');
 
           if (result.success) {
             // Cache is handled by CacheService
@@ -1352,27 +1311,13 @@ const useIDEStore = create(
             set({ availableIDEs: updatedIDEs });
             
             logger.info('Successfully switched to IDE:', port);
-            optimizationStore.completeSwitch(true, Date.now() - startTime);
             return true;
           } else {
-            // Revert on failure
-            if (optimizationStore.optimisticUpdates) {
-              set({ activePort: previousPort });
-              
-              // Also revert availableIDEs state
-              const { availableIDEs } = get();
-              const revertedIDEs = availableIDEs.map(ide => ({
-                ...ide,
-                active: ide.port === previousPort
-              }));
-              set({ availableIDEs: revertedIDEs });
-            }
             throw new Error(result.error || 'Failed to switch IDE');
           }
         } catch (error) {
           logger.error('Error switching IDE:', error.message, error.stack);
           set({ error: error.message });
-          optimizationStore.completeSwitch(false, Date.now() - startTime);
           return false;
         } finally {
           set({ isLoading: false });
@@ -1387,9 +1332,9 @@ const useIDEStore = create(
           await get().loadAvailableIDEs();
           
           // DISABLED: Re-validate current active port - This was causing port to reset!
-          // const { activePort } = get();
-          // if (activePort) {
-          //   const isValid = await get().validatePort(activePort);
+          // const { selectedPort } = get();
+          // if (selectedPort) {
+          //   const isValid = await get().validatePort(selectedPort);
           //   if (!isValid) {
           //     logger.info('Current active port invalid, selecting new one');
           //     await get().loadActivePort();
@@ -1413,7 +1358,7 @@ const useIDEStore = create(
 
       reset: () => {
         set({
-          activePort: null,
+          selectedPort: null,
           portPreferences: [],
           availableIDEs: [],
           isLoading: false,
@@ -1440,7 +1385,7 @@ const useIDEStore = create(
             entryCount: stats.memoryEntries,
             hitRate: stats.hitRate
           },
-          activePort: get().activePort,
+          selectedPort: get().selectedPort,
           availableIDEs: get().availableIDEs.length
         });
         return stats;
@@ -1508,7 +1453,7 @@ const useIDEStore = create(
     {
       name: 'ide-storage',
       partialize: (state) => ({
-        activePort: state.activePort,
+        selectedPort: state.selectedPort,
         portPreferences: state.portPreferences,
         // NEW: Persist project data
         projectData: state.projectData
@@ -1516,7 +1461,7 @@ const useIDEStore = create(
       onRehydrateStorage: () => (state) => {
         if (state) {
           logger.info('State rehydrated:', {
-            activePort: state.activePort,
+            selectedPort: state.selectedPort,
             preferencesCount: state.portPreferences.length,
             projectDataKeys: Object.keys(state.projectData?.git || {}).length
           });

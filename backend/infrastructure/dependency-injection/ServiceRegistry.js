@@ -90,11 +90,7 @@ class ServiceRegistry {
             return manager;
         }, { singleton: true, dependencies: ['browserManager', 'projectRepository', 'eventBus', 'gitService'] });
 
-        // IDE Port Manager
-        this.container.register('idePortManager', (ideManager, eventBus) => {
-            const IDEPortManager = require('@domain/services/ide/IDEPortManager');
-            return new IDEPortManager(ideManager, eventBus);
-        }, { singleton: true, dependencies: ['ideManager', 'eventBus'] });
+        // IDE Port Manager removed - using InterfaceManager instead
 
         // Step Registry Service (moved from external services)
         this.container.register('stepRegistry', () => {
@@ -120,19 +116,31 @@ class ServiceRegistry {
 
         // Interface management services
         this.container.register('interfaceManager', (eventBus, logger) => {
-            const { InterfaceManager } = require('@domain/services/interface');
+            const InterfaceManager = require('@domain/services/interface/InterfaceManager');
             return new InterfaceManager({ eventBus, logger });
         }, { singleton: true, dependencies: ['eventBus', 'logger'] });
 
         this.container.register('interfaceFactory', (interfaceManager, logger) => {
-            const { InterfaceFactory } = require('@domain/services/interface');
+            const InterfaceFactory = require('@domain/services/interface/InterfaceFactory');
             return new InterfaceFactory({ interfaceManager, logger });
         }, { singleton: true, dependencies: ['interfaceManager', 'logger'] });
 
         this.container.register('interfaceRegistry', (logger) => {
-            const { InterfaceRegistry } = require('@domain/services/interface');
+            const InterfaceRegistry = require('@domain/services/interface/InterfaceRegistry');
             return new InterfaceRegistry({ logger });
         }, { singleton: true, dependencies: ['logger'] });
+
+        // Register IDE Handler
+        this.container.register('ideHandler', (ideManager, eventBus, logger) => {
+            const IDEHandler = require('../../domain/services/interface/handlers/IDEHandler');
+            const handler = new IDEHandler({
+                ideManager,
+                eventBus,
+                serviceRegistry: this,
+                logger
+            });
+            return handler;
+        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'logger'] });
 
         this.registeredServices.add('infrastructure');
     }
@@ -160,11 +168,11 @@ class ServiceRegistry {
             return new TerminalLogReader();
         }, { singleton: true });
 
-        // IDEController - FIXED: Add missing dependencies
-        this.container.register('ideController', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader) => {
+        // IDEController - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('ideController', (ideManager, eventBus, interfaceManager, taskRepository, terminalLogCaptureService, terminalLogReader) => {
             const IDEController = require('@presentation/api/IDEController');
-            return new IDEController(ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader);
-        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
+            return new IDEController(ideManager, eventBus, interfaceManager, taskRepository, terminalLogCaptureService, terminalLogReader);
+        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
 
         // AuthController - coordinates authentication endpoints
         this.container.register('authController', (authApplicationService) => {
@@ -235,20 +243,7 @@ class ServiceRegistry {
             return new IDEService(browserManager, ideManager, eventBus, ideFactory);
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
 
-        this.container.register('cursorIDEService', (browserManager, ideManager, eventBus, stepRegistry) => {
-            const CursorIDEService = require('@domain/services/ide/CursorIDEService');
-            return new CursorIDEService(browserManager, ideManager, eventBus, stepRegistry);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'] });
-
-        this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
-            const VSCodeIDEService = require('@domain/services/ide/VSCodeIDEService');
-            return new VSCodeIDEService(browserManager, ideManager, eventBus);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
-
-        this.container.register('windsurfIDEService', (browserManager, ideManager, eventBus) => {
-            const WindsurfIDEService = require('@domain/services/ide/WindsurfIDEService');
-            return new WindsurfIDEService(browserManager, ideManager, eventBus);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
+        // CursorIDEService, VSCodeIDEService, WindsurfIDEService removed - using InterfaceManager instead
 
         // CDP Connection Manager for Workspace Detection
         this.container.register('cdpConnectionManager', () => {
@@ -294,40 +289,40 @@ class ServiceRegistry {
             return new AnalysisOutputService({ analysisRepository, logger });
         }, { singleton: true, dependencies: ['analysisRepository', 'logger'] });
 
-        // Task Analysis Service - FIXED: Remove redundant analysisOrchestrator dependency
-        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
+        // Task Analysis Service - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('taskAnalysisService', (interfaceManager, eventBus, logger, aiService, projectAnalyzer) => {
             const TaskAnalysisService = require('@domain/services/task/TaskAnalysisService');
             return new TaskAnalysisService({
-                cursorIDEService,
+                interfaceManager,
                 eventBus,
                 logger,
                 aiService,
                 projectAnalyzer
             });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
+        }, { singleton: true, dependencies: ['interfaceManager', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
 
-        // Task Validation Service
-        this.container.register('taskValidationService', (taskRepository, cursorIDEService, eventBus, fileSystemService) => {
+        // Task Validation Service - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('taskValidationService', (taskRepository, interfaceManager, eventBus, fileSystemService) => {
             const TaskValidationService = require('@domain/services/task/TaskValidationService');
             return new TaskValidationService({
                 taskRepository,
-                cursorIDEService,
+                interfaceManager,
                 eventBus,
                 fileSystemService
             });
-        }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
+        }, { singleton: true, dependencies: ['taskRepository', 'interfaceManager', 'eventBus', 'fileSystemService'] });
 
-        // Task Generation Service
-        this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, analysisRepository, cursorIDEService, eventBus) => {
+        // Task Generation Service - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, analysisRepository, interfaceManager, eventBus) => {
             const TaskGenerationService = require('@domain/services/task/TaskGenerationService');
             return new TaskGenerationService(
                 taskRepository,
                 taskTemplateRepository,
                 analysisRepository,
-                cursorIDEService,
+                interfaceManager,
                 eventBus
             );
-        }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'cursorIDEService', 'eventBus'] });
+        }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'interfaceManager', 'eventBus'] });
 
         // Advanced Analysis Service - combines layer and logic validation
         this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
@@ -433,19 +428,16 @@ class ServiceRegistry {
             });
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'logger'] });
 
-        // Workflow Execution Service
-        this.container.register('workflowExecutionService', (chatSessionService, ideAutomationService, browserManager, ideManager, eventBus, stepRegistry, logger) => {
-            const WorkflowExecutionService = require('@domain/services/WorkflowExecutionService');
-            return new WorkflowExecutionService({
-                chatSessionService,
-                ideAutomationService,
-                browserManager,
-                ideManager,
+        // Workflow Execution Service - using WorkflowOrchestrationService instead
+        this.container.register('workflowExecutionService', (interfaceManager, taskRepository, eventBus, logger) => {
+            const WorkflowOrchestrationService = require('@domain/services/workflow/WorkflowOrchestrationService');
+            return new WorkflowOrchestrationService({
+                interfaceManager,
+                taskRepository,
                 eventBus,
-                stepRegistry,
                 logger
             });
-        }, { singleton: true, dependencies: ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'stepRegistry', 'logger'] });
+        }, { singleton: true, dependencies: ['interfaceManager', 'taskRepository', 'eventBus', 'logger'] });
 
         // IDE Factory
         this.container.register('ideFactory', () => {
@@ -468,17 +460,9 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
 
 
-        // VSCode IDE service
-        this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
-            const VSCodeIDEService = require('@domain/services/ide/VSCodeService');
-            return new VSCodeIDEService(browserManager, ideManager, eventBus);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
+        // VSCode IDE service removed - using InterfaceManager instead
 
-        // Windsurf IDE service
-        this.container.register('windsurfIDEService', (browserManager, ideManager, eventBus) => {
-            const WindsurfIDEService = require('@domain/services/ide/WindsurfIDEService');
-            return new WindsurfIDEService(browserManager, ideManager, eventBus);
-        }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
+        // Windsurf IDE service removed - using InterfaceManager instead
 
         // Session activity service
         this.container.register('sessionActivityService', (userSessionRepository, eventBus) => {
@@ -501,11 +485,11 @@ class ServiceRegistry {
             return new AuthService(userRepository, userSessionRepository, 'simple-jwt-secret', 'simple-refresh-secret', sessionActivityService);
         }, { singleton: true, dependencies: ['userRepository', 'userSessionRepository', 'sessionActivityService'] });
 
-        // Task service
-        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, cursorIDEService, queueTaskExecutionService, fileSystemService, eventBus) => {
+        // Task service - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('taskService', (taskRepository, aiService, projectAnalyzer, interfaceManager, queueTaskExecutionService, fileSystemService, eventBus) => {
             const TaskService = require('@domain/services/task/TaskService');
-            return new TaskService(taskRepository, aiService, projectAnalyzer, cursorIDEService, null, null, queueTaskExecutionService, fileSystemService, eventBus, this); // Pass serviceRegistry as last parameter
-        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService', 'fileSystemService', 'eventBus'] });
+            return new TaskService(taskRepository, aiService, projectAnalyzer, interfaceManager, null, null, queueTaskExecutionService, fileSystemService, eventBus, this); // Pass serviceRegistry as last parameter
+        }, { singleton: true, dependencies: ['taskRepository', 'aiService', 'projectAnalyzer', 'interfaceManager', 'queueTaskExecutionService', 'fileSystemService', 'eventBus'] });
 
 
         // Task Content Hash Service
@@ -520,16 +504,16 @@ class ServiceRegistry {
             return new ManualTasksImportService(browserManager, taskService, taskRepository, fileSystemService);
         }, { singleton: true, dependencies: ['browserManager', 'taskService', 'taskRepository', 'fileSystemService'] });
 
-        // Workflow services
-        this.container.register('workflowOrchestrationService', (cursorIDEService, taskRepository, logger, eventBus) => {
+        // Workflow services - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('workflowOrchestrationService', (interfaceManager, taskRepository, logger, eventBus) => {
             const WorkflowOrchestrationService = require('@domain/services/workflow/WorkflowOrchestrationService');
             return new WorkflowOrchestrationService({
-                cursorIDEService,
+                interfaceManager,
                 taskRepository,
                 logger,
                 eventBus
             });
-        }, { singleton: true, dependencies: ['cursorIDEService', 'taskRepository', 'logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['interfaceManager', 'taskRepository', 'logger', 'eventBus'] });
 
         // WorkflowLoaderService - Loads and manages JSON workflow definitions
         this.container.register('workflowLoaderService', () => {
@@ -576,16 +560,19 @@ class ServiceRegistry {
         }, { singleton: true, dependencies: ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'] });
 
         // Project Application Service - coordinates project management use cases
-        this.container.register('projectApplicationService', (projectRepository, ideManager, workspacePathDetector, projectMappingService, logger) => {
+        this.container.register('projectApplicationService', (projectRepository, ideManager, workspacePathDetector, projectMappingService, interfaceManager, interfaceFactory, interfaceRegistry, logger) => {
             const ProjectApplicationService = require('@application/services/ProjectApplicationService');
             return new ProjectApplicationService({
                 projectRepository,
                 ideManager,
                 workspacePathDetector,
                 projectMappingService,
+                interfaceManager,
+                interfaceFactory,
+                interfaceRegistry,
                 logger
             });
-        }, { singleton: true, dependencies: ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'logger'] });
+        }, { singleton: true, dependencies: ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'interfaceManager', 'interfaceFactory', 'interfaceRegistry', 'logger'] });
 
         // Task Application Service - coordinates task management use cases
         this.container.register('taskApplicationService', (taskService, taskQueueService, taskRepository, aiService, projectAnalyzer, projectMappingService, ideManager, manualTasksImportService, logger) => {
@@ -605,34 +592,23 @@ class ServiceRegistry {
 
 
 
-        // IDE Application Service - coordinates IDE management use cases
-        this.container.register('ideApplicationService', (ideManager, ideWorkspaceDetectionService, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {
+        // IDE Application Service - FIXED: Use interfaceManager instead of interfaceManager
+        this.container.register('ideApplicationService', (ideManager, ideWorkspaceDetectionService, eventBus, interfaceManager, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {
             const IDEApplicationService = require('@application/services/IDEApplicationService');
             return new IDEApplicationService({
                 ideManager,
                 ideWorkspaceDetectionService,
                 eventBus,
-                cursorIDEService,
+                interfaceManager,
                 taskRepository,
                 terminalLogCaptureService,
                 terminalLogReader,
                 browserManager,
                 logger
             });
-        }, { singleton: true, dependencies: ['ideManager', 'ideWorkspaceDetectionService', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
+        }, { singleton: true, dependencies: ['ideManager', 'ideWorkspaceDetectionService', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
 
-        // WebChat Application Service - coordinates chat use cases
-        this.container.register('webChatApplicationService', (stepRegistry, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
-            const WebChatApplicationService = require('@application/services/WebChatApplicationService');
-            return new WebChatApplicationService({
-                stepRegistry,
-                cursorIDEService,
-                authService,
-                chatSessionService,
-                eventBus,
-                logger
-            });
-        }, { singleton: true, dependencies: ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'] });
+        // WebChat Application Service removed - service doesn't exist
 
         // Workflow Application Service - coordinates workflow execution use cases
         this.container.register('workflowApplicationService', (commandBus, queryBus, eventBus, ideManager, taskService, taskQueueService, projectMappingService, logger) => {
@@ -730,9 +706,7 @@ class ServiceRegistry {
             case 'ideApplicationService':
                 this.registerIDEApplicationService();
                 break;
-            case 'webChatApplicationService':
-                this.registerWebChatApplicationService();
-                break;
+            // webChatApplicationService removed - service doesn't exist
             case 'workflowApplicationService':
                 this.registerWorkflowApplicationService();
                 break;
@@ -774,16 +748,19 @@ class ServiceRegistry {
     }
 
     registerProjectApplicationService() {
-        this.container.register('projectApplicationService', (projectRepository, ideManager, workspacePathDetector, projectMappingService, logger) => {
+        this.container.register('projectApplicationService', (projectRepository, ideManager, workspacePathDetector, projectMappingService, interfaceManager, interfaceFactory, interfaceRegistry, logger) => {
             const ProjectApplicationService = require('@application/services/ProjectApplicationService');
             return new ProjectApplicationService({
                 projectRepository,
                 ideManager,
                 workspacePathDetector,
                 projectMappingService,
+                interfaceManager,
+                interfaceFactory,
+                interfaceRegistry,
                 logger
             });
-        }, { singleton: true, dependencies: ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'logger'] });
+        }, { singleton: true, dependencies: ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'interfaceManager', 'interfaceFactory', 'interfaceRegistry', 'logger'] });
     }
 
     registerTaskApplicationService() {
@@ -804,34 +781,22 @@ class ServiceRegistry {
     }
 
     registerIDEApplicationService() {
-        this.container.register('ideApplicationService', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {
+        this.container.register('ideApplicationService', (ideManager, eventBus, interfaceManager, taskRepository, terminalLogCaptureService, terminalLogReader, browserManager, logger) => {
             const IDEApplicationService = require('@application/services/IDEApplicationService');
             return new IDEApplicationService({
                 ideManager,
                 eventBus,
-                cursorIDEService,
+                interfaceManager,
                 taskRepository,
                 terminalLogCaptureService,
                 terminalLogReader,
                 browserManager,
                 logger
             });
-        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
+        }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'] });
     }
 
-    registerWebChatApplicationService() {
-        this.container.register('webChatApplicationService', (stepRegistry, cursorIDEService, authService, chatSessionService, eventBus, logger) => {
-            const WebChatApplicationService = require('@application/services/WebChatApplicationService');
-            return new WebChatApplicationService({
-                stepRegistry,
-                cursorIDEService,
-                authService,
-                chatSessionService,
-                eventBus,
-                logger
-            });
-        }, { singleton: true, dependencies: ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'] });
-    }
+    // registerWebChatApplicationService removed - service doesn't exist
 
     registerWorkflowApplicationService() {
         this.container.register('workflowApplicationService', (commandBus, queryBus, eventBus, ideManager, taskService, taskQueueService, projectMappingService, logger) => {
@@ -883,13 +848,14 @@ class ServiceRegistry {
     }
 
     registerContentLibraryApplicationService() {
-        this.container.register('contentLibraryApplicationService', (logger, eventBus) => {
+        this.container.register('contentLibraryApplicationService', (logger, eventBus, contentRepository) => {
             const ContentLibraryApplicationService = require('@application/services/ContentLibraryApplicationService');
             return new ContentLibraryApplicationService({
                 logger,
-                eventBus
+                eventBus,
+                contentRepository
             });
-        }, { singleton: true, dependencies: ['logger', 'eventBus'] });
+        }, { singleton: true, dependencies: ['logger', 'eventBus', 'contentRepository'] });
     }
 
     registerCodeExplorerApplicationService() {
@@ -945,7 +911,7 @@ class ServiceRegistry {
         this.container.register('workflowOrchestrationService', (taskRepository, eventBus, logger, stepRegistry) => {
             const WorkflowOrchestrationService = require('@domain/services/workflow/WorkflowOrchestrationService');
             return new WorkflowOrchestrationService({
-                cursorIDEService: null, // Will be injected later
+                interfaceManager: null, // Will be injected later
                 taskRepository,
                 eventBus,
                 logger,
@@ -1126,8 +1092,8 @@ class ServiceRegistry {
 
         // Chat repository
         this.container.register('chatRepository', () => {
-            const InMemoryChatRepository = require('../database/InMemoryChatRepository');
-            return new InMemoryChatRepository();
+            const ChatRepository = require('@domain/repositories/ChatRepository');
+            return new ChatRepository();
         }, { singleton: true });
 
         // Task repository
@@ -1258,12 +1224,7 @@ class ServiceRegistry {
                     return manager;
                 }, { singleton: true, dependencies: ['browserManager', 'projectRepository', 'eventBus', 'gitService'] });
                 break;
-            case 'idePortManager':
-                this.container.register('idePortManager', (ideManager, eventBus) => {
-                    const IDEPortManager = require('@domain/services/ide/IDEPortManager');
-                    return new IDEPortManager(ideManager, eventBus);
-                }, { singleton: true, dependencies: ['ideManager', 'eventBus'] });
-                break;
+            // IDE Port Manager removed - using InterfaceManager instead
             case 'stepRegistry':
                 this.container.register('stepRegistry', () => {
                     const { getStepRegistry } = require('@domain/steps');
@@ -1299,8 +1260,8 @@ class ServiceRegistry {
         switch (serviceName) {
             case 'chatRepository':
                 this.container.register('chatRepository', () => {
-                    const InMemoryChatRepository = require('../database/InMemoryChatRepository');
-                    return new InMemoryChatRepository();
+                    const ChatRepository = require('@domain/repositories/ChatRepository');
+                    return new ChatRepository();
                 }, { singleton: true });
                 break;
             case 'taskRepository':
@@ -1377,16 +1338,16 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['stepRegistry', 'eventBus', 'logger'] });
                 break;
             case 'workflowOrchestrationService':
-                this.container.register('workflowOrchestrationService', (taskRepository, eventBus, logger, stepRegistry, cursorIDEService) => {
+                this.container.register('workflowOrchestrationService', (taskRepository, eventBus, logger, stepRegistry, interfaceManager) => {
                     const WorkflowOrchestrationService = require('@domain/services/workflow/WorkflowOrchestrationService');
                     return new WorkflowOrchestrationService({
-                        cursorIDEService,
+                        interfaceManager,
                         taskRepository,
                         eventBus,
                         logger,
                         stepRegistry
                     });
-                }, { singleton: true, dependencies: ['taskRepository', 'eventBus', 'logger', 'stepRegistry', 'cursorIDEService'] });
+                }, { singleton: true, dependencies: ['taskRepository', 'eventBus', 'logger', 'stepRegistry', 'interfaceManager'] });
                 break;
             case 'projectAnalyzer':
                 this.container.register('projectAnalyzer', () => {
@@ -1481,10 +1442,10 @@ class ServiceRegistry {
                 }, { singleton: true });
                 break;
             case 'ideController':
-                this.container.register('ideController', (ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader) => {
+                this.container.register('ideController', (ideManager, eventBus, interfaceManager, taskRepository, terminalLogCaptureService, terminalLogReader) => {
                     const IDEController = require('@presentation/api/IDEController');
-                    return new IDEController(ideManager, eventBus, cursorIDEService, taskRepository, terminalLogCaptureService, terminalLogReader);
-                }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
+                    return new IDEController(ideManager, eventBus, interfaceManager, taskRepository, terminalLogCaptureService, terminalLogReader);
+                }, { singleton: true, dependencies: ['ideManager', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'] });
                 break;
             case 'authController':
                 this.container.register('authController', (authApplicationService) => {
@@ -1523,28 +1484,28 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['analysisRepository', 'logger'] });
                 break;
             case 'taskAnalysisService':
-                        this.container.register('taskAnalysisService', (cursorIDEService, eventBus, logger, aiService, projectAnalyzer) => {
+                        this.container.register('taskAnalysisService', (interfaceManager, eventBus, logger, aiService, projectAnalyzer) => {
             const TaskAnalysisService = require('@domain/services/task/TaskAnalysisService');
-            return new TaskAnalysisService(cursorIDEService, eventBus, logger, aiService, projectAnalyzer);
-        }, { singleton: true, dependencies: ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
+            return new TaskAnalysisService(interfaceManager, eventBus, logger, aiService, projectAnalyzer);
+        }, { singleton: true, dependencies: ['interfaceManager', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'] });
                 break;
             case 'taskValidationService':
-                this.container.register('taskValidationService', (taskRepository, cursorIDEService, eventBus, fileSystemService) => {
+                this.container.register('taskValidationService', (taskRepository, interfaceManager, eventBus, fileSystemService) => {
                     const TaskValidationService = require('@domain/services/task/TaskValidationService');
-                    return new TaskValidationService(taskRepository, cursorIDEService, eventBus, fileSystemService);
-                }, { singleton: true, dependencies: ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'] });
+                    return new TaskValidationService(taskRepository, interfaceManager, eventBus, fileSystemService);
+                }, { singleton: true, dependencies: ['taskRepository', 'interfaceManager', 'eventBus', 'fileSystemService'] });
                 break;
             case 'taskGenerationService':
-                this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, analysisRepository, cursorIDEService, eventBus) => {
+                this.container.register('taskGenerationService', (taskRepository, taskTemplateRepository, analysisRepository, interfaceManager, eventBus) => {
                     const TaskGenerationService = require('@domain/services/task/TaskGenerationService');
                     return new TaskGenerationService(
                         taskRepository,
                         taskTemplateRepository,
                         analysisRepository,
-                        cursorIDEService,
+                        interfaceManager,
                         eventBus
                     );
-                }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'cursorIDEService', 'eventBus'] });
+                }, { singleton: true, dependencies: ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'interfaceManager', 'eventBus'] });
                 break;
             case 'advancedAnalysisService':
                 this.container.register('advancedAnalysisService', (layerValidationService, logicValidationService, taskAnalysisService, eventBus, logger) => {
@@ -1644,18 +1605,15 @@ class ServiceRegistry {
                 }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'logger'] });
                 break;
             case 'workflowExecutionService':
-                this.container.register('workflowExecutionService', (chatSessionService, ideAutomationService, browserManager, ideManager, eventBus, stepRegistry, logger) => {
-                    const WorkflowExecutionService = require('@domain/services/WorkflowExecutionService');
-                    return new WorkflowExecutionService({
-                        chatSessionService,
-                        ideAutomationService,
-                        browserManager,
-                        ideManager,
+                this.container.register('workflowExecutionService', (interfaceManager, taskRepository, eventBus, logger) => {
+                    const WorkflowOrchestrationService = require('@domain/services/workflow/WorkflowOrchestrationService');
+                    return new WorkflowOrchestrationService({
+                        interfaceManager,
+                        taskRepository,
                         eventBus,
-                        stepRegistry,
                         logger
                     });
-                }, { singleton: true, dependencies: ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'stepRegistry', 'logger'] });
+                }, { singleton: true, dependencies: ['interfaceManager', 'taskRepository', 'eventBus', 'logger'] });
                 break;
             case 'ideFactory':
                 this.container.register('ideFactory', () => {
@@ -1676,24 +1634,8 @@ class ServiceRegistry {
                     throw new Error('Failed to create IDE service: ' + result.error);
                 }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'ideFactory'] });
                 break;
-            case 'cursorIDEService':
-                this.container.register('cursorIDEService', (browserManager, ideManager, eventBus, stepRegistry) => {
-                    const CursorIDEService = require('@domain/services/ide/CursorIDEService');
-                    return new CursorIDEService(browserManager, ideManager, eventBus, stepRegistry);
-                }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'] });
-                break;
-            case 'vscodeIDEService':
-                this.container.register('vscodeIDEService', (browserManager, ideManager, eventBus) => {
-                    const VSCodeIDEService = require('@domain/services/ide/VSCodeService');
-                    return new VSCodeIDEService(browserManager, ideManager, eventBus);
-                }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
-                break;
-            case 'windsurfIDEService':
-                this.container.register('windsurfIDEService', (browserManager, ideManager, eventBus) => {
-                    const WindsurfIDEService = require('@domain/services/ide/WindsurfIDEService');
-                    return new WindsurfIDEService(browserManager, ideManager, eventBus);
-                }, { singleton: true, dependencies: ['browserManager', 'ideManager', 'eventBus'] });
-                break;
+            // CursorIDEService, VSCodeIDEService removed - using InterfaceManager instead
+            // WindsurfIDEService removed - using InterfaceManager instead
             case 'getChatHistoryHandler':
                 this.container.register('getChatHistoryHandler', (chatRepository, ideManager, serviceRegistry, chatCacheService) => {
                     const GetChatHistoryHandler = require('@application/handlers/categories/chat/GetChatHistoryHandler');
@@ -1812,7 +1754,7 @@ class ServiceRegistry {
         this.addServiceDefinition('aiService', [], 'external');
         // AnalysisOrchestrator service definition removed - redundant
         this.addServiceDefinition('testOrchestrator', ['stepRegistry', 'eventBus', 'logger'], 'external');
-        this.addServiceDefinition('workflowOrchestrationService', ['taskRepository', 'eventBus', 'logger', 'stepRegistry', 'cursorIDEService'], 'external');
+        this.addServiceDefinition('workflowOrchestrationService', ['taskRepository', 'eventBus', 'logger', 'stepRegistry', 'interfaceManager'], 'external');
         this.addServiceDefinition('projectAnalyzer', [], 'external');
         this.addServiceDefinition('gitService', ['logger', 'eventBus', 'stepRegistry'], 'external');
 
@@ -1826,15 +1768,15 @@ class ServiceRegistry {
         this.addServiceDefinition('ideMirrorService', ['ideManager', 'browserManager'], 'domain');
         this.addServiceDefinition('terminalLogCaptureService', ['ideManager', 'browserManager', 'ideMirrorService'], 'domain');
         this.addServiceDefinition('terminalLogReader', [], 'domain');
-        this.addServiceDefinition('ideController', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'], 'domain');
+        this.addServiceDefinition('ideController', ['ideManager', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader'], 'domain');
         this.addServiceDefinition('authController', ['authApplicationService'], 'domain');
         this.addServiceDefinition('projectMappingService', ['monorepoStrategy'], 'domain');
         this.addServiceDefinition('workspacePathDetector', [], 'domain');
         this.addServiceDefinition('ideWorkspaceDetectionService', ['ideManager', 'projectRepository'], 'domain');
         this.addServiceDefinition('subprojectDetector', [], 'domain');
         this.addServiceDefinition('analysisOutputService', ['analysisRepository', 'logger'], 'domain');
-        this.addServiceDefinition('taskAnalysisService', ['cursorIDEService', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'], 'domain');
-        this.addServiceDefinition('taskValidationService', ['taskRepository', 'cursorIDEService', 'eventBus', 'fileSystemService'], 'domain');
+        this.addServiceDefinition('taskAnalysisService', ['interfaceManager', 'eventBus', 'logger', 'aiService', 'projectAnalyzer'], 'domain');
+        this.addServiceDefinition('taskValidationService', ['taskRepository', 'interfaceManager', 'eventBus', 'fileSystemService'], 'domain');
         this.addServiceDefinition('taskGenerationService', ['taskRepository', 'taskTemplateRepository', 'analysisRepository', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('advancedAnalysisService', ['layerValidationService', 'logicValidationService', 'taskAnalysisService', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('layerValidationService', ['logger'], 'domain');
@@ -1845,16 +1787,15 @@ class ServiceRegistry {
         this.addServiceDefinition('stepProgressService', ['eventBus', 'logger'], 'domain');
         this.addServiceDefinition('chatSessionService', ['chatRepository', 'browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('ideAutomationService', ['browserManager', 'ideManager', 'eventBus', 'logger'], 'domain');
-        this.addServiceDefinition('workflowExecutionService', ['chatSessionService', 'ideAutomationService', 'browserManager', 'ideManager', 'eventBus', 'stepRegistry', 'logger'], 'domain');
+        this.addServiceDefinition('workflowExecutionService', ['interfaceManager', 'taskRepository', 'eventBus', 'logger'], 'domain');
         this.addServiceDefinition('workflowExecutor', ['stepRegistry', 'taskRepository', 'workflowLoaderService', 'logger'], 'domain');
         this.addServiceDefinition('ideFactory', [], 'domain');
         this.addServiceDefinition('ideService', ['browserManager', 'ideManager', 'eventBus', 'ideFactory'], 'domain');
-        this.addServiceDefinition('cursorIDEService', ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'], 'domain');
-        this.addServiceDefinition('vscodeIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
-        this.addServiceDefinition('windsurfIDEService', ['browserManager', 'ideManager', 'eventBus'], 'domain');
+        this.addServiceDefinition('interfaceManager', ['browserManager', 'ideManager', 'eventBus', 'stepRegistry'], 'domain');
+        // vscodeIDEService and windsurfIDEService removed - using InterfaceManager instead
         this.addServiceDefinition('sessionActivityService', ['userSessionRepository', 'eventBus'], 'domain');
         this.addServiceDefinition('authService', ['userRepository', 'userSessionRepository', 'sessionActivityService'], 'domain');
-        this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'cursorIDEService', 'queueTaskExecutionService'], 'domain');
+        this.addServiceDefinition('taskService', ['taskRepository', 'aiService', 'projectAnalyzer', 'interfaceManager', 'queueTaskExecutionService'], 'domain');
         this.addServiceDefinition('manualTasksImportService', ['browserManager', 'taskService', 'taskRepository'], 'domain');
         this.addServiceDefinition('workflowLoaderService', [], 'domain');
         this.addServiceDefinition('queueHistoryService', ['queueHistoryRepository', 'eventBus'], 'domain');
@@ -1865,8 +1806,8 @@ class ServiceRegistry {
         this.addServiceDefinition('analysisApplicationService', ['analysisOutputService', 'analysisRepository', 'projectRepository', 'logger'], 'application');
         this.addServiceDefinition('projectApplicationService', ['projectRepository', 'ideManager', 'workspacePathDetector', 'projectMappingService', 'interfaceManager', 'interfaceFactory', 'interfaceRegistry', 'logger'], 'application');
         this.addServiceDefinition('taskApplicationService', ['taskService', 'taskQueueService', 'taskRepository', 'aiService', 'projectAnalyzer', 'projectMappingService', 'ideManager', 'manualTasksImportService', 'logger'], 'application');
-        this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'], 'application');
-        this.addServiceDefinition('webChatApplicationService', ['stepRegistry', 'cursorIDEService', 'authService', 'chatSessionService', 'eventBus', 'logger'], 'application');
+        this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'browserManager', 'logger'], 'application');
+        // webChatApplicationService removed - service doesn't exist
         this.addServiceDefinition('workflowApplicationService', ['commandBus', 'queryBus', 'eventBus', 'ideManager', 'taskService', 'taskQueueService', 'projectMappingService', 'logger'], 'application');
         this.addServiceDefinition('gitApplicationService', ['logger', 'eventBus', 'gitService'], 'application');
         this.addServiceDefinition('authApplicationService', ['authService', 'logger', 'eventBus'], 'application');
@@ -1875,7 +1816,7 @@ class ServiceRegistry {
         this.addServiceDefinition('codeExplorerApplicationService', ['logger', 'eventBus', 'browserManager'], 'application');
 
         this.addServiceDefinition('ideMirrorApplicationService', ['ideMirrorService', 'logger', 'eventBus'], 'application');
-        this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'cursorIDEService', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'logger'], 'application');
+        this.addServiceDefinition('ideApplicationService', ['ideManager', 'eventBus', 'interfaceManager', 'taskRepository', 'terminalLogCaptureService', 'terminalLogReader', 'logger'], 'application');
 
         // Handler services are now managed by HandlerRegistry with ServiceRegistry injection
         // No direct service definitions here to avoid redundancy

@@ -4,13 +4,28 @@
 -- Created: 2025-10-01T14:33:40.000Z
 
 -- Add content hash column for content addressable storage
-ALTER TABLE tasks ADD COLUMN content_hash TEXT;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tasks' AND column_name = 'content_hash') THEN
+        ALTER TABLE tasks ADD COLUMN content_hash TEXT;
+    END IF;
+END $$;
 
 -- Add file path column for metadata tracking (not source of truth)
-ALTER TABLE tasks ADD COLUMN file_path TEXT;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tasks' AND column_name = 'file_path') THEN
+        ALTER TABLE tasks ADD COLUMN file_path TEXT;
+    END IF;
+END $$;
 
 -- Add last synced timestamp for consistency tracking
-ALTER TABLE tasks ADD COLUMN last_synced_at TIMESTAMP WITH TIME ZONE;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tasks' AND column_name = 'last_synced_at') THEN
+        ALTER TABLE tasks ADD COLUMN last_synced_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+END $$;
 
 -- Create task_file_events table for event sourcing
 CREATE TABLE IF NOT EXISTS task_file_events (

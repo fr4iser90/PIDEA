@@ -146,7 +146,7 @@ class ServiceInitialization {
     try {
       const services = {
         // Core services
-        cursorIDEService: serviceRegistry.getService('cursorIDEService'),
+        // cursorIDEService removed - using interfaceManager instead
         authService: serviceRegistry.getService('authService'),
         aiService: serviceRegistry.getService('aiService'),
         recommendationsService: serviceRegistry.getService('recommendationsService'),
@@ -167,7 +167,13 @@ class ServiceInitialization {
         workflowOrchestrationService: serviceRegistry.getService('workflowOrchestrationService'),
         gitService: serviceRegistry.getService('gitService'),
         testOrchestrator: serviceRegistry.getService('testOrchestrator'),
-        workflowLoaderService: serviceRegistry.getService('workflowLoaderService')
+        workflowLoaderService: serviceRegistry.getService('workflowLoaderService'),
+        
+        // Interface management services
+        interfaceManager: serviceRegistry.getService('interfaceManager'),
+        interfaceFactory: serviceRegistry.getService('interfaceFactory'),
+        interfaceRegistry: serviceRegistry.getService('interfaceRegistry'),
+        ideHandler: serviceRegistry.getService('ideHandler')
       };
       
       return services;

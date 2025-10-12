@@ -24,6 +24,9 @@ class ServiceContainer {
             projectId: null,
             workspacePath: null
         };
+        
+    // Register optimization services (disabled for now due to SQL syntax errors)
+    // this.registerOptimizationServices();
     }
 
     /**
@@ -487,6 +490,66 @@ class ServiceContainer {
             factories: Array.from(this.factories.keys()),
             projectContext: this.projectContext
         };
+    }
+
+    /**
+     * Register optimization services
+     */
+    registerOptimizationServices() {
+        // Register QueryOptimizer as singleton
+        this.register('queryOptimizer', (container) => {
+            const databaseConnection = container.resolve('databaseConnection');
+            const QueryOptimizer = require('../database/QueryOptimizer');
+            return new QueryOptimizer(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Register IndexManager as singleton
+        this.register('indexManager', (container) => {
+            const databaseConnection = container.resolve('databaseConnection');
+            const IndexManager = require('../database/IndexManager');
+            return new IndexManager(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Register PartitionManager as singleton
+        this.register('partitionManager', (container) => {
+            const databaseConnection = container.resolve('databaseConnection');
+            const PartitionManager = require('../database/PartitionManager');
+            return new PartitionManager(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Register MaterializedViewManager as singleton
+        this.register('materializedViewManager', (container) => {
+            const databaseConnection = container.resolve('databaseConnection');
+            const MaterializedViewManager = require('../database/MaterializedViewManager');
+            return new MaterializedViewManager(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Register PerformanceSchema as singleton
+        this.register('performanceSchema', (container) => {
+            const databaseConnection = container.resolve('databaseConnection');
+            const PerformanceSchema = require('../database/PerformanceSchema');
+            return new PerformanceSchema(databaseConnection);
+        }, { singleton: true, dependencies: ['databaseConnection'] });
+
+        // Register DatabaseOptimizationService as singleton
+        this.register('databaseOptimizationService', (container) => {
+            const queryOptimizer = container.resolve('queryOptimizer');
+            const indexManager = container.resolve('indexManager');
+            const partitionManager = container.resolve('partitionManager');
+            const materializedViewManager = container.resolve('materializedViewManager');
+            const DatabaseOptimizationService = require('../../application/services/DatabaseOptimizationService');
+            return new DatabaseOptimizationService(
+                queryOptimizer,
+                indexManager,
+                partitionManager,
+                materializedViewManager
+            );
+        }, { 
+            singleton: true, 
+            dependencies: ['queryOptimizer', 'indexManager', 'partitionManager', 'materializedViewManager'] 
+        });
+
+        logger.debug('Optimization services registered');
     }
 }
 

@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
-import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 import ActiveTaskItem from './ActiveTaskItem.jsx';
 import QueueItem from './QueueItem.jsx';
@@ -49,7 +49,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
     });
 
 
-    const { projectId } = useActiveIDE();
+    const { projectId } = useSelectedIDE();
 
     /**
      * Load queue status

@@ -7,7 +7,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import '@/scss/pages/_version-management.scss';;
 import VersionManagementRepository from '@/infrastructure/repositories/VersionManagementRepository.jsx';
-import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import AIRecommendationDisplay from './AIRecommendationDisplay.jsx';
 
@@ -28,8 +28,8 @@ const getProjectIdFromWorkspace = (workspacePath) => {
 
 const VersionManagementComponent = ({ activePort, eventBus }) => {
   // Global state
-  const activeIDE = useActiveIDE();
-  const workspacePath = activeIDE.workspacePath;
+  const selectedIDE = useSelectedIDE();
+  const workspacePath = selectedIDE?.workspacePath;
   const { aiVersionAnalysis } = useIDEStore();
 
   // Local state for UI

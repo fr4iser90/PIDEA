@@ -36,7 +36,22 @@ class InterfaceManager {
       lastActivity: new Date()
     };
     
-    this.logger.info('InterfaceManager initialized');
+    // IDE handler is not an interface - it's a service handler
+    // IDE interfaces are registered separately in Application.js
+
+    // WebChat handler is not an interface - it's a service handler
+
+    // API handler is not an interface - it's a service handler
+
+    // Terminal handler is not an interface - it's a service handler
+
+    // File handler is not an interface - it's a service handler
+
+    // IDE handler is now managed separately in ServiceRegistry
+    // No need to initialize it here
+    
+    // Store dependencies for later use
+    this.dependencies = dependencies;
   }
 
   /**
@@ -77,6 +92,32 @@ class InterfaceManager {
       interfaceType,
       className: interfaceClass.name
     });
+  }
+
+  /**
+   * Get handler for interface type
+   * @param {string} interfaceType - Interface type
+   * @returns {Object} Handler instance
+   */
+  getHandler(interfaceType) {
+    const handlerEntry = this.interfaceRegistry.get(interfaceType);
+    if (!handlerEntry) {
+      throw new Error(`Unknown interface type: ${interfaceType}`);
+    }
+    
+    const handlerClass = handlerEntry.class;
+    
+    // If it's a class, instantiate it with dependencies
+    if (typeof handlerClass === 'function') {
+      return new handlerClass({
+        ideManager: this.dependencies?.ideManager,
+        eventBus: this.dependencies?.eventBus,
+        serviceRegistry: this.dependencies?.serviceRegistry,
+        logger: this.logger
+      });
+    }
+    
+    return handlerClass;
   }
 
   /**
@@ -516,6 +557,723 @@ class InterfaceManager {
     this.configCache.clear();
     
     this.logger.info('InterfaceManager destroyed');
+  }
+
+  /**
+   * Create interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {Object} interfaceData - Interface creation data
+   * @returns {Promise<Object>} Created interface
+   */
+  async createInterface(projectId, interfaceData) {
+    try {
+      const { name, type, configuration = {} } = interfaceData;
+      
+      // Generate unique interface ID
+      const interfaceId = `interface_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Create interface instance
+      const interfaceInstance = await this.createInterface(type, {
+        ...configuration,
+        projectId,
+        name
+      }, interfaceId);
+      
+      // Get interface schema for validation
+      const interfaceInfo = this.interfaceRegistry.get(type);
+      const schema = interfaceInfo.schema || interfaceInfo.config;
+      
+      // Validate configuration against schema
+      const validationResult = this.validateInterfaceConfig(configuration, schema);
+      if (!validationResult.valid) {
+        throw new Error(`Configuration validation failed: ${validationResult.errors.join(', ')}`);
+      }
+      
+      // Apply schema defaults
+      const finalConfig = this.applySchemaDefaults(configuration, schema);
+      
+      // Store in active interfaces with project context
+      this.activeInterfaces.set(interfaceId, {
+        ...interfaceInstance,
+        projectId,
+        name,
+        type,
+        status: 'created',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      this.stats.totalCreated++;
+      this.stats.activeCount++;
+      this.stats.lastActivity = new Date();
+      
+      this.logger.info(`Interface created: ${interfaceId} for project: ${projectId}`, {
+        interfaceId,
+        projectId,
+        name,
+        type
+      });
+      
+      return {
+        id: interfaceId,
+        name,
+        type,
+        projectId,
+        configuration: finalConfig,
+        status: 'created',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to create interface:', error);
+      throw new Error(`Failed to create interface: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<Object|null>} Interface data or null if not found
+   */
+  async getInterface(projectId, interfaceId) {
+    try {
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return null;
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return null;
+      }
+      
+      return {
+        id: interfaceId,
+        name: interfaceInstance.name,
+        type: interfaceInstance.type,
+        projectId: interfaceInstance.projectId,
+        configuration: interfaceInstance.configuration,
+        status: interfaceInstance.status,
+        createdAt: interfaceInstance.createdAt,
+        updatedAt: interfaceInstance.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to get interface:', error);
+      throw new Error(`Failed to get interface: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @param {Object} updateData - Update data
+   * @returns {Promise<Object|null>} Updated interface or null if not found
+   */
+  async updateInterface(projectId, interfaceId, updateData) {
+    try {
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return null;
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return null;
+      }
+      
+      // Update interface data
+      const updatedInterface = {
+        ...interfaceInstance,
+        ...updateData,
+        updatedAt: new Date()
+      };
+      
+      this.activeInterfaces.set(interfaceId, updatedInterface);
+      
+      this.logger.info(`Interface updated: ${interfaceId} for project: ${projectId}`, {
+        interfaceId,
+        projectId,
+        updateData
+      });
+      
+      return {
+        id: interfaceId,
+        name: updatedInterface.name,
+        type: updatedInterface.type,
+        projectId: updatedInterface.projectId,
+        configuration: updatedInterface.configuration,
+        status: updatedInterface.status,
+        createdAt: updatedInterface.createdAt,
+        updatedAt: updatedInterface.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to update interface:', error);
+      throw new Error(`Failed to update interface: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<boolean>} True if interface was deleted
+   */
+  async deleteInterface(projectId, interfaceId) {
+    try {
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return false;
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return false;
+      }
+      
+      // Stop interface if running
+      if (interfaceInstance.status === 'running') {
+        await this.stopInterface(projectId, interfaceId);
+      }
+      
+      // Remove from active interfaces
+      this.activeInterfaces.delete(interfaceId);
+      
+      this.stats.totalDestroyed++;
+      this.stats.activeCount--;
+      this.stats.lastActivity = new Date();
+      
+      this.logger.info(`Interface deleted: ${interfaceId} for project: ${projectId}`, {
+        interfaceId,
+        projectId
+      });
+      
+      return true;
+      
+    } catch (error) {
+      this.logger.error('Failed to delete interface:', error);
+      throw new Error(`Failed to delete interface: ${error.message}`);
+    }
+  }
+
+  /**
+   * List interfaces for a project
+   * @param {string} projectId - Project identifier
+   * @param {Object} options - Query options
+   * @returns {Promise<Object>} List of interfaces with pagination info
+   */
+  async listInterfaces(projectId, options = {}) {
+    try {
+      const { page = 1, limit = 10, type, status } = options;
+      const offset = (page - 1) * limit;
+      
+      // Filter interfaces by project
+      let projectInterfaces = Array.from(this.activeInterfaces.values())
+        .filter(interfaceInstance => interfaceInstance.projectId === projectId);
+      
+      // Apply filters
+      if (type) {
+        projectInterfaces = projectInterfaces.filter(interfaceInstance => 
+          interfaceInstance.type === type
+        );
+      }
+      
+      if (status) {
+        projectInterfaces = projectInterfaces.filter(interfaceInstance => 
+          interfaceInstance.status === status
+        );
+      }
+      
+      // Apply pagination
+      const total = projectInterfaces.length;
+      const paginatedInterfaces = projectInterfaces.slice(offset, offset + limit);
+      
+      const interfaces = paginatedInterfaces.map(interfaceInstance => ({
+        id: interfaceInstance.interfaceId || interfaceInstance.id,
+        name: interfaceInstance.name,
+        type: interfaceInstance.type,
+        projectId: interfaceInstance.projectId,
+        configuration: interfaceInstance.configuration,
+        status: interfaceInstance.status,
+        createdAt: interfaceInstance.createdAt,
+        updatedAt: interfaceInstance.updatedAt
+      }));
+      
+      return {
+        interfaces,
+        total
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to list interfaces:', error);
+      throw new Error(`Failed to list interfaces: ${error.message}`);
+    }
+  }
+
+  /**
+   * Start interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<Object>} Start result
+   */
+  async startInterface(projectId, interfaceId) {
+    try {
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return { success: false, error: 'Interface not found' };
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return { success: false, error: 'Interface not found' };
+      }
+      
+      // Check if already running
+      if (interfaceInstance.status === 'running') {
+        return { success: false, error: 'Interface already running' };
+      }
+      
+      // Update status to starting
+      interfaceInstance.status = 'starting';
+      interfaceInstance.updatedAt = new Date();
+      
+      // Simulate interface start (in real implementation, this would start the actual interface)
+      setTimeout(() => {
+        interfaceInstance.status = 'running';
+        interfaceInstance.updatedAt = new Date();
+        this.logger.info(`Interface started: ${interfaceId} for project: ${projectId}`);
+      }, 1000);
+      
+      return {
+        success: true,
+        interface: {
+          id: interfaceId,
+          name: interfaceInstance.name,
+          type: interfaceInstance.type,
+          projectId: interfaceInstance.projectId,
+          status: 'starting',
+          createdAt: interfaceInstance.createdAt,
+          updatedAt: interfaceInstance.updatedAt
+        }
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to start interface:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Stop interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<Object>} Stop result
+   */
+  async stopInterface(projectId, interfaceId) {
+    try {
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return { success: false, error: 'Interface not found' };
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return { success: false, error: 'Interface not found' };
+      }
+      
+      // Check if already stopped
+      if (interfaceInstance.status === 'stopped') {
+        return { success: false, error: 'Interface already stopped' };
+      }
+      
+      // Update status to stopping
+      interfaceInstance.status = 'stopping';
+      interfaceInstance.updatedAt = new Date();
+      
+      // Simulate interface stop (in real implementation, this would stop the actual interface)
+      setTimeout(() => {
+        interfaceInstance.status = 'stopped';
+        interfaceInstance.updatedAt = new Date();
+        this.logger.info(`Interface stopped: ${interfaceId} for project: ${projectId}`);
+      }, 1000);
+      
+      return {
+        success: true,
+        interface: {
+          id: interfaceId,
+          name: interfaceInstance.name,
+          type: interfaceInstance.type,
+          projectId: interfaceInstance.projectId,
+          status: 'stopping',
+          createdAt: interfaceInstance.createdAt,
+          updatedAt: interfaceInstance.updatedAt
+        }
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to stop interface:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Restart interface within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<Object>} Restart result
+   */
+  async restartInterface(projectId, interfaceId) {
+    try {
+      // Stop interface first
+      const stopResult = await this.stopInterface(projectId, interfaceId);
+      if (!stopResult.success) {
+        return stopResult;
+      }
+      
+      // Wait a moment then start
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Start interface
+      const startResult = await this.startInterface(projectId, interfaceId);
+      return startResult;
+      
+    } catch (error) {
+      this.logger.error('Failed to restart interface:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get interface status within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @returns {Promise<Object|null>} Interface status or null if not found
+   */
+  async getInterfaceStatus(projectId, interfaceId) {
+    try {
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return null;
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return null;
+      }
+      
+      return {
+        status: interfaceInstance.status,
+        running: interfaceInstance.status === 'running',
+        port: interfaceInstance.configuration?.port || null,
+        pid: interfaceInstance.configuration?.pid || null,
+        lastActivity: interfaceInstance.updatedAt
+      };
+      
+    } catch (error) {
+      this.logger.error('Failed to get interface status:', error);
+      throw new Error(`Failed to get interface status: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get interface logs within project context
+   * @param {string} projectId - Project identifier
+   * @param {string} interfaceId - Interface identifier
+   * @param {Object} options - Log options
+   * @returns {Promise<Array|null>} Interface logs or null if not found
+   */
+  async getInterfaceLogs(projectId, interfaceId, options = {}) {
+    try {
+      const { lines = 100 } = options;
+      
+      const interfaceInstance = this.activeInterfaces.get(interfaceId);
+      
+      if (!interfaceInstance) {
+        return null;
+      }
+      
+      // Verify interface belongs to project
+      if (interfaceInstance.projectId !== projectId) {
+        return null;
+      }
+      
+      // Simulate log generation (in real implementation, this would read actual logs)
+      const logs = Array.from({ length: Math.min(lines, 50) }, (_, i) => 
+        `[${new Date().toISOString()}] Interface ${interfaceId} log line ${i + 1}`
+      );
+      
+      return logs;
+      
+    } catch (error) {
+      this.logger.error('Failed to get interface logs:', error);
+      throw new Error(`Failed to get interface logs: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get available IDEs
+   * @returns {Promise<Array>} Available IDEs
+   */
+  async getAvailableIDEs() {
+    try {
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.getAvailableIDEs();
+      
+    } catch (error) {
+      this.logger.error('Failed to get available IDEs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get IDE features
+   * @param {string} interfaceId - Interface ID
+   * @returns {Promise<Object>} IDE features
+   */
+  async getIDEFeatures(interfaceId) {
+    try {
+      const interfaceInstance = this.getInterfaceInstance(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface ${interfaceId} not found`);
+      }
+      
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.getIDEFeatures(interfaceInstance.configuration?.port);
+      
+    } catch (error) {
+      this.logger.error('Failed to get IDE features:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get IDE version
+   * @param {string} interfaceId - Interface ID
+   * @returns {Promise<string>} IDE version
+   */
+  async getIDEVersion(interfaceId) {
+    try {
+      const interfaceInstance = this.getInterfaceInstance(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface ${interfaceId} not found`);
+      }
+      
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.getIDEVersion(interfaceInstance.configuration?.port);
+      
+    } catch (error) {
+      this.logger.error('Failed to get IDE version:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get workspace info
+   * @param {string} interfaceId - Interface ID
+   * @returns {Promise<Object>} Workspace information
+   */
+  async getWorkspaceInfo(interfaceId) {
+    try {
+      const interfaceInstance = this.getInterfaceInstance(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface ${interfaceId} not found`);
+      }
+      
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.getWorkspaceInfo(interfaceInstance.configuration?.port);
+      
+    } catch (error) {
+      this.logger.error('Failed to get workspace info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set workspace path
+   * @param {string} interfaceId - Interface ID
+   * @param {string} workspacePath - New workspace path
+   * @returns {Promise<Object>} Set result
+   */
+  async setWorkspacePath(interfaceId, workspacePath) {
+    try {
+      const interfaceInstance = this.getInterfaceInstance(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface ${interfaceId} not found`);
+      }
+      
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.setWorkspacePath(interfaceInstance.configuration?.port, workspacePath);
+      
+    } catch (error) {
+      this.logger.error('Failed to set workspace path:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Detect workspace paths
+   * @param {string} interfaceId - Interface ID
+   * @returns {Promise<Array>} Detected workspace paths
+   */
+  async detectWorkspacePaths(interfaceId) {
+    try {
+      const interfaceInstance = this.getInterfaceInstance(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface ${interfaceId} not found`);
+      }
+      
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.detectWorkspacePaths(interfaceInstance.configuration?.port);
+      
+    } catch (error) {
+      this.logger.error('Failed to detect workspace paths:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Monitor terminal
+   * @param {string} interfaceId - Interface ID
+   * @param {Object} options - Monitor options
+   * @returns {Promise<Object>} Monitor result
+   */
+  async monitorTerminal(interfaceId, options = {}) {
+    try {
+      const interfaceInstance = this.getInterfaceInstance(interfaceId);
+      if (!interfaceInstance) {
+        throw new Error(`Interface ${interfaceId} not found`);
+      }
+      
+      const ideHandler = this.getHandler('ide');
+      if (!ideHandler) {
+        throw new Error('IDE handler not available');
+      }
+      
+      return await ideHandler.monitorTerminal(interfaceInstance.configuration?.port, options);
+      
+    } catch (error) {
+      this.logger.error('Failed to monitor terminal:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate interface configuration against schema
+   * @param {Object} config - Configuration to validate
+   * @param {Object} schema - Schema definition
+   * @returns {Object} Validation result
+   */
+  validateInterfaceConfig(config, schema) {
+    const errors = [];
+    
+    if (!schema) {
+      return { valid: true, errors: [] };
+    }
+    
+    // Check required fields
+    for (const [field, fieldSchema] of Object.entries(schema)) {
+      if (fieldSchema.required && (config[field] === undefined || config[field] === null)) {
+        errors.push(`Field '${field}' is required`);
+        continue;
+      }
+      
+      if (config[field] !== undefined) {
+        // Type validation
+        if (fieldSchema.type === 'number' && typeof config[field] !== 'number') {
+          errors.push(`Field '${field}' must be a number`);
+        } else if (fieldSchema.type === 'string' && typeof config[field] !== 'string') {
+          errors.push(`Field '${field}' must be a string`);
+        } else if (fieldSchema.type === 'boolean' && typeof config[field] !== 'boolean') {
+          errors.push(`Field '${field}' must be a boolean`);
+        }
+        
+        // Range validation for numbers
+        if (fieldSchema.type === 'number') {
+          if (fieldSchema.min !== undefined && config[field] < fieldSchema.min) {
+            errors.push(`Field '${field}' must be >= ${fieldSchema.min}`);
+          }
+          if (fieldSchema.max !== undefined && config[field] > fieldSchema.max) {
+            errors.push(`Field '${field}' must be <= ${fieldSchema.max}`);
+          }
+        }
+        
+        // String length validation
+        if (fieldSchema.type === 'string') {
+          if (fieldSchema.minLength !== undefined && config[field].length < fieldSchema.minLength) {
+            errors.push(`Field '${field}' must be at least ${fieldSchema.minLength} characters`);
+          }
+          if (fieldSchema.maxLength !== undefined && config[field].length > fieldSchema.maxLength) {
+            errors.push(`Field '${field}' must be at most ${fieldSchema.maxLength} characters`);
+          }
+        }
+        
+        // Enum validation
+        if (fieldSchema.enum && !fieldSchema.enum.includes(config[field])) {
+          errors.push(`Field '${field}' must be one of: ${fieldSchema.enum.join(', ')}`);
+        }
+      }
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Apply schema defaults to configuration
+   * @param {Object} config - Configuration
+   * @param {Object} schema - Schema definition
+   * @returns {Object} Configuration with defaults applied
+   */
+  applySchemaDefaults(config, schema) {
+    if (!schema) {
+      return config;
+    }
+    
+    const result = { ...config };
+    
+    for (const [field, fieldSchema] of Object.entries(schema)) {
+      if (result[field] === undefined && fieldSchema.default !== undefined) {
+        result[field] = fieldSchema.default;
+      }
+    }
+    
+    return result;
   }
 }
 

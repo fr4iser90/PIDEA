@@ -15,7 +15,7 @@ const ServiceLogger = require('@logging/ServiceLogger');
 class WorkflowOrchestrationService {
     constructor(dependencies = {}) {
         this.workflowGitService = dependencies.workflowGitService || new WorkflowGitService(dependencies);
-        this.cursorIDEService = dependencies.cursorIDEService;
+        this.interfaceManager = dependencies.interfaceManager;
         this.taskRepository = dependencies.taskRepository;
         this.logger = dependencies.logger || new ServiceLogger('WorkflowOrchestrationService');
         this.eventBus = dependencies.eventBus;
@@ -242,14 +242,14 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for refactoring
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.clickNewChat) {
+                await this.interfaceManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Execute AI refactoring with Steps
             const aiPrompt = await this.buildRefactoringPrompt(task);
-            const refactoringResult = await this.cursorIDEService.sendMessage(aiPrompt);
+            const refactoringResult = await this.interfaceManager.sendMessage?.(aiPrompt);
             
             // Step 2.1: Execute ConfirmationStep if stepRegistry is available
             if (this.stepRegistry) {
@@ -302,18 +302,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for feature development
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Execute feature implementation
             const featurePrompt = await this.buildFeaturePrompt(task);
-            const featureResult = await this.cursorIDEService.sendMessage(featurePrompt);
+            const featureResult = await this.interfaceManager.sendMessage(featurePrompt);
 
             // Step 3: Generate tests for the feature
             const testPrompt = await this.buildTestGenerationPrompt(task);
-            const testResult = await this.cursorIDEService.sendMessage(testPrompt);
+            const testResult = await this.interfaceManager.sendMessage(testPrompt);
 
             // Step 4: Validate feature implementation
             const validationResult = await this.validateFeatureImplementation(task, featureResult, testResult);
@@ -349,18 +349,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for bug fixing
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Analyze the bug
             const analysisPrompt = await this.buildBugAnalysisPrompt(task);
-            const analysisResult = await this.cursorIDEService.sendMessage(analysisPrompt);
+            const analysisResult = await this.interfaceManager.sendMessage(analysisPrompt);
 
             // Step 3: Implement the fix
             const fixPrompt = await this.buildBugFixPrompt(task, analysisResult);
-            const fixResult = await this.cursorIDEService.sendMessage(fixPrompt);
+            const fixResult = await this.interfaceManager.sendMessage(fixPrompt);
 
             // Step 4: Validate the fix
             const validationResult = await this.validateBugFix(task, fixResult);
@@ -396,18 +396,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for analysis
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Execute comprehensive analysis
             const analysisPrompt = await this.buildAnalysisPrompt(task);
-            const analysisResult = await this.cursorIDEService.sendMessage(analysisPrompt);
+            const analysisResult = await this.interfaceManager.sendMessage(analysisPrompt);
 
             // Step 3: Generate analysis report
             const reportPrompt = await this.buildReportGenerationPrompt(task, analysisResult);
-            const reportResult = await this.cursorIDEService.sendMessage(reportPrompt);
+            const reportResult = await this.interfaceManager.sendMessage(reportPrompt);
 
             return {
                 type: 'analysis',
@@ -482,14 +482,14 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for documentation
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Generate documentation
             const docPrompt = await this.buildDocumentationPrompt(task);
-            const docResult = await this.cursorIDEService.sendMessage(docPrompt);
+            const docResult = await this.interfaceManager.sendMessage(docPrompt);
 
             // Step 3: Validate documentation
             const validationResult = await this.validateDocumentation(task, docResult);
@@ -524,18 +524,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for debugging
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Analyze the issue
             const debugPrompt = await this.buildDebugPrompt(task);
-            const debugResult = await this.cursorIDEService.sendMessage(debugPrompt);
+            const debugResult = await this.interfaceManager.sendMessage(debugPrompt);
 
             // Step 3: Generate debug report
             const reportPrompt = await this.buildDebugReportPrompt(task, debugResult);
-            const reportResult = await this.cursorIDEService.sendMessage(reportPrompt);
+            const reportResult = await this.interfaceManager.sendMessage(reportPrompt);
 
             return {
                 type: 'debug',
@@ -567,18 +567,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for optimization
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Analyze current performance
             const analysisPrompt = await this.buildOptimizationAnalysisPrompt(task);
-            const analysisResult = await this.cursorIDEService.sendMessage(analysisPrompt);
+            const analysisResult = await this.interfaceManager.sendMessage(analysisPrompt);
 
             // Step 3: Implement optimizations
             const optimizationPrompt = await this.buildOptimizationPrompt(task, analysisResult);
-            const optimizationResult = await this.cursorIDEService.sendMessage(optimizationPrompt);
+            const optimizationResult = await this.interfaceManager.sendMessage(optimizationPrompt);
 
             // Step 4: Validate optimizations
             const validationResult = await this.validateOptimization(task, optimizationResult);
@@ -614,18 +614,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for code review
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Perform code review
             const reviewPrompt = await this.buildCodeReviewPrompt(task);
-            const reviewResult = await this.cursorIDEService.sendMessage(reviewPrompt);
+            const reviewResult = await this.interfaceManager.sendMessage(reviewPrompt);
 
             // Step 3: Generate review report
             const reportPrompt = await this.buildReviewReportPrompt(task, reviewResult);
-            const reportResult = await this.cursorIDEService.sendMessage(reportPrompt);
+            const reportResult = await this.interfaceManager.sendMessage(reportPrompt);
 
             return {
                 type: 'code_review',
@@ -657,18 +657,18 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat for hotfix
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Analyze the critical issue
             const analysisPrompt = await this.buildHotfixAnalysisPrompt(task);
-            const analysisResult = await this.cursorIDEService.sendMessage(analysisPrompt);
+            const analysisResult = await this.interfaceManager.sendMessage(analysisPrompt);
 
             // Step 3: Implement critical fix
             const fixPrompt = await this.buildHotfixPrompt(task, analysisResult);
-            const fixResult = await this.cursorIDEService.sendMessage(fixPrompt);
+            const fixResult = await this.interfaceManager.sendMessage(fixPrompt);
 
             // Step 4: Validate critical fix
             const validationResult = await this.validateHotfix(task, fixResult);
@@ -704,14 +704,14 @@ class WorkflowOrchestrationService {
             });
 
             // Step 1: Create new chat
-            if (this.cursorIDEService?.browserManager) {
-                await this.cursorIDEService.browserManager.clickNewChat();
+            if (this.interfaceManager?.browserManager) {
+                await this.interfaceManager.browserManager.clickNewChat();
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
             // Step 2: Execute generic task
             const genericPrompt = await this.buildGenericPrompt(task);
-            const genericResult = await this.cursorIDEService.sendMessage(genericPrompt);
+            const genericResult = await this.interfaceManager.sendMessage(genericPrompt);
 
             return {
                 type: 'generic',
@@ -1098,14 +1098,14 @@ class WorkflowOrchestrationService {
                 });
                 
                 // Step 1: Create new chat for this task
-                if (this.cursorIDEService?.browserManager) {
-                    await this.cursorIDEService.browserManager.clickNewChat();
+                if (this.interfaceManager?.browserManager) {
+                    await this.interfaceManager.browserManager.clickNewChat();
                     await new Promise(resolve => setTimeout(resolve, 2000));
                 }
                 
                 // Step 2: Send task prompt to IDE chat
                 const taskPrompt = await this.buildTaskPrompt(task, options);
-                const chatResponse = await this.cursorIDEService.sendMessage(taskPrompt);
+                const chatResponse = await this.interfaceManager.sendMessage(taskPrompt);
                 
                 // Step 3: Wait for completion confirmation
                 const completionResult = await this.waitForTaskCompletion(task, chatResponse, options);

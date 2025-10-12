@@ -19,6 +19,7 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import { apiCall } from '@/infrastructure/repositories/APIChatRepository.jsx';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
 import refreshService from '@/infrastructure/services/RefreshService';
+import '@/scss/components/_project-add-modal.scss';
 
 function App() {
   const [eventBus] = useState(() => new EventBus());
@@ -38,6 +39,9 @@ function App() {
     isOpen: false,
     timeUntilExpiry: 0
   });
+  
+  // Project add modal state
+  const [showProjectAddModal, setShowProjectAddModal] = useState(false);
   
   // Use IDEStore for port management
   const {
@@ -343,7 +347,13 @@ function App() {
           <main className={`main-layout${isSplitView ? ' split-view' : ''}${!isLeftSidebarVisible ? ' sidebar-hidden' : ''}${!isRightSidebarVisible ? ' rightpanel-hidden' : ''}`}>
             {/* Left Sidebar */}
             {isLeftSidebarVisible && (
-              <SidebarLeft eventBus={eventBus} activePort={activePort} onActivePortChange={setActivePort} />
+              <SidebarLeft 
+                eventBus={eventBus} 
+                activePort={activePort} 
+                onActivePortChange={setActivePort}
+                showProjectAddModal={showProjectAddModal}
+                onShowProjectAddModal={setShowProjectAddModal}
+              />
             )}
             
             {/* Main View */}
@@ -374,6 +384,112 @@ function App() {
             onLogout={handleSessionLogout}
             onClose={handleCloseSessionWarning}
           />
+          
+          {/* Project Add Modal */}
+          {showProjectAddModal && (
+            <div className="project-add-modal__project-add-modal-overlay" onClick={() => setShowProjectAddModal(false)}>
+              <div className="project-add-modal__project-add-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="project-add-modal__project-add-modal-header">
+                  <h2>📁 Create New Project</h2>
+                  <button className="project-add-modal__project-add-modal-close-btn" onClick={() => setShowProjectAddModal(false)}>×</button>
+                </div>
+                
+                <div className="project-add-modal__project-add-modal-content">
+                  <form className="project-add-form">
+                    <div className="form-group">
+                      <label htmlFor="project-name">Project Name *</label>
+                      <input
+                        id="project-name"
+                        type="text"
+                        placeholder="Enter project name"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="project-description">Description</label>
+                      <textarea
+                        id="project-description"
+                        placeholder="Brief description of the project"
+                        rows="3"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="workspace-path">Workspace Path *</label>
+                      <input
+                        id="workspace-path"
+                        type="text"
+                        placeholder="/path/to/project"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="project-type">Type</label>
+                        <select id="project-type">
+                          <option value="development">Development</option>
+                          <option value="research">Research</option>
+                          <option value="production">Production</option>
+                        </select>
+                      </div>
+                      
+                      <div className="form-group">
+                        <label htmlFor="framework">Framework</label>
+                        <select id="framework">
+                          <option value="">Select Framework</option>
+                          <option value="react">React</option>
+                          <option value="vue">Vue.js</option>
+                          <option value="angular">Angular</option>
+                          <option value="node">Node.js</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="language">Language</label>
+                        <select id="language">
+                          <option value="javascript">JavaScript</option>
+                          <option value="typescript">TypeScript</option>
+                          <option value="python">Python</option>
+                          <option value="java">Java</option>
+                        </select>
+                      </div>
+                      
+                      <div className="form-group">
+                        <label htmlFor="package-manager">Package Manager</label>
+                        <select id="package-manager">
+                          <option value="npm">npm</option>
+                          <option value="yarn">Yarn</option>
+                          <option value="pnpm">pnpm</option>
+                        </select>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                
+                <div className="project-add-modal__project-add-modal-footer">
+                  <button 
+                    className="project-add-modal__btn project-add-modal__btn-secondary" 
+                    onClick={() => setShowProjectAddModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="project-add-modal__btn project-add-modal__btn-primary"
+                    onClick={() => {
+                      // TODO: Handle project creation
+                      setShowProjectAddModal(false);
+                    }}
+                  >
+                    Create Project
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </IDEProvider>
     </AuthWrapper>

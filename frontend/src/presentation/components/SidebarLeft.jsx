@@ -13,19 +13,34 @@ import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
+import { useProjectManagement } from '@/infrastructure/stores/hooks/useProjectStore';
 import ChatPanelComponent from './chat/sidebar-left/ChatPanelComponent.jsx';
+import ProjectListComponent from './project/ProjectListComponent.jsx';
+import InterfaceManagerComponent from './interfaces/InterfaceManagerComponent.jsx';
 import IDEStartModal from './ide/IDEStartModal.jsx';
 import '@/scss/base/_sidebar-left.scss';
 
-function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }) {
+function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', showProjectAddModal, onShowProjectAddModal }) {
   logger.info('🔍 SidebarLeft RENDERING!');
   
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [showIDEStartModal, setShowIDEStartModal] = useState(false);
+  const [currentView, setCurrentView] = useState('projects'); // projects, interfaces, chat
+  
+  // Debug currentView changes
+  useEffect(() => {
+    logger.info('🔍 currentView changed to:', currentView);
+  }, [currentView]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showInterfaces, setShowInterfaces] = useState(false);
+  const [showChats, setShowChats] = useState(false);
   const { isAuthenticated } = useAuthStore();
   
   // Use IDEStore instead of local state
   const { availableIDEs, loadAvailableIDEs } = useIDEStore();
+  
+  // Use ProjectStore for project management
+  const { activeProject, setActiveProject } = useProjectManagement();
 
   // EventBus-Listener for sidebar-level events
   useEffect(() => {
@@ -51,17 +66,45 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
       }
     };
 
+    const handleProjectSelected = (data) => {
+      logger.info('Project selected:', data.projectId);
+      setActiveProject(data.projectId);
+      setSelectedProject(data.projectId);
+      setShowInterfaces(true);
+      setShowChats(false);
+      setCurrentView('interfaces');
+    };
+
+    const handleProjectCreated = (data) => {
+      logger.info('Project created:', data.project);
+      // Refresh project list
+    };
+
+    const handleInterfaceSwitched = (data) => {
+      logger.info('Interface switched:', data.interfaceId);
+      setShowChats(true);
+      setCurrentView('chat');
+    };
+
     // IDE Management Events
     eventBus.on('ideListUpdated', handleIDEListUpdated);
     eventBus.on('activeIDEChanged', handleActiveIDEChanged);
     eventBus.on('sidebar-left-toggle', handleLeftSidebarToggle);
     
+    // Project Management Events
+    eventBus.on('project-selected', handleProjectSelected);
+    eventBus.on('project-created', handleProjectCreated);
+    eventBus.on('interface-switched', handleInterfaceSwitched);
+    
     return () => {
       eventBus.off('ideListUpdated', handleIDEListUpdated);
       eventBus.off('activeIDEChanged', handleActiveIDEChanged);
       eventBus.off('sidebar-left-toggle', handleLeftSidebarToggle);
+      eventBus.off('project-selected', handleProjectSelected);
+      eventBus.off('project-created', handleProjectCreated);
+      eventBus.off('interface-switched', handleInterfaceSwitched);
     };
-  }, [eventBus, onActivePortChange]);
+  }, [eventBus, onActivePortChange, setActiveProject]);
 
   // Load IDE list on component mount ONLY if authenticated
   useEffect(() => {
@@ -160,9 +203,26 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
     eventBus.emit('sidebar-left:session-selected', { sessionId });
   };
 
-  // Render the appropriate panel based on mode
-  const renderPanel = () => {
-    switch (mode) {
+  // Render the appropriate panel based on current view
+  const renderMainContent = () => {
+    logger.info('🔍 renderMainContent called with currentView:', currentView);
+    switch (currentView) {
+      case 'projects':
+        return (
+          <ProjectListComponent 
+            eventBus={eventBus}
+            onProjectSelect={setActiveProject}
+            showAddModal={showProjectAddModal}
+            onCloseAddModal={() => onShowProjectAddModal(false)}
+          />
+        );
+      case 'interfaces':
+        return (
+          <InterfaceManagerComponent 
+            eventBus={eventBus}
+            activeProjectId={selectedProject}
+          />
+        );
       case 'chat':
         return (
           <ChatPanelComponent 
@@ -171,111 +231,117 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat' }
             onSessionSelect={handleSessionSelect}
           />
         );
-      case 'code':
-        return <div className="code-panel">Code Panel (TODO)</div>;
-      case 'git':
-        return <div className="git-panel">Git Panel (TODO)</div>;
       default:
-        return <div className="default-panel">Default Panel</div>;
+        return <div className="default-panel">Select a view</div>;
     }
   };
 
   return (
     <div className="sidebar-left">
       <div className="sidebar-left-content">
-      {/* IDE Management Section - Always visible */}
-      <div className="ide-management-section">
-        <div className="ide-header">
-          <h4>🖥️ IDE Management</h4>
-          <button 
-            className="btn-icon" 
-            title="Neue IDE starten" 
-            onClick={handleNewIDE}
-          >
-            🚀
-          </button>
-        </div>
-        <div className="ide-list">
-          {availableIDEs.length === 0 ? (
-            <div className="no-ides">Keine IDEs verfügbar</div>
-          ) : (
-            availableIDEs.map(ide => (
-              <div
-                className={`ide-item${ide.active === true ? ' active' : ''}`}
-                key={ide.port}
-                onClick={e => {
-                  if (!e.target.classList.contains('ide-stop-btn')) {
-                    handleSwitchDirectlyToIDE(ide.port);
-                  }
+        {/* Multi-Layer Navigation */}
+        <div className="sidebar-navigation">
+          {/* Meta Layer - Projects */}
+          <div className="nav-section">
+            <div className="nav-section-header">
+              <h3>Meta Layer</h3>
+              <button 
+                className="nav-add-btn"
+                onClick={() => {
+                  logger.info('🔍 Add Project button clicked');
+                  onShowProjectAddModal(true);
                 }}
+                title="Add new project"
               >
-                <div className="ide-info">
-                  <div className="ide-title">
-                    <span className="ide-icon">{getIDEIcon(ide.ideType)}</span>
-                    <span className="ide-name">{getIDEName(ide.ideType)}</span>
-                    <span className="ide-port">Port {ide.port}</span>
-                    <span className="ide-project-name">
-                      {ide.projectName || (ide.workspacePath ? ide.workspacePath.split('/').pop() : 'Unbekanntes Projekt')}
-                    </span>
-                  </div>
-                  <div className="ide-meta">
-                    <span className={`ide-status ${ide.status}`}>{ide.status}</span>
-                    {ide.workspacePath && (
-                      <span className="ide-root-folder">
-                        {ide.workspacePath}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="ide-actions">
-                  {ide.active && <span className="active-indicator">✓</span>}
-                  <button
-                    className="ide-refresh-btn"
-                    title="Workspace neu erkennen"
-                    onClick={async e => {
-                      e.stopPropagation();
-                      try {
-                        const { apiCall } = await import('@/infrastructure/repositories/APIChatRepository.jsx');
-                        await apiCall(`/api/ide/workspace-detection/${ide.port}`, { method: 'POST' });
-                        loadAvailableIDEs(); // IDEStore handles this
-                      } catch (err) {
-                        alert('Fehler beim Workspace-Update: ' + (err?.message || err));
-                      }
-                    }}
-                  >
-                    🔄
-                  </button>
-                  <button
-                    className="ide-stop-btn"
-                    title="IDE stoppen"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleStopIDE(ide.port);
-                    }}
-                  >
-                    ⏹️
-                  </button>
-                </div>
+                + Add
+              </button>
+            </div>
+            <button 
+              className={`nav-btn ${currentView === 'projects' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentView('projects');
+                setShowInterfaces(false);
+                setShowChats(false);
+                setSelectedProject(null);
+              }}
+              title="Project Management"
+            >
+              📁 Projects
+            </button>
+          </div>
+
+          {/* Project Layer - Interfaces */}
+          {showInterfaces && (
+            <div className="nav-section">
+              <div className="nav-section-header">
+                <h3>Project Layer</h3>
+                <button 
+                  className="nav-back-btn"
+                  onClick={() => {
+                    setShowInterfaces(false);
+                    setShowChats(false);
+                    setCurrentView('projects');
+                    setSelectedProject(null);
+                  }}
+                  title="Back to Projects"
+                >
+                  ← Back
+                </button>
               </div>
-            ))
+              <button 
+                className={`nav-btn ${currentView === 'interfaces' ? 'active' : ''}`}
+                onClick={() => setCurrentView('interfaces')}
+                title="Interface Management"
+              >
+                🖥️ Interfaces
+              </button>
+            </div>
+          )}
+
+          {/* IDE Layer - Chats */}
+          {showChats && (
+            <div className="nav-section">
+              <div className="nav-section-header">
+                <h3>IDE Layer</h3>
+                <button 
+                  className="nav-back-btn"
+                  onClick={() => {
+                    setShowChats(false);
+                    setCurrentView('interfaces');
+                  }}
+                  title="Back to Interfaces"
+                >
+                  ← Back
+                </button>
+              </div>
+              <button 
+                className={`nav-btn ${currentView === 'chat' ? 'active' : ''}`}
+                onClick={() => setCurrentView('chat')}
+                title="Chat Sessions"
+              >
+                💬 Chat
+              </button>
+            </div>
           )}
         </div>
-      </div>
-
-      {/* Mode-specific Panel */}
-      <div className="sidebar-panel-container">
-        {renderPanel()}
-      </div>
+        
+        {/* Main Content */}
+        <div className="sidebar-content">
+          {renderMainContent()}
+        </div>
       </div>
       
-      {/* IDE Start Modal */}
-      <IDEStartModal
-        isOpen={showIDEStartModal}
-        onClose={handleIDEStartModalClose}
-        onSuccess={handleIDEStartSuccess}
-      />
-    </div>
-  );
-}
+          {/* IDE Start Modal */}
+          {showIDEStartModal && (
+            <IDEStartModal
+              isOpen={showIDEStartModal}
+              onClose={handleIDEStartModalClose}
+              onSuccess={handleIDEStartSuccess}
+            />
+          )}
+          
+        </div>
+      );
+    }
 
 export default SidebarLeft;

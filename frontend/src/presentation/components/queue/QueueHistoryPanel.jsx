@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
-import { useActiveIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
+import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import TaskModeBadge from './TaskModeBadge.jsx';
 import '@/scss/components/_queue-history-panel.scss';;
 
@@ -37,7 +37,7 @@ const QueueHistoryPanel = ({ eventBus, activePort }) => {
 
     const queueRepository = useMemo(() => new QueueRepository(), []);
     const webSocketService = WebSocketService;
-    const { projectId } = useActiveIDE();
+    const { projectId } = useSelectedIDE();
 
     /**
      * Load queue history

@@ -35,6 +35,8 @@ services:
         condition: service_healthy
     environment:
       DOCKER_ENV: "true"
+      DATABASE_OPTIMIZATION_ENABLED: "true"
+      PERFORMANCE_MONITORING_ENABLED: "true"
     env_file:
       - .env
     volumes:

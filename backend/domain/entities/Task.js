@@ -41,6 +41,8 @@ class Task {
     this._startedAt = null;
     this._executionHistory = [];
     this._workflowContext = null;
+    this._layerAssignments = []; // Array of layer IDs this task is assigned to
+    this._layerStatus = {}; // Status per layer: { layerId: status }
 
     this._validate();
   }
@@ -65,6 +67,8 @@ class Task {
   get progress() { return this._progress; }
   get executionHistory() { return [...this._executionHistory]; }
   get workflowContext() { return this._workflowContext; }
+  get layerAssignments() { return [...this._layerAssignments]; }
+  get layerStatus() { return { ...this._layerStatus }; }
 
   // Domain methods
   isPending() {
@@ -629,6 +633,43 @@ class Task {
       return Date.now() - this._createdAt.getTime();
     }
     return this._completedAt.getTime() - this._createdAt.getTime();
+  }
+
+  // Layer management methods
+  assignToLayer(layerId) {
+    if (!this._layerAssignments.includes(layerId)) {
+      this._layerAssignments.push(layerId);
+      this._layerStatus[layerId] = 'pending';
+      this._updatedAt = new Date();
+    }
+  }
+
+  removeFromLayer(layerId) {
+    const index = this._layerAssignments.indexOf(layerId);
+    if (index > -1) {
+      this._layerAssignments.splice(index, 1);
+      delete this._layerStatus[layerId];
+      this._updatedAt = new Date();
+    }
+  }
+
+  updateLayerStatus(layerId, status) {
+    if (this._layerAssignments.includes(layerId)) {
+      this._layerStatus[layerId] = status;
+      this._updatedAt = new Date();
+    }
+  }
+
+  getLayerStatus(layerId) {
+    return this._layerStatus[layerId] || null;
+  }
+
+  isAssignedToLayer(layerId) {
+    return this._layerAssignments.includes(layerId);
+  }
+
+  getAssignedLayers() {
+    return [...this._layerAssignments];
   }
 }
 

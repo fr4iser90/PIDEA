@@ -48,7 +48,7 @@ class ApplicationIntegration {
         this.logger.info('Initializing domain services with DI...');
 
         // Get domain services through DI container
-        this.cursorIDEService = this.serviceRegistry.getService('cursorIDEService');
+        // cursorIDEService removed - using interfaceManager instead
         this.authService = this.serviceRegistry.getService('authService');
         this.aiService = this.serviceRegistry.getService('aiService');
         this.projectAnalyzer = this.serviceRegistry.getService('projectAnalyzer');
@@ -181,7 +181,7 @@ class ApplicationIntegration {
                 'path.resolve(currentDir, "..")'
             ],
             dependencyInjection: [
-                'new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer, this.cursorIDEService)',
+                'new TaskService(this.taskRepository, this.aiService, this.projectAnalyzer, this.interfaceManager)',
                 'new AnalyzeArchitectureHandler({ eventBus: this.eventBus, analysisRepository: this.analysisRepository, ... })',
                 'Manual dependency passing through constructors'
             ],

@@ -81,6 +81,28 @@ const cacheConfig = {
       description: 'Workflow data - frequent updates'
     },
     
+    // Project Store specific data types
+    projectStore: { 
+      ttl: 30 * 60 * 1000, // 30 minutes
+      priority: 'high',
+      description: 'Project store data - frequently accessed'
+    },
+    projectMetadata: { 
+      ttl: 60 * 60 * 1000, // 1 hour
+      priority: 'medium',
+      description: 'Project metadata - moderate updates'
+    },
+    projectList: { 
+      ttl: 15 * 60 * 1000, // 15 minutes
+      priority: 'high',
+      description: 'Project list - critical for performance'
+    },
+    projectStats: { 
+      ttl: 5 * 60 * 1000, // 5 minutes
+      priority: 'low',
+      description: 'Project statistics - frequently changing'
+    },
+    
     // Default configuration
     default: { 
       ttl: 12 * 60 * 60 * 1000, // 12 hours
@@ -133,7 +155,8 @@ const cacheConfig = {
     project: ['project:analysis', 'project:structure', 'project:dependencies'],
     analysis: ['analysis:codeQuality', 'analysis:security', 'analysis:performance'],
     chat: ['chat:history', 'chat:messages', 'chat:port'],
-    workflow: ['workflow:steps', 'workflow:status', 'workflow:progress']
+    workflow: ['workflow:steps', 'workflow:status', 'workflow:progress'],
+    projectStore: ['projectStore:projects', 'projectStore:project', 'projectStore:list', 'projectStore:stats', 'projectStore:metadata']
   },
   
   // Event-driven invalidation rules
@@ -145,7 +168,11 @@ const cacheConfig = {
     'project:change': { namespace: 'project', pattern: 'project:*' },
     'analysis:complete': { namespace: 'analysis', pattern: 'analysis:*' },
     'chat:new': { namespace: 'chat', pattern: 'chat:*' },
-    'workflow:update': { namespace: 'workflow', pattern: 'workflow:*' }
+    'workflow:update': { namespace: 'workflow', pattern: 'workflow:*' },
+    'projectStore:create': { namespace: 'projectStore', pattern: 'projectStore:*' },
+    'projectStore:update': { namespace: 'projectStore', pattern: 'projectStore:*' },
+    'projectStore:delete': { namespace: 'projectStore', pattern: 'projectStore:*' },
+    'projectStore:refresh': { namespace: 'projectStore', pattern: 'projectStore:*' }
   },
   
   // Cache warming strategies
@@ -156,7 +183,7 @@ const cacheConfig = {
       preload: true, // Preload critical data
       background: true // Background cache warming
     },
-    triggers: ['ide:switch', 'project:load', 'analysis:start']
+    triggers: ['ide:switch', 'project:load', 'analysis:start', 'projectStore:load']
   },
   
   // Security settings
