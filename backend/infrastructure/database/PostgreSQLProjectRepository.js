@@ -151,7 +151,8 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async findById(id) {
     const sql = `SELECT * FROM ${this.tableName} WHERE id = $1`;
     const results = await this.databaseConnection.query(sql, [id]);
-    return results.length > 0 ? this._rowToProject(results[0]) : null;
+    const rows = Array.isArray(results) ? results : results.rows || [];
+    return rows.length > 0 ? this._rowToProject(rows[0]) : null;
   }
 
   /**
@@ -162,7 +163,8 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async findByWorkspacePath(workspacePath) {
     const sql = `SELECT * FROM ${this.tableName} WHERE workspace_path = $1`;
     const results = await this.databaseConnection.query(sql, [workspacePath]);
-    return results.length > 0 ? this._rowToProject(results[0]) : null;
+    const rows = Array.isArray(results) ? results : results.rows || [];
+    return rows.length > 0 ? this._rowToProject(rows[0]) : null;
   }
 
 
@@ -175,7 +177,8 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async findByFramework(framework) {
     const sql = `SELECT * FROM ${this.tableName} WHERE framework = $1 ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql, [framework]);
-    return results.map(row => this._rowToProject(row));
+    const rows = Array.isArray(results) ? results : results.rows || [];
+    return rows.map(row => this._rowToProject(row));
   }
 
   /**
@@ -186,7 +189,8 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async findByLanguage(language) {
     const sql = `SELECT * FROM ${this.tableName} WHERE language = $1 ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql, [language]);
-    return results.map(row => this._rowToProject(row));
+    const rows = Array.isArray(results) ? results : results.rows || [];
+    return rows.map(row => this._rowToProject(row));
   }
 
   /**
@@ -196,7 +200,8 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async findActive() {
     const sql = `SELECT * FROM ${this.tableName} WHERE status = 'active' ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql);
-    return results.map(row => this._rowToProject(row));
+    const rows = Array.isArray(results) ? results : results.rows || [];
+    return rows.map(row => this._rowToProject(row));
   }
 
   /**
@@ -268,13 +273,14 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   }
 
   /**
-   * Find all projects
+   * Find all projects (legacy method - use findAllWithOptions instead)
    * @returns {Promise<Object[]>} All projects
    */
-  async findAll() {
+  async findAllLegacy() {
     const sql = `SELECT * FROM ${this.tableName} ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql);
-    return results.map(row => this._rowToProject(row));
+    const rows = Array.isArray(results) ? results : results.rows || [];
+    return rows.map(row => this._rowToProject(row));
   }
 
   /**
@@ -368,25 +374,61 @@ class PostgreSQLProjectRepository extends ProjectRepository {
    * @returns {Promise<Array<Object>>} Array of projects
    */
   async findAll(options = {}) {
-    const { limit = 10, offset = 0, search } = options;
+    try {
+      const { limit = 10, offset = 0, search } = options;
+      
+      console.log('🔍 [PostgreSQLProjectRepository] findAll called with:', { limit, offset, search });
+      
+      let query = `
+        SELECT * FROM ${this.tableName}
+      `;
+      
+      const params = [];
+      
+      if (search) {
+        query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
+        params.push(`%${search}%`);
+      }
+      
+      query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      params.push(limit, offset);
+      
+      console.log('🔍 [PostgreSQLProjectRepository] Executing query:', query);
+      console.log('🔍 [PostgreSQLProjectRepository] With params:', params);
+      
+      console.log('🔍 [PostgreSQLProjectRepository] About to execute query...');
+      const result = await this.databaseConnection.query(query, params);
+      console.log('🔍 [PostgreSQLProjectRepository] Query executed successfully');
     
-    let query = `
-      SELECT * FROM ${this.tableName}
-    `;
+    console.log('🔍 [PostgreSQLProjectRepository] Raw result:', { 
+      resultType: typeof result,
+      isArray: Array.isArray(result),
+      hasRows: !!(result && result.rows),
+      resultLength: Array.isArray(result) ? result.length : (result?.rows?.length || 0),
+      resultKeys: result ? Object.keys(result) : 'null',
+      resultValue: result
+    });
     
-    const params = [];
+    // PostgreSQL result object
+    const rows = result.rows;
     
-    if (search) {
-      query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
-      params.push(`%${search}%`);
+    console.log('🔍 [PostgreSQLProjectRepository] Processed rows:', { 
+      rowsCount: rows.length,
+      firstRow: rows[0] || 'none'
+    });
+    
+    const projects = rows.map(row => this._rowToProject(row));
+    
+    console.log('🔍 [PostgreSQLProjectRepository] Final result:', { 
+      count: projects.length,
+      firstProject: projects[0] || 'none'
+    });
+    
+    return projects;
+    } catch (error) {
+      console.error('❌ [PostgreSQLProjectRepository] findAll error:', error);
+      throw error;
     }
-    
-    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit, offset);
-    
-    const result = await this.databaseConnection.query(query, params);
-    
-    return result.rows.map(row => this.mapRowToProject(row));
   }
 
   /**
@@ -396,18 +438,23 @@ class PostgreSQLProjectRepository extends ProjectRepository {
    * @returns {Promise<number>} Number of projects
    */
   async count(options = {}) {
-    const { search } = options;
-    
-    let query = `SELECT COUNT(*) FROM ${this.tableName}`;
-    const params = [];
-    
-    if (search) {
-      query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
-      params.push(`%${search}%`);
+    try {
+      const { search } = options;
+      
+      let query = `SELECT COUNT(*) as count FROM ${this.tableName}`;
+      const params = [];
+      
+      if (search) {
+        query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
+        params.push(`%${search}%`);
+      }
+      
+      const result = await this.databaseConnection.getOne(query, params);
+      return parseInt(result.count || 0);
+    } catch (error) {
+      console.error('❌ [PostgreSQLProjectRepository] count error:', error);
+      throw error;
     }
-    
-    const result = await this.databaseConnection.query(query, params);
-    return parseInt(result.rows[0].count);
   }
 }
 

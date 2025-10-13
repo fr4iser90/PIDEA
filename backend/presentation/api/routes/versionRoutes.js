@@ -6,7 +6,7 @@
  */
 
 const express = require('express');
-const VersionController = require('../controllers/VersionController');
+const VersionController = require('../projects/VersionController');
 const Logger = require('@logging/Logger');
 
 class VersionRoutes {

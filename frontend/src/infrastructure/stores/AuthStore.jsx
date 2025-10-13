@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import { create } from 'zustand';
 import useNotificationStore from './NotificationStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
+import apiService from '@/infrastructure/services/ApiService.js';
 import sessionMonitorService from '../services/SessionMonitorService.jsx';
 import activityTrackerService from '../services/ActivityTrackerService.jsx';
 import crossTabSyncService from '../services/CrossTabSyncService.jsx';
@@ -44,10 +44,12 @@ const useAuthStore = create(
           // Check for cookies - if no cookies, user is not authenticated
           // Debug: Log all cookies to see what's available
           logger.info('🔍 [AuthStore] All cookies:', document.cookie);
-          const hasCookies = document.cookie.includes('accessToken') || document.cookie.includes('refreshToken');
-          logger.info('🔍 [AuthStore] Has cookies:', hasCookies);
+          const hasAccessToken = document.cookie.includes('accessToken');
+          const hasRefreshToken = document.cookie.includes('refreshToken');
+          logger.info('🔍 [AuthStore] Has accessToken:', hasAccessToken, 'Has refreshToken:', hasRefreshToken);
           
-          if (!hasCookies) {
+          // If no cookies at all, user is not authenticated
+          if (!hasAccessToken && !hasRefreshToken) {
             logger.info('❌ [AuthStore] No authentication cookies found');
             set({ 
               isAuthenticated: false, 
@@ -60,9 +62,9 @@ const useAuthStore = create(
             return;
           }
           
-          // Validate cookies with backend
+          // Validate cookies with backend - force validation during initialization
           logger.info('🔍 [AuthStore] Found cookies, validating with backend...');
-          const isValid = await get().validateToken();
+          const isValid = await get().validateToken(true); // Force validation during initialization
           
           if (!isValid) {
             logger.info('❌ [AuthStore] Cookie validation failed');
@@ -79,14 +81,29 @@ const useAuthStore = create(
           
           logger.info('✅ [AuthStore] Cookie validation successful');
           
+          // Get the current state after validation (which should have set the user)
+          const currentState = get();
+          logger.info('🔍 [AuthStore] State after validation:', { 
+            isAuthenticated: currentState.isAuthenticated, 
+            user: currentState.user,
+            userId: currentState.user?.id 
+          });
+          
+          // CRITICAL FIX: Ensure user state is preserved from validation
           set({ 
             isValidating: false,
             isInitialized: true,
-            isAuthenticated: true, // CRITICAL: Set authentication state after successful validation!
+            isAuthenticated: true,
+            user: currentState.user, // Preserve user from validation
             error: null
           });
           
           logger.info('✅ [AuthStore] Initialization complete');
+          logger.info('🔍 [AuthStore] Final state:', { 
+            isAuthenticated: true, 
+            user: currentState.user, 
+            isInitialized: true 
+          });
           
         } catch (error) {
           logger.error('❌ [AuthStore] Initialization failed:', error);
@@ -107,7 +124,7 @@ const useAuthStore = create(
         try {
           logger.debug('🔍 [AuthStore] Attempting login for:', email);
           
-          const data = await apiCall('/api/auth/login', {
+          const data = await apiService.call('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
             credentials: 'include', // Include cookies
@@ -123,16 +140,17 @@ const useAuthStore = create(
 
           // Backend returns: { success: true, data: { user } }
           const userData = data.data || data;
+          const user = userData.user || userData.data?.user || { id: 'me', email, role: 'admin' };
 
           logger.info('🔍 [AuthStore] Login successful, cookies set by backend');
-          logger.info('🔍 [AuthStore] User data:', userData.user);
+          logger.info('🔍 [AuthStore] User data:', user);
 
           // SIMPLIFIED: Trust the login response and set state immediately
           // Cookies are set by backend, no need for immediate validation
           logger.info('✅ [AuthStore] Login successful, setting authentication state');
 
           set({
-            user: userData.user,
+            user: user,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -160,7 +178,7 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          const data = await apiCall('/api/auth/register', {
+          const data = await apiService.call('/api/auth/register', {
             method: 'POST',
             body: JSON.stringify({ email, password, username }),
           });
@@ -179,7 +197,7 @@ const useAuthStore = create(
 
           // Validate authentication immediately after registration
           logger.info('🔍 [AuthStore] Validating authentication after registration...');
-          const validationResult = await get().validateToken();
+          const validationResult = await get().validateToken(true); // Force validation after registration
           
           if (!validationResult) {
             throw new Error('Authentication validation failed after registration');
@@ -257,21 +275,32 @@ const useAuthStore = create(
       },
 
       // Professional authentication validation with proper caching
-      validateToken: async () => {
+      validateToken: async (forceValidation = false) => {
         const { lastAuthCheck, authCheckInterval, isValidating, isAuthenticated, user } = get();
         
-        // Prevent race conditions
-        if (isValidating) {
-          logger.debug('🔍 [AuthStore] Validation already in progress, skipping');
-          return true;
+        // Prevent race conditions - but allow forced validation during initialization
+        if (isValidating && !forceValidation) {
+          logger.debug('🔍 [AuthStore] Validation already in progress, waiting for completion...');
+          // Wait for the current validation to complete instead of skipping
+          return new Promise((resolve) => {
+            const checkValidation = () => {
+              const currentState = get();
+              if (!currentState.isValidating) {
+                resolve(currentState.isAuthenticated);
+              } else {
+                setTimeout(checkValidation, 100);
+              }
+            };
+            checkValidation();
+          });
         }
         
-        // OPTIMIZATION: Skip validation if recently validated and user exists
+        // OPTIMIZATION: Skip validation if recently validated and user exists (unless forced)
         const now = new Date();
         const recentlyValidated = lastAuthCheck && (now - lastAuthCheck) < (5 * 60 * 1000); // 5 minutes
         const hasUserData = user && isAuthenticated;
         
-        if (recentlyValidated && hasUserData) {
+        if (recentlyValidated && hasUserData && !forceValidation) {
           logger.debug('🔍 [AuthStore] Recently validated with user data, skipping validation');
           return true;
         }
@@ -282,13 +311,37 @@ const useAuthStore = create(
           set({ isValidating: true });
           logger.info('🔍 [AuthStore] Making validation request to /api/auth/validate...');
           
-          const data = await apiCall('/api/auth/validate');
+          const data = await apiService.call('/api/auth/validate');
           
           logger.info('🔍 [AuthStore] Validation response received:', data);
           
           // Check if validation was successful
           if (!data.success) {
             logger.error('❌ [AuthStore] Validation failed:', data.error);
+            
+            // If validation failed, try to refresh the token
+            logger.info('🔄 [AuthStore] Trying to refresh token...');
+            try {
+              const refreshData = await apiService.call('/api/auth/refresh');
+              logger.info('🔍 [AuthStore] Refresh response:', refreshData);
+              
+              if (refreshData.success && refreshData.data?.user) {
+                logger.info('✅ [AuthStore] Token refreshed successfully');
+                set({ 
+                  user: refreshData.data.user, 
+                  isAuthenticated: true, 
+                  lastAuthCheck: now,
+                  redirectToLogin: false,
+                  isValidating: false,
+                  error: null
+                });
+                return true;
+              }
+            } catch (refreshError) {
+              logger.error('❌ [AuthStore] Token refresh failed:', refreshError);
+            }
+            
+            // All authentication attempts failed
             throw new Error(data.error || 'Authentication validation failed');
           }
           
@@ -377,7 +430,7 @@ const useAuthStore = create(
       refreshToken: async () => {
         try {
           logger.info('🔍 [AuthStore] Refreshing authentication...');
-          const data = await apiCall('/api/auth/refresh', {
+          const data = await apiService.call('/api/auth/refresh', {
             method: 'POST',
             credentials: 'include', // Include cookies
           });
@@ -558,7 +611,7 @@ const useAuthStore = create(
         try {
           logger.info('🔍 [AuthStore] Extending session...');
           
-          const data = await apiCall('/api/session/extend', {
+          const data = await apiService.call('/api/session/extend', {
             method: 'POST',
             credentials: 'include'
           });
@@ -598,7 +651,7 @@ const useAuthStore = create(
        */
       getSessionStatus: async () => {
         try {
-          const data = await apiCall('/api/session/status', {
+          const data = await apiService.call('/api/session/status', {
             credentials: 'include'
           });
 

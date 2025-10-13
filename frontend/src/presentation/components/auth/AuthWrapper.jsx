@@ -8,6 +8,8 @@ import LoginComponent from './LoginComponent.jsx';
 import RegisterComponent from './RegisterComponent.jsx';
 
 const AuthWrapper = ({ children }) => {
+  logger.info('🔍 [AuthWrapper] AuthWrapper component rendered!');
+  
   const { 
     isAuthenticated, 
     isLoading,
@@ -16,6 +18,8 @@ const AuthWrapper = ({ children }) => {
     initialize
   } = useAuthStore();
   
+  logger.info('🔍 [AuthWrapper] AuthStore state:', { isAuthenticated, isLoading, isValidating, isInitialized });
+  
   const { showInfo, showWarning } = useNotificationStore();
   
   const [authMode, setAuthMode] = useState('login');
@@ -23,13 +27,16 @@ const AuthWrapper = ({ children }) => {
   const [showIDERequirementModal, setShowIDERequirementModal] = useState(false);
   const [isCheckingIDERequirement, setIsCheckingIDERequirement] = useState(false);
 
-  // Initialize AuthStore on mount
+  // Initialize AuthStore on mount - ONLY ONCE!
   useEffect(() => {
+    logger.info('🔍 [AuthWrapper] useEffect triggered', { isInitialized, isValidating });
     if (!isInitialized) {
       logger.info('🔍 [AuthWrapper] Initializing AuthStore...');
       initialize();
+    } else {
+      logger.info('🔍 [AuthWrapper] AuthStore already initialized');
     }
-  }, [isInitialized, initialize]);
+  }, [isInitialized]); // REMOVED initialize from dependencies!
 
   // Check IDE requirement when user becomes authenticated AND validation is complete
   // BUT ONLY if we have cookies - prevent unnecessary API calls

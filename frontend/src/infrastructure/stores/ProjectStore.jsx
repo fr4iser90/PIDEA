@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
-import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
+import apiService from '@/infrastructure/services/ApiService.js';
 import useAuthStore from './AuthStore.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 
@@ -79,50 +79,80 @@ const useProjectStore = create(
        * Load all projects for the current user with caching
        */
       loadProjects: async () => {
-        const { isLoading, loadingLock } = get();
+        const state = get();
+        const { isLoading, loadingLock } = state;
+        
+        // STRICT DEDUPLICATION - prevent multiple calls
         if (isLoading || loadingLock) {
-          logger.warn('Project loading already in progress');
-          return;
+          logger.warn('🚫 Project loading already in progress - DEDUPLICATION ACTIVE!', { 
+            isLoading, 
+            loadingLock 
+          });
+          return Promise.resolve(); // Return resolved promise to prevent hanging
         }
 
         try {
+          logger.info('🔄 Starting project loading...');
           set({ isLoading: true, error: null, loadingLock: true });
-          logger.info('Loading projects...');
 
           const { user } = useAuthStore.getState();
+          logger.info('🔍 [ProjectStore] User state:', { user: !!user, userId: user?.id });
+          
           if (!user) {
             throw new Error('User not authenticated');
           }
 
-          // Try cache first
+          // Try cache first - USE YOUR CACHE!
           const cacheKey = `projectStore:projects:list:${user.id}`;
           const cachedData = cacheService.get(cacheKey);
           
           if (cachedData) {
-            logger.info('✅ Using cached project list');
+            logger.info('✅ USING CACHED PROJECT LIST - NO API CALL!');
             set({
               projects: cachedData,
               isLoading: false,
               lastUpdate: new Date().toISOString(),
               retryCount: 0,
-              loadingLock: false
+              loadingLock: false // CRITICAL: Always reset loadingLock
             });
             return;
           }
 
           // Load from API
-          const response = await apiCall('/api/projects', {
+          logger.info('🔍 [ProjectStore] Making API call to /api/projects...');
+          const response = await apiService.call('/api/projects', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
             }
           });
+          logger.info('🔍 [ProjectStore] API response received:', { success: response?.success, error: response?.error });
 
           if (!response.success) {
             throw new Error(response.error || 'Failed to load projects');
           }
 
+          // DEBUG: Log the actual response structure
+          logger.info('🔍 [ProjectStore] Full API response:', response);
+          
+          // Simple parsing - no nesting
           const projects = response.data || [];
+          logger.info('🔍 [ProjectStore] Extracted projects:', { 
+            count: projects.length, 
+            projects,
+            isArray: Array.isArray(projects),
+            type: typeof projects
+          });
+          
+          // SAFETY CHECK: Ensure projects is an array
+          if (!Array.isArray(projects)) {
+            logger.error('❌ [ProjectStore] Projects is not an array!', { 
+              projects, 
+              type: typeof projects,
+              isArray: Array.isArray(projects)
+            });
+            throw new Error('Projects data is not in expected array format');
+          }
           const projectsMap = {};
           
           // Convert array to map for easier access
@@ -146,7 +176,7 @@ const useProjectStore = create(
             isLoading: false,
             lastUpdate: new Date().toISOString(),
             retryCount: 0,
-            loadingLock: false
+            loadingLock: false // CRITICAL: Always reset loadingLock
           });
 
           logger.info(`✅ Loaded ${projects.length} projects and cached`);
@@ -159,7 +189,7 @@ const useProjectStore = create(
               error: error.message,
               isLoading: false,
               retryCount: retryCount + 1,
-              loadingLock: false
+              loadingLock: false // CRITICAL: Always reset loadingLock
             });
             
             // Retry after delay
@@ -171,7 +201,7 @@ const useProjectStore = create(
               error: error.message,
               isLoading: false,
               retryCount: 0,
-              loadingLock: false
+              loadingLock: false // CRITICAL: Always reset loadingLock
             });
           }
         }
@@ -193,7 +223,7 @@ const useProjectStore = create(
           // Generate project ID if not provided
           const projectId = projectData.id || generateProjectId(projectData.name, projectData.workspacePath);
 
-          const response = await apiCall('/api/projects', {
+          const response = await apiService.call('/api/projects', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -234,6 +264,12 @@ const useProjectStore = create(
           }));
 
           logger.info(`✅ Project created: ${projectId}`);
+          
+          // Refresh the project list to ensure consistency
+          setTimeout(() => {
+            get().loadProjects();
+          }, 100);
+          
           return newProject;
         } catch (error) {
           logger.error('❌ Failed to create project:', error);
@@ -258,7 +294,7 @@ const useProjectStore = create(
             throw new Error('User not authenticated');
           }
 
-          const response = await apiCall(`/api/projects/${projectId}`, {
+          const response = await apiService.call(`/api/projects/${projectId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
@@ -316,7 +352,7 @@ const useProjectStore = create(
             throw new Error('User not authenticated');
           }
 
-          const response = await apiCall(`/api/projects/${projectId}`, {
+          const response = await apiService.call(`/api/projects/${projectId}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
@@ -445,16 +481,31 @@ const useProjectStore = create(
       },
 
       /**
-       * Refresh projects data with cache invalidation
+       * Force stop loading state
+       */
+      stopLoading: () => {
+        logger.warn('🛑 FORCE STOPPING loading state - clearing all locks!');
+        set({ 
+          isLoading: false, 
+          loadingLock: false, 
+          error: 'Loading stopped by user',
+          retryCount: 0 // Reset retry count too
+        });
+      },
+
+      /**
+       * Refresh projects data - MODERN CACHE STRATEGY
+       * User wants fresh data → Clear cache + reload
        */
       refresh: async () => {
         const { user } = useAuthStore.getState();
-        if (user) {
-          // Invalidate cache before refresh
-          const cacheKey = `projectStore:projects:list:${user.id}`;
-          cacheService.delete(cacheKey);
-          cacheService.invalidateNamespace('projectStore');
-        }
+        if (!user) return;
+        
+        // USER ACTION: Clear cache + fresh data
+        const cacheKey = `projectStore:projects:list:${user.id}`;
+        cacheService.delete(cacheKey);
+        logger.info('🔄 User refresh: Cache cleared for fresh data');
+        
         await get().loadProjects();
       },
 
@@ -586,7 +637,7 @@ const useProjectStore = create(
           }
           
           // Load from API
-          const response = await apiCall(`/api/projects/${projectId}/git/status`, {
+          const response = await apiService.call(`/api/projects/${projectId}/git/status`, {
             method: 'GET'
           });
           
@@ -670,7 +721,7 @@ const useProjectStore = create(
           }
           
           // Load from API
-          const response = await apiCall(`/api/projects/${projectId}/analysis`, {
+          const response = await apiService.call(`/api/projects/${projectId}/analysis`, {
             method: 'GET'
           });
           
@@ -737,7 +788,7 @@ const useProjectStore = create(
           }
           
           // Load from API
-          const response = await apiCall(`/api/projects/${projectId}/chat`, {
+          const response = await apiService.call(`/api/projects/${projectId}/chat`, {
             method: 'GET'
           });
           
@@ -802,7 +853,7 @@ const useProjectStore = create(
           }
           
           // Load from API
-          const response = await apiCall(`/api/projects/${projectId}/tasks`, {
+          const response = await apiService.call(`/api/projects/${projectId}/tasks`, {
             method: 'GET'
           });
           
@@ -867,7 +918,7 @@ const useProjectStore = create(
           
           // Load from API
           const apiEndpoint = endpoint || `/api/projects/${projectId}/analysis/${category}`;
-          const response = await apiCall(apiEndpoint, {
+          const response = await apiService.call(apiEndpoint, {
             method: 'GET'
           });
           
@@ -1084,7 +1135,7 @@ const useProjectStore = create(
             throw new Error('Project ID required');
           }
 
-          const response = await apiCall(`/api/projects/${projectId}/commands`, {
+          const response = await apiService.call(`/api/projects/${projectId}/commands`, {
             method: 'GET'
           });
 
@@ -1105,7 +1156,7 @@ const useProjectStore = create(
             throw new Error('Project ID and command type required');
           }
 
-          const response = await apiCall(`/api/projects/${projectId}/execute-command`, {
+          const response = await apiService.call(`/api/projects/${projectId}/execute-command`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

@@ -77,7 +77,8 @@ class AuthApplicationService {
             const result = await this.authService.validateAccessToken(accessToken);
             return {
                 success: true,
-                data: result
+                user: result.user,
+                session: result.session
             };
         } catch (error) {
             this.logger.error('Error validating access token:', error);

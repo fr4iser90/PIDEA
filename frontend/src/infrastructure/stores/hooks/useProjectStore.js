@@ -19,7 +19,7 @@ export const useProjectStore = () => {
 /**
  * Hook for project management with auto-loading
  */
-export const useProjectManagement = (autoLoad = true) => {
+export const useProjectManagement = (autoLoad = false) => { // CHANGED: Default to false!
   const {
     projects,
     selectedProject,
@@ -31,17 +31,19 @@ export const useProjectManagement = (autoLoad = true) => {
     deleteProject,
     setSelectedProject,
     clearError,
-    refresh
+    refresh,
+    stopLoading
   } = useProjectStoreCore();
 
-  // Auto-load projects on mount - ONLY if authenticated
+  // Auto-load projects on mount - ONLY if authenticated - ONCE ONLY!
   useEffect(() => {
     // Wait for auth store to be initialized
     const authState = useAuthStore.getState();
     if (autoLoad && authState.isInitialized && authState.isAuthenticated && Object.keys(projects).length === 0 && !isLoading) {
+      logger.info('🔍 [useProjectManagement] Auto-loading projects... ONCE ONLY!');
       loadProjects();
     }
-  }, [autoLoad, projects, isLoading, loadProjects]);
+  }, [autoLoad, isLoading, loadProjects]); // REMOVED 'projects' from dependencies!
 
   // Wrapped actions with error handling
   const handleCreateProject = useCallback(async (projectData) => {
@@ -85,6 +87,15 @@ export const useProjectManagement = (autoLoad = true) => {
   const handleRefresh = useCallback(async () => {
     try {
       clearError();
+      // Check if already loading - USE STRICT DEDUPLICATION!
+      const currentState = useProjectStoreCore.getState();
+      if (currentState.isLoading || currentState.loadingLock) {
+        logger.warn('🚫 Refresh skipped - already loading (STRICT DEDUPLICATION ACTIVE)', {
+          isLoading: currentState.isLoading,
+          loadingLock: currentState.loadingLock
+        });
+        return;
+      }
       await refresh();
     } catch (error) {
       logger.error('Failed to refresh projects:', error);
@@ -105,7 +116,8 @@ export const useProjectManagement = (autoLoad = true) => {
     setSelectedProject: handleSetSelectedProject,
     refresh: handleRefresh,
     clearError,
-    loadProjects
+    loadProjects,
+    stopLoading
   };
 };
 

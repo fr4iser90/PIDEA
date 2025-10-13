@@ -437,17 +437,38 @@ class AuthService {
     return await this.userSessionRepository.findActiveSessionsByUserId(userId);
   }
 
-  // Clean up all sessions for a user
+  // Modern session management: Clean up expired sessions and enforce limits
   async cleanupUserSessions(userId) {
     if (!userId) {
       throw new Error('User ID is required');
     }
 
-    logger.info('🧹 [AuthService] Cleaning up old sessions for user:', userId);
+    logger.info('🧹 [AuthService] Cleaning up expired sessions for user:', userId);
     
     try {
-      const deletedCount = await this.userSessionRepository.deleteByUserId(userId);
-      logger.info('✅ [AuthService] Cleaned up', deletedCount, 'old sessions for user:', userId);
+      // 1. Delete expired sessions
+      const expiredCount = await this.userSessionRepository.deleteExpiredByUserId(userId);
+      logger.info('✅ [AuthService] Cleaned up', expiredCount, 'expired sessions for user:', userId);
+      
+      // 2. Check session limits (modern approach: allow multiple active sessions)
+      const activeSessions = await this.userSessionRepository.findActiveSessionsByUserId(userId);
+      const maxSessions = parseInt(process.env.MAX_USER_SESSIONS || '5'); // Default: 5 concurrent sessions
+      
+      if (activeSessions.length >= maxSessions) {
+        // Remove oldest sessions if limit exceeded
+        const sessionsToRemove = activeSessions.length - maxSessions + 1; // +1 for the new session we're about to create
+        const sessionsToDelete = activeSessions
+          .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Oldest first
+          .slice(0, sessionsToRemove);
+        
+        for (const session of sessionsToDelete) {
+          await this.userSessionRepository.delete(session.id);
+          logger.info('🧹 [AuthService] Removed old session due to limit:', session.id);
+        }
+        
+        logger.info('✅ [AuthService] Session limit enforced, removed', sessionsToDelete.length, 'oldest sessions');
+      }
+      
     } catch (error) {
       logger.error('❌ [AuthService] Failed to cleanup sessions for user:', userId, error);
       // Don't throw - session cleanup failure shouldn't prevent login

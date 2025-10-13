@@ -37,6 +37,13 @@ class DatabaseInitialization {
     // Initialize database migrations
     const DatabaseMigrationService = require('./DatabaseMigrationService');
     const migrationService = new DatabaseMigrationService(databaseConnection);
+    
+    // Ensure database connection is still connected before running migrations
+    if (!databaseConnection.isConnected) {
+      this.logger.info('🔄 Reconnecting database for migrations...');
+      await databaseConnection.connect();
+    }
+    
     await migrationService.initialize();
     
     return {

@@ -1,6 +1,15 @@
 /**
  * VersionController - API controller for version management operations
  * Handles HTTP requests for version management endpoints
+ * 
+ * TODO: Update routes to use project-specific endpoints:
+ * - /api/projects/:projectId/versions/bump
+ * - /api/projects/:projectId/versions/current
+ * - /api/projects/:projectId/versions/history
+ * - /api/projects/:projectId/versions/validate
+ * - /api/projects/:projectId/versions/compare
+ * - /api/projects/:projectId/versions/determine-bump-type
+ * - /api/projects/:projectId/versions/ai-analysis
  */
 
 const Logger = require('@logging/Logger');

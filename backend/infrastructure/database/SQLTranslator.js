@@ -213,6 +213,274 @@ class SQLTranslator {
    */
   _convertSyntax(sql) {
     let convertedSQL = sql;
+    
+    logger.info(`🔍 [SQLTranslator] _convertSyntax called with SQL: ${sql.substring(0, 100)}...`);
+    logger.info(`🔍 [SQLTranslator] Looking for DO blocks...`);
+    
+    // Log the FULL SQL to see what we're working with
+    logger.info(`🔍 [SQLTranslator] FULL SQL LENGTH: ${sql.length}`);
+    logger.info(`🔍 [SQLTranslator] FULL SQL: ${JSON.stringify(sql)}`);
+    
+    // Test the regex - try different patterns
+    const patterns = [
+      /DO\s*\$\$([\s\S]*?)\$\$/gi,
+      /DO\s*\$\$\s*([\s\S]*?)\$\$/gi,
+      /DO\s*\$\$([\s\S]*?)\$\$\s*;/gi
+    ];
+    
+    let foundPattern = -1;
+    for (let i = 0; i < patterns.length; i++) {
+      const testMatch = patterns[i].exec(sql);
+      logger.info(`🔍 [SQLTranslator] Pattern ${i + 1} test result: ${testMatch ? 'FOUND' : 'NOT FOUND'}`);
+      if (testMatch) {
+        foundPattern = i;
+        logger.info(`🔍 [SQLTranslator] Match found with pattern ${i + 1}: ${testMatch[0].substring(0, 100)}...`);
+        logger.info(`🔍 [SQLTranslator] Block content: ${testMatch[1].substring(0, 100)}...`);
+        break;
+      }
+    }
+
+    // Convert PostgreSQL DO $$ ... $$ blocks to SQLite-compatible statements
+    // Try multiple patterns to catch different variations
+    convertedSQL = convertedSQL.replace(/DO\s*\$\$\s*([\s\S]*?)\$\$\s*;/gi, (match, blockContent) => {
+      logger.info(`🔄 [SQLTranslator] Found DO block! Converting to SQLite-compatible statements`);
+      logger.info(`🔄 [SQLTranslator] Block content: ${blockContent.substring(0, 200)}...`);
+      
+      // Extract individual statements from the DO block
+      const statements = blockContent
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt.length > 0);
+      
+      logger.info(`🔄 [SQLTranslator] Found ${statements.length} statements in DO block`);
+      
+      // Convert each statement to SQLite-compatible format
+      const convertedStatements = statements.map(stmt => {
+        logger.info(`🔄 [SQLTranslator] Converting statement: ${stmt.substring(0, 100)}...`);
+        
+        // Handle IF NOT EXISTS statements specially for SQLite
+        if (stmt.toUpperCase().includes('IF NOT EXISTS')) {
+          // Extract the ALTER TABLE statement from IF NOT EXISTS
+          const alterMatch = stmt.match(/ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+(\w+)\s+(\w+)(?:\s+DEFAULT\s+(\w+))?/i);
+          if (alterMatch) {
+            const [, tableName, columnName, columnType, defaultValue] = alterMatch;
+            // Convert to SQLite-compatible ALTER TABLE (SQLite doesn't support IF NOT EXISTS for ADD COLUMN)
+            let convertedStmt = `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`;
+            if (defaultValue) {
+              convertedStmt += ` DEFAULT ${defaultValue}`;
+            }
+            logger.info(`🔄 [SQLTranslator] Converted ADD COLUMN IF NOT EXISTS to: ${convertedStmt}`);
+            return convertedStmt;
+          }
+          
+          // Also handle the original IF NOT EXISTS pattern for DO blocks
+          const doBlockAlterMatch = stmt.match(/ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(\w+)\s+(\w+)/i);
+          if (doBlockAlterMatch) {
+            const [, tableName, columnName, columnType] = doBlockAlterMatch;
+            // Convert to SQLite-compatible ALTER TABLE with IF NOT EXISTS check
+            const convertedStmt = `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`;
+            logger.info(`🔄 [SQLTranslator] Converted IF NOT EXISTS to: ${convertedStmt}`);
+            return convertedStmt;
+          }
+        }
+        
+        // Remove PostgreSQL-specific keywords and convert to SQLite
+        let convertedStmt = stmt
+          .replace(/\bBEGIN\b/gi, '') // Remove BEGIN (not needed in SQLite)
+          .replace(/\bEND\b/gi, '') // Remove END (not needed in SQLite)
+          .replace(/\bDECLARE\b/gi, '') // Remove DECLARE (not supported in SQLite)
+          .replace(/\bIF\s+NOT\s+EXISTS\b/gi, '') // Remove IF NOT EXISTS (not supported in SQLite)
+          .replace(/\bTHEN\b/gi, '') // Remove THEN (not needed in SQLite)
+          .replace(/\bEND\s+IF\b/gi, '') // Remove END IF (not needed in SQLite)
+          .replace(/\bRAISE\s+NOTICE\b/gi, '-- RAISE NOTICE') // Convert RAISE NOTICE to comment
+          .replace(/\bINTO\s+(\w+)/gi, '') // Remove INTO clause (not supported in SQLite)
+          .replace(/DEFAULT\s+uuid_generate_v4\(\)(::text)?\s*,?/gi, '') // Remove DEFAULT uuid_generate_v4() for SQLite
+          .trim();
+        
+        // Convert variable declarations to comments (SQLite doesn't support DECLARE)
+        if (convertedStmt.match(/^\s*\w+\s+INTEGER\s*;?\s*$/)) {
+          logger.info(`🔄 [SQLTranslator] Converting variable declaration to comment: ${convertedStmt}`);
+          convertedStmt = `-- Variable declaration: ${convertedStmt}`;
+        }
+        
+        // Convert PostgreSQL system tables to SQLite-compatible queries
+        if (convertedStmt.includes('information_schema.tables')) {
+          logger.info(`🔄 [SQLTranslator] Converting PostgreSQL information_schema.tables to SQLite`);
+          convertedStmt = `-- PostgreSQL system query: ${convertedStmt}`;
+        }
+        
+        if (convertedStmt.includes('information_schema.columns')) {
+          logger.info(`🔄 [SQLTranslator] Converting PostgreSQL information_schema.columns to SQLite`);
+          convertedStmt = `-- PostgreSQL system query: ${convertedStmt}`;
+        }
+        
+        if (convertedStmt.includes('pg_indexes')) {
+          logger.info(`🔄 [SQLTranslator] Converting PostgreSQL pg_indexes to SQLite`);
+          convertedStmt = `-- PostgreSQL system query: ${convertedStmt}`;
+        }
+        
+        if (convertedStmt.includes('information_schema.table_constraints')) {
+          logger.info(`🔄 [SQLTranslator] Converting PostgreSQL information_schema.table_constraints to SQLite`);
+          convertedStmt = `-- PostgreSQL system query: ${convertedStmt}`;
+        }
+        
+        // Convert any remaining SELECT statements in DO blocks to comments
+        if (convertedStmt.trim().toUpperCase().startsWith('SELECT')) {
+          logger.info(`🔄 [SQLTranslator] Converting remaining SELECT statement to comment: ${convertedStmt.substring(0, 50)}...`);
+          convertedStmt = `-- PostgreSQL query: ${convertedStmt}`;
+        }
+        
+        // Convert any remaining statements that contain FROM (PostgreSQL-specific)
+        if (convertedStmt.includes('FROM') && !convertedStmt.startsWith('--')) {
+          logger.info(`🔄 [SQLTranslator] Converting statement with FROM to comment: ${convertedStmt.substring(0, 50)}...`);
+          convertedStmt = `-- PostgreSQL statement: ${convertedStmt}`;
+        }
+        
+        // If it's a CREATE INDEX statement, make it SQLite-compatible
+        if (convertedStmt.toUpperCase().includes('CREATE INDEX')) {
+          convertedStmt = convertedStmt.replace(/\bIF\s+NOT\s+EXISTS\b/gi, '');
+        }
+        
+        logger.info(`🔄 [SQLTranslator] Converted to: ${convertedStmt.substring(0, 100)}...`);
+        return convertedStmt;
+      }).filter(stmt => stmt.trim().length > 0);
+      
+      // Join statements with semicolons
+      const result = convertedStatements.join(';\n');
+      logger.info(`🔄 [SQLTranslator] Final converted result: ${result.substring(0, 200)}...`);
+      
+      // If all statements are comments, return a single comment to avoid SQLite execution issues
+      if (convertedStatements.every(stmt => stmt.trim().startsWith('--'))) {
+        logger.info(`🔄 [SQLTranslator] All statements are comments, returning single comment`);
+        return `-- PostgreSQL DO block converted to comments (not supported in SQLite)`;
+      }
+      
+      return result;
+    });
+
+    // Convert PostgreSQL ADD COLUMN IF NOT EXISTS to SQLite-compatible format
+    convertedSQL = convertedSQL.replace(/ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+(\w+)\s+(\w+)(?:\s+DEFAULT\s+(\w+))?/gi, (match, tableName, columnName, columnType, defaultValue) => {
+      logger.info(`🔄 [SQLTranslator] Converting ADD COLUMN IF NOT EXISTS to SQLite-compatible format`);
+      let convertedStmt = `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`;
+      if (defaultValue) {
+        convertedStmt += ` DEFAULT ${defaultValue}`;
+      }
+      logger.info(`🔄 [SQLTranslator] Converted to: ${convertedStmt}`);
+      return convertedStmt;
+    });
+
+    // Convert PostgreSQL ADD CONSTRAINT to SQLite-compatible format (SQLite doesn't support ADD CONSTRAINT)
+    convertedSQL = convertedSQL.replace(/ALTER\s+TABLE\s+(\w+)\s+ADD\s+CONSTRAINT\s+(\w+)\s+CHECK\s*\(([^)]+)\)/gi, (match, tableName, constraintName, checkCondition) => {
+      logger.info(`🔄 [SQLTranslator] Converting ADD CONSTRAINT to SQLite-compatible format`);
+      // SQLite doesn't support ADD CONSTRAINT, so we replace with a comment
+      logger.info(`🔄 [SQLTranslator] Skipping ADD CONSTRAINT (not supported in SQLite): ${constraintName}`);
+      return `-- Skipped ADD CONSTRAINT ${constraintName} (not supported in SQLite)`;
+    });
+
+    // Convert PostgreSQL COMMENT ON TABLE to SQLite-compatible format (SQLite doesn't support COMMENT ON TABLE)
+    convertedSQL = convertedSQL.replace(/COMMENT\s+ON\s+TABLE\s+(\w+)\s+IS\s+'([^']+)';?/gi, (match, tableName, comment) => {
+      logger.info(`🔄 [SQLTranslator] Converting COMMENT ON TABLE to SQLite-compatible format`);
+      // SQLite doesn't support COMMENT ON TABLE, so we replace with a comment
+      logger.info(`🔄 [SQLTranslator] Skipping COMMENT ON TABLE (not supported in SQLite): ${tableName}`);
+      return `-- Skipped COMMENT ON TABLE ${tableName}: ${comment}`;
+    });
+
+    // Convert PostgreSQL COMMENT ON COLUMN to SQLite-compatible format (SQLite doesn't support COMMENT ON COLUMN)
+    convertedSQL = convertedSQL.replace(/COMMENT\s+ON\s+COLUMN\s+(\w+)\.(\w+)\s+IS\s+'([^']+)';?/gi, (match, tableName, columnName, comment) => {
+      logger.info(`🔄 [SQLTranslator] Converting COMMENT ON COLUMN to SQLite-compatible format`);
+      // SQLite doesn't support COMMENT ON COLUMN, so we replace with a comment
+      logger.info(`🔄 [SQLTranslator] Skipping COMMENT ON COLUMN (not supported in SQLite): ${tableName}.${columnName}`);
+      return `-- Skipped COMMENT ON COLUMN ${tableName}.${columnName}: ${comment}`;
+    });
+
+    // Convert PostgreSQL COMMIT to SQLite-compatible format (SQLite doesn't support COMMIT without active transaction)
+    convertedSQL = convertedSQL.replace(/COMMIT\s*;?/gi, (match) => {
+      logger.info(`🔄 [SQLTranslator] Converting COMMIT to SQLite-compatible format`);
+      // SQLite doesn't support COMMIT without active transaction, so we replace with a comment
+      logger.info(`🔄 [SQLTranslator] Skipping COMMIT (not supported in SQLite without active transaction)`);
+      return `-- Skipped COMMIT (not supported in SQLite without active transaction)`;
+    });
+
+    // Convert PostgreSQL comment endings to SQLite-compatible format (SQLite doesn't support */ as statement)
+    convertedSQL = convertedSQL.replace(/^\s*\*\/\s*$/gm, (match) => {
+      logger.info(`🔄 [SQLTranslator] Converting comment ending to SQLite-compatible format`);
+      // SQLite doesn't support */ as a statement, so we replace with a comment
+      logger.info(`🔄 [SQLTranslator] Skipping comment ending (not supported in SQLite)`);
+      return `-- Skipped comment ending (not supported in SQLite)`;
+    });
+
+    // Convert PostgreSQL BEGIN/BEGIN TRANSACTION to SQLite-compatible format (SQLite doesn't support nested transactions)
+    convertedSQL = convertedSQL.replace(/^\s*BEGIN\s*(?:TRANSACTION)?\s*;?\s*$/gmi, (match) => {
+      logger.info(`🔄 [SQLTranslator] Converting BEGIN/BEGIN TRANSACTION to SQLite-compatible format`);
+      // SQLite doesn't support nested transactions, so we replace with a comment
+      logger.info(`🔄 [SQLTranslator] Skipping BEGIN/BEGIN TRANSACTION (not supported in SQLite with nested transactions)`);
+      return `-- Skipped BEGIN/BEGIN TRANSACTION (not supported in SQLite with nested transactions)`;
+    });
+    
+    // Convert standalone BEGIN statements (more flexible pattern)
+    convertedSQL = convertedSQL.replace(/^BEGIN\s*;?\s*$/gm, (match) => {
+      logger.info(`🔄 [SQLTranslator] Converting standalone BEGIN to comment`);
+      return `-- Skipped standalone BEGIN (not supported in SQLite)`;
+    });
+
+    // Remove DEFAULT uuid_generate_v4() FIRST (before converting uuid_generate_v4())
+    // Test multiple patterns to find the right one
+    logger.info(`🔍 [SQLTranslator] Testing DEFAULT uuid_generate_v4() patterns...`);
+    
+    // Pattern 1: DEFAULT uuid_generate_v4()::text,
+    if (convertedSQL.includes('DEFAULT uuid_generate_v4()::text')) {
+      logger.info(`🔍 [SQLTranslator] Found Pattern 1: DEFAULT uuid_generate_v4()::text`);
+      convertedSQL = convertedSQL.replace(/DEFAULT\s+uuid_generate_v4\(\)::text\s*,?/gi, (match) => {
+        logger.info(`🔄 [SQLTranslator] Pattern 1 matched: ${match}`);
+        return '';
+      });
+    }
+    
+    // Pattern 2: DEFAULT uuid_generate_v4()::text (without comma)
+    if (convertedSQL.includes('DEFAULT uuid_generate_v4()::text')) {
+      logger.info(`🔍 [SQLTranslator] Found Pattern 2: DEFAULT uuid_generate_v4()::text (no comma)`);
+      convertedSQL = convertedSQL.replace(/DEFAULT\s+uuid_generate_v4\(\)::text/gi, (match) => {
+        logger.info(`🔄 [SQLTranslator] Pattern 2 matched: ${match}`);
+        return '';
+      });
+    }
+    
+    // Pattern 3: DEFAULT uuid_generate_v4() (without ::text)
+    if (convertedSQL.includes('DEFAULT uuid_generate_v4()')) {
+      logger.info(`🔍 [SQLTranslator] Found Pattern 3: DEFAULT uuid_generate_v4()`);
+      convertedSQL = convertedSQL.replace(/DEFAULT\s+uuid_generate_v4\(\)/gi, (match) => {
+        logger.info(`🔄 [SQLTranslator] Pattern 3 matched: ${match}`);
+        return '';
+      });
+    }
+
+    // Convert remaining uuid_generate_v4() to SQLite-compatible format (if any)
+    convertedSQL = convertedSQL.replace(/uuid_generate_v4\(\)::text/gi, (match) => {
+      logger.info(`🔄 [SQLTranslator] Converting uuid_generate_v4() to SQLite-compatible format`);
+      // SQLite doesn't support uuid_generate_v4(), so we replace with a SQLite-compatible UUID generation
+      logger.info(`🔄 [SQLTranslator] Converting to SQLite UUID generation`);
+      return `lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))`;
+    });
+
+    // Remove DEFAULT with complex SQLite UUID generation (after conversion)
+    // This regex needs to match the ENTIRE complex UUID generation string
+    convertedSQL = convertedSQL.replace(/DEFAULT\s+lower\(hex\(randomblob\(4\)\)\)\s*\|\|\s*'-'\s*\|\|\s*lower\(hex\(randomblob\(2\)\)\)\s*\|\|\s*'-4'\s*\|\|\s*substr\(lower\(hex\(randomblob\(2\)\)\),2\)\s*\|\|\s*'-'\s*\|\|\s*substr\('89ab',abs\(random\(\)\)\s*%\s*4\s*\+\s*1,\s*1\)\s*\|\|\s*substr\(lower\(hex\(randomblob\(2\)\)\),2\)\s*\|\|\s*'-'\s*\|\|\s*lower\(hex\(randomblob\(6\)\)\)\s*,?/gi, (match) => {
+      logger.info(`🔄 [SQLTranslator] Removing ENTIRE DEFAULT with complex SQLite UUID generation`);
+      // Always return a comma to maintain proper SQL syntax
+      return ',';
+    });
+
+    // Convert PostgreSQL BOOLEAN to SQLite INTEGER
+    convertedSQL = convertedSQL.replace(/\bBOOLEAN\b/gi, 'INTEGER');
+
+    // Convert PostgreSQL JSONB to SQLite TEXT
+    convertedSQL = convertedSQL.replace(/\bJSONB\b/gi, 'TEXT');
+
+    // Convert PostgreSQL TIMESTAMP WITH TIME ZONE to SQLite TEXT (but preserve column names)
+    convertedSQL = convertedSQL.replace(/\bTIMESTAMP\s+WITH\s+TIME\s+ZONE\b/gi, 'TEXT');
+
+    // Convert PostgreSQL NOW() to SQLite CURRENT_TIMESTAMP
+    convertedSQL = convertedSQL.replace(/\bNOW\(\)\b/gi, 'CURRENT_TIMESTAMP');
 
     // Convert PostgreSQL ILIKE to SQLite LIKE (case-insensitive)
     convertedSQL = convertedSQL.replace(/\bILIKE\b/gi, 'LIKE');
@@ -260,7 +528,7 @@ class SQLTranslator {
       convertedSQL = convertedSQL.replace(/\bCHARACTER VARYING\b/gi, 'TEXT');
       convertedSQL = convertedSQL.replace(/\bTIMESTAMP WITH TIME ZONE\b/gi, 'TEXT');
       convertedSQL = convertedSQL.replace(/\bTIMESTAMP WITHOUT TIME ZONE\b/gi, 'TEXT');
-      convertedSQL = convertedSQL.replace(/\bTIMESTAMP\b/gi, 'TEXT');
+      // Note: Removed global TIMESTAMP conversion to avoid converting column names like "timestamp"
       convertedSQL = convertedSQL.replace(/\bDATE\b/gi, 'TEXT');
       convertedSQL = convertedSQL.replace(/\bTIME\b/gi, 'TEXT');
       convertedSQL = convertedSQL.replace(/\bJSON\b/gi, 'TEXT');

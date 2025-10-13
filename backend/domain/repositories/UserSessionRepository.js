@@ -57,6 +57,13 @@ class UserSessionRepository {
     throw new Error('deleteByUserId method must be implemented');
   }
 
+  async deleteExpiredByUserId(userId) {
+    if (!userId) {
+      throw new Error('User id is required');
+    }
+    throw new Error('deleteExpiredByUserId method must be implemented');
+  }
+
   async deleteExpiredSessions() {
     throw new Error('deleteExpiredSessions method must be implemented');
   }

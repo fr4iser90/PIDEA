@@ -173,10 +173,20 @@ class DatabaseConnection {
 
     try {
       // If using SQLite, translate PostgreSQL syntax to SQLite
-      if (this.type === 'sqlite' && this.sqlTranslator.canTranslate(sql)) {
-        const translation = this.sqlTranslator.translate(sql, params);
-        logger.debug(`Executing translated SQL`);
-        result = await this.dbConnection.execute(translation.sql, translation.params);
+      if (this.type === 'sqlite') {
+        logger.info(`🔍 [DatabaseConnection] SQLite detected, checking translation...`);
+        logger.info(`🔍 [DatabaseConnection] SQL preview: ${sql.substring(0, 100)}...`);
+        logger.info(`🔍 [DatabaseConnection] Can translate: ${this.sqlTranslator.canTranslate(sql)}`);
+        
+        if (this.sqlTranslator.canTranslate(sql)) {
+          logger.info(`🔄 [DatabaseConnection] Translating SQL...`);
+          const translation = this.sqlTranslator.translate(sql, params);
+          logger.info(`🔄 [DatabaseConnection] Translation result: ${translation.sql.substring(0, 100)}...`);
+          result = await this.dbConnection.execute(translation.sql, translation.params);
+        } else {
+          logger.info(`⚠️ [DatabaseConnection] Cannot translate, executing directly...`);
+          result = await this.dbConnection.execute(sql, params);
+        }
       } else {
         // Delegate to the specific connection class
         result = await this.dbConnection.execute(sql, params);

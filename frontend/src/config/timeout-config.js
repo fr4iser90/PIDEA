@@ -11,7 +11,9 @@ const TimeoutConfig = {
     ANALYSIS: 300000,         // 5 minutes - for analysis operations
     CHAT: 120000,             // 2 minutes - for chat operations
     QUICK: 10000,             // 10 seconds - for quick operations
-    ULTRA_QUICK: 5000         // 5 seconds - for very quick operations
+    ULTRA_QUICK: 5000,        // 5 seconds - for very quick operations
+    PROJECT_LOAD: 500,       // 0.5 seconds - FAST project loading!
+    PROJECT_SYNC: 1000        // 1 second - FAST project synchronization
   },
 
   // UI Operations

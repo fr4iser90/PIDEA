@@ -16,7 +16,7 @@ import '@/scss/components/_project-management.scss';
 const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onCloseAddModal, onOpenAddModal }) => {
   logger.info('🔍 ProjectListComponent RENDERING!', { showAddModal });
   
-  const { projects, isLoading, error, refresh } = useProjectManagement();
+  const { projects, isLoading, error, refresh, stopLoading } = useProjectManagement(false); // NO AUTO-LOAD!
   const selectedProject = useSelectedProject();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -35,13 +35,11 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
     }
   }, [projects, searchQuery]);
 
-  // Auto-refresh projects on mount
-  // Removed automatic project loading - projects should be loaded manually
-  // useEffect(() => {
-  //   if (Object.keys(projects).length === 0 && !isLoading) {
-  //     refresh();
-  //   }
-  // }, [projects, isLoading, refresh]);
+  // MANUAL LOAD ONLY - NO AUTO-LOAD!
+  const handleManualLoad = async () => {
+    logger.info('🔍 [ProjectListComponent] MANUAL LOAD TRIGGERED - ONCE ONLY!');
+    await refresh();
+  };
 
 
   const handleProjectSelect = (projectId) => {
@@ -52,7 +50,7 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
 
   const handleProjectCreated = (project) => {
     logger.info('Project created:', project);
-    setShowAddForm(false);
+    onCloseAddModal?.();
     eventBus?.emit('project-created', { project });
   };
 
@@ -65,6 +63,13 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
       <div className="project-list-loading">
         <div className="loading-spinner"></div>
         <p>Loading projects...</p>
+        <button 
+          onClick={stopLoading} 
+          className="btn btn-secondary btn-sm"
+          style={{ marginTop: '10px' }}
+        >
+          Stop Loading
+        </button>
       </div>
     );
   }
@@ -75,23 +80,38 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
       {error && (
         <div className="project-list-error">
           <div className="error-icon">⚠️</div>
-          <p>Failed to load projects</p>
-          <button onClick={refresh} className="btn btn-secondary">
-            Retry
-          </button>
+          <p>Failed to load projects: {error}</p>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button onClick={refresh} className="btn btn-secondary">
+              Retry
+            </button>
+            <button onClick={stopLoading} className="btn btn-secondary">
+              Stop Loading
+            </button>
+          </div>
         </div>
       )}
       
       {/* Header */}
       <div className="project-list-header">
         <h3>Projects</h3>
-        <button 
-          onClick={() => onOpenAddModal && onOpenAddModal(true)}
-          className="btn btn-primary btn-sm"
-          title="Add new project"
-        >
-          + Add Project
-        </button>
+        <div style={{ display: 'flex', gap: '5px' }}>
+          <button 
+            onClick={handleManualLoad}
+            className="btn btn-secondary btn-sm"
+            title="Load projects"
+            disabled={isLoading}
+          >
+            🔄 Load
+          </button>
+          <button 
+            onClick={() => onOpenAddModal && onOpenAddModal(true)}
+            className="btn btn-primary btn-sm"
+            title="Add new project"
+          >
+            + Add Project
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -123,6 +143,12 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
         )}
       </div>
 
+      {/* Project Add Modal */}
+      <ProjectAddComponent
+        isOpen={showAddModal}
+        onClose={() => onCloseAddModal?.(false)}
+        onProjectCreated={handleProjectCreated}
+      />
     </div>
   );
 };

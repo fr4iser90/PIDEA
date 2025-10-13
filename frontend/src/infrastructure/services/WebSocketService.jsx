@@ -14,12 +14,19 @@ class WebSocketService {
   }
 
   connect() {
+    // GLOBAL AUTH CHECK - prevent connection if not authenticated
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      logger.info('🔐 WebSocketService: User not authenticated, skipping connection');
+      return Promise.reject(new Error('User not authenticated'));
+    }
+
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       return Promise.resolve();
     }
 
     if (this.connectionPromise) {
-return this.connectionPromise;
+      return this.connectionPromise;
     }
 
     this.connectionPromise = new Promise((resolve, reject) => {

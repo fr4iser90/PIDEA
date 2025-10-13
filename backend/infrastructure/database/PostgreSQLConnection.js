@@ -86,8 +86,8 @@ class PostgreSQLConnection {
     ];
     
     try {
-      const tables = await this.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
-      const existingTables = tables.map(t => t.tablename);
+      const result = await this.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+      const existingTables = result.rows.map(t => t.tablename);
       
       const missingTables = requiredTables.filter(table => !existingTables.includes(table));
       
@@ -127,15 +127,15 @@ class PostgreSQLConnection {
     const client = await this.connection.connect();
     try {
       const result = await client.query(sql, params);
-      return result.rows;
+      return result;
     } finally {
       client.release();
     }
   }
 
   async getOne(sql, params = []) {
-    const rows = await this.query(sql, params);
-    return rows.length > 0 ? rows[0] : null;
+    const result = await this.query(sql, params);
+    return result.rows.length > 0 ? result.rows[0] : null;
   }
 
   async disconnect() {

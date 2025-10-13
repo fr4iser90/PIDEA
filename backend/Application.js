@@ -59,7 +59,6 @@ const AuthMiddleware = require('./infrastructure/auth/AuthMiddleware');
 const AnalysisController = require('./presentation/api/AnalysisController');
 const GitController = require('./presentation/api/GitController');
 const WebSocketManager = require('./presentation/websocket/WebSocketManager');
-const ProjectController = require('./presentation/api/controllers/ProjectController');
 
 class Application {
   constructor(config = {}) {
@@ -261,6 +260,13 @@ class Application {
       this.logger.info('[Application] Ready');
     } catch (error) {
       this.logger.error('[Application] Initialization failed:', error);
+      this.logger.error('[Application] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code,
+        errno: error.errno
+      });
       throw error;
     }
   }
@@ -386,7 +392,6 @@ class Application {
         logger: this.serviceRegistry.getService('logger')
     });
 
-    this.projectController = new ProjectController(this.serviceRegistry.getService('projectApplicationService'));
 
     // Initialize Interface Controller
     const InterfaceController = require('./presentation/api/InterfaceController');
@@ -400,38 +405,82 @@ class Application {
     this.logger.info('Setting up routes...');
     
     try {
+      let totalRoutes = 0;
+      const routeModules = [];
 
     // Main routes - Using modular route file
-    const MainRoutes = require('./presentation/api/routes/mainRoutes');
-    const mainRoutes = new MainRoutes();
-    mainRoutes.setupRoutes(this.app);
+    try {
+      const MainRoutes = require('./presentation/api/routes/mainRoutes');
+      const mainRoutes = new MainRoutes();
+      mainRoutes.setupRoutes(this.app);
+      routeModules.push('MainRoutes');
+      totalRoutes++;
+    } catch (error) {
+      this.logger.error('❌ Failed to load MainRoutes:', error.message);
+      throw error;
+    }
 
     // Health check routes - Using modular route file
-    const HealthRoutes = require('./presentation/api/routes/healthRoutes');
-    const healthRoutes = new HealthRoutes(this.autoSecurityManager, this.databaseConnection);
-    healthRoutes.setupRoutes(this.app);
+    try {
+      const HealthRoutes = require('./presentation/api/routes/healthRoutes');
+      const healthRoutes = new HealthRoutes(this.autoSecurityManager, this.databaseConnection);
+      healthRoutes.setupRoutes(this.app);
+      routeModules.push('HealthRoutes');
+      totalRoutes++;
+    } catch (error) {
+      this.logger.error('❌ Failed to load HealthRoutes:', error.message);
+      throw error;
+    }
 
     // Auth routes - Using modular route file
-    const AuthRoutes = require('./presentation/api/routes/authRoutes');
-    const authRoutes = new AuthRoutes(this.authController, this.authMiddlewareInstance);
-    authRoutes.setupRoutes(this.app);
+    try {
+      const AuthRoutes = require('./presentation/api/routes/authRoutes');
+      const authRoutes = new AuthRoutes(this.authController, this.authMiddlewareInstance);
+      authRoutes.setupRoutes(this.app);
+      routeModules.push('AuthRoutes');
+      totalRoutes++;
+    } catch (error) {
+      this.logger.error('❌ Failed to load AuthRoutes:', error.message);
+      throw error;
+    }
 
     // Session management routes - Using modular route file
-    const SessionRoutes = require('./presentation/api/routes/sessionRoutes');
-    const sessionRoutes = new SessionRoutes(this.sessionController, this.authMiddlewareInstance);
-    sessionRoutes.setupRoutes(this.app);
+    try {
+      const SessionRoutes = require('./presentation/api/routes/sessionRoutes');
+      const sessionRoutes = new SessionRoutes(this.sessionController, this.authMiddlewareInstance);
+      sessionRoutes.setupRoutes(this.app);
+      routeModules.push('SessionRoutes');
+      totalRoutes++;
+    } catch (error) {
+      this.logger.error('❌ Failed to load SessionRoutes:', error.message);
+      throw error;
+    }
 
     // Chat routes removed - webChatController doesn't exist
 
     // Project routes - Using modular route file (NEW PROJECT-CENTRIC API)
-    const ProjectRoutes = require('./presentation/api/routes/projectRoutes');
-    const projectRoutes = new ProjectRoutes(this.projectController, this.authMiddlewareInstance);
-    projectRoutes.setupRoutes(this.app);
+    try {
+      const ProjectRoutes = require('./presentation/api/routes/projectRoutes');
+      const projectRoutes = new ProjectRoutes(this.projectApplicationService, this.interfaceManager, this.authMiddlewareInstance);
+      projectRoutes.setupRoutes(this.app);
+      routeModules.push('ProjectRoutes');
+      totalRoutes++;
+    } catch (error) {
+      this.logger.error('❌ Failed to load ProjectRoutes:', error.message);
+      throw error;
+    }
 
     // Interface routes - Using modular route file (NEW PROJECT-CENTRIC API)
-    const InterfaceRoutes = require('./presentation/routes/interfaceRoutes');
-    const interfaceRoutes = new InterfaceRoutes(this.interfaceManager, this.projectApplicationService, this.authMiddlewareInstance);
-    interfaceRoutes.setupRoutes(this.app);
+    try {
+      const InterfaceRoutes = require('./presentation/api/routes/interfaceRoutes');
+      const interfaceRoutes = new InterfaceRoutes(this.interfaceManager, this.projectApplicationService, this.authMiddlewareInstance);
+      interfaceRoutes.setupRoutes(this.app);
+      routeModules.push('InterfaceRoutes');
+      totalRoutes++;
+    } catch (error) {
+      this.logger.error('❌ Failed to load InterfaceRoutes:', error.message);
+      throw error;
+    }
 
     // Legacy IDE routes removed - now using project-centric API via /api/projects/:projectId/interfaces/*
 
@@ -516,6 +565,8 @@ class Application {
     });
 
     this.logger.info('Routes setup complete');
+    this.logger.info(`📊 Route Summary: ${totalRoutes} route modules loaded successfully`);
+    this.logger.info(`📋 Loaded modules: ${routeModules.join(', ')}`);
     
     } catch (error) {
       this.logger.error('Route setup failed:', error.message);

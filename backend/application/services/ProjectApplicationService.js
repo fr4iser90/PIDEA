@@ -334,7 +334,8 @@ class ProjectApplicationService {
     try {
       this.logger.info('Getting all projects');
       
-      const projects = await this.projectRepository.findAll();
+      // Use findAll with empty options to get all projects
+      const projects = await this.projectRepository.findAll({});
       
       return projects.map(project => ({
         id: project.id,
@@ -676,17 +677,39 @@ class ProjectApplicationService {
       const { page = 1, limit = 10, search } = options;
       const offset = (page - 1) * limit;
       
-      this.logger.info(`Listing projects with pagination: page=${page}, limit=${limit}, search=${search}`);
+      this.logger.info('🔍 [ProjectApplicationService] listProjects called with:', { page, limit, offset, search });
       
       // Get projects with pagination
+      console.log('🔍 [ProjectApplicationService] About to call repository.findAll...');
       const projects = await this.projectRepository.findAll({
         limit,
         offset,
         search
       });
+      console.log('🔍 [ProjectApplicationService] Repository.findAll returned:', { 
+        projectsType: typeof projects,
+        projectsIsArray: Array.isArray(projects),
+        projectsValue: projects,
+        projectsCount: projects?.length || 0,
+        firstProject: projects?.[0] || 'none'
+      });
+      
+      this.logger.info('🔍 [ProjectApplicationService] Repository returned:', { 
+        projectsCount: projects?.length || 0,
+        firstProject: projects?.[0] || 'none'
+      });
       
       // Get total count for pagination
       const total = await this.projectRepository.count({ search });
+      
+      this.logger.info('🔍 [ProjectApplicationService] Count query returned:', { total });
+      
+      console.log('🔍 [ProjectApplicationService] About to call projects.map, projects:', { 
+        projectsType: typeof projects,
+        projectsIsArray: Array.isArray(projects),
+        projectsValue: projects,
+        projectsLength: projects?.length || 0
+      });
       
       return {
         projects: projects.map(project => ({

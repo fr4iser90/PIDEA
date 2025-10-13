@@ -110,30 +110,40 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       throw new Error('Access token is required');
     }
 
-    logger.info('🔍 Finding session by access authentication');
+    logger.info('🔍 Finding session by access token');
 
-    // Extract first 20 characters for comparison
-    const accessTokenStart = accessToken.substring(0, 20);
-    const sql = 'SELECT * FROM user_sessions WHERE access_token_start = $1';
-    const row = await this.db.getOne(sql, [accessTokenStart]);
+    // Modern approach: Use token hash for precise matching
+    const tokenHashResult = this.tokenHasher.hashToken(accessToken);
+    const accessTokenHash = tokenHashResult.hash;
+    
+    // First try: Find by exact hash match
+    let sql = 'SELECT * FROM user_sessions WHERE access_token_hash = $1';
+    let row = await this.db.getOne(sql, [accessTokenHash]);
+    
+    // Fallback: If no exact hash match, try prefix match (for backward compatibility)
+    if (!row) {
+      const accessTokenStart = accessToken.substring(0, 20);
+      sql = 'SELECT * FROM user_sessions WHERE access_token_start = $1';
+      row = await this.db.getOne(sql, [accessTokenStart]);
+    }
     
     logger.info('🔍 Database result:', row ? {
       id: row.id,
       user_id: row.user_id,
-      expires_at: row.expires_at
+      expires_at: row.expires_at,
+      hash_match: row.access_token_hash === accessTokenHash
     } : 'null');
     
     if (!row) return null;
     
     // Create session with the original access token from the request
-    // The session will use this for hash validation
     const session = UserSession.fromJSON({
       id: row.id,
-      userId: row.user_id, // Map user_id to userId
+      userId: row.user_id,
       accessToken: accessToken, // Use the FULL token from the request
       refreshToken: row.refresh_token,
-      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
-      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
+      expiresAt: row.expires_at,
+      createdAt: row.created_at,
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       accessTokenHash: row.access_token_hash
     });
@@ -141,7 +151,8 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     logger.info('✅ Session found and reconstructed:', {
       id: session.id,
       userId: session.userId,
-      isActive: session.isActive()
+      isActive: session.isActive(),
+      hashMatch: row.access_token_hash === accessTokenHash
     });
     
     return session;
@@ -222,7 +233,17 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
 
     const sql = 'DELETE FROM user_sessions WHERE user_id = $1';
     const result = await this.db.execute(sql, [userId]);
-    return result.rowsAffected > 0;
+    return result.rowsAffected;
+  }
+
+  async deleteExpiredByUserId(userId) {
+    if (!userId) {
+      throw new Error('User id is required');
+    }
+
+    const sql = 'DELETE FROM user_sessions WHERE user_id = $1 AND expires_at <= NOW()';
+    const result = await this.db.execute(sql, [userId]);
+    return result.rowsAffected;
   }
 
   async deleteExpiredSessions() {

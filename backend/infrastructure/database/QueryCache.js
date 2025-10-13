@@ -291,13 +291,8 @@ class QueryCache extends EventEmitter {
   prepareResult(result) {
     if (!result) return null;
     
-    // Extract relevant data from result
-    return {
-      rows: result.rows || [],
-      rowCount: result.rowCount || 0,
-      fields: result.fields || [],
-      command: result.command || 'SELECT'
-    };
+    // Return the full result object as-is
+    return result;
   }
 
   /**

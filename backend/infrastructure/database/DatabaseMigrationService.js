@@ -12,13 +12,22 @@ class DatabaseMigrationService {
     async initialize() {
         this.logger.info('🔧 Initializing database migration service...');
         
-        // Create migrations table if it doesn't exist
-        await this.createMigrationsTable();
-        
-        // Run pending migrations
-        await this.runPendingMigrations();
-        
-        this.logger.info('✅ Database migration service initialized');
+        try {
+            // Create migrations table if it doesn't exist
+            this.logger.info('🔧 Creating migrations table...');
+            await this.createMigrationsTable();
+            this.logger.info('✅ Migrations table created successfully');
+            
+            // Run pending migrations
+            this.logger.info('🔧 Running pending migrations...');
+            await this.runPendingMigrations();
+            this.logger.info('✅ Pending migrations completed');
+            
+            this.logger.info('✅ Database migration service initialized');
+        } catch (error) {
+            this.logger.error('❌ Database migration service initialization failed:', error);
+            throw error;
+        }
     }
 
     async createMigrationsTable() {
@@ -52,7 +61,7 @@ class DatabaseMigrationService {
         if (this.databaseConnection.getType() === 'sqlite') {
             await this.databaseConnection.dbConnection.execute(createTableSQL);
         } else {
-            await this.databaseConnection.execute(createTableSQL);
+            await this.databaseConnection.query(createTableSQL);
         }
         
         this.logger.debug('✅ Migrations table created/verified');
@@ -119,7 +128,8 @@ class DatabaseMigrationService {
             
             const result = await this.databaseConnection.query(query, params);
             
-            return result.map(row => row.migration_name);
+            const rows = result.rows || result;
+            return rows.map(row => row.migration_name);
         } catch (error) {
             this.logger.error('❌ Error getting applied migrations:', error);
             return [];
@@ -145,26 +155,29 @@ class DatabaseMigrationService {
                 
                 for (let i = 0; i < statements.length; i++) {
                     const statement = statements[i];
-                    if (statement.trim()) {
-                        try {
-                            this.logger.debug(`🔧 Translating statement ${i + 1}: ${statement.substring(0, 100)}...`);
-                            this.logger.debug(`🔧 SQLTranslator available: ${!!this.databaseConnection.sqlTranslator}`);
-                            const translation = this.databaseConnection.sqlTranslator.translate(statement);
-                            this.logger.debug(`🔧 Translation result: ${translation.sql.substring(0, 100)}...`);
-                            
-                            // Skip empty statements and comments
-                            if (!translation.sql.trim() || translation.sql.trim().startsWith('--')) {
-                                this.logger.debug(`🔧 Skipping empty/comment statement ${i + 1}`);
-                                continue;
-                            }
-                            
-                            await this.databaseConnection.dbConnection.execute(translation.sql, translation.params);
-                        } catch (error) {
-                            this.logger.warn(`⚠️ Statement ${i + 1} failed: ${error.message}`);
-                            // Continue with other statements unless it's a critical error
-                            if (!error.message.includes('already exists')) {
-                                throw error;
-                            }
+                    
+                    // Skip empty statements and comments FIRST
+                    if (!statement.trim() || statement.trim().startsWith('--')) {
+                        this.logger.debug(`🔧 Skipping empty/comment statement ${i + 1}: ${statement.substring(0, 50)}...`);
+                        continue;
+                    }
+                    
+                    try {
+                        this.logger.debug(`🔧 Executing statement ${i + 1}: ${statement.substring(0, 100)}...`);
+                        this.logger.debug(`🔧 Full statement ${i + 1}: ${statement}`);
+                        
+                        // Use DatabaseConnection.execute() which handles SQLite translation automatically
+                        await this.databaseConnection.execute(statement);
+                        this.logger.debug(`✅ Statement ${i + 1} executed successfully`);
+                    } catch (error) {
+                        this.logger.warn(`⚠️ Statement ${i + 1} failed: ${error.message}`);
+                        this.logger.warn(`⚠️ Failed statement ${i + 1}: ${statement}`);
+                        // Continue with other statements unless it's a critical error
+                        if (!error.message.includes('already exists') && 
+                            !error.message.includes('duplicate column name') &&
+                            !error.message.includes('duplicate key') &&
+                            !error.message.includes('SQLITE_MISUSE')) {
+                            throw error;
                         }
                     }
                 }
@@ -229,17 +242,48 @@ class DatabaseMigrationService {
             })
             .join('\n');
         
-        // Split by semicolons and filter out empty statements
-        const statements = sqlWithoutComments
-            .split(';')
-            .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0)
-            .map(stmt => stmt.endsWith(')') ? stmt + ';' : stmt);
+        // Handle DO $$ ... $$ blocks specially for PostgreSQL
+        const statements = [];
+        let remainingSQL = sqlWithoutComments;
+        
+        while (remainingSQL.length > 0) {
+            // Look for DO $$ blocks
+            const doBlockMatch = remainingSQL.match(/DO\s*\$\$([\s\S]*?)\$\$\s*;/i);
+            
+            if (doBlockMatch) {
+                // Extract the DO block as a single statement
+                const doBlock = doBlockMatch[0];
+                statements.push(doBlock.trim());
+                
+                // Remove the DO block from remaining SQL
+                remainingSQL = remainingSQL.substring(doBlockMatch.index + doBlock.length);
+            } else {
+                // No more DO blocks, split by semicolons normally
+                const semicolonIndex = remainingSQL.indexOf(';');
+                if (semicolonIndex >= 0) {
+                    const statement = remainingSQL.substring(0, semicolonIndex + 1).trim();
+                    if (statement.length > 0) {
+                        statements.push(statement);
+                    }
+                    remainingSQL = remainingSQL.substring(semicolonIndex + 1);
+                } else {
+                    // No more semicolons, add remaining SQL if not empty
+                    const statement = remainingSQL.trim();
+                    if (statement.length > 0) {
+                        statements.push(statement);
+                    }
+                    break;
+                }
+            }
+        }
+        
+        // Filter out empty statements
+        const filteredStatements = statements.filter(stmt => stmt.length > 0);
         
         // Log only the count of statements
-        this.logger.debug(`📝 Parsed ${statements.length} SQL statements`);
+        this.logger.debug(`📝 Parsed ${filteredStatements.length} SQL statements`);
         
-        return statements;
+        return filteredStatements;
     }
 }
 

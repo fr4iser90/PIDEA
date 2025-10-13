@@ -12,6 +12,7 @@ BEGIN;
 -- ============================================================================
 
 -- Event Store Table - Core event sourcing implementation
+-- Note: This will be converted to SQLite-compatible format by SQLTranslator
 CREATE TABLE IF NOT EXISTS event_store (
     id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
     aggregate_id TEXT NOT NULL,
