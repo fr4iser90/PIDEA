@@ -165,8 +165,8 @@ class MiddlewareSetup {
   setupFrontendBuilding(app) {
     // Serve frontend build files in development
     if (process.env.NODE_ENV === 'development') {
-      const frontendDistPath = path.join(__dirname, '../frontend/dist');
-      const frontendPath = path.join(__dirname, '../frontend');
+      const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+      const frontendPath = path.join(__dirname, '../../frontend');
       
       if (!fs.existsSync(frontendDistPath)) {
         this.logger.info('🔨 Frontend dist not found, building automatically...');

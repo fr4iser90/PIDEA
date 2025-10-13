@@ -1,6 +1,7 @@
 const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const ScreenshotStreamingService = require('../../domain/services/ide-mirror/ScreenshotStreamingService');
+const StreamingController = require('./StreamingController');
 const logger = new ServiceLogger('IDEMirrorController');
 
 
@@ -65,10 +66,9 @@ class IDEMirrorController {
             );
 
             // Create streaming controller
-            this.streamingController = new StreamingController(
-                this.screenshotStreamingService,
-                eventBus
-            );
+            this.streamingController = new StreamingController({
+                streamingApplicationService: this.screenshotStreamingService
+            });
 
             // Set streaming service in WebSocket manager
             if (webSocketManager) {

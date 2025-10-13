@@ -100,6 +100,12 @@ async function createDefaultUser() {
     logger.info('🆔 User ID: me');
 
   } catch (error) {
+    // Check if it's a duplicate key error (user already exists)
+    if (error.message.includes('duplicate key value violates unique constraint')) {
+      logger.info('✅ Default user already exists, skipping creation');
+      return; // Don't throw error for duplicate user
+    }
+    
     logger.error('❌ Error creating default user:', error.message);
     logger.error('❌ Error stack:', error.stack);
     throw error;

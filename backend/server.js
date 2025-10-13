@@ -56,7 +56,17 @@ async function ensureDefaultUser() {
     }
     
     // Create default user
-    await createDefaultUser();
+    try {
+      await createDefaultUser();
+    } catch (createError) {
+      // Check if it's a duplicate key error (user already exists)
+      if (createError.message.includes('duplicate key value violates unique constraint')) {
+        logger.info('✅ Default user already exists, skipping creation');
+      } else {
+        logger.error('❌ Error creating default user:', createError.message);
+        logger.warn('⚠️ Continuing without default user...');
+      }
+    }
     // Don't disconnect - let Application.js use the same connection
     
   } catch (error) {
