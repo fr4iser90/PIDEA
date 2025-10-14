@@ -20,12 +20,17 @@ class ResponseManager {
    * @param {Object} options - Additional options
    */
   success(res, data = null, statusCode = 200, options = {}) {
-    const response = {
-      ...data,
-      ...(options.meta && { meta: options.meta }),
-      ...(options.pagination && { pagination: options.pagination }),
-      timestamp: new Date().toISOString()
-    };
+    // 2025 Standard: Direct data, no wrapping!
+    let response = data;
+    
+    // Only add metadata if explicitly requested
+    if (options.meta || options.pagination) {
+      response = {
+        ...data,
+        ...(options.meta && { meta: options.meta }),
+        ...(options.pagination && { pagination: options.pagination })
+      };
+    }
 
     // Remove null/undefined values
     const cleanResponse = this.cleanResponse(response);
@@ -73,6 +78,7 @@ class ResponseManager {
    * @param {number} statusCode - HTTP status code (default: 200)
    */
   paginated(res, data, pagination, statusCode = 200) {
+    // 2025 Standard: Only wrap when pagination is needed
     const response = {
       data,
       pagination: {
@@ -82,8 +88,7 @@ class ResponseManager {
         totalPages: Math.ceil((pagination.total || data.length) / (pagination.limit || 10)),
         hasNext: pagination.hasNext || false,
         hasPrev: pagination.hasPrev || false
-      },
-      timestamp: new Date().toISOString()
+      }
     };
 
     this.logger.debug('Sending paginated response', { 
@@ -102,10 +107,8 @@ class ResponseManager {
    * @param {string} location - Location header value
    */
   created(res, data, location = null) {
-    const response = {
-      ...data,
-      timestamp: new Date().toISOString()
-    };
+    // 2025 Standard: Direct data, no wrapping!
+    let response = data;
 
     if (location) {
       res.set('Location', location);
