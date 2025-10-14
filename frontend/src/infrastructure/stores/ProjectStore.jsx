@@ -133,10 +133,9 @@ const useProjectStore = create(
             responseKeys: response ? Object.keys(response) : 'null'
           });
 
-          // Handle modern API response format
-          // Backend returns: { data: [projects], pagination: {...} }
-          // ApiService returns data directly
-          const projects = response.data || [];
+          // Handle 2025 Modern API response format
+          // Backend returns: [projects] directly
+          const projects = Array.isArray(response) ? response : [];
           
           logger.info('🔍 [ProjectStore] Extracted projects:', { 
             count: projects.length, 
@@ -244,10 +243,10 @@ const useProjectStore = create(
           }
 
           const newProject = {
-            ...response.data,
+            ...response,
             lastUpdate: new Date().toISOString(),
             metadata: {
-              ...response.data.metadata,
+              ...response.metadata,
               lastAccessed: new Date().toISOString(),
               accessCount: 0
             }

@@ -157,14 +157,8 @@ class ProjectController {
         firstProject: result.projects?.[0] || "none",
       });
 
-      res.success({
-        data: result.projects,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: result.total,
-        },
-      });
+      // 2025 Modern Standard: Direct projects array
+      res.success(result.projects);
     } catch (error) {
       this.logger.error("Failed to list projects:", error);
       res.error("Internal server error", 500);

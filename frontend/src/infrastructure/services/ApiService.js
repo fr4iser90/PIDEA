@@ -117,12 +117,8 @@ class ApiService {
         dataLength: Array.isArray(result) ? result.length : 'not array'
       });
       
-      // Handle backend response format: { data: [...], pagination: {...} }
-      if (result && typeof result === 'object' && result.data !== undefined) {
-        return result.data; // Return just the data array
-      }
-      
-      // Return data directly
+      // 2025 Modern Standard: Backend sends direct data (no wrapper)
+      // Return data directly - no processing needed
       return result;
 
     } catch (error) {

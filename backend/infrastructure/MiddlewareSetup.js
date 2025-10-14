@@ -8,6 +8,7 @@ const hpp = require("hpp");
 const slowDown = require("express-slow-down");
 const cookieParser = require("cookie-parser");
 const ResponseManager = require("./middleware/ResponseManager");
+const centralizedConfig = require("../config/centralized-config");
 
 /**
  * Middleware Setup - Professional Middleware Configuration
@@ -193,8 +194,9 @@ class MiddlewareSetup {
   setupFrontendBuilding(app) {
     // Serve frontend build files in development
     if (process.env.NODE_ENV === "development") {
-      const frontendDistPath = path.join(__dirname, "../../frontend/dist");
-      const frontendPath = path.join(__dirname, "../../frontend");
+      const config = centralizedConfig.pathConfig.project;
+      const frontendDistPath = path.join(config.root, config.frontend, "dist");
+      const frontendPath = path.join(config.root, config.frontend);
 
       if (!fs.existsSync(frontendDistPath)) {
         this.logger.info(

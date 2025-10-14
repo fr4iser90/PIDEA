@@ -188,7 +188,7 @@ class IDEMirrorController {
         await this.ideMirrorApplicationService.connectToIDE(userId);
       const state = result.data.state;
 
-      res.success({ message: "Connected to IDE", data: state });
+      res.success({ message: "Connected to IDE", ...state });
     } catch (error) {
       logger.error("❌ Failed to connect to IDE:", error.message);
       res.error(error.message, 500);
