@@ -25,15 +25,12 @@ class HealthRoutes {
     
     // Health check (public endpoint)
     app.get('/api/health', (req, res) => {
-      res.json({
-        success: true,
-        data: {
+      res.success({
           status: 'healthy',
           timestamp: new Date().toISOString(),
           environment: this.autoSecurityManager.getEnvironment(),
           database: this.databaseConnection.getType()
-        }
-      });
+        });
     });
   }
 }

@@ -18,10 +18,7 @@ class AutoRefactorController {
             // Validate request
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    errors: errors.array()
-                });
+                return res.badRequest(errors.array());
             }
 
             const { projectId } = req.params;
@@ -35,10 +32,7 @@ class AutoRefactorController {
             });
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             // Create and execute command
@@ -57,8 +51,7 @@ const logger = new Logger('Logger');
                 taskCount: result.tasks?.length || 0
             });
 
-            res.json({
-                success: true,
+            res.success({
                 message: result.message || 'Auto refactor completed successfully',
                 data: {
                     tasks: result.tasks || [],
@@ -73,11 +66,8 @@ const logger = new Logger('Logger');
                 stack: error.stack
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to execute auto refactor',
-                message: error.message
-            });
+            res.error('Failed to execute auto refactor', 500, { details: error.message
+             });
         }
     }
 }

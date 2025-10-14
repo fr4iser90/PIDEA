@@ -2,7 +2,6 @@ const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('CodeExplorerController');
 
-
 class CodeExplorerController {
   constructor(dependencies = {}) {
     this.codeExplorerApplicationService = dependencies.codeExplorerApplicationService;
@@ -24,10 +23,7 @@ class CodeExplorerController {
       });
     } catch (error) {
       logger.error('Error getting file tree:', error);
-      res.status(500).json({
-        success: false,
-        error: error?.message || String(error)
-      });
+      res.error(error?.message || String(error), 500);
     }
   }
 
@@ -45,10 +41,7 @@ class CodeExplorerController {
       });
     } catch (error) {
       logger.error('Error getting file content:', error);
-      res.status(500).json({
-        success: false,
-        error: error?.message || String(error)
-      });
+      res.error(error?.message || String(error), 500);
     }
   }
 
@@ -65,10 +58,7 @@ class CodeExplorerController {
       });
     } catch (error) {
       logger.error('Error getting current file info:', error);
-      res.status(500).json({
-        success: false,
-        error: error?.message || String(error)
-      });
+      res.error(error?.message || String(error), 500);
     }
   }
 
@@ -85,10 +75,7 @@ class CodeExplorerController {
       });
     } catch (error) {
       logger.error('Error refreshing explorer:', error);
-      res.status(500).json({
-        success: false,
-        error: error?.message || String(error)
-      });
+      res.error(error?.message || String(error), 500);
     }
   }
 }

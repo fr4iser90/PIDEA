@@ -34,11 +34,7 @@ class CouplingAnalysisController {
       const { projectId, projectPath, config = {} } = req.body;
 
       if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing required parameters: projectId and projectPath',
-          data: null
-        });
+        return res.badRequest('Missing required parameters: projectId and projectPath');
       }
 
       const result = await this.couplingService.analyze({
@@ -52,16 +48,14 @@ class CouplingAnalysisController {
         components: result.data?.components?.length || 0 
       });
 
-      res.json({
-        success: true,
+      res.success({
         data: {
           projectId: projectId,
           timestamp: new Date().toISOString(),
           scanner: 'coupling',
           results: result.data || {},
           metadata: result.metadata || {}
-        },
-        error: null
+        }
       });
     } catch (error) {
       this.logger.error('Coupling analysis failed', { 
@@ -69,14 +63,7 @@ class CouplingAnalysisController {
         error: error.message 
       });
 
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Coupling analysis failed',
-          details: error.message
-        }
-      });
+      res.error('Coupling analysis failed', 500, { details: error.message });
     }
   }
 
@@ -84,22 +71,11 @@ class CouplingAnalysisController {
     try {
       const config = await this.couplingService.getConfiguration();
       
-      res.json({
-        success: true,
-        data: config,
-        error: null
-      });
+      res.success(config);
     } catch (error) {
       this.logger.error('Failed to get coupling analysis configuration', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get configuration',
-          details: error.message
-        }
-      });
+      res.error('Failed to get configuration', 500, { details: error.message });
     }
   }
 
@@ -107,22 +83,11 @@ class CouplingAnalysisController {
     try {
       const status = await this.couplingService.getStatus();
       
-      res.json({
-        success: true,
-        data: status,
-        error: null
-      });
+      res.success(status);
     } catch (error) {
       this.logger.error('Failed to get coupling analysis status', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get status',
-          details: error.message
-        }
-      });
+      res.error('Failed to get status', 500, { details: error.message });
     }
   }
 

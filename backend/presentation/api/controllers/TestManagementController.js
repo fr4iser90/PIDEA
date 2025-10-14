@@ -33,10 +33,7 @@ class TestManagementController {
             
             if (!projectId) {
                 this.logger.warn('TestManagementController: No project ID provided');
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required',
-                    timestamp: new Date()
+                return res.badRequest('Project ID is required', {timestamp: new Date()
                 });
             }
 
@@ -49,18 +46,10 @@ class TestManagementController {
             
             this.logger.info(`TestManagementController: Configuration loaded successfully for project: ${projectId}`);
 
-            res.json({
-                success: true,
-                data: result.result,
-                timestamp: new Date()
-            });
+            res.success(result.result);
         } catch (error) {
             this.logger.error(`TestManagementController: Failed to get configuration for project: ${req.params.projectId}`, error);
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -84,18 +73,12 @@ class TestManagementController {
             console.log('=== CONTROLLER DEBUG END ===');
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required',
-                    timestamp: new Date()
+                return res.badRequest('Project ID is required', {timestamp: new Date()
                 });
             }
 
             if (!config) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Configuration is required',
-                    timestamp: new Date()
+                return res.badRequest('Configuration is required', {timestamp: new Date()
                 });
             }
 
@@ -109,19 +92,10 @@ class TestManagementController {
             
             this.logger.info(`TestManagementController: Configuration updated successfully for project: ${projectId}`);
 
-            res.json({
-                success: true,
-                data: result.result,
-                message: 'Playwright configuration updated successfully',
-                timestamp: new Date()
-            });
+            res.success(result.result);
         } catch (error) {
             this.logger.error(`TestManagementController: Failed to update configuration for project: ${req.params.projectId}`, error);
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -135,10 +109,7 @@ class TestManagementController {
             const { testNames, options = {} } = req.body;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required',
-                    timestamp: new Date()
+                return res.badRequest('Project ID is required', {timestamp: new Date()
                 });
             }
 
@@ -150,18 +121,9 @@ class TestManagementController {
 
             const result = await this.playwrightTestHandler.handleExecuteTests(command);
 
-            res.json({
-                success: true,
-                data: result.result,
-                message: 'Playwright tests executed successfully',
-                timestamp: new Date()
-            });
+            res.success(result.result);
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -176,18 +138,9 @@ class TestManagementController {
             const command = { testIds };
             const result = await this.playwrightTestHandler.handleStopTests(command);
 
-            res.json({
-                success: true,
-                data: result.result,
-                message: 'Playwright tests stopped successfully',
-                timestamp: new Date()
-            });
+            res.success(result.result);
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -200,10 +153,7 @@ class TestManagementController {
             const { projectId } = req.params;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required',
-                    timestamp: new Date()
+                return res.badRequest('Project ID is required', {timestamp: new Date()
                 });
             }
 
@@ -214,17 +164,9 @@ class TestManagementController {
 
             const result = await this.playwrightTestHandler.handleProjectCommand(command);
 
-            res.json({
-                success: true,
-                data: result.result,
-                timestamp: new Date()
-            });
+            res.success(result.result);
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -238,18 +180,12 @@ class TestManagementController {
             const { name, config } = req.body;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required',
-                    timestamp: new Date()
+                return res.badRequest('Project ID is required', {timestamp: new Date()
                 });
             }
 
             if (!name) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project name is required',
-                    timestamp: new Date()
+                return res.badRequest('Project name is required', {timestamp: new Date()
                 });
             }
 
@@ -261,18 +197,9 @@ class TestManagementController {
 
             const result = await this.playwrightTestHandler.handleProjectCommand(command);
 
-            res.json({
-                success: true,
-                data: result.result,
-                message: 'Playwright test project created successfully',
-                timestamp: new Date()
-            });
+            res.success(result.result);
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -288,19 +215,10 @@ class TestManagementController {
             
             this.logger.info('TestManagementController: Browser environment info retrieved successfully');
             
-            res.json({
-                success: true,
-                data: environmentSummary,
-                message: 'Browser environment information retrieved successfully',
-                timestamp: new Date()
-            });
+            res.success(environmentSummary);
         } catch (error) {
             this.logger.error('TestManagementController: Error getting browser environment', error);
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -321,25 +239,13 @@ class TestManagementController {
                 const resultsData = fs.readFileSync(resultsPath, 'utf8');
                 const jsonResults = JSON.parse(resultsData);
                 
-                res.json({
-                    success: true,
-                    data: jsonResults,
-                    message: 'Test results loaded successfully',
-                    timestamp: new Date()
-                });
+                res.success(jsonResults);
             } else {
-                res.status(404).json({
-                    success: false,
-                    error: 'Test results file not found',
-                    timestamp: new Date()
+                res.notFound('Test results file not found', {timestamp: new Date()
                 });
             }
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -356,11 +262,7 @@ class TestManagementController {
             const result = await this.getPlaywrightTestResults(req, res);
             
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -399,22 +301,14 @@ class TestManagementController {
                 }
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     projectId,
                     history: history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                },
-                message: 'Test history loaded successfully',
-                timestamp: new Date()
-            });
+                }, 200, { meta: { message: 'Test history loaded successfully', timestamp: new Date()
+             } });
             
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: error.message,
-                timestamp: new Date()
-            });
+            res.error(error.message, 500);
         }
     }
 }

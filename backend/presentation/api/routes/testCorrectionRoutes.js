@@ -127,19 +127,13 @@ router.use((error, req, res, next) => {
     method: req.method
   });
 
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
-  });
+  res.error('Internal server error', 500, { details: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+   });
 });
 
 // 404 handler for undefined routes
 router.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found',
-    availableRoutes: [
+  res.notFound('Route not found', {availableRoutes: [
       'GET /health',
       'GET /status',
       'POST /analyze',

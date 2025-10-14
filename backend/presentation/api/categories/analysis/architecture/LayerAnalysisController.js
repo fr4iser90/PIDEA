@@ -34,11 +34,7 @@ class LayerAnalysisController {
       const { projectId, projectPath, config = {} } = req.body;
 
       if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing required parameters: projectId and projectPath',
-          data: null
-        });
+        return res.badRequest('Missing required parameters: projectId and projectPath');
       }
 
       const result = await this.layerService.analyze({
@@ -52,16 +48,14 @@ class LayerAnalysisController {
         summary: result.data?.summary || {} 
       });
 
-      res.json({
-        success: true,
+      res.success({
         data: {
           projectId: projectId,
           timestamp: new Date().toISOString(),
           scanner: 'layer',
           results: result.data || {},
           metadata: result.metadata || {}
-        },
-        error: null
+        }
       });
     } catch (error) {
       this.logger.error('Layer analysis failed', { 
@@ -69,14 +63,7 @@ class LayerAnalysisController {
         error: error.message 
       });
 
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Layer analysis failed',
-          details: error.message
-        }
-      });
+      res.error('Layer analysis failed', 500, { details: error.message });
     }
   }
 
@@ -84,22 +71,11 @@ class LayerAnalysisController {
     try {
       const config = await this.layerService.getConfiguration();
       
-      res.json({
-        success: true,
-        data: config,
-        error: null
-      });
+      res.success(config);
     } catch (error) {
       this.logger.error('Failed to get layer analysis configuration', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get configuration',
-          details: error.message
-        }
-      });
+      res.error('Failed to get configuration', 500, { details: error.message });
     }
   }
 
@@ -107,22 +83,11 @@ class LayerAnalysisController {
     try {
       const status = await this.layerService.getStatus();
       
-      res.json({
-        success: true,
-        data: status,
-        error: null
-      });
+      res.success(status);
     } catch (error) {
       this.logger.error('Failed to get layer analysis status', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get status',
-          details: error.message
-        }
-      });
+      res.error('Failed to get status', 500, { details: error.message });
     }
   }
 

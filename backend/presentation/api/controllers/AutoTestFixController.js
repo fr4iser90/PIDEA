@@ -54,10 +54,7 @@ class AutoTestFixController {
       const validatedProjectPath = projectPath || process.cwd();
       
       if (!fs.existsSync(validatedProjectPath)) {
-        return res.status(400).json({
-          success: false,
-          error: `Project path does not exist: ${validatedProjectPath}`
-        });
+        return res.badRequest('Project path does not exist: ${validatedProjectPath}');
       }
 
       // Execute workflow
@@ -72,23 +69,16 @@ class AutoTestFixController {
         ...otherOptions
       });
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          sessionId: result.sessionId,
-          message: loadExistingTasks ? 'Processing existing tasks' : 'Generated and processing new tasks',
-          result: result
-        }
+      return res.success({
+        sessionId: result.sessionId,
+        message: loadExistingTasks ? 'Processing existing tasks' : 'Generated and processing new tasks',
+        result: result
       });
 
     } catch (error) {
       this.logger.error('Auto test fix execution failed:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -108,10 +98,7 @@ class AutoTestFixController {
 
       // Validate request
       if (!projectId) {
-        return res.status(400).json({
-          success: false,
-          error: 'projectId is required'
-        });
+        return res.badRequest('projectId is required');
       }
 
       // Analyze project tests
@@ -124,19 +111,13 @@ class AutoTestFixController {
         hasIssues: result.hasIssues
       });
 
-      return res.status(200).json({
-        success: true,
-        result: result
+      return res.success({result: result
       });
 
     } catch (error) {
       this.logger.error('Project test analysis failed:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -157,19 +138,13 @@ class AutoTestFixController {
       // Get session status
       const status = this.autoTestFixSystem.getSessionStatus(sessionId);
 
-      return res.status(200).json({
-        success: true,
-        status: status
+      return res.success({status: status
       });
 
     } catch (error) {
       this.logger.error('Failed to get session status:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -190,20 +165,14 @@ class AutoTestFixController {
       // Cancel session
       const success = this.autoTestFixSystem.cancelSession(sessionId);
 
-      return res.status(200).json({
-        success: true,
-        cancelled: success,
+      return res.success({cancelled: success,
         sessionId: sessionId
       });
 
     } catch (error) {
       this.logger.error('Failed to cancel session:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -245,19 +214,13 @@ class AutoTestFixController {
         timestamp: new Date()
       };
 
-      return res.status(200).json({
-        success: true,
-        stats: stats
+      return res.success({stats: stats
       });
 
     } catch (error) {
       this.logger.error('Failed to get statistics:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -286,27 +249,20 @@ class AutoTestFixController {
       // Apply pagination
       const paginatedTasks = tasks.slice(offset, offset + limit);
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          tasks: paginatedTasks,
-          pagination: {
-            total: tasks.length,
-            limit: parseInt(limit),
-            offset: parseInt(offset),
-            hasMore: offset + limit < tasks.length
-          }
+      return res.success({
+        tasks: paginatedTasks,
+        pagination: {
+          total: tasks.length,
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          hasMore: offset + limit < tasks.length
         }
       });
 
     } catch (error) {
       this.logger.error('Failed to get auto test tasks:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -327,31 +283,21 @@ class AutoTestFixController {
       const task = await this.taskRepository.findById(taskId);
       
       if (!task || !task.belongsToProject(projectId)) {
-        return res.status(404).json({
-          success: false,
-          error: 'Auto test task not found'
-        });
+        return res.notFound('Auto test task not found');
       }
 
       // Get execution history if available
       const executionHistory = task.executionHistory || [];
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          task: task,
-          executionHistory: executionHistory
-        }
+      return res.success({
+        task: task,
+        executionHistory: executionHistory
       });
 
     } catch (error) {
       this.logger.error('Failed to get auto test task details:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -374,10 +320,7 @@ class AutoTestFixController {
       const task = await this.taskRepository.findById(taskId);
       
       if (!task || !task.belongsToProject(projectId)) {
-        return res.status(404).json({
-          success: false,
-          error: 'Auto test task not found'
-        });
+        return res.notFound('Auto test task not found');
       }
 
       // Reset task status and retry
@@ -387,25 +330,18 @@ class AutoTestFixController {
 
       // Execute task again
               // Task execution now handled by WorkflowController
-        const execution = { success: true, message: 'Task execution moved to WorkflowController' };
+        const execution = { message: 'Task execution moved to WorkflowController' };
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          task: task,
-          execution: execution,
-          message: 'Auto test task retry initiated'
-        }
+      return res.success({
+        task: task,
+        execution: execution,
+        message: 'Auto test task retry initiated'
       });
 
     } catch (error) {
       this.logger.error('Failed to retry auto test task:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 
@@ -432,23 +368,16 @@ class AutoTestFixController {
         status: status || null
       });
 
-      return res.status(200).json({
-        success: true,
-        data: {
-          tasks: tasks,
-          count: tasks.length,
-          message: `Loaded ${tasks.length} existing tasks from database`
-        }
+      return res.success({
+        tasks: tasks,
+        count: tasks.length,
+        message: `Loaded ${tasks.length} existing tasks from database`
       });
 
     } catch (error) {
       this.logger.error('Failed to load existing tasks:', error.message);
 
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      return res.error(error.message, 500);
     }
   }
 }

@@ -19,23 +19,17 @@ class PerformanceMonitoringController {
     try {
       const status = this.databaseConnection.getConnectionStatus();
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           enabled: status.performanceMonitoring?.enabled || false,
           performanceMonitor: status.performanceMonitoring?.performanceMonitor || null,
           queryMonitor: status.performanceMonitoring?.queryMonitor || null,
           queryCache: status.performanceMonitoring?.queryCache || null
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Error getting performance monitoring status:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get performance monitoring status',
-        message: error.message
-      });
+      res.error('Failed to get performance monitoring status', 500, { details: error.message
+       });
     }
   }
 
@@ -56,18 +50,13 @@ class PerformanceMonitoringController {
         cache: queryCache ? queryCache.getStats() : null
       };
       
-      res.json({
-        success: true,
-        data: stats
-      });
+      res.success(stats
+      );
       
     } catch (error) {
       this.logger.error('Error getting performance statistics:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get performance statistics',
-        message: error.message
-      });
+      res.error('Failed to get performance statistics', 500, { details: error.message
+       });
     }
   }
 
@@ -80,10 +69,7 @@ class PerformanceMonitoringController {
     try {
       const queryMonitor = this.databaseConnection.getQueryMonitor();
       if (!queryMonitor) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query monitoring not available'
-        });
+        return res.notFound('Query monitoring not available');
       }
       
       const limit = parseInt(req.query.limit) || 100;
@@ -91,23 +77,17 @@ class PerformanceMonitoringController {
       
       const history = queryMonitor.getRecentHistory(limit, filter);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           history,
           count: history.length,
           limit,
           filter
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Error getting query history:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get query history',
-        message: error.message
-      });
+      res.error('Failed to get query history', 500, { details: error.message
+       });
     }
   }
 
@@ -120,31 +100,22 @@ class PerformanceMonitoringController {
     try {
       const queryMonitor = this.databaseConnection.getQueryMonitor();
       if (!queryMonitor) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query monitoring not available'
-        });
+        return res.notFound('Query monitoring not available');
       }
       
       const limit = parseInt(req.query.limit) || 50;
       const slowQueries = queryMonitor.getSlowQueries(limit);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           slowQueries,
           count: slowQueries.length,
           limit
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Error getting slow queries:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get slow queries',
-        message: error.message
-      });
+      res.error('Failed to get slow queries', 500, { details: error.message
+       });
     }
   }
 
@@ -157,31 +128,22 @@ class PerformanceMonitoringController {
     try {
       const queryMonitor = this.databaseConnection.getQueryMonitor();
       if (!queryMonitor) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query monitoring not available'
-        });
+        return res.notFound('Query monitoring not available');
       }
       
       const limit = parseInt(req.query.limit) || 10;
       const topQueries = queryMonitor.getTopQueriesByTime(limit);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           topQueries,
           count: topQueries.length,
           limit
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Error getting top queries by time:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get top queries by time',
-        message: error.message
-      });
+      res.error('Failed to get top queries by time', 500, { details: error.message
+       });
     }
   }
 
@@ -194,31 +156,22 @@ class PerformanceMonitoringController {
     try {
       const queryMonitor = this.databaseConnection.getQueryMonitor();
       if (!queryMonitor) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query monitoring not available'
-        });
+        return res.notFound('Query monitoring not available');
       }
       
       const limit = parseInt(req.query.limit) || 10;
       const frequentQueries = queryMonitor.getMostFrequentQueries(limit);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           frequentQueries,
           count: frequentQueries.length,
           limit
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Error getting most frequent queries:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get most frequent queries',
-        message: error.message
-      });
+      res.error('Failed to get most frequent queries', 500, { details: error.message
+       });
     }
   }
 
@@ -231,26 +184,17 @@ class PerformanceMonitoringController {
     try {
       const queryMonitor = this.databaseConnection.getQueryMonitor();
       if (!queryMonitor) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query monitoring not available'
-        });
+        return res.notFound('Query monitoring not available');
       }
       
       queryMonitor.clearHistory();
       
-      res.json({
-        success: true,
-        message: 'Query history cleared successfully'
-      });
+      res.success({message: 'Query history cleared successfully'});
       
     } catch (error) {
       this.logger.error('Error clearing query history:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to clear query history',
-        message: error.message
-      });
+      res.error('Failed to clear query history', 500, { details: error.message
+       });
     }
   }
 
@@ -263,26 +207,17 @@ class PerformanceMonitoringController {
     try {
       const queryCache = this.databaseConnection.getQueryCache();
       if (!queryCache) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query cache not available'
-        });
+        return res.notFound('Query cache not available');
       }
       
       await queryCache.clear();
       
-      res.json({
-        success: true,
-        message: 'Query cache cleared successfully'
-      });
+      res.success({message: 'Query cache cleared successfully'});
       
     } catch (error) {
       this.logger.error('Error clearing query cache:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to clear query cache',
-        message: error.message
-      });
+      res.error('Failed to clear query cache', 500, { details: error.message
+       });
     }
   }
 
@@ -295,10 +230,7 @@ class PerformanceMonitoringController {
     try {
       const queryMonitor = this.databaseConnection.getQueryMonitor();
       if (!queryMonitor) {
-        return res.status(404).json({
-          success: false,
-          error: 'Query monitoring not available'
-        });
+        return res.notFound('Query monitoring not available');
       }
       
       const format = req.query.format || 'json';
@@ -316,11 +248,8 @@ class PerformanceMonitoringController {
       
     } catch (error) {
       this.logger.error('Error exporting performance data:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to export performance data',
-        message: error.message
-      });
+      res.error('Failed to export performance data', 500, { details: error.message
+       });
     }
   }
 
@@ -333,18 +262,12 @@ class PerformanceMonitoringController {
     try {
       this.databaseConnection.enablePerformanceMonitoring();
       
-      res.json({
-        success: true,
-        message: 'Performance monitoring enabled successfully'
-      });
+      res.success({message: 'Performance monitoring enabled successfully'});
       
     } catch (error) {
       this.logger.error('Error enabling performance monitoring:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to enable performance monitoring',
-        message: error.message
-      });
+      res.error('Failed to enable performance monitoring', 500, { details: error.message
+       });
     }
   }
 
@@ -357,18 +280,12 @@ class PerformanceMonitoringController {
     try {
       this.databaseConnection.disablePerformanceMonitoring();
       
-      res.json({
-        success: true,
-        message: 'Performance monitoring disabled successfully'
-      });
+      res.success({message: 'Performance monitoring disabled successfully'});
       
     } catch (error) {
       this.logger.error('Error disabling performance monitoring:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to disable performance monitoring',
-        message: error.message
-      });
+      res.error('Failed to disable performance monitoring', 500, { details: error.message
+       });
     }
   }
 }

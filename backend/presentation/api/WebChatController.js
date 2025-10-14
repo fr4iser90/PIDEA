@@ -2,7 +2,6 @@ const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('WebChatController');
 
-
 class WebChatController {
   constructor(dependencies = {}) {
     this.webChatApplicationService = dependencies.webChatApplicationService;
@@ -16,10 +15,7 @@ class WebChatController {
     try {
       const { message, sessionId } = req.body;
       if (!message || message.trim().length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Message content is required'
-        });
+        return res.badRequest('Message content is required');
       }
       
       // Use authenticated user as requestedBy
@@ -38,22 +34,16 @@ class WebChatController {
       };
       
       const result = await this.webChatApplicationService.sendMessage(messageData, req.user?.id);
-      res.json({
-        success: true,
-        data: {
+      res.success({
           messageId: result.messageId,
           response: result.response,
           sessionId: result.sessionId,
           timestamp: result.timestamp,
           codeBlocks: result.codeBlocks || []
-        }
-      });
+        });
     } catch (error) {
       logger.error('Send message error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to send message'
-      });
+      res.error('Failed to send message', 500);
     }
   }
 
@@ -65,10 +55,7 @@ class WebChatController {
 
       // Validate user can access this session
       if (sessionId && !req.user.canAccessResource('chat', sessionId)) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this chat session'
-        });
+        return res.forbidden('Access denied to this chat session');
       }
 
       // Create query with user context
@@ -83,21 +70,15 @@ class WebChatController {
       // Get chat history via application service
       const result = await this.webChatApplicationService.getChatHistory(query, userId);
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           messages: result.messages,
           sessionId: result.sessionId,
           totalCount: result.totalCount,
           hasMore: result.hasMore
-        }
-      });
+        });
     } catch (error) {
       logger.error('Get chat history error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get chat history'
-      });
+      res.error('Failed to get chat history', 500);
     }
   }
 
@@ -120,22 +101,16 @@ class WebChatController {
 
       const result = await this.webChatApplicationService.getPortChatHistory(queryData, { userId });
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           messages: result.messages || [],
           sessionId: result.sessionId,
           port: port,
           totalCount: result.totalCount || 0,
           hasMore: result.hasMore || false
-        }
-      });
+        });
     } catch (error) {
       logger.error('Get port chat history error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get port chat history'
-      });
+      res.error('Failed to get port chat history', 500);
     }
   }
 
@@ -153,25 +128,14 @@ class WebChatController {
 
       const result = await this.webChatApplicationService.getUserSessions(queryData, { userId });
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           sessions: result.sessions.map(session => ({
-            id: session.id,
-            title: session.title,
-            createdAt: session.createdAt,
-            updatedAt: session.updatedAt,
-            messageCount: session.messageCount,
-            lastMessage: session.lastMessage
-          }))
+            id: session.id))
         }
       });
     } catch (error) {
       logger.error('Get user sessions error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get user sessions'
-      });
+      res.error('Failed to get user sessions', 500);
     }
   }
 
@@ -193,8 +157,7 @@ class WebChatController {
 
       const result = await this.webChatApplicationService.createChatSession(sessionData, { userId });
 
-      res.status(201).json({
-        success: true,
+      res.created({
         data: {
           session: {
             id: result.session.id,
@@ -206,10 +169,7 @@ class WebChatController {
       });
     } catch (error) {
       logger.error('Create session error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to create chat session'
-      });
+      res.error('Failed to create chat session', 500);
     }
   }
 
@@ -221,25 +181,16 @@ class WebChatController {
 
       // Validate user can access this session
       if (!req.user.canAccessResource('chat', sessionId)) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this chat session'
-        });
+        return res.forbidden('Access denied to this chat session');
       }
 
       // Delete session via application service
       await this.webChatApplicationService.deleteChatSession(sessionId, { userId });
 
-      res.json({
-        success: true,
-        message: 'Chat session deleted successfully'
-      });
+      res.success({message: 'Chat session deleted successfully'});
     } catch (error) {
       logger.error('Delete session error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete chat session'
-      });
+      res.error('Failed to delete chat session', 500);
     }
   }
 
@@ -251,8 +202,7 @@ class WebChatController {
       // Get user-specific connection status
       const status = await this.cursorIDEService.getConnectionStatus(userId);
 
-      res.json({
-        success: true,
+      res.success({
         data: {
           connected: status.connected,
           activePort: status.activePort,
@@ -267,10 +217,7 @@ class WebChatController {
       });
     } catch (error) {
       logger.error('Get connection status error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get connection status'
-      });
+      res.error('Failed to get connection status', 500);
     }
   }
 
@@ -278,7 +225,7 @@ class WebChatController {
   async getQuickPrompts(req, res) {
     try {
       if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Not authenticated' });
+        return res.unauthorized('Not authenticated');
       }
       const userId = req.user.id;
       const userRole = req.user.role;
@@ -286,15 +233,12 @@ class WebChatController {
       // Get role-specific quick prompts
       const prompts = await this.getQuickPromptsForUser(userRole);
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           prompts: prompts
-        }
-      });
+        });
     } catch (error) {
       logger.error('Get quick prompts error:', error);
-      res.status(500).json({ success: false, message: error.message });
+      res.error(error.message, 500);
     }
   }
 
@@ -306,18 +250,12 @@ class WebChatController {
       // Get user-specific settings
       const settings = await this.getUserSettings(userId);
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           settings: settings
-        }
-      });
+        });
     } catch (error) {
       logger.error('Get settings error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get settings'
-      });
+      res.error('Failed to get settings', 500);
     }
   }
 
@@ -329,25 +267,16 @@ class WebChatController {
 
       // Validate settings
       if (!settings || typeof settings !== 'object') {
-        return res.status(400).json({
-          success: false,
-          error: 'Settings object is required'
-        });
+        return res.badRequest('Settings object is required');
       }
 
       // Update user settings
       await this.updateUserSettings(userId, settings);
 
-      res.json({
-        success: true,
-        message: 'Settings updated successfully'
-      });
+      res.success({message: 'Settings updated successfully'});
     } catch (error) {
       logger.error('Update settings error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update settings'
-      });
+      res.error('Failed to update settings', 500);
     }
   }
 

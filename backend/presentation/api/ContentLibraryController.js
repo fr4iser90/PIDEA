@@ -4,7 +4,6 @@ const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('ContentLibraryController');
 
-
 class ContentLibraryController {
   constructor(dependencies = {}) {
     this.contentLibraryApplicationService = dependencies.contentLibraryApplicationService;
@@ -32,17 +31,12 @@ class ContentLibraryController {
         );
       }
       
-      res.json({
-        success: true,
-        data: filteredFrameworks
-      });
+      res.success(filteredFrameworks
+      );
     } catch (error) {
       logger.error('Error loading frameworks:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load frameworks',
-        message: error.message 
-      });
+      res.error('Failed to load frameworks', 500, { details: error.message 
+       });
     }
   }
 
@@ -63,20 +57,14 @@ class ContentLibraryController {
         );
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           frameworkId,
           prompts: filteredPrompts
-        }
-      });
+        });
     } catch (error) {
       logger.error('Error loading framework prompts:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load framework prompts',
-        message: error.message 
-      });
+      res.error('Failed to load framework prompts', 500, { details: error.message 
+       });
     }
   }
 
@@ -97,20 +85,14 @@ class ContentLibraryController {
         );
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           frameworkId,
           templates: filteredTemplates
-        }
-      });
+        });
     } catch (error) {
       logger.error('Error loading framework templates:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load framework templates',
-        message: error.message 
-      });
+      res.error('Failed to load framework templates', 500, { details: error.message 
+       });
     }
   }
 
@@ -131,17 +113,12 @@ class ContentLibraryController {
         );
       }
       
-      res.json({
-        success: true,
-        data: filteredPrompts
-      });
+      res.success(filteredPrompts
+      );
     } catch (error) {
       logger.error('Error loading prompts:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load prompts',
-        message: error.message 
-      });
+      res.error('Failed to load prompts', 500, { details: error.message 
+       });
     }
   }
 
@@ -153,20 +130,14 @@ class ContentLibraryController {
       
       const prompts = await this.scanDirectoryForPrompts(promptsPath);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           prompts
-        }
-      });
+        });
     } catch (error) {
       logger.error('Error loading prompts by category:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load prompts by category',
-        message: error.message 
-      });
+      res.error('Failed to load prompts by category', 500, { details: error.message 
+       });
     }
   }
 
@@ -176,9 +147,9 @@ class ContentLibraryController {
       const { category, filename } = req.params;
       const filePath = path.join(this.contentLibraryPath, 'prompts', category, filename);
       const content = await fs.readFile(filePath, 'utf-8');
-      res.json({ success: true, category, filename, content });
+      res.success({category, filename, content});
     } catch (error) {
-      res.status(404).json({ success: false, error: 'Prompt file not found', message: error.message });
+      res.notFound('Prompt file not found', {message: error.message });
     }
   }
 
@@ -188,9 +159,9 @@ class ContentLibraryController {
       const { category, subcategory, filename } = req.params;
       const filePath = path.join(this.contentLibraryPath, 'prompts', category, subcategory, filename);
       const content = await fs.readFile(filePath, 'utf-8');
-      res.json({ success: true, category, subcategory, filename, content });
+      res.success({category, subcategory, filename, content});
     } catch (error) {
-      res.status(404).json({ success: false, error: 'Prompt file not found', message: error.message });
+      res.notFound('Prompt file not found', {message: error.message });
     }
   }
 
@@ -211,17 +182,12 @@ class ContentLibraryController {
         );
       }
       
-      res.json({
-        success: true,
-        data: filteredTemplates
-      });
+      res.success(filteredTemplates
+      );
     } catch (error) {
       logger.error('Error loading templates:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load templates',
-        message: error.message 
-      });
+      res.error('Failed to load templates', 500, { details: error.message 
+       });
     }
   }
 
@@ -233,20 +199,14 @@ class ContentLibraryController {
       
       const templates = await this.scanDirectoryForTemplates(templatesPath);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           templates
-        }
-      });
+        });
     } catch (error) {
       logger.error('Error loading templates by category:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to load templates by category',
-        message: error.message 
-      });
+      res.error('Failed to load templates by category', 500, { details: error.message 
+       });
     }
   }
 
@@ -256,9 +216,9 @@ class ContentLibraryController {
       const { category, filename } = req.params;
       const filePath = path.join(this.contentLibraryPath, 'templates', category, filename);
       const content = await fs.readFile(filePath, 'utf-8');
-      res.json({ success: true, category, filename, content });
+      res.success({category, filename, content});
     } catch (error) {
-      res.status(404).json({ success: false, error: 'Template file not found', message: error.message });
+      res.notFound('Template file not found', {message: error.message });
     }
   }
 
@@ -273,31 +233,22 @@ class ContentLibraryController {
       // Sicherheitscheck: Verhindere Directory Traversal
       const normalizedPath = path.normalize(fullPath);
       if (!normalizedPath.startsWith(this.contentLibraryPath)) {
-        return res.status(403).json({ 
-          success: false,
-          error: 'Access denied' 
-        });
+        return res.forbidden('Access denied');
       }
       
       const content = await fs.readFile(fullPath, 'utf8');
       const relativePath = path.relative(this.contentLibraryPath, fullPath);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           id: path.basename(filePath, '.md'),
           name: path.basename(filePath, '.md').replace(/([A-Z])/g, ' $1').trim(),
           content: content,
           file: relativePath,
           type: relativePath.includes('templates/') ? 'template' : 'prompt'
-        }
-      });
+        });
     } catch (error) {
       logger.error('Error loading file:', error);
-      res.status(404).json({ 
-        success: false,
-        error: 'File not found',
-        message: error.message 
+      res.notFound('File not found', {message: error.message 
       });
     }
   }
@@ -408,9 +359,9 @@ class ContentLibraryController {
       const { frameworkId, filename } = req.params;
       const filePath = path.join(this.contentLibraryPath, 'frameworks', frameworkId, 'prompts', filename);
       const content = await fs.readFile(filePath, 'utf-8');
-      res.json({ success: true, frameworkId, filename, content });
+      res.success({frameworkId, filename, content});
     } catch (error) {
-      res.status(404).json({ success: false, error: 'Framework prompt file not found', message: error.message });
+      res.notFound('Framework prompt file not found', {message: error.message });
     }
   }
 
@@ -420,9 +371,9 @@ class ContentLibraryController {
       const { frameworkId, filename } = req.params;
       const filePath = path.join(this.contentLibraryPath, 'frameworks', frameworkId, 'templates', filename);
       const content = await fs.readFile(filePath, 'utf-8');
-      res.json({ success: true, frameworkId, filename, content });
+      res.success({frameworkId, filename, content});
     } catch (error) {
-      res.status(404).json({ success: false, error: 'Framework template file not found', message: error.message });
+      res.notFound('Framework template file not found', {message: error.message });
     }
   }
 }

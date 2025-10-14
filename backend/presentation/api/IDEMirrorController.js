@@ -4,7 +4,6 @@ const ScreenshotStreamingService = require('../../domain/services/ide-mirror/Scr
 const StreamingController = require('./StreamingController');
 const logger = new ServiceLogger('IDEMirrorController');
 
-
 class IDEMirrorController {
     constructor(dependencies = {}) {
         this.ideMirrorApplicationService = dependencies.ideMirrorApplicationService;
@@ -90,17 +89,10 @@ class IDEMirrorController {
             const result = await this.ideMirrorApplicationService.getIDEState(userId);
             const state = result.data;
             
-            res.json({
-                success: true,
-                data: state,
-                timestamp: Date.now()
-            });
+            res.success(state);
         } catch (error) {
             logger.error('❌ Failed to get IDE state:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -116,16 +108,11 @@ class IDEMirrorController {
                 status: ide.port === activeIDE?.port ? 'active' : ide.status
             }));
             
-            res.json({
-                success: true,
-                data: idesWithStatus
-            });
+            res.success(idesWithStatus
+            );
         } catch (error) {
             logger.error('❌ Failed to get available IDEs:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -134,10 +121,7 @@ class IDEMirrorController {
             const { selector, coordinates } = req.body;
 
             if (!selector && !coordinates) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Either selector or coordinates required'
-                });
+                return res.badRequest('Either selector or coordinates required');
             }
 
             const userId = req.user?.id;
@@ -152,18 +136,14 @@ class IDEMirrorController {
             // Notify all connected WebSocket clients
             this.broadcastToClients('ide-state-updated', newState);
 
-            res.json({
-                success: true,
+            res.success({
                 data: newState,
                 action: 'click',
                 target: selector || `${coordinates.x},${coordinates.y}`
             });
         } catch (error) {
             logger.error('❌ Failed to click element:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -172,10 +152,7 @@ class IDEMirrorController {
             const { port } = req.body;
             
             if (!port) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Port is required'
-                });
+                return res.badRequest('Port is required');
             }
 
             const userId = req.user?.id;
@@ -185,17 +162,11 @@ class IDEMirrorController {
             const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
-            res.json({
-                success: true,
-                message: `Switched to IDE on port ${port}`,
-                data: newState
-            });
+            res.success(newState
+            , 200, { meta: { message: 'Switched to IDE on port ${port}' } });
         } catch (error) {
             logger.error('❌ Failed to switch IDE:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -205,17 +176,11 @@ class IDEMirrorController {
             const result = await this.ideMirrorApplicationService.connectToIDE(userId);
             const state = result.data.state;
             
-            res.json({
-                success: true,
-                message: 'Connected to IDE',
-                data: state
-            });
+            res.success({message: 'Connected to IDE',
+                data: state});
         } catch (error) {
             logger.error('❌ Failed to connect to IDE:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -224,10 +189,7 @@ class IDEMirrorController {
             const { text, selector } = req.body;
 
             if (!text) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Text is required'
-                });
+                return res.badRequest('Text is required');
             }
 
             const userId = req.user?.id;
@@ -240,18 +202,10 @@ class IDEMirrorController {
             const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
-            res.json({
-                success: true,
-                data: newState,
-                action: 'type',
-                text: text.substring(0, 50)
-            });
+            res.success(newState);
         } catch (error) {
             logger.error('❌ Failed to type text:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -260,10 +214,7 @@ class IDEMirrorController {
             const { selector, text, clearFirst = false } = req.body;
 
             if (!selector || !text) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Selector and text are required'
-                });
+                return res.badRequest('Selector and text are required');
             }
 
             const userId = req.user?.id;
@@ -276,19 +227,10 @@ class IDEMirrorController {
             const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
-            res.json({
-                success: true,
-                data: newState,
-                action: 'focus-and-type',
-                target: selector,
-                text: text.substring(0, 50)
-            });
+            res.success(newState);
         } catch (error) {
             logger.error('❌ Failed to focus and type:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 
@@ -297,10 +239,7 @@ class IDEMirrorController {
             const { message } = req.body;
 
             if (!message) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Message is required'
-                });
+                return res.badRequest('Message is required');
             }
 
             const userId = req.user?.id;
@@ -313,18 +252,10 @@ class IDEMirrorController {
             const newState = result.data.newState;
             this.broadcastToClients('ide-state-updated', newState);
 
-            res.json({
-                success: true,
-                data: newState,
-                action: 'chat-message',
-                message: message.substring(0, 50)
-            });
+            res.success(newState);
         } catch (error) {
             logger.error('❌ Failed to send chat message:', error.message);
-            res.status(500).json({
-                success: false,
-                error: error.message
-            });
+            res.error(error.message, 500);
         }
     }
 

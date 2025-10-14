@@ -1,0 +1,258 @@
+/**
+ * Centralized Response Manager
+ * 
+ * This module provides a single, consistent way to handle all API responses
+ * across the entire application. It eliminates the need for manual response
+ * formatting in every controller.
+ */
+
+class ResponseManager {
+  constructor() {
+    const Logger = require('../logging/Logger');
+    this.logger = new Logger('ResponseManager');
+  }
+
+  /**
+   * Create standardized success response
+   * @param {Object} res - Express response object
+   * @param {*} data - Response data
+   * @param {number} statusCode - HTTP status code (default: 200)
+   * @param {Object} options - Additional options
+   */
+  success(res, data = null, statusCode = 200, options = {}) {
+    const response = {
+      ...data,
+      ...(options.meta && { meta: options.meta }),
+      ...(options.pagination && { pagination: options.pagination }),
+      timestamp: new Date().toISOString()
+    };
+
+    // Remove null/undefined values
+    const cleanResponse = this.cleanResponse(response);
+    
+    this.logger.debug('Sending success response', { 
+      statusCode, 
+      dataKeys: Object.keys(cleanResponse) 
+    });
+    
+    return res.status(statusCode).json(cleanResponse);
+  }
+
+  /**
+   * Create standardized error response
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   * @param {number} statusCode - HTTP status code (default: 500)
+   * @param {Object} details - Additional error details
+   */
+  error(res, message, statusCode = 500, details = {}) {
+    const response = {
+      error: {
+        message,
+        code: this.getErrorCode(statusCode),
+        statusCode,
+        timestamp: new Date().toISOString(),
+        ...details
+      }
+    };
+
+    this.logger.warn('Sending error response', { 
+      statusCode, 
+      message,
+      details: Object.keys(details)
+    });
+    
+    return res.status(statusCode).json(response);
+  }
+
+  /**
+   * Create paginated response
+   * @param {Object} res - Express response object
+   * @param {Array} data - Array of data
+   * @param {Object} pagination - Pagination info
+   * @param {number} statusCode - HTTP status code (default: 200)
+   */
+  paginated(res, data, pagination, statusCode = 200) {
+    const response = {
+      data,
+      pagination: {
+        page: pagination.page || 1,
+        limit: pagination.limit || 10,
+        total: pagination.total || data.length,
+        totalPages: Math.ceil((pagination.total || data.length) / (pagination.limit || 10)),
+        hasNext: pagination.hasNext || false,
+        hasPrev: pagination.hasPrev || false
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    this.logger.debug('Sending paginated response', { 
+      statusCode, 
+      itemCount: data.length,
+      pagination: response.pagination
+    });
+    
+    return res.status(statusCode).json(response);
+  }
+
+  /**
+   * Create created response (201)
+   * @param {Object} res - Express response object
+   * @param {*} data - Created resource data
+   * @param {string} location - Location header value
+   */
+  created(res, data, location = null) {
+    const response = {
+      ...data,
+      timestamp: new Date().toISOString()
+    };
+
+    if (location) {
+      res.set('Location', location);
+    }
+
+    this.logger.debug('Sending created response', { 
+      dataKeys: Object.keys(response),
+      location 
+    });
+    
+    return res.status(201).json(response);
+  }
+
+  /**
+   * Create no content response (204)
+   * @param {Object} res - Express response object
+   */
+  noContent(res) {
+    this.logger.debug('Sending no content response');
+    return res.status(204).send();
+  }
+
+  /**
+   * Create not found response (404)
+   * @param {Object} res - Express response object
+   * @param {string} resource - Resource name
+   */
+  notFound(res, resource = 'Resource') {
+    return this.error(res, `${resource} not found`, 404);
+  }
+
+  /**
+   * Create unauthorized response (401)
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  unauthorized(res, message = 'Unauthorized') {
+    return this.error(res, message, 401);
+  }
+
+  /**
+   * Create forbidden response (403)
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  forbidden(res, message = 'Forbidden') {
+    return this.error(res, message, 403);
+  }
+
+  /**
+   * Create bad request response (400)
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   * @param {Object} validation - Validation errors
+   */
+  badRequest(res, message = 'Bad Request', validation = {}) {
+    return this.error(res, message, 400, { validation });
+  }
+
+  /**
+   * Create conflict response (409)
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  conflict(res, message = 'Conflict') {
+    return this.error(res, message, 409);
+  }
+
+  /**
+   * Create internal server error response (500)
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   * @param {Object} details - Error details
+   */
+  internalError(res, message = 'Internal Server Error', details = {}) {
+    return this.error(res, message, 500, details);
+  }
+
+  /**
+   * Get error code from status code
+   * @param {number} statusCode - HTTP status code
+   * @returns {string} Error code
+   */
+  getErrorCode(statusCode) {
+    const codes = {
+      400: 'BAD_REQUEST',
+      401: 'UNAUTHORIZED',
+      403: 'FORBIDDEN',
+      404: 'NOT_FOUND',
+      409: 'CONFLICT',
+      422: 'UNPROCESSABLE_ENTITY',
+      500: 'INTERNAL_SERVER_ERROR',
+      502: 'BAD_GATEWAY',
+      503: 'SERVICE_UNAVAILABLE'
+    };
+    return codes[statusCode] || 'UNKNOWN_ERROR';
+  }
+
+  /**
+   * Clean response object by removing null/undefined values
+   * @param {Object} obj - Object to clean
+   * @returns {Object} Cleaned object
+   */
+  cleanResponse(obj) {
+    if (obj === null || obj === undefined) {
+      return null;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.cleanResponse(item));
+    }
+    
+    if (typeof obj === 'object') {
+      const cleaned = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value !== null && value !== undefined) {
+          cleaned[key] = this.cleanResponse(value);
+        }
+      }
+      return cleaned;
+    }
+    
+    return obj;
+  }
+
+  /**
+   * Middleware to attach response methods to res object
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Next middleware function
+   */
+  middleware(req, res, next) {
+    // Attach response methods to res object
+    res.success = (data, statusCode, options) => this.success(res, data, statusCode, options);
+    res.error = (message, statusCode, details) => this.error(res, message, statusCode, details);
+    res.paginated = (data, pagination, statusCode) => this.paginated(res, data, pagination, statusCode);
+    res.created = (data, location) => this.created(res, data, location);
+    res.noContent = () => this.noContent(res);
+    res.notFound = (resource) => this.notFound(res, resource);
+    res.unauthorized = (message) => this.unauthorized(res, message);
+    res.forbidden = (message) => this.forbidden(res, message);
+    res.badRequest = (message, validation) => this.badRequest(res, message, validation);
+    res.conflict = (message) => this.conflict(res, message);
+    res.internalError = (message, details) => this.internalError(res, message, details);
+    
+    next();
+  }
+}
+
+module.exports = ResponseManager;

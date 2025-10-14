@@ -7,6 +7,7 @@ const cors = require('cors');
 const hpp = require('hpp');
 const slowDown = require('express-slow-down');
 const cookieParser = require('cookie-parser');
+const ResponseManager = require('./middleware/ResponseManager');
 
 /**
  * Middleware Setup - Professional Middleware Configuration
@@ -35,6 +36,13 @@ class MiddlewareSetup {
     // BODY PARSING MIDDLEWARE - Must be first
     // ========================================
     this.setupBodyParsing(app, securityConfig);
+    
+    // ========================================
+    // RESPONSE MANAGEMENT - Centralized Response Handling
+    // ========================================
+    const responseManager = new ResponseManager();
+    app.use(responseManager.middleware.bind(responseManager));
+    this.logger.info('ResponseManager middleware applied globally');
     
     // Global auth middleware for all API routes except login/register (if provided)
     if (authMiddleware) {

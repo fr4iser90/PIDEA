@@ -289,10 +289,8 @@ class ProjectInterfaceController {
       // Get available IDEs from IDE handler
       const availableIDEs = await this.interfaceManager.getAvailableIDEs();
       
-      res.json({
-        success: true,
-        data: availableIDEs
-      });
+      res.success(availableIDEs
+      );
       
     } catch (error) {
       this.logger.error('Failed to get available IDEs:', error);
@@ -316,10 +314,7 @@ class ProjectInterfaceController {
       // Get available IDEs from IDE handler
       const availableIDEs = await this.interfaceManager.getAvailableIDEs();
       
-      res.json({
-        success: true,
-        availableIDEs
-      });
+      res.success({availableIDEs});
       
     } catch (error) {
       this.logger.error('Failed to get available IDEs:', error);
@@ -353,11 +348,8 @@ class ProjectInterfaceController {
       // Get IDE features
       const features = await this.interfaceManager.getIDEFeatures(interfaceId);
       
-      res.json({
-        success: true,
-        interfaceId,
-        features
-      });
+      res.success({interfaceId,
+        features});
       
     } catch (error) {
       this.logger.error('Failed to get IDE features:', error);
@@ -391,11 +383,8 @@ class ProjectInterfaceController {
       // Get IDE version
       const version = await this.interfaceManager.getIDEVersion(interfaceId);
       
-      res.json({
-        success: true,
-        interfaceId,
-        version
-      });
+      res.success({interfaceId,
+        version});
       
     } catch (error) {
       this.logger.error('Failed to get IDE version:', error);
@@ -429,11 +418,8 @@ class ProjectInterfaceController {
       // Get workspace info
       const workspaceInfo = await this.interfaceManager.getWorkspaceInfo(interfaceId);
       
-      res.json({
-        success: true,
-        interfaceId,
-        workspaceInfo
-      });
+      res.success({interfaceId,
+        workspaceInfo});
       
     } catch (error) {
       this.logger.error('Failed to get workspace info:', error);
@@ -468,11 +454,8 @@ class ProjectInterfaceController {
       // Set workspace path
       const result = await this.interfaceManager.setWorkspacePath(interfaceId, workspacePath);
       
-      res.json({
-        success: true,
-        interfaceId,
-        result
-      });
+      res.success({interfaceId,
+        result});
       
     } catch (error) {
       this.logger.error('Failed to set workspace path:', error);
@@ -506,11 +489,8 @@ class ProjectInterfaceController {
       // Detect workspace paths
       const workspacePaths = await this.interfaceManager.detectWorkspacePaths(interfaceId);
       
-      res.json({
-        success: true,
-        interfaceId,
-        workspacePaths
-      });
+      res.success({interfaceId,
+        workspacePaths});
       
     } catch (error) {
       this.logger.error('Failed to detect workspace paths:', error);
@@ -545,11 +525,8 @@ class ProjectInterfaceController {
       // Monitor terminal
       const result = await this.interfaceManager.monitorTerminal(interfaceId, options);
       
-      res.json({
-        success: true,
-        interfaceId,
-        result
-      });
+      res.success({interfaceId,
+        result});
       
     } catch (error) {
       this.logger.error('Failed to monitor terminal:', error);

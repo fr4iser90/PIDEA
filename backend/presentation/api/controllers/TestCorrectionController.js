@@ -27,22 +27,16 @@ class TestCorrectionController {
     try {
       const status = this.testCorrectionService.getStatus();
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           ...status,
           timestamp: new Date().toISOString(),
           uptime: process.uptime()
-        }
-      });
+        });
       
     } catch (error) {
       logger.error('Failed to get test correction status', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get status',
-        details: error.message
-      });
+      res.error('Failed to get status', 500, { details: error.message
+       });
     }
   }
 
@@ -55,10 +49,7 @@ class TestCorrectionController {
       const { testResults, options = {} } = req.body;
       
       if (!testResults) {
-        return res.status(400).json({
-          success: false,
-          error: 'Test results are required'
-        });
+        return res.badRequest('Test results are required');
       }
       
       logger.info('Starting test analysis', { 
@@ -87,8 +78,7 @@ class TestCorrectionController {
         corrections.push(...complexCorrections);
       }
       
-      res.json({
-        success: true,
+      res.success({
         data: {
           corrections: corrections.map(c => c.toJSON()),
           summary: {
@@ -102,11 +92,8 @@ class TestCorrectionController {
       
     } catch (error) {
       logger.error('Failed to analyze tests', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to analyze tests',
-        details: error.message
-      });
+      res.error('Failed to analyze tests', 500, { details: error.message
+       });
     }
   }
 
@@ -119,10 +106,7 @@ class TestCorrectionController {
       const { corrections, options = {} } = req.body;
       
       if (!corrections || !Array.isArray(corrections)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Corrections array is required'
-        });
+        return res.badRequest('Corrections array is required');
       }
       
       logger.info('Starting test fixes', { 
@@ -147,27 +131,17 @@ class TestCorrectionController {
         strategies: this.getStrategyDistribution(results)
       };
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           results: results.map(r => ({
-            success: r.success,
-            testFile: r.correction?.testFile,
-            testName: r.correction?.testName,
-            fixType: r.fixResult?.fixType,
-            error: r.error
-          })),
+            success: r.success)),
           summary
         }
       });
       
     } catch (error) {
       logger.error('Failed to fix tests', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fix tests',
-        details: error.message
-      });
+      res.error('Failed to fix tests', 500, { details: error.message
+       });
     }
   }
 
@@ -196,13 +170,10 @@ class TestCorrectionController {
       if (this.commandBus) {
         const result = await this.commandBus.execute(command);
         
-        res.json({
-          success: true,
-          data: {
+        res.success({
             commandId: command.id,
             result: result
-          }
-        });
+          });
       } else {
         // Fallback to direct execution
         const AutoFixTests = require('../../../scripts/test-correction/auto-fix-tests');
@@ -220,11 +191,8 @@ class TestCorrectionController {
       
     } catch (error) {
       logger.error('Failed to run auto-fix', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to run auto-fix',
-        details: error.message
-      });
+      res.error('Failed to run auto-fix', 500, { details: error.message
+       });
     }
   }
 
@@ -260,11 +228,8 @@ class TestCorrectionController {
       
     } catch (error) {
       logger.error('Failed to improve coverage', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to improve coverage',
-        details: error.message
-      });
+      res.error('Failed to improve coverage', 500, { details: error.message
+       });
     }
   }
 
@@ -278,22 +243,16 @@ class TestCorrectionController {
       
       const coverage = await this.coverageAnalyzer.getCurrentCoverage(scope);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           coverage,
           scope,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       logger.error('Failed to get coverage', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get coverage',
-        details: error.message
-      });
+      res.error('Failed to get coverage', 500, { details: error.message
+       });
     }
   }
 
@@ -306,17 +265,11 @@ class TestCorrectionController {
       const { refactorType, scope = 'all', options = {} } = req.body;
       
       if (!refactorType) {
-        return res.status(400).json({
-          success: false,
-          error: 'Refactor type is required'
-        });
+        return res.badRequest('Refactor type is required');
       }
       
       if (!AutoRefactorCommand.validateRefactorType(refactorType)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid refactor type'
-        });
+        return res.badRequest('Invalid refactor type');
       }
       
       logger.info('Starting test refactoring', { refactorType, scope, options });
@@ -334,39 +287,30 @@ class TestCorrectionController {
       if (this.commandBus) {
         const result = await this.commandBus.execute(command);
         
-        res.json({
-          success: true,
-          data: {
+        res.success({
             commandId: command.id,
             refactorType,
             scope,
             result: result
-          }
-        });
+          });
       } else {
         // Fallback to direct execution
         const AutoRefactorService = require('@services/AutoRefactorService');
         const refactorService = new AutoRefactorService();
         const result = await refactorService.refactorTests(command);
         
-        res.json({
-          success: true,
-          data: {
+        res.success({
             commandId: command.id,
             refactorType,
             scope,
             result: result
-          }
-        });
+          });
       }
       
     } catch (error) {
       logger.error('Failed to refactor tests', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to refactor tests',
-        details: error.message
-      });
+      res.error('Failed to refactor tests', 500, { details: error.message
+       });
     }
   }
 
@@ -380,21 +324,15 @@ class TestCorrectionController {
       
       await this.testCorrectionService.stopAll();
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           message: 'All corrections stopped',
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       logger.error('Failed to stop corrections', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to stop corrections',
-        details: error.message
-      });
+      res.error('Failed to stop corrections', 500, { details: error.message
+       });
     }
   }
 
@@ -422,24 +360,16 @@ class TestCorrectionController {
           }
         }
         
-        res.json({
-          success: true,
-          data: report
-        });
+        res.success(report
+        );
       } else {
-        res.status(404).json({
-          success: false,
-          error: 'No report found'
-        });
+        res.notFound('No report found');
       }
       
     } catch (error) {
       logger.error('Failed to get report', { error: error.message });
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get report',
-        details: error.message
-      });
+      res.error('Failed to get report', 500, { details: error.message
+       });
     }
   }
 
@@ -460,18 +390,13 @@ class TestCorrectionController {
         queuedCorrections: status.queued
       };
       
-      res.json({
-        success: true,
-        data: health
-      });
+      res.success(health
+      );
       
     } catch (error) {
       logger.error('Health check failed', { error: error.message });
-      res.status(503).json({
-        success: false,
-        error: 'Service unhealthy',
-        details: error.message
-      });
+      res.error('Service unhealthy', 503, { details: error.message
+       });
     }
   }
 

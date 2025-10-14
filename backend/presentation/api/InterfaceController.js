@@ -31,10 +31,7 @@ class InterfaceController {
       this.logger.info('Getting all interfaces');
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const interfaces = this.interfaceManager.getAllInterfaces();
@@ -46,9 +43,7 @@ class InterfaceController {
         metadata: interfaceInstance.getMetadata()
       }));
       
-      res.json({
-        success: true,
-        data: interfaceData,
+      res.success(interfaceData, 200, {
         meta: {
           total: interfaceData.length,
           timestamp: new Date().toISOString()
@@ -57,10 +52,7 @@ class InterfaceController {
       
     } catch (error) {
       this.logger.error('Failed to get all interfaces:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -76,37 +68,25 @@ class InterfaceController {
       this.logger.info(`Getting interface: ${interfaceId}`);
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const interfaceInstance = this.interfaceManager.getInterface(interfaceId);
       if (!interfaceInstance) {
-        return res.status(404).json({
-          success: false,
-          error: `Interface not found: ${interfaceId}`
-        });
+        return res.notFound('Interface not found: ${interfaceId}');
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           id: interfaceInstance.id,
           type: interfaceInstance.type,
           status: interfaceInstance.status,
           config: interfaceInstance.config,
           metadata: interfaceInstance.getMetadata()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Failed to get interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -122,17 +102,11 @@ class InterfaceController {
       this.logger.info(`Creating interface: ${interfaceType}`);
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       if (!interfaceType) {
-        return res.status(400).json({
-          success: false,
-          error: 'interfaceType is required'
-        });
+        return res.badRequest('interfaceType is required');
       }
       
       let interfaceInstance;
@@ -150,23 +124,17 @@ class InterfaceController {
         );
       }
       
-      res.status(201).json({
-        success: true,
-        data: {
-          id: interfaceInstance.id,
-          type: interfaceInstance.type,
-          status: interfaceInstance.status,
-          config: interfaceInstance.config,
-          metadata: interfaceInstance.getMetadata()
-        }
+      res.created({
+        id: interfaceInstance.id,
+        type: interfaceInstance.type,
+        status: interfaceInstance.status,
+        config: interfaceInstance.config,
+        metadata: interfaceInstance.getMetadata()
       });
       
     } catch (error) {
       this.logger.error('Failed to create interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -182,31 +150,19 @@ class InterfaceController {
       this.logger.info(`Removing interface: ${interfaceId}`);
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const removed = await this.interfaceManager.removeInterface(interfaceId);
       if (!removed) {
-        return res.status(404).json({
-          success: false,
-          error: `Interface not found: ${interfaceId}`
-        });
+        return res.notFound('Interface not found: ${interfaceId}');
       }
       
-      res.json({
-        success: true,
-        data: { removed: true }
-      });
+      res.success({ removed: true });
       
     } catch (error) {
       this.logger.error('Failed to remove interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -222,25 +178,16 @@ class InterfaceController {
       this.logger.info(`Starting interface: ${interfaceId}`);
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const started = await this.interfaceManager.startInterface(interfaceId);
       
-      res.json({
-        success: true,
-        data: { started }
-      });
+      res.success({ started });
       
     } catch (error) {
       this.logger.error('Failed to start interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -256,25 +203,16 @@ class InterfaceController {
       this.logger.info(`Stopping interface: ${interfaceId}`);
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const stopped = await this.interfaceManager.stopInterface(interfaceId);
       
-      res.json({
-        success: true,
-        data: { stopped }
-      });
+      res.success({ stopped });
       
     } catch (error) {
       this.logger.error('Failed to stop interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -290,25 +228,16 @@ class InterfaceController {
       this.logger.info(`Restarting interface: ${interfaceId}`);
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const restarted = await this.interfaceManager.restartInterface(interfaceId);
       
-      res.json({
-        success: true,
-        data: { restarted }
-      });
+      res.success({ restarted });
       
     } catch (error) {
       this.logger.error('Failed to restart interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -323,29 +252,19 @@ class InterfaceController {
       this.logger.info('Getting available interface types');
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const types = this.interfaceManager.getAvailableTypes();
       
-      res.json({
-        success: true,
-        data: types,
-        meta: {
+      res.success(types, 200, { meta: {
           total: types.length,
           timestamp: new Date().toISOString()
-        }
-      });
+        } });
       
     } catch (error) {
       this.logger.error('Failed to get available types:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -360,29 +279,20 @@ class InterfaceController {
       this.logger.info('Getting interface statistics');
       
       if (!this.interfaceManager) {
-        return res.status(503).json({
-          success: false,
-          error: 'Interface manager not available'
-        });
+        return res.error('Interface manager not available', 503);
       }
       
       const stats = this.interfaceManager.getStats();
       const statusSummary = this.interfaceManager.getStatusSummary();
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           stats,
           statusSummary
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error('Failed to get interface statistics:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -398,30 +308,20 @@ class InterfaceController {
       this.logger.info(`Getting interfaces for project: ${projectId}`);
       
       if (!this.projectApplicationService) {
-        return res.status(503).json({
-          success: false,
-          error: 'Project application service not available'
-        });
+        return res.error('Project application service not available', 503);
       }
       
       const interfaces = await this.projectApplicationService.getProjectInterfaces(projectId);
       
-      res.json({
-        success: true,
-        data: interfaces,
-        meta: {
+      res.success(interfaces, 200, { meta: {
           projectId,
           total: interfaces.length,
           timestamp: new Date().toISOString()
-        }
-      });
+        } });
       
     } catch (error) {
       this.logger.error('Failed to get project interfaces:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -438,17 +338,11 @@ class InterfaceController {
       this.logger.info(`Creating interface for project: ${projectId}, type: ${interfaceType}`);
       
       if (!this.projectApplicationService) {
-        return res.status(503).json({
-          success: false,
-          error: 'Project application service not available'
-        });
+        return res.error('Project application service not available', 503);
       }
       
       if (!interfaceType) {
-        return res.status(400).json({
-          success: false,
-          error: 'interfaceType is required'
-        });
+        return res.badRequest('interfaceType is required');
       }
       
       const interfaceData = await this.projectApplicationService.createProjectInterface(
@@ -457,17 +351,12 @@ class InterfaceController {
         config
       );
       
-      res.status(201).json({
-        success: true,
-        data: interfaceData
-      });
+      res.created(interfaceData
+      );
       
     } catch (error) {
       this.logger.error('Failed to create project interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -483,10 +372,7 @@ class InterfaceController {
       this.logger.info(`Removing interface ${interfaceId} from project: ${projectId}`);
       
       if (!this.projectApplicationService) {
-        return res.status(503).json({
-          success: false,
-          error: 'Project application service not available'
-        });
+        return res.error('Project application service not available', 503);
       }
       
       const removed = await this.projectApplicationService.removeProjectInterface(
@@ -494,17 +380,11 @@ class InterfaceController {
         interfaceId
       );
       
-      res.json({
-        success: true,
-        data: { removed }
-      });
+      res.success({ removed });
       
     } catch (error) {
       this.logger.error('Failed to remove project interface:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 
@@ -520,30 +400,20 @@ class InterfaceController {
       this.logger.info(`Getting available interface types for project: ${projectId}`);
       
       if (!this.projectApplicationService) {
-        return res.status(503).json({
-          success: false,
-          error: 'Project application service not available'
-        });
+        return res.error('Project application service not available', 503);
       }
       
       const types = await this.projectApplicationService.getAvailableInterfaceTypes(projectId);
       
-      res.json({
-        success: true,
-        data: types,
-        meta: {
+      res.success(types, 200, { meta: {
           projectId,
           total: types.length,
           timestamp: new Date().toISOString()
-        }
-      });
+        } });
       
     } catch (error) {
       this.logger.error('Failed to get available types for project:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      res.error(error.message, 500);
     }
   }
 }

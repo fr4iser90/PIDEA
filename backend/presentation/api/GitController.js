@@ -30,17 +30,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             // Only log if there's a significant change or it's the first request
@@ -62,7 +56,6 @@ class GitController {
             ]);
             
             const responseData = {
-                success: true,
                 data: {
                     status,
                     currentBranch
@@ -107,11 +100,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get Git status',
-                message: error.message
-            });
+            res.error('Failed to get Git status', 500, { details: error.message
+             });
         }
     }
 
@@ -126,17 +116,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             this.logger.info('GitController: Getting branches', { projectId, userId });
@@ -147,14 +131,10 @@ class GitController {
                 this.gitApplicationService.getCurrentBranchDirect(projectPath)
             ]);
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     branches: branches && branches.all ? branches.all : (Array.isArray(branches) ? branches : []),
                     currentBranch
-                },
-                message: 'Branches retrieved successfully'
-            });
+                }, 200, { meta: { message: 'Branches retrieved successfully' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to get branches', {
@@ -163,11 +143,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get branches',
-                message: error.message
-            });
+            res.error('Failed to get branches', 500, { details: error.message
+             });
         }
     }
 
@@ -182,17 +159,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             // ✅ FIX: Use ApplicationService instead of duplicate direct service calls
@@ -235,11 +206,7 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: validation,
-                message: 'Validation completed successfully'
-            });
+            res.success(validation);
 
         } catch (error) {
             this.logger.error('GitController: Failed to validate changes', {
@@ -248,11 +215,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to validate changes',
-                message: error.message
-            });
+            res.error('Failed to validate changes', 500, { details: error.message
+             });
         }
     }
 
@@ -267,17 +231,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath || !sourceBranch) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path and source branch are required'
-                });
+                return res.badRequest('Project path and source branch are required');
             }
 
             this.logger.info('GitController: Comparing branches', { 
@@ -316,17 +274,13 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     diff,
                     sourceHistory,
                     targetHistory,
                     sourceBranch,
                     targetBranch
-                },
-                message: 'Branch comparison completed successfully'
-            });
+                }, 200, { meta: { message: 'Branch comparison completed successfully' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to compare branches', {
@@ -337,11 +291,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to compare branches',
-                message: error.message
-            });
+            res.error('Failed to compare branches', 500, { details: error.message
+             });
         }
     }
 
@@ -356,17 +307,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             this.logger.info('GitController: Pulling changes', { 
@@ -402,15 +347,11 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     output: result.output,
                     branch,
                     remote
-                },
-                message: 'Changes pulled successfully'
-            });
+                }, 200, { meta: { message: 'Changes pulled successfully' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to pull changes', {
@@ -420,11 +361,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to pull changes',
-                message: error.message
-            });
+            res.error('Failed to pull changes', 500, { details: error.message
+             });
         }
     }
 
@@ -439,17 +377,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath || !branch) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path and branch are required'
-                });
+                return res.badRequest('Project path and branch are required');
             }
 
             this.logger.info('GitController: Checking out branch', { 
@@ -470,14 +402,10 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     output: result.output,
                     branch
-                },
-                message: `Switched to branch: ${branch}`
-            });
+                }, 200, { meta: { message: 'Switched to branch: ${branch}' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to checkout branch', {
@@ -487,11 +415,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to checkout branch',
-                message: error.message
-            });
+            res.error('Failed to checkout branch', 500, { details: error.message
+             });
         }
     }
 
@@ -506,17 +431,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath || !sourceBranch) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path and source branch are required'
-                });
+                return res.badRequest('Project path and source branch are required');
             }
 
             this.logger.info('GitController: Merging branches', { 
@@ -552,15 +471,11 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     output: result.output,
                     sourceBranch,
                     targetBranch
-                },
-                message: `Successfully merged ${sourceBranch} into ${targetBranch}`
-            });
+                }, 200, { meta: { message: 'Successfully merged ${sourceBranch} into ${targetBranch}' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to merge branches', {
@@ -571,11 +486,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to merge branches',
-                message: error.message
-            });
+            res.error('Failed to merge branches', 500, { details: error.message
+             });
         }
     }
 
@@ -590,17 +502,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath || !branchName) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path and branch name are required'
-                });
+                return res.badRequest('Project path and branch name are required');
             }
 
             this.logger.info('GitController: Creating branch', { 
@@ -625,8 +531,7 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
+            res.success({
                 data: {
                     output: result.output,
                     branchName,
@@ -643,11 +548,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to create branch',
-                message: error.message
-            });
+            res.error('Failed to create branch', 500, { details: error.message
+             });
         }
     }
 
@@ -662,17 +564,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             this.logger.info('GitController: Getting repository info', { projectId, userId });
@@ -680,11 +576,7 @@ class GitController {
             // ✅ OPTIMIZATION: Use GitApplicationService with direct Commands/Handlers
             const result = await this.gitApplicationService.getGitInfo(projectPath, userId);
 
-            res.json({
-                success: true,
-                data: result.data,
-                message: 'Repository info retrieved successfully'
-            });
+            res.success(result.data);
 
         } catch (error) {
             this.logger.error('GitController: Failed to get repository info', {
@@ -693,11 +585,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get repository info',
-                message: error.message
-            });
+            res.error('Failed to get repository info', 500, { details: error.message
+             });
         }
     }
 
@@ -712,17 +601,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             this.logger.info('GitController: Pulling from pidea-agent branch', { 
@@ -759,16 +642,12 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     output: result.output,
                     branch: 'pidea-agent',
                     remote,
                     changes: result.changes || []
-                },
-                message: 'Successfully pulled from pidea-agent branch'
-            });
+                }, 200, { meta: { message: 'Successfully pulled from pidea-agent branch' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to pull from pidea-agent branch', {
@@ -778,11 +657,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to pull from pidea-agent branch',
-                message: error.message
-            });
+            res.error('Failed to pull from pidea-agent branch', 500, { details: error.message
+             });
         }
     }
 
@@ -797,17 +673,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath || !sourceBranch) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path and source branch are required'
-                });
+                return res.badRequest('Project path and source branch are required');
             }
 
             this.logger.info('GitController: Merging to pidea-agent branch', { 
@@ -841,15 +711,11 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     output: result.output,
                     sourceBranch,
                     targetBranch: 'pidea-agent'
-                },
-                message: `Successfully merged ${sourceBranch} into pidea-agent branch`
-            });
+                }, 200, { meta: { message: 'Successfully merged ${sourceBranch} into pidea-agent branch' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to merge to pidea-agent branch', {
@@ -859,11 +725,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to merge to pidea-agent branch',
-                message: error.message
-            });
+            res.error('Failed to merge to pidea-agent branch', 500, { details: error.message
+             });
         }
     }
 
@@ -878,17 +741,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path is required'
-                });
+                return res.badRequest('Project path is required');
             }
 
             this.logger.info('GitController: Getting pidea-agent branch status', { projectId, userId, projectPath });
@@ -911,10 +768,7 @@ class GitController {
 
             if (!pideaAgentExists) {
                 this.logger.warn('GitController: Pidea-agent branch not found', { branches });
-                return res.status(404).json({
-                    success: false,
-                    error: 'Pidea-agent branch does not exist',
-                    message: 'The pidea-agent branch has not been created yet'
+                return res.notFound('Pidea-agent branch does not exist', {message: 'The pidea-agent branch has not been created yet'
                 });
             }
 
@@ -950,11 +804,7 @@ class GitController {
 
             this.logger.info('GitController: Sending response', { responseData });
 
-            res.json({
-                success: true,
-                data: responseData,
-                message: 'Pidea-agent branch status retrieved successfully'
-            });
+            res.success(responseData);
 
         } catch (error) {
             this.logger.error('GitController: Failed to get pidea-agent branch status', {
@@ -963,11 +813,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get pidea-agent branch status',
-                message: error.message
-            });
+            res.error('Failed to get pidea-agent branch status', 500, { details: error.message
+             });
         }
     }
 
@@ -982,17 +829,11 @@ class GitController {
             const userId = req.user?.id;
 
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             if (!projectPath || !sourceBranch) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project path and source branch are required'
-                });
+                return res.badRequest('Project path and source branch are required');
             }
 
             this.logger.info('GitController: Comparing with pidea-agent branch', { 
@@ -1008,10 +849,7 @@ class GitController {
             const pideaAgentExists = branches.includes('pidea-agent') || branches.includes('remotes/origin/pidea-agent');
 
             if (!pideaAgentExists) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Pidea-agent branch does not exist',
-                    message: 'The pidea-agent branch has not been created yet'
+                return res.notFound('Pidea-agent branch does not exist', {message: 'The pidea-agent branch has not been created yet'
                 });
             }
 
@@ -1042,17 +880,13 @@ class GitController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     diff,
                     sourceHistory,
                     pideaAgentHistory,
                     sourceBranch,
                     targetBranch: 'pidea-agent'
-                },
-                message: 'Comparison with pidea-agent branch completed successfully'
-            });
+                }, 200, { meta: { message: 'Comparison with pidea-agent branch completed successfully' } });
 
         } catch (error) {
             this.logger.error('GitController: Failed to compare with pidea-agent branch', {
@@ -1062,11 +896,8 @@ class GitController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to compare with pidea-agent branch',
-                message: error.message
-            });
+            res.error('Failed to compare with pidea-agent branch', 500, { details: error.message
+             });
         }
     }
 }

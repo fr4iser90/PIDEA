@@ -111,20 +111,12 @@ class AnalysisController {
       res.set('ETag', etag);
       res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
       
-      res.json({
-        success: true,
-        data: result,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(result);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis data:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis data',
-        message: error.message
-      });
+      res.error('Failed to get analysis data', 500, { details: error.message
+       });
     }
   }
 
@@ -137,11 +129,7 @@ class AnalysisController {
     // Check for duplicate requests
     if (this.isRequestActive(requestKey)) {
       this.logger.warn(`📊 Duplicate request detected for status: ${requestKey}`);
-      return res.status(409).json({
-        success: false,
-        error: 'Request already in progress',
-        message: 'Another request for the same data is currently being processed'
-      });
+      return res.conflict('Request already in progress', { details: 'Another request for the same data is currently being processed' });
     }
     
     try {
@@ -163,21 +151,13 @@ class AnalysisController {
       const status = await this.analysisApplicationService.getAnalysisStatus(projectId);
       
       this.markRequestCompleted(requestKey);
-      res.json({
-        success: true,
-        data: status,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(status);
       
     } catch (error) {
       this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis status:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis status',
-        message: error.message
-      });
+      res.error('Failed to get analysis status', 500, { details: error.message
+       });
     }
   }
 
@@ -190,11 +170,7 @@ class AnalysisController {
     // Check for duplicate requests
     if (this.isRequestActive(requestKey)) {
       this.logger.warn(`📚 Duplicate request detected for history: ${requestKey}`);
-      return res.status(409).json({
-        success: false,
-        error: 'Request already in progress',
-        message: 'Another request for the same data is currently being processed'
-      });
+      return res.conflict('Request already in progress', { details: 'Another request for the same data is currently being processed' });
     }
     
     try {
@@ -226,8 +202,7 @@ class AnalysisController {
       });
       
       this.markRequestCompleted(requestKey);
-      res.json({
-        success: true,
+      res.success({
         data: {
           history,
           pagination: {
@@ -243,11 +218,8 @@ class AnalysisController {
     } catch (error) {
       this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis history:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis history',
-        message: error.message
-      });
+      res.error('Failed to get analysis history', 500, { details: error.message
+       });
     }
   }
 
@@ -260,11 +232,7 @@ class AnalysisController {
     // Check for duplicate requests
     if (this.isRequestActive(requestKey)) {
       this.logger.warn(`🔍 Duplicate request detected for issues: ${requestKey}`);
-      return res.status(409).json({
-        success: false,
-        error: 'Request already in progress',
-        message: 'Another request for the same data is currently being processed'
-      });
+      return res.conflict('Request already in progress', { details: 'Another request for the same data is currently being processed' });
     }
     
     try {
@@ -287,22 +255,13 @@ class AnalysisController {
       const issues = await this.analysisApplicationService.getAnalysisIssues(projectId, type);
       
       this.markRequestCompleted(requestKey);
-      res.json({
-        success: true,
-        data: issues,
-        projectId,
-        analysisType: type,
-        timestamp: new Date().toISOString()
-      });
+      res.success(issues);
       
     } catch (error) {
       this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis issues:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis issues',
-        message: error.message
-      });
+      res.error('Failed to get analysis issues', 500, { details: error.message
+       });
     }
   }
 
@@ -318,8 +277,7 @@ class AnalysisController {
       
       // Note: Actual analysis execution should be handled by WorkflowController
       // This is just a request acknowledgment
-      res.json({
-        success: true,
+      res.success({
         message: 'Analysis request received. Use WorkflowController for execution.',
         data: {
           projectId,
@@ -332,11 +290,8 @@ class AnalysisController {
       
     } catch (error) {
       this.logger.error('❌ Failed to process analysis request:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to process analysis request',
-        message: error.message
-      });
+      res.error('Failed to process analysis request', 500, { details: error.message
+       });
     }
   }
 
@@ -352,20 +307,12 @@ class AnalysisController {
       // Use Application Service to get real metrics from database
       const metrics = await this.analysisApplicationService.getAnalysisMetrics(projectId);
       
-      res.json({
-        success: true,
-        data: metrics,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(metrics);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis metrics:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis metrics',
-        message: error.message
-      });
+      res.error('Failed to get analysis metrics', 500, { details: error.message
+       });
     }
   }
 
@@ -381,20 +328,12 @@ class AnalysisController {
       // Use Application Service for database analysis
       const analysis = await this.analysisApplicationService.getAnalysisFromDatabase(projectId);
       
-      res.json({
-        success: true,
-        data: analysis,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(analysis);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis from database:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis from database',
-        message: error.message
-      });
+      res.error('Failed to get analysis from database', 500, { details: error.message
+       });
     }
   }
 
@@ -410,20 +349,12 @@ class AnalysisController {
       // Use Application Service for tech stack data
       const techStack = await this.analysisApplicationService.getAnalysisTechStack(projectId);
       
-      res.json({
-        success: true,
-        data: techStack,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(techStack);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis tech stack:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis tech stack',
-        message: error.message
-      });
+      res.error('Failed to get analysis tech stack', 500, { details: error.message
+       });
     }
   }
 
@@ -439,20 +370,12 @@ class AnalysisController {
       // Use Application Service for architecture data
       const architecture = await this.analysisApplicationService.getAnalysisArchitecture(projectId);
       
-      res.json({
-        success: true,
-        data: architecture,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(architecture);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis architecture:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis architecture',
-        message: error.message
-      });
+      res.error('Failed to get analysis architecture', 500, { details: error.message
+       });
     }
   }
 
@@ -468,21 +391,12 @@ class AnalysisController {
       // Use Application Service for charts data
       const charts = await this.analysisApplicationService.getAnalysisCharts(projectId, type);
       
-      res.json({
-        success: true,
-        data: charts,
-        projectId,
-        chartType: type,
-        timestamp: new Date().toISOString()
-      });
+      res.success(charts);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis charts:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis charts',
-        message: error.message
-      });
+      res.error('Failed to get analysis charts', 500, { details: error.message
+       });
     }
   }
 
@@ -495,11 +409,7 @@ class AnalysisController {
     // Check for duplicate requests
     if (this.isRequestActive(requestKey)) {
       this.logger.warn(`💡 Duplicate request detected for recommendations: ${requestKey}`);
-      return res.status(409).json({
-        success: false,
-        error: 'Request already in progress',
-        message: 'Another request for the same data is currently being processed'
-      });
+      return res.conflict('Request already in progress', { details: 'Another request for the same data is currently being processed' });
     }
     
     try {
@@ -512,21 +422,13 @@ class AnalysisController {
       const recommendations = await this.analysisApplicationService.getAnalysisRecommendations(projectId);
       
       this.markRequestCompleted(requestKey);
-      res.json({
-        success: true,
-        data: recommendations,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(recommendations);
       
     } catch (error) {
       this.markRequestCompleted(requestKey);
       this.logger.error('❌ Failed to get analysis recommendations:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis recommendations',
-        message: error.message
-      });
+      res.error('Failed to get analysis recommendations', 500, { details: error.message
+       });
     }
   }
 
@@ -542,21 +444,12 @@ class AnalysisController {
       // Use Application Service for file data
       const fileData = await this.analysisApplicationService.getAnalysisFile(projectId, filename);
       
-      res.json({
-        success: true,
-        data: fileData,
-        projectId,
-        filename,
-        timestamp: new Date().toISOString()
-      });
+      res.success(fileData);
       
     } catch (error) {
       this.logger.error('❌ Failed to get analysis file:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get analysis file',
-        message: error.message
-      });
+      res.error('Failed to get analysis file', 500, { details: error.message
+       });
     }
   }
 
@@ -577,11 +470,8 @@ class AnalysisController {
       // Check if we have a workflowController injected
       if (!this.workflowController) {
         this.logger.error('❌ WorkflowController not available in AnalysisController');
-        return res.status(500).json({
-          success: false,
-          error: 'WorkflowController not available',
-          message: 'AnalysisController was not properly initialized with WorkflowController dependency'
-        });
+        return res.error('WorkflowController not available', 500, { details: 'AnalysisController was not properly initialized with WorkflowController dependency'
+         });
       }
       
       // Set the mode for workflow execution
@@ -595,11 +485,8 @@ class AnalysisController {
       
     } catch (error) {
       this.logger.error('❌ Failed to execute analysis workflow:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to execute analysis workflow',
-        message: error.message
-      });
+      res.error('Failed to execute analysis workflow', 500, { details: error.message
+       });
     }
   }
 
@@ -619,18 +506,13 @@ class AnalysisController {
         timestamp: new Date().toISOString()
       };
       
-      res.json({
-        success: true,
-        data: health
-      });
+      res.success(health
+      );
       
     } catch (error) {
       this.logger.error('❌ Health check failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Health check failed',
-        message: error.message
-      });
+      res.error('Health check failed', 500, { details: error.message
+       });
     }
   }
 
@@ -729,16 +611,13 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`No analyses found for project: ${projectId}, returning empty recommendations`);
-        return res.json({
-          success: true,
-          data: {
+        return res.success({
             category,
             recommendations: [],
             count: 0,
             projectId,
             timestamp: new Date().toISOString()
-          }
-        });
+          });
       }
       
       // Filter for the specific category and extract recommendations
@@ -805,24 +684,18 @@ class AnalysisController {
         this.logger.warn(`⚠️ [AnalysisController] No completed analyses found for category: ${category}`);
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           recommendations,
           count: recommendations.length,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} recommendations:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} recommendations`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} recommendations', 500, { details: error.message
+       });
     }
   }
 
@@ -841,16 +714,13 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`No analyses found for project: ${projectId}, returning empty issues`);
-        return res.json({
-          success: true,
-          data: {
+        return res.success({
             category,
             issues: [],
             count: 0,
             projectId,
             timestamp: new Date().toISOString()
-          }
-        });
+          });
       }
       
       // Filter for the specific category and extract issues
@@ -918,24 +788,18 @@ class AnalysisController {
       
       this.logger.info(`📤 [AnalysisController] Sending ${issues.length} issues to frontend for category: ${category}`);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           issues,
           count: issues.length,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} issues:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} issues`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} issues', 500, { details: error.message
+       });
     }
   }
 
@@ -954,8 +818,7 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`No analyses found for project: ${projectId}, returning empty metrics`);
-        return res.json({
-          success: true,
+        return res.success({
           data: {
             category,
             metrics: {
@@ -1006,23 +869,17 @@ class AnalysisController {
         }
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           metrics,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} metrics:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} metrics`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} metrics', 500, { details: error.message
+       });
     }
   }
 
@@ -1044,8 +901,7 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`⚠️ [AnalysisController] No analyses found for project: ${projectId}, returning empty summary`);
-        return res.json({
-          success: true,
+        return res.success({
           data: {
             category,
             summary: {},
@@ -1086,23 +942,17 @@ class AnalysisController {
       }
       
       this.logger.info(`📤 [AnalysisController] Sending summary to frontend:`, JSON.stringify(summary, null, 2));
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           summary,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} summary:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} summary`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} summary', 500, { details: error.message
+       });
     }
   }
 
@@ -1121,8 +971,7 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`No analyses found for project: ${projectId}, returning empty results`);
-        return res.json({
-          success: true,
+        return res.success({
           data: {
             category,
             results: {},
@@ -1152,23 +1001,17 @@ class AnalysisController {
         }
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           results,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} results:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} results`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} results', 500, { details: error.message
+       });
     }
   }
 
@@ -1187,16 +1030,13 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`No analyses found for project: ${projectId}, returning empty tasks`);
-        return res.json({
-          success: true,
-          data: {
+        return res.success({
             category,
             tasks: [],
             count: 0,
             projectId,
             timestamp: new Date().toISOString()
-          }
-        });
+          });
       }
       
       // Filter for the specific category and extract tasks
@@ -1217,24 +1057,18 @@ class AnalysisController {
         }
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           tasks,
           count: tasks.length,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} tasks:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} tasks`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} tasks', 500, { details: error.message
+       });
     }
   }
 
@@ -1253,16 +1087,13 @@ class AnalysisController {
       // Defensive check: ensure analyses is an array
       if (!analyses || !Array.isArray(analyses)) {
         this.logger.warn(`No analyses found for project: ${projectId}, returning empty documentation`);
-        return res.json({
-          success: true,
-          data: {
+        return res.success({
             category,
             documentation: [],
             count: 0,
             projectId,
             timestamp: new Date().toISOString()
-          }
-        });
+          });
       }
       
       // Filter for the specific category and extract documentation
@@ -1282,24 +1113,18 @@ class AnalysisController {
         }
       }
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           category,
           documentation,
           count: documentation.length,
           projectId,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
       
     } catch (error) {
       this.logger.error(`❌ Failed to get ${category} documentation:`, error);
-      res.status(500).json({
-        success: false,
-        error: `Failed to get ${category} documentation`,
-        message: error.message
-      });
+      res.error('Failed to get ${category} documentation', 500, { details: error.message
+       });
     }
   }
 

@@ -38,10 +38,7 @@ class VersionController {
 
       // Validate required fields (task is now optional)
       if (!projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Project path is required',
-          timestamp: new Date()
+        return res.badRequest('Project path is required', {timestamp: new Date()
         });
       }
 
@@ -98,10 +95,7 @@ class VersionController {
         body: req.body
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -115,10 +109,7 @@ class VersionController {
       const { projectPath } = req.query;
 
       if (!projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Project path is required',
-          timestamp: new Date()
+        return res.badRequest('Project path is required', {timestamp: new Date()
         });
       }
 
@@ -140,10 +131,7 @@ class VersionController {
         query: req.query
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -174,10 +162,7 @@ class VersionController {
         query: req.query
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -191,10 +176,7 @@ class VersionController {
       const { version } = req.body;
 
       if (!version) {
-        return res.status(400).json({
-          success: false,
-          error: 'Version is required',
-          timestamp: new Date()
+        return res.badRequest('Version is required', {timestamp: new Date()
         });
       }
 
@@ -216,10 +198,7 @@ class VersionController {
         body: req.body
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -233,10 +212,7 @@ class VersionController {
       const { version1, version2 } = req.body;
 
       if (!version1 || !version2) {
-        return res.status(400).json({
-          success: false,
-          error: 'Both version1 and version2 are required',
-          timestamp: new Date()
+        return res.badRequest('Both version1 and version2 are required', {timestamp: new Date()
         });
       }
 
@@ -258,10 +234,7 @@ class VersionController {
         body: req.body
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -275,10 +248,7 @@ class VersionController {
       const { task, projectPath, context } = req.body;
 
       if (!task || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Task and projectPath are required',
-          timestamp: new Date()
+        return res.badRequest('Task and projectPath are required', {timestamp: new Date()
         });
       }
 
@@ -304,10 +274,7 @@ class VersionController {
         body: req.body
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -335,10 +302,7 @@ class VersionController {
         error: error.message
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -352,10 +316,7 @@ class VersionController {
       const { config } = req.body;
 
       if (!config || typeof config !== 'object') {
-        return res.status(400).json({
-          success: false,
-          error: 'Config object is required',
-          timestamp: new Date()
+        return res.badRequest('Config object is required', {timestamp: new Date()
         });
       }
 
@@ -377,10 +338,7 @@ class VersionController {
         body: req.body
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -408,10 +366,7 @@ class VersionController {
         error: error.message
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -425,17 +380,13 @@ class VersionController {
       const { task = '', projectPath, context = {}, bumpType = '', customVersion = '' } = req.body;
 
       if (!projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Project path is required',
-          timestamp: new Date()
+        return res.badRequest('Project path is required', {timestamp: new Date()
         });
       }
 
       // Check if everything is already provided - no AI needed
       if (task && task.trim() && bumpType && bumpType !== 'auto') {
-        return res.status(200).json({
-          success: true,
+        return res.success({
           data: {
             recommendedType: bumpType,
             confidence: 1.0,
@@ -473,10 +424,7 @@ class VersionController {
         body: req.body
       });
 
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date()
+      res.error('Internal server error', 500, {timestamp: new Date()
       });
     }
   }
@@ -487,18 +435,14 @@ class VersionController {
    */
   async healthCheck(req, res) {
     try {
-      res.status(200).json({
-        success: true,
-        status: 'healthy',
+      res.success({status: 'healthy',
         service: 'version-management',
         timestamp: new Date(),
         version: '1.0.0'
       });
     } catch (error) {
-      res.status(500).json({
-        success: false,
+      res.error(error.message, 500, {
         status: 'unhealthy',
-        error: error.message,
         timestamp: new Date()
       });
     }

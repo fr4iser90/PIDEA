@@ -27,10 +27,7 @@ class SessionController {
       const { user, session } = req;
       
       if (!user || !session) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       logger.info('Session extension request', {
@@ -43,21 +40,15 @@ class SessionController {
         'manual'
       );
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           sessionId: result.sessionId,
           expiresAt: result.expiresAt,
           extensionCount: result.extensionCount
-        }
-      });
+        });
 
     } catch (error) {
       logger.error('Session extension failed:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to extend session'
-      });
+      res.error(error.message || 'Failed to extend session', 500);
     }
   }
 
@@ -70,25 +61,17 @@ class SessionController {
       const { user, session } = req;
       
       if (!user || !session) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       const stats = await this.sessionActivityService.getSessionActivityStats(session.id);
 
-      res.json({
-        success: true,
-        data: stats
-      });
+      res.success(stats
+      );
 
     } catch (error) {
       logger.error('Failed to get session status:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to get session status'
-      });
+      res.error(error.message || 'Failed to get session status', 500);
     }
   }
 
@@ -101,10 +84,7 @@ class SessionController {
       const { user, session } = req;
       
       if (!user || !session) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       const { type, details, duration } = req.body;
@@ -119,17 +99,12 @@ class SessionController {
         ipAddress
       });
 
-      res.json({
-        success: true,
-        data: activity
-      });
+      res.success(activity
+      );
 
     } catch (error) {
       logger.error('Failed to record activity:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to record activity'
-      });
+      res.error(error.message || 'Failed to record activity', 500);
     }
   }
 
@@ -142,10 +117,7 @@ class SessionController {
       const { user } = req;
       
       if (!user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       const { timeRange } = req.query;
@@ -156,17 +128,12 @@ class SessionController {
         rangeMs
       );
 
-      res.json({
-        success: true,
-        data: analytics
-      });
+      res.success(analytics
+      );
 
     } catch (error) {
       logger.error('Failed to get session analytics:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to get session analytics'
-      });
+      res.error(error.message || 'Failed to get session analytics', 500);
     }
   }
 
@@ -179,25 +146,17 @@ class SessionController {
       const { user } = req;
       
       if (!user || !user.hasPermission('admin:monitor')) {
-        return res.status(403).json({
-          success: false,
-          error: 'Admin permission required'
-        });
+        return res.forbidden('Admin permission required');
       }
 
       const status = this.sessionActivityService.getStatus();
 
-      res.json({
-        success: true,
-        data: status
-      });
+      res.success(status
+      );
 
     } catch (error) {
       logger.error('Failed to get monitoring data:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to get monitoring data'
-      });
+      res.error(error.message || 'Failed to get monitoring data', 500);
     }
   }
 
@@ -210,25 +169,17 @@ class SessionController {
       const { user } = req;
       
       if (!user || !user.hasPermission('admin:cleanup')) {
-        return res.status(403).json({
-          success: false,
-          error: 'Admin permission required'
-        });
+        return res.forbidden('Admin permission required');
       }
 
       const result = await this.sessionActivityService.cleanupExpiredSessions();
 
-      res.json({
-        success: true,
-        data: result
-      });
+      res.success(result
+      );
 
     } catch (error) {
       logger.error('Failed to trigger cleanup:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to trigger cleanup'
-      });
+      res.error(error.message || 'Failed to trigger cleanup', 500);
     }
   }
 
@@ -241,34 +192,22 @@ class SessionController {
       const { user } = req;
       
       if (!user || !user.hasPermission('admin:config')) {
-        return res.status(403).json({
-          success: false,
-          error: 'Admin permission required'
-        });
+        return res.forbidden('Admin permission required');
       }
 
       const { config } = req.body;
       
       if (!config || typeof config !== 'object') {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid configuration data'
-        });
+        return res.badRequest('Invalid configuration data');
       }
 
       this.sessionActivityService.updateConfig(config);
 
-      res.json({
-        success: true,
-        message: 'Configuration updated successfully'
-      });
+      res.success({message: 'Configuration updated successfully'});
 
     } catch (error) {
       logger.error('Failed to update config:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to update configuration'
-      });
+      res.error(error.message || 'Failed to update configuration', 500);
     }
   }
 
@@ -280,27 +219,18 @@ class SessionController {
     try {
       const status = this.sessionActivityService.getStatus();
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           status: 'healthy',
           timestamp: new Date().toISOString(),
           service: status
-        }
-      });
+        });
 
     } catch (error) {
       logger.error('Health check failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Service unhealthy'
-      });
+      res.error('Service unhealthy', 500);
     }
   }
 }
 
 module.exports = SessionController;
-
-
-
 

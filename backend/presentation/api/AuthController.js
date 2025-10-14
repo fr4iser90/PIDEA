@@ -2,7 +2,6 @@ const Logger = require('@logging/Logger');
 const ServiceLogger = require('@logging/ServiceLogger');
 const logger = new ServiceLogger('AuthController');
 
-
 class AuthController {
   constructor(dependencies = {}) {
     this.authApplicationService = dependencies.authApplicationService;
@@ -16,19 +15,18 @@ class AuthController {
     try {
       const { email, password, username } = req.body;
       if (!email || !password) {
-        return res.status(400).json({ success: false, message: 'Email and password are required' });
+        return res.badRequest('Email and password are required');
       }
 
       const userData = { email, password, username };
       const result = await this.authApplicationService.register(userData);
       
-      res.status(201).json({ 
-        success: result.success, 
+      res.created({ 
         user: result.data 
       });
     } catch (error) {
       logger.error('Registration error:', error);
-      res.status(500).json({ success: false, message: error.message });
+      res.error(error.message, 500);
     }
   }
 
@@ -47,10 +45,7 @@ class AuthController {
       // Validate input
       if (!email || !password) {
         logger.info('❌ [AuthController] Missing email or password');
-        return res.status(400).json({
-          success: false,
-          error: 'Email and password are required'
-        });
+        return res.badRequest('Email and password are required');
       }
 
       // Authenticate user and create session
@@ -58,7 +53,6 @@ class AuthController {
       const result = await this.authApplicationService.login(credentials);
 
       const responseData = {
-        success: true,
         data: {
           user: result.data.user,
           accessToken: result.data.session.accessToken,
@@ -68,7 +62,6 @@ class AuthController {
       };
 
       logger.info('✅ [AuthController] Login successful, sending response:', {
-        success: responseData.success,
         userId: responseData.data.user.id,
         userEmail: responseData.data.user.email,
         accessTokenLength: responseData.data.accessToken.length,
@@ -96,13 +89,10 @@ class AuthController {
       });
 
       logger.info('✅ [AuthController] Cookies set successfully');
-      res.json(responseData);
+      res.success(responseData.data);
     } catch (error) {
       logger.error('Login error:', error);
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
+      res.unauthorized('Invalid credentials');
     }
   }
 
@@ -114,10 +104,7 @@ class AuthController {
       
       if (!refreshToken) {
         logger.info('❌ [AuthController] No refresh token found in cookies');
-        return res.status(400).json({
-          success: false,
-          error: 'Refresh token is required'
-        });
+        return res.badRequest('Refresh token is required');
       }
 
       // Refresh authentication using application service with refresh token
@@ -146,18 +133,12 @@ class AuthController {
         userEmail: result.data.user.email
       });
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           user: result.data.user
-        }
-      });
+        });
     } catch (error) {
       logger.error('❌ [AuthController] Refresh error:', error);
-      res.status(401).json({
-        success: false,
-        error: 'Authentication refresh failed'
-      });
+      res.unauthorized('Authentication refresh failed');
     }
   }
 
@@ -186,10 +167,7 @@ class AuthController {
       
       logger.info('✅ [AuthController] Cookies cleared successfully');
       
-      res.json({
-        success: true,
-        message: 'Logged out successfully'
-      });
+      res.success({message: 'Logged out successfully'});
     } catch (error) {
       logger.error('❌ [AuthController] Logout error:', error);
       
@@ -209,10 +187,7 @@ class AuthController {
         logger.error('❌ [AuthController] Failed to clear cookies:', cookieError);
       }
       
-      res.status(500).json({
-        success: false,
-        error: 'Logout failed'
-      });
+      res.error('Logout failed', 500);
     }
   }
 
@@ -220,26 +195,17 @@ class AuthController {
   async getProfile(req, res) {
     try {
       if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       const result = await this.authApplicationService.getUserProfile(req.user.id);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           user: result.data.user
-        }
-      });
+        });
     } catch (error) {
       logger.error('Get profile error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get profile'
-      });
+      res.error('Failed to get profile', 500);
     }
   }
 
@@ -261,10 +227,7 @@ class AuthController {
       
       if (!accessToken && !refreshToken) {
         logger.info('❌ [AuthController] No authentication tokens found in cookies');
-        return res.status(401).json({
-          success: false,
-          error: 'No valid session found',
-          code: 'SESSION_EXPIRED'
+        return res.unauthorized('No valid session found', {code: 'SESSION_EXPIRED'
         });
       }
 
@@ -274,12 +237,9 @@ class AuthController {
           const result = await this.authApplicationService.validateAccessToken(accessToken);
           if (result.success) {
             logger.info('✅ [AuthController] Access token validation successful');
-            return res.json({
-              success: true,
-              data: {
+            return res.success({
                 user: result.data.user
-              }
-            });
+              });
           }
         } catch (error) {
           logger.debug('❌ [AuthController] Access token validation failed, trying refresh token');
@@ -311,12 +271,9 @@ class AuthController {
             });
 
             logger.info('✅ [AuthController] Token refreshed and validated successfully');
-            return res.json({
-              success: true,
-              data: {
+            return res.success({
                 user: result.data.user
-              }
-            });
+              });
           }
         } catch (error) {
           logger.debug('❌ [AuthController] Refresh token validation failed:', error.message);
@@ -325,17 +282,11 @@ class AuthController {
 
       // All validation attempts failed
       logger.info('❌ [AuthController] All authentication attempts failed');
-      return res.status(401).json({
-        success: false,
-        error: 'No valid session found',
-        code: 'SESSION_EXPIRED'
+      return res.unauthorized('No valid session found', {code: 'SESSION_EXPIRED'
       });
     } catch (error) {
       logger.error('❌ [AuthController] Authentication validation error:', error);
-      res.status(401).json({
-        success: false,
-        error: 'Authentication validation failed',
-        code: 'VALIDATION_ERROR'
+      res.unauthorized('Authentication validation failed', {code: 'VALIDATION_ERROR'
       });
     }
   }
@@ -344,53 +295,35 @@ class AuthController {
   async updateProfile(req, res) {
     try {
       if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       const { email, currentPassword, newPassword } = req.body;
 
       // Validate required fields for password change
       if (newPassword && !currentPassword) {
-        return res.status(400).json({
-          success: false,
-          error: 'Current password is required to change password'
-        });
+        return res.badRequest('Current password is required to change password');
       }
 
       const profileData = { email, currentPassword, newPassword };
       const result = await this.authApplicationService.updateUserProfile(req.user.id, profileData);
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           user: result.data.user
-        }
-      });
+        });
     } catch (error) {
       logger.error('Update profile error:', error);
       
       // Handle specific error types
       if (error.message === 'Email already in use') {
-        return res.status(409).json({
-          success: false,
-          error: 'Email already in use'
-        });
+        return res.conflict('Email already in use');
       }
       
       if (error.message === 'Current password is incorrect') {
-        return res.status(400).json({
-          success: false,
-          error: 'Current password is incorrect'
-        });
+        return res.badRequest('Current password is incorrect');
       }
       
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update profile'
-      });
+      res.error('Failed to update profile', 500);
     }
   }
 
@@ -398,26 +331,17 @@ class AuthController {
   async getSessions(req, res) {
     try {
       if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
-        });
+        return res.unauthorized('Authentication required');
       }
 
       const result = await this.authApplicationService.getUserSessions(req.user.id);
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           sessions: result.data.sessions
-        }
-      });
+        });
     } catch (error) {
       logger.error('Get sessions error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get sessions'
-      });
+      res.error('Failed to get sessions', 500);
     }
   }
 }

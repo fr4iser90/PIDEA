@@ -36,10 +36,7 @@ class PerformanceAnalysisController {
       const { projectId, projectPath, config = {} } = req.body;
 
       if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing required parameters: projectId and projectPath',
-          data: null
+        return res.badRequest('Missing required parameters: projectId and projectPath', {data: null
         });
       }
 
@@ -54,8 +51,7 @@ class PerformanceAnalysisController {
         samples: result.data?.samples?.length || 0 
       });
 
-      res.json({
-        success: true,
+      res.success({
         data: {
           projectId: projectId,
           timestamp: new Date().toISOString(),
@@ -63,8 +59,7 @@ class PerformanceAnalysisController {
           results: result.data?.results || {},
           recommendations: result.data?.recommendations || [],
           summary: result.data?.summary || {}
-        },
-        error: null
+        }
       });
     } catch (error) {
       this.logger.error('Performance analysis failed', { 
@@ -72,14 +67,7 @@ class PerformanceAnalysisController {
         error: error.message 
       });
 
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Performance analysis failed',
-          details: error.message
-        }
-      });
+      res.error('Performance analysis failed', 500, { details: error.message });
     }
   }
 
@@ -87,22 +75,11 @@ class PerformanceAnalysisController {
     try {
       const config = await this.performanceService.getConfiguration();
       
-      res.json({
-        success: true,
-        data: config,
-        error: null
-      });
+      res.success(config);
     } catch (error) {
       this.logger.error('Failed to get performance configuration', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get configuration',
-          details: error.message
-        }
-      });
+      res.error('Failed to get configuration', 500, { details: error.message });
     }
   }
 
@@ -110,22 +87,11 @@ class PerformanceAnalysisController {
     try {
       const status = await this.performanceService.getStatus();
       
-      res.json({
-        success: true,
-        data: status,
-        error: null
-      });
+      res.success(status);
     } catch (error) {
       this.logger.error('Failed to get performance status', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get status',
-          details: error.message
-        }
-      });
+      res.error('Failed to get status', 500, { details: error.message });
     }
   }
 
@@ -134,42 +100,25 @@ class PerformanceAnalysisController {
       const { id } = req.params;
       
       if (!id) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing result ID',
-          data: null
+        return res.badRequest('Missing result ID', {data: null
         });
       }
 
       const results = await this.performanceService.getResults(id);
       
       if (!results) {
-        return res.status(404).json({
-          success: false,
-          error: 'Results not found',
-          data: null
+        return res.notFound('Results not found', {data: null
         });
       }
 
-      res.json({
-        success: true,
-        data: results,
-        error: null
-      });
+      res.success(results);
     } catch (error) {
       this.logger.error('Failed to get performance results', { 
         id: req.params.id, 
         error: error.message 
       });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get results',
-          details: error.message
-        }
-      });
+      res.error('Failed to get results', 500, { details: error.message });
     }
   }
 
@@ -178,34 +127,20 @@ class PerformanceAnalysisController {
       const { id } = req.params;
       
       if (!id) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing result ID',
-          data: null
+        return res.badRequest('Missing result ID', {data: null
         });
       }
 
       await this.performanceService.deleteResults(id);
       
-      res.json({
-        success: true,
-        data: { message: 'Results deleted successfully' },
-        error: null
-      });
+      res.success({ message: 'Results deleted successfully' });
     } catch (error) {
       this.logger.error('Failed to delete performance results', { 
         id: req.params.id, 
         error: error.message 
       });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to delete results',
-          details: error.message
-        }
-      });
+      res.error('Failed to delete results', 500, { details: error.message });
     }
   }
 

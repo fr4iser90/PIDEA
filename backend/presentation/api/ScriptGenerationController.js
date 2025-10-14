@@ -22,10 +22,7 @@ class ScriptGenerationController {
             // Validate request
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    errors: errors.array()
-                });
+                return res.badRequest(errors.array());
             }
 
             const {
@@ -57,15 +54,11 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     script: result.script,
                     metadata: result.metadata,
                     confidence: result.confidence
-                },
-                message: 'Script generated successfully'
-            });
+                }, 200, { meta: { message: 'Script generated successfully' } });
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to generate script', {
@@ -74,11 +67,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to generate script',
-                message: error.message
-            });
+            res.error('Failed to generate script', 500, { details: error.message
+             });
         }
     }
 
@@ -120,8 +110,7 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
+            res.success({
                 data: {
                     scripts: result.scripts,
                     pagination: {
@@ -139,11 +128,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get scripts',
-                message: error.message
-            });
+            res.error('Failed to get scripts', 500, { details: error.message
+             });
         }
     }
 
@@ -164,10 +150,7 @@ class ScriptGenerationController {
             const result = await this.queryBus.execute('GetGeneratedScriptsQuery', query);
 
             if (!result.scripts || result.scripts.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Script not found'
-                });
+                return res.notFound('Script not found');
             }
 
             const script = result.scripts[0];
@@ -177,10 +160,8 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: script
-            });
+            res.success(script
+            );
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to get script', {
@@ -189,11 +170,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get script',
-                message: error.message
-            });
+            res.error('Failed to get script', 500, { details: error.message
+             });
         }
     }
 
@@ -221,14 +199,10 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     script: result.script,
                     execution: result.execution
-                },
-                message: 'Script execution started'
-            });
+                }, 200, { meta: { message: 'Script execution started' } });
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to execute script', {
@@ -237,11 +211,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to execute script',
-                message: error.message
-            });
+            res.error('Failed to execute script', 500, { details: error.message
+             });
         }
     }
 
@@ -262,10 +233,7 @@ class ScriptGenerationController {
             const result = await this.queryBus.execute('GetScriptExecutionQuery', query);
 
             if (!result.execution) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Script execution not found'
-                });
+                return res.notFound('Script execution not found');
             }
 
             this.logger.info('ScriptGenerationController: Script execution retrieved', {
@@ -273,10 +241,8 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.execution
-            });
+            res.success(result.execution
+            );
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to get script execution', {
@@ -285,11 +251,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get script execution',
-                message: error.message
-            });
+            res.error('Failed to get script execution', 500, { details: error.message
+             });
         }
     }
 
@@ -305,10 +268,7 @@ class ScriptGenerationController {
             // Validate request
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    errors: errors.array()
-                });
+                return res.badRequest(errors.array());
             }
 
             const updateData = {
@@ -324,11 +284,7 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.script,
-                message: 'Script updated successfully'
-            });
+            res.success(result.script);
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to update script', {
@@ -337,11 +293,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to update script',
-                message: error.message
-            });
+            res.error('Failed to update script', 500, { details: error.message
+             });
         }
     }
 
@@ -366,10 +319,7 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                message: 'Script deleted successfully'
-            });
+            res.success({message: 'Script deleted successfully'});
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to delete script', {
@@ -378,11 +328,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to delete script',
-                message: error.message
-            });
+            res.error('Failed to delete script', 500, { details: error.message
+             });
         }
     }
 
@@ -408,10 +355,8 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.templates
-            });
+            res.success(result.templates
+            );
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to get script templates', {
@@ -419,11 +364,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get script templates',
-                message: error.message
-            });
+            res.error('Failed to get script templates', 500, { details: error.message
+             });
         }
     }
 
@@ -461,11 +403,7 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.template,
-                message: 'Script template created successfully'
-            });
+            res.success(result.template);
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to create script template', {
@@ -473,11 +411,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to create script template',
-                message: error.message
-            });
+            res.error('Failed to create script template', 500, { details: error.message
+             });
         }
     }
 
@@ -502,10 +437,8 @@ class ScriptGenerationController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.stats
-            });
+            res.success(result.stats
+            );
 
         } catch (error) {
             this.logger.error('ScriptGenerationController: Failed to get script statistics', {
@@ -513,11 +446,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get script statistics',
-                message: error.message
-            });
+            res.error('Failed to get script statistics', 500, { details: error.message
+             });
         }
     }
 
@@ -540,10 +470,7 @@ class ScriptGenerationController {
             const result = await this.queryBus.execute('ExportScriptQuery', query);
 
             if (!result.script) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Script not found'
-                });
+                return res.notFound('Script not found');
             }
 
             this.logger.info('ScriptGenerationController: Script exported', {
@@ -566,11 +493,8 @@ class ScriptGenerationController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to export script',
-                message: error.message
-            });
+            res.error('Failed to export script', 500, { details: error.message
+             });
         }
     }
 
@@ -597,17 +521,11 @@ class ScriptGenerationController {
      */
     async healthCheck(req, res) {
         try {
-            res.json({
-                success: true,
-                message: 'Script generation service is healthy',
-                timestamp: new Date().toISOString()
-            });
+            res.success({message: 'Script generation service is healthy',
+                timestamp: new Date().toISOString()});
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: 'Script generation service is unhealthy',
-                message: error.message
-            });
+            res.error('Script generation service is unhealthy', 500, { details: error.message
+             });
         }
     }
 }

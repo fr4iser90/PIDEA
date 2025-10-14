@@ -87,20 +87,12 @@ class TaskStatusSyncController {
         });
       }
 
-      res.json({
-        success: true,
-        data: result,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(result);
 
     } catch (error) {
       this.logger.error('❌ [TaskStatusSyncController] Task status sync failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to sync task statuses',
-        message: error.message
-      });
+      res.error('Failed to sync task statuses', 500, { details: error.message
+       });
     }
   }
 
@@ -146,20 +138,12 @@ class TaskStatusSyncController {
         invalidTasks: result.invalidTasks
       });
 
-      res.json({
-        success: true,
-        data: result,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(result);
 
     } catch (error) {
       this.logger.error('❌ [TaskStatusSyncController] Task status validation failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to validate task statuses',
-        message: error.message
-      });
+      res.error('Failed to validate task statuses', 500, { details: error.message
+       });
     }
   }
 
@@ -215,20 +199,12 @@ class TaskStatusSyncController {
         });
       }
 
-      res.json({
-        success: true,
-        data: result,
-        projectId,
-        timestamp: new Date().toISOString()
-      });
+      res.success(result);
 
     } catch (error) {
       this.logger.error('❌ [TaskStatusSyncController] Task status rollback failed:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to rollback task statuses',
-        message: error.message
-      });
+      res.error('Failed to rollback task statuses', 500, { details: error.message
+       });
     }
   }
 }

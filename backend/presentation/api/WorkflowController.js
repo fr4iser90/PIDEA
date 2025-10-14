@@ -50,10 +50,7 @@ class WorkflowController {
 
             // Validate required fields
             if (!workflow) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Workflow is required',
-                    message: 'Please specify which workflow to execute',
+                return res.badRequest('Workflow is required', {message: 'Please specify which workflow to execute',
                     deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
                 });
             }
@@ -183,15 +180,7 @@ class WorkflowController {
                         success: executionResult.success
                     });
 
-                    return res.json({
-                        success: true,
-                        data: executionResult,
-                        projectId,
-                        taskMode: 'task',
-                        taskType: req.body.taskType,
-                        workflowName: workflow.name,
-                        deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
-                    });
+                    return res.success(executionResult);
 
                 } catch (error) {
                     this.logger.error('WorkflowController: JSON workflow execution failed', {
@@ -199,11 +188,8 @@ class WorkflowController {
                         error: error.message
                     });
 
-                    return res.status(500).json({
-                        success: false,
-                        error: 'JSON workflow execution failed',
-                        message: error.message
-                    });
+                    return res.error('JSON workflow execution failed', 500, { details: error.message
+                     });
                 }
             }
             
@@ -430,8 +416,7 @@ class WorkflowController {
                             queueItemId: taskResult.queueItemId
                         });
 
-                        res.json({
-                            success: true,
+                        res.success({
                             message: 'Task executed successfully with additional steps',
                             data: {
                                 taskId: taskOptions.taskId,
@@ -455,11 +440,8 @@ class WorkflowController {
                         stack: error.stack
                     });
                     
-                    res.status(500).json({
-                        success: false,
-                        error: 'Failed to execute task',
-                        message: error.message
-                    });
+                    res.error('Failed to execute task', 500, { details: error.message
+                     });
                     return;
                 }
             }
@@ -505,11 +487,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeArchitectureAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Architecture analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'ArchitectureAnalysisOrchestrator';
                     stepOptions.analysisType = 'architecture';
@@ -521,11 +499,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeCodeQualityAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Code quality analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'CodeQualityAnalysisOrchestrator';
                     stepOptions.analysisType = 'code-quality';
@@ -537,11 +511,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeTechStackAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Tech stack analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'TechStackAnalysisOrchestrator';
                     stepOptions.analysisType = 'tech-stack';
@@ -553,11 +523,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeManifestAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Manifest analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'ManifestAnalysisOrchestrator';
                     stepOptions.analysisType = 'manifest';
@@ -570,11 +536,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeSecurityAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Security analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'SecurityAnalysisOrchestrator';
                     stepOptions.analysisType = 'security';
@@ -586,11 +548,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executePerformanceAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Performance analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'PerformanceAnalysisOrchestrator';
                     stepOptions.analysisType = 'performance';
@@ -602,11 +560,7 @@ class WorkflowController {
                 // Use AnalysisApplicationService instead of direct step execution
                 if (this.analysisApplicationService) {
                     const result = await this.analysisApplicationService.executeDependencyAnalysis(projectId, stepOptions);
-                    return res.json({
-                        success: true,
-                        data: result,
-                        message: 'Dependency analysis completed successfully'
-                    });
+                    return res.success(result);
                 } else {
                     stepName = 'DependencyAnalysisOrchestrator';
                     stepOptions.analysisType = 'dependencies';
@@ -633,10 +587,7 @@ class WorkflowController {
                         userId
                     });
                     if (!result.success) {
-                        return res.status(500).json({
-                            success: false,
-                            error: `Failed to execute ${step.name}: ${result.error}`
-                        });
+                        return res.error('Failed to execute ${step.name}: ${result.error}', 500);
                     }
                     analysis_results[step.key] = result.result;
                 }
@@ -690,13 +641,12 @@ class WorkflowController {
                             
                             results.push({
                                 orchestrator: orchestratorName,
-                                success: false,
                                 error: error.message
                             });
                         }
                     }
                     
-                    const successCount = results.filter(r => r.success).length;
+                    const successCount = results.filter(r => !r.error).length;
                     const totalCount = results.length;
                     
                     return res.json({
@@ -719,10 +669,7 @@ class WorkflowController {
                         userId
                     });
                     
-                    return res.status(500).json({
-                        success: false,
-                        error: `Failed to execute individual analysis: ${error.message}`
-                    });
+                    return res.error('Failed to execute individual analysis: ${error.message}', 500);
                 }
             } else if (workflow === 'security-recommendations' || workflow === 'security-recommendations-analysis') {
                 stepName = 'SecurityRecommendationsStep';
@@ -851,8 +798,7 @@ class WorkflowController {
                         creationMode
                     });
                     
-                    return res.status(200).json({
-                        success: true,
+                    return res.success({
                         message: `Task creation workflow started successfully`,
                         data: {
                             workflowId: realTask.id,
@@ -867,10 +813,7 @@ class WorkflowController {
                     
                 } catch (error) {
                     this.logger.error('WorkflowController: Task creation workflow failed:', error);
-                    return res.status(500).json({
-                        success: false,
-                        error: `Task creation workflow failed: ${error.message}`
-                    });
+                    return res.error('Task creation workflow failed: ${error.message}', 500);
                 }
             } else if (workflow === 'task-review') {
                 // 📋 TASK REVIEW WORKFLOW - QUEUE-BASED EXECUTION
@@ -940,7 +883,6 @@ class WorkflowController {
                                 queueResults.push({
                                     taskId: task.id,
                                     taskTitle: task.title || task.name,
-                                    success: true,
                                     queueItemId: queueResult.queueItemId,
                                     status: queueResult.status,
                                     position: queueResult.position,
@@ -977,7 +919,6 @@ class WorkflowController {
                             queueResults.push({
                                 taskId: task.id,
                                 taskTitle: task.title || task.name,
-                                success: false,
                                 error: error.message,
                                 index: i + 1
                             });
@@ -987,7 +928,7 @@ class WorkflowController {
                     // Use queueResults directly instead of reassigning
                     const results = queueResults;
                     
-                    const successCount = results.filter(r => r.success).length;
+                    const successCount = results.filter(r => !r.error).length;
                     const totalCount = results.length;
                     
                     if (this.logger && this.logger.info) {
@@ -1027,10 +968,7 @@ class WorkflowController {
                         console.error('WorkflowController: Task review workflow failed:', error.message);
                     }
                     
-                    return res.status(500).json({
-                        success: false,
-                        error: `Task review workflow failed: ${error.message}`
-                    });
+                    return res.error('Task review workflow failed: ${error.message}', 500);
                 }
             } else {
 
@@ -1141,7 +1079,6 @@ class WorkflowController {
 
             this.logger.info('WorkflowController: Workflow execution completed with Categories', {
                 stepName,
-                success: true,
                 executionMethod: 'categories'
             });
 
@@ -1156,8 +1093,7 @@ class WorkflowController {
                 });
             }
 
-            res.json({
-                success: true,
+            res.success({
                 message: 'Workflow executed successfully with Categories system',
                 data: {
                     stepName,
@@ -1184,11 +1120,8 @@ class WorkflowController {
                 });
             }
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to execute workflow',
-                message: error.message
-            });
+            res.error('Failed to execute workflow', 500, { details: error.message
+             });
         }
     }
     */
@@ -1213,10 +1146,8 @@ class WorkflowController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.status
-            });
+            res.success(result.status
+            );
 
         } catch (error) {
             this.logger.error('WorkflowController: Failed to get workflow status', {
@@ -1225,11 +1156,8 @@ class WorkflowController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get workflow status',
-                message: error.message
-            });
+            res.error('Failed to get workflow status', 500, { details: error.message
+             });
         }
     }
     
@@ -1254,10 +1182,8 @@ class WorkflowController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.progress
-            });
+            res.success(result.progress
+            );
 
         } catch (error) {
             this.logger.error('WorkflowController: Failed to get workflow progress', {
@@ -1266,11 +1192,8 @@ class WorkflowController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get workflow progress',
-                message: error.message
-            });
+            res.error('Failed to get workflow progress', 500, { details: error.message
+             });
         }
     }
 
@@ -1295,10 +1218,8 @@ class WorkflowController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.results
-            });
+            res.success(result.results
+            );
 
         } catch (error) {
             this.logger.error('WorkflowController: Failed to get workflow results', {
@@ -1307,11 +1228,8 @@ class WorkflowController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get workflow results',
-                message: error.message
-            });
+            res.error('Failed to get workflow results', 500, { details: error.message
+             });
         }
     }
 
@@ -1351,8 +1269,7 @@ class WorkflowController {
                 userId
             });
 
-            res.json({
-                success: true,
+            res.success({
                 data: {
                     sessions: result.sessions,
                     pagination: {
@@ -1370,11 +1287,8 @@ class WorkflowController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get workflow sessions',
-                message: error.message
-            });
+            res.error('Failed to get workflow sessions', 500, { details: error.message
+             });
         }
     }
 
@@ -1399,10 +1313,8 @@ class WorkflowController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.stats
-            });
+            res.success(result.stats
+            );
 
         } catch (error) {
             this.logger.error('WorkflowController: Failed to get workflow statistics', {
@@ -1410,11 +1322,8 @@ class WorkflowController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get workflow statistics',
-                message: error.message
-            });
+            res.error('Failed to get workflow statistics', 500, { details: error.message
+             });
         }
     }
 
@@ -1440,10 +1349,7 @@ class WorkflowController {
                 });
             }
 
-            res.json({
-                success: true,
-                message: 'Workflow stopped successfully'
-            });
+            res.success({message: 'Workflow stopped successfully'});
 
         } catch (error) {
             this.logger.error('WorkflowController: Failed to stop workflow', {
@@ -1452,11 +1358,8 @@ class WorkflowController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to stop workflow',
-                message: error.message
-            });
+            res.error('Failed to stop workflow', 500, { details: error.message
+             });
         }
     }
 
@@ -1465,7 +1368,6 @@ class WorkflowController {
      */
     async executeWorkflowSteps(workflow, taskData, projectId, userId, workspacePath, options) {
         const results = {
-            success: true,
             steps: [],
             errors: [],
             duration: 0
@@ -1608,7 +1510,6 @@ class WorkflowController {
                     if (!stepResult.success) {
                         results.errors.push(`Step ${step.name} failed: ${stepResult.error}`);
                         if (step.strict !== false) {
-                            results.success = false;
                             break;
                         }
                     }
@@ -1623,7 +1524,6 @@ class WorkflowController {
                     const stepProgress = {
                         name: step.name,
                         type: step.type,
-                        success: false,
                         duration: stepDuration,
                         error: error.message
                     };
@@ -1642,7 +1542,6 @@ class WorkflowController {
                     results.errors.push(`Step ${step.name} failed: ${error.message}`);
                     
                     if (step.strict !== false) {
-                        results.success = false;
                         break;
                     }
                 }
@@ -1730,7 +1629,6 @@ class WorkflowController {
                 error: error.message
             });
             
-            results.success = false;
             results.errors.push(`Workflow execution failed: ${error.message}`);
 
             // Update queue with workflow failure
@@ -1977,7 +1875,6 @@ class WorkflowController {
             });
             
             return {
-                success: false,
                 error: error.message
             };
         }
@@ -1989,17 +1886,11 @@ class WorkflowController {
      */
     async healthCheck(req, res) {
         try {
-            res.json({
-                success: true,
-                message: 'Workflow service is healthy',
-                timestamp: new Date().toISOString()
-            });
+            res.success({message: 'Workflow service is healthy',
+                timestamp: new Date().toISOString()});
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: 'Workflow service is unhealthy',
-                message: error.message
-            });
+            res.error('Workflow service is unhealthy', 500, { details: error.message
+             });
         }
     }
 }

@@ -30,10 +30,7 @@ class ProjectController {
       // Validate input
       const validation = this.validateProjectData({ name, workspacePath, description });
       if (!validation.isValid) {
-        return res.status(400).json({ 
-          success: false,
-          error: validation.errors 
-        });
+        return res.badRequest(validation.errors);
       }
       
       // Create project via application service
@@ -48,10 +45,7 @@ class ProjectController {
       
     } catch (error) {
       this.logger.error('Failed to create project:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Internal server error' 
-      });
+      res.error('Internal server error', 500);
     }
   }
 
@@ -65,20 +59,14 @@ class ProjectController {
       const project = await this.projectApplicationService.getProject(projectId);
       
       if (!project) {
-        return res.status(404).json({ 
-          success: false,
-          error: 'Project not found' 
-        });
+        return res.notFound('Project not found');
       }
       
       res.json(project);
       
     } catch (error) {
       this.logger.error('Failed to get project:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Internal server error' 
-      });
+      res.error('Internal server error', 500);
     }
   }
 
@@ -94,19 +82,13 @@ class ProjectController {
       // Validate updates
       const validation = this.validateProjectData(updates, true);
       if (!validation.isValid) {
-        return res.status(400).json({ 
-          success: false,
-          error: validation.errors 
-        });
+        return res.badRequest(validation.errors);
       }
       
       const project = await this.projectApplicationService.updateProject(projectId, updates);
       
       if (!project) {
-        return res.status(404).json({ 
-          success: false,
-          error: 'Project not found' 
-        });
+        return res.notFound('Project not found');
       }
       
       this.logger.info('Project updated:', { projectId, updates });
@@ -114,10 +96,7 @@ class ProjectController {
       
     } catch (error) {
       this.logger.error('Failed to update project:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Internal server error' 
-      });
+      res.error('Internal server error', 500);
     }
   }
 
@@ -131,10 +110,7 @@ class ProjectController {
       const deleted = await this.projectApplicationService.deleteProject(projectId);
       
       if (!deleted) {
-        return res.status(404).json({ 
-          success: false,
-          error: 'Project not found' 
-        });
+        return res.notFound('Project not found');
       }
       
       this.logger.info('Project deleted:', { projectId });
@@ -144,10 +120,7 @@ class ProjectController {
       
     } catch (error) {
       this.logger.error('Failed to delete project:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Internal server error' 
-      });
+      res.error('Internal server error', 500);
     }
   }
 
@@ -184,10 +157,7 @@ class ProjectController {
       
     } catch (error) {
       this.logger.error('Failed to list projects:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Internal server error' 
-      });
+      res.error('Internal server error', 500);
     }
   }
 
@@ -207,30 +177,18 @@ class ProjectController {
       this.logger.error('Failed to save project port:', error);
       
       if (error.message.includes('Valid port number required')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Valid port number required'
-        });
+        return res.badRequest('Valid port number required');
       }
       
       if (error.message.includes('Project not found')) {
-        return res.status(404).json({
-          success: false,
-          error: 'Project not found'
-        });
+        return res.notFound('Project not found');
       }
       
       if (error.message.includes('Invalid port type')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port type'
-        });
+        return res.badRequest('Invalid port type');
       }
       
-      res.status(500).json({
-        success: false,
-        error: 'Failed to save port'
-      });
+      res.error('Failed to save port', 500);
     }
   }
 
@@ -250,30 +208,18 @@ class ProjectController {
       this.logger.error('Failed to update project port:', error);
       
       if (error.message.includes('Valid port number required')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Valid port number required'
-        });
+        return res.badRequest('Valid port number required');
       }
       
       if (error.message.includes('Project not found')) {
-        return res.status(404).json({
-          success: false,
-          error: 'Project not found'
-        });
+        return res.notFound('Project not found');
       }
       
       if (error.message.includes('Invalid port type')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port type'
-        });
+        return res.badRequest('Invalid port type');
       }
       
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update port'
-      });
+      res.error('Failed to update port', 500);
     }
   }
 

@@ -19,10 +19,7 @@ class ProjectAnalysisController {
             const userId = req.user?.id;
             
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             const result = await this.projectAnalysisApplicationService.getProjectAnalyses(projectId, userId);
@@ -44,16 +41,11 @@ class ProjectAnalysisController {
             res.set('ETag', etag);
             res.set('Cache-Control', 'private, max-age=300, must-revalidate');
             
-            res.json({
-                success: true,
-                data: responseData
-            });
+            res.success(responseData
+            );
         } catch (error) {
             this.logger.error('Error getting project analyses:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get project analyses'
-            });
+            res.error('Failed to get project analyses', 500);
         }
     }
 
@@ -65,20 +57,14 @@ class ProjectAnalysisController {
             const { projectId, analysisType } = req.params;
             
             if (!projectId || !analysisType) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID and analysis type are required'
-                });
+                return res.badRequest('Project ID and analysis type are required');
             }
 
             const result = await this.projectAnalysisApplicationService.getLatestAnalysisByType(projectId, analysisType, req.user?.id);
             const analysis = result.data;
             
             if (!analysis) {
-                return res.status(404).json({
-                    success: false,
-                    error: `No ${analysisType} analysis found for project ${projectId}`
-                });
+                return res.notFound('No ${analysisType} analysis found for project ${projectId}');
             }
 
             const responseData = analysis.toJSON();
@@ -98,16 +84,11 @@ class ProjectAnalysisController {
             res.set('ETag', etag);
             res.set('Cache-Control', 'private, max-age=300, must-revalidate');
 
-            res.json({
-                success: true,
-                data: responseData
-            });
+            res.success(responseData
+            );
         } catch (error) {
             this.logger.error('Error getting latest analysis:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get latest analysis'
-            });
+            res.error('Failed to get latest analysis', 500);
         }
     }
 
@@ -119,10 +100,7 @@ class ProjectAnalysisController {
             const { projectId, analysisType } = req.params;
             
             if (!projectId || !analysisType) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID and analysis type are required'
-                });
+                return res.badRequest('Project ID and analysis type are required');
             }
 
             const result = await this.projectAnalysisApplicationService.getAnalysesByType(projectId, analysisType, req.user?.id);
@@ -150,16 +128,11 @@ class ProjectAnalysisController {
             res.set('ETag', etag);
             res.set('Cache-Control', 'private, max-age=300, must-revalidate');
             
-            res.json({
-                success: true,
-                data: responseData
-            });
+            res.success(responseData
+            );
         } catch (error) {
             this.logger.error('Error getting analyses by type:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get analyses by type'
-            });
+            res.error('Failed to get analyses by type', 500);
         }
     }
 
@@ -171,10 +144,7 @@ class ProjectAnalysisController {
             const { projectId, projectPath, analysisType, analysisData, metadata = {} } = req.body;
             
             if (!projectId || !projectPath || !analysisType || !analysisData) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID, project path, analysis type, and analysis data are required'
-                });
+                return res.badRequest('Project ID, project path, analysis type, and analysis data are required');
             }
 
             const analysis = new ProjectAnalysis({
@@ -188,16 +158,11 @@ class ProjectAnalysisController {
             const result = await this.projectAnalysisApplicationService.createProjectAnalysis(projectId, { type: analysisType, data: analysisData }, req.user?.id);
             const savedAnalysis = result.data;
             
-            res.status(201).json({
-                success: true,
-                data: savedAnalysis.toJSON()
-            });
+            res.created(savedAnalysis.toJSON()
+            );
         } catch (error) {
             this.logger.error('Error creating analysis:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to create analysis'
-            });
+            res.error('Failed to create analysis', 500);
         }
     }
 
@@ -210,20 +175,14 @@ class ProjectAnalysisController {
             const updateData = req.body;
             
             if (!id) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Analysis ID is required'
-                });
+                return res.badRequest('Analysis ID is required');
             }
 
             const existingResult = await this.projectAnalysisApplicationService.getProjectAnalysis(id, req.user?.id);
             const existingAnalysis = existingResult.data;
             
             if (!existingAnalysis) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Analysis not found'
-                });
+                return res.notFound('Analysis not found');
             }
 
             // Update the analysis data
@@ -244,16 +203,11 @@ class ProjectAnalysisController {
             const result = await this.projectAnalysisApplicationService.updateProjectAnalysis(id, req.body, req.user?.id);
             const updatedAnalysis = result.data;
             
-            res.json({
-                success: true,
-                data: existingAnalysis.toJSON()
-            });
+            res.success(existingAnalysis.toJSON()
+            );
         } catch (error) {
             this.logger.error('Error updating analysis:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to update analysis'
-            });
+            res.error('Failed to update analysis', 500);
         }
     }
 
@@ -265,32 +219,20 @@ class ProjectAnalysisController {
             const { id } = req.params;
             
             if (!id) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Analysis ID is required'
-                });
+                return res.badRequest('Analysis ID is required');
             }
 
             const result = await this.projectAnalysisApplicationService.deleteProjectAnalysis(id, req.user?.id);
             const deleted = result.success;
             
             if (!deleted) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Analysis not found'
-                });
+                return res.notFound('Analysis not found');
             }
 
-            res.json({
-                success: true,
-                message: 'Analysis deleted successfully'
-            });
+            res.success({message: 'Analysis deleted successfully'});
         } catch (error) {
             this.logger.error('Error deleting analysis:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to delete analysis'
-            });
+            res.error('Failed to delete analysis', 500);
         }
     }
 
@@ -302,10 +244,7 @@ class ProjectAnalysisController {
             const { projectId } = req.params;
             
             if (!projectId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Project ID is required'
-                });
+                return res.badRequest('Project ID is required');
             }
 
             const result = await this.projectAnalysisApplicationService.getAnalysisStats(projectId, req.user?.id);
@@ -326,16 +265,11 @@ class ProjectAnalysisController {
             res.set('ETag', etag);
             res.set('Cache-Control', 'private, max-age=300, must-revalidate');
 
-            res.json({
-                success: true,
-                data: responseData
-            });
+            res.success(responseData
+            );
         } catch (error) {
             this.logger.error('Error getting analysis stats:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get analysis statistics'
-            });
+            res.error('Failed to get analysis statistics', 500);
         }
     }
 }

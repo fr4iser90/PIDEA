@@ -50,21 +50,12 @@ class TaskController {
                 type
             });
             
-            res.json({
-                success: true,
-                data: tasks,
-                projectId,
-                count: tasks.length,
-                timestamp: new Date().toISOString()
-            });
+            res.success(tasks);
             
         } catch (error) {
             this.logger.error('❌ Failed to get project tasks:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get project tasks',
-                message: error.message
-            });
+            res.error('Failed to get project tasks', 500, { details: error.message
+             });
         }
     }
 
@@ -80,27 +71,16 @@ class TaskController {
             // Use Application Service for task retrieval
             const task = await this.taskApplicationService.getTask(id, projectId);
             
-            res.json({
-                success: true,
-                data: task,
-                projectId,
-                timestamp: new Date().toISOString()
-            });
+            res.success(task);
             
         } catch (error) {
             this.logger.error('❌ Failed to get task:', error);
             if (error.message.includes('not found') || error.message.includes('does not belong')) {
-                res.status(404).json({
-                    success: false,
-                    error: 'Task not found',
-                    message: error.message
+                res.notFound('Task not found', {message: error.message
                 });
             } else {
-                res.status(500).json({
-                    success: false,
-                    error: 'Failed to get task',
-                    message: error.message
-                });
+                res.error('Failed to get task', 500, { details: error.message
+                 });
             }
         }
     }
@@ -133,20 +113,12 @@ class TaskController {
                 metadata
             }, projectId, userId);
             
-            res.status(201).json({
-                success: true,
-                data: task,
-                projectId,
-                timestamp: new Date().toISOString()
-            });
+            res.created(task);
             
         } catch (error) {
             this.logger.error('❌ Failed to create task:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to create task',
-                message: error.message
-            });
+            res.error('Failed to create task', 500, { details: error.message
+             });
         }
     }
 
@@ -164,27 +136,16 @@ class TaskController {
             // Use Application Service for task update
             const task = await this.taskApplicationService.updateTask(id, projectId, updateData, userId);
             
-            res.json({
-                success: true,
-                data: task,
-                projectId,
-                timestamp: new Date().toISOString()
-            });
+            res.success(task);
             
         } catch (error) {
             this.logger.error('❌ Failed to update task:', error);
             if (error.message.includes('not found') || error.message.includes('does not belong')) {
-                res.status(404).json({
-                    success: false,
-                    error: 'Task not found',
-                    message: error.message
+                res.notFound('Task not found', {message: error.message
                 });
             } else {
-                res.status(500).json({
-                    success: false,
-                    error: 'Failed to update task',
-                    message: error.message
-                });
+                res.error('Failed to update task', 500, { details: error.message
+                 });
             }
         }
     }
@@ -202,28 +163,19 @@ class TaskController {
             // Use Application Service for task deletion
             await this.taskApplicationService.deleteTask(id, projectId, userId);
             
-            res.json({
-                success: true,
-                message: 'Task deleted successfully',
+            res.success({message: 'Task deleted successfully',
                 projectId,
                 taskId: id,
-                timestamp: new Date().toISOString()
-            });
+                timestamp: new Date().toISOString()});
             
         } catch (error) {
             this.logger.error('❌ Failed to delete task:', error);
             if (error.message.includes('not found') || error.message.includes('does not belong')) {
-                res.status(404).json({
-                    success: false,
-                    error: 'Task not found',
-                    message: error.message
+                res.notFound('Task not found', {message: error.message
                 });
             } else {
-                res.status(500).json({
-                    success: false,
-                    error: 'Failed to delete task',
-                    message: error.message
-                });
+                res.error('Failed to delete task', 500, { details: error.message
+                 });
             }
         }
     }
@@ -263,19 +215,13 @@ class TaskController {
         } catch (error) {
             this.logger.error('❌ [TaskController] Task execution failed:', error);
             if (error.message.includes('not found') || error.message.includes('does not belong')) {
-                res.status(404).json({
-                    success: false,
-                    error: 'Task not found',
-                    message: error.message,
+                res.notFound('Task not found', {message: error.message,
                     deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
                 });
             } else {
-                res.status(500).json({
-                    success: false,
-                    error: 'Task execution failed',
-                    message: error.message,
+                res.error('Task execution failed', 500, { details: error.message,
                     deprecationWarning: 'This endpoint is deprecated. Use /api/projects/:projectId/tasks/enqueue instead.'
-                });
+                 });
             }
         }
     }
@@ -368,20 +314,12 @@ class TaskController {
                 this.logger.info('📡 [TaskController] Emitted task:sync:completed event');
             }
 
-            res.json({
-                success: true,
-                data: result,
-                projectId,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('❌ [TaskController] Failed to sync manual tasks:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to sync manual tasks',
-                message: error.message
-            });
+            res.error('Failed to sync manual tasks', 500, { details: error.message
+             });
         }
     }
 
@@ -400,20 +338,12 @@ class TaskController {
 
             this.logger.info('✅ [TaskController] Manual tasks cleanup completed successfully');
 
-            res.json({
-                success: true,
-                data: result,
-                projectId,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('❌ [TaskController] Failed to clean manual tasks:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to clean manual tasks',
-                message: error.message
-            });
+            res.error('Failed to clean manual tasks', 500, { details: error.message
+             });
         }
     }
 
@@ -432,20 +362,12 @@ class TaskController {
 
             this.logger.info('✅ [TaskController] Project analysis completed successfully');
 
-            res.json({
-                success: true,
-                data: result,
-                projectId,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('❌ [TaskController] Failed to analyze project for tasks:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to analyze project for tasks',
-                message: error.message
-            });
+            res.error('Failed to analyze project for tasks', 500, { details: error.message
+             });
         }
     }
 
@@ -465,18 +387,13 @@ class TaskController {
                 timestamp: new Date().toISOString()
             };
 
-            res.json({
-                success: true,
-                data: health
-            });
+            res.success(health
+            );
 
         } catch (error) {
             this.logger.error('❌ Health check failed:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Health check failed',
-                message: error.message
-            });
+            res.error('Health check failed', 500, { details: error.message
+             });
         }
     }
     /**
@@ -487,10 +404,7 @@ class TaskController {
             const { taskId } = req.body;
             
             if (!taskId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Task ID is required'
-                });
+                return res.badRequest('Task ID is required');
             }
 
             this.logger.info(`Syncing task status for task: ${taskId}`);
@@ -498,19 +412,12 @@ class TaskController {
             // Use Application Service for status synchronization
             const result = await this.taskApplicationService.syncTaskStatus(taskId);
 
-            res.json({
-                success: true,
-                data: result,
-                message: 'Task status synchronized successfully'
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('❌ Failed to sync task status:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to sync task status',
-                message: error.message
-            });
+            res.error('Failed to sync task status', 500, { details: error.message
+             });
         }
     }
 
@@ -522,10 +429,7 @@ class TaskController {
             const { taskId, autoFix = false } = req.body;
             
             if (!taskId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Task ID is required'
-                });
+                return res.badRequest('Task ID is required');
             }
 
             this.logger.info(`Validating task consistency for task: ${taskId}`);
@@ -533,19 +437,12 @@ class TaskController {
             // Use Application Service for consistency validation
             const result = await this.taskApplicationService.validateTaskConsistency(taskId, { autoFix });
 
-            res.json({
-                success: true,
-                data: result,
-                message: 'Task consistency validation completed'
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('❌ Failed to validate task consistency:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to validate task consistency',
-                message: error.message
-            });
+            res.error('Failed to validate task consistency', 500, { details: error.message
+             });
         }
     }
 
@@ -564,19 +461,12 @@ class TaskController {
                 category
             });
 
-            res.json({
-                success: true,
-                data: stats,
-                message: 'Validation statistics retrieved successfully'
-            });
+            res.success(stats);
 
         } catch (error) {
             this.logger.error('❌ Failed to get validation statistics:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get validation statistics',
-                message: error.message
-            });
+            res.error('Failed to get validation statistics', 500, { details: error.message
+             });
         }
     }
 
@@ -588,10 +478,7 @@ class TaskController {
             const { taskIds, autoFix = false } = req.body;
             
             if (!taskIds || !Array.isArray(taskIds) || taskIds.length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Task IDs array is required'
-                });
+                return res.badRequest('Task IDs array is required');
             }
 
             this.logger.info(`Batch syncing ${taskIds.length} tasks`);
@@ -599,19 +486,12 @@ class TaskController {
             // Use Application Service for batch synchronization
             const result = await this.taskApplicationService.batchSyncTasks(taskIds, { autoFix });
 
-            res.json({
-                success: true,
-                data: result,
-                message: `Batch synchronization completed for ${taskIds.length} tasks`
-            });
+            res.success(result, 200, { meta: { message: 'Batch synchronization completed for ${taskIds.length} tasks' } });
 
         } catch (error) {
             this.logger.error('❌ Failed to batch sync tasks:', error);
-            res.status(500).json({
-                success: false,
-                error: 'Failed to batch sync tasks',
-                message: error.message
-            });
+            res.error('Failed to batch sync tasks', 500, { details: error.message
+             });
         }
     }
 
@@ -758,8 +638,7 @@ class TaskController {
                         queueItemId: taskResult.queueItemId
                     });
 
-                    res.json({
-                        success: true,
+                    res.success({
                         message: 'Task queued for execution successfully',
                         data: {
                             taskId,
@@ -776,11 +655,8 @@ class TaskController {
                         stack: error.stack
                     });
                     
-                    res.status(500).json({
-                        success: false,
-                        error: 'Failed to queue task for execution',
-                        message: error.message
-                    });
+                    res.error('Failed to queue task for execution', 500, { details: error.message
+                     });
                     return;
                 }
             }
@@ -826,7 +702,6 @@ class TaskController {
                             queueResults.push({
                                     taskId: task.id,
                                     taskTitle: task.title || task.name,
-                                    success: true,
                                     queueItemId: queueResult.queueItemId,
                                     status: queueResult.status,
                                     position: queueResult.position,
@@ -851,7 +726,6 @@ class TaskController {
                             queueResults.push({
                                 taskId: task.id,
                                 taskTitle: task.title || task.name,
-                                success: false,
                                 error: error.message,
                                 index: i + 1
                             });
@@ -891,10 +765,7 @@ class TaskController {
                         userId
                     });
                     
-                    return res.status(500).json({
-                        success: false,
-                        error: `Task check-state workflow failed: ${error.message}`
-                    });
+                    return res.error('Task check-state workflow failed: ${error.message}', 500);
                 }
             }
 
@@ -939,7 +810,6 @@ class TaskController {
                             queueResults.push({
                                 taskId: task.id,
                                 taskTitle: task.title || task.name,
-                                success: true,
                                 queueItemId: queueResult.queueItemId,
                                 status: queueResult.status,
                                 position: queueResult.position,
@@ -964,7 +834,6 @@ class TaskController {
                             queueResults.push({
                                 taskId: task.id,
                                 taskTitle: task.title || task.name,
-                                success: false,
                                 error: error.message,
                                 index: i + 1
                             });
@@ -1003,10 +872,7 @@ class TaskController {
                         userId
                     });
                     
-                    return res.status(500).json({
-                        success: false,
-                        error: `Bulk task review failed: ${error.message}`
-                    });
+                    return res.error('Bulk task review failed: ${error.message}', 500);
                 }
             }
 
@@ -1070,8 +936,7 @@ class TaskController {
                                 position: queueResult.position
                             });
                             
-                            return res.status(200).json({
-                                success: true,
+                            return res.success({
                                 message: 'Task created and queued for execution successfully',
                                 data: {
                                     task: createdTask,
@@ -1094,8 +959,7 @@ class TaskController {
                             });
                             
                             // Task was created but failed to queue - return partial success
-                            return res.status(200).json({
-                                success: true,
+                            return res.success({
                                 message: 'Task created successfully but failed to queue for execution',
                                 data: {
                                     task: createdTask,
@@ -1112,8 +976,7 @@ class TaskController {
                         }
                     } else {
                         // Task created but not queued for execution
-                        return res.status(200).json({
-                            success: true,
+                        return res.success({
                             message: 'Task created successfully',
                             data: {
                                 task: createdTask,
@@ -1135,18 +998,13 @@ class TaskController {
                         userId
                     });
                     
-                    return res.status(500).json({
-                        success: false,
-                        error: `Task creation workflow failed: ${error.message}`
-                    });
+                    return res.error('Task creation workflow failed: ${error.message}', 500);
                 }
             }
 
             // For other workflows, return not implemented
-            res.status(501).json({
-                success: false,
-                error: 'Workflow not implemented',
-                message: `Workflow '${workflow}' is not yet implemented in TaskController`
+            res.error('Workflow not implemented', 501, { 
+                message: `Workflow '${workflow}' is not yet implemented in TaskController` 
             });
 
         } catch (error) {
@@ -1156,11 +1014,8 @@ class TaskController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to enqueue task',
-                message: error.message
-            });
+            res.error('Failed to enqueue task', 500, { details: error.message
+             });
         }
     }
 }

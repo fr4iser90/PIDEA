@@ -34,10 +34,7 @@ class DatabaseAnalysisController {
       const { projectId, projectPath, config = {} } = req.body;
 
       if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing required parameters: projectId and projectPath',
-          data: null
+        return res.badRequest('Missing required parameters: projectId and projectPath', {data: null
         });
       }
 
@@ -52,16 +49,14 @@ class DatabaseAnalysisController {
         samples: result.data?.samples?.length || 0 
       });
 
-      res.json({
-        success: true,
+      res.success({
         data: {
           projectId: projectId,
           timestamp: new Date().toISOString(),
           scanner: 'database',
           results: result.data || {},
           metadata: result.metadata || {}
-        },
-        error: null
+        }
       });
     } catch (error) {
       this.logger.error('Database analysis failed', { 
@@ -69,14 +64,7 @@ class DatabaseAnalysisController {
         error: error.message 
       });
 
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Database analysis failed',
-          details: error.message
-        }
-      });
+      res.error('Database analysis failed', 500, { details: error.message });
     }
   }
 
@@ -84,22 +72,11 @@ class DatabaseAnalysisController {
     try {
       const config = await this.databaseService.getConfiguration();
       
-      res.json({
-        success: true,
-        data: config,
-        error: null
-      });
+      res.success(config);
     } catch (error) {
       this.logger.error('Failed to get database configuration', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get configuration',
-          details: error.message
-        }
-      });
+      res.error('Failed to get configuration', 500, { details: error.message });
     }
   }
 
@@ -107,22 +84,11 @@ class DatabaseAnalysisController {
     try {
       const status = await this.databaseService.getStatus();
       
-      res.json({
-        success: true,
-        data: status,
-        error: null
-      });
+      res.success(status);
     } catch (error) {
       this.logger.error('Failed to get database status', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get status',
-          details: error.message
-        }
-      });
+      res.error('Failed to get status', 500, { details: error.message });
     }
   }
 

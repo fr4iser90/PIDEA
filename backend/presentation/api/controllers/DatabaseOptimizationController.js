@@ -25,11 +25,7 @@ class DatabaseOptimizationController {
       const options = req.body || {};
       const result = await this.databaseOptimizationService.performOptimization(options);
 
-      res.json({
-        success: true,
-        data: result,
-        message: 'Database optimization completed successfully'
-      });
+      res.success(result);
 
     } catch (error) {
       this.logger.error('Database optimization failed', { 
@@ -37,11 +33,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Database optimization failed'
-      });
+      res.error(error.message, 500, { message: 'Database optimization failed' });
     }
   }
 
@@ -58,11 +50,7 @@ class DatabaseOptimizationController {
 
       const recommendations = await this.databaseOptimizationService.getOptimizationRecommendations();
 
-      res.json({
-        success: true,
-        data: recommendations,
-        message: 'Optimization recommendations retrieved successfully'
-      });
+      res.success(recommendations);
 
     } catch (error) {
       this.logger.error('Failed to get optimization recommendations', { 
@@ -70,11 +58,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Failed to get optimization recommendations'
-      });
+      res.error(error.message, 500, { message: 'Failed to get optimization recommendations' });
     }
   }
 
@@ -91,11 +75,7 @@ class DatabaseOptimizationController {
 
       const status = await this.databaseOptimizationService.getOptimizationStatus();
 
-      res.json({
-        success: true,
-        data: status,
-        message: 'Optimization status retrieved successfully'
-      });
+      res.success(status);
 
     } catch (error) {
       this.logger.error('Failed to get optimization status', { 
@@ -103,11 +83,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Failed to get optimization status'
-      });
+      res.error(error.message, 500, { message: 'Failed to get optimization status' });
     }
   }
 
@@ -126,11 +102,7 @@ class DatabaseOptimizationController {
       const schedule = req.body || {};
       const result = await this.databaseOptimizationService.scheduleOptimization(schedule);
 
-      res.json({
-        success: true,
-        data: result,
-        message: 'Optimization scheduled successfully'
-      });
+      res.success(result);
 
     } catch (error) {
       this.logger.error('Failed to schedule optimization', { 
@@ -138,11 +110,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Failed to schedule optimization'
-      });
+      res.error(error.message, 500, { message: 'Failed to schedule optimization' });
     }
   }
 
@@ -161,11 +129,7 @@ class DatabaseOptimizationController {
       const { scheduleId } = req.params;
       const result = await this.databaseOptimizationService.cancelOptimization(scheduleId);
 
-      res.json({
-        success: true,
-        data: result,
-        message: 'Optimization cancelled successfully'
-      });
+      res.success(result);
 
     } catch (error) {
       this.logger.error('Failed to cancel optimization', { 
@@ -173,11 +137,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Failed to cancel optimization'
-      });
+      res.error(error.message, 500, { message: 'Failed to cancel optimization' });
     }
   }
 
@@ -218,16 +178,12 @@ class DatabaseOptimizationController {
         }
       ];
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           history: history.slice(offset, offset + limit),
           total: history.length,
           limit: parseInt(limit),
           offset: parseInt(offset)
-        },
-        message: 'Optimization history retrieved successfully'
-      });
+        }, 200, { meta: { message: 'Optimization history retrieved successfully' } });
 
     } catch (error) {
       this.logger.error('Failed to get optimization history', { 
@@ -235,11 +191,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Failed to get optimization history'
-      });
+      res.error(error.message, 500, { message: 'Failed to get optimization history' });
     }
   }
 
@@ -269,11 +221,7 @@ class DatabaseOptimizationController {
         timestamp: new Date().toISOString()
       };
 
-      res.json({
-        success: true,
-        data: metrics,
-        message: 'Optimization metrics retrieved successfully'
-      });
+      res.success(metrics);
 
     } catch (error) {
       this.logger.error('Failed to get optimization metrics', { 
@@ -281,11 +229,7 @@ class DatabaseOptimizationController {
         user: req.user?.id 
       });
 
-      res.status(500).json({
-        success: false,
-        error: error.message,
-        message: 'Failed to get optimization metrics'
-      });
+      res.error(error.message, 500, { message: 'Failed to get optimization metrics' });
     }
   }
 }

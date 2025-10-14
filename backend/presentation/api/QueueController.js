@@ -33,19 +33,12 @@ class QueueController {
 
             const queueStatus = await this.taskQueueStore.getProjectQueueStatus(projectId, userId);
             
-            res.json({
-                success: true,
-                data: queueStatus,
-                timestamp: new Date().toISOString()
-            });
+            res.success(queueStatus);
 
         } catch (error) {
             this.logger.error('Failed to get queue status', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get queue status',
-                message: error.message
-            });
+            res.error('Failed to get queue status', 500, { details: error.message
+             });
         }
     }
 
@@ -79,19 +72,12 @@ class QueueController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: queueItem,
-                timestamp: new Date().toISOString()
-            });
+            res.success(queueItem);
 
         } catch (error) {
             this.logger.error('Failed to add item to queue', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to add item to queue',
-                message: error.message
-            });
+            res.error('Failed to add item to queue', 500, { details: error.message
+             });
         }
     }
 
@@ -118,19 +104,12 @@ class QueueController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: result,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('Failed to cancel queue item', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to cancel queue item',
-                message: error.message
-            });
+            res.error('Failed to cancel queue item', 500, { details: error.message
+             });
         }
     }
 
@@ -164,19 +143,12 @@ class QueueController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: result,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('Failed to update queue item priority', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to update queue item priority',
-                message: error.message
-            });
+            res.error('Failed to update queue item priority', 500, { details: error.message
+             });
         }
     }
 
@@ -194,19 +166,12 @@ class QueueController {
 
             const stepProgress = await this.stepProgressService.getTaskStepProgress(projectId, itemId, userId);
 
-            res.json({
-                success: true,
-                data: stepProgress,
-                timestamp: new Date().toISOString()
-            });
+            res.success(stepProgress);
 
         } catch (error) {
             this.logger.error('Failed to get step progress', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get step progress',
-                message: error.message
-            });
+            res.error('Failed to get step progress', 500, { details: error.message
+             });
         }
     }
 
@@ -242,19 +207,12 @@ class QueueController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: result,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('Failed to toggle step status', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to toggle step status',
-                message: error.message
-            });
+            res.error('Failed to toggle step status', 500, { details: error.message
+             });
         }
     }
 
@@ -272,19 +230,12 @@ class QueueController {
 
             const statistics = await this.taskQueueStore.getQueueStatistics(projectId, userId);
 
-            res.json({
-                success: true,
-                data: statistics,
-                timestamp: new Date().toISOString()
-            });
+            res.success(statistics);
 
         } catch (error) {
             this.logger.error('Failed to get queue statistics', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get queue statistics',
-                message: error.message
-            });
+            res.error('Failed to get queue statistics', 500, { details: error.message
+             });
         }
     }
 
@@ -311,19 +262,12 @@ class QueueController {
                 });
             }
 
-            res.json({
-                success: true,
-                data: result,
-                timestamp: new Date().toISOString()
-            });
+            res.success(result);
 
         } catch (error) {
             this.logger.error('Failed to clear completed items', { error: error.message });
-            res.status(500).json({
-                success: false,
-                error: 'Failed to clear completed items',
-                message: error.message
-            });
+            res.error('Failed to clear completed items', 500, { details: error.message
+             });
         }
     }
 
@@ -363,10 +307,8 @@ class QueueController {
 
             const history = await this.queueHistoryService.getWorkflowHistory(filters, pagination);
 
-            res.json({
-                success: true,
-                data: history
-            });
+            res.success(history
+            );
 
         } catch (error) {
             this.logger.error('Failed to get queue history', { 
@@ -374,11 +316,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get queue history',
-                message: error.message
-            });
+            res.error('Failed to get queue history', 500, { details: error.message
+             });
         }
     }
 
@@ -397,17 +336,11 @@ class QueueController {
             const historyItem = await this.queueHistoryService.getHistoryItem(historyId);
 
             if (!historyItem) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'History item not found',
-                    message: `History item ${historyId} not found`
-                });
+                return res.notFound('History item not found', { message: `History item ${historyId} not found` });
             }
 
-            res.json({
-                success: true,
-                data: historyItem
-            });
+            res.success(historyItem
+            );
 
         } catch (error) {
             this.logger.error('Failed to get history item', { 
@@ -416,11 +349,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get history item',
-                message: error.message
-            });
+            res.error('Failed to get history item', 500, { details: error.message
+             });
         }
     }
 
@@ -443,11 +373,7 @@ class QueueController {
 
             const result = await this.queueHistoryService.cleanupOldHistory(retentionDays);
 
-            res.json({
-                success: true,
-                data: result,
-                message: `Successfully deleted ${result.deletedCount} history items`
-            });
+            res.success(result, 200, { meta: { message: 'Successfully deleted ${result.deletedCount} history items' } });
 
         } catch (error) {
             this.logger.error('Failed to delete history items', { 
@@ -455,11 +381,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to delete history items',
-                message: error.message
-            });
+            res.error('Failed to delete history items', 500, { details: error.message
+             });
         }
     }
 
@@ -493,11 +416,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to export history',
-                message: error.message
-            });
+            res.error('Failed to export history', 500, { details: error.message
+             });
         }
     }
 
@@ -524,10 +444,8 @@ class QueueController {
 
             const result = await this.TaskModeDetector.detectTaskMode(workflowData);
 
-            res.json({
-                success: true,
-                data: result
-            });
+            res.success(result
+            );
 
         } catch (error) {
             this.logger.error('Failed to detect workflow type', { 
@@ -535,11 +453,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to detect workflow type',
-                message: error.message
-            });
+            res.error('Failed to detect workflow type', 500, { details: error.message
+             });
         }
     }
 
@@ -557,14 +472,11 @@ class QueueController {
 
             const types = this.TaskModeDetector.getKnownTypes();
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     types: types,
                     count: types.length,
                     detectionMethod: 'strict_no_fallbacks'
-                }
-            });
+                });
 
         } catch (error) {
             this.logger.error('Failed to get workflow types', { 
@@ -572,11 +484,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get workflow types',
-                message: error.message
-            });
+            res.error('Failed to get workflow types', 500, { details: error.message
+             });
         }
     }
 
@@ -600,10 +509,8 @@ class QueueController {
             const filters = { type, status, startDate, endDate };
             const statistics = await this.queueHistoryService.getHistoryStatistics(filters);
 
-            res.json({
-                success: true,
-                data: statistics
-            });
+            res.success(statistics
+            );
 
         } catch (error) {
             this.logger.error('Failed to get history statistics', { 
@@ -611,11 +518,8 @@ class QueueController {
                 error: error.message 
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get history statistics',
-                message: error.message
-            });
+            res.error('Failed to get history statistics', 500, { details: error.message
+             });
         }
     }
 }

@@ -29,37 +29,24 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.status(400).json({
-          success: false,
-          error: 'No active IDE port specified'
-        });
+        return res.badRequest('No active IDE port specified');
       }
 
       const ideService = this.getIDEServiceForPort(activePort);
       if (!ideService) {
-        return res.status(404).json({
-          success: false,
-          error: `No IDE service found for port ${activePort}`
-        });
+        return res.notFound('No IDE service found for port ${activePort}');
       }
 
       const domData = await this.captureIDEDOM(ideService, activePort);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           port: activePort,
           dom: domData,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
     } catch (error) {
       this.logger.error('Error getting IDE DOM:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get IDE DOM',
-        details: error.message
-      });
+      res.error('Failed to get IDE DOM', 500, { details: error.message });
     }
   }
 
@@ -73,38 +60,25 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.status(400).json({
-          success: false,
-          error: 'No active IDE port specified'
-        });
+        return res.badRequest('No active IDE port specified');
       }
 
       const ideService = this.getIDEServiceForPort(activePort);
       if (!ideService) {
-        return res.status(404).json({
-          success: false,
-          error: `No IDE service found for port ${activePort}`
-        });
+        return res.notFound('No IDE service found for port ${activePort}');
       }
 
       const result = await this.performIDEInteraction(ideService, activePort, action, selector, data);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           port: activePort,
           action: action,
           result: result,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
     } catch (error) {
       this.logger.error('Error interacting with IDE:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to interact with IDE',
-        details: error.message
-      });
+      res.error('Failed to interact with IDE', 500, { details: error.message });
     }
   }
 
@@ -118,8 +92,7 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.json({
-          success: true,
+        return res.success({
           data: {
             connected: false,
             activePort: null,
@@ -142,17 +115,10 @@ class IDEMirrorController {
         lastActivity: new Date().toISOString()
       };
 
-      res.json({
-        success: true,
-        data: status
-      });
+      res.success(status);
     } catch (error) {
       this.logger.error('Error getting mirror status:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get mirror status',
-        details: error.message
-      });
+      res.error('Failed to get mirror status', 500, { details: error.message });
     }
   }
 
@@ -166,18 +132,12 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.status(400).json({
-          success: false,
-          error: 'No active IDE port specified'
-        });
+        return res.badRequest('No active IDE port specified');
       }
 
       const ideService = this.getIDEServiceForPort(activePort);
       if (!ideService) {
-        return res.status(404).json({
-          success: false,
-          error: `No IDE service found for port ${activePort}`
-        });
+        return res.notFound('No IDE service found for port ${activePort}');
       }
 
       // Initialize mirror state
@@ -199,22 +159,15 @@ class IDEMirrorController {
         });
       }
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           port: activePort,
           connected: true,
           initialDOM: initialDOM,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
     } catch (error) {
       this.logger.error('Error connecting to IDE mirror:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to connect to IDE mirror',
-        details: error.message
-      });
+      res.error('Failed to connect to IDE mirror', 500, { details: error.message });
     }
   }
 
@@ -228,10 +181,7 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.status(400).json({
-          success: false,
-          error: 'No active IDE port specified'
-        });
+        return res.badRequest('No active IDE port specified');
       }
 
       // Clear mirror state
@@ -245,21 +195,14 @@ class IDEMirrorController {
         });
       }
 
-      res.json({
-        success: true,
-        data: {
+      res.success({
           port: activePort,
           connected: false,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
     } catch (error) {
       this.logger.error('Error disconnecting from IDE mirror:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to disconnect from IDE mirror',
-        details: error.message
-      });
+      res.error('Failed to disconnect from IDE mirror', 500, { details: error.message });
     }
   }
 
@@ -273,18 +216,12 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.status(400).json({
-          success: false,
-          error: 'No active IDE port specified'
-        });
+        return res.badRequest('No active IDE port specified');
       }
 
       const ideService = this.getIDEServiceForPort(activePort);
       if (!ideService) {
-        return res.status(404).json({
-          success: false,
-          error: `No IDE service found for port ${activePort}`
-        });
+        return res.notFound('No IDE service found for port ${activePort}');
       }
 
       const mirrorData = {
@@ -297,17 +234,10 @@ class IDEMirrorController {
         mirrorData.dom = await this.captureIDEDOM(ideService, activePort);
       }
 
-      res.json({
-        success: true,
-        data: mirrorData
-      });
+      res.success(mirrorData);
     } catch (error) {
       this.logger.error('Error getting mirror data:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get mirror data',
-        details: error.message
-      });
+      res.error('Failed to get mirror data', 500, { details: error.message });
     }
   }
 
@@ -321,45 +251,29 @@ class IDEMirrorController {
       const activePort = port ? parseInt(port) : this.ideManager.getActivePort();
       
       if (!activePort) {
-        return res.status(400).json({
-          success: false,
-          error: 'No active IDE port specified'
-        });
+        return res.badRequest('No active IDE port specified');
       }
 
       if (!message) {
-        return res.status(400).json({
-          success: false,
-          error: 'Message is required'
-        });
+        return res.badRequest('Message is required');
       }
 
       const ideService = this.getIDEServiceForPort(activePort);
       if (!ideService) {
-        return res.status(404).json({
-          success: false,
-          error: `No IDE service found for port ${activePort}`
-        });
+        return res.notFound('No IDE service found for port ${activePort}');
       }
 
       const result = await this.sendMessageToIDE(ideService, activePort, message);
       
-      res.json({
-        success: true,
-        data: {
+      res.success({
           port: activePort,
           message: message,
           result: result,
           timestamp: new Date().toISOString()
-        }
-      });
+        });
     } catch (error) {
       this.logger.error('Error sending chat message:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to send chat message',
-        details: error.message
-      });
+      res.error('Failed to send chat message', 500, { details: error.message });
     }
   }
 
@@ -448,7 +362,7 @@ class IDEMirrorController {
       return await ideService.clickElement(selector);
     } else {
       // Fallback implementation
-      return { success: true, action: 'click', selector };
+      return { action: 'click', selector };
     }
   }
 
@@ -460,7 +374,7 @@ class IDEMirrorController {
       return await ideService.typeText(selector, text);
     } else {
       // Fallback implementation
-      return { success: true, action: 'type', selector, text };
+      return { action: 'type', selector, text };
     }
   }
 
@@ -472,7 +386,7 @@ class IDEMirrorController {
       return await ideService.focusElement(selector);
     } else {
       // Fallback implementation
-      return { success: true, action: 'focus', selector };
+      return { action: 'focus', selector };
     }
   }
 
@@ -481,7 +395,7 @@ class IDEMirrorController {
    */
   async performScroll(ideService, scrollData) {
     // Generic scroll implementation
-    return { success: true, action: 'scroll', data: scrollData };
+    return { action: 'scroll', data: scrollData };
   }
 
   /**
@@ -489,7 +403,7 @@ class IDEMirrorController {
    */
   async performKeyPress(ideService, keyData) {
     // Generic key press implementation
-    return { success: true, action: 'key', data: keyData };
+    return { action: 'key', data: keyData };
   }
 
   /**
@@ -503,7 +417,7 @@ class IDEMirrorController {
         return await ideService.sendMessage(message);
       } else {
         // Fallback implementation
-        return { success: true, message: message, sent: true };
+        return { message: message, sent: true };
       }
     } catch (error) {
       this.logger.error(`Error sending message to IDE port ${port}:`, error);

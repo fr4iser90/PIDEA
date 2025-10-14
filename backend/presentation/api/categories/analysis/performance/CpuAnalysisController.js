@@ -34,11 +34,7 @@ class CpuAnalysisController {
       const { projectId, projectPath, config = {} } = req.body;
 
       if (!projectId || !projectPath) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing required parameters: projectId and projectPath',
-          data: null
-        });
+        return res.badRequest('Missing required parameters: projectId and projectPath');
       }
 
       const result = await this.cpuService.analyze({
@@ -52,16 +48,14 @@ class CpuAnalysisController {
         samples: result.data?.samples?.length || 0 
       });
 
-      res.json({
-        success: true,
+      res.success({
         data: {
           projectId: projectId,
           timestamp: new Date().toISOString(),
           scanner: 'cpu',
           results: result.data || {},
           metadata: result.metadata || {}
-        },
-        error: null
+        }
       });
     } catch (error) {
       this.logger.error('CPU analysis failed', { 
@@ -69,14 +63,7 @@ class CpuAnalysisController {
         error: error.message 
       });
 
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'CPU analysis failed',
-          details: error.message
-        }
-      });
+      res.error('CPU analysis failed', 500, { details: error.message });
     }
   }
 
@@ -84,22 +71,11 @@ class CpuAnalysisController {
     try {
       const config = await this.cpuService.getConfiguration();
       
-      res.json({
-        success: true,
-        data: config,
-        error: null
-      });
+      res.success(config);
     } catch (error) {
       this.logger.error('Failed to get CPU configuration', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get configuration',
-          details: error.message
-        }
-      });
+      res.error('Failed to get configuration', 500, { details: error.message });
     }
   }
 
@@ -107,22 +83,11 @@ class CpuAnalysisController {
     try {
       const status = await this.cpuService.getStatus();
       
-      res.json({
-        success: true,
-        data: status,
-        error: null
-      });
+      res.success(status);
     } catch (error) {
       this.logger.error('Failed to get CPU status', { error: error.message });
       
-      res.status(500).json({
-        success: false,
-        data: null,
-        error: {
-          message: 'Failed to get status',
-          details: error.message
-        }
-      });
+      res.error('Failed to get status', 500, { details: error.message });
     }
   }
 

@@ -28,10 +28,7 @@ class StreamingController {
       
       // Validate port parameter
       if (!port || isNaN(port) || port < 1 || port > 65535) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port number. Must be between 1 and 65535.'
-        });
+        return res.badRequest('Invalid port number. Must be between 1 and 65535.');
       }
       
       const result = await this.streamingApplicationService.startPortStreaming(
@@ -49,11 +46,7 @@ class StreamingController {
       
     } catch (error) {
       logger.error('Error starting streaming:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -67,10 +60,7 @@ class StreamingController {
       
       // Validate port parameter
       if (!port || isNaN(port) || port < 1 || port > 65535) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port number. Must be between 1 and 65535.'
-        });
+        return res.badRequest('Invalid port number. Must be between 1 and 65535.');
       }
       
       const userId = req.user?.id;
@@ -91,11 +81,7 @@ class StreamingController {
       
     } catch (error) {
       logger.error('Error stopping streaming:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -109,10 +95,7 @@ class StreamingController {
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port number. Must be between 1 and 65535.'
-        });
+        return res.badRequest('Invalid port number. Must be between 1 and 65535.');
       }
       
       // Get port information via application service
@@ -120,26 +103,14 @@ class StreamingController {
       const portInfo = result.data;
       
       if (!result.success) {
-        return res.status(404).json({
-          success: false,
-          error: 'Port not found',
-          port: port
-        });
+        return res.notFound('Port not found', { port: port });
       }
       
-      res.status(200).json({
-        success: true,
-        port: port,
-        status: portInfo
-      });
+      res.success({ port: port, status: portInfo });
       
     } catch (error) {
       logger.error('Error getting port status:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -152,19 +123,13 @@ class StreamingController {
       const result = await this.streamingApplicationService.getAllPorts(req.user?.id);
       const ports = result.data;
       
-      res.status(200).json({
-        success: true,
-        ports: ports,
+      res.success({ports: ports,
         count: ports.length
       });
       
     } catch (error) {
       logger.error('Error getting all ports:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -179,10 +144,7 @@ class StreamingController {
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port number. Must be between 1 and 65535.'
-        });
+        return res.badRequest('Invalid port number. Must be between 1 and 65535.');
       }
       
       // Create port-based command
@@ -198,27 +160,17 @@ class StreamingController {
       const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
-        res.status(200).json({
-          success: true,
-          port: port,
+        res.success({port: port,
           config: result.result,
           message: 'Port configuration updated successfully'
         });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          port: port
-        });
+        res.badRequest(result.error, { port: port });
       }
       
     } catch (error) {
       logger.error('Error updating port config:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -232,10 +184,7 @@ class StreamingController {
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port number. Must be between 1 and 65535.'
-        });
+        return res.badRequest('Invalid port number. Must be between 1 and 65535.');
       }
       
       // Create port-based command
@@ -245,27 +194,17 @@ class StreamingController {
       const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
-        res.status(200).json({
-          success: true,
-          port: port,
+        res.success({port: port,
           status: result.result.status,
           message: 'Streaming paused successfully'
         });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          port: port
-        });
+        res.badRequest(result.error, { port: port });
       }
       
     } catch (error) {
       logger.error('Error pausing streaming:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -279,10 +218,7 @@ class StreamingController {
       
       // Validate parameters
       if (!port || isNaN(port) || port < 1 || port > 65535) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid port number. Must be between 1 and 65535.'
-        });
+        return res.badRequest('Invalid port number. Must be between 1 and 65535.');
       }
       
       // Create port-based command
@@ -292,27 +228,17 @@ class StreamingController {
       const result = await this.portStreamingHandler.handle(command);
       
       if (result.success) {
-        res.status(200).json({
-          success: true,
-          port: port,
+        res.success({port: port,
           status: result.result.status,
           message: 'Streaming resumed successfully'
         });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          port: port
-        });
+        res.badRequest(result.error, { port: port });
       }
       
     } catch (error) {
       logger.error('Error resuming streaming:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -325,18 +251,12 @@ class StreamingController {
       const result = await this.streamingApplicationService.getStreamingStats(req.user?.id);
       const stats = result.data;
       
-      res.status(200).json({
-        success: true,
-        stats: stats
+      res.success({stats: stats
       });
       
     } catch (error) {
       logger.error('Error getting stats:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -349,19 +269,14 @@ class StreamingController {
       const result = await this.streamingApplicationService.stopAllStreaming(req.user?.id);
       const stoppedCount = result.data.stoppedCount;
       
-      res.status(200).json({
-        success: true,
+      res.success({
         stoppedCount: stoppedCount,
         message: `Stopped ${stoppedCount} streaming sessions`
       });
       
     } catch (error) {
       logger.error('Error stopping all streaming:', error.message);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        details: error.message
-      });
+      res.error('Internal server error', 500, { details: error.message });
     }
   }
 
@@ -375,9 +290,7 @@ class StreamingController {
       const stats = result.data;
       const isHealthy = stats.activeStreams >= 0; // Basic health check
       
-      res.status(200).json({
-        success: true,
-        healthy: isHealthy,
+      res.success({healthy: isHealthy,
         activeSessions: stats.activeSessions,
         uptime: stats.uptime,
         timestamp: new Date().toISOString()
@@ -385,11 +298,9 @@ class StreamingController {
       
     } catch (error) {
       logger.error('Health check error:', error.message);
-      res.status(500).json({
-        success: false,
+      res.error('Health check failed', 500, { 
         healthy: false,
-        error: 'Health check failed',
-        details: error.message
+        details: error.message 
       });
     }
   }

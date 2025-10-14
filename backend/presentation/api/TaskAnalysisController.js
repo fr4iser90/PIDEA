@@ -22,10 +22,7 @@ class TaskAnalysisController {
             // Validate request
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    errors: errors.array()
-                });
+                return res.badRequest(errors.array());
             }
 
             const {
@@ -53,15 +50,11 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     analysis: result.analysis,
                     insights: result.insights,
                     recommendations: result.recommendations
-                },
-                message: 'Project analysis completed successfully'
-            });
+                }, 200, { meta: { message: 'Project analysis completed successfully' } });
 
         } catch (error) {
             this.logger.error('TaskAnalysisController: Failed to analyze project', {
@@ -70,11 +63,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to analyze project',
-                message: error.message
-            });
+            res.error('Failed to analyze project', 500, { details: error.message
+             });
         }
     }
 
@@ -95,10 +85,7 @@ class TaskAnalysisController {
             const result = await this.queryBus.execute('GetProjectAnalysisQuery', query);
 
             if (!result.analysis) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Project analysis not found'
-                });
+                return res.notFound('Project analysis not found');
             }
 
             this.logger.info('TaskAnalysisController: Project analysis retrieved', {
@@ -106,10 +93,8 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.analysis
-            });
+            res.success(result.analysis
+            );
 
         } catch (error) {
             this.logger.error('TaskAnalysisController: Failed to get project analysis', {
@@ -118,11 +103,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get project analysis',
-                message: error.message
-            });
+            res.error('Failed to get project analysis', 500, { details: error.message
+             });
         }
     }
 
@@ -158,18 +140,14 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     analysis: result.analysis,
                     aiInsights: result.aiInsights,
                     suggestions: result.suggestions,
                     codeQuality: result.codeQuality,
                     securityIssues: result.securityIssues,
                     performanceMetrics: result.performanceMetrics
-                },
-                message: 'AI analysis completed successfully'
-            });
+                }, 200, { meta: { message: 'AI analysis completed successfully' } });
 
         } catch (error) {
             this.logger.error('TaskAnalysisController: Failed to perform AI analysis', {
@@ -178,11 +156,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to perform AI analysis',
-                message: error.message
-            });
+            res.error('Failed to perform AI analysis', 500, { details: error.message
+             });
         }
     }
 
@@ -222,8 +197,7 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
+            res.success({
                 data: {
                     analyses: result.analyses,
                     pagination: {
@@ -241,11 +215,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get analysis history',
-                message: error.message
-            });
+            res.error('Failed to get analysis history', 500, { details: error.message
+             });
         }
     }
 
@@ -272,16 +243,12 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: {
+            res.success({
                     comparison: result.comparison,
                     differences: result.differences,
                     improvements: result.improvements,
                     regressions: result.regressions
-                },
-                message: 'Analysis comparison completed successfully'
-            });
+                }, 200, { meta: { message: 'Analysis comparison completed successfully' } });
 
         } catch (error) {
             this.logger.error('TaskAnalysisController: Failed to compare analyses', {
@@ -290,11 +257,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to compare analyses',
-                message: error.message
-            });
+            res.error('Failed to compare analyses', 500, { details: error.message
+             });
         }
     }
 
@@ -317,10 +281,7 @@ class TaskAnalysisController {
             const result = await this.queryBus.execute('ExportAnalysisQuery', query);
 
             if (!result.analysis) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Analysis not found'
-                });
+                return res.notFound('Analysis not found');
             }
 
             this.logger.info('TaskAnalysisController: Analysis exported', {
@@ -343,11 +304,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to export analysis',
-                message: error.message
-            });
+            res.error('Failed to export analysis', 500, { details: error.message
+             });
         }
     }
 
@@ -372,10 +330,8 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.stats
-            });
+            res.success(result.stats
+            );
 
         } catch (error) {
             this.logger.error('TaskAnalysisController: Failed to get analysis statistics', {
@@ -383,11 +339,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to get analysis statistics',
-                message: error.message
-            });
+            res.error('Failed to get analysis statistics', 500, { details: error.message
+             });
         }
     }
 
@@ -422,11 +375,7 @@ class TaskAnalysisController {
                 userId
             });
 
-            res.json({
-                success: true,
-                data: result.schedule,
-                message: 'Analysis scheduled successfully'
-            });
+            res.success(result.schedule);
 
         } catch (error) {
             this.logger.error('TaskAnalysisController: Failed to schedule analysis', {
@@ -435,11 +384,8 @@ class TaskAnalysisController {
                 userId: req.user?.id
             });
 
-            res.status(500).json({
-                success: false,
-                error: 'Failed to schedule analysis',
-                message: error.message
-            });
+            res.error('Failed to schedule analysis', 500, { details: error.message
+             });
         }
     }
 
@@ -465,17 +411,11 @@ class TaskAnalysisController {
      */
     async healthCheck(req, res) {
         try {
-            res.json({
-                success: true,
-                message: 'Analysis service is healthy',
-                timestamp: new Date().toISOString()
-            });
+            res.success({message: 'Analysis service is healthy',
+                timestamp: new Date().toISOString()});
         } catch (error) {
-            res.status(500).json({
-                success: false,
-                error: 'Analysis service is unhealthy',
-                message: error.message
-            });
+            res.error('Analysis service is unhealthy', 500, { details: error.message
+             });
         }
     }
 }
