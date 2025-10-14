@@ -13,7 +13,6 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: { user: { id: 'test-user', email: 'test@example.com' } }
         })
       });
@@ -24,7 +23,6 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: []
         })
       });
@@ -35,7 +33,6 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: []
         })
       });
@@ -46,7 +43,6 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: {
             cursor: {
               windows: 'https://cursor.sh/download/windows',
@@ -73,7 +69,6 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: {
             cursor: 'cursor',
             vscode: 'code',
@@ -136,7 +131,6 @@ test.describe('IDE Requirement Modal E2E', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: {
               valid: true,
               version: '1.0.3''
@@ -148,7 +142,6 @@ test.describe('IDE Requirement Modal E2E', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: {
               valid: false,
               error: 'File not found'
@@ -192,7 +185,6 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: {
             port: 9222,
             ideType: 'cursor',
@@ -222,7 +214,7 @@ test.describe('IDE Requirement Modal E2E', () => {
         status: 500,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: false,
+         
           error: 'Failed to start IDE'
         })
       });

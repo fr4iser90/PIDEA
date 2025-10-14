@@ -5,98 +5,151 @@
  */
 class IDETypes {
   // Standard IDE types
-  static CURSOR = 'cursor';
-  static VSCODE = 'vscode';
-  static WINDSURF = 'windsurf';
-  static JETBRAINS = 'jetbrains';
-  static SUBLIME = 'sublime';
+  static CURSOR = "cursor";
+  static VSCODE = "vscode";
+  static WINDSURF = "windsurf";
+  static JETBRAINS = "jetbrains";
+  static SUBLIME = "sublime";
 
   // IDE type metadata (NO SELECTORS - they are in JSON files)
   static METADATA = {
     [IDETypes.CURSOR]: {
-      name: 'Cursor',
-      displayName: 'Cursor IDE',
-      description: 'AI-powered code editor',
-      supportedFeatures: ['chat', 'refactoring', 'terminal', 'git', 'extensions'],
-      fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
-      startupCommand: 'cursor',
-      detectionPatterns: ['cursor', 'Cursor'],
+      name: "Cursor",
+      displayName: "Cursor IDE",
+      description: "AI-powered code editor",
+      supportedFeatures: [
+        "chat",
+        "refactoring",
+        "terminal",
+        "git",
+        "extensions",
+      ],
+      fileExtensions: [".js", ".jsx", ".ts", ".tsx", ".json", ".md"],
+      startupCommand: "cursor",
+      detectionPatterns: ["cursor", "Cursor"],
       versionDetection: {
-        method: 'cdp',
+        method: "cdp",
         automaticDetection: true,
         comparisonEnabled: true,
-        validationEnabled: true
+        validationEnabled: true,
       },
       // Available versions are now loaded from JSON files
-      availableVersions: ['1.5.7', '1.7.17'] // This will be updated dynamically
+      availableVersions: ["1.5.7", "1.7.17"], // This will be updated dynamically
     },
     [IDETypes.VSCODE]: {
-      name: 'Visual Studio Code',
-      displayName: 'VSCode',
-      description: 'Microsoft code editor',
-      supportedFeatures: ['chat', 'refactoring', 'terminal', 'git', 'extensions', 'debugging'],
-      fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md', '.py', '.java', '.cpp'],
-      startupCommand: 'code',
-      detectionPatterns: ['vscode', 'code', 'Code'],
+      name: "Visual Studio Code",
+      displayName: "VSCode",
+      description: "Microsoft code editor",
+      supportedFeatures: [
+        "chat",
+        "refactoring",
+        "terminal",
+        "git",
+        "extensions",
+        "debugging",
+      ],
+      fileExtensions: [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".json",
+        ".md",
+        ".py",
+        ".java",
+        ".cpp",
+      ],
+      startupCommand: "code",
+      detectionPatterns: ["vscode", "code", "Code"],
       versionDetection: {
-        method: 'cdp',
+        method: "cdp",
         automaticDetection: true,
         comparisonEnabled: true,
-        validationEnabled: true
+        validationEnabled: true,
       },
-      availableVersions: ['1.85.0'] // This will be updated dynamically
+      availableVersions: ["1.85.0"], // This will be updated dynamically
     },
     [IDETypes.WINDSURF]: {
-      name: 'Windsurf',
-      displayName: 'Windsurf IDE',
-      description: 'AI-powered development environment',
-      supportedFeatures: ['chat', 'refactoring', 'terminal', 'git', 'extensions'],
-      fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md'],
-      startupCommand: 'windsurf',
-      detectionPatterns: ['windsurf', 'Windsurf'],
+      name: "Windsurf",
+      displayName: "Windsurf IDE",
+      description: "AI-powered development environment",
+      supportedFeatures: [
+        "chat",
+        "refactoring",
+        "terminal",
+        "git",
+        "extensions",
+      ],
+      fileExtensions: [".js", ".jsx", ".ts", ".tsx", ".json", ".md"],
+      startupCommand: "windsurf",
+      detectionPatterns: ["windsurf", "Windsurf"],
       versionDetection: {
-        method: 'cdp',
+        method: "cdp",
         automaticDetection: true,
         comparisonEnabled: true,
-        validationEnabled: true
+        validationEnabled: true,
       },
       availableVersions: (() => {
-        const VersionService = require('../version/VersionService');
+        const VersionService = require("../version/VersionService");
         return [new VersionService().getVersion()];
-      })() // Dynamic version from central version file
+      })(), // Dynamic version from central version file
     },
     [IDETypes.JETBRAINS]: {
-      name: 'JetBrains IDEs',
-      displayName: 'JetBrains',
-      description: 'Professional development environments',
-      supportedFeatures: ['refactoring', 'terminal', 'git', 'extensions', 'debugging'],
-      fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.java', '.py', '.cpp', '.kt'],
-      startupCommand: 'jetbrains',
-      detectionPatterns: ['jetbrains', 'JetBrains', 'intellij', 'IntelliJ'],
+      name: "JetBrains IDEs",
+      displayName: "JetBrains",
+      description: "Professional development environments",
+      supportedFeatures: [
+        "refactoring",
+        "terminal",
+        "git",
+        "extensions",
+        "debugging",
+      ],
+      fileExtensions: [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".java",
+        ".py",
+        ".cpp",
+        ".kt",
+      ],
+      startupCommand: "jetbrains",
+      detectionPatterns: ["jetbrains", "JetBrains", "intellij", "IntelliJ"],
       versionDetection: {
-        method: 'cdp',
+        method: "cdp",
         automaticDetection: false,
         comparisonEnabled: true,
-        validationEnabled: true
+        validationEnabled: true,
       },
-      availableVersions: [] // No versions available yet
+      availableVersions: [], // No versions available yet
     },
     [IDETypes.SUBLIME]: {
-      name: 'Sublime Text',
-      displayName: 'Sublime Text',
-      description: 'Sophisticated text editor',
-      supportedFeatures: ['extensions', 'git'],
-      fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.md', '.py', '.java'],
-      startupCommand: 'sublime',
-      detectionPatterns: ['sublime', 'Sublime'],
+      name: "Sublime Text",
+      displayName: "Sublime Text",
+      description: "Sophisticated text editor",
+      supportedFeatures: ["extensions", "git"],
+      fileExtensions: [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".json",
+        ".md",
+        ".py",
+        ".java",
+      ],
+      startupCommand: "sublime",
+      detectionPatterns: ["sublime", "Sublime"],
       versionDetection: {
-        method: 'cdp',
+        method: "cdp",
         automaticDetection: false,
         comparisonEnabled: true,
-        validationEnabled: true
+        validationEnabled: true,
       },
-      availableVersions: [] // No versions available yet
-    }
+      availableVersions: [], // No versions available yet
+    },
   };
 
   /**
@@ -205,7 +258,9 @@ class IDETypes {
    * @deprecated Use JSONSelectorManager.getSelectors() instead
    */
   static getSelectorsForVersion(ideType, version) {
-    throw new Error(`getSelectorsForVersion is deprecated. Use JSONSelectorManager.getSelectors('${ideType}', '${version}') instead. Selectors are now stored in JSON files.`);
+    throw new Error(
+      `getSelectorsForVersion is deprecated. Use JSONSelectorManager.getSelectors('${ideType}', '${version}') instead. Selectors are now stored in JSON files.`,
+    );
   }
 
   /**
@@ -215,7 +270,9 @@ class IDETypes {
    * @deprecated No fallbacks allowed - specify exact version
    */
   static getFallbackVersion(ideType) {
-    throw new Error(`getFallbackVersion is deprecated. No fallbacks allowed. Please specify exact version for ${ideType}.`);
+    throw new Error(
+      `getFallbackVersion is deprecated. No fallbacks allowed. Please specify exact version for ${ideType}.`,
+    );
   }
 
   /**
@@ -244,7 +301,7 @@ class IDETypes {
    */
   static getDescription(ideType) {
     const metadata = this.getMetadata(ideType);
-    return metadata ? metadata.description || '' : '';
+    return metadata ? metadata.description || "" : "";
   }
 }
 

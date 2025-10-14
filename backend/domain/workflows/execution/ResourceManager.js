@@ -2,36 +2,36 @@
  * ResourceManager - Resource allocation and monitoring for workflow execution
  * Provides resource management with allocation, monitoring, and limits
  */
-const os = require('os');
-const ServiceLogger = require('@logging/ServiceLogger');
+const os = require("os");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * Resource manager for workflow execution
  */
 class ResourceManager {
   constructor(options = {}) {
-    this.logger = options.logger || new ServiceLogger('ResourceManager');
-    
+    this.logger = options.logger || new ServiceLogger("ResourceManager");
+
     this.maxMemoryUsage = options.maxMemoryUsage || 512; // MB
     this.maxCpuUsage = options.maxCpuUsage || 80; // Percentage
     this.maxConcurrentExecutions = options.maxConcurrentExecutions || 5;
     this.resourceTimeout = options.resourceTimeout || 300000; // 5 minutes
     this.enableResourceMonitoring = options.enableResourceMonitoring !== false;
     this.enableResourceLimits = options.enableResourceLimits !== false;
-    
+
     // Resource tracking
     this.allocatedResources = new Map();
     this.resourceUsage = new Map();
     this.resourceLimits = new Map();
     this.resourceHistory = new Map();
-    
+
     // Initialize resource limits
     this.initializeResourceLimits();
-    
+
     // Monitoring interval
     this.monitoringInterval = null;
     this.monitoringIntervalMs = options.monitoringIntervalMs || 5000; // 5 seconds
-    
+
     // Start monitoring if enabled
     if (this.enableResourceMonitoring) {
       this.startResourceMonitoring();
@@ -42,10 +42,10 @@ class ResourceManager {
    * Initialize resource limits
    */
   initializeResourceLimits() {
-    this.resourceLimits.set('memory', this.maxMemoryUsage);
-    this.resourceLimits.set('cpu', this.maxCpuUsage);
-    this.resourceLimits.set('concurrent', this.maxConcurrentExecutions);
-    this.resourceLimits.set('timeout', this.resourceTimeout);
+    this.resourceLimits.set("memory", this.maxMemoryUsage);
+    this.resourceLimits.set("cpu", this.maxCpuUsage);
+    this.resourceLimits.set("concurrent", this.maxConcurrentExecutions);
+    this.resourceLimits.set("timeout", this.resourceTimeout);
   }
 
   /**
@@ -56,9 +56,9 @@ class ResourceManager {
    */
   async allocateResources(executionId, requirements = {}) {
     try {
-      this.logger.info('Allocating resources', {
+      this.logger.info("Allocating resources", {
         executionId,
-        requirements
+        requirements,
       });
 
       // Check resource availability
@@ -74,7 +74,7 @@ class ResourceManager {
         cpu: requirements.cpu || 10, // Percentage
         timeout: requirements.timeout || this.resourceTimeout,
         allocatedAt: new Date(),
-        requirements
+        requirements,
       };
 
       // Track allocation
@@ -83,20 +83,19 @@ class ResourceManager {
         memory: 0,
         cpu: 0,
         startTime: Date.now(),
-        lastUpdate: Date.now()
+        lastUpdate: Date.now(),
       });
 
-      this.logger.info('Resources allocated', {
+      this.logger.info("Resources allocated", {
         executionId,
-        allocatedResources
+        allocatedResources,
       });
 
       return allocatedResources;
-
     } catch (error) {
-      this.logger.error('Resource allocation failed', {
+      this.logger.error("Resource allocation failed", {
         executionId,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -109,8 +108,8 @@ class ResourceManager {
    */
   async releaseResources(executionId) {
     try {
-      this.logger.info('Releasing resources', {
-        executionId
+      this.logger.info("Releasing resources", {
+        executionId,
       });
 
       // Get allocation before removal
@@ -128,22 +127,21 @@ class ResourceManager {
           allocation,
           usage,
           releasedAt: new Date(),
-          duration: Date.now() - usage.startTime
+          duration: Date.now() - usage.startTime,
         });
       }
 
-      this.logger.info('Resources released', {
+      this.logger.info("Resources released", {
         executionId,
         wasAllocated,
-        duration: usage ? Date.now() - usage.startTime : 0
+        duration: usage ? Date.now() - usage.startTime : 0,
       });
 
       return wasAllocated;
-
     } catch (error) {
-      this.logger.error('Resource release failed', {
+      this.logger.error("Resource release failed", {
         executionId,
-        error: error.message
+        error: error.message,
       });
       return false;
     }
@@ -163,7 +161,7 @@ class ResourceManager {
     if (currentUsage.memory + requiredMemory > limits.memory) {
       return {
         available: false,
-        reason: `Insufficient memory: ${currentUsage.memory}MB + ${requiredMemory}MB > ${limits.memory}MB`
+        reason: `Insufficient memory: ${currentUsage.memory}MB + ${requiredMemory}MB > ${limits.memory}MB`,
       };
     }
 
@@ -172,7 +170,7 @@ class ResourceManager {
     if (currentUsage.cpu + requiredCpu > limits.cpu) {
       return {
         available: false,
-        reason: `Insufficient CPU: ${currentUsage.cpu}% + ${requiredCpu}% > ${limits.cpu}%`
+        reason: `Insufficient CPU: ${currentUsage.cpu}% + ${requiredCpu}% > ${limits.cpu}%`,
       };
     }
 
@@ -180,7 +178,7 @@ class ResourceManager {
     if (this.allocatedResources.size >= limits.concurrent) {
       return {
         available: false,
-        reason: `Maximum concurrent executions reached: ${this.allocatedResources.size} >= ${limits.concurrent}`
+        reason: `Maximum concurrent executions reached: ${this.allocatedResources.size} >= ${limits.concurrent}`,
       };
     }
 
@@ -188,7 +186,7 @@ class ResourceManager {
       available: true,
       currentUsage,
       limits,
-      estimatedWaitTime: this.estimateWaitTime(requirements)
+      estimatedWaitTime: this.estimateWaitTime(requirements),
     };
   }
 
@@ -201,14 +199,18 @@ class ResourceManager {
     // Simple estimation based on current usage and history
     const currentUsage = this.getCurrentResourceUsage();
     const limits = this.getResourceLimits();
-    
+
     // Calculate resource pressure
     const memoryPressure = currentUsage.memory / limits.memory;
     const cpuPressure = currentUsage.cpu / limits.cpu;
     const concurrentPressure = currentUsage.concurrent / limits.concurrent;
-    
-    const maxPressure = Math.max(memoryPressure, cpuPressure, concurrentPressure);
-    
+
+    const maxPressure = Math.max(
+      memoryPressure,
+      cpuPressure,
+      concurrentPressure,
+    );
+
     // Estimate wait time based on pressure
     if (maxPressure < 0.5) {
       return 0; // No wait
@@ -238,7 +240,7 @@ class ResourceManager {
     return {
       memory: totalMemory,
       cpu: totalCpu,
-      concurrent: this.allocatedResources.size
+      concurrent: this.allocatedResources.size,
     };
   }
 
@@ -251,11 +253,11 @@ class ResourceManager {
       const totalMemory = os.totalmem();
       const freeMemory = os.freemem();
       const usedMemory = totalMemory - freeMemory;
-      
+
       // Get CPU usage (simplified)
       const cpus = os.cpus();
       const cpuUsage = this.calculateCpuUsage(cpus);
-      
+
       return {
         totalMemory: Math.round(totalMemory / 1024 / 1024), // MB
         usedMemory: Math.round(usedMemory / 1024 / 1024), // MB
@@ -263,11 +265,11 @@ class ResourceManager {
         memoryUsage: Math.round((usedMemory / totalMemory) * 100), // Percentage
         cpuUsage: Math.round(cpuUsage * 100), // Percentage
         loadAverage: os.loadavg(),
-        uptime: os.uptime()
+        uptime: os.uptime(),
       };
     } catch (error) {
-      this.logger.error('Failed to get system resource usage', {
-        error: error.message
+      this.logger.error("Failed to get system resource usage", {
+        error: error.message,
       });
       return {
         totalMemory: 0,
@@ -276,7 +278,7 @@ class ResourceManager {
         memoryUsage: 0,
         cpuUsage: 0,
         loadAverage: [0, 0, 0],
-        uptime: 0
+        uptime: 0,
       };
     }
   }
@@ -297,7 +299,7 @@ class ResourceManager {
       totalIdle += cpu.times.idle;
     }
 
-    return 1 - (totalIdle / totalTick);
+    return 1 - totalIdle / totalTick;
   }
 
   /**
@@ -306,10 +308,10 @@ class ResourceManager {
    */
   getResourceLimits() {
     return {
-      memory: this.resourceLimits.get('memory'),
-      cpu: this.resourceLimits.get('cpu'),
-      concurrent: this.resourceLimits.get('concurrent'),
-      timeout: this.resourceLimits.get('timeout')
+      memory: this.resourceLimits.get("memory"),
+      cpu: this.resourceLimits.get("cpu"),
+      concurrent: this.resourceLimits.get("concurrent"),
+      timeout: this.resourceLimits.get("timeout"),
     };
   }
 
@@ -327,21 +329,21 @@ class ResourceManager {
         memory: {
           used: currentUsage.memory,
           limit: limits.memory,
-          percentage: (currentUsage.memory / limits.memory) * 100
+          percentage: (currentUsage.memory / limits.memory) * 100,
         },
         cpu: {
           used: currentUsage.cpu,
           limit: limits.cpu,
-          percentage: (currentUsage.cpu / limits.cpu) * 100
+          percentage: (currentUsage.cpu / limits.cpu) * 100,
         },
         concurrent: {
           used: currentUsage.concurrent,
           limit: limits.concurrent,
-          percentage: (currentUsage.concurrent / limits.concurrent) * 100
-        }
+          percentage: (currentUsage.concurrent / limits.concurrent) * 100,
+        },
       },
       system: systemUsage,
-      efficiency: this.calculateEfficiency(currentUsage, systemUsage)
+      efficiency: this.calculateEfficiency(currentUsage, systemUsage),
     };
   }
 
@@ -352,16 +354,20 @@ class ResourceManager {
    * @returns {Object} Efficiency metrics
    */
   calculateEfficiency(allocatedUsage, systemUsage) {
-    const memoryEfficiency = systemUsage.totalMemory > 0 ? 
-      (allocatedUsage.memory / systemUsage.totalMemory) * 100 : 0;
-    
-    const cpuEfficiency = systemUsage.cpuUsage > 0 ? 
-      (allocatedUsage.cpu / systemUsage.cpuUsage) * 100 : 0;
-    
+    const memoryEfficiency =
+      systemUsage.totalMemory > 0
+        ? (allocatedUsage.memory / systemUsage.totalMemory) * 100
+        : 0;
+
+    const cpuEfficiency =
+      systemUsage.cpuUsage > 0
+        ? (allocatedUsage.cpu / systemUsage.cpuUsage) * 100
+        : 0;
+
     return {
       memoryEfficiency: Math.round(memoryEfficiency),
       cpuEfficiency: Math.round(cpuEfficiency),
-      overallEfficiency: Math.round((memoryEfficiency + cpuEfficiency) / 2)
+      overallEfficiency: Math.round((memoryEfficiency + cpuEfficiency) / 2),
     };
   }
 
@@ -376,7 +382,7 @@ class ResourceManager {
       this.resourceUsage.set(executionId, {
         ...currentUsage,
         ...usage,
-        lastUpdate: Date.now()
+        lastUpdate: Date.now(),
       });
     }
   }
@@ -393,14 +399,14 @@ class ResourceManager {
       try {
         await this.monitorResources();
       } catch (error) {
-        this.logger.error('Resource monitoring failed', {
-          error: error.message
+        this.logger.error("Resource monitoring failed", {
+          error: error.message,
         });
       }
     }, this.monitoringIntervalMs);
 
-    this.logger.info('Resource monitoring started', {
-      interval: this.monitoringIntervalMs
+    this.logger.info("Resource monitoring started", {
+      interval: this.monitoringIntervalMs,
     });
   }
 
@@ -411,7 +417,7 @@ class ResourceManager {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
-      this.logger.info('Resource monitoring stopped');
+      this.logger.info("Resource monitoring stopped");
     }
   }
 
@@ -420,15 +426,15 @@ class ResourceManager {
    */
   async monitorResources() {
     const utilization = await this.getResourceUtilization();
-    
+
     // Check for resource violations
     const violations = this.checkResourceViolations(utilization);
-    
+
     if (violations.length > 0) {
-      this.logger.warn('Resource violations detected', {
-        violations
+      this.logger.warn("Resource violations detected", {
+        violations,
       });
-      
+
       // Take corrective actions
       await this.handleResourceViolations(violations);
     }
@@ -450,34 +456,34 @@ class ResourceManager {
    */
   checkResourceViolations(utilization) {
     const violations = [];
-    
+
     // Check memory usage
     if (utilization.allocated.memory.percentage > 90) {
       violations.push({
-        type: 'memory',
-        severity: 'high',
-        message: `Memory usage is ${utilization.allocated.memory.percentage.toFixed(1)}%`
+        type: "memory",
+        severity: "high",
+        message: `Memory usage is ${utilization.allocated.memory.percentage.toFixed(1)}%`,
       });
     }
-    
+
     // Check CPU usage
     if (utilization.allocated.cpu.percentage > 90) {
       violations.push({
-        type: 'cpu',
-        severity: 'high',
-        message: `CPU usage is ${utilization.allocated.cpu.percentage.toFixed(1)}%`
+        type: "cpu",
+        severity: "high",
+        message: `CPU usage is ${utilization.allocated.cpu.percentage.toFixed(1)}%`,
       });
     }
-    
+
     // Check concurrent executions
     if (utilization.allocated.concurrent.percentage > 95) {
       violations.push({
-        type: 'concurrent',
-        severity: 'medium',
-        message: `Concurrent executions at ${utilization.allocated.concurrent.percentage.toFixed(1)}%`
+        type: "concurrent",
+        severity: "medium",
+        message: `Concurrent executions at ${utilization.allocated.concurrent.percentage.toFixed(1)}%`,
       });
     }
-    
+
     return violations;
   }
 
@@ -488,13 +494,13 @@ class ResourceManager {
   async handleResourceViolations(violations) {
     for (const violation of violations) {
       switch (violation.type) {
-        case 'memory':
+        case "memory":
           await this.handleMemoryViolation(violation);
           break;
-        case 'cpu':
+        case "cpu":
           await this.handleCpuViolation(violation);
           break;
-        case 'concurrent':
+        case "concurrent":
           await this.handleConcurrentViolation(violation);
           break;
       }
@@ -507,14 +513,15 @@ class ResourceManager {
    */
   async handleMemoryViolation(violation) {
     // Find executions with highest memory usage
-    const executions = Array.from(this.allocatedResources.entries())
-      .sort(([, a], [, b]) => b.memory - a.memory);
-    
+    const executions = Array.from(this.allocatedResources.entries()).sort(
+      ([, a], [, b]) => b.memory - a.memory,
+    );
+
     if (executions.length > 0) {
       const [executionId] = executions[0];
-      this.logger.warn('High memory usage detected', {
+      this.logger.warn("High memory usage detected", {
         executionId,
-        violation: violation.message
+        violation: violation.message,
       });
     }
   }
@@ -525,14 +532,15 @@ class ResourceManager {
    */
   async handleCpuViolation(violation) {
     // Find executions with highest CPU usage
-    const executions = Array.from(this.allocatedResources.entries())
-      .sort(([, a], [, b]) => b.cpu - a.cpu);
-    
+    const executions = Array.from(this.allocatedResources.entries()).sort(
+      ([, a], [, b]) => b.cpu - a.cpu,
+    );
+
     if (executions.length > 0) {
       const [executionId] = executions[0];
-      this.logger.warn('High CPU usage detected', {
+      this.logger.warn("High CPU usage detected", {
         executionId,
-        violation: violation.message
+        violation: violation.message,
       });
     }
   }
@@ -542,9 +550,9 @@ class ResourceManager {
    * @param {Object} violation - Concurrent violation
    */
   async handleConcurrentViolation(violation) {
-    this.logger.warn('High concurrent execution count', {
+    this.logger.warn("High concurrent execution count", {
       violation: violation.message,
-      currentExecutions: this.allocatedResources.size
+      currentExecutions: this.allocatedResources.size,
     });
   }
 
@@ -561,19 +569,26 @@ class ResourceManager {
       utilization,
       allocations: {
         current: allocations.length,
-        total: history.length + allocations.length
+        total: history.length + allocations.length,
       },
-      averageMemory: allocations.length > 0 ? 
-        allocations.reduce((sum, a) => sum + a.memory, 0) / allocations.length : 0,
-      averageCpu: allocations.length > 0 ? 
-        allocations.reduce((sum, a) => sum + a.cpu, 0) / allocations.length : 0,
-      averageDuration: history.length > 0 ? 
-        history.reduce((sum, h) => sum + h.duration, 0) / history.length : 0,
+      averageMemory:
+        allocations.length > 0
+          ? allocations.reduce((sum, a) => sum + a.memory, 0) /
+            allocations.length
+          : 0,
+      averageCpu:
+        allocations.length > 0
+          ? allocations.reduce((sum, a) => sum + a.cpu, 0) / allocations.length
+          : 0,
+      averageDuration:
+        history.length > 0
+          ? history.reduce((sum, h) => sum + h.duration, 0) / history.length
+          : 0,
       limits: this.getResourceLimits(),
       monitoring: {
         enabled: this.enableResourceMonitoring,
-        interval: this.monitoringIntervalMs
-      }
+        interval: this.monitoringIntervalMs,
+      },
     };
   }
 
@@ -588,7 +603,7 @@ class ResourceManager {
       }
     }
 
-    this.logger.info('Resource limits updated', newLimits);
+    this.logger.info("Resource limits updated", newLimits);
   }
 
   /**
@@ -623,26 +638,26 @@ class ResourceManager {
    */
   clearHistory() {
     this.resourceHistory.clear();
-    this.logger.info('Resource history cleared');
+    this.logger.info("Resource history cleared");
   }
 
   /**
    * Shutdown resource manager
    */
   async shutdown() {
-    this.logger.info('Shutting down');
-    
+    this.logger.info("Shutting down");
+
     // Stop monitoring
     this.stopResourceMonitoring();
-    
+
     // Release all allocated resources
     const executionIds = Array.from(this.allocatedResources.keys());
     for (const executionId of executionIds) {
       await this.releaseResources(executionId);
     }
-    
-    this.logger.info('Shutdown complete');
+
+    this.logger.info("Shutdown complete");
   }
 }
 
-module.exports = ResourceManager; 
+module.exports = ResourceManager;

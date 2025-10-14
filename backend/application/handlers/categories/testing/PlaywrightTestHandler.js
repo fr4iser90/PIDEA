@@ -1,24 +1,26 @@
-const Logger = require('@logging/Logger');
-const PlaywrightTestApplicationService = require('@application/services/PlaywrightTestApplicationService');
-const centralizedConfig = require('@config/centralized-config');
+const Logger = require("@logging/Logger");
+const PlaywrightTestApplicationService = require("@application/services/PlaywrightTestApplicationService");
+const centralizedConfig = require("@config/centralized-config");
 
-const logger = new Logger('PlaywrightTestHandler');
+const logger = new Logger("PlaywrightTestHandler");
 
 /**
  * Playwright Test Handler
- * 
+ *
  * Handles Playwright test execution commands following the existing
  * HandlerRegistry pattern and categories/testing/ organization.
  */
 class PlaywrightTestHandler {
   constructor(dependencies = {}) {
     this.logger = dependencies.logger || logger;
-    this.playwrightTestService = dependencies.playwrightTestService || new PlaywrightTestApplicationService(dependencies);
-    this.application = dependencies.application;  // ✅ APPLICATION OBJEKT!
-    
-    this.logger.info('PlaywrightTestHandler initialized');
+    this.playwrightTestService =
+      dependencies.playwrightTestService ||
+      new PlaywrightTestApplicationService(dependencies);
+    this.application = dependencies.application; // ✅ APPLICATION OBJEKT!
+
+    this.logger.info("PlaywrightTestHandler initialized");
   }
-  
+
   /**
    * Handle test execution command
    * @param {Object} command - Test execution command
@@ -26,43 +28,41 @@ class PlaywrightTestHandler {
    */
   async handleExecuteTests(command) {
     try {
-      this.logger.info('Handling execute tests command', {
+      this.logger.info("Handling execute tests command", {
         projectId: command.projectId,
         testNames: command.testNames,
-        options: command.options
+        options: command.options,
       });
-      
+
       const { projectId, testNames, options = {} } = command;
-      
+
       if (!projectId) {
-        throw new Error('Project ID is required');
+        throw new Error("Project ID is required");
       }
-      
+
       // Execute tests using application service
       const result = await this.playwrightTestService.executeTests(projectId, {
         ...options,
-        testNames
+        testNames,
       });
-      
-      this.logger.info('Test execution completed', {
+
+      this.logger.info("Test execution completed", {
         projectId,
         success: result.success,
-        duration: result.duration
+        duration: result.duration,
       });
-      
+
       return {
-        success: true,
-        command: 'executeTests',
+        command: "executeTests",
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to handle execute tests command', error);
+      this.logger.error("Failed to handle execute tests command", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle get test results command
    * @param {Object} command - Get results command
@@ -70,37 +70,35 @@ class PlaywrightTestHandler {
    */
   async handleGetTestResults(command) {
     try {
-      this.logger.info('Handling get test results command', {
-        testId: command.testId
+      this.logger.info("Handling get test results command", {
+        testId: command.testId,
       });
-      
+
       const { testId } = command;
-      
+
       if (!testId) {
-        throw new Error('Test ID is required');
+        throw new Error("Test ID is required");
       }
-      
+
       // Get test results using application service
       const result = await this.playwrightTestService.getTestResults(testId);
-      
-      this.logger.info('Test results retrieved', {
+
+      this.logger.info("Test results retrieved", {
         testId,
-        success: result.success
+        success: result.success,
       });
-      
+
       return {
-        success: true,
-        command: 'getTestResults',
+        command: "getTestResults",
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to handle get test results command', error);
+      this.logger.error("Failed to handle get test results command", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle get all test results command
    * @param {Object} command - Get all results command
@@ -108,29 +106,27 @@ class PlaywrightTestHandler {
    */
   async handleGetAllTestResults(command) {
     try {
-      this.logger.info('Handling get all test results command');
-      
+      this.logger.info("Handling get all test results command");
+
       // Get all test results using application service
       const result = await this.playwrightTestService.getAllTestResults();
-      
-      this.logger.info('All test results retrieved', {
+
+      this.logger.info("All test results retrieved", {
         count: result.count,
-        success: result.success
+        success: result.success,
       });
-      
+
       return {
-        success: true,
-        command: 'getAllTestResults',
+        command: "getAllTestResults",
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to handle get all test results command', error);
+      this.logger.error("Failed to handle get all test results command", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle stop tests command
    * @param {Object} command - Stop tests command
@@ -138,33 +134,31 @@ class PlaywrightTestHandler {
    */
   async handleStopTests(command) {
     try {
-      this.logger.info('Handling stop tests command', {
-        testIds: command.testIds
+      this.logger.info("Handling stop tests command", {
+        testIds: command.testIds,
       });
-      
+
       const { testIds } = command;
-      
+
       // Stop tests using application service
       const result = await this.playwrightTestService.stopTests(testIds);
-      
-      this.logger.info('Tests stopped', {
+
+      this.logger.info("Tests stopped", {
         testIds,
-        success: result.success
+        success: result.success,
       });
-      
+
       return {
-        success: true,
-        command: 'stopTests',
+        command: "stopTests",
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to handle stop tests command', error);
+      this.logger.error("Failed to handle stop tests command", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle get test runner status command
    * @param {Object} command - Get status command
@@ -172,29 +166,30 @@ class PlaywrightTestHandler {
    */
   async handleGetTestRunnerStatus(command) {
     try {
-      this.logger.info('Handling get test runner status command');
-      
+      this.logger.info("Handling get test runner status command");
+
       // Get test runner status using application service
       const result = await this.playwrightTestService.getTestRunnerStatus();
-      
-      this.logger.info('Test runner status retrieved', {
+
+      this.logger.info("Test runner status retrieved", {
         success: result.success,
-        isRunning: result.status?.isRunning
+        isRunning: result.status?.isRunning,
       });
-      
+
       return {
-        success: true,
-        command: 'getTestRunnerStatus',
+        command: "getTestRunnerStatus",
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to handle get test runner status command', error);
+      this.logger.error(
+        "Failed to handle get test runner status command",
+        error,
+      );
       throw error;
     }
   }
-  
+
   /**
    * Handle validate login credentials command
    * @param {Object} command - Validate credentials command
@@ -202,41 +197,45 @@ class PlaywrightTestHandler {
    */
   async handleValidateLoginCredentials(command) {
     try {
-      this.logger.info('Handling validate login credentials command', {
-        projectId: command.projectId
+      this.logger.info("Handling validate login credentials command", {
+        projectId: command.projectId,
       });
-      
+
       const { projectId, credentials } = command;
-      
+
       if (!projectId) {
-        throw new Error('Project ID is required');
+        throw new Error("Project ID is required");
       }
-      
+
       if (!credentials) {
-        throw new Error('Credentials are required');
+        throw new Error("Credentials are required");
       }
-      
+
       // Validate credentials using application service
-      const result = await this.playwrightTestService.validateLoginCredentials(projectId, credentials);
-      
-      this.logger.info('Login credentials validated', {
+      const result = await this.playwrightTestService.validateLoginCredentials(
         projectId,
-        success: result.success
+        credentials,
+      );
+
+      this.logger.info("Login credentials validated", {
+        projectId,
+        success: result.success,
       });
-      
+
       return {
-        success: true,
-        command: 'validateLoginCredentials',
+        command: "validateLoginCredentials",
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to handle validate login credentials command', error);
+      this.logger.error(
+        "Failed to handle validate login credentials command",
+        error,
+      );
       throw error;
     }
   }
-  
+
   /**
    * Handle configuration management commands
    * @param {Object} command - Configuration command
@@ -244,34 +243,33 @@ class PlaywrightTestHandler {
    */
   async handleConfigurationCommand(command) {
     try {
-      this.logger.info('Handling configuration command', {
+      this.logger.info("Handling configuration command", {
         action: command.action,
-        projectId: command.projectId
+        projectId: command.projectId,
       });
-      
+
       const { action, projectId, config, workspacePath } = command;
-      
+
       if (!projectId) {
-        throw new Error('Project ID is required');
+        throw new Error("Project ID is required");
       }
-      
+
       switch (action) {
-        case 'get':
+        case "get":
           return await this.handleGetConfiguration(projectId);
-        case 'update':
+        case "update":
           return await this.handleUpdateConfiguration(projectId, config);
-        case 'validate':
+        case "validate":
           return await this.handleValidateConfiguration(config);
         default:
           throw new Error(`Unknown configuration action: ${action}`);
       }
-      
     } catch (error) {
-      this.logger.error('Failed to handle configuration command', error);
+      this.logger.error("Failed to handle configuration command", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle get configuration
    * @param {string} projectId - Project ID
@@ -280,25 +278,26 @@ class PlaywrightTestHandler {
   async handleGetConfiguration(projectId) {
     try {
       // Load configuration from DATABASE instead of file
-      const config = await this.playwrightTestService.loadConfigurationFromDatabase(projectId);
-      
+      const config =
+        await this.playwrightTestService.loadConfigurationFromDatabase(
+          projectId,
+        );
+
       return {
-        success: true,
-        command: 'getConfiguration',
+        command: "getConfiguration",
         result: {
           projectId,
           config,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to get configuration', error);
+      this.logger.error("Failed to get configuration", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle update configuration
    * @param {string} projectId - Project ID
@@ -308,85 +307,94 @@ class PlaywrightTestHandler {
   async handleUpdateConfiguration(projectId, config) {
     try {
       // Debug: Log the exact config structure being validated
-      console.log('=== CONFIG DEBUG ===');
-      console.log('Config type:', typeof config);
-      console.log('Config keys:', Object.keys(config));
-      console.log('Browsers field:', config.browsers);
-      console.log('Browsers type:', typeof config.browsers);
-      console.log('Browsers isArray:', Array.isArray(config.browsers));
-      console.log('=== CONFIG DEBUG END ===');
-      
+      console.log("=== CONFIG DEBUG ===");
+      console.log("Config type:", typeof config);
+      console.log("Config keys:", Object.keys(config));
+      console.log("Browsers field:", config.browsers);
+      console.log("Browsers type:", typeof config.browsers);
+      console.log("Browsers isArray:", Array.isArray(config.browsers));
+      console.log("=== CONFIG DEBUG END ===");
+
       // Extract only the relevant Playwright configuration fields
       const playwrightConfig = {
         baseURL: config.baseURL,
         timeout: config.timeout || 30000,
         retries: config.retries || 2,
-        browsers: config.browsers || ['chromium'],
+        browsers: config.browsers || ["chromium"],
         headless: config.headless !== undefined ? config.headless : true,
-        login: config.login || { required: false, username: '', password: '' },
+        login: config.login || { required: false, username: "", password: "" },
         tests: config.tests || {
-          directory: 'tests/playwright/tests',
-          pattern: '**/*.test.js',
-          exclude: ['**/node_modules/**']
+          directory: "tests/playwright/tests",
+          pattern: "**/*.test.js",
+          exclude: ["**/node_modules/**"],
         },
         screenshots: config.screenshots || {
           enabled: true,
-          path: 'tests/playwright/screenshots',
-          onFailure: true
+          path: "tests/playwright/screenshots",
+          onFailure: true,
         },
         videos: config.videos || {
           enabled: false,
-          path: 'tests/playwright/videos',
-          onFailure: true
+          path: "tests/playwright/videos",
+          onFailure: true,
         },
         reports: config.reports || {
           enabled: true,
-          path: 'tests/playwright/reports',
-          format: 'html'
-        }
+          path: "tests/playwright/reports",
+          format: "html",
+        },
       };
-      
+
       // Ensure browsers is always an array
-      if (playwrightConfig.browsers && !Array.isArray(playwrightConfig.browsers)) {
-        console.log('Converting browsers to array:', playwrightConfig.browsers);
+      if (
+        playwrightConfig.browsers &&
+        !Array.isArray(playwrightConfig.browsers)
+      ) {
+        console.log("Converting browsers to array:", playwrightConfig.browsers);
         playwrightConfig.browsers = [playwrightConfig.browsers];
       } else if (!playwrightConfig.browsers) {
-        console.log('Setting default browsers array');
-        playwrightConfig.browsers = ['chromium'];
+        console.log("Setting default browsers array");
+        playwrightConfig.browsers = ["chromium"];
       }
-      
+
       // Validate configuration
-      console.log('=== STARTING VALIDATION ===');
-      const validation = this.playwrightTestService.testManager.validateTestConfig(playwrightConfig);
-      console.log('Validation result:', validation);
-      console.log('Validation valid:', validation.valid);
-      console.log('Validation errors:', validation.errors);
-      console.log('=== VALIDATION COMPLETE ===');
-      
+      console.log("=== STARTING VALIDATION ===");
+      const validation =
+        this.playwrightTestService.testManager.validateTestConfig(
+          playwrightConfig,
+        );
+      console.log("Validation result:", validation);
+      console.log("Validation valid:", validation.valid);
+      console.log("Validation errors:", validation.errors);
+      console.log("=== VALIDATION COMPLETE ===");
+
       if (!validation.valid) {
-        throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid configuration: ${validation.errors.join(", ")}`,
+        );
       }
-      
+
       // Save configuration to database
-      await this.playwrightTestService.saveConfigurationToDatabase(projectId, playwrightConfig);
-      
+      await this.playwrightTestService.saveConfigurationToDatabase(
+        projectId,
+        playwrightConfig,
+      );
+
       return {
-        success: true,
-        command: 'updateConfiguration',
+        command: "updateConfiguration",
         result: {
           projectId,
-          message: 'Configuration updated successfully in database',
-          timestamp: new Date().toISOString()
+          message: "Configuration updated successfully in database",
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to update configuration', error);
+      this.logger.error("Failed to update configuration", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle validate configuration
    * @param {Object} config - Configuration to validate
@@ -395,26 +403,25 @@ class PlaywrightTestHandler {
   async handleValidateConfiguration(config) {
     try {
       // Validate configuration
-      const validation = this.playwrightTestService.testManager.validateTestConfig(config);
-      
+      const validation =
+        this.playwrightTestService.testManager.validateTestConfig(config);
+
       return {
-        success: true,
-        command: 'validateConfiguration',
+        command: "validateConfiguration",
         result: {
           valid: validation.valid,
           errors: validation.errors,
           warnings: validation.warnings,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to validate configuration', error);
+      this.logger.error("Failed to validate configuration", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle project management commands
    * @param {Object} command - Project command
@@ -422,36 +429,35 @@ class PlaywrightTestHandler {
    */
   async handleProjectCommand(command) {
     try {
-      this.logger.info('Handling project command', {
+      this.logger.info("Handling project command", {
         action: command.action,
-        projectId: command.projectId
+        projectId: command.projectId,
       });
-      
+
       const { action, projectId, projectData } = command;
-      
+
       if (!projectId) {
-        throw new Error('Project ID is required');
+        throw new Error("Project ID is required");
       }
-      
+
       switch (action) {
-        case 'list':
+        case "list":
           return await this.handleListProjects(projectId);
-        case 'create':
+        case "create":
           return await this.handleCreateProject(projectId, projectData);
-        case 'getConfig':
+        case "getConfig":
           return await this.handleGetProjectConfig(projectId);
-        case 'updateConfig':
+        case "updateConfig":
           return await this.handleUpdateProjectConfig(projectId, projectData);
         default:
           throw new Error(`Unknown project action: ${action}`);
       }
-      
     } catch (error) {
-      this.logger.error('Failed to handle project command', error);
+      this.logger.error("Failed to handle project command", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle list projects
    * @param {string} projectId - Project ID
@@ -460,39 +466,41 @@ class PlaywrightTestHandler {
   async handleListProjects(projectId) {
     try {
       // ✅ WORKSPACE PATH VOM PROJECT REPOSITORY HOLEN!
-      const project = await this.application.projectRepository.findById(projectId);
+      const project =
+        await this.application.projectRepository.findById(projectId);
       if (!project || !project.workspacePath) {
         throw new Error(`Workspace path not found for project: ${projectId}`);
       }
-      
+
       // Discover test projects
-      const testFiles = await this.playwrightTestService.discoverProjectTests(project.workspacePath, {});
-      
-      const projects = testFiles.map(testFile => ({
+      const testFiles = await this.playwrightTestService.discoverProjectTests(
+        project.workspacePath,
+        {},
+      );
+
+      const projects = testFiles.map((testFile) => ({
         id: testFile.name,
         name: testFile.name,
         path: testFile.path,
-        directory: testFile.directory
+        directory: testFile.directory,
       }));
-      
+
       return {
-        success: true,
-        command: 'listProjects',
+        command: "listProjects",
         result: {
           projectId,
           projects,
           count: projects.length,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to list projects', error);
+      this.logger.error("Failed to list projects", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle create project
    * @param {string} projectId - Project ID
@@ -502,31 +510,33 @@ class PlaywrightTestHandler {
   async handleCreateProject(projectId, projectData) {
     try {
       // Detect workspace path
-      const workspacePath = await this.playwrightTestService.detectWorkspacePath(projectId);
+      const workspacePath =
+        await this.playwrightTestService.detectWorkspacePath(projectId);
       if (!workspacePath) {
         throw new Error(`Workspace path not found for project: ${projectId}`);
       }
-      
+
       // Create test project
-      await this.playwrightTestService.testManager.createTestProject(workspacePath, projectData);
-      
+      await this.playwrightTestService.testManager.createTestProject(
+        workspacePath,
+        projectData,
+      );
+
       return {
-        success: true,
-        command: 'createProject',
+        command: "createProject",
         result: {
           projectId,
-          message: 'Test project created successfully',
-          timestamp: new Date().toISOString()
+          message: "Test project created successfully",
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to create project', error);
+      this.logger.error("Failed to create project", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle get project config
    * @param {string} projectId - Project ID
@@ -535,31 +545,33 @@ class PlaywrightTestHandler {
   async handleGetProjectConfig(projectId) {
     try {
       // Detect workspace path
-      const workspacePath = await this.playwrightTestService.detectWorkspacePath(projectId);
+      const workspacePath =
+        await this.playwrightTestService.detectWorkspacePath(projectId);
       if (!workspacePath) {
         throw new Error(`Workspace path not found for project: ${projectId}`);
       }
-      
+
       // Load project configuration
-      const config = await this.playwrightTestService.loadProjectConfiguration(workspacePath);
-      
+      const config =
+        await this.playwrightTestService.loadProjectConfiguration(
+          workspacePath,
+        );
+
       return {
-        success: true,
-        command: 'getProjectConfig',
+        command: "getProjectConfig",
         result: {
           projectId,
           config,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to get project config', error);
+      this.logger.error("Failed to get project config", error);
       throw error;
     }
   }
-  
+
   /**
    * Handle update project config
    * @param {string} projectId - Project ID
@@ -569,27 +581,29 @@ class PlaywrightTestHandler {
   async handleUpdateProjectConfig(projectId, config) {
     try {
       // Detect workspace path
-      const workspacePath = await this.playwrightTestService.detectWorkspacePath(projectId);
+      const workspacePath =
+        await this.playwrightTestService.detectWorkspacePath(projectId);
       if (!workspacePath) {
         throw new Error(`Workspace path not found for project: ${projectId}`);
       }
-      
+
       // Save project configuration
-      await this.playwrightTestService.testManager.saveTestConfig(workspacePath, config);
-      
+      await this.playwrightTestService.testManager.saveTestConfig(
+        workspacePath,
+        config,
+      );
+
       return {
-        success: true,
-        command: 'updateProjectConfig',
+        command: "updateProjectConfig",
         result: {
           projectId,
-          message: 'Project configuration updated successfully',
-          timestamp: new Date().toISOString()
+          message: "Project configuration updated successfully",
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to update project config', error);
+      this.logger.error("Failed to update project config", error);
       throw error;
     }
   }

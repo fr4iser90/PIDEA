@@ -1,4 +1,4 @@
-const ChatMessage = require('@entities/ChatMessage');
+const ChatMessage = require("@entities/ChatMessage");
 
 class ChatRepository {
   constructor() {
@@ -8,32 +8,38 @@ class ChatRepository {
 
   async saveMessage(message) {
     if (!(message instanceof ChatMessage)) {
-      throw new Error('Invalid message');
+      throw new Error("Invalid message");
     }
-    
+
     const messageId = message.id || `msg_${++this.messageCounter}`;
     this.messages.set(messageId, message.toJSON());
     return messageId;
   }
 
   async getAllMessages() {
-    return Array.from(this.messages.values()).map(m => ChatMessage.fromJSON(m));
+    return Array.from(this.messages.values()).map((m) =>
+      ChatMessage.fromJSON(m),
+    );
   }
 
   async getMessagesByPort(port, userId = null) {
     const allMessages = await this.getAllMessages();
-    let filteredMessages = allMessages.filter(message => message.port === parseInt(port));
-    
+    let filteredMessages = allMessages.filter(
+      (message) => message.port === parseInt(port),
+    );
+
     if (userId) {
-      filteredMessages = filteredMessages.filter(message => message.userId === userId);
+      filteredMessages = filteredMessages.filter(
+        (message) => message.userId === userId,
+      );
     }
-    
+
     return filteredMessages;
   }
 
   async getMessagesByUser(userId) {
     const allMessages = await this.getAllMessages();
-    return allMessages.filter(message => message.userId === userId);
+    return allMessages.filter((message) => message.userId === userId);
   }
 
   async findMessageById(messageId) {
@@ -47,4 +53,4 @@ class ChatRepository {
   }
 }
 
-module.exports = ChatRepository; 
+module.exports = ChatRepository;

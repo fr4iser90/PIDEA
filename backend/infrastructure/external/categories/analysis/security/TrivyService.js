@@ -1,55 +1,56 @@
 /**
  * TrivyService - Infrastructure Layer
  * External integration for Trivy vulnerability scanner API
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Container and dependency vulnerability scanning via Trivy API
  */
 
-const Logger = require('@logging/Logger');
-const HttpClient = require('@infrastructure/http/HttpClient');
+const Logger = require("@logging/Logger");
+const HttpClient = require("@infrastructure/http/HttpClient");
 
 class TrivyService {
   constructor() {
-    this.logger = new Logger('TrivyService');
+    this.logger = new Logger("TrivyService");
     this.httpClient = new HttpClient();
-    this.baseUrl = process.env.TRIVY_API_URL || 'http://localhost:8080';
+    this.baseUrl = process.env.TRIVY_API_URL || "http://localhost:8080";
     this.apiKey = process.env.TRIVY_API_KEY;
     this.timeout = parseInt(process.env.TRIVY_TIMEOUT) || 30000;
   }
 
   async analyze(params) {
     try {
-      this.logger.info('Starting Trivy vulnerability analysis', { projectId: params.projectId });
-      
+      this.logger.info("Starting Trivy vulnerability analysis", {
+        projectId: params.projectId,
+      });
+
       const { projectPath, config = {} } = params;
       const scanConfig = {
         ...config,
-        format: 'json',
-        severity: config.severity || 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL',
-        exitCode: 0
+        format: "json",
+        severity: config.severity || "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+        exitCode: 0,
       };
 
       const result = await this.scanContainer(projectPath, scanConfig);
-      
-      this.logger.info('Trivy analysis completed successfully', { 
+
+      this.logger.info("Trivy analysis completed successfully", {
         projectId: params.projectId,
-        vulnerabilities: result.vulnerabilities?.length || 0 
+        vulnerabilities: result.vulnerabilities?.length || 0,
       });
 
       return {
-        success: true,
         data: result,
         metadata: {
-          scanner: 'trivy',
+          scanner: "trivy",
           timestamp: new Date().toISOString(),
-          config: scanConfig
-        }
+          config: scanConfig,
+        },
       };
     } catch (error) {
-      this.logger.error('Trivy analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Trivy analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -59,15 +60,15 @@ class TrivyService {
     const endpoint = `${this.baseUrl}/v1/scan`;
     const payload = {
       target: projectPath,
-      config: config
+      config: config,
     };
 
     const response = await this.httpClient.post(endpoint, payload, {
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': this.apiKey ? `Bearer ${this.apiKey}` : undefined
+        "Content-Type": "application/json",
+        Authorization: this.apiKey ? `Bearer ${this.apiKey}` : undefined,
       },
-      timeout: this.timeout
+      timeout: this.timeout,
     });
 
     return response.data;
@@ -75,35 +76,39 @@ class TrivyService {
 
   async getConfiguration() {
     return {
-      name: 'Trivy Vulnerability Scanner',
-      version: '1.0.0',
-      capabilities: ['container-scanning', 'dependency-scanning', 'secret-scanning'],
+      name: "Trivy Vulnerability Scanner",
+      version: "1.0.0",
+      capabilities: [
+        "container-scanning",
+        "dependency-scanning",
+        "secret-scanning",
+      ],
       configuration: {
         baseUrl: this.baseUrl,
         timeout: this.timeout,
-        hasApiKey: !!this.apiKey
-      }
+        hasApiKey: !!this.apiKey,
+      },
     };
   }
 
   async getStatus() {
     try {
       const response = await this.httpClient.get(`${this.baseUrl}/health`, {
-        timeout: 5000
+        timeout: 5000,
       });
       return {
-        status: 'healthy',
-        version: response.data?.version || 'unknown',
-        timestamp: new Date().toISOString()
+        status: "healthy",
+        version: response.data?.version || "unknown",
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
 }
 
-module.exports = TrivyService; 
+module.exports = TrivyService;

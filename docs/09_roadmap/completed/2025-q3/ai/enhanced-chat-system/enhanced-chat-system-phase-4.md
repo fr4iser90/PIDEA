@@ -525,7 +525,6 @@ class SmartCompletionDetector {
             if (completionDetection.isComplete && completionDetection.confidence >= this.config.minConfidence) {
               this.logger.info('Completion detected with high confidence');
               return {
-                success: true,
                 response: currentResponse,
                 completion: completionDetection,
                 duration: Date.now() - startTime,
@@ -554,7 +553,7 @@ class SmartCompletionDetector {
         // If we have a partial completion, return it
         if (lastCompletionDetection) {
           return {
-            success: false,
+           
             response: lastResponse,
             completion: lastCompletionDetection,
             duration: Date.now() - startTime,
@@ -576,7 +575,7 @@ class SmartCompletionDetector {
     });
 
     return {
-      success: false,
+     
       response: finalResponse,
       completion: finalCompletion,
       duration: Date.now() - startTime,
@@ -696,7 +695,6 @@ class ChatMessageHandler {
       const responseWithContext = await this.extractLatestAIResponse(await this.browserManager.getPage());
       
       return {
-        success: true,
         response: completionResult.response,
         completion: completionResult.completion,
         context: responseWithContext.context,
@@ -710,7 +708,7 @@ class ChatMessageHandler {
       this.logger.info(`⏰ [ChatMessageHandler] AI response timeout in ${this.ideType} (${completionResult.method})`);
       
       return {
-        success: false,
+       
         response: completionResult.response,
         completion: completionResult.completion,
         error: completionResult.reason || 'Timeout waiting for AI to finish editing',
@@ -823,7 +821,6 @@ class AutoFinishSystem {
           return {
             taskId: task.id,
             description: task.description,
-            success: true,
             result,
             duration: Date.now() - taskStartTime,
             completedAt: new Date(),
@@ -858,7 +855,6 @@ class AutoFinishSystem {
         return {
           taskId: task.id,
           description: task.description,
-          success: true,
           aiResponse,
           completionDetection,
           validationResult,
@@ -882,7 +878,7 @@ Current response: ${aiResponse}`;
         return {
           taskId: task.id,
           description: task.description,
-          success: false,
+         
           status: 'partial_completion',
           aiResponse,
           clarificationResponse,
@@ -920,7 +916,7 @@ Current response: ${aiResponse}`;
               
               return {
                 taskId: task.id,
-                success: false,
+               
                 status: 'paused',
                 reason: 'user_input_required',
                 aiResponse
@@ -940,7 +936,6 @@ Current response: ${aiResponse}`;
         return {
           taskId: task.id,
           description: task.description,
-          success: true,
           aiResponse,
           completionDetection,
           confirmationResult,
@@ -957,7 +952,7 @@ Current response: ${aiResponse}`;
       return {
         taskId: task.id,
         description: task.description,
-        success: false,
+       
         error: error.message,
         duration: Date.now() - taskStartTime,
         failedAt: new Date()

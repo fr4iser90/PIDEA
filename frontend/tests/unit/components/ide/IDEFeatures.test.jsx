@@ -42,7 +42,7 @@ describe('IDEFeatures Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    apiCall.mockResolvedValue({ success: true, data: mockFeatures });
+    apiCall.mockResolvedValue({ data: mockFeatures });
   });
 
   describe('Rendering', () => {
@@ -311,7 +311,7 @@ describe('IDEFeatures Component', () => {
         }
       };
 
-      apiCall.mockResolvedValue({ success: true, data: mockFeaturesWithDisabled });
+      apiCall.mockResolvedValue({ data: mockFeaturesWithDisabled });
       
       render(<IDEFeatures {...defaultProps} />);
 

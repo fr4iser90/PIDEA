@@ -4,7 +4,7 @@
  * This file is kept for backward compatibility
  */
 
-const centralizedConfig = require('./centralized-config');
+const centralizedConfig = require("./centralized-config");
 
 // Export the path config from centralized config
 module.exports = centralizedConfig.pathConfig;

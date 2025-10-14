@@ -2,24 +2,26 @@
  * SequentialExecutionEngine - Enhanced sequential execution engine for workflow execution
  * Provides core execution functionality with optimization, resource management, and caching
  */
-const ExecutionContext = require('./ExecutionContext');
-const ExecutionResult = require('./ExecutionResult');
-const ExecutionQueue = require('./ExecutionQueue');
-const ExecutionScheduler = require('./ExecutionScheduler');
-const { ExecutionException } = require('./exceptions/ExecutionException');
-const ServiceLogger = require('@logging/ServiceLogger');
+const ExecutionContext = require("./ExecutionContext");
+const ExecutionResult = require("./ExecutionResult");
+const ExecutionQueue = require("./ExecutionQueue");
+const ExecutionScheduler = require("./ExecutionScheduler");
+const { ExecutionException } = require("./exceptions/ExecutionException");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 // Optimization and Resource Management Components
-const WorkflowOptimizer = require('./WorkflowOptimizer');
-const ResourceManager = require('./ResourceManager');
-const ExecutionCache = require('./ExecutionCache');
-const ExecutionMetrics = require('./ExecutionMetrics');
-const ExecutionPredictor = require('./ExecutionPredictor');
+const WorkflowOptimizer = require("./WorkflowOptimizer");
+const ResourceManager = require("./ResourceManager");
+const ExecutionCache = require("./ExecutionCache");
+const ExecutionMetrics = require("./ExecutionMetrics");
+const ExecutionPredictor = require("./ExecutionPredictor");
 
 // New Optimization Components
-const { ExecutionOptimizer } = require('./optimization/ExecutionOptimizer');
-const { ExecutionMonitor } = require('./monitoring/ExecutionMonitor');
-const { ExecutionExceptionFactory } = require('./exceptions/ExecutionException');
+const { ExecutionOptimizer } = require("./optimization/ExecutionOptimizer");
+const { ExecutionMonitor } = require("./monitoring/ExecutionMonitor");
+const {
+  ExecutionExceptionFactory,
+} = require("./exceptions/ExecutionException");
 
 /**
  * Enhanced sequential execution engine for workflow execution
@@ -29,56 +31,56 @@ class SequentialExecutionEngine {
     this.maxQueueSize = options.maxQueueSize || 50;
     this.executionTimeout = options.executionTimeout || 300000; // 5 minutes
     this.retryAttempts = options.retryAttempts || 2;
-    
+
     // Core components
     this.executionQueue = new ExecutionQueue({
       maxSize: this.maxQueueSize,
       enablePriority: options.enablePriority !== false,
       enableRetry: options.enableRetry !== false,
-      maxRetries: this.retryAttempts
+      maxRetries: this.retryAttempts,
     });
-    
+
     this.executionScheduler = new ExecutionScheduler({
       maxConcurrentExecutions: options.maxConcurrentExecutions || 10,
       enableResourceManagement: options.enableResourceManagement !== false,
       enableDependencyResolution: options.enableDependencyResolution !== false,
-      enablePriorityScheduling: options.enablePriorityScheduling !== false
+      enablePriorityScheduling: options.enablePriorityScheduling !== false,
     });
-    
+
     // Optimization and Resource Management Components
     this.workflowOptimizer = new WorkflowOptimizer({
       enableOptimization: options.enableOptimization !== false,
       enableCaching: options.enableOptimizationCaching !== false,
       enableLearning: options.enableOptimizationLearning !== false,
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     this.resourceManager = new ResourceManager({
       maxMemoryUsage: options.maxMemoryUsage || 512,
       maxCpuUsage: options.maxCpuUsage || 80,
       maxConcurrentExecutions: options.maxConcurrentExecutions || 5,
       enableResourceMonitoring: options.enableResourceMonitoring !== false,
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     this.executionCache = new ExecutionCache({
       enableCaching: options.enableCaching !== false,
       maxSize: options.cacheMaxSize || 1000,
       ttl: options.cacheTtl || 3600000,
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     this.executionMetrics = new ExecutionMetrics({
       enableMetrics: options.enableMetrics !== false,
       enableRealTimeMetrics: options.enableRealTimeMetrics !== false,
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     this.executionPredictor = new ExecutionPredictor({
       enablePrediction: options.enablePrediction !== false,
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     // New Optimization Components
     this.executionOptimizer = new ExecutionOptimizer({
       enabled: options.enableAdvancedOptimization !== false,
@@ -89,9 +91,9 @@ class SequentialExecutionEngine {
       predictiveOptimization: options.enablePredictiveOptimization !== false,
       caching: options.enableOptimizationCaching !== false,
       learningEnabled: options.enableOptimizationLearning !== false,
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     this.executionMonitor = new ExecutionMonitor({
       enabled: options.enableMonitoring !== false,
       monitoringInterval: options.monitoringInterval || 1000,
@@ -102,35 +104,37 @@ class SequentialExecutionEngine {
         cpuThreshold: options.cpuThreshold || 90,
         errorThreshold: options.errorThreshold || 3,
         stepFailureThreshold: options.stepFailureThreshold || 0.5,
-        performanceDegradationThreshold: options.performanceDegradationThreshold || 0.3
+        performanceDegradationThreshold:
+          options.performanceDegradationThreshold || 0.3,
       },
-      logger: options.logger
+      logger: options.logger,
     });
-    
+
     // Execution state
     this.activeExecutions = new Map();
     this.executionStrategies = new Map();
-    
+
     // Initialize strategies
     this.initializeStrategies();
-    
+
     // Start monitoring
     if (options.enableMonitoring !== false) {
       this.executionMonitor.start();
     }
-    
-    this.logger = options.logger || new ServiceLogger('SequentialExecutionEngine');
+
+    this.logger =
+      options.logger || new ServiceLogger("SequentialExecutionEngine");
   }
 
   /**
    * Initialize execution strategies
    */
   initializeStrategies() {
-    const BasicSequentialStrategy = require('./strategies/BasicSequentialStrategy');
-    const SimpleSequentialStrategy = require('./strategies/SimpleSequentialStrategy');
-    
-    this.executionStrategies.set('basic', new BasicSequentialStrategy());
-    this.executionStrategies.set('simple', new SimpleSequentialStrategy());
+    const BasicSequentialStrategy = require("./strategies/BasicSequentialStrategy");
+    const SimpleSequentialStrategy = require("./strategies/SimpleSequentialStrategy");
+
+    this.executionStrategies.set("basic", new BasicSequentialStrategy());
+    this.executionStrategies.set("simple", new SimpleSequentialStrategy());
   }
 
   /**
@@ -143,100 +147,146 @@ class SequentialExecutionEngine {
   async executeWorkflow(workflow, context, options = {}) {
     const executionId = this.generateExecutionId();
     const startTime = Date.now();
-    
+
     try {
-      this.logger.info('SequentialExecutionEngine: Starting enhanced workflow execution', {
-        executionId,
-        workflowName: workflow.getMetadata().name,
-        strategy: options.strategy || 'basic'
-      });
+      this.logger.info(
+        "SequentialExecutionEngine: Starting enhanced workflow execution",
+        {
+          executionId,
+          workflowName: workflow.getMetadata().name,
+          strategy: options.strategy || "basic",
+        },
+      );
 
       // Record execution start in metrics
       this.executionMetrics.recordExecutionStart(executionId, {
         name: workflow.getMetadata().name,
-        strategy: options.strategy || 'basic'
+        strategy: options.strategy || "basic",
       });
 
       // Check cache for existing result
-      const cachedResult = await this.executionCache.getCachedResult(workflow, context);
+      const cachedResult = await this.executionCache.getCachedResult(
+        workflow,
+        context,
+      );
       if (cachedResult) {
-        this.logger.info('SequentialExecutionEngine: Using cached result', {
+        this.logger.info("SequentialExecutionEngine: Using cached result", {
           executionId,
-          cacheHit: true
+          cacheHit: true,
         });
-        
+
         this.executionMetrics.recordExecutionEnd(executionId, cachedResult);
         return cachedResult;
       }
 
       // Predict execution time and resource requirements
-      const prediction = await this.executionPredictor.predictExecutionTime(workflow, context, options);
-      const resourcePrediction = await this.executionPredictor.predictResourceRequirements(workflow, context);
-      
-      this.logger.info('SequentialExecutionEngine: Execution prediction', {
+      const prediction = await this.executionPredictor.predictExecutionTime(
+        workflow,
+        context,
+        options,
+      );
+      const resourcePrediction =
+        await this.executionPredictor.predictResourceRequirements(
+          workflow,
+          context,
+        );
+
+      this.logger.info("SequentialExecutionEngine: Execution prediction", {
         executionId,
         predictedTime: prediction.executionTime,
         confidence: prediction.confidence,
-        resourceRequirements: resourcePrediction
+        resourceRequirements: resourcePrediction,
       });
 
       // Allocate resources
-      const allocatedResources = await this.resourceManager.allocateResources(executionId, resourcePrediction);
-      
-      this.logger.info('SequentialExecutionEngine: Resources allocated', {
+      const allocatedResources = await this.resourceManager.allocateResources(
         executionId,
-        allocatedResources
+        resourcePrediction,
+      );
+
+      this.logger.info("SequentialExecutionEngine: Resources allocated", {
+        executionId,
+        allocatedResources,
       });
 
       // Register execution for monitoring
       this.executionMonitor.registerExecution(executionId, {
         workflowName: workflow.getMetadata().name,
         stepCount: workflow.getMetadata().steps?.length || 0,
-        strategy: options.strategy || 'basic'
+        strategy: options.strategy || "basic",
       });
 
       // Advanced workflow optimization
       let optimizedWorkflow = workflow;
       let optimizationResult = null;
-      
+
       if (this.executionOptimizer.config.enabled) {
         try {
           const steps = this.getWorkflowSteps(workflow);
-          optimizationResult = await this.executionOptimizer.optimizeWorkflow(steps, context, options);
-          optimizedWorkflow = await this.applyOptimizationResult(workflow, optimizationResult, context);
-          
-          this.logger.info('SequentialExecutionEngine: Advanced workflow optimization completed', {
-            executionId,
-            originalSteps: steps.length,
-            optimizedSteps: optimizationResult.optimizedSteps.length,
-            estimatedSavings: optimizationResult.estimatedSavings,
-            confidence: optimizationResult.confidence,
-            appliedOptimizations: optimizationResult.appliedOptimizations.map(opt => opt.type)
-          });
+          optimizationResult = await this.executionOptimizer.optimizeWorkflow(
+            steps,
+            context,
+            options,
+          );
+          optimizedWorkflow = await this.applyOptimizationResult(
+            workflow,
+            optimizationResult,
+            context,
+          );
+
+          this.logger.info(
+            "SequentialExecutionEngine: Advanced workflow optimization completed",
+            {
+              executionId,
+              originalSteps: steps.length,
+              optimizedSteps: optimizationResult.optimizedSteps.length,
+              estimatedSavings: optimizationResult.estimatedSavings,
+              confidence: optimizationResult.confidence,
+              appliedOptimizations: optimizationResult.appliedOptimizations.map(
+                (opt) => opt.type,
+              ),
+            },
+          );
         } catch (error) {
-          this.logger.warn('SequentialExecutionEngine: Advanced optimization failed, using basic optimization', {
-            executionId,
-            error: error.message
-          });
-          
+          this.logger.warn(
+            "SequentialExecutionEngine: Advanced optimization failed, using basic optimization",
+            {
+              executionId,
+              error: error.message,
+            },
+          );
+
           // Fallback to basic optimization
-          optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(workflow, context);
+          optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(
+            workflow,
+            context,
+          );
         }
       } else {
         // Use basic optimization
-        optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(workflow, context);
+        optimizedWorkflow = await this.workflowOptimizer.optimizeWorkflow(
+          workflow,
+          context,
+        );
       }
-      
-      this.logger.info('SequentialExecutionEngine: Workflow optimization completed', {
-        executionId,
-        originalSteps: workflow.getMetadata().steps?.length || 0,
-        optimizedSteps: optimizedWorkflow.getMetadata().steps?.length || 0,
-        optimizationType: optimizationResult ? 'advanced' : 'basic'
-      });
+
+      this.logger.info(
+        "SequentialExecutionEngine: Workflow optimization completed",
+        {
+          executionId,
+          originalSteps: workflow.getMetadata().steps?.length || 0,
+          optimizedSteps: optimizedWorkflow.getMetadata().steps?.length || 0,
+          optimizationType: optimizationResult ? "advanced" : "basic",
+        },
+      );
 
       // Determine execution strategy
-      const strategy = this.determineExecutionStrategy(optimizedWorkflow, context, options);
-      
+      const strategy = this.determineExecutionStrategy(
+        optimizedWorkflow,
+        context,
+        options,
+      );
+
       // Create execution context
       const executionContext = new ExecutionContext({
         id: executionId,
@@ -248,77 +298,91 @@ class SequentialExecutionEngine {
           ...options,
           prediction,
           resourcePrediction,
-          allocatedResources
-        }
+          allocatedResources,
+        },
       });
 
       // Register execution
       this.activeExecutions.set(executionId, executionContext);
 
       // Schedule execution
-      const scheduledExecution = await this.executionScheduler.schedule(executionContext);
+      const scheduledExecution =
+        await this.executionScheduler.schedule(executionContext);
 
       // Execute workflow
-      const result = await this.executeWithStrategy(executionContext, scheduledExecution);
+      const result = await this.executeWithStrategy(
+        executionContext,
+        scheduledExecution,
+      );
 
       // Cache successful results
       if (result && result.success !== false) {
         await this.executionCache.cacheResult(workflow, context, result, {
           ttl: options.cacheTtl,
-          excludeSensitive: options.excludeSensitiveFromCache
+          excludeSensitive: options.excludeSensitiveFromCache,
         });
       }
 
       // Update monitoring with execution progress
       this.executionMonitor.updateExecution(executionId, {
-        completedSteps: result.stepResults?.filter(r => r.success).length || 0,
-        failedSteps: result.stepResults?.filter(r => !r.success).length || 0,
+        completedSteps:
+          result.stepResults?.filter((r) => r.success).length || 0,
+        failedSteps: result.stepResults?.filter((r) => !r.success).length || 0,
         cacheHits: result.cacheHits || 0,
         cacheMisses: result.cacheMisses || 0,
-        retryAttempts: result.retryAttempts || 0
+        retryAttempts: result.retryAttempts || 0,
       });
 
       // Learn from execution
-      await this.executionPredictor.learnFromExecution(executionId, optimizedWorkflow, context, result, prediction);
+      await this.executionPredictor.learnFromExecution(
+        executionId,
+        optimizedWorkflow,
+        context,
+        result,
+        prediction,
+      );
       await this.workflowOptimizer.learnFromExecution(executionId, result);
-      
+
       // Learn from optimization if available
       if (optimizationResult) {
         await this.executionOptimizer.learnFromOptimization(
-          this.getWorkflowSteps(workflow), 
-          optimizationResult, 
-          context
+          this.getWorkflowSteps(workflow),
+          optimizationResult,
+          context,
         );
       }
 
       // Record execution end in metrics
       this.executionMetrics.recordExecutionEnd(executionId, result);
-      
+
       // Complete monitoring
       this.executionMonitor.completeExecution(executionId, {
         optimizationSavings: optimizationResult?.estimatedSavings?.time || 0,
-        parallelExecutionSavings: optimizationResult?.estimatedSavings?.time || 0
+        parallelExecutionSavings:
+          optimizationResult?.estimatedSavings?.time || 0,
       });
 
       return result;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
-      this.logger.error('SequentialExecutionEngine: Workflow execution failed', {
-        executionId,
-        error: error.message,
-        duration
-      });
+
+      this.logger.error(
+        "SequentialExecutionEngine: Workflow execution failed",
+        {
+          executionId,
+          error: error.message,
+          duration,
+        },
+      );
 
       // Record error in metrics
-      this.executionMetrics.recordError(executionId, 'execution', error);
+      this.executionMetrics.recordError(executionId, "execution", error);
 
-      throw new ExecutionException('Workflow execution failed', error);
+      throw new ExecutionException("Workflow execution failed", error);
     } finally {
       // Release resources
       await this.resourceManager.releaseResources(executionId);
-      
+
       // Cleanup
       this.activeExecutions.delete(executionId);
     }
@@ -338,7 +402,7 @@ class SequentialExecutionEngine {
     }
 
     // Default to basic strategy
-    return this.executionStrategies.get('basic');
+    return this.executionStrategies.get("basic");
   }
 
   /**
@@ -351,9 +415,9 @@ class SequentialExecutionEngine {
     const { strategy, workflow, context } = executionContext;
 
     // Update context with execution information
-    context.setData('executionId', executionContext.getId());
-    context.setData('executionStrategy', strategy.name);
-    context.setData('scheduledExecution', scheduledExecution);
+    context.setData("executionId", executionContext.getId());
+    context.setData("executionStrategy", strategy.name);
+    context.setData("scheduledExecution", scheduledExecution);
 
     // Execute with strategy
     return await strategy.execute(workflow, context, executionContext);
@@ -377,7 +441,7 @@ class SequentialExecutionEngine {
     if (workflow._steps) {
       return workflow._steps;
     }
-    
+
     // For other workflows, return single step
     return [workflow];
   }
@@ -395,10 +459,10 @@ class SequentialExecutionEngine {
     }
 
     // Create optimized workflow with new steps
-    const ComposedWorkflow = require('../ComposedWorkflow');
+    const ComposedWorkflow = require("../ComposedWorkflow");
     const optimizedWorkflow = new ComposedWorkflow(
       optimizationResult.optimizedSteps,
-      workflow.getMetadata()
+      workflow.getMetadata(),
     );
 
     // Copy optimization metadata
@@ -416,16 +480,16 @@ class SequentialExecutionEngine {
   getExecutionStatus(executionId) {
     const execution = this.activeExecutions.get(executionId);
     if (!execution) {
-      return { status: 'not_found' };
+      return { status: "not_found" };
     }
 
     return {
-      status: 'active',
+      status: "active",
       executionId,
       workflowName: execution.getWorkflow().getMetadata().name,
       strategy: execution.getStrategy().name,
       startTime: execution.startTime,
-      duration: Date.now() - execution.startTime
+      duration: Date.now() - execution.startTime,
     };
   }
 
@@ -436,12 +500,13 @@ class SequentialExecutionEngine {
   async getSystemMetrics() {
     const queueStats = this.executionQueue.getStatistics();
     const schedulerStats = this.executionScheduler.getStatistics();
-    const optimizationStats = this.workflowOptimizer.getOptimizationStatistics();
+    const optimizationStats =
+      this.workflowOptimizer.getOptimizationStatistics();
     const resourceStats = await this.resourceManager.getResourceStatistics();
     const cacheStats = this.executionCache.getStatistics();
     const metricsStats = this.executionMetrics.getMetricsSummary();
     const predictionStats = this.executionPredictor.getPredictionStatistics();
-    
+
     return {
       // Core metrics
       activeExecutions: this.activeExecutions.size,
@@ -454,31 +519,31 @@ class SequentialExecutionEngine {
       resourceUtilization: schedulerStats.resourceUtilization,
       averageWaitTime: queueStats.averageWaitTime,
       averageProcessingTime: queueStats.averageProcessingTime,
-      
+
       // Optimization metrics
       optimization: {
         enabled: optimizationStats.enabled,
         cacheSize: optimizationStats.cacheSize,
         rulesCount: optimizationStats.rulesCount,
-        learning: optimizationStats.enabledLearning
+        learning: optimizationStats.enabledLearning,
       },
-      
+
       // Resource management metrics
       resourceManagement: {
         utilization: resourceStats.utilization,
         allocations: resourceStats.allocations,
         averageMemory: resourceStats.averageMemory,
-        averageCpu: resourceStats.averageCpu
+        averageCpu: resourceStats.averageCpu,
       },
-      
+
       // Cache metrics
       cache: {
         hitRate: cacheStats.hitRatePercentage,
         size: cacheStats.size,
         maxSize: cacheStats.maxSize,
-        enabled: cacheStats.enabled
+        enabled: cacheStats.enabled,
       },
-      
+
       // Execution metrics
       metrics: {
         totalExecutions: metricsStats.aggregated.totalExecutions,
@@ -486,15 +551,15 @@ class SequentialExecutionEngine {
         failedExecutions: metricsStats.aggregated.failedExecutions,
         averageExecutionTime: metricsStats.aggregated.averageExecutionTime,
         errorRate: metricsStats.aggregated.errorRate,
-        throughput: metricsStats.aggregated.throughput
+        throughput: metricsStats.aggregated.throughput,
       },
-      
+
       // Prediction metrics
       prediction: {
         enabled: predictionStats.enabled,
         totalPredictions: predictionStats.totalPredictions,
-        accuracy: predictionStats.accuracy
-      }
+        accuracy: predictionStats.accuracy,
+      },
     };
   }
 
@@ -538,15 +603,15 @@ class SequentialExecutionEngine {
   cancelExecution(executionId) {
     // Cancel in scheduler
     const cancelled = this.executionScheduler.cancelExecution(executionId);
-    
+
     // Remove from active executions
     this.activeExecutions.delete(executionId);
-    
-    this.logger.info('SequentialExecutionEngine: Execution cancelled', {
+
+    this.logger.info("SequentialExecutionEngine: Execution cancelled", {
       executionId,
-      cancelled
+      cancelled,
     });
-    
+
     return cancelled;
   }
 
@@ -583,7 +648,9 @@ class SequentialExecutionEngine {
    */
   registerStrategy(name, strategy) {
     this.executionStrategies.set(name, strategy);
-    this.logger.info('SequentialExecutionEngine: Strategy registered', { name });
+    this.logger.info("SequentialExecutionEngine: Strategy registered", {
+      name,
+    });
   }
 
   /**
@@ -602,26 +669,29 @@ class SequentialExecutionEngine {
     if (config.maxQueueSize !== undefined) {
       this.maxQueueSize = config.maxQueueSize;
     }
-    
+
     if (config.executionTimeout !== undefined) {
       this.executionTimeout = config.executionTimeout;
     }
-    
+
     if (config.retryAttempts !== undefined) {
       this.retryAttempts = config.retryAttempts;
     }
-    
+
     // Update queue configuration
     if (config.queue) {
       this.executionQueue.updateConfiguration(config.queue);
     }
-    
+
     // Update scheduler configuration
     if (config.scheduler) {
       this.executionScheduler.updateConfiguration(config.scheduler);
     }
-    
-    this.logger.info('SequentialExecutionEngine: Configuration updated', config);
+
+    this.logger.info(
+      "SequentialExecutionEngine: Configuration updated",
+      config,
+    );
   }
 
   /**
@@ -634,7 +704,7 @@ class SequentialExecutionEngine {
       executionTimeout: this.executionTimeout,
       retryAttempts: this.retryAttempts,
       queue: this.executionQueue.getConfiguration(),
-      scheduler: this.executionScheduler.getConfiguration()
+      scheduler: this.executionScheduler.getConfiguration(),
     };
   }
 
@@ -648,36 +718,36 @@ class SequentialExecutionEngine {
     const resourceHealth = this.resourceManager.getResourceUtilization();
     const cacheHealth = this.executionCache.getStatistics();
     const metricsHealth = this.executionMetrics.getMetricsSummary();
-    
+
     // Determine overall health status
-    let overallStatus = 'healthy';
+    let overallStatus = "healthy";
     const issues = [];
-    
-    if (queueHealth.status !== 'healthy') {
-      overallStatus = 'warning';
+
+    if (queueHealth.status !== "healthy") {
+      overallStatus = "warning";
       issues.push(`Queue: ${queueHealth.status}`);
     }
-    
-    if (schedulerHealth.status !== 'healthy') {
-      overallStatus = 'warning';
+
+    if (schedulerHealth.status !== "healthy") {
+      overallStatus = "warning";
       issues.push(`Scheduler: ${schedulerHealth.status}`);
     }
-    
+
     if (resourceHealth.allocated.memory.percentage > 90) {
-      overallStatus = 'warning';
-      issues.push('High memory usage');
+      overallStatus = "warning";
+      issues.push("High memory usage");
     }
-    
+
     if (resourceHealth.allocated.cpu.percentage > 90) {
-      overallStatus = 'warning';
-      issues.push('High CPU usage');
+      overallStatus = "warning";
+      issues.push("High CPU usage");
     }
-    
+
     if (metricsHealth.aggregated.errorRate > 0.1) {
-      overallStatus = 'warning';
-      issues.push('High error rate');
+      overallStatus = "warning";
+      issues.push("High error rate");
     }
-    
+
     return {
       status: overallStatus,
       issues,
@@ -685,19 +755,24 @@ class SequentialExecutionEngine {
         queue: queueHealth,
         scheduler: schedulerHealth,
         resourceManagement: {
-          status: resourceHealth.allocated.memory.percentage > 90 || resourceHealth.allocated.cpu.percentage > 90 ? 'warning' : 'healthy',
-          utilization: resourceHealth
+          status:
+            resourceHealth.allocated.memory.percentage > 90 ||
+            resourceHealth.allocated.cpu.percentage > 90
+              ? "warning"
+              : "healthy",
+          utilization: resourceHealth,
         },
         cache: {
-          status: cacheHealth.enabled ? 'healthy' : 'disabled',
-          hitRate: cacheHealth.hitRatePercentage
+          status: cacheHealth.enabled ? "healthy" : "disabled",
+          hitRate: cacheHealth.hitRatePercentage,
         },
         metrics: {
-          status: metricsHealth.aggregated.errorRate > 0.1 ? 'warning' : 'healthy',
-          errorRate: metricsHealth.aggregated.errorRate
-        }
+          status:
+            metricsHealth.aggregated.errorRate > 0.1 ? "warning" : "healthy",
+          errorRate: metricsHealth.aggregated.errorRate,
+        },
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -808,14 +883,14 @@ class SequentialExecutionEngine {
    * @returns {Promise<Object>} Analysis result
    */
   async analyzeWorkflow(workflow, context) {
-    const WorkflowAnalyzer = require('./optimization/WorkflowAnalyzer');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+    const WorkflowAnalyzer = require("./optimization/WorkflowAnalyzer");
+    const Logger = require("@logging/Logger");
+    const logger = new Logger("Logger");
     const analyzer = new WorkflowAnalyzer({
       enableAnalysis: true,
-      logger: this.logger
+      logger: this.logger,
     });
-    
+
     return await analyzer.analyzeWorkflow(workflow, context);
   }
 
@@ -824,7 +899,7 @@ const logger = new Logger('Logger');
    */
   clearOptimizationCache() {
     this.workflowOptimizer.clearCache();
-    this.logger.info('SequentialExecutionEngine: Optimization cache cleared');
+    this.logger.info("SequentialExecutionEngine: Optimization cache cleared");
   }
 
   /**
@@ -832,7 +907,7 @@ const logger = new Logger('Logger');
    */
   clearExecutionCache() {
     this.executionCache.clear();
-    this.logger.info('SequentialExecutionEngine: Execution cache cleared');
+    this.logger.info("SequentialExecutionEngine: Execution cache cleared");
   }
 
   /**
@@ -841,7 +916,7 @@ const logger = new Logger('Logger');
   clearAllCaches() {
     this.clearOptimizationCache();
     this.clearExecutionCache();
-    this.logger.info('SequentialExecutionEngine: All caches cleared');
+    this.logger.info("SequentialExecutionEngine: All caches cleared");
   }
 
   /**
@@ -849,33 +924,33 @@ const logger = new Logger('Logger');
    * @returns {Promise<void>}
    */
   async shutdown() {
-    this.logger.info('SequentialExecutionEngine: Shutting down');
-    
+    this.logger.info("SequentialExecutionEngine: Shutting down");
+
     // Stop monitoring
     if (this.executionMonitor) {
       this.executionMonitor.stop();
     }
-    
+
     // Cancel all active executions
     for (const [executionId, execution] of this.activeExecutions.entries()) {
       this.cancelExecution(executionId);
     }
-    
+
     // Clear queues
     this.executionQueue.clear();
     this.executionQueue.clearCompleted();
     this.executionQueue.clearFailed();
-    
+
     // Clear active executions
     this.activeExecutions.clear();
-    
+
     // Shutdown optimization and resource management components
     await this.workflowOptimizer.shutdown();
     await this.resourceManager.shutdown();
     this.executionCache.shutdown();
     this.executionMetrics.shutdown();
     this.executionPredictor.shutdown();
-    
+
     // Shutdown new optimization components
     if (this.executionOptimizer) {
       this.executionOptimizer.reset();
@@ -883,8 +958,8 @@ const logger = new Logger('Logger');
     if (this.executionMonitor) {
       this.executionMonitor.reset();
     }
-    
-    this.logger.info('SequentialExecutionEngine: Shutdown complete');
+
+    this.logger.info("SequentialExecutionEngine: Shutdown complete");
   }
 
   /**
@@ -905,10 +980,14 @@ const logger = new Logger('Logger');
       cache: this.executionCache.getStatistics(),
       metrics: this.executionMetrics.getMetricsSummary(),
       prediction: this.executionPredictor.getPredictionStatistics(),
-      advancedOptimization: this.executionOptimizer ? this.executionOptimizer.getStatistics() : null,
-      monitoring: this.executionMonitor ? this.executionMonitor.getStatistics() : null
+      advancedOptimization: this.executionOptimizer
+        ? this.executionOptimizer.getStatistics()
+        : null,
+      monitoring: this.executionMonitor
+        ? this.executionMonitor.getStatistics()
+        : null,
     };
   }
 }
 
-module.exports = SequentialExecutionEngine; 
+module.exports = SequentialExecutionEngine;

@@ -9,19 +9,22 @@ class TaskDistributionManager {
     this.layerManager = layerManager;
     this.eventBus = eventBus;
     this.logger = null;
-    
+
     this.initialize();
   }
 
   initialize() {
     // Initialize logger
-    const ServiceLogger = require('@logging/ServiceLogger');
-    this.logger = new ServiceLogger('TaskDistributionManager');
+    const ServiceLogger = require("@logging/ServiceLogger");
+    this.logger = new ServiceLogger("TaskDistributionManager");
   }
 
   async distributeTask(task, targetLayers = null) {
     try {
-      this.logger.info('Distributing task', { taskId: task.id, taskType: task.type });
+      this.logger.info("Distributing task", {
+        taskId: task.id,
+        taskType: task.type,
+      });
 
       // If no target layers specified, determine based on task properties
       if (!targetLayers) {
@@ -31,7 +34,7 @@ class TaskDistributionManager {
       // Validate target layers
       const validLayers = await this.validateTargetLayers(targetLayers);
       if (validLayers.length === 0) {
-        throw new Error('No valid target layers found');
+        throw new Error("No valid target layers found");
       }
 
       // Distribute task to layers
@@ -41,23 +44,26 @@ class TaskDistributionManager {
         distributionResults.push(result);
       }
 
-      this.logger.info('Task distributed successfully', { 
-        taskId: task.id, 
-        distributedTo: distributionResults.length 
+      this.logger.info("Task distributed successfully", {
+        taskId: task.id,
+        distributedTo: distributionResults.length,
       });
 
       // Emit event
       if (this.eventBus) {
-        this.eventBus.emit('task.distributed', {
+        this.eventBus.emit("task.distributed", {
           taskId: task.id,
-          targetLayers: validLayers.map(l => l.id),
-          distributionResults
+          targetLayers: validLayers.map((l) => l.id),
+          distributionResults,
         });
       }
 
       return distributionResults;
     } catch (error) {
-      this.logger.error('Failed to distribute task', { taskId: task.id, error: error.message });
+      this.logger.error("Failed to distribute task", {
+        taskId: task.id,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -69,22 +75,24 @@ class TaskDistributionManager {
 
       // Determine layers based on task properties
       if (task.category) {
-        const categoryLayers = layers.filter(layer => 
-          layer.getTaskCategories().includes(task.category)
+        const categoryLayers = layers.filter((layer) =>
+          layer.getTaskCategories().includes(task.category),
         );
         targetLayers.push(...categoryLayers);
       }
 
       if (task.type) {
-        const typeLayers = layers.filter(layer => 
-          layer.getTaskTypes().includes(task.type)
+        const typeLayers = layers.filter((layer) =>
+          layer.getTaskTypes().includes(task.type),
         );
         targetLayers.push(...typeLayers);
       }
 
       // If no specific layers found, use default distribution
       if (targetLayers.length === 0) {
-        const defaultLayer = layers.find(layer => layer.layerType.value === 'application');
+        const defaultLayer = layers.find(
+          (layer) => layer.layerType.value === "application",
+        );
         if (defaultLayer) {
           targetLayers.push(defaultLayer);
         }
@@ -92,7 +100,9 @@ class TaskDistributionManager {
 
       return targetLayers;
     } catch (error) {
-      this.logger.error('Failed to determine target layers', { error: error.message });
+      this.logger.error("Failed to determine target layers", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -100,7 +110,7 @@ class TaskDistributionManager {
   async validateTargetLayers(targetLayers) {
     try {
       const validLayers = [];
-      
+
       for (const layer of targetLayers) {
         const layerEntity = await this.layerManager.getLayer(layer.id || layer);
         if (layerEntity && layerEntity.isActive) {
@@ -110,7 +120,9 @@ class TaskDistributionManager {
 
       return validLayers;
     } catch (error) {
-      this.logger.error('Failed to validate target layers', { error: error.message });
+      this.logger.error("Failed to validate target layers", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -131,32 +143,32 @@ class TaskDistributionManager {
       const values = [
         layer.id,
         task.id,
-        'direct',
+        "direct",
         task.priority || 0,
-        'pending',
+        "pending",
         new Date().toISOString(),
-        JSON.stringify({ assignedAt: new Date().toISOString() })
+        JSON.stringify({ assignedAt: new Date().toISOString() }),
       ];
 
       const result = await this.databaseConnection.execute(sql, values);
-      
-      this.logger.info('Task assigned to layer', { 
-        taskId: task.id, 
-        layerId: layer.id, 
-        layerName: layer.name 
+
+      this.logger.info("Task assigned to layer", {
+        taskId: task.id,
+        layerId: layer.id,
+        layerName: layer.name,
       });
 
       return {
         layerId: layer.id,
         layerName: layer.name,
         assignmentId: result.rows[0].id,
-        status: 'assigned'
+        status: "assigned",
       };
     } catch (error) {
-      this.logger.error('Failed to assign task to layer', { 
-        taskId: task.id, 
-        layerId: layer.id, 
-        error: error.message 
+      this.logger.error("Failed to assign task to layer", {
+        taskId: task.id,
+        layerId: layer.id,
+        error: error.message,
       });
       throw error;
     }
@@ -175,7 +187,10 @@ class TaskDistributionManager {
       const result = await this.databaseConnection.execute(sql, [taskId]);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get task layer assignments', { taskId, error: error.message });
+      this.logger.error("Failed to get task layer assignments", {
+        taskId,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -188,20 +203,23 @@ class TaskDistributionManager {
         JOIN tasks t ON lt.task_id = t.id
         WHERE lt.layer_id = $1
       `;
-      
+
       const values = [layerId];
-      
+
       if (status) {
-        sql += ' AND lt.status = $2';
+        sql += " AND lt.status = $2";
         values.push(status);
       }
-      
-      sql += ' ORDER BY lt.priority DESC, lt.assigned_at ASC';
+
+      sql += " ORDER BY lt.priority DESC, lt.assigned_at ASC";
 
       const result = await this.databaseConnection.execute(sql, values);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get layer tasks', { layerId, error: error.message });
+      this.logger.error("Failed to get layer tasks", {
+        layerId,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -215,33 +233,37 @@ class TaskDistributionManager {
         RETURNING *
       `;
 
-      const result = await this.databaseConnection.execute(sql, [status, taskId, layerId]);
-      
+      const result = await this.databaseConnection.execute(sql, [
+        status,
+        taskId,
+        layerId,
+      ]);
+
       if (result.rows.length === 0) {
-        throw new Error('Task layer assignment not found');
+        throw new Error("Task layer assignment not found");
       }
 
-      this.logger.info('Task layer status updated', { 
-        taskId, 
-        layerId, 
-        status 
+      this.logger.info("Task layer status updated", {
+        taskId,
+        layerId,
+        status,
       });
 
       // Emit event
       if (this.eventBus) {
-        this.eventBus.emit('task.layer.status.updated', {
+        this.eventBus.emit("task.layer.status.updated", {
           taskId,
           layerId,
-          status
+          status,
         });
       }
 
       return result.rows[0];
     } catch (error) {
-      this.logger.error('Failed to update task layer status', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to update task layer status", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -255,31 +277,34 @@ class TaskDistributionManager {
         RETURNING *
       `;
 
-      const result = await this.databaseConnection.execute(sql, [taskId, layerId]);
-      
+      const result = await this.databaseConnection.execute(sql, [
+        taskId,
+        layerId,
+      ]);
+
       if (result.rows.length === 0) {
-        throw new Error('Task layer assignment not found');
+        throw new Error("Task layer assignment not found");
       }
 
-      this.logger.info('Task removed from layer', { 
-        taskId, 
-        layerId 
+      this.logger.info("Task removed from layer", {
+        taskId,
+        layerId,
       });
 
       // Emit event
       if (this.eventBus) {
-        this.eventBus.emit('task.layer.removed', {
+        this.eventBus.emit("task.layer.removed", {
           taskId,
-          layerId
+          layerId,
         });
       }
 
       return result.rows[0];
     } catch (error) {
-      this.logger.error('Failed to remove task from layer', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to remove task from layer", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -296,7 +321,9 @@ class TaskDistributionManager {
       const result = await this.databaseConnection.execute(sql);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get distribution rules', { error: error.message });
+      this.logger.error("Failed to get distribution rules", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -311,24 +338,26 @@ class TaskDistributionManager {
 
       const values = [
         ruleData.ruleName,
-        ruleData.description || '',
-        ruleData.ruleType || 'automatic',
+        ruleData.description || "",
+        ruleData.ruleType || "automatic",
         JSON.stringify(ruleData.conditions),
         JSON.stringify(ruleData.targetLayers),
         ruleData.priority || 0,
-        JSON.stringify(ruleData.metadata || {})
+        JSON.stringify(ruleData.metadata || {}),
       ];
 
       const result = await this.databaseConnection.execute(sql, values);
-      
-      this.logger.info('Distribution rule created', { 
-        ruleId: result.rows[0].id, 
-        ruleName: result.rows[0].rule_name 
+
+      this.logger.info("Distribution rule created", {
+        ruleId: result.rows[0].id,
+        ruleName: result.rows[0].rule_name,
       });
 
       return result.rows[0];
     } catch (error) {
-      this.logger.error('Failed to create distribution rule', { error: error.message });
+      this.logger.error("Failed to create distribution rule", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -356,7 +385,9 @@ class TaskDistributionManager {
 
       return [];
     } catch (error) {
-      this.logger.error('Failed to apply distribution rules', { error: error.message });
+      this.logger.error("Failed to apply distribution rules", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -364,7 +395,7 @@ class TaskDistributionManager {
   async isRuleApplicable(task, rule) {
     try {
       const conditions = JSON.parse(rule.conditions);
-      
+
       // Check category condition
       if (conditions.category && task.category !== conditions.category) {
         return false;
@@ -391,7 +422,9 @@ class TaskDistributionManager {
 
       return true;
     } catch (error) {
-      this.logger.error('Failed to check rule applicability', { error: error.message });
+      this.logger.error("Failed to check rule applicability", {
+        error: error.message,
+      });
       return false;
     }
   }

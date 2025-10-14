@@ -1,15 +1,14 @@
-
 /**
  * IDE Detector Factory
  * Manages IDE-specific detectors using the factory pattern
  * Provides unified interface for detecting different IDE types
  */
 
-const CursorDetector = require('./detectors/CursorDetector');
-const VSCodeDetector = require('./detectors/VSCodeDetector');
-const WindsurfDetector = require('./detectors/WindsurfDetector');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('IDEDetectorFactory');
+const CursorDetector = require("./detectors/CursorDetector");
+const VSCodeDetector = require("./detectors/VSCodeDetector");
+const WindsurfDetector = require("./detectors/WindsurfDetector");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("IDEDetectorFactory");
 
 class IDEDetectorFactory {
   constructor() {
@@ -21,9 +20,9 @@ class IDEDetectorFactory {
    * Initialize default IDE detectors
    */
   initializeDefaultDetectors() {
-    this.registerDetector('cursor', new CursorDetector());
-    this.registerDetector('vscode', new VSCodeDetector());
-    this.registerDetector('windsurf', new WindsurfDetector());
+    this.registerDetector("cursor", new CursorDetector());
+    this.registerDetector("vscode", new VSCodeDetector());
+    this.registerDetector("windsurf", new WindsurfDetector());
   }
 
   /**
@@ -45,8 +44,8 @@ class IDEDetectorFactory {
    * @param {Object} detector - Detector instance
    */
   registerDetector(type, detector) {
-    if (!detector || typeof detector.scanForIDEs !== 'function') {
-      throw new Error('Detector must implement scanForIDEs method');
+    if (!detector || typeof detector.scanForIDEs !== "function") {
+      throw new Error("Detector must implement scanForIDEs method");
     }
     this.detectors.set(type.toLowerCase(), detector);
   }
@@ -69,22 +68,23 @@ class IDEDetectorFactory {
 
     for (const [type, detector] of this.detectors) {
       detectionPromises.push(
-        detector.scanForIDEs()
-          .then(ides => {
+        detector
+          .scanForIDEs()
+          .then((ides) => {
             // Add IDE type to each detected IDE
-            return ides.map(ide => ({ ...ide, ideType: type }));
+            return ides.map((ide) => ({ ...ide, ideType: type }));
           })
-          .catch(error => {
+          .catch((error) => {
             logger.error(`Error detecting ${type} IDEs:`, error.message);
             return [];
-          })
+          }),
       );
     }
 
     const results = await Promise.allSettled(detectionPromises);
-    
+
     results.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         allIDEs.push(...result.value);
       }
     });
@@ -101,7 +101,7 @@ class IDEDetectorFactory {
   async detectByType(type) {
     const detector = this.createDetector(type);
     const ides = await detector.scanForIDEs();
-    return ides.map(ide => ({ ...ide, ideType: type }));
+    return ides.map((ide) => ({ ...ide, ideType: type }));
   }
 
   /**
@@ -111,7 +111,7 @@ class IDEDetectorFactory {
    */
   async findAvailablePort(type) {
     const detector = this.createDetector(type);
-    if (typeof detector.findAvailablePort === 'function') {
+    if (typeof detector.findAvailablePort === "function") {
       return await detector.findAvailablePort();
     }
     throw new Error(`Detector for ${type} does not support findAvailablePort`);
@@ -125,7 +125,7 @@ class IDEDetectorFactory {
    */
   async checkPort(port, type) {
     const detector = this.createDetector(type);
-    if (typeof detector.checkPort === 'function') {
+    if (typeof detector.checkPort === "function") {
       return await detector.checkPort(port);
     }
     throw new Error(`Detector for ${type} does not support checkPort`);
@@ -138,7 +138,7 @@ class IDEDetectorFactory {
    */
   getDetectorConfig(type) {
     const detector = this.createDetector(type);
-    if (typeof detector.getConfig === 'function') {
+    if (typeof detector.getConfig === "function") {
       return detector.getConfig();
     }
     return null;
@@ -152,10 +152,10 @@ class IDEDetectorFactory {
   validateDetector(type) {
     try {
       const detector = this.createDetector(type);
-      const requiredMethods = ['scanForIDEs'];
-      
-      return requiredMethods.every(method => 
-        typeof detector[method] === 'function'
+      const requiredMethods = ["scanForIDEs"];
+
+      return requiredMethods.every(
+        (method) => typeof detector[method] === "function",
       );
     } catch (error) {
       return false;
@@ -170,7 +170,7 @@ class IDEDetectorFactory {
     const stats = {
       totalDetectors: this.detectors.size,
       availableTypes: this.getAvailableDetectors(),
-      validDetectors: 0
+      validDetectors: 0,
     };
 
     for (const type of this.detectors.keys()) {
@@ -183,4 +183,4 @@ class IDEDetectorFactory {
   }
 }
 
-module.exports = IDEDetectorFactory; 
+module.exports = IDEDetectorFactory;

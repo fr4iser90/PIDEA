@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 /**
  * GitWorkflowAudit - Auditing and logging for Git workflow operations
  * Provides comprehensive audit trail and compliance logging
@@ -11,30 +11,30 @@ class GitWorkflowAudit {
     this.maxLogSize = options.maxLogSize || 10000;
     this.retentionDays = options.retentionDays || 30;
     this.logger = options.logger || console;
-    
+
     // Audit levels
     this.levels = {
-      INFO: 'info',
-      WARNING: 'warning',
-      ERROR: 'error',
-      SECURITY: 'security',
-      COMPLIANCE: 'compliance'
+      INFO: "info",
+      WARNING: "warning",
+      ERROR: "error",
+      SECURITY: "security",
+      COMPLIANCE: "compliance",
     };
-    
+
     // Audit categories
     this.categories = {
-      WORKFLOW_START: 'workflow_start',
-      WORKFLOW_COMPLETE: 'workflow_complete',
-      WORKFLOW_FAIL: 'workflow_fail',
-      BRANCH_CREATE: 'branch_create',
-      BRANCH_DELETE: 'branch_delete',
-      MERGE_ATTEMPT: 'merge_attempt',
-      MERGE_COMPLETE: 'merge_complete',
-      PULL_REQUEST_CREATE: 'pull_request_create',
-      REVIEW_COMPLETE: 'review_complete',
-      PERMISSION_CHECK: 'permission_check',
-      VALIDATION_FAIL: 'validation_fail',
-      SECURITY_VIOLATION: 'security_violation'
+      WORKFLOW_START: "workflow_start",
+      WORKFLOW_COMPLETE: "workflow_complete",
+      WORKFLOW_FAIL: "workflow_fail",
+      BRANCH_CREATE: "branch_create",
+      BRANCH_DELETE: "branch_delete",
+      MERGE_ATTEMPT: "merge_attempt",
+      MERGE_COMPLETE: "merge_complete",
+      PULL_REQUEST_CREATE: "pull_request_create",
+      REVIEW_COMPLETE: "review_complete",
+      PERMISSION_CHECK: "permission_check",
+      VALIDATION_FAIL: "validation_fail",
+      SECURITY_VIOLATION: "security_violation",
     };
   }
 
@@ -48,7 +48,7 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.INFO,
@@ -56,7 +56,7 @@ class GitWorkflowAudit {
       taskId: task.id,
       taskType: task.type?.value,
       taskTitle: task.title,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       automationLevel: task.metadata?.automationLevel,
       success: results.success,
@@ -65,18 +65,18 @@ class GitWorkflowAudit {
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        sessionId: options.sessionId
-      }
+        sessionId: options.sessionId,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
-    
+
     // Log to external logger
-    this.logger.info('GitWorkflowAudit: Workflow completed', {
+    this.logger.info("GitWorkflowAudit: Workflow completed", {
       taskId: task.id,
       success: results.success,
       duration: results.duration,
-      auditId: auditEntry.metadata.auditId
+      auditId: auditEntry.metadata.auditId,
     });
   }
 
@@ -90,7 +90,7 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.ERROR,
@@ -98,30 +98,30 @@ class GitWorkflowAudit {
       taskId: task.id,
       taskType: task.type?.value,
       taskTitle: task.title,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       automationLevel: task.metadata?.automationLevel,
-      success: false,
+     
       error: {
         message: error.message,
         name: error.name,
         stack: error.stack,
-        recoverable: error.recoverable
+        recoverable: error.recoverable,
       },
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        sessionId: options.sessionId
-      }
+        sessionId: options.sessionId,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
-    
+
     // Log to external logger
-    this.logger.error('GitWorkflowAudit: Workflow failed', {
+    this.logger.error("GitWorkflowAudit: Workflow failed", {
       taskId: task.id,
       error: error.message,
-      auditId: auditEntry.metadata.auditId
+      auditId: auditEntry.metadata.auditId,
     });
   }
 
@@ -135,14 +135,14 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.INFO,
       category: this.categories.BRANCH_CREATE,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       branchName: branchResult.branchName,
       baseBranch: branchResult.baseBranch,
@@ -150,10 +150,10 @@ class GitWorkflowAudit {
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        strategy: branchResult.strategy
-      }
+        strategy: branchResult.strategy,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
   }
 
@@ -167,14 +167,14 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.INFO,
       category: this.categories.MERGE_COMPLETE,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       sourceBranch: mergeResult.sourceBranch,
       targetBranch: mergeResult.targetBranch,
@@ -183,10 +183,10 @@ class GitWorkflowAudit {
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        method: mergeResult.method
-      }
+        method: mergeResult.method,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
   }
 
@@ -200,14 +200,14 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.INFO,
       category: this.categories.PULL_REQUEST_CREATE,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       prId: prResult.id,
       prUrl: prResult.url,
@@ -218,10 +218,10 @@ class GitWorkflowAudit {
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        labels: prResult.labels
-      }
+        labels: prResult.labels,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
   }
 
@@ -235,14 +235,14 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.INFO,
       category: this.categories.REVIEW_COMPLETE,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       prId: reviewResult.prId,
       reviewScore: reviewResult.score,
@@ -251,10 +251,10 @@ class GitWorkflowAudit {
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        recommendations: reviewResult.recommendations
-      }
+        recommendations: reviewResult.recommendations,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
   }
 
@@ -268,14 +268,14 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: permissionResult.granted ? this.levels.INFO : this.levels.SECURITY,
       category: this.categories.PERMISSION_CHECK,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       operation: permissionResult.operation,
       resource: permissionResult.resource,
@@ -284,20 +284,20 @@ class GitWorkflowAudit {
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        permissions: permissionResult.permissions
-      }
+        permissions: permissionResult.permissions,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
-    
+
     // Log security violations
     if (!permissionResult.granted) {
-      this.logger.warn('GitWorkflowAudit: Permission denied', {
+      this.logger.warn("GitWorkflowAudit: Permission denied", {
         taskId: task.id,
         operation: permissionResult.operation,
         resource: permissionResult.resource,
         reason: permissionResult.reason,
-        auditId: auditEntry.metadata.auditId
+        auditId: auditEntry.metadata.auditId,
       });
     }
   }
@@ -312,32 +312,32 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.WARNING,
       category: this.categories.VALIDATION_FAIL,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       errors: validationResult.errors,
       warnings: validationResult.warnings,
       metadata: {
         ...options,
         auditId: this.generateAuditId(),
-        validationDuration: validationResult.duration
-      }
+        validationDuration: validationResult.duration,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
-    
+
     // Log validation failures
-    this.logger.warn('GitWorkflowAudit: Validation failed', {
+    this.logger.warn("GitWorkflowAudit: Validation failed", {
       taskId: task.id,
       errors: validationResult.errors,
       warnings: validationResult.warnings,
-      auditId: auditEntry.metadata.auditId
+      auditId: auditEntry.metadata.auditId,
     });
   }
 
@@ -351,14 +351,14 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const auditEntry = {
       timestamp: new Date(),
       level: this.levels.SECURITY,
       category: this.categories.SECURITY_VIOLATION,
       taskId: task.id,
       taskType: task.type?.value,
-      userId: options.userId || 'system',
+      userId: options.userId || "system",
       projectPath: task.metadata?.projectPath,
       violationType: violation.type,
       violationDetails: violation.details,
@@ -367,18 +367,18 @@ class GitWorkflowAudit {
         ...options,
         auditId: this.generateAuditId(),
         ipAddress: violation.ipAddress,
-        userAgent: violation.userAgent
-      }
+        userAgent: violation.userAgent,
+      },
     };
-    
+
     this.addAuditEntry(auditEntry);
-    
+
     // Log security violations
-    this.logger.error('GitWorkflowAudit: Security violation detected', {
+    this.logger.error("GitWorkflowAudit: Security violation detected", {
       taskId: task.id,
       violationType: violation.type,
       severity: violation.severity,
-      auditId: auditEntry.metadata.auditId
+      auditId: auditEntry.metadata.auditId,
     });
   }
 
@@ -390,15 +390,15 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     // Add entry to log
     this.auditLog.push(entry);
-    
+
     // Maintain log size
     if (this.auditLog.length > this.maxLogSize) {
       this.auditLog.shift();
     }
-    
+
     // Clean up old entries
     this.cleanupOldEntries();
   }
@@ -410,12 +410,12 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.retentionDays);
-    
-    this.auditLog = this.auditLog.filter(entry => 
-      entry.timestamp > cutoffDate
+
+    this.auditLog = this.auditLog.filter(
+      (entry) => entry.timestamp > cutoffDate,
     );
   }
 
@@ -436,46 +436,60 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return [];
     }
-    
+
     let filteredLog = [...this.auditLog];
-    
+
     // Apply filters
     if (filters.level) {
-      filteredLog = filteredLog.filter(entry => entry.level === filters.level);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.level === filters.level,
+      );
     }
-    
+
     if (filters.category) {
-      filteredLog = filteredLog.filter(entry => entry.category === filters.category);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.category === filters.category,
+      );
     }
-    
+
     if (filters.taskId) {
-      filteredLog = filteredLog.filter(entry => entry.taskId === filters.taskId);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.taskId === filters.taskId,
+      );
     }
-    
+
     if (filters.userId) {
-      filteredLog = filteredLog.filter(entry => entry.userId === filters.userId);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.userId === filters.userId,
+      );
     }
-    
+
     if (filters.startDate) {
-      filteredLog = filteredLog.filter(entry => entry.timestamp >= filters.startDate);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.timestamp >= filters.startDate,
+      );
     }
-    
+
     if (filters.endDate) {
-      filteredLog = filteredLog.filter(entry => entry.timestamp <= filters.endDate);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.timestamp <= filters.endDate,
+      );
     }
-    
+
     if (filters.success !== undefined) {
-      filteredLog = filteredLog.filter(entry => entry.success === filters.success);
+      filteredLog = filteredLog.filter(
+        (entry) => entry.success === filters.success,
+      );
     }
-    
+
     // Sort by timestamp (newest first)
     filteredLog.sort((a, b) => b.timestamp - a.timestamp);
-    
+
     // Apply limit
     if (filters.limit) {
       filteredLog = filteredLog.slice(0, filters.limit);
     }
-    
+
     return filteredLog;
   }
 
@@ -487,44 +501,58 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return {};
     }
-    
+
     const stats = {
       totalEntries: this.auditLog.length,
       levels: {},
       categories: {},
       successRate: 0,
       averageDuration: 0,
-      recentActivity: 0
+      recentActivity: 0,
     };
-    
+
     // Count by level
     for (const entry of this.auditLog) {
       stats.levels[entry.level] = (stats.levels[entry.level] || 0) + 1;
     }
-    
+
     // Count by category
     for (const entry of this.auditLog) {
-      stats.categories[entry.category] = (stats.categories[entry.category] || 0) + 1;
+      stats.categories[entry.category] =
+        (stats.categories[entry.category] || 0) + 1;
     }
-    
+
     // Calculate success rate
-    const successfulEntries = this.auditLog.filter(entry => entry.success === true);
-    const totalWithSuccess = this.auditLog.filter(entry => entry.success !== undefined);
-    stats.successRate = totalWithSuccess.length > 0 ? 
-      Math.round((successfulEntries.length / totalWithSuccess.length) * 100) : 0;
-    
+    const successfulEntries = this.auditLog.filter(
+      (entry) => entry.success === true,
+    );
+    const totalWithSuccess = this.auditLog.filter(
+      (entry) => entry.success !== undefined,
+    );
+    stats.successRate =
+      totalWithSuccess.length > 0
+        ? Math.round((successfulEntries.length / totalWithSuccess.length) * 100)
+        : 0;
+
     // Calculate average duration
-    const entriesWithDuration = this.auditLog.filter(entry => entry.duration);
+    const entriesWithDuration = this.auditLog.filter((entry) => entry.duration);
     if (entriesWithDuration.length > 0) {
-      const totalDuration = entriesWithDuration.reduce((sum, entry) => sum + entry.duration, 0);
-      stats.averageDuration = Math.round(totalDuration / entriesWithDuration.length);
+      const totalDuration = entriesWithDuration.reduce(
+        (sum, entry) => sum + entry.duration,
+        0,
+      );
+      stats.averageDuration = Math.round(
+        totalDuration / entriesWithDuration.length,
+      );
     }
-    
+
     // Count recent activity (last 24 hours)
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    stats.recentActivity = this.auditLog.filter(entry => entry.timestamp > oneDayAgo).length;
-    
+    stats.recentActivity = this.auditLog.filter(
+      (entry) => entry.timestamp > oneDayAgo,
+    ).length;
+
     return stats;
   }
 
@@ -537,16 +565,16 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return { entries: [], statistics: {} };
     }
-    
+
     const filters = options.filters || {};
     const entries = this.getAuditLog(filters);
     const statistics = this.getAuditStatistics();
-    
+
     return {
       entries,
       statistics,
       exportTimestamp: new Date(),
-      exportOptions: options
+      exportOptions: options,
     };
   }
 
@@ -557,9 +585,9 @@ class GitWorkflowAudit {
     if (!this.enabled) {
       return;
     }
-    
+
     this.auditLog = [];
-    this.logger.info('GitWorkflowAudit: Audit log cleared');
+    this.logger.info("GitWorkflowAudit: Audit log cleared");
   }
 
   /**
@@ -568,7 +596,9 @@ class GitWorkflowAudit {
    */
   setEnabled(enabled) {
     this.enabled = enabled;
-    this.logger.info(`GitWorkflowAudit: Auditing ${enabled ? 'enabled' : 'disabled'}`);
+    this.logger.info(
+      `GitWorkflowAudit: Auditing ${enabled ? "enabled" : "disabled"}`,
+    );
   }
 
   /**
@@ -577,7 +607,7 @@ class GitWorkflowAudit {
    */
   setMaxLogSize(maxSize) {
     this.maxLogSize = maxSize;
-    
+
     // Trim log if necessary
     if (this.auditLog.length > maxSize) {
       this.auditLog = this.auditLog.slice(-maxSize);
@@ -594,4 +624,4 @@ class GitWorkflowAudit {
   }
 }
 
-module.exports = GitWorkflowAudit; 
+module.exports = GitWorkflowAudit;

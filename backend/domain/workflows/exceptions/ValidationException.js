@@ -2,22 +2,22 @@
  * ValidationException - Exception for validation-specific errors
  * Extends WorkflowException with validation result information
  */
-const WorkflowException = require('./WorkflowException');
-const ValidationResult = require('@domain/workflows/validation/ValidationResult');
+const WorkflowException = require("./WorkflowException");
+const ValidationResult = require("@domain/workflows/validation/ValidationResult");
 
 class ValidationException extends WorkflowException {
   constructor(
     message,
     validationResult = null,
     field = null,
-    code = 'VALIDATION_ERROR',
+    code = "VALIDATION_ERROR",
     context = null,
     cause = null,
-    metadata = {}
+    metadata = {},
   ) {
     super(message, code, context, cause, metadata);
-    
-    this.name = 'ValidationException';
+
+    this.name = "ValidationException";
     this.validationResult = validationResult;
     this.field = field;
     this.rule = null; // For test compatibility
@@ -39,7 +39,9 @@ class ValidationException extends WorkflowException {
   }
 
   hasValidationResult() {
-    return this.validationResult !== null && this.validationResult !== undefined;
+    return (
+      this.validationResult !== null && this.validationResult !== undefined
+    );
   }
 
   // Field management
@@ -62,44 +64,64 @@ class ValidationException extends WorkflowException {
   }
 
   getWarnings() {
-    return this.hasValidationResult() ? this.validationResult.getWarnings() : [];
+    return this.hasValidationResult()
+      ? this.validationResult.getWarnings()
+      : [];
   }
 
   getErrorCount() {
-    return this.hasValidationResult() ? this.validationResult.getErrorCount() : 0;
+    return this.hasValidationResult()
+      ? this.validationResult.getErrorCount()
+      : 0;
   }
 
   getWarningCount() {
-    return this.hasValidationResult() ? this.validationResult.getWarningCount() : 0;
+    return this.hasValidationResult()
+      ? this.validationResult.getWarningCount()
+      : 0;
   }
 
   getFirstError() {
-    return this.hasValidationResult() ? this.validationResult.getFirstError() : null;
+    return this.hasValidationResult()
+      ? this.validationResult.getFirstError()
+      : null;
   }
 
   getFirstWarning() {
-    return this.hasValidationResult() ? this.validationResult.getFirstWarning() : null;
+    return this.hasValidationResult()
+      ? this.validationResult.getFirstWarning()
+      : null;
   }
 
   getErrorsByField(field) {
-    return this.hasValidationResult() ? this.validationResult.getErrorsByField(field) : [];
+    return this.hasValidationResult()
+      ? this.validationResult.getErrorsByField(field)
+      : [];
   }
 
   getWarningsByField(field) {
-    return this.hasValidationResult() ? this.validationResult.getWarningsByField(field) : [];
+    return this.hasValidationResult()
+      ? this.validationResult.getWarningsByField(field)
+      : [];
   }
 
   getErrorsByCode(code) {
-    return this.hasValidationResult() ? this.validationResult.getErrorsByCode(code) : [];
+    return this.hasValidationResult()
+      ? this.validationResult.getErrorsByCode(code)
+      : [];
   }
 
   getWarningsByCode(code) {
-    return this.hasValidationResult() ? this.validationResult.getWarningsByCode(code) : [];
+    return this.hasValidationResult()
+      ? this.validationResult.getWarningsByCode(code)
+      : [];
   }
 
   // Utility methods
   getValidationSummary() {
-    return this.hasValidationResult() ? this.validationResult.getSummary() : null;
+    return this.hasValidationResult()
+      ? this.validationResult.getSummary()
+      : null;
   }
 
   getFieldErrors() {
@@ -130,42 +152,67 @@ class ValidationException extends WorkflowException {
     return {
       ...base,
       name: this.name,
-      validationResult: this.hasValidationResult() ? this.validationResult.toJSON() : null,
+      validationResult: this.hasValidationResult()
+        ? this.validationResult.toJSON()
+        : null,
       field: this.field,
       errorCount: this.getErrorCount(),
       warningCount: this.getWarningCount(),
-      validationSummary: this.getValidationSummary()
+      validationSummary: this.getValidationSummary(),
     };
   }
 
   static fromJSON(data) {
     const exception = new ValidationException(
       data.message,
-      data.validationResult ? ValidationResult.fromJSON(data.validationResult) : null,
+      data.validationResult
+        ? ValidationResult.fromJSON(data.validationResult)
+        : null,
       data.field,
       data.code,
       data.context,
       data.cause ? WorkflowException.fromJSON(data.cause) : null,
-      data.metadata
+      data.metadata,
     );
-    
+
     exception.timestamp = new Date(data.timestamp);
     exception.stack = data.stack;
-    
+
     return exception;
   }
 
   // Factory methods
-  static create(message, validationResult = null, field = null, context = null) {
-    return new ValidationException(message, validationResult, field, 'VALIDATION_ERROR', context);
+  static create(
+    message,
+    validationResult = null,
+    field = null,
+    context = null,
+  ) {
+    return new ValidationException(
+      message,
+      validationResult,
+      field,
+      "VALIDATION_ERROR",
+      context,
+    );
   }
 
-  static createWithValidationResult(validationResult, field = null, context = null) {
-    const message = validationResult.hasErrors() 
+  static createWithValidationResult(
+    validationResult,
+    field = null,
+    context = null,
+  ) {
+    const message = validationResult.hasErrors()
       ? `Validation failed with ${validationResult.getErrorCount()} error(s)`
-      : 'Validation failed';
-    
-    return new ValidationException(message, validationResult, field, 'VALIDATION_ERROR', context);
+      : "Validation failed";
+
+    return new ValidationException(
+      message,
+      validationResult,
+      field,
+      "VALIDATION_ERROR",
+      context,
+    );
   }
 
   static createFieldRequired(field, context = null) {
@@ -174,24 +221,39 @@ class ValidationException extends WorkflowException {
       `Field '${field}' is required`,
       validationResult,
       field,
-      'FIELD_REQUIRED',
-      context
+      "FIELD_REQUIRED",
+      context,
     );
   }
 
   static createFieldTypeError(field, expectedType, actualType, context = null) {
-    const validationResult = ValidationResult.createFieldTypeError(field, expectedType, actualType);
+    const validationResult = ValidationResult.createFieldTypeError(
+      field,
+      expectedType,
+      actualType,
+    );
     return new ValidationException(
       `Field '${field}' must be of type '${expectedType}', got '${actualType}'`,
       validationResult,
       field,
-      'INVALID_TYPE',
-      context
+      "INVALID_TYPE",
+      context,
     );
   }
 
-  static createFieldLengthError(field, minLength, maxLength, actualLength, context = null) {
-    const validationResult = ValidationResult.createFieldLengthError(field, minLength, maxLength, actualLength);
+  static createFieldLengthError(
+    field,
+    minLength,
+    maxLength,
+    actualLength,
+    context = null,
+  ) {
+    const validationResult = ValidationResult.createFieldLengthError(
+      field,
+      minLength,
+      maxLength,
+      actualLength,
+    );
     let message;
     if (minLength && maxLength) {
       message = `Field '${field}' must be between ${minLength} and ${maxLength} characters, got ${actualLength}`;
@@ -202,29 +264,37 @@ class ValidationException extends WorkflowException {
     } else {
       message = `Field '${field}' has invalid length: ${actualLength}`;
     }
-    
+
     return new ValidationException(
       message,
       validationResult,
       field,
-      'LENGTH_VIOLATION',
-      context
+      "LENGTH_VIOLATION",
+      context,
     );
   }
 
   static createFieldPatternError(field, pattern, context = null) {
-    const validationResult = ValidationResult.createFieldPatternError(field, pattern);
+    const validationResult = ValidationResult.createFieldPatternError(
+      field,
+      pattern,
+    );
     return new ValidationException(
       `Field '${field}' does not match required pattern`,
       validationResult,
       field,
-      'PATTERN_MISMATCH',
-      context
+      "PATTERN_MISMATCH",
+      context,
     );
   }
 
   static createFieldRangeError(field, min, max, actual, context = null) {
-    const validationResult = ValidationResult.createFieldRangeError(field, min, max, actual);
+    const validationResult = ValidationResult.createFieldRangeError(
+      field,
+      min,
+      max,
+      actual,
+    );
     let message;
     if (min !== undefined && max !== undefined) {
       message = `Field '${field}' must be between ${min} and ${max}, got ${actual}`;
@@ -235,24 +305,33 @@ class ValidationException extends WorkflowException {
     } else {
       message = `Field '${field}' has invalid value: ${actual}`;
     }
-    
+
     return new ValidationException(
       message,
       validationResult,
       field,
-      'RANGE_VIOLATION',
-      context
+      "RANGE_VIOLATION",
+      context,
     );
   }
 
-  static createFieldEnumError(field, allowedValues, actualValue, context = null) {
-    const validationResult = ValidationResult.createFieldEnumError(field, allowedValues, actualValue);
+  static createFieldEnumError(
+    field,
+    allowedValues,
+    actualValue,
+    context = null,
+  ) {
+    const validationResult = ValidationResult.createFieldEnumError(
+      field,
+      allowedValues,
+      actualValue,
+    );
     return new ValidationException(
-      `Field '${field}' must be one of: ${allowedValues.join(', ')}, got '${actualValue}'`,
+      `Field '${field}' must be one of: ${allowedValues.join(", ")}, got '${actualValue}'`,
       validationResult,
       field,
-      'ENUM_VIOLATION',
-      context
+      "ENUM_VIOLATION",
+      context,
     );
   }
 
@@ -262,8 +341,8 @@ class ValidationException extends WorkflowException {
       `Schema validation failed with ${errors.length} error(s)`,
       validationResult,
       null,
-      'SCHEMA_VALIDATION_ERROR',
-      context
+      "SCHEMA_VALIDATION_ERROR",
+      context,
     );
   }
 
@@ -273,8 +352,8 @@ class ValidationException extends WorkflowException {
       `Validation rule '${ruleName}' failed for field '${field}': ${error}`,
       validationResult,
       field,
-      'RULE_VALIDATION_ERROR',
-      context
+      "RULE_VALIDATION_ERROR",
+      context,
     );
   }
 
@@ -284,8 +363,8 @@ class ValidationException extends WorkflowException {
       `Multiple validation errors occurred (${errors.length} errors)`,
       validationResult,
       null,
-      'MULTIPLE_VALIDATION_ERRORS',
-      context
+      "MULTIPLE_VALIDATION_ERRORS",
+      context,
     );
   }
 
@@ -296,7 +375,9 @@ class ValidationException extends WorkflowException {
 
   static fromValidationResult(validationResult, field = null, context = null) {
     if (!validationResult || validationResult.isValid) {
-      throw new Error('Cannot create ValidationException from valid validation result');
+      throw new Error(
+        "Cannot create ValidationException from valid validation result",
+      );
     }
 
     // Extract field from validation result if not provided
@@ -307,12 +388,20 @@ class ValidationException extends WorkflowException {
       }
     }
 
-    return ValidationException.createWithValidationResult(validationResult, field, context);
+    return ValidationException.createWithValidationResult(
+      validationResult,
+      field,
+      context,
+    );
   }
 
-  static fromWorkflowException(workflowException, validationResult = null, field = null) {
+  static fromWorkflowException(
+    workflowException,
+    validationResult = null,
+    field = null,
+  ) {
     if (!(workflowException instanceof WorkflowException)) {
-      throw new Error('Input must be a WorkflowException');
+      throw new Error("Input must be a WorkflowException");
     }
 
     return new ValidationException(
@@ -322,7 +411,7 @@ class ValidationException extends WorkflowException {
       workflowException.code,
       workflowException.context,
       workflowException.cause,
-      workflowException.metadata
+      workflowException.metadata,
     );
   }
 
@@ -338,28 +427,28 @@ class ValidationException extends WorkflowException {
     }
 
     return new ValidationException(
-      error.message || 'Validation error occurred',
+      error.message || "Validation error occurred",
       null,
       field,
-      'VALIDATION_ERROR',
+      "VALIDATION_ERROR",
       context,
-      error
+      error,
     );
   }
 
   // Common validation error codes
   static CODES = {
-    VALIDATION_ERROR: 'VALIDATION_ERROR',
-    FIELD_REQUIRED: 'FIELD_REQUIRED',
-    INVALID_TYPE: 'INVALID_TYPE',
-    LENGTH_VIOLATION: 'LENGTH_VIOLATION',
-    PATTERN_MISMATCH: 'PATTERN_MISMATCH',
-    RANGE_VIOLATION: 'RANGE_VIOLATION',
-    ENUM_VIOLATION: 'ENUM_VIOLATION',
-    SCHEMA_VALIDATION_ERROR: 'SCHEMA_VALIDATION_ERROR',
-    RULE_VALIDATION_ERROR: 'RULE_VALIDATION_ERROR',
-    MULTIPLE_VALIDATION_ERRORS: 'MULTIPLE_VALIDATION_ERRORS',
-    CUSTOM_VALIDATION_ERROR: 'CUSTOM_VALIDATION_ERROR'
+    VALIDATION_ERROR: "VALIDATION_ERROR",
+    FIELD_REQUIRED: "FIELD_REQUIRED",
+    INVALID_TYPE: "INVALID_TYPE",
+    LENGTH_VIOLATION: "LENGTH_VIOLATION",
+    PATTERN_MISMATCH: "PATTERN_MISMATCH",
+    RANGE_VIOLATION: "RANGE_VIOLATION",
+    ENUM_VIOLATION: "ENUM_VIOLATION",
+    SCHEMA_VALIDATION_ERROR: "SCHEMA_VALIDATION_ERROR",
+    RULE_VALIDATION_ERROR: "RULE_VALIDATION_ERROR",
+    MULTIPLE_VALIDATION_ERRORS: "MULTIPLE_VALIDATION_ERRORS",
+    CUSTOM_VALIDATION_ERROR: "CUSTOM_VALIDATION_ERROR",
   };
 
   // Aliases for test compatibility
@@ -367,11 +456,16 @@ class ValidationException extends WorkflowException {
     return this.createFieldRequired(field, context);
   }
   static fieldInvalid(field, message = null, context = null) {
-    return this.createFieldTypeError(field, message || 'Invalid', typeof message, context);
+    return this.createFieldTypeError(
+      field,
+      message || "Invalid",
+      typeof message,
+      context,
+    );
   }
   static fieldTooShort(field, minLength, context = null) {
     return this.createFieldLengthError(field, minLength, null, 0, context);
   }
 }
 
-module.exports = ValidationException; 
+module.exports = ValidationException;

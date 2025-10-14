@@ -8,9 +8,9 @@ class GitCreateBranchCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitcreatebranchcommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
+
     this.branchName = params.branchName;
     this.checkout = params.checkout !== undefined ? params.checkout : true;
     this.fromBranch = params.fromBranch;
@@ -18,11 +18,11 @@ class GitCreateBranchCommand {
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     if (!this.branchName) {
-      throw new Error('Branch name is required');
+      throw new Error("Branch name is required");
     }
     return true;
   }
@@ -32,7 +32,7 @@ class GitCreateBranchCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       branchName: this.branchName,
       checkout: this.checkout,
       fromBranch: this.fromBranch,

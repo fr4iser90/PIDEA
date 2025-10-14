@@ -3,13 +3,13 @@
  * Handler for capturing terminal logs
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class TerminalLogCaptureHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class TerminalLogCaptureHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,8 +40,8 @@ class TerminalLogCaptureHandler {
       this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
-      if (!command || command.type !== 'TerminalLogCaptureCommand') {
-        throw new Error('Invalid command type for TerminalLogCaptureHandler');
+      if (!command || command.type !== "TerminalLogCaptureCommand") {
+        throw new Error("Invalid command type for TerminalLogCaptureHandler");
       }
 
       // Capture terminal logs
@@ -49,35 +49,35 @@ class TerminalLogCaptureHandler {
         ...command.options,
         maxLines: command.maxLines,
         includeTimestamps: command.includeTimestamps,
-        filterLevel: command.filterLevel
+        filterLevel: command.filterLevel,
       });
 
       // Publish success event
-      await this.eventBus.publish('terminal.logs.captured', {
+      await this.eventBus.publish("terminal.logs.captured", {
         commandId: command.commandId,
         userId: command.userId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info(`Terminal logs captured successfully: ${result.count} entries`);
+      this.logger.info(
+        `Terminal logs captured successfully: ${result.count} entries`,
+      );
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to capture terminal logs:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('terminal.logs.capture.failed', {
+      await this.eventBus.publish("terminal.logs.capture.failed", {
         commandId: command.commandId,
         userId: command.userId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -90,12 +90,12 @@ class TerminalLogCaptureHandler {
    */
   getInfo() {
     return {
-      name: 'TerminalLogCaptureHandler',
-      version: '1.0.0',
-      description: 'Handles IDE terminal log capture operations',
-      supportedCommands: ['TerminalLogCaptureCommand']
+      name: "TerminalLogCaptureHandler",
+      version: "1.0.0",
+      description: "Handles IDE terminal log capture operations",
+      supportedCommands: ["TerminalLogCaptureCommand"],
     };
   }
 }
 
-module.exports = TerminalLogCaptureHandler; 
+module.exports = TerminalLogCaptureHandler;

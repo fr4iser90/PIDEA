@@ -9,7 +9,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution>} The saved task execution
    */
   async save(execution) {
-    throw new Error('save method must be implemented');
+    throw new Error("save method must be implemented");
   }
 
   /**
@@ -18,7 +18,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution|null>} The found execution or null
    */
   async findById(id) {
-    throw new Error('findById method must be implemented');
+    throw new Error("findById method must be implemented");
   }
 
   /**
@@ -28,7 +28,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of executions
    */
   async findByTaskId(taskId, filters = {}) {
-    throw new Error('findByTaskId method must be implemented');
+    throw new Error("findByTaskId method must be implemented");
   }
 
   /**
@@ -37,7 +37,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution|null>} The latest execution or null
    */
   async findLatestByTaskId(taskId) {
-    throw new Error('findLatestByTaskId method must be implemented');
+    throw new Error("findLatestByTaskId method must be implemented");
   }
 
   /**
@@ -46,7 +46,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of executions
    */
   async findAll(filters = {}) {
-    throw new Error('findAll method must be implemented');
+    throw new Error("findAll method must be implemented");
   }
 
   /**
@@ -56,7 +56,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of executions
    */
   async findByStatus(status, filters = {}) {
-    throw new Error('findByStatus method must be implemented');
+    throw new Error("findByStatus method must be implemented");
   }
 
   /**
@@ -65,7 +65,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of running executions
    */
   async findRunning(filters = {}) {
-    throw new Error('findRunning method must be implemented');
+    throw new Error("findRunning method must be implemented");
   }
 
   /**
@@ -74,7 +74,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of completed executions
    */
   async findCompleted(filters = {}) {
-    throw new Error('findCompleted method must be implemented');
+    throw new Error("findCompleted method must be implemented");
   }
 
   /**
@@ -83,7 +83,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of failed executions
    */
   async findFailed(filters = {}) {
-    throw new Error('findFailed method must be implemented');
+    throw new Error("findFailed method must be implemented");
   }
 
   /**
@@ -94,7 +94,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of executions in date range
    */
   async findByDateRange(startDate, endDate, filters = {}) {
-    throw new Error('findByDateRange method must be implemented');
+    throw new Error("findByDateRange method must be implemented");
   }
 
   /**
@@ -105,7 +105,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of executions in duration range
    */
   async findByDurationRange(minDuration, maxDuration, filters = {}) {
-    throw new Error('findByDurationRange method must be implemented');
+    throw new Error("findByDurationRange method must be implemented");
   }
 
   /**
@@ -115,7 +115,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of long-running executions
    */
   async findLongRunning(threshold = 3600, filters = {}) {
-    throw new Error('findLongRunning method must be implemented');
+    throw new Error("findLongRunning method must be implemented");
   }
 
   /**
@@ -124,7 +124,7 @@ class TaskExecutionRepository {
    * @returns {Promise<Object>} Object with status counts
    */
   async countByStatus(filters = {}) {
-    throw new Error('countByStatus method must be implemented');
+    throw new Error("countByStatus method must be implemented");
   }
 
   /**
@@ -133,7 +133,7 @@ class TaskExecutionRepository {
    * @returns {Promise<Object>} Execution statistics
    */
   async getStatistics(filters = {}) {
-    throw new Error('getStatistics method must be implemented');
+    throw new Error("getStatistics method must be implemented");
   }
 
   /**
@@ -143,7 +143,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution>} The updated execution
    */
   async update(id, updates) {
-    throw new Error('update method must be implemented');
+    throw new Error("update method must be implemented");
   }
 
   /**
@@ -152,7 +152,7 @@ class TaskExecutionRepository {
    * @returns {Promise<boolean>} True if deleted, false otherwise
    */
   async delete(id) {
-    throw new Error('delete method must be implemented');
+    throw new Error("delete method must be implemented");
   }
 
   /**
@@ -161,7 +161,7 @@ class TaskExecutionRepository {
    * @returns {Promise<number>} Number of deleted executions
    */
   async deleteByTaskId(taskId) {
-    throw new Error('deleteByTaskId method must be implemented');
+    throw new Error("deleteByTaskId method must be implemented");
   }
 
   /**
@@ -170,7 +170,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of saved executions
    */
   async bulkSave(executions) {
-    throw new Error('bulkSave method must be implemented');
+    throw new Error("bulkSave method must be implemented");
   }
 
   /**
@@ -179,7 +179,7 @@ class TaskExecutionRepository {
    * @returns {Promise<TaskExecution[]>} Array of updated executions
    */
   async bulkUpdate(updates) {
-    throw new Error('bulkUpdate method must be implemented');
+    throw new Error("bulkUpdate method must be implemented");
   }
 
   /**
@@ -188,7 +188,7 @@ class TaskExecutionRepository {
    * @returns {Promise<number>} Number of deleted executions
    */
   async bulkDelete(ids) {
-    throw new Error('bulkDelete method must be implemented');
+    throw new Error("bulkDelete method must be implemented");
   }
 
   /**
@@ -200,7 +200,7 @@ class TaskExecutionRepository {
    * @returns {Promise<Object>} Object with executions and pagination info
    */
   async findWithPagination(page = 1, limit = 10, filters = {}, sort = {}) {
-    throw new Error('findWithPagination method must be implemented');
+    throw new Error("findWithPagination method must be implemented");
   }
 
   /**
@@ -209,7 +209,7 @@ class TaskExecutionRepository {
    * @returns {Promise<boolean>} True if exists, false otherwise
    */
   async exists(id) {
-    throw new Error('exists method must be implemented');
+    throw new Error("exists method must be implemented");
   }
 
   /**
@@ -220,7 +220,7 @@ class TaskExecutionRepository {
    * @returns {Promise<Object[]>} Array of log entries
    */
   async getLogs(executionId, level = null, limit = null) {
-    throw new Error('getLogs method must be implemented');
+    throw new Error("getLogs method must be implemented");
   }
 
   /**
@@ -230,7 +230,7 @@ class TaskExecutionRepository {
    * @returns {Promise<boolean>} True if added, false otherwise
    */
   async addLog(executionId, logEntry) {
-    throw new Error('addLog method must be implemented');
+    throw new Error("addLog method must be implemented");
   }
 
   /**
@@ -240,7 +240,7 @@ class TaskExecutionRepository {
    * @returns {Promise<Object[]>} Array of performance metrics
    */
   async getPerformanceMetrics(executionId, metricType = null) {
-    throw new Error('getPerformanceMetrics method must be implemented');
+    throw new Error("getPerformanceMetrics method must be implemented");
   }
 
   /**
@@ -251,7 +251,7 @@ class TaskExecutionRepository {
    * @returns {Promise<boolean>} True if added, false otherwise
    */
   async addPerformanceMetric(executionId, metricType, value) {
-    throw new Error('addPerformanceMetric method must be implemented');
+    throw new Error("addPerformanceMetric method must be implemented");
   }
 
   /**
@@ -260,7 +260,7 @@ class TaskExecutionRepository {
    * @returns {Promise<Object[]>} Array of execution steps
    */
   async getSteps(executionId) {
-    throw new Error('getSteps method must be implemented');
+    throw new Error("getSteps method must be implemented");
   }
 
   /**
@@ -270,7 +270,7 @@ class TaskExecutionRepository {
    * @returns {Promise<boolean>} True if added, false otherwise
    */
   async addStep(executionId, step) {
-    throw new Error('addStep method must be implemented');
+    throw new Error("addStep method must be implemented");
   }
 
   /**
@@ -281,7 +281,7 @@ class TaskExecutionRepository {
    * @returns {Promise<boolean>} True if updated, false otherwise
    */
   async updateStep(executionId, stepName, updates) {
-    throw new Error('updateStep method must be implemented');
+    throw new Error("updateStep method must be implemented");
   }
 
   /**
@@ -290,7 +290,7 @@ class TaskExecutionRepository {
    * @returns {Promise<number>} Number of cleared executions
    */
   async clearOld(daysOld = 30) {
-    throw new Error('clearOld method must be implemented');
+    throw new Error("clearOld method must be implemented");
   }
 
   /**
@@ -298,8 +298,8 @@ class TaskExecutionRepository {
    * @returns {Promise<number>} Number of cleared executions
    */
   async clear() {
-    throw new Error('clear method must be implemented');
+    throw new Error("clear method must be implemented");
   }
 }
 
-module.exports = TaskExecutionRepository; 
+module.exports = TaskExecutionRepository;

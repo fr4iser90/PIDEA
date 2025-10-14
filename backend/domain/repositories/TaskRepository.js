@@ -8,7 +8,7 @@ class TaskRepository {
    * @returns {Promise<Task>} Created task
    */
   async create(task) {
-    throw new Error('create method must be implemented');
+    throw new Error("create method must be implemented");
   }
 
   /**
@@ -17,7 +17,7 @@ class TaskRepository {
    * @returns {Promise<Task|null>} Task or null
    */
   async findById(id) {
-    throw new Error('findById method must be implemented');
+    throw new Error("findById method must be implemented");
   }
 
   /**
@@ -27,7 +27,7 @@ class TaskRepository {
    * @returns {Promise<Array<Task>>} Array of tasks
    */
   async findByProject(projectId, filters = {}) {
-    throw new Error('findByProject method must be implemented');
+    throw new Error("findByProject method must be implemented");
   }
 
   /**
@@ -36,7 +36,7 @@ class TaskRepository {
    * @returns {Promise<Task|null>} Task or null
    */
   async findByTitle(title) {
-    throw new Error('findByTitle method must be implemented');
+    throw new Error("findByTitle method must be implemented");
   }
 
   /**
@@ -46,7 +46,7 @@ class TaskRepository {
    * @returns {Promise<Task>} Updated task
    */
   async update(id, updates) {
-    throw new Error('update method must be implemented');
+    throw new Error("update method must be implemented");
   }
 
   /**
@@ -55,7 +55,7 @@ class TaskRepository {
    * @returns {Promise<boolean>} Success status
    */
   async delete(id) {
-    throw new Error('delete method must be implemented');
+    throw new Error("delete method must be implemented");
   }
 
   /**
@@ -65,7 +65,7 @@ class TaskRepository {
    * @returns {Promise<Array<Task>>} Array of tasks
    */
   async findByStatus(projectId, status) {
-    throw new Error('findByStatus method must be implemented');
+    throw new Error("findByStatus method must be implemented");
   }
 
   /**
@@ -75,7 +75,7 @@ class TaskRepository {
    * @returns {Promise<Array<Task>>} Array of tasks
    */
   async findByPriority(projectId, priority) {
-    throw new Error('findByPriority method must be implemented');
+    throw new Error("findByPriority method must be implemented");
   }
 
   /**
@@ -85,7 +85,7 @@ class TaskRepository {
    * @returns {Promise<Array<Task>>} Array of tasks
    */
   async findByType(projectId, type) {
-    throw new Error('findByType method must be implemented');
+    throw new Error("findByType method must be implemented");
   }
 
   /**
@@ -94,8 +94,8 @@ class TaskRepository {
    * @returns {Promise<Object>} Task statistics
    */
   async getProjectStats(projectId) {
-    throw new Error('getProjectStats method must be implemented');
+    throw new Error("getProjectStats method must be implemented");
   }
 }
 
-module.exports = TaskRepository; 
+module.exports = TaskRepository;

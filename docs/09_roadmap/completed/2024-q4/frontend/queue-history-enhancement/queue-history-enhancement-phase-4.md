@@ -859,7 +859,6 @@ describe('StepTimeline Integration', () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        success: true,
         steps: mockSteps,
         currentStep: mockSteps[1]
       })

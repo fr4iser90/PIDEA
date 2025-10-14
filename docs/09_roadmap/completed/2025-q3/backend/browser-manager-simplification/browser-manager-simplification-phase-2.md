@@ -126,7 +126,6 @@ async execute(context = {}) {
     logger.info(`✅ Message sent to IDE`);
     
     return {
-      success: true,
       message: 'Message sent to IDE',
       data: result,
       ideType: ideType || 'auto-detected'
@@ -136,7 +135,7 @@ async execute(context = {}) {
     logger.error('❌ Failed to send message to IDE:', error);
     
     return {
-      success: false,
+     
       error: error.message,
       timestamp: new Date()
     };

@@ -103,20 +103,20 @@ this.container.register('projectApplicationService', (projectRepository, ideMana
 // ✅ Controller Error Handling
 try {
   const result = await this.projectApplicationService.methodName(params);
-  res.json({ success: true, data: result });
+  res.json({ data: result });
 } catch (error) {
   this.logger.error('Operation failed:', error);
   
   // Application service errors properly mapped to HTTP responses
   if (error.message.includes('Project not found')) {
-    return res.status(404).json({ success: false, error: 'Project not found' });
+    return res.status(404).json({ error: 'Project not found' });
   }
   
   if (error.message.includes('Valid port number required')) {
-    return res.status(400).json({ success: false, error: 'Valid port number required' });
+    return res.status(400).json({ error: 'Valid port number required' });
   }
   
-  res.status(500).json({ success: false, error: 'Operation failed' });
+  res.status(500).json({ error: 'Operation failed' });
 }
 ```
 

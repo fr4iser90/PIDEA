@@ -2,7 +2,7 @@
  * HandlerRegistryRepository
  * Repository interface and implementation for handler registry persistence
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Interface for handler registry repository
@@ -14,7 +14,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Object>} Registered handler
    */
   async registerHandler(handler) {
-    throw new Error('registerHandler method must be implemented');
+    throw new Error("registerHandler method must be implemented");
   }
 
   /**
@@ -23,7 +23,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Object|null>} Handler or null
    */
   async getHandlerByType(handlerType) {
-    throw new Error('getHandlerByType method must be implemented');
+    throw new Error("getHandlerByType method must be implemented");
   }
 
   /**
@@ -33,7 +33,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Object>} Updated handler
    */
   async updateHandler(handlerType, updates) {
-    throw new Error('updateHandler method must be implemented');
+    throw new Error("updateHandler method must be implemented");
   }
 
   /**
@@ -42,7 +42,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Array>} Handlers
    */
   async getAllHandlers(options = {}) {
-    throw new Error('getAllHandlers method must be implemented');
+    throw new Error("getAllHandlers method must be implemented");
   }
 
   /**
@@ -51,7 +51,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Array>} Active handlers
    */
   async getActiveHandlers(options = {}) {
-    throw new Error('getActiveHandlers method must be implemented');
+    throw new Error("getActiveHandlers method must be implemented");
   }
 
   /**
@@ -60,7 +60,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Array>} Default handlers
    */
   async getDefaultHandlers(options = {}) {
-    throw new Error('getDefaultHandlers method must be implemented');
+    throw new Error("getDefaultHandlers method must be implemented");
   }
 
   /**
@@ -69,7 +69,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Object|null>} Best handler or null
    */
   async getBestHandler(handlerType) {
-    throw new Error('getBestHandler method must be implemented');
+    throw new Error("getBestHandler method must be implemented");
   }
 
   /**
@@ -79,7 +79,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Object>} Updated handler
    */
   async updateHandlerStatistics(handlerType, statistics) {
-    throw new Error('updateHandlerStatistics method must be implemented');
+    throw new Error("updateHandlerStatistics method must be implemented");
   }
 
   /**
@@ -88,7 +88,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Object>} Recorded usage
    */
   async recordHandlerUsage(usage) {
-    throw new Error('recordHandlerUsage method must be implemented');
+    throw new Error("recordHandlerUsage method must be implemented");
   }
 
   /**
@@ -98,7 +98,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Array>} Usage history
    */
   async getHandlerUsageHistory(handlerType, options = {}) {
-    throw new Error('getHandlerUsageHistory method must be implemented');
+    throw new Error("getHandlerUsageHistory method must be implemented");
   }
 
   /**
@@ -107,7 +107,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<Array>} Performance summary
    */
   async getHandlerPerformanceSummary(options = {}) {
-    throw new Error('getHandlerPerformanceSummary method must be implemented');
+    throw new Error("getHandlerPerformanceSummary method must be implemented");
   }
 
   /**
@@ -116,7 +116,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<boolean>} Success status
    */
   async deleteHandler(handlerType) {
-    throw new Error('deleteHandler method must be implemented');
+    throw new Error("deleteHandler method must be implemented");
   }
 
   /**
@@ -125,7 +125,7 @@ class HandlerRegistryRepository {
    * @returns {Promise<number>} Number of deleted records
    */
   async cleanupOldUsageHistory(daysOld = 30) {
-    throw new Error('cleanupOldUsageHistory method must be implemented');
+    throw new Error("cleanupOldUsageHistory method must be implemented");
   }
 }
 
@@ -136,8 +136,8 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
   constructor(databaseConnection) {
     super();
     this.db = databaseConnection;
-    this.handlerTable = 'handler_registry';
-    this.usageTable = 'handler_usage_history';
+    this.handlerTable = "handler_registry";
+    this.usageTable = "handler_usage_history";
   }
 
   /**
@@ -174,7 +174,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
       handler.handlerName,
       handler.handlerClass,
       handler.handlerPath,
-      handler.version || '1.0.0',
+      handler.version || "1.0.0",
       handler.description,
       JSON.stringify(handler.capabilities || {}),
       JSON.stringify(handler.configuration || {}),
@@ -182,7 +182,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
       JSON.stringify(handler.metadata || {}),
       handler.isActive !== false,
       handler.isDefault || false,
-      handler.priority || 1
+      handler.priority || 1,
     ];
 
     try {
@@ -225,7 +225,11 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
 
     // Build dynamic update query
     for (const [key, value] of Object.entries(updates)) {
-      if (['capabilities', 'configuration', 'dependencies', 'metadata'].includes(key)) {
+      if (
+        ["capabilities", "configuration", "dependencies", "metadata"].includes(
+          key,
+        )
+      ) {
         setClause.push(`${this.toSnakeCase(key)} = $${paramIndex}`);
         values.push(JSON.stringify(value));
       } else {
@@ -239,7 +243,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
 
     const query = `
       UPDATE ${this.handlerTable} 
-      SET ${setClause.join(', ')}
+      SET ${setClause.join(", ")}
       WHERE handler_type = $${paramIndex}
       RETURNING *
     `;
@@ -258,7 +262,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
    * @returns {Promise<Array>} Handlers
    */
   async getAllHandlers(options = {}) {
-    const { limit = 100, offset = 0, sortBy = 'handler_type' } = options;
+    const { limit = 100, offset = 0, sortBy = "handler_type" } = options;
 
     const query = `
       SELECT * FROM ${this.handlerTable} 
@@ -280,7 +284,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
    * @returns {Promise<Array>} Active handlers
    */
   async getActiveHandlers(options = {}) {
-    const { limit = 100, offset = 0, sortBy = 'priority DESC' } = options;
+    const { limit = 100, offset = 0, sortBy = "priority DESC" } = options;
 
     const query = `
       SELECT * FROM ${this.handlerTable} 
@@ -367,7 +371,11 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
     `;
 
     try {
-      const result = await this.db.query(query, [executionTime, status, handlerType]);
+      const result = await this.db.query(query, [
+        executionTime,
+        status,
+        handlerType,
+      ]);
       return result[0];
     } catch (error) {
       throw new Error(`Failed to update handler statistics: ${error.message}`);
@@ -393,7 +401,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
       usage.status,
       usage.executionTime,
       usage.errorMessage,
-      JSON.stringify(usage.metadata || {})
+      JSON.stringify(usage.metadata || {}),
     ];
 
     try {
@@ -455,7 +463,9 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
       const result = await this.db.query(query, [limit, offset]);
       return result;
     } catch (error) {
-      throw new Error(`Failed to get handler performance summary: ${error.message}`);
+      throw new Error(
+        `Failed to get handler performance summary: ${error.message}`,
+      );
     }
   }
 
@@ -503,7 +513,7 @@ class PostgreSQLHandlerRegistryRepository extends HandlerRegistryRepository {
    * @returns {string} Converted string
    */
   toSnakeCase(str) {
-    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
   }
 }
 
@@ -524,7 +534,7 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
       handlerName: handler.handlerName,
       handlerClass: handler.handlerClass,
       handlerPath: handler.handlerPath,
-      version: handler.version || '1.0.0',
+      version: handler.version || "1.0.0",
       description: handler.description,
       capabilities: handler.capabilities || {},
       configuration: handler.configuration || {},
@@ -539,7 +549,7 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
       averageExecutionTime: 0,
       registeredAt: new Date(),
       updatedAt: new Date(),
-      lastUsedAt: null
+      lastUsedAt: null,
     };
 
     this.handlers.set(handler.handlerType, handlerRecord);
@@ -561,13 +571,13 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
   }
 
   async getAllHandlers(options = {}) {
-    const { limit = 100, offset = 0, sortBy = 'handlerType' } = options;
-    
+    const { limit = 100, offset = 0, sortBy = "handlerType" } = options;
+
     let handlers = Array.from(this.handlers.values());
 
     // Sort handlers
     handlers.sort((a, b) => {
-      if (sortBy === 'priority') {
+      if (sortBy === "priority") {
         return b.priority - a.priority;
       }
       return a[sortBy].localeCompare(b[sortBy]);
@@ -577,13 +587,14 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
   }
 
   async getActiveHandlers(options = {}) {
-    const { limit = 100, offset = 0, sortBy = 'priority' } = options;
-    
-    let handlers = Array.from(this.handlers.values())
-      .filter(handler => handler.isActive);
+    const { limit = 100, offset = 0, sortBy = "priority" } = options;
+
+    let handlers = Array.from(this.handlers.values()).filter(
+      (handler) => handler.isActive,
+    );
 
     // Sort handlers
-    if (sortBy === 'priority') {
+    if (sortBy === "priority") {
       handlers.sort((a, b) => b.priority - a.priority);
     } else {
       handlers.sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
@@ -594,9 +605,9 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
 
   async getDefaultHandlers(options = {}) {
     const { limit = 100, offset = 0 } = options;
-    
+
     const handlers = Array.from(this.handlers.values())
-      .filter(handler => handler.isDefault && handler.isActive)
+      .filter((handler) => handler.isDefault && handler.isActive)
       .sort((a, b) => b.priority - a.priority);
 
     return handlers.slice(offset, offset + limit);
@@ -620,7 +631,7 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
     const { executionTime, status } = statistics;
 
     handler.usageCount++;
-    if (status === 'success') {
+    if (status === "success") {
       handler.successCount++;
     } else {
       handler.failureCount++;
@@ -630,7 +641,10 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
     if (handler.usageCount === 1) {
       handler.averageExecutionTime = executionTime;
     } else {
-      handler.averageExecutionTime = ((handler.averageExecutionTime * (handler.usageCount - 1)) + executionTime) / handler.usageCount;
+      handler.averageExecutionTime =
+        (handler.averageExecutionTime * (handler.usageCount - 1) +
+          executionTime) /
+        handler.usageCount;
     }
 
     handler.lastUsedAt = new Date();
@@ -649,7 +663,7 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
       executionTime: usage.executionTime,
       errorMessage: usage.errorMessage,
       metadata: usage.metadata || {},
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     this.usageHistory.set(usageId, usageRecord);
@@ -658,37 +672,48 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
 
   async getHandlerUsageHistory(handlerType, options = {}) {
     const { limit = 100, offset = 0, status } = options;
-    
-    let usage = Array.from(this.usageHistory.values())
-      .filter(record => record.handlerType === handlerType);
+
+    let usage = Array.from(this.usageHistory.values()).filter(
+      (record) => record.handlerType === handlerType,
+    );
 
     if (status) {
-      usage = usage.filter(record => record.status === status);
+      usage = usage.filter((record) => record.status === status);
     }
 
     usage.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
     return usage.slice(offset, offset + limit);
   }
 
   async getHandlerPerformanceSummary(options = {}) {
     const { limit = 100, offset = 0 } = options;
-    
+
     const summaries = Array.from(this.handlers.values())
-      .filter(handler => handler.isActive)
-      .map(handler => {
-        const successRate = handler.usageCount > 0 ? (handler.successCount / handler.usageCount) * 100 : 0;
-        
+      .filter((handler) => handler.isActive)
+      .map((handler) => {
+        const successRate =
+          handler.usageCount > 0
+            ? (handler.successCount / handler.usageCount) * 100
+            : 0;
+
         // Get recent usage (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const recentUsage = Array.from(this.usageHistory.values())
-          .filter(record => record.handlerType === handler.handlerType && record.createdAt >= thirtyDaysAgo);
-        
-        const recentAvgExecutionTime = recentUsage.length > 0 
-          ? recentUsage.reduce((sum, record) => sum + record.executionTime, 0) / recentUsage.length 
-          : 0;
+
+        const recentUsage = Array.from(this.usageHistory.values()).filter(
+          (record) =>
+            record.handlerType === handler.handlerType &&
+            record.createdAt >= thirtyDaysAgo,
+        );
+
+        const recentAvgExecutionTime =
+          recentUsage.length > 0
+            ? recentUsage.reduce(
+                (sum, record) => sum + record.executionTime,
+                0,
+              ) / recentUsage.length
+            : 0;
 
         return {
           handler_type: handler.handlerType,
@@ -704,10 +729,14 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
           success_rate: successRate,
           recent_usage_count: recentUsage.length,
           recent_avg_execution_time: recentAvgExecutionTime,
-          last_used: handler.lastUsedAt
+          last_used: handler.lastUsedAt,
         };
       })
-      .sort((a, b) => b.success_rate - a.success_rate || a.average_execution_time - b.average_execution_time);
+      .sort(
+        (a, b) =>
+          b.success_rate - a.success_rate ||
+          a.average_execution_time - b.average_execution_time,
+      );
 
     return summaries.slice(offset, offset + limit);
   }
@@ -735,5 +764,5 @@ class InMemoryHandlerRegistryRepository extends HandlerRegistryRepository {
 module.exports = {
   HandlerRegistryRepository,
   PostgreSQLHandlerRegistryRepository,
-  InMemoryHandlerRegistryRepository
-}; 
+  InMemoryHandlerRegistryRepository,
+};

@@ -421,7 +421,6 @@ class [StepName] {
       logger.info(`✅ ${this.name} completed successfully`);
 
       return {
-        success: true,
         result: result,
         metadata: {
           stepName: this.name,
@@ -433,7 +432,7 @@ class [StepName] {
       logger.error(`❌ ${this.name} failed: ${error.message}`);
       
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
           stepName: this.name,

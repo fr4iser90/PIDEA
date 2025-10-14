@@ -1,14 +1,13 @@
-const fs = require('fs').promises;
-const path = require('path');
-const LogEncryptionService = require('@security/LogEncryptionService');
-const LogPermissionManager = require('@security/LogPermissionManager');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-
+const fs = require("fs").promises;
+const path = require("path");
+const LogEncryptionService = require("@security/LogEncryptionService");
+const LogPermissionManager = require("@security/LogPermissionManager");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * Terminal Log Reader Service
- * 
+ *
  * Reads and decrypts terminal log files with search and filtering capabilities.
  * Provides secure access to encrypted log data.
  */
@@ -30,9 +29,12 @@ class TerminalLogReader {
   async getRecentLogs(port, lines = 50, key = null) {
     try {
       logger.info(`Getting recent ${lines} logs for port ${port}`);
-      
-      const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
-      
+
+      const encryptedLogPath = this.permissionManager.getSecureFilePath(
+        port,
+        "encrypted",
+      );
+
       // Check if file exists
       try {
         await fs.stat(encryptedLogPath);
@@ -40,24 +42,30 @@ class TerminalLogReader {
         logger.info(`No encrypted log file found for port ${port}`);
         return [];
       }
-      
+
       // Read encrypted log file
-      const encryptedContent = await fs.readFile(encryptedLogPath, 'utf8');
-      const encryptedLines = encryptedContent.split('\n').filter(line => line.trim());
-      
+      const encryptedContent = await fs.readFile(encryptedLogPath, "utf8");
+      const encryptedLines = encryptedContent
+        .split("\n")
+        .filter((line) => line.trim());
+
       if (encryptedLines.length === 0) {
         return [];
       }
-      
+
       // Get the last N lines
       const recentEncryptedLines = encryptedLines.slice(-lines);
-      
+
       // Decrypt log entries
-      const decryptedEntries = await this.encryptionService.decryptLogEntries(recentEncryptedLines, key);
-      
-      logger.info(`Retrieved ${decryptedEntries.length} log entries for port ${port}`);
+      const decryptedEntries = await this.encryptionService.decryptLogEntries(
+        recentEncryptedLines,
+        key,
+      );
+
+      logger.info(
+        `Retrieved ${decryptedEntries.length} log entries for port ${port}`,
+      );
       return decryptedEntries;
-      
     } catch (error) {
       logger.error(`Error getting recent logs for port ${port}:`, error);
       throw error;
@@ -78,15 +86,18 @@ class TerminalLogReader {
   async searchLogs(port, searchText, options = {}, key = null) {
     try {
       logger.info(`Searching logs for port ${port}: "${searchText}"`);
-      
+
       const {
         caseSensitive = false,
         useRegex = false,
-        maxResults = 100
+        maxResults = 100,
       } = options;
-      
-      const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
-      
+
+      const encryptedLogPath = this.permissionManager.getSecureFilePath(
+        port,
+        "encrypted",
+      );
+
       // Check if file exists
       try {
         await fs.stat(encryptedLogPath);
@@ -94,42 +105,48 @@ class TerminalLogReader {
         logger.info(`No encrypted log file found for port ${port}`);
         return [];
       }
-      
+
       // Read all encrypted log entries
-      const encryptedContent = await fs.readFile(encryptedLogPath, 'utf8');
-      const encryptedLines = encryptedContent.split('\n').filter(line => line.trim());
-      
+      const encryptedContent = await fs.readFile(encryptedLogPath, "utf8");
+      const encryptedLines = encryptedContent
+        .split("\n")
+        .filter((line) => line.trim());
+
       if (encryptedLines.length === 0) {
         return [];
       }
-      
+
       // Decrypt all entries
-      const allEntries = await this.encryptionService.decryptLogEntries(encryptedLines, key);
-      
+      const allEntries = await this.encryptionService.decryptLogEntries(
+        encryptedLines,
+        key,
+      );
+
       // Prepare search pattern
       let searchPattern;
       if (useRegex) {
-        searchPattern = new RegExp(searchText, caseSensitive ? 'g' : 'gi');
+        searchPattern = new RegExp(searchText, caseSensitive ? "g" : "gi");
       } else {
-        const escapedText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        searchPattern = new RegExp(escapedText, caseSensitive ? 'g' : 'gi');
+        const escapedText = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        searchPattern = new RegExp(escapedText, caseSensitive ? "g" : "gi");
       }
-      
+
       // Filter matching entries
       const matchingEntries = [];
       for (const entry of allEntries) {
         if (searchPattern.test(entry.text)) {
           matchingEntries.push(entry);
-          
+
           if (matchingEntries.length >= maxResults) {
             break;
           }
         }
       }
-      
-      logger.info(`Found ${matchingEntries.length} matching entries for port ${port}`);
+
+      logger.info(
+        `Found ${matchingEntries.length} matching entries for port ${port}`,
+      );
       return matchingEntries;
-      
     } catch (error) {
       logger.error(`Error searching logs for port ${port}:`, error);
       throw error;
@@ -146,10 +163,15 @@ class TerminalLogReader {
    */
   async getLogsInTimeRange(port, startTime, endTime, key = null) {
     try {
-      logger.info(`Getting logs in time range for port ${port}: ${startTime} to ${endTime}`);
-      
-      const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
-      
+      logger.info(
+        `Getting logs in time range for port ${port}: ${startTime} to ${endTime}`,
+      );
+
+      const encryptedLogPath = this.permissionManager.getSecureFilePath(
+        port,
+        "encrypted",
+      );
+
       // Check if file exists
       try {
         await fs.stat(encryptedLogPath);
@@ -157,27 +179,33 @@ class TerminalLogReader {
         logger.info(`No encrypted log file found for port ${port}`);
         return [];
       }
-      
+
       // Read all encrypted log entries
-      const encryptedContent = await fs.readFile(encryptedLogPath, 'utf8');
-      const encryptedLines = encryptedContent.split('\n').filter(line => line.trim());
-      
+      const encryptedContent = await fs.readFile(encryptedLogPath, "utf8");
+      const encryptedLines = encryptedContent
+        .split("\n")
+        .filter((line) => line.trim());
+
       if (encryptedLines.length === 0) {
         return [];
       }
-      
+
       // Decrypt all entries
-      const allEntries = await this.encryptionService.decryptLogEntries(encryptedLines, key);
-      
+      const allEntries = await this.encryptionService.decryptLogEntries(
+        encryptedLines,
+        key,
+      );
+
       // Filter entries within time range
-      const filteredEntries = allEntries.filter(entry => {
+      const filteredEntries = allEntries.filter((entry) => {
         const entryTime = new Date(entry.timestamp);
         return entryTime >= startTime && entryTime <= endTime;
       });
-      
-      logger.info(`Found ${filteredEntries.length} entries in time range for port ${port}`);
+
+      logger.info(
+        `Found ${filteredEntries.length} entries in time range for port ${port}`,
+      );
       return filteredEntries;
-      
     } catch (error) {
       logger.error(`Error getting logs in time range for port ${port}:`, error);
       throw error;
@@ -195,36 +223,40 @@ class TerminalLogReader {
    * @param {string} key - Encryption key (optional)
    * @returns {string} Exported log data
    */
-  async exportLogs(port, format = 'json', options = {}, key = null) {
+  async exportLogs(port, format = "json", options = {}, key = null) {
     try {
       logger.info(`Exporting logs for port ${port} in ${format} format`);
-      
+
       const { lines, startTime, endTime } = options;
-      
+
       let logEntries;
-      
+
       if (startTime && endTime) {
-        logEntries = await this.getLogsInTimeRange(port, startTime, endTime, key);
+        logEntries = await this.getLogsInTimeRange(
+          port,
+          startTime,
+          endTime,
+          key,
+        );
       } else if (lines) {
         logEntries = await this.getRecentLogs(port, lines, key);
       } else {
         logEntries = await this.getRecentLogs(port, 1000, key); // Default to 1000 lines
       }
-      
+
       switch (format.toLowerCase()) {
-        case 'json':
+        case "json":
           return JSON.stringify(logEntries, null, 2);
-          
-        case 'csv':
+
+        case "csv":
           return this.convertToCSV(logEntries);
-          
-        case 'txt':
+
+        case "txt":
           return this.convertToText(logEntries);
-          
+
         default:
           throw new Error(`Unsupported export format: ${format}`);
       }
-      
     } catch (error) {
       logger.error(`Error exporting logs for port ${port}:`, error);
       throw error;
@@ -239,25 +271,27 @@ class TerminalLogReader {
   convertToCSV(logEntries) {
     try {
       if (logEntries.length === 0) {
-        return 'timestamp,type,text,level,port\n';
+        return "timestamp,type,text,level,port\n";
       }
-      
-      const headers = ['timestamp', 'type', 'text', 'level', 'port'];
-      const csvLines = [headers.join(',')];
-      
+
+      const headers = ["timestamp", "type", "text", "level", "port"];
+      const csvLines = [headers.join(",")];
+
       for (const entry of logEntries) {
-        const row = headers.map(header => {
-          const value = entry[header] || '';
+        const row = headers.map((header) => {
+          const value = entry[header] || "";
           // Escape quotes and wrap in quotes if contains comma or quote
           const escaped = String(value).replace(/"/g, '""');
-          return escaped.includes(',') || escaped.includes('"') ? `"${escaped}"` : escaped;
+          return escaped.includes(",") || escaped.includes('"')
+            ? `"${escaped}"`
+            : escaped;
         });
-        csvLines.push(row.join(','));
+        csvLines.push(row.join(","));
       }
-      
-      return csvLines.join('\n');
+
+      return csvLines.join("\n");
     } catch (error) {
-      logger.error('Error converting to CSV:', error);
+      logger.error("Error converting to CSV:", error);
       throw error;
     }
   }
@@ -270,20 +304,20 @@ class TerminalLogReader {
   convertToText(logEntries) {
     try {
       if (logEntries.length === 0) {
-        return 'No log entries found.\n';
+        return "No log entries found.\n";
       }
-      
+
       const textLines = [];
-      
+
       for (const entry of logEntries) {
         const timestamp = new Date(entry.timestamp).toISOString();
         const line = `[${timestamp}] [${entry.level.toUpperCase()}] ${entry.text}`;
         textLines.push(line);
       }
-      
-      return textLines.join('\n') + '\n';
+
+      return textLines.join("\n") + "\n";
     } catch (error) {
-      logger.error('Error converting to text:', error);
+      logger.error("Error converting to text:", error);
       throw error;
     }
   }
@@ -297,9 +331,12 @@ class TerminalLogReader {
   async getLogStatistics(port, key = null) {
     try {
       logger.info(`Getting log statistics for port ${port}`);
-      
-      const encryptedLogPath = this.permissionManager.getSecureFilePath(port, 'encrypted');
-      
+
+      const encryptedLogPath = this.permissionManager.getSecureFilePath(
+        port,
+        "encrypted",
+      );
+
       // Check if file exists
       try {
         await fs.stat(encryptedLogPath);
@@ -311,17 +348,19 @@ class TerminalLogReader {
           fileSize: 0,
           firstEntry: null,
           lastEntry: null,
-          levels: {}
+          levels: {},
         };
       }
-      
+
       // Get file stats
       const stats = await fs.stat(encryptedLogPath);
-      
+
       // Read all encrypted log entries
-      const encryptedContent = await fs.readFile(encryptedLogPath, 'utf8');
-      const encryptedLines = encryptedContent.split('\n').filter(line => line.trim());
-      
+      const encryptedContent = await fs.readFile(encryptedLogPath, "utf8");
+      const encryptedLines = encryptedContent
+        .split("\n")
+        .filter((line) => line.trim());
+
       if (encryptedLines.length === 0) {
         return {
           port: port,
@@ -329,49 +368,65 @@ class TerminalLogReader {
           fileSize: stats.size,
           firstEntry: null,
           lastEntry: null,
-          levels: {}
+          levels: {},
         };
       }
-      
+
       // Decrypt all entries
-      const allEntries = await this.encryptionService.decryptLogEntries(encryptedLines, key);
-      
+      const allEntries = await this.encryptionService.decryptLogEntries(
+        encryptedLines,
+        key,
+      );
+
       // Calculate statistics
       const levels = {};
       let firstEntry = null;
       let lastEntry = null;
-      
+
       for (const entry of allEntries) {
         // Count levels
         levels[entry.level] = (levels[entry.level] || 0) + 1;
-        
+
         // Track first and last entries
-        if (!firstEntry || new Date(entry.timestamp) < new Date(firstEntry.timestamp)) {
+        if (
+          !firstEntry ||
+          new Date(entry.timestamp) < new Date(firstEntry.timestamp)
+        ) {
           firstEntry = entry;
         }
-        if (!lastEntry || new Date(entry.timestamp) > new Date(lastEntry.timestamp)) {
+        if (
+          !lastEntry ||
+          new Date(entry.timestamp) > new Date(lastEntry.timestamp)
+        ) {
           lastEntry = entry;
         }
       }
-      
+
       const statistics = {
         port: port,
         totalEntries: allEntries.length,
         fileSize: stats.size,
-        firstEntry: firstEntry ? {
-          timestamp: firstEntry.timestamp,
-          text: firstEntry.text.substring(0, 100) + (firstEntry.text.length > 100 ? '...' : '')
-        } : null,
-        lastEntry: lastEntry ? {
-          timestamp: lastEntry.timestamp,
-          text: lastEntry.text.substring(0, 100) + (lastEntry.text.length > 100 ? '...' : '')
-        } : null,
-        levels: levels
+        firstEntry: firstEntry
+          ? {
+              timestamp: firstEntry.timestamp,
+              text:
+                firstEntry.text.substring(0, 100) +
+                (firstEntry.text.length > 100 ? "..." : ""),
+            }
+          : null,
+        lastEntry: lastEntry
+          ? {
+              timestamp: lastEntry.timestamp,
+              text:
+                lastEntry.text.substring(0, 100) +
+                (lastEntry.text.length > 100 ? "..." : ""),
+            }
+          : null,
+        levels: levels,
       };
-      
+
       logger.info(`Statistics for port ${port}: ${allEntries.length} entries`);
       return statistics;
-      
     } catch (error) {
       logger.error(`Error getting log statistics for port ${port}:`, error);
       throw error;
@@ -389,10 +444,10 @@ class TerminalLogReader {
         logger.info(`Cleared cache for port ${port}`);
       } else {
         this.cache.clear();
-        logger.info('Cleared all cache');
+        logger.info("Cleared all cache");
       }
     } catch (error) {
-      logger.error('Error clearing cache:', error);
+      logger.error("Error clearing cache:", error);
     }
   }
 
@@ -404,9 +459,9 @@ class TerminalLogReader {
     return {
       size: this.cache.size,
       timeout: this.cacheTimeout,
-      entries: Array.from(this.cache.keys())
+      entries: Array.from(this.cache.keys()),
     };
   }
 }
 
-module.exports = TerminalLogReader; 
+module.exports = TerminalLogReader;

@@ -1,20 +1,20 @@
 /**
  * API Handler - REST/GraphQL/WebSocket APIs
- * 
+ *
  * Handles API interfaces for external service integration.
  * Supports REST, GraphQL, gRPC, and WebSocket APIs.
  */
 
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class APIHandler {
   constructor(dependencies = {}) {
-    this.logger = dependencies.logger || new ServiceLogger('APIHandler');
+    this.logger = dependencies.logger || new ServiceLogger("APIHandler");
     this.httpClient = dependencies.httpClient;
     this.eventBus = dependencies.eventBus;
     this.serviceRegistry = dependencies.serviceRegistry;
-    
+
     // API state
     this.activeAPIs = new Map(); // apiId -> API instance
     this.requestHistory = new Map(); // apiId -> request history
@@ -29,17 +29,17 @@ class APIHandler {
   async createInterface(config, interfaceId) {
     try {
       const { baseUrl, apiType, authType, apiKey, timeout } = config;
-      
+
       this.logger.info(`Creating API interface: ${interfaceId}`, {
         baseUrl,
         apiType,
         authType,
-        timeout
+        timeout,
       });
 
       // Initialize API client
       const apiClient = await this.initializeAPIClient(config);
-      
+
       // Store active API
       this.activeAPIs.set(interfaceId, {
         id: interfaceId,
@@ -49,22 +49,21 @@ class APIHandler {
         apiKey,
         timeout,
         client: apiClient,
-        status: 'connected',
-        createdAt: new Date()
+        status: "connected",
+        createdAt: new Date(),
       });
 
       return {
         id: interfaceId,
-        type: 'api',
+        type: "api",
         baseUrl,
         apiType,
         authType,
-        status: 'connected',
-        createdAt: new Date()
+        status: "connected",
+        createdAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Failed to create API interface:', error);
+      this.logger.error("Failed to create API interface:", error);
       throw new Error(`Failed to create API interface: ${error.message}`);
     }
   }
@@ -77,40 +76,39 @@ class APIHandler {
   async initializeAPIClient(config) {
     try {
       const { baseUrl, apiType, authType, apiKey, timeout } = config;
-      
+
       this.logger.info(`Initializing ${apiType} client for ${baseUrl}`);
 
       const clientConfig = {
         baseUrl,
         timeout: timeout || 30000,
-        auth: this.buildAuthConfig(authType, apiKey)
+        auth: this.buildAuthConfig(authType, apiKey),
       };
 
       let client;
-      
+
       switch (apiType) {
-        case 'rest':
+        case "rest":
           client = await this.createRESTClient(clientConfig);
           break;
-        case 'graphql':
+        case "graphql":
           client = await this.createGraphQLClient(clientConfig);
           break;
-        case 'grpc':
+        case "grpc":
           client = await this.createGRPCClient(clientConfig);
           break;
-        case 'websocket':
+        case "websocket":
           client = await this.createWebSocketClient(clientConfig);
           break;
         default:
           throw new Error(`Unsupported API type: ${apiType}`);
       }
-      
-      this.logger.info(`${apiType} client initialized for ${baseUrl}`);
-      
-      return client;
 
+      this.logger.info(`${apiType} client initialized for ${baseUrl}`);
+
+      return client;
     } catch (error) {
-      this.logger.error('Failed to initialize API client:', error);
+      this.logger.error("Failed to initialize API client:", error);
       throw new Error(`Failed to initialize API client: ${error.message}`);
     }
   }
@@ -123,14 +121,14 @@ class APIHandler {
    */
   buildAuthConfig(authType, apiKey) {
     switch (authType) {
-      case 'bearer':
-        return { type: 'bearer', token: apiKey };
-      case 'basic':
-        return { type: 'basic', username: apiKey, password: '' };
-      case 'apikey':
-        return { type: 'apikey', key: apiKey };
-      case 'oauth':
-        return { type: 'oauth', token: apiKey };
+      case "bearer":
+        return { type: "bearer", token: apiKey };
+      case "basic":
+        return { type: "basic", username: apiKey, password: "" };
+      case "apikey":
+        return { type: "apikey", key: apiKey };
+      case "oauth":
+        return { type: "oauth", token: apiKey };
       default:
         return null;
     }
@@ -144,12 +142,12 @@ class APIHandler {
   async createRESTClient(config) {
     // Mock implementation - replace with actual HTTP client
     return {
-      type: 'rest',
+      type: "rest",
       config,
       request: async (method, endpoint, data) => {
         this.logger.info(`REST ${method} ${endpoint}`);
-        return { status: 200, data: { message: 'Mock response' } };
-      }
+        return { status: 200, data: { message: "Mock response" } };
+      },
     };
   }
 
@@ -161,16 +159,16 @@ class APIHandler {
   async createGraphQLClient(config) {
     // Mock implementation - replace with actual GraphQL client
     return {
-      type: 'graphql',
+      type: "graphql",
       config,
       query: async (query, variables) => {
         this.logger.info(`GraphQL Query: ${query}`);
-        return { data: { message: 'Mock GraphQL response' } };
+        return { data: { message: "Mock GraphQL response" } };
       },
       mutate: async (mutation, variables) => {
         this.logger.info(`GraphQL Mutation: ${mutation}`);
-        return { data: { message: 'Mock GraphQL mutation response' } };
-      }
+        return { data: { message: "Mock GraphQL mutation response" } };
+      },
     };
   }
 
@@ -182,12 +180,12 @@ class APIHandler {
   async createGRPCClient(config) {
     // Mock implementation - replace with actual gRPC client
     return {
-      type: 'grpc',
+      type: "grpc",
       config,
       call: async (service, method, data) => {
         this.logger.info(`gRPC ${service}.${method}`);
-        return { message: 'Mock gRPC response' };
-      }
+        return { message: "Mock gRPC response" };
+      },
     };
   }
 
@@ -199,10 +197,10 @@ class APIHandler {
   async createWebSocketClient(config) {
     // Mock implementation - replace with actual WebSocket client
     return {
-      type: 'websocket',
+      type: "websocket",
       config,
       connect: async () => {
-        this.logger.info('WebSocket connected');
+        this.logger.info("WebSocket connected");
         return true;
       },
       send: async (message) => {
@@ -210,9 +208,9 @@ class APIHandler {
         return true;
       },
       close: async () => {
-        this.logger.info('WebSocket closed');
+        this.logger.info("WebSocket closed");
         return true;
-      }
+      },
     };
   }
 
@@ -225,7 +223,7 @@ class APIHandler {
   async makeRequest(apiId, request) {
     try {
       const api = this.activeAPIs.get(apiId);
-      
+
       if (!api) {
         throw new Error(`API ${apiId} not found`);
       }
@@ -233,43 +231,53 @@ class APIHandler {
       this.logger.info(`Making ${api.apiType} request`, { apiId, request });
 
       let response;
-      
+
       switch (api.apiType) {
-        case 'rest':
-          response = await api.client.request(request.method, request.endpoint, request.data);
+        case "rest":
+          response = await api.client.request(
+            request.method,
+            request.endpoint,
+            request.data,
+          );
           break;
-        case 'graphql':
-          if (request.type === 'query') {
+        case "graphql":
+          if (request.type === "query") {
             response = await api.client.query(request.query, request.variables);
           } else {
-            response = await api.client.mutate(request.mutation, request.variables);
+            response = await api.client.mutate(
+              request.mutation,
+              request.variables,
+            );
           }
           break;
-        case 'grpc':
-          response = await api.client.call(request.service, request.method, request.data);
+        case "grpc":
+          response = await api.client.call(
+            request.service,
+            request.method,
+            request.data,
+          );
           break;
-        case 'websocket':
+        case "websocket":
           response = await api.client.send(request.message);
           break;
         default:
           throw new Error(`Unsupported API type: ${api.apiType}`);
       }
-      
+
       // Store in history
       if (!this.requestHistory.has(apiId)) {
         this.requestHistory.set(apiId, []);
       }
-      
+
       this.requestHistory.get(apiId).push({
         request,
         response,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-      
-      return response;
 
+      return response;
     } catch (error) {
-      this.logger.error('Failed to make API request:', error);
+      this.logger.error("Failed to make API request:", error);
       throw new Error(`Failed to make API request: ${error.message}`);
     }
   }
@@ -291,14 +299,14 @@ class APIHandler {
   async getAPIStatus(apiId) {
     try {
       const api = this.activeAPIs.get(apiId);
-      
+
       if (!api) {
         throw new Error(`API ${apiId} not found`);
       }
 
       // Test connection
       const isConnected = await this.testConnection(api);
-      
+
       return {
         apiId,
         status: api.status,
@@ -307,11 +315,10 @@ class APIHandler {
         authType: api.authType,
         connected: isConnected,
         uptime: Date.now() - api.createdAt.getTime(),
-        requestCount: this.requestHistory.get(apiId)?.length || 0
+        requestCount: this.requestHistory.get(apiId)?.length || 0,
       };
-
     } catch (error) {
-      this.logger.error('Failed to get API status:', error);
+      this.logger.error("Failed to get API status:", error);
       throw new Error(`Failed to get API status: ${error.message}`);
     }
   }
@@ -324,19 +331,19 @@ class APIHandler {
   async testConnection(api) {
     try {
       switch (api.apiType) {
-        case 'rest':
-          await api.client.request('GET', '/health');
+        case "rest":
+          await api.client.request("GET", "/health");
           break;
-        case 'graphql':
-          await api.client.query('{ __schema { types { name } } }');
+        case "graphql":
+          await api.client.query("{ __schema { types { name } } }");
           break;
-        case 'websocket':
+        case "websocket":
           await api.client.connect();
           break;
         default:
           return true; // Assume connected for gRPC
       }
-      
+
       return true;
     } catch (error) {
       this.logger.warn(`API connection test failed: ${error.message}`);
@@ -351,12 +358,15 @@ class APIHandler {
   getAPIStats() {
     return {
       activeAPIs: this.activeAPIs.size,
-      totalRequests: Array.from(this.requestHistory.values()).reduce((total, history) => total + history.length, 0),
+      totalRequests: Array.from(this.requestHistory.values()).reduce(
+        (total, history) => total + history.length,
+        0,
+      ),
       apiTypes: Array.from(this.activeAPIs.values()).reduce((types, api) => {
         types[api.apiType] = (types[api.apiType] || 0) + 1;
         return types;
       }, {}),
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
   }
 
@@ -368,7 +378,7 @@ class APIHandler {
       // Close all active APIs
       for (const [apiId, api] of this.activeAPIs) {
         try {
-          if (api.apiType === 'websocket') {
+          if (api.apiType === "websocket") {
             await api.client.close();
           }
         } catch (error) {
@@ -380,10 +390,9 @@ class APIHandler {
       this.activeAPIs.clear();
       this.requestHistory.clear();
 
-      this.logger.info('API Handler cleanup completed');
-
+      this.logger.info("API Handler cleanup completed");
     } catch (error) {
-      this.logger.error('Failed to cleanup API Handler:', error);
+      this.logger.error("Failed to cleanup API Handler:", error);
     }
   }
 }

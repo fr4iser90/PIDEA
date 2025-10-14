@@ -64,7 +64,6 @@ async getCategoryIssues(req, res, category) {
     if (!analyses || !Array.isArray(analyses)) {
       this.logger.warn(`No analyses found for project: ${projectId}, returning empty issues`);
       return res.json({
-        success: true,
         data: {
           category,
           issues: [],
@@ -93,7 +92,6 @@ async getCategoryIssues(req, res, category) {
     }
     
     res.json({
-      success: true,
       data: {
         category,
         issues,
@@ -106,7 +104,7 @@ async getCategoryIssues(req, res, category) {
   } catch (error) {
     this.logger.error(`❌ Failed to get ${category} issues:`, error);
     res.status(500).json({
-      success: false,
+     
       error: `Failed to get ${category} issues`,
       message: error.message
     });
@@ -123,7 +121,7 @@ async getCategoryAnalysis(category, endpoint, projectId = null) {
     
     if (!currentProjectId) {
       logger.warn('No project ID available for category analysis');
-      return { success: false, error: 'No project ID available' };
+      return { error: 'No project ID available' };
     }
     
     const url = `${API_CONFIG.baseURL}/api/analysis/${currentProjectId}/${category}/${endpoint}`;
@@ -149,7 +147,7 @@ async getCategoryAnalysis(category, endpoint, projectId = null) {
   } catch (error) {
     logger.error(`❌ Error fetching ${category} ${endpoint}:`, error);
     return {
-      success: false,
+     
       error: `Failed to fetch ${category} ${endpoint}`,
       message: error.message
     };

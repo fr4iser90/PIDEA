@@ -3,28 +3,28 @@
  * Provides browser-tab-like session management for IDE chat functionality
  */
 
-const ChatSession = require('@entities/ChatSession');
-const ChatMessage = require('@entities/ChatMessage');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ChatSession = require("@entities/ChatSession");
+const ChatMessage = require("@entities/ChatMessage");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class ChatSessionService {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.eventBus = dependencies.eventBus;
     this.ideManager = dependencies.ideManager;
     this.chatRepository = dependencies.chatRepository;
-    
+
     // Session management
     this.activeSessions = new Map(); // userId -> active session
     this.sessionHistory = new Map(); // userId -> session list
     this.sessionCounter = 0;
-    
+
     // Event listeners
     this.setupEventListeners();
-    
-    logger.info('✅ Chat session service initialized');
+
+    logger.info("✅ Chat session service initialized");
   }
 
   /**
@@ -33,7 +33,7 @@ class ChatSessionService {
    * @throws {Error} If dependencies are invalid
    */
   validateDependencies(dependencies) {
-    const required = ['eventBus', 'ideManager', 'chatRepository'];
+    const required = ["eventBus", "ideManager", "chatRepository"];
     for (const dep of required) {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
@@ -46,11 +46,11 @@ class ChatSessionService {
    */
   setupEventListeners() {
     if (this.eventBus) {
-      this.eventBus.subscribe('ide.portChanged', async (eventData) => {
+      this.eventBus.subscribe("ide.portChanged", async (eventData) => {
         await this.handlePortChange(eventData);
       });
-      
-      this.eventBus.subscribe('user.logout', async (eventData) => {
+
+      this.eventBus.subscribe("user.logout", async (eventData) => {
         await this.handleUserLogout(eventData);
       });
     }
@@ -63,17 +63,17 @@ class ChatSessionService {
    * @param {Object} metadata - Session metadata
    * @returns {Promise<ChatSession>} Created session
    */
-  async createSession(userId, title = 'New Chat', metadata = {}) {
+  async createSession(userId, title = "New Chat", metadata = {}) {
     try {
       // Get current IDE port
       const activePort = this.ideManager.getActivePort();
-      
+
       // Create session with IDE port
       const session = ChatSession.createSession(userId, title, {
         ...metadata,
         idePort: activePort,
         createdAt: new Date(),
-        status: 'active'
+        status: "active",
       });
 
       // Save to repository
@@ -89,12 +89,12 @@ class ChatSessionService {
       this.sessionHistory.get(userId).push(session);
 
       // Publish event
-      await this.eventBus.publish('chat.session.created', {
+      await this.eventBus.publish("chat.session.created", {
         sessionId: session.id,
         userId: userId,
         title: title,
         idePort: activePort,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       logger.info(`Created session ${session.id} for user`);
@@ -121,7 +121,7 @@ class ChatSessionService {
 
       // Check access
       if (!session.belongsToUser(userId)) {
-        throw new Error('Access denied to this session');
+        throw new Error("Access denied to this session");
       }
 
       // Update active session
@@ -129,11 +129,11 @@ class ChatSessionService {
       this.activeSessions.set(userId, session);
 
       // Publish event
-      await this.eventBus.publish('chat.session.switched', {
+      await this.eventBus.publish("chat.session.switched", {
         sessionId: session.id,
         userId: userId,
         previousSessionId: previousSession?.id,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       logger.info(`Switched to session ${sessionId} for user`);
@@ -152,7 +152,7 @@ class ChatSessionService {
   async getActiveSession(userId) {
     try {
       let activeSession = this.activeSessions.get(userId);
-      
+
       if (!activeSession) {
         // Create new session if none exists
         activeSession = await this.createSession(userId);
@@ -174,17 +174,17 @@ class ChatSessionService {
   async listSessions(userId, options = {}) {
     try {
       const { limit = 50, offset = 0, includeArchived = false } = options;
-      
+
       const sessions = await this.chatRepository.findSessionsByUserId(userId, {
         limit,
         offset,
-        includeArchived
+        includeArchived,
       });
 
       // Mark active session
       const activeSession = this.activeSessions.get(userId);
       if (activeSession) {
-        sessions.forEach(session => {
+        sessions.forEach((session) => {
           session.isActive = session.id === activeSession.id;
         });
       }
@@ -212,7 +212,7 @@ class ChatSessionService {
 
       // Check access
       if (!session.belongsToUser(userId)) {
-        throw new Error('Access denied to this session');
+        throw new Error("Access denied to this session");
       }
 
       // Close session
@@ -226,10 +226,10 @@ class ChatSessionService {
       }
 
       // Publish event
-      await this.eventBus.publish('chat.session.closed', {
+      await this.eventBus.publish("chat.session.closed", {
         sessionId: session.id,
         userId: userId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       logger.info(`Closed session ${sessionId} for user`);
@@ -257,12 +257,13 @@ class ChatSessionService {
 
       // Check access
       if (!session.belongsToUser(userId)) {
-        throw new Error('Access denied to this session');
+        throw new Error("Access denied to this session");
       }
 
       const { limit = 100, offset = 0 } = options;
-      const allMessages = await this.chatRepository.getSessionMessages(sessionId);
-      
+      const allMessages =
+        await this.chatRepository.getSessionMessages(sessionId);
+
       // Apply pagination manually since repositories don't support it
       let messages = allMessages;
       if (offset > 0) {
@@ -274,7 +275,10 @@ class ChatSessionService {
 
       return messages;
     } catch (error) {
-      logger.error(`Failed to get chat history for session ${sessionId}:`, error);
+      logger.error(
+        `Failed to get chat history for session ${sessionId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -286,17 +290,19 @@ class ChatSessionService {
   async handlePortChange(eventData) {
     try {
       const { port, userId } = eventData;
-      
+
       // Update active session's IDE port if exists
       const activeSession = this.activeSessions.get(userId);
       if (activeSession) {
         activeSession.metadata.idePort = port;
         await this.chatRepository.saveSession(activeSession);
-        
-        logger.info(`Updated IDE port to ${port} for session ${activeSession.id}`);
+
+        logger.info(
+          `Updated IDE port to ${port} for session ${activeSession.id}`,
+        );
       }
     } catch (error) {
-      logger.error('Failed to handle port change:', error);
+      logger.error("Failed to handle port change:", error);
     }
   }
 
@@ -307,13 +313,13 @@ class ChatSessionService {
   async handleUserLogout(eventData) {
     try {
       const { userId } = eventData;
-      
+
       // Clear active session
       this.activeSessions.delete(userId);
-      
+
       logger.info(`Cleared active session for user`);
     } catch (error) {
-      logger.error('Failed to handle user logout:', error);
+      logger.error("Failed to handle user logout:", error);
     }
   }
 
@@ -324,13 +330,15 @@ class ChatSessionService {
    */
   async getSessionStats(userId) {
     try {
-      const sessions = await this.listSessions(userId, { includeArchived: true });
-      
+      const sessions = await this.listSessions(userId, {
+        includeArchived: true,
+      });
+
       const stats = {
         total: sessions.length,
-        active: sessions.filter(s => s.status === 'active').length,
-        archived: sessions.filter(s => s.status === 'archived').length,
-        hasActiveSession: this.activeSessions.has(userId)
+        active: sessions.filter((s) => s.status === "active").length,
+        archived: sessions.filter((s) => s.status === "archived").length,
+        hasActiveSession: this.activeSessions.has(userId),
       };
 
       return stats;
@@ -341,4 +349,4 @@ class ChatSessionService {
   }
 }
 
-module.exports = ChatSessionService; 
+module.exports = ChatSessionService;

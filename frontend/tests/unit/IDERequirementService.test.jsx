@@ -19,7 +19,6 @@ describe('IDERequirementService', () => {
   describe('hasRunningIDE', () => {
     it('should return true when IDE is running', async () => {
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: [{ port: 9222, ideType: 'cursor' }]
       });
 
@@ -31,7 +30,6 @@ describe('IDERequirementService', () => {
 
     it('should return false when no IDE is running', async () => {
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: []
       });
 
@@ -56,7 +54,6 @@ describe('IDERequirementService', () => {
       ];
 
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: mockConfigs
       });
 
@@ -93,7 +90,6 @@ describe('IDERequirementService', () => {
       };
 
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: createdConfig
       });
 
@@ -108,7 +104,7 @@ describe('IDERequirementService', () => {
 
     it('should throw error on failure', async () => {
       apiCall.mockResolvedValueOnce({
-        success: false,
+       
         error: 'Validation failed'
       });
 
@@ -127,7 +123,6 @@ describe('IDERequirementService', () => {
       };
 
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: validationResult
       });
 
@@ -159,7 +154,6 @@ describe('IDERequirementService', () => {
       };
 
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: downloadLinks
       });
 
@@ -182,13 +176,11 @@ describe('IDERequirementService', () => {
     it('should show modal when no IDE running and no configurations', async () => {
       // Mock hasRunningIDE to return false
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: []
       });
 
       // Mock getActiveIDEConfigurations to return empty array
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: []
       });
 
@@ -200,7 +192,6 @@ describe('IDERequirementService', () => {
     it('should not show modal when IDE is running', async () => {
       // Mock hasRunningIDE to return true
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: [{ port: 9222, ideType: 'cursor' }]
       });
 
@@ -212,13 +203,11 @@ describe('IDERequirementService', () => {
     it('should not show modal when configurations exist', async () => {
       // Mock hasRunningIDE to return false
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: []
       });
 
       // Mock getActiveIDEConfigurations to return configurations
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: [{ id: 'config-1', ideType: 'cursor' }]
       });
 
@@ -241,7 +230,6 @@ describe('IDERequirementService', () => {
       const configData = { ideType: 'cursor', executablePath: '/usr/bin/cursor' };
 
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: { id: 'new-config', ...configData }
       });
 
@@ -249,7 +237,6 @@ describe('IDERequirementService', () => {
 
       // Cache should be cleared, so next call should make API request
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: []
       });
 

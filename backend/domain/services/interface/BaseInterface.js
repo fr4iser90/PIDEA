@@ -1,10 +1,10 @@
 /**
  * BaseInterface - Abstract base class for all interface implementations
- * 
+ *
  * This abstract class defines the contract that all interface implementations
  * must follow. It provides common functionality and enforces consistent
  * interface lifecycle management across different interface types.
- * 
+ *
  * @abstract
  */
 class BaseInterface {
@@ -17,17 +17,19 @@ class BaseInterface {
    */
   constructor(interfaceId, interfaceType, config = {}, dependencies = {}) {
     if (this.constructor === BaseInterface) {
-      throw new Error('BaseInterface is abstract and cannot be instantiated directly');
+      throw new Error(
+        "BaseInterface is abstract and cannot be instantiated directly",
+      );
     }
 
     this.interfaceId = interfaceId;
     this.interfaceType = interfaceType;
     this.interfaceConfig = config;
     this.dependencies = dependencies;
-    this.currentStatus = 'created';
+    this.currentStatus = "created";
     this.createdAt = new Date();
     this.lastActivity = new Date();
-    
+
     // Validate required properties
     this._validateConfiguration();
   }
@@ -39,7 +41,7 @@ class BaseInterface {
    * @returns {Promise<void>}
    */
   async initialize(config) {
-    throw new Error('initialize method must be implemented by subclass');
+    throw new Error("initialize method must be implemented by subclass");
   }
 
   /**
@@ -48,7 +50,7 @@ class BaseInterface {
    * @returns {Promise<void>}
    */
   async start() {
-    throw new Error('start method must be implemented by subclass');
+    throw new Error("start method must be implemented by subclass");
   }
 
   /**
@@ -57,7 +59,7 @@ class BaseInterface {
    * @returns {Promise<void>}
    */
   async stop() {
-    throw new Error('stop method must be implemented by subclass');
+    throw new Error("stop method must be implemented by subclass");
   }
 
   /**
@@ -66,7 +68,7 @@ class BaseInterface {
    * @returns {Promise<void>}
    */
   async destroy() {
-    throw new Error('destroy method must be implemented by subclass');
+    throw new Error("destroy method must be implemented by subclass");
   }
 
   /**
@@ -123,11 +125,22 @@ class BaseInterface {
    * @returns {void}
    */
   setStatus(status) {
-    const validStatuses = ['created', 'initialized', 'starting', 'running', 'stopping', 'stopped', 'error', 'destroyed'];
+    const validStatuses = [
+      "created",
+      "initialized",
+      "starting",
+      "running",
+      "stopping",
+      "stopped",
+      "error",
+      "destroyed",
+    ];
     if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid status: ${status}. Valid statuses are: ${validStatuses.join(', ')}`);
+      throw new Error(
+        `Invalid status: ${status}. Valid statuses are: ${validStatuses.join(", ")}`,
+      );
     }
-    
+
     this.currentStatus = status;
     this.lastActivity = new Date();
   }
@@ -145,7 +158,7 @@ class BaseInterface {
    * @returns {boolean} True if interface is running
    */
   isRunning() {
-    return this.currentStatus === 'running';
+    return this.currentStatus === "running";
   }
 
   /**
@@ -153,7 +166,7 @@ class BaseInterface {
    * @returns {boolean} True if interface is stopped
    */
   isStopped() {
-    return this.currentStatus === 'stopped';
+    return this.currentStatus === "stopped";
   }
 
   /**
@@ -161,7 +174,7 @@ class BaseInterface {
    * @returns {boolean} True if interface is in error state
    */
   isError() {
-    return this.currentStatus === 'error';
+    return this.currentStatus === "error";
   }
 
   /**
@@ -175,7 +188,7 @@ class BaseInterface {
       status: this.currentStatus,
       createdAt: this.createdAt,
       lastActivity: this.lastActivity,
-      config: this.interfaceConfig
+      config: this.interfaceConfig,
     };
   }
 
@@ -186,16 +199,19 @@ class BaseInterface {
    * @throws {Error} If configuration is invalid
    */
   _validateConfiguration() {
-    if (!this.interfaceId || typeof this.interfaceId !== 'string') {
-      throw new Error('interfaceId must be a non-empty string');
+    if (!this.interfaceId || typeof this.interfaceId !== "string") {
+      throw new Error("interfaceId must be a non-empty string");
     }
-    
-    if (!this.interfaceType || typeof this.interfaceType !== 'string') {
-      throw new Error('interfaceType must be a non-empty string');
+
+    if (!this.interfaceType || typeof this.interfaceType !== "string") {
+      throw new Error("interfaceType must be a non-empty string");
     }
-    
-    if (typeof this.interfaceConfig !== 'object' || this.interfaceConfig === null) {
-      throw new Error('interfaceConfig must be an object');
+
+    if (
+      typeof this.interfaceConfig !== "object" ||
+      this.interfaceConfig === null
+    ) {
+      throw new Error("interfaceConfig must be an object");
     }
   }
 
@@ -213,10 +229,10 @@ class BaseInterface {
       interfaceId: this.interfaceId,
       interfaceType: this.interfaceType,
       status: this.currentStatus,
-      ...meta
+      ...meta,
     };
-    
-    if (typeof logger[level] === 'function') {
+
+    if (typeof logger[level] === "function") {
       logger[level](message, logData);
     } else {
       console.log(`[${level.toUpperCase()}] ${message}`, logData);
@@ -231,11 +247,11 @@ class BaseInterface {
    * @returns {void}
    */
   _handleError(error, operation) {
-    this.setStatus('error');
-    this._log('error', `Interface ${operation} failed`, {
+    this.setStatus("error");
+    this._log("error", `Interface ${operation} failed`, {
       error: error.message,
       stack: error.stack,
-      operation
+      operation,
     });
   }
 
@@ -247,17 +263,17 @@ class BaseInterface {
    * @param {Object} details - Additional error details
    * @returns {Object} Error response object
    */
-  _createErrorResponse(message, code = 'INTERFACE_ERROR', details = {}) {
+  _createErrorResponse(message, code = "INTERFACE_ERROR", details = {}) {
     return {
-      success: false,
+     
       error: {
         message,
         code,
         interfaceId: this.interfaceId,
         interfaceType: this.interfaceType,
         timestamp: new Date().toISOString(),
-        ...details
-      }
+        ...details,
+      },
     };
   }
 
@@ -270,14 +286,13 @@ class BaseInterface {
    */
   _createSuccessResponse(data = null, meta = {}) {
     return {
-      success: true,
       data,
       meta: {
         interfaceId: this.interfaceId,
         interfaceType: this.interfaceType,
         timestamp: new Date().toISOString(),
-        ...meta
-      }
+        ...meta,
+      },
     };
   }
 }

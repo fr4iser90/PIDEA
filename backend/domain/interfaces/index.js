@@ -1,20 +1,20 @@
 /**
  * Domain Interfaces - Module Exports
- * 
+ *
  * This module provides exports for all domain interfaces,
  * including workflow interfaces and handler interfaces.
  */
 
 // Workflow Interfaces
-const IWorkflow = require('./IWorkflow');
-const IWorkflowContext = require('./IWorkflowContext');
+const IWorkflow = require("./IWorkflow");
+const IWorkflowContext = require("./IWorkflowContext");
 
 // Handler Interfaces
-const IHandler = require('./IHandler');
-const IHandlerAdapter = require('./IHandlerAdapter');
+const IHandler = require("./IHandler");
+const IHandlerAdapter = require("./IHandlerAdapter");
 
 // Registry Interfaces
-const IStandardRegistry = require('./IStandardRegistry');
+const IStandardRegistry = require("./IStandardRegistry");
 
 // Module exports
 module.exports = {
@@ -32,15 +32,15 @@ module.exports = {
   // Convenience exports
   workflow: {
     IWorkflow,
-    IWorkflowContext
+    IWorkflowContext,
   },
 
   handler: {
     IHandler,
-    IHandlerAdapter
+    IHandlerAdapter,
   },
 
   registry: {
-    IStandardRegistry
-  }
-}; 
+    IStandardRegistry,
+  },
+};

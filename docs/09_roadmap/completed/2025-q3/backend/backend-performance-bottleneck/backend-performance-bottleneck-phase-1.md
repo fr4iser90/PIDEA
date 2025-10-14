@@ -39,7 +39,6 @@ async execute(context) {
   const cachedMessages = this.chatCacheService.getChatHistory(context.port);
   if (cachedMessages) {
     return {
-      success: true,
       messages: cachedMessages,
       fromCache: true
     };
@@ -52,7 +51,7 @@ async execute(context) {
   this.chatCacheService.setChatHistory(context.port, messages);
   
   return {
-    success: true,
+   
     messages: messages,
     fromCache: false
   };
@@ -254,7 +253,6 @@ async execute(context) {
         logger.info(`Returning cached messages for port ${context.port}: ${cachedMessages.length} messages`);
         
         return {
-          success: true,
           stepId,
           sessionId: context.sessionId,
           port: context.port,

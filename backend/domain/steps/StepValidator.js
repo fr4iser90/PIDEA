@@ -3,8 +3,8 @@
  * Validates step module structure and configuration
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('StepValidator');
+const Logger = require("@logging/Logger");
+const logger = new Logger("StepValidator");
 
 class StepValidator {
   /**
@@ -20,52 +20,54 @@ class StepValidator {
       warnings: [],
       type: null,
       hasConfig: false,
-      hasExecute: false
+      hasExecute: false,
     };
 
     try {
       // Check if module exists
       if (!stepModule) {
-        result.errors.push('Step module is null or undefined');
+        result.errors.push("Step module is null or undefined");
         return result;
       }
 
       // Determine module type
-      if (typeof stepModule === 'function' && stepModule.prototype) {
-        result.type = 'class';
-      } else if (typeof stepModule === 'object' && stepModule !== null) {
-        result.type = 'object';
+      if (typeof stepModule === "function" && stepModule.prototype) {
+        result.type = "class";
+      } else if (typeof stepModule === "object" && stepModule !== null) {
+        result.type = "object";
       } else {
         result.errors.push(`Invalid module type: ${typeof stepModule}`);
         return result;
       }
 
       // Check for config
-      if (result.type === 'class') {
+      if (result.type === "class") {
         result.hasConfig = !!stepModule.prototype.config || !!stepModule.config;
       } else {
         result.hasConfig = !!stepModule.config;
       }
 
       // Check for execute method
-      if (result.type === 'class') {
-        result.hasExecute = typeof stepModule.prototype.execute === 'function' || typeof stepModule.execute === 'function';
+      if (result.type === "class") {
+        result.hasExecute =
+          typeof stepModule.prototype.execute === "function" ||
+          typeof stepModule.execute === "function";
       } else {
-        result.hasExecute = typeof stepModule.execute === 'function';
+        result.hasExecute = typeof stepModule.execute === "function";
       }
 
       // Validate required components
       if (!result.hasConfig) {
-        result.warnings.push('Step has no config property');
+        result.warnings.push("Step has no config property");
       }
 
       if (!result.hasExecute) {
-        result.errors.push('Step has no execute method');
+        result.errors.push("Step has no execute method");
       }
 
       // Check for proper export
-      if (result.type === 'class' && !stepModule.name) {
-        result.warnings.push('Step class has no name property');
+      if (result.type === "class" && !stepModule.name) {
+        result.warnings.push("Step class has no name property");
       }
 
       // Determine if valid
@@ -77,9 +79,8 @@ class StepValidator {
         hasConfig: result.hasConfig,
         hasExecute: result.hasExecute,
         errors: result.errors.length,
-        warnings: result.warnings.length
+        warnings: result.warnings.length,
       });
-
     } catch (error) {
       result.errors.push(`Validation error: ${error.message}`);
       logger.error(`Step validation failed for ${stepPath}:`, error.message);
@@ -97,40 +98,39 @@ class StepValidator {
     const result = {
       isValid: false,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     try {
       if (!config) {
-        result.errors.push('Step configuration is missing');
+        result.errors.push("Step configuration is missing");
         return result;
       }
 
       // Check required fields
       if (!config.name) {
-        result.errors.push('Step name is required');
+        result.errors.push("Step name is required");
       }
 
       if (!config.type) {
-        result.warnings.push('Step type is recommended');
+        result.warnings.push("Step type is recommended");
       }
 
       if (!config.category) {
-        result.warnings.push('Step category is recommended');
+        result.warnings.push("Step category is recommended");
       }
 
       if (!config.description) {
-        result.warnings.push('Step description is recommended');
+        result.warnings.push("Step description is recommended");
       }
 
       // Validate dependencies
       if (config.dependencies && !Array.isArray(config.dependencies)) {
-        result.errors.push('Dependencies must be an array');
+        result.errors.push("Dependencies must be an array");
       }
 
       // Determine if valid
       result.isValid = result.errors.length === 0;
-
     } catch (error) {
       result.errors.push(`Configuration validation error: ${error.message}`);
     }
@@ -139,4 +139,4 @@ class StepValidator {
   }
 }
 
-module.exports = StepValidator; 
+module.exports = StepValidator;

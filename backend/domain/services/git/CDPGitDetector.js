@@ -1,15 +1,15 @@
-const Logger = require('@logging/Logger');
-const path = require('path');
-const fs = require('fs');
-const { execSync } = require('child_process');
-const logger = new Logger('CDPGitDetector');
+const Logger = require("@logging/Logger");
+const path = require("path");
+const fs = require("fs");
+const { execSync } = require("child_process");
+const logger = new Logger("CDPGitDetector");
 
 /**
  * CDP-Based Git Detector
- * 
+ *
  * Extracts Git repository information using Chrome DevTools Protocol (CDP)
  * instead of terminal-based commands. Provides faster and more reliable Git detection.
- * 
+ *
  * @class CDPGitDetector
  */
 class CDPGitDetector {
@@ -20,7 +20,7 @@ class CDPGitDetector {
       commandTimeout: options.commandTimeout || 5000, // 5 seconds for Git commands
       enableCDPExtraction: options.enableCDPExtraction !== false, // Default true
       enableLocalExtraction: options.enableLocalExtraction !== false, // Default true
-      ...options
+      ...options,
     };
 
     // Git detection state
@@ -28,11 +28,11 @@ class CDPGitDetector {
     this.extractionHistory = new Map(); // workspacePath -> extraction history
     this.isInitialized = false;
 
-    logger.info('CDPGitDetector initialized', {
+    logger.info("CDPGitDetector initialized", {
       cacheTimeout: this.options.cacheTimeout,
       commandTimeout: this.options.commandTimeout,
       enableCDPExtraction: this.options.enableCDPExtraction,
-      enableLocalExtraction: this.options.enableLocalExtraction
+      enableLocalExtraction: this.options.enableLocalExtraction,
     });
   }
 
@@ -42,21 +42,20 @@ class CDPGitDetector {
    */
   async initialize() {
     if (this.isInitialized) {
-      logger.debug('CDPGitDetector already initialized');
+      logger.debug("CDPGitDetector already initialized");
       return;
     }
 
     try {
-      logger.info('Initializing CDPGitDetector...');
-      
+      logger.info("Initializing CDPGitDetector...");
+
       // Initialize CDP connection manager
       await this.cdpManager.initialize();
-      
+
       this.isInitialized = true;
-      logger.info('CDPGitDetector initialized successfully');
-      
+      logger.info("CDPGitDetector initialized successfully");
     } catch (error) {
-      logger.error('Failed to initialize CDPGitDetector:', error.message);
+      logger.error("Failed to initialize CDPGitDetector:", error.message);
       throw error;
     }
   }
@@ -69,9 +68,9 @@ class CDPGitDetector {
   async extractGitInfoFromCDP(connection) {
     try {
       const { page } = connection;
-      
-      logger.debug('Extracting Git information from IDE via CDP');
-      
+
+      logger.debug("Extracting Git information from IDE via CDP");
+
       const gitInfo = await page.evaluate(() => {
         const info = {
           isGitRepo: false,
@@ -80,86 +79,93 @@ class CDPGitDetector {
           remotes: {},
           status: null,
           lastCommit: null,
-          extractionMethod: 'cdp'
+          extractionMethod: "cdp",
         };
 
         // Method 1: Try VS Code Git extension API
         if (window.vscode && window.vscode.extensions) {
           try {
-            const gitExtension = window.vscode.extensions.getExtension('vscode.git');
+            const gitExtension =
+              window.vscode.extensions.getExtension("vscode.git");
             if (gitExtension && gitExtension.exports) {
               const git = gitExtension.exports.getAPI(1);
               if (git && git.repositories && git.repositories.length > 0) {
                 const repo = git.repositories[0];
-                
+
                 info.isGitRepo = true;
                 info.gitRoot = repo.rootUri?.fsPath;
-                
+
                 if (repo.state) {
                   info.currentBranch = repo.state.head?.name;
-                  
+
                   if (repo.state.remotes) {
                     info.remotes = {};
                     for (const remote of repo.state.remotes) {
                       info.remotes[remote.name] = remote.fetchUrl;
                     }
                   }
-                  
+
                   // Get status information
                   if (repo.state.workingTreeChanges) {
                     info.status = {
                       modified: repo.state.workingTreeChanges.length,
-                      staged: repo.state.indexChanges?.length || 0
+                      staged: repo.state.indexChanges?.length || 0,
                     };
                   }
                 }
-                
-                logger.debug('Git info extracted via VS Code API');
+
+                logger.debug("Git info extracted via VS Code API");
                 return info;
               }
             }
           } catch (vscodeError) {
-            logger.debug('VS Code Git API not available:', vscodeError.message);
+            logger.debug("VS Code Git API not available:", vscodeError.message);
           }
         }
 
         // Method 2: Look for Git-related DOM elements
-        const gitElements = document.querySelectorAll('[data-git], .git-status, .scm-viewlet, .git-branch');
+        const gitElements = document.querySelectorAll(
+          "[data-git], .git-status, .scm-viewlet, .git-branch",
+        );
         for (const element of gitElements) {
-          const gitData = element.getAttribute('data-git') || 
-                         element.getAttribute('title') || 
-                         element.textContent;
-          
-          if (gitData && gitData.includes('git')) {
+          const gitData =
+            element.getAttribute("data-git") ||
+            element.getAttribute("title") ||
+            element.textContent;
+
+          if (gitData && gitData.includes("git")) {
             info.isGitRepo = true;
-            info.extractionMethod = 'dom_element';
-            
+            info.extractionMethod = "dom_element";
+
             // Try to extract branch name
             const branchMatch = gitData.match(/branch[:\s]+([^\s]+)/i);
             if (branchMatch) {
               info.currentBranch = branchMatch[1];
             }
-            
-            logger.debug('Git info extracted via DOM elements');
+
+            logger.debug("Git info extracted via DOM elements");
             return info;
           }
         }
 
         // Method 3: Check Git status bar
-        const gitStatusBar = document.querySelector('.statusbar-item[title*="git"], .git-status, [data-testid*="git"]');
+        const gitStatusBar = document.querySelector(
+          '.statusbar-item[title*="git"], .git-status, [data-testid*="git"]',
+        );
         if (gitStatusBar) {
-          const title = gitStatusBar.getAttribute('title') || gitStatusBar.textContent;
-          if (title && title.toLowerCase().includes('git')) {
+          const title =
+            gitStatusBar.getAttribute("title") || gitStatusBar.textContent;
+          if (title && title.toLowerCase().includes("git")) {
             info.isGitRepo = true;
-            info.extractionMethod = 'status_bar';
-            
+            info.extractionMethod = "status_bar";
+
             // Try to extract branch from status bar
             const branchMatch = title.match(/(?:branch|on)\s+([^\s]+)/i);
             if (branchMatch) {
               info.currentBranch = branchMatch[1];
             }
-            
-            logger.debug('Git info extracted via status bar');
+
+            logger.debug("Git info extracted via status bar");
             return info;
           }
         }
@@ -167,16 +173,15 @@ class CDPGitDetector {
         return info;
       });
 
-      logger.debug('CDP Git extraction completed:', {
+      logger.debug("CDP Git extraction completed:", {
         isGitRepo: gitInfo.isGitRepo,
         currentBranch: gitInfo.currentBranch,
-        extractionMethod: gitInfo.extractionMethod
+        extractionMethod: gitInfo.extractionMethod,
       });
 
       return gitInfo;
-
     } catch (error) {
-      logger.error('Failed to extract Git info from CDP:', error.message);
+      logger.error("Failed to extract Git info from CDP:", error.message);
       return null;
     }
   }
@@ -192,10 +197,10 @@ class CDPGitDetector {
         return null;
       }
 
-      const gitPath = path.join(workspacePath, '.git');
+      const gitPath = path.join(workspacePath, ".git");
       if (!fs.existsSync(gitPath)) {
         logger.debug(`No Git repository found at: ${workspacePath}`);
-        return { isGitRepo: false, extractionMethod: 'local' };
+        return { isGitRepo: false, extractionMethod: "local" };
       }
 
       logger.debug(`Extracting Git info locally for: ${workspacePath}`);
@@ -204,22 +209,22 @@ class CDPGitDetector {
         isGitRepo: true,
         gitRoot: workspacePath,
         gitPath: gitPath,
-        extractionMethod: 'local'
+        extractionMethod: "local",
       };
 
       // Get Git configuration
       try {
-        const config = execSync('git config --list', { 
-          cwd: workspacePath, 
-          encoding: 'utf8',
-          timeout: this.options.commandTimeout
+        const config = execSync("git config --list", {
+          cwd: workspacePath,
+          encoding: "utf8",
+          timeout: this.options.commandTimeout,
         });
-        
-        const configLines = config.split('\n').filter(line => line.trim());
+
+        const configLines = config.split("\n").filter((line) => line.trim());
         gitInfo.config = {};
-        
+
         for (const line of configLines) {
-          const [key, value] = line.split('=');
+          const [key, value] = line.split("=");
           if (key && value) {
             gitInfo.config[key] = value;
           }
@@ -230,10 +235,10 @@ class CDPGitDetector {
 
       // Get current branch
       try {
-        const branch = execSync('git branch --show-current', { 
-          cwd: workspacePath, 
-          encoding: 'utf8',
-          timeout: this.options.commandTimeout
+        const branch = execSync("git branch --show-current", {
+          cwd: workspacePath,
+          encoding: "utf8",
+          timeout: this.options.commandTimeout,
         }).trim();
         gitInfo.currentBranch = branch;
       } catch (branchError) {
@@ -242,20 +247,20 @@ class CDPGitDetector {
 
       // Get remote information
       try {
-        const remotes = execSync('git remote -v', { 
-          cwd: workspacePath, 
-          encoding: 'utf8',
-          timeout: this.options.commandTimeout
+        const remotes = execSync("git remote -v", {
+          cwd: workspacePath,
+          encoding: "utf8",
+          timeout: this.options.commandTimeout,
         });
-        
-        const remoteLines = remotes.split('\n').filter(line => line.trim());
+
+        const remoteLines = remotes.split("\n").filter((line) => line.trim());
         gitInfo.remotes = {};
-        
+
         for (const line of remoteLines) {
-          const parts = line.split('\t');
+          const parts = line.split("\t");
           if (parts.length >= 2) {
             const name = parts[0];
-            const url = parts[1].split(' ')[0];
+            const url = parts[1].split(" ")[0];
             gitInfo.remotes[name] = url;
           }
         }
@@ -265,18 +270,18 @@ class CDPGitDetector {
 
       // Get status
       try {
-        const status = execSync('git status --porcelain', { 
-          cwd: workspacePath, 
-          encoding: 'utf8',
-          timeout: this.options.commandTimeout
+        const status = execSync("git status --porcelain", {
+          cwd: workspacePath,
+          encoding: "utf8",
+          timeout: this.options.commandTimeout,
         });
-        
-        const statusLines = status.split('\n').filter(line => line.trim());
+
+        const statusLines = status.split("\n").filter((line) => line.trim());
         gitInfo.status = {
-          modified: statusLines.filter(line => line.startsWith('M')).length,
-          added: statusLines.filter(line => line.startsWith('A')).length,
-          deleted: statusLines.filter(line => line.startsWith('D')).length,
-          untracked: statusLines.filter(line => line.startsWith('??')).length
+          modified: statusLines.filter((line) => line.startsWith("M")).length,
+          added: statusLines.filter((line) => line.startsWith("A")).length,
+          deleted: statusLines.filter((line) => line.startsWith("D")).length,
+          untracked: statusLines.filter((line) => line.startsWith("??")).length,
         };
       } catch (statusError) {
         gitInfo.statusError = statusError.message;
@@ -284,10 +289,10 @@ class CDPGitDetector {
 
       // Get last commit
       try {
-        const lastCommit = execSync('git log -1 --oneline', { 
-          cwd: workspacePath, 
-          encoding: 'utf8',
-          timeout: this.options.commandTimeout
+        const lastCommit = execSync("git log -1 --oneline", {
+          cwd: workspacePath,
+          encoding: "utf8",
+          timeout: this.options.commandTimeout,
         }).trim();
         gitInfo.lastCommit = lastCommit;
       } catch (commitError) {
@@ -296,10 +301,16 @@ class CDPGitDetector {
 
       logger.debug(`Local Git extraction completed for: ${workspacePath}`);
       return gitInfo;
-
     } catch (error) {
-      logger.error(`Error extracting Git info locally for ${workspacePath}:`, error.message);
-      return { isGitRepo: false, error: error.message, extractionMethod: 'local' };
+      logger.error(
+        `Error extracting Git info locally for ${workspacePath}:`,
+        error.message,
+      );
+      return {
+        isGitRepo: false,
+        error: error.message,
+        extractionMethod: "local",
+      };
     }
   }
 
@@ -311,10 +322,10 @@ class CDPGitDetector {
    */
   async getGitInformation(workspacePath, port = null) {
     const startTime = Date.now();
-    
+
     try {
       logger.info(`Getting Git information for: ${workspacePath}`);
-      
+
       // Check cache first
       const cachedResult = this.getCachedGitInfo(workspacePath);
       if (cachedResult) {
@@ -331,7 +342,7 @@ class CDPGitDetector {
             port,
             async (connection) => {
               return await this.extractGitInfoFromCDP(connection);
-            }
+            },
           );
 
           if (cdpResult && cdpResult.isGitRepo) {
@@ -339,7 +350,10 @@ class CDPGitDetector {
             logger.debug(`Git info extracted via CDP for port ${port}`);
           }
         } catch (cdpError) {
-          logger.debug(`CDP Git extraction failed for port ${port}:`, cdpError.message);
+          logger.debug(
+            `CDP Git extraction failed for port ${port}:`,
+            cdpError.message,
+          );
         }
       }
 
@@ -372,18 +386,23 @@ class CDPGitDetector {
         isGitRepo: gitInfo.isGitRepo,
         currentBranch: gitInfo.currentBranch,
         extractionMethod: gitInfo.extractionMethod,
-        extractionDuration: gitInfo.extractionDuration
+        extractionDuration: gitInfo.extractionDuration,
       });
 
       return gitInfo;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error(`Failed to get Git information for ${workspacePath} after ${duration}ms:`, error.message);
-      
+      logger.error(
+        `Failed to get Git information for ${workspacePath} after ${duration}ms:`,
+        error.message,
+      );
+
       // Record failed extraction
-      this.recordExtractionHistory(workspacePath, { error: error.message, extractionTime: Date.now() });
-      
+      this.recordExtractionHistory(workspacePath, {
+        error: error.message,
+        extractionTime: Date.now(),
+      });
+
       return null;
     }
   }
@@ -398,11 +417,13 @@ class CDPGitDetector {
     const cacheEntry = {
       gitInfo,
       timestamp: Date.now(),
-      ttl
+      ttl,
     };
 
     this.gitCache.set(workspacePath, cacheEntry);
-    logger.debug(`Cached Git information for: ${workspacePath} with TTL ${ttl}ms`);
+    logger.debug(
+      `Cached Git information for: ${workspacePath} with TTL ${ttl}ms`,
+    );
   }
 
   /**
@@ -442,7 +463,7 @@ class CDPGitDetector {
    */
   clearAllGitCache() {
     this.gitCache.clear();
-    logger.debug('Cleared all Git cache');
+    logger.debug("Cleared all Git cache");
   }
 
   /**
@@ -458,7 +479,7 @@ class CDPGitDetector {
     const history = this.extractionHistory.get(workspacePath);
     history.push({
       ...result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Keep only last 10 extractions
@@ -492,7 +513,7 @@ class CDPGitDetector {
    */
   clearAllExtractionHistory() {
     this.extractionHistory.clear();
-    logger.debug('Cleared all extraction history');
+    logger.debug("Cleared all extraction history");
   }
 
   /**
@@ -500,20 +521,26 @@ class CDPGitDetector {
    * @returns {Object} Statistics object
    */
   getStatistics() {
-    const totalExtractions = Array.from(this.extractionHistory.values())
-      .reduce((sum, history) => sum + history.length, 0);
+    const totalExtractions = Array.from(this.extractionHistory.values()).reduce(
+      (sum, history) => sum + history.length,
+      0,
+    );
 
-    const successfulExtractions = Array.from(this.extractionHistory.values())
-      .reduce((sum, history) => sum + history.filter(h => !h.error).length, 0);
+    const successfulExtractions = Array.from(
+      this.extractionHistory.values(),
+    ).reduce((sum, history) => sum + history.filter((h) => !h.error).length, 0);
 
     return {
       totalExtractions,
       successfulExtractions,
-      successRate: totalExtractions > 0 ? (successfulExtractions / totalExtractions) * 100 : 0,
+      successRate:
+        totalExtractions > 0
+          ? (successfulExtractions / totalExtractions) * 100
+          : 0,
       workspacesWithHistory: this.extractionHistory.size,
       cacheSize: this.gitCache.size,
       options: this.options,
-      isInitialized: this.isInitialized
+      isInitialized: this.isInitialized,
     };
   }
 
@@ -522,19 +549,18 @@ class CDPGitDetector {
    * @returns {Promise<void>}
    */
   async destroy() {
-    logger.info('Destroying CDPGitDetector...');
-    
+    logger.info("Destroying CDPGitDetector...");
+
     try {
       // Clear all cache and history
       this.clearAllGitCache();
       this.clearAllExtractionHistory();
-      
+
       this.isInitialized = false;
-      
-      logger.info('CDPGitDetector destroyed successfully');
-      
+
+      logger.info("CDPGitDetector destroyed successfully");
     } catch (error) {
-      logger.error('Error destroying CDPGitDetector:', error.message);
+      logger.error("Error destroying CDPGitDetector:", error.message);
       throw error;
     }
   }

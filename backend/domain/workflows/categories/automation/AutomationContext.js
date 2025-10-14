@@ -2,7 +2,7 @@
  * AutomationContext - Automation execution context
  * Manages context data for automation execution
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class AutomationContext {
   constructor(
@@ -12,7 +12,7 @@ class AutomationContext {
     projectId = null,
     data = {},
     metadata = {},
-    createdAt = new Date()
+    createdAt = new Date(),
   ) {
     this._id = id;
     this._taskId = taskId;
@@ -140,7 +140,7 @@ class AutomationContext {
   setAutomationLevel(level) {
     this._automationLevel = level;
     this._updatedAt = new Date();
-    this._addToHistory('automation_level_set', { level });
+    this._addToHistory("automation_level_set", { level });
   }
 
   /**
@@ -150,7 +150,7 @@ class AutomationContext {
   setConfidenceScore(score) {
     this._confidenceScore = score;
     this._updatedAt = new Date();
-    this._addToHistory('confidence_score_set', { score });
+    this._addToHistory("confidence_score_set", { score });
   }
 
   /**
@@ -161,7 +161,7 @@ class AutomationContext {
   setData(key, value) {
     this._data[key] = value;
     this._updatedAt = new Date();
-    this._addToHistory('data_set', { key, value });
+    this._addToHistory("data_set", { key, value });
   }
 
   /**
@@ -181,7 +181,7 @@ class AutomationContext {
   setMetadata(key, value) {
     this._metadata[key] = value;
     this._updatedAt = new Date();
-    this._addToHistory('metadata_set', { key, value });
+    this._addToHistory("metadata_set", { key, value });
   }
 
   /**
@@ -203,11 +203,11 @@ class AutomationContext {
       id: uuidv4(),
       message,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
     this._errors.push(error);
     this._updatedAt = new Date();
-    this._addToHistory('error_added', error);
+    this._addToHistory("error_added", error);
   }
 
   /**
@@ -220,11 +220,11 @@ class AutomationContext {
       id: uuidv4(),
       message,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
     this._warnings.push(warning);
     this._updatedAt = new Date();
-    this._addToHistory('warning_added', warning);
+    this._addToHistory("warning_added", warning);
   }
 
   /**
@@ -233,7 +233,7 @@ class AutomationContext {
   clearErrors() {
     this._errors = [];
     this._updatedAt = new Date();
-    this._addToHistory('errors_cleared', {});
+    this._addToHistory("errors_cleared", {});
   }
 
   /**
@@ -242,7 +242,7 @@ class AutomationContext {
   clearWarnings() {
     this._warnings = [];
     this._updatedAt = new Date();
-    this._addToHistory('warnings_cleared', {});
+    this._addToHistory("warnings_cleared", {});
   }
 
   /**
@@ -255,7 +255,7 @@ class AutomationContext {
       id: uuidv4(),
       action,
       data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -277,7 +277,7 @@ class AutomationContext {
       warningCount: this._warnings.length,
       historyCount: this._executionHistory.length,
       createdAt: this._createdAt.toISOString(),
-      updatedAt: this._updatedAt.toISOString()
+      updatedAt: this._updatedAt.toISOString(),
     };
   }
 
@@ -302,7 +302,9 @@ class AutomationContext {
    * @returns {Object|null} Latest error
    */
   getLatestError() {
-    return this._errors.length > 0 ? this._errors[this._errors.length - 1] : null;
+    return this._errors.length > 0
+      ? this._errors[this._errors.length - 1]
+      : null;
   }
 
   /**
@@ -310,7 +312,9 @@ class AutomationContext {
    * @returns {Object|null} Latest warning
    */
   getLatestWarning() {
-    return this._warnings.length > 0 ? this._warnings[this._warnings.length - 1] : null;
+    return this._warnings.length > 0
+      ? this._warnings[this._warnings.length - 1]
+      : null;
   }
 
   /**
@@ -331,7 +335,7 @@ class AutomationContext {
       errors: this._errors,
       warnings: this._warnings,
       createdAt: this._createdAt.toISOString(),
-      updatedAt: this._updatedAt.toISOString()
+      updatedAt: this._updatedAt.toISOString(),
     };
   }
 
@@ -348,7 +352,7 @@ class AutomationContext {
       data.projectId,
       data.data,
       data.metadata,
-      data.createdAt
+      data.createdAt,
     );
 
     if (data.automationLevel) {
@@ -388,7 +392,7 @@ class AutomationContext {
       task.projectId || options.projectId,
       options.data || {},
       options.metadata || {},
-      new Date()
+      new Date(),
     );
   }
 
@@ -405,7 +409,10 @@ class AutomationContext {
     this._metadata = { ...this._metadata, ...other._metadata };
 
     // Merge execution history
-    this._executionHistory = [...this._executionHistory, ...other._executionHistory];
+    this._executionHistory = [
+      ...this._executionHistory,
+      ...other._executionHistory,
+    ];
 
     // Merge errors
     this._errors = [...this._errors, ...other._errors];
@@ -420,4 +427,4 @@ class AutomationContext {
   }
 }
 
-module.exports = AutomationContext; 
+module.exports = AutomationContext;

@@ -11,25 +11,25 @@ class GitWorkflowResult {
     this.timestamp = data.timestamp || new Date();
     this.error = data.error || null;
     this.errorCode = data.errorCode || null;
-    
+
     // Phase results
     this.branchResult = data.branchResult || null;
     this.workflowResult = data.workflowResult || null;
     this.pullRequestResult = data.pullRequestResult || null;
     this.reviewResult = data.reviewResult || null;
     this.mergeResult = data.mergeResult || null;
-    
+
     // Metadata
     this.metadata = data.metadata || {};
     this.context = data.context || {};
     this.metrics = data.metrics || {};
-    
+
     // Status tracking
     this.phases = data.phases || [];
     this.currentPhase = data.currentPhase || null;
     this.completedPhases = data.completedPhases || [];
     this.failedPhases = data.failedPhases || [];
-    
+
     // Validation
     this.validationResult = data.validationResult || null;
     this.warnings = data.warnings || [];
@@ -43,9 +43,8 @@ class GitWorkflowResult {
    */
   static success(data = {}) {
     return new GitWorkflowResult({
-      success: true,
       timestamp: new Date(),
-      ...data
+      ...data,
     });
   }
 
@@ -57,10 +56,10 @@ class GitWorkflowResult {
    */
   static failure(error, data = {}) {
     return new GitWorkflowResult({
-      success: false,
+     
       error,
       timestamp: new Date(),
-      ...data
+      ...data,
     });
   }
 
@@ -77,10 +76,10 @@ class GitWorkflowResult {
       duration: result.duration || 0,
       timestamp: result.timestamp || new Date(),
       error: result.error || null,
-      metadata: result.metadata || {}
+      metadata: result.metadata || {},
     };
-    
-    this.addCompletedPhase('branch_creation');
+
+    this.addCompletedPhase("branch_creation");
   }
 
   /**
@@ -95,10 +94,10 @@ class GitWorkflowResult {
       duration: result.duration || 0,
       timestamp: result.timestamp || new Date(),
       error: result.error || null,
-      metadata: result.metadata || {}
+      metadata: result.metadata || {},
     };
-    
-    this.addCompletedPhase('workflow_execution');
+
+    this.addCompletedPhase("workflow_execution");
   }
 
   /**
@@ -117,10 +116,10 @@ class GitWorkflowResult {
       duration: result.duration || 0,
       timestamp: result.timestamp || new Date(),
       error: result.error || null,
-      metadata: result.metadata || {}
+      metadata: result.metadata || {},
     };
-    
-    this.addCompletedPhase('pull_request_creation');
+
+    this.addCompletedPhase("pull_request_creation");
   }
 
   /**
@@ -137,10 +136,10 @@ class GitWorkflowResult {
       duration: result.duration || 0,
       timestamp: result.timestamp || new Date(),
       error: result.error || null,
-      metadata: result.metadata || {}
+      metadata: result.metadata || {},
     };
-    
-    this.addCompletedPhase('code_review');
+
+    this.addCompletedPhase("code_review");
   }
 
   /**
@@ -157,10 +156,10 @@ class GitWorkflowResult {
       duration: result.duration || 0,
       timestamp: result.timestamp || new Date(),
       error: result.error || null,
-      metadata: result.metadata || {}
+      metadata: result.metadata || {},
     };
-    
-    this.addCompletedPhase('merge');
+
+    this.addCompletedPhase("merge");
   }
 
   /**
@@ -171,9 +170,9 @@ class GitWorkflowResult {
     if (!this.completedPhases.includes(phase)) {
       this.completedPhases.push(phase);
     }
-    
+
     if (this.failedPhases.includes(phase)) {
-      this.failedPhases = this.failedPhases.filter(p => p !== phase);
+      this.failedPhases = this.failedPhases.filter((p) => p !== phase);
     }
   }
 
@@ -186,7 +185,7 @@ class GitWorkflowResult {
     if (!this.failedPhases.includes(phase)) {
       this.failedPhases.push(phase);
     }
-    
+
     this.addError(error, phase);
   }
 
@@ -203,11 +202,11 @@ class GitWorkflowResult {
    * @param {string} error - Error message
    * @param {string} phase - Phase where error occurred
    */
-  addError(error, phase = 'unknown') {
+  addError(error, phase = "unknown") {
     this.errors.push({
       message: error,
       phase,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -216,11 +215,11 @@ class GitWorkflowResult {
    * @param {string} warning - Warning message
    * @param {string} phase - Phase where warning occurred
    */
-  addWarning(warning, phase = 'unknown') {
+  addWarning(warning, phase = "unknown") {
     this.warnings.push({
       message: warning,
       phase,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -234,7 +233,7 @@ class GitWorkflowResult {
       errors: result.errors || [],
       warnings: result.warnings || [],
       duration: result.duration || 0,
-      timestamp: result.timestamp || new Date()
+      timestamp: result.timestamp || new Date(),
     };
   }
 
@@ -246,7 +245,7 @@ class GitWorkflowResult {
     this.metrics = {
       ...this.metrics,
       ...metrics,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -275,13 +274,13 @@ class GitWorkflowResult {
    */
   getPhaseResult(phase) {
     const phaseResults = {
-      'branch_creation': this.branchResult,
-      'workflow_execution': this.workflowResult,
-      'pull_request_creation': this.pullRequestResult,
-      'code_review': this.reviewResult,
-      'merge': this.mergeResult
+      branch_creation: this.branchResult,
+      workflow_execution: this.workflowResult,
+      pull_request_creation: this.pullRequestResult,
+      code_review: this.reviewResult,
+      merge: this.mergeResult,
     };
-    
+
     return phaseResults[phase] || null;
   }
 
@@ -299,13 +298,13 @@ class GitWorkflowResult {
    */
   getStatus() {
     if (this.success && this.failedPhases.length === 0) {
-      return 'completed';
+      return "completed";
     } else if (this.failedPhases.length > 0) {
-      return 'failed';
+      return "failed";
     } else if (this.currentPhase) {
-      return 'in_progress';
+      return "in_progress";
     } else {
-      return 'unknown';
+      return "unknown";
     }
   }
 
@@ -327,16 +326,16 @@ class GitWorkflowResult {
     if (this.duration > 0) {
       return this.duration;
     }
-    
+
     // Calculate from individual phase durations
     const phases = [
       this.branchResult,
       this.workflowResult,
       this.pullRequestResult,
       this.reviewResult,
-      this.mergeResult
+      this.mergeResult,
     ];
-    
+
     return phases.reduce((total, phase) => {
       return total + (phase?.duration || 0);
     }, 0);
@@ -358,7 +357,7 @@ class GitWorkflowResult {
       failedPhases: this.failedPhases,
       errorCount: this.errors.length,
       warningCount: this.warnings.length,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -377,30 +376,30 @@ class GitWorkflowResult {
       timestamp: this.timestamp,
       error: this.error,
       errorCode: this.errorCode,
-      
+
       // Phase results
       phases: {
         branch: this.branchResult,
         workflow: this.workflowResult,
         pullRequest: this.pullRequestResult,
         review: this.reviewResult,
-        merge: this.mergeResult
+        merge: this.mergeResult,
       },
-      
+
       // Status tracking
       completedPhases: this.completedPhases,
       failedPhases: this.failedPhases,
       currentPhase: this.currentPhase,
-      
+
       // Validation and issues
       validation: this.validationResult,
       errors: this.errors,
       warnings: this.warnings,
-      
+
       // Metadata
       metadata: this.metadata,
       context: this.context,
-      metrics: this.metrics
+      metrics: this.metrics,
     };
   }
 
@@ -422,7 +421,9 @@ class GitWorkflowResult {
       const data = JSON.parse(json);
       return new GitWorkflowResult(data);
     } catch (error) {
-      throw new Error(`Failed to parse GitWorkflowResult from JSON: ${error.message}`);
+      throw new Error(
+        `Failed to parse GitWorkflowResult from JSON: ${error.message}`,
+      );
     }
   }
 
@@ -441,7 +442,9 @@ class GitWorkflowResult {
       errorCode: this.errorCode,
       branchResult: this.branchResult ? { ...this.branchResult } : null,
       workflowResult: this.workflowResult ? { ...this.workflowResult } : null,
-      pullRequestResult: this.pullRequestResult ? { ...this.pullRequestResult } : null,
+      pullRequestResult: this.pullRequestResult
+        ? { ...this.pullRequestResult }
+        : null,
       reviewResult: this.reviewResult ? { ...this.reviewResult } : null,
       mergeResult: this.mergeResult ? { ...this.mergeResult } : null,
       metadata: { ...this.metadata },
@@ -451,11 +454,13 @@ class GitWorkflowResult {
       currentPhase: this.currentPhase,
       completedPhases: [...this.completedPhases],
       failedPhases: [...this.failedPhases],
-      validationResult: this.validationResult ? { ...this.validationResult } : null,
+      validationResult: this.validationResult
+        ? { ...this.validationResult }
+        : null,
       warnings: [...this.warnings],
-      errors: [...this.errors]
+      errors: [...this.errors],
     });
   }
 }
 
-module.exports = GitWorkflowResult; 
+module.exports = GitWorkflowResult;

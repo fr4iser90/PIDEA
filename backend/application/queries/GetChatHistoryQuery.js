@@ -7,15 +7,15 @@ class GetChatHistoryQuery {
 
   validate() {
     if (this.limit < 1 || this.limit > 1000) {
-      throw new Error('Limit must be between 1 and 1000');
+      throw new Error("Limit must be between 1 and 1000");
     }
-    
+
     if (this.offset < 0) {
-      throw new Error('Offset must be non-negative');
+      throw new Error("Offset must be non-negative");
     }
-    
+
     // sessionId is optional now
   }
 }
 
-module.exports = GetChatHistoryQuery; 
+module.exports = GetChatHistoryQuery;

@@ -1,18 +1,18 @@
 /**
  * Test Database Manager
- * 
+ *
  * Manages test database connections, setup, and cleanup for database testing.
  * Provides isolation between tests and supports multiple database types.
  */
 
-const DatabaseConnection = require('../../infrastructure/database/DatabaseConnection');
-const Logger = require('../../infrastructure/logging/Logger');
+const DatabaseConnection = require("../../infrastructure/database/DatabaseConnection");
+const Logger = require("../../infrastructure/logging/Logger");
 
 class TestDatabaseManager {
   constructor() {
     this.connections = new Map();
     this.testDatabases = new Set();
-    this.logger = new Logger('TestDatabaseManager');
+    this.logger = new Logger("TestDatabaseManager");
   }
 
   /**
@@ -22,9 +22,9 @@ class TestDatabaseManager {
    * @param {Object} config - Additional configuration
    * @returns {Promise<DatabaseConnection>} Database connection
    */
-  async createTestDatabase(type = 'sqlite', name = null, config = {}) {
+  async createTestDatabase(type = "sqlite", name = null, config = {}) {
     const testConfig = this.getTestConfig(type, name, config);
-    const connectionKey = `${type}-${name || 'default'}`;
+    const connectionKey = `${type}-${name || "default"}`;
 
     // Check if connection already exists
     if (this.connections.has(connectionKey)) {
@@ -41,7 +41,10 @@ class TestDatabaseManager {
       this.logger.info(`Created test database: ${connectionKey}`);
       return connection;
     } catch (error) {
-      this.logger.error(`Failed to create test database ${connectionKey}:`, error);
+      this.logger.error(
+        `Failed to create test database ${connectionKey}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -57,42 +60,42 @@ class TestDatabaseManager {
     const baseConfig = {
       monitoring: false,
       optimization: false,
-      ...config
+      ...config,
     };
 
     switch (type) {
-      case 'sqlite':
+      case "sqlite":
         return {
-          type: 'sqlite',
-          database: name || ':memory:',
+          type: "sqlite",
+          database: name || ":memory:",
           enableWAL: true,
-          synchronous: 'NORMAL',
-          journalMode: 'WAL',
-          ...baseConfig
+          synchronous: "NORMAL",
+          journalMode: "WAL",
+          ...baseConfig,
         };
 
-      case 'postgresql':
+      case "postgresql":
         return {
-          type: 'postgresql',
-          host: process.env.TEST_DB_HOST || 'localhost',
+          type: "postgresql",
+          host: process.env.TEST_DB_HOST || "localhost",
           port: process.env.TEST_DB_PORT || 5432,
-          database: name || process.env.TEST_DB_NAME || 'pidea_test',
-          username: process.env.TEST_DB_USER || 'test',
-          password: process.env.TEST_DB_PASSWORD || 'test',
+          database: name || process.env.TEST_DB_NAME || "pidea_test",
+          username: process.env.TEST_DB_USER || "test",
+          password: process.env.TEST_DB_PASSWORD || "test",
           max: 10,
           idleTimeoutMillis: 30000,
           connectionTimeoutMillis: 2000,
-          ...baseConfig
+          ...baseConfig,
         };
 
-      case 'memory':
+      case "memory":
         return {
-          type: 'sqlite',
-          database: ':memory:',
+          type: "sqlite",
+          database: ":memory:",
           enableWAL: true,
-          synchronous: 'NORMAL',
-          journalMode: 'WAL',
-          ...baseConfig
+          synchronous: "NORMAL",
+          journalMode: "WAL",
+          ...baseConfig,
         };
 
       default:
@@ -135,7 +138,10 @@ class TestDatabaseManager {
       this.testDatabases.delete(connectionKey);
       this.logger.info(`Cleaned up test database: ${connectionKey}`);
     } catch (error) {
-      this.logger.error(`Failed to cleanup test database ${connectionKey}:`, error);
+      this.logger.error(
+        `Failed to cleanup test database ${connectionKey}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -146,14 +152,14 @@ class TestDatabaseManager {
    */
   async cleanupAllTestDatabases() {
     const cleanupPromises = Array.from(this.testDatabases).map(
-      connectionKey => this.cleanupTestDatabase(connectionKey)
+      (connectionKey) => this.cleanupTestDatabase(connectionKey),
     );
 
     try {
       await Promise.all(cleanupPromises);
-      this.logger.info('Cleaned up all test databases');
+      this.logger.info("Cleaned up all test databases");
     } catch (error) {
-      this.logger.error('Failed to cleanup some test databases:', error);
+      this.logger.error("Failed to cleanup some test databases:", error);
       throw error;
     }
   }
@@ -196,7 +202,7 @@ class TestDatabaseManager {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (post_id) REFERENCES posts (id),
         FOREIGN KEY (user_id) REFERENCES users (id)
-      )`
+      )`,
     ];
 
     const tablesToCreate = tables.length > 0 ? tables : defaultTables;
@@ -205,7 +211,7 @@ class TestDatabaseManager {
       try {
         await connection.execute(tableSQL);
       } catch (error) {
-        this.logger.error('Failed to create test table:', error);
+        this.logger.error("Failed to create test table:", error);
         throw error;
       }
     }
@@ -220,7 +226,7 @@ class TestDatabaseManager {
    * @returns {Promise<void>}
    */
   async cleanupTestData(connection, tables = []) {
-    const defaultTables = ['comments', 'posts', 'users'];
+    const defaultTables = ["comments", "posts", "users"];
     const tablesToClean = tables.length > 0 ? tables : defaultTables;
 
     for (const tableName of tablesToClean) {
@@ -247,33 +253,33 @@ class TestDatabaseManager {
         type: connection.getType(),
         tables: [],
         indexes: [],
-        constraints: []
+        constraints: [],
       };
 
       // Get tables
       const tables = await connection.query(
-        "SELECT name FROM sqlite_master WHERE type='table'"
+        "SELECT name FROM sqlite_master WHERE type='table'",
       );
-      result.tables = tables.map(t => t.name);
+      result.tables = tables.map((t) => t.name);
 
       // Get indexes
       const indexes = await connection.query(
-        "SELECT name FROM sqlite_master WHERE type='index'"
+        "SELECT name FROM sqlite_master WHERE type='index'",
       );
-      result.indexes = indexes.map(i => i.name);
+      result.indexes = indexes.map((i) => i.name);
 
       // Get constraints (SQLite specific)
-      if (connection.getType() === 'sqlite') {
+      if (connection.getType() === "sqlite") {
         const constraints = await connection.query(
-          "SELECT sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL"
+          "SELECT sql FROM sqlite_master WHERE type='table' AND sql IS NOT NULL",
         );
-        result.constraints = constraints.map(c => c.sql);
+        result.constraints = constraints.map((c) => c.sql);
       }
 
-      this.logger.info('Test database setup verified');
+      this.logger.info("Test database setup verified");
       return result;
     } catch (error) {
-      this.logger.error('Failed to verify test database setup:', error);
+      this.logger.error("Failed to verify test database setup:", error);
       throw error;
     }
   }
@@ -290,19 +296,21 @@ class TestDatabaseManager {
         testDatabaseCount: this.testDatabases.size,
         tables: 0,
         records: 0,
-        indexes: 0
+        indexes: 0,
       };
 
       // Get table count
       const tables = await connection.query(
-        "SELECT name FROM sqlite_master WHERE type='table'"
+        "SELECT name FROM sqlite_master WHERE type='table'",
       );
       stats.tables = tables.length;
 
       // Get total record count
       for (const table of tables) {
         try {
-          const count = await connection.query(`SELECT COUNT(*) as count FROM ${table.name}`);
+          const count = await connection.query(
+            `SELECT COUNT(*) as count FROM ${table.name}`,
+          );
           stats.records += count[0].count;
         } catch (error) {
           // Ignore errors for system tables
@@ -311,13 +319,13 @@ class TestDatabaseManager {
 
       // Get index count
       const indexes = await connection.query(
-        "SELECT name FROM sqlite_master WHERE type='index'"
+        "SELECT name FROM sqlite_master WHERE type='index'",
       );
       stats.indexes = indexes.length;
 
       return stats;
     } catch (error) {
-      this.logger.error('Failed to get test database stats:', error);
+      this.logger.error("Failed to get test database stats:", error);
       throw error;
     }
   }
@@ -334,16 +342,16 @@ class TestDatabaseManager {
 
       // Drop all tables
       const tables = await connection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
       );
 
       for (const table of tables) {
         await connection.execute(`DROP TABLE ${table.name}`);
       }
 
-      this.logger.info('Test database reset to clean state');
+      this.logger.info("Test database reset to clean state");
     } catch (error) {
-      this.logger.error('Failed to reset test database:', error);
+      this.logger.error("Failed to reset test database:", error);
       throw error;
     }
   }
@@ -370,7 +378,7 @@ class TestDatabaseManager {
     await this.cleanupAllTestDatabases();
     this.connections.clear();
     this.testDatabases.clear();
-    this.logger.info('Test database manager destroyed');
+    this.logger.info("Test database manager destroyed");
   }
 }
 

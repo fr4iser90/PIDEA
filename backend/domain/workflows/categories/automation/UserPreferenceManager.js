@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 /**
  * UserPreferenceManager - User preference management
  * Manages user automation preferences with persistence
@@ -7,7 +7,8 @@ const logger = new Logger('Logger');
 class UserPreferenceManager {
   constructor(dependencies = {}) {
     this.userRepository = dependencies.userRepository;
-    this.automationPreferencesRepository = dependencies.automationPreferencesRepository;
+    this.automationPreferencesRepository =
+      dependencies.automationPreferencesRepository;
     this.logger = dependencies.logger || console;
     this.cache = new Map();
     this.cacheTimeout = 300000; // 5 minutes
@@ -29,18 +30,20 @@ class UserPreferenceManager {
         automationLevel,
         confidenceThreshold: options.confidenceThreshold || 0.8,
         preferences: options.preferences || {},
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(userId, {
         data: preference,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.saveUserPreference(preference);
+        await this.automationPreferencesRepository.saveUserPreference(
+          preference,
+        );
       }
 
       // Update user metadata if repository available
@@ -48,13 +51,16 @@ class UserPreferenceManager {
         await this.userRepository.updateMetadata(userId, {
           automationPreference: automationLevel,
           automationConfidenceThreshold: preference.confidenceThreshold,
-          lastAutomationPreferenceUpdate: new Date()
+          lastAutomationPreferenceUpdate: new Date(),
         });
       }
 
       return preference;
     } catch (error) {
-      this.logger.error(`Failed to set preference for user ${userId}:`, error.message);
+      this.logger.error(
+        `Failed to set preference for user ${userId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -68,14 +74,15 @@ class UserPreferenceManager {
     try {
       // Check cache first
       const cached = this.cache.get(userId);
-      if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+      if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
         return cached.data;
       }
 
       // Load from database
       let preference = null;
       if (this.automationPreferencesRepository) {
-        preference = await this.automationPreferencesRepository.getUserPreference(userId);
+        preference =
+          await this.automationPreferencesRepository.getUserPreference(userId);
       }
 
       // Fallback to user metadata
@@ -85,9 +92,11 @@ class UserPreferenceManager {
           preference = {
             userId,
             automationLevel: user.metadata.automationPreference,
-            confidenceThreshold: user.metadata.automationConfidenceThreshold || 0.8,
+            confidenceThreshold:
+              user.metadata.automationConfidenceThreshold || 0.8,
             preferences: user.metadata.automationPreferences || {},
-            updatedAt: user.metadata.lastAutomationPreferenceUpdate || user.updatedAt
+            updatedAt:
+              user.metadata.lastAutomationPreferenceUpdate || user.updatedAt,
           };
         }
       }
@@ -96,13 +105,16 @@ class UserPreferenceManager {
       if (preference) {
         this.cache.set(userId, {
           data: preference,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
 
       return preference;
     } catch (error) {
-      this.logger.error(`Failed to get preference for user ${userId}:`, error.message);
+      this.logger.error(
+        `Failed to get preference for user ${userId}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -143,23 +155,28 @@ class UserPreferenceManager {
       const updatedPreference = {
         ...preference,
         preferences: { ...preference.preferences, ...metadata },
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(userId, {
         data: updatedPreference,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.saveUserPreference(updatedPreference);
+        await this.automationPreferencesRepository.saveUserPreference(
+          updatedPreference,
+        );
       }
 
       return updatedPreference;
     } catch (error) {
-      this.logger.error(`Failed to update metadata for user ${userId}:`, error.message);
+      this.logger.error(
+        `Failed to update metadata for user ${userId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -187,13 +204,16 @@ class UserPreferenceManager {
           automationPreference: null,
           automationConfidenceThreshold: null,
           automationPreferences: null,
-          lastAutomationPreferenceUpdate: new Date()
+          lastAutomationPreferenceUpdate: new Date(),
         });
       }
 
       return true;
     } catch (error) {
-      this.logger.error(`Failed to delete preference for user ${userId}:`, error.message);
+      this.logger.error(
+        `Failed to delete preference for user ${userId}:`,
+        error.message,
+      );
       return false;
     }
   }
@@ -209,9 +229,11 @@ class UserPreferenceManager {
         return [];
       }
 
-      return await this.automationPreferencesRepository.getAllUserPreferences(options);
+      return await this.automationPreferencesRepository.getAllUserPreferences(
+        options,
+      );
     } catch (error) {
-      this.logger.error('Failed to get all user preferences:', error.message);
+      this.logger.error("Failed to get all user preferences:", error.message);
       return [];
     }
   }
@@ -227,9 +249,14 @@ class UserPreferenceManager {
         return [];
       }
 
-      return await this.automationPreferencesRepository.getUsersByAutomationLevel(automationLevel);
+      return await this.automationPreferencesRepository.getUsersByAutomationLevel(
+        automationLevel,
+      );
     } catch (error) {
-      this.logger.error(`Failed to get users by automation level ${automationLevel}:`, error.message);
+      this.logger.error(
+        `Failed to get users by automation level ${automationLevel}:`,
+        error.message,
+      );
       return [];
     }
   }
@@ -256,14 +283,16 @@ class UserPreferenceManager {
   getCacheStats() {
     const now = Date.now();
     const entries = Array.from(this.cache.entries());
-    const validEntries = entries.filter(([_, value]) => (now - value.timestamp) < this.cacheTimeout);
+    const validEntries = entries.filter(
+      ([_, value]) => now - value.timestamp < this.cacheTimeout,
+    );
     const expiredEntries = entries.length - validEntries.length;
 
     return {
       totalEntries: entries.length,
       validEntries: validEntries.length,
       expiredEntries,
-      cacheTimeout: this.cacheTimeout
+      cacheTimeout: this.cacheTimeout,
     };
   }
 
@@ -273,11 +302,11 @@ class UserPreferenceManager {
   cleanExpiredCache() {
     const now = Date.now();
     for (const [userId, value] of this.cache.entries()) {
-      if ((now - value.timestamp) >= this.cacheTimeout) {
+      if (now - value.timestamp >= this.cacheTimeout) {
         this.cache.delete(userId);
       }
     }
   }
 }
 
-module.exports = UserPreferenceManager; 
+module.exports = UserPreferenceManager;

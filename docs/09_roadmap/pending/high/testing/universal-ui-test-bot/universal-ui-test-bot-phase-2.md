@@ -159,12 +159,11 @@ class TestBotController {
       await this.testResultRepository.saveTestResult(result);
       
       res.json({
-        success: true,
         data: result
       });
     } catch (error) {
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -181,12 +180,11 @@ class TestBotController {
       });
       
       res.json({
-        success: true,
         data: results
       });
     } catch (error) {
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }

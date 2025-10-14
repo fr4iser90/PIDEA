@@ -51,7 +51,6 @@ export default class TaskWorkflowRepository {
       logger.info('Task creation workflow started successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'started',
         projectId,
@@ -113,7 +112,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow executed successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'executing',
         projectId: currentProjectId,
@@ -146,7 +144,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow status retrieved successfully');
       
       return {
-        success: true,
         workflowId,
         status: response.data.status,
         progress: response.data.progress,
@@ -181,7 +178,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow cancelled successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'cancelled',
         timestamp: new Date()
@@ -218,7 +214,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow updated successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'updated',
         timestamp: new Date()
@@ -250,7 +245,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow history retrieved successfully');
       
       return {
-        success: true,
         workflowId,
         history: response.data.history || [],
         timestamp: new Date()
@@ -282,7 +276,6 @@ export default class TaskWorkflowRepository {
       logger.info('Project workflows retrieved successfully');
       
       return {
-        success: true,
         projectId,
         workflows: response.data.workflows || [],
         timestamp: new Date()
@@ -314,7 +307,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow logs retrieved successfully');
       
       return {
-        success: true,
         workflowId,
         logs: response.data.logs || [],
         timestamp: new Date()
@@ -346,7 +338,6 @@ export default class TaskWorkflowRepository {
       logger.info('Workflow retry started successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'retrying',
         timestamp: new Date()

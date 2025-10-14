@@ -329,7 +329,6 @@ describe('IDEStartModal', () => {
       // Mock API call
       const { apiCall } = require('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockResolvedValueOnce({
-        success: true,
         data: { port: 9222, ideType: 'cursor' }
       });
 

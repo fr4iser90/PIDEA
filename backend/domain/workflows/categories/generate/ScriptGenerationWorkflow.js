@@ -1,13 +1,13 @@
 /**
  * ScriptGenerationWorkflow - Domain Layer: Script Generation Workflow
- * 
+ *
  * This workflow handles script generation tasks, orchestrating the
  * creation of various types of scripts (build scripts, deployment
  * scripts, utility scripts, etc.).
  */
-const IWorkflow = require('../../../interfaces/IWorkflow');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const IWorkflow = require("../../../interfaces/IWorkflow");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class ScriptGenerationWorkflow extends IWorkflow {
   /**
@@ -29,9 +29,9 @@ class ScriptGenerationWorkflow extends IWorkflow {
    */
   async execute(context) {
     try {
-      this.logger.info('ScriptGenerationWorkflow: Starting script generation', {
+      this.logger.info("ScriptGenerationWorkflow: Starting script generation", {
         scriptType: context.scriptType,
-        targetPath: context.targetPath
+        targetPath: context.targetPath,
       });
 
       // Validate input
@@ -46,41 +46,42 @@ class ScriptGenerationWorkflow extends IWorkflow {
       // Save script to target location
       const result = await this.saveScript(scriptContent, context);
 
-      this.logger.info('ScriptGenerationWorkflow: Script generation completed', {
-        scriptType: context.scriptType,
-        targetPath: context.targetPath,
-        success: true
-      });
+      this.logger.info(
+        "ScriptGenerationWorkflow: Script generation completed",
+        {
+          scriptType: context.scriptType,
+          targetPath: context.targetPath,
+         
+        },
+      );
 
       return {
-        success: true,
         data: {
           scriptContent,
           targetPath: context.targetPath,
           scriptType: context.scriptType,
-          metadata: result.metadata
+          metadata: result.metadata,
         },
         metadata: {
-          taskMode: 'script_generation',
+          taskMode: "script_generation",
           executionTime: Date.now(),
-          scriptSize: scriptContent.length
-        }
+          scriptSize: scriptContent.length,
+        },
       };
-
     } catch (error) {
-      this.logger.error('ScriptGenerationWorkflow: Script generation failed', {
+      this.logger.error("ScriptGenerationWorkflow: Script generation failed", {
         error: error.message,
         scriptType: context.scriptType,
-        targetPath: context.targetPath
+        targetPath: context.targetPath,
       });
 
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
-          taskMode: 'script_generation',
-          executionTime: Date.now()
-        }
+          taskMode: "script_generation",
+          executionTime: Date.now(),
+        },
       };
     }
   }
@@ -92,24 +93,24 @@ class ScriptGenerationWorkflow extends IWorkflow {
    */
   async validateInput(context) {
     if (!context.scriptType) {
-      throw new Error('Script type is required');
+      throw new Error("Script type is required");
     }
 
     if (!context.targetPath) {
-      throw new Error('Target path is required');
+      throw new Error("Target path is required");
     }
 
     const validScriptTypes = [
-      'build',
-      'deploy',
-      'test',
-      'lint',
-      'format',
-      'clean',
-      'setup',
-      'migrate',
-      'backup',
-      'restore'
+      "build",
+      "deploy",
+      "test",
+      "lint",
+      "format",
+      "clean",
+      "setup",
+      "migrate",
+      "backup",
+      "restore",
     ];
 
     if (!validScriptTypes.includes(context.scriptType)) {
@@ -133,7 +134,7 @@ class ScriptGenerationWorkflow extends IWorkflow {
       template,
       scriptType,
       targetPath,
-      options
+      options,
     });
 
     return scriptContent;
@@ -147,11 +148,14 @@ class ScriptGenerationWorkflow extends IWorkflow {
    */
   async validateScript(scriptContent, context) {
     if (!scriptContent || scriptContent.trim().length === 0) {
-      throw new Error('Generated script content is empty');
+      throw new Error("Generated script content is empty");
     }
 
     // Validate script syntax and structure
-    await this.validationService.validateScript(scriptContent, context.scriptType);
+    await this.validationService.validateScript(
+      scriptContent,
+      context.scriptType,
+    );
   }
 
   /**
@@ -176,8 +180,8 @@ class ScriptGenerationWorkflow extends IWorkflow {
         size: scriptContent.length,
         extension,
         scriptType,
-        savedAt: new Date()
-      }
+        savedAt: new Date(),
+      },
     };
   }
 
@@ -188,19 +192,19 @@ class ScriptGenerationWorkflow extends IWorkflow {
    */
   getScriptExtension(scriptType) {
     const extensionMap = {
-      build: 'sh',
-      deploy: 'sh',
-      test: 'sh',
-      lint: 'sh',
-      format: 'sh',
-      clean: 'sh',
-      setup: 'sh',
-      migrate: 'sh',
-      backup: 'sh',
-      restore: 'sh'
+      build: "sh",
+      deploy: "sh",
+      test: "sh",
+      lint: "sh",
+      format: "sh",
+      clean: "sh",
+      setup: "sh",
+      migrate: "sh",
+      backup: "sh",
+      restore: "sh",
     };
 
-    return extensionMap[scriptType] || 'sh';
+    return extensionMap[scriptType] || "sh";
   }
 
   /**
@@ -209,22 +213,22 @@ class ScriptGenerationWorkflow extends IWorkflow {
    */
   getMetadata() {
     return {
-      name: 'Script Generation Workflow',
-      description: 'Workflow for generating various types of scripts',
-      version: '1.0.0',
-      type: 'script_generation',
+      name: "Script Generation Workflow",
+      description: "Workflow for generating various types of scripts",
+      version: "1.0.0",
+      type: "script_generation",
       supportedScriptTypes: [
-        'build',
-        'deploy',
-        'test',
-        'lint',
-        'format',
-        'clean',
-        'setup',
-        'migrate',
-        'backup',
-        'restore'
-      ]
+        "build",
+        "deploy",
+        "test",
+        "lint",
+        "format",
+        "clean",
+        "setup",
+        "migrate",
+        "backup",
+        "restore",
+      ],
     };
   }
 
@@ -233,7 +237,7 @@ class ScriptGenerationWorkflow extends IWorkflow {
    * @returns {Array<string>} Required dependencies
    */
   getDependencies() {
-    return ['scriptService', 'templateService', 'validationService'];
+    return ["scriptService", "templateService", "validationService"];
   }
 
   /**
@@ -241,7 +245,7 @@ class ScriptGenerationWorkflow extends IWorkflow {
    * @returns {string} Workflow version
    */
   getVersion() {
-    return '1.0.0';
+    return "1.0.0";
   }
 
   /**
@@ -249,8 +253,8 @@ class ScriptGenerationWorkflow extends IWorkflow {
    * @returns {string} Workflow type
    */
   getType() {
-    return 'script_generation';
+    return "script_generation";
   }
 }
 
-module.exports = ScriptGenerationWorkflow; 
+module.exports = ScriptGenerationWorkflow;

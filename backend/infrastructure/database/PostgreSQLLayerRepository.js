@@ -3,13 +3,13 @@
  * Handles database operations for Layer entities
  */
 
-const Layer = require('../../domain/entities/Layer');
-const LayerType = require('../../domain/value-objects/LayerType');
+const Layer = require("../../domain/entities/Layer");
+const LayerType = require("../../domain/value-objects/LayerType");
 
 class PostgreSQLLayerRepository {
   constructor(databaseConnection) {
     this.databaseConnection = databaseConnection;
-    this.tableName = 'layers';
+    this.tableName = "layers";
   }
 
   async init() {
@@ -21,10 +21,10 @@ class PostgreSQLLayerRepository {
     const row = layer.toDatabaseRow();
     const columns = Object.keys(row);
     const values = Object.values(row);
-    const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+    const placeholders = values.map((_, index) => `$${index + 1}`).join(", ");
 
     const sql = `
-      INSERT INTO ${this.tableName} (${columns.join(', ')})
+      INSERT INTO ${this.tableName} (${columns.join(", ")})
       VALUES (${placeholders})
       RETURNING *
     `;
@@ -39,7 +39,7 @@ class PostgreSQLLayerRepository {
 
   async findById(id) {
     const sql = `SELECT * FROM ${this.tableName} WHERE id = $1`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [id]);
       if (result.rows.length === 0) {
@@ -53,7 +53,7 @@ class PostgreSQLLayerRepository {
 
   async findByName(name) {
     const sql = `SELECT * FROM ${this.tableName} WHERE name = $1`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [name]);
       if (result.rows.length === 0) {
@@ -67,10 +67,10 @@ class PostgreSQLLayerRepository {
 
   async findByType(layerType) {
     const sql = `SELECT * FROM ${this.tableName} WHERE layer_type = $1 ORDER BY order_index`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [layerType]);
-      return result.rows.map(row => Layer.fromDatabaseRow(row));
+      return result.rows.map((row) => Layer.fromDatabaseRow(row));
     } catch (error) {
       throw new Error(`Failed to find layers by type: ${error.message}`);
     }
@@ -78,10 +78,10 @@ class PostgreSQLLayerRepository {
 
   async findAll() {
     const sql = `SELECT * FROM ${this.tableName} ORDER BY order_index`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql);
-      return result.rows.map(row => Layer.fromDatabaseRow(row));
+      return result.rows.map((row) => Layer.fromDatabaseRow(row));
     } catch (error) {
       throw new Error(`Failed to find all layers: ${error.message}`);
     }
@@ -89,10 +89,10 @@ class PostgreSQLLayerRepository {
 
   async findActive() {
     const sql = `SELECT * FROM ${this.tableName} WHERE is_active = true ORDER BY order_index`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql);
-      return result.rows.map(row => Layer.fromDatabaseRow(row));
+      return result.rows.map((row) => Layer.fromDatabaseRow(row));
     } catch (error) {
       throw new Error(`Failed to find active layers: ${error.message}`);
     }
@@ -100,9 +100,13 @@ class PostgreSQLLayerRepository {
 
   async update(layer) {
     const row = layer.toDatabaseRow();
-    const columns = Object.keys(row).filter(key => key !== 'id' && key !== 'created_at' && key !== 'created_by');
-    const values = columns.map(col => row[col]);
-    const setClause = columns.map((col, index) => `${col} = $${index + 1}`).join(', ');
+    const columns = Object.keys(row).filter(
+      (key) => key !== "id" && key !== "created_at" && key !== "created_by",
+    );
+    const values = columns.map((col) => row[col]);
+    const setClause = columns
+      .map((col, index) => `${col} = $${index + 1}`)
+      .join(", ");
 
     const sql = `
       UPDATE ${this.tableName}
@@ -112,9 +116,12 @@ class PostgreSQLLayerRepository {
     `;
 
     try {
-      const result = await this.databaseConnection.execute(sql, [...values, layer.id]);
+      const result = await this.databaseConnection.execute(sql, [
+        ...values,
+        layer.id,
+      ]);
       if (result.rows.length === 0) {
-        throw new Error('Layer not found');
+        throw new Error("Layer not found");
       }
       return Layer.fromDatabaseRow(result.rows[0]);
     } catch (error) {
@@ -124,11 +131,11 @@ class PostgreSQLLayerRepository {
 
   async delete(id) {
     const sql = `DELETE FROM ${this.tableName} WHERE id = $1 RETURNING *`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [id]);
       if (result.rows.length === 0) {
-        throw new Error('Layer not found');
+        throw new Error("Layer not found");
       }
       return Layer.fromDatabaseRow(result.rows[0]);
     } catch (error) {
@@ -138,7 +145,7 @@ class PostgreSQLLayerRepository {
 
   async count() {
     const sql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql);
       return parseInt(result.rows[0].count);
@@ -149,7 +156,7 @@ class PostgreSQLLayerRepository {
 
   async countByType(layerType) {
     const sql = `SELECT COUNT(*) as count FROM ${this.tableName} WHERE layer_type = $1`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [layerType]);
       return parseInt(result.rows[0].count);
@@ -160,7 +167,7 @@ class PostgreSQLLayerRepository {
 
   async exists(id) {
     const sql = `SELECT EXISTS(SELECT 1 FROM ${this.tableName} WHERE id = $1)`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [id]);
       return result.rows[0].exists;
@@ -171,7 +178,7 @@ class PostgreSQLLayerRepository {
 
   async existsByName(name) {
     const sql = `SELECT EXISTS(SELECT 1 FROM ${this.tableName} WHERE name = $1)`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql, [name]);
       return result.rows[0].exists;
@@ -182,7 +189,7 @@ class PostgreSQLLayerRepository {
 
   async getNextOrderIndex() {
     const sql = `SELECT MAX(order_index) as max_order FROM ${this.tableName}`;
-    
+
     try {
       const result = await this.databaseConnection.execute(sql);
       const maxOrder = result.rows[0].max_order;

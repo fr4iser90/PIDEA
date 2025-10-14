@@ -1,17 +1,17 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const cors = require('cors');
-const hpp = require('hpp');
-const slowDown = require('express-slow-down');
-const cookieParser = require('cookie-parser');
-const ResponseManager = require('./middleware/ResponseManager');
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const cors = require("cors");
+const hpp = require("hpp");
+const slowDown = require("express-slow-down");
+const cookieParser = require("cookie-parser");
+const ResponseManager = require("./middleware/ResponseManager");
 
 /**
  * Middleware Setup - Professional Middleware Configuration
- * 
+ *
  * This module provides a clean, modular approach to middleware setup
  * including security, rate limiting, static file serving, and frontend building.
  */
@@ -27,33 +27,35 @@ class MiddlewareSetup {
    * @param {Express.Router} app - Express app instance
    */
   setupMiddleware(app, authMiddleware = null) {
-    this.logger.info('Setting up middleware...');
-    
+    this.logger.info("Setting up middleware...");
+
     // Import centralized security configuration
-    const securityConfig = require('../config/security-config');
+    const securityConfig = require("../config/security-config");
 
     // ========================================
     // BODY PARSING MIDDLEWARE - Must be first
     // ========================================
     this.setupBodyParsing(app, securityConfig);
-    
+
     // ========================================
     // RESPONSE MANAGEMENT - Centralized Response Handling
     // ========================================
     const responseManager = new ResponseManager();
     app.use(responseManager.middleware.bind(responseManager));
-    this.logger.info('ResponseManager middleware applied globally');
-    
+    this.logger.info("ResponseManager middleware applied globally");
+
     // Global auth middleware for all API routes except login/register (if provided)
     if (authMiddleware) {
-      app.use('/api', (req, res, next) => {
+      app.use("/api", (req, res, next) => {
         // Skip auth for login and register routes
-        if (req.path === '/auth/login' || req.path === '/auth/register') {
+        if (req.path === "/auth/login" || req.path === "/auth/register") {
           return next();
         }
         return authMiddleware(req, res, next);
       });
-      this.logger.info('Global auth middleware applied to all /api routes except login/register');
+      this.logger.info(
+        "Global auth middleware applied to all /api routes except login/register",
+      );
     }
 
     // ========================================
@@ -80,16 +82,18 @@ class MiddlewareSetup {
     // ========================================
     this.setupFrontendBuilding(app);
 
-    this.logger.info('Middleware setup complete');
+    this.logger.info("Middleware setup complete");
   }
 
   setupSecurityMiddleware(app, securityConfig) {
     // Security middleware
     app.use(helmet(securityConfig.config.helmet));
-    app.use(cors({
-      ...securityConfig.config.cors,
-      credentials: true // Allow cookies
-    }));
+    app.use(
+      cors({
+        ...securityConfig.config.cors,
+        credentials: true, // Allow cookies
+      }),
+    );
 
     // HTTP Parameter Pollution protection
     app.use(hpp());
@@ -103,37 +107,44 @@ class MiddlewareSetup {
       delayMs: 1000, // begin adding 1000ms of delay per request above 20
       skip: (req) => {
         // Skip rate limiting for authenticated users
-        return req.user || req.path === '/api/health';
+        return req.user || req.path === "/api/health";
       },
       onLimitReached: (req, res) => {
         // Redirect content library requests to GitHub
-        if (req.path.includes('/api/frameworks') || req.path.includes('/api/prompts') || req.path.includes('/api/templates')) {
+        if (
+          req.path.includes("/api/frameworks") ||
+          req.path.includes("/api/prompts") ||
+          req.path.includes("/api/templates")
+        ) {
           return res.status(429).json({
-            success: false,
-            error: 'Rate limit exceeded for content library',
-            message: 'Please visit our GitHub repository for direct access to frameworks, prompts, and templates',
-            githubUrl: 'https://github.com/fr4iser90/PIDEA'
+           
+            error: "Rate limit exceeded for content library",
+            message:
+              "Please visit our GitHub repository for direct access to frameworks, prompts, and templates",
+            githubUrl: "https://github.com/fr4iser90/PIDEA",
           });
         }
-      }
+      },
     });
-    app.use('/api/', speedLimiter);
+    app.use("/api/", speedLimiter);
 
     // Standard rate limiting
     const limiter = rateLimit({
       ...securityConfig.config.rateLimiting,
       skip: (req) => {
         // Skip rate limiting for authenticated users and public content
-        return req.user || 
-               req.path === '/api/health' || 
-               req.path.startsWith('/web/') || 
-               req.path.startsWith('/framework/') ||
-               req.path.startsWith('/api/frameworks') ||
-               req.path.startsWith('/api/prompts') ||
-               req.path.startsWith('/api/templates');
-      }
+        return (
+          req.user ||
+          req.path === "/api/health" ||
+          req.path.startsWith("/web/") ||
+          req.path.startsWith("/framework/") ||
+          req.path.startsWith("/api/frameworks") ||
+          req.path.startsWith("/api/prompts") ||
+          req.path.startsWith("/api/templates")
+        );
+      },
     });
-    app.use('/api/', limiter);
+    app.use("/api/", limiter);
   }
 
   setupBodyParsing(app, securityConfig) {
@@ -141,84 +152,105 @@ class MiddlewareSetup {
     app.use(cookieParser());
 
     // Body parsing with security limits
-    app.use(express.json({ 
-      limit: securityConfig.config.inputValidation.limits.maxBodySize,
-      strict: true
-    }));
-    app.use(express.urlencoded({ 
-      extended: true,
-      limit: securityConfig.config.inputValidation.limits.maxBodySize
-    }));
+    app.use(
+      express.json({
+        limit: securityConfig.config.inputValidation.limits.maxBodySize,
+        strict: true,
+      }),
+    );
+    app.use(
+      express.urlencoded({
+        extended: true,
+        limit: securityConfig.config.inputValidation.limits.maxBodySize,
+      }),
+    );
   }
 
   setupStaticFiles(app, securityConfig) {
     // Serve static files with security headers
-    app.use('/web', express.static(path.join(__dirname, '../web'), {
-      etag: false,
-      lastModified: false,
-      setHeaders: (res, path) => {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        // Add security headers to static files
-        Object.entries(securityConfig.config.headers).forEach(([key, value]) => {
-          res.setHeader(key, value);
-        });
-      }
-    }));
+    app.use(
+      "/web",
+      express.static(path.join(__dirname, "../web"), {
+        etag: false,
+        lastModified: false,
+        setHeaders: (res, path) => {
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+          // Add security headers to static files
+          Object.entries(securityConfig.config.headers).forEach(
+            ([key, value]) => {
+              res.setHeader(key, value);
+            },
+          );
+        },
+      }),
+    );
 
-    app.use('/framework', require('express').static(path.join(__dirname, '../framework')));
+    app.use(
+      "/framework",
+      require("express").static(path.join(__dirname, "../framework")),
+    );
   }
 
   setupFrontendBuilding(app) {
     // Serve frontend build files in development
-    if (process.env.NODE_ENV === 'development') {
-      const frontendDistPath = path.join(__dirname, '../../frontend/dist');
-      const frontendPath = path.join(__dirname, '../../frontend');
-      
+    if (process.env.NODE_ENV === "development") {
+      const frontendDistPath = path.join(__dirname, "../../frontend/dist");
+      const frontendPath = path.join(__dirname, "../../frontend");
+
       if (!fs.existsSync(frontendDistPath)) {
-        this.logger.info('🔨 Frontend dist not found, building automatically...');
+        this.logger.info(
+          "🔨 Frontend dist not found, building automatically...",
+        );
         try {
-          const { execSync } = require('child_process');
-          
+          const { execSync } = require("child_process");
+
           // Check if frontend package.json exists
-          if (fs.existsSync(path.join(frontendPath, 'package.json'))) {
-            this.logger.info('📦 Installing frontend dependencies...');
-            execSync('npm install', { 
-              cwd: frontendPath, 
-              stdio: 'inherit',
-              timeout: 120000 // 2 minutes timeout
+          if (fs.existsSync(path.join(frontendPath, "package.json"))) {
+            this.logger.info("📦 Installing frontend dependencies...");
+            execSync("npm install", {
+              cwd: frontendPath,
+              stdio: "inherit",
+              timeout: 120000, // 2 minutes timeout
             });
-            
-            this.logger.info('🔨 Building frontend for backend serving...');
-            execSync('npm run build', { 
-              cwd: frontendPath, 
-              stdio: 'inherit',
+
+            this.logger.info("🔨 Building frontend for backend serving...");
+            execSync("npm run build", {
+              cwd: frontendPath,
+              stdio: "inherit",
               timeout: 180000, // 3 minutes timeout
               env: {
                 ...process.env,
-                VITE_SERVE_FROM_BACKEND: 'true' // Tell Vite to use relative URLs
-              }
+                VITE_SERVE_FROM_BACKEND: "true", // Tell Vite to use relative URLs
+              },
             });
-            
-            this.logger.info('✅ Frontend built successfully!');
-            
+
+            this.logger.info("✅ Frontend built successfully!");
+
             // Start file watcher for automatic rebuilds
             this.startFrontendWatcher(frontendPath);
           } else {
-            this.logger.warn('⚠️ Frontend package.json not found, skipping auto-build');
+            this.logger.warn(
+              "⚠️ Frontend package.json not found, skipping auto-build",
+            );
           }
         } catch (error) {
-          this.logger.error('❌ Failed to build frontend automatically:', error.message);
-          this.logger.info('💡 Please run: cd frontend && npm install && npm run build');
+          this.logger.error(
+            "❌ Failed to build frontend automatically:",
+            error.message,
+          );
+          this.logger.info(
+            "💡 Please run: cd frontend && npm install && npm run build",
+          );
         }
       }
-      
+
       if (fs.existsSync(frontendDistPath)) {
         app.use(express.static(frontendDistPath));
-        this.logger.info('📁 Serving frontend from:', frontendDistPath);
+        this.logger.info("📁 Serving frontend from:", frontendDistPath);
       } else {
-        this.logger.warn('⚠️ Frontend dist still not found, serving fallback');
+        this.logger.warn("⚠️ Frontend dist still not found, serving fallback");
       }
     }
   }
@@ -228,53 +260,61 @@ class MiddlewareSetup {
    */
   startFrontendWatcher(frontendPath) {
     try {
-      const chokidar = require('chokidar');
-      
-      this.logger.info('👀 Starting frontend file watcher...');
-      
-      const watcher = chokidar.watch([
-        `${frontendPath}/src/**/*.{js,jsx,ts,tsx,css,scss}`,
-        `${frontendPath}/public/**/*`
-      ], {
-        ignored: /node_modules/,
-        persistent: true,
-        ignoreInitial: true
-      });
+      const chokidar = require("chokidar");
+
+      this.logger.info("👀 Starting frontend file watcher...");
+
+      const watcher = chokidar.watch(
+        [
+          `${frontendPath}/src/**/*.{js,jsx,ts,tsx,css,scss}`,
+          `${frontendPath}/public/**/*`,
+        ],
+        {
+          ignored: /node_modules/,
+          persistent: true,
+          ignoreInitial: true,
+        },
+      );
 
       let buildTimeout;
-      
-      watcher.on('change', (path) => {
+
+      watcher.on("change", (path) => {
         this.logger.info(`🔄 Frontend file changed: ${path}`);
-        
+
         // Debounce builds to avoid multiple rapid builds
         if (buildTimeout) {
           clearTimeout(buildTimeout);
         }
-        
+
         buildTimeout = setTimeout(() => {
-          this.logger.info('🔨 Auto-rebuilding frontend...');
-          
+          this.logger.info("🔨 Auto-rebuilding frontend...");
+
           try {
-            execSync('npm run build', { 
-              cwd: frontendPath, 
-              stdio: 'inherit',
-              timeout: 180000
+            execSync("npm run build", {
+              cwd: frontendPath,
+              stdio: "inherit",
+              timeout: 180000,
             });
-            this.logger.info('✅ Frontend auto-rebuild successful!');
+            this.logger.info("✅ Frontend auto-rebuild successful!");
           } catch (error) {
-            this.logger.error('❌ Frontend auto-rebuild failed:', error.message);
+            this.logger.error(
+              "❌ Frontend auto-rebuild failed:",
+              error.message,
+            );
           }
         }, 1000); // Wait 1 second before rebuilding
       });
 
-      watcher.on('error', (error) => {
-        this.logger.error('❌ Frontend watcher error:', error);
+      watcher.on("error", (error) => {
+        this.logger.error("❌ Frontend watcher error:", error);
       });
 
-      this.logger.info('✅ Frontend file watcher started');
-      
+      this.logger.info("✅ Frontend file watcher started");
     } catch (error) {
-      this.logger.warn('⚠️ Could not start frontend watcher (chokidar not available):', error.message);
+      this.logger.warn(
+        "⚠️ Could not start frontend watcher (chokidar not available):",
+        error.message,
+      );
     }
   }
 }

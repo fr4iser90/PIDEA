@@ -1,18 +1,20 @@
 /**
  * Integration Tests for Project Routes
- * 
+ *
  * Tests the complete project API endpoints with real database and service interactions.
  * Validates the project-centric API structure and ensures proper RESTful behavior.
  */
 
-const request = require('supertest');
-const express = require('express');
-const { getServiceContainer } = require('@infrastructure/dependency-injection/ServiceContainer');
+const request = require("supertest");
+const express = require("express");
+const {
+  getServiceContainer,
+} = require("@infrastructure/dependency-injection/ServiceContainer");
 
 // Import the application setup
-const Application = require('@Application');
+const Application = require("@Application");
 
-describe('Project Routes Integration', () => {
+describe("Project Routes Integration", () => {
   let app;
   let application;
   let container;
@@ -26,17 +28,17 @@ describe('Project Routes Integration', () => {
     await application.initialize();
     app = application.app;
     container = getServiceContainer();
-    
+
     // Get services
-    projectApplicationService = container.resolve('projectApplicationService');
-    interfaceManager = container.resolve('interfaceManager');
-    
+    projectApplicationService = container.resolve("projectApplicationService");
+    interfaceManager = container.resolve("interfaceManager");
+
     // Mock logger to avoid console output during tests
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
   });
 
@@ -52,89 +54,89 @@ describe('Project Routes Integration', () => {
     jest.clearAllMocks();
   });
 
-  describe('POST /api/projects', () => {
-    it('should create a new project successfully', async () => {
+  describe("POST /api/projects", () => {
+    it("should create a new project successfully", async () => {
       const projectData = {
-        name: 'Test Project',
-        workspacePath: '/path/to/test/project',
-        description: 'A test project for integration testing',
-        type: 'web',
-        framework: 'react'
+        name: "Test Project",
+        workspacePath: "/path/to/test/project",
+        description: "A test project for integration testing",
+        type: "web",
+        framework: "react",
       };
 
       const response = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(projectData)
         .expect(201);
 
-      expect(response.body).toHaveProperty('project');
+      expect(response.body).toHaveProperty("project");
       expect(response.body.project).toMatchObject({
         name: projectData.name,
         workspacePath: projectData.workspacePath,
         description: projectData.description,
         type: projectData.type,
-        framework: projectData.framework
+        framework: projectData.framework,
       });
-      expect(response.body.project).toHaveProperty('id');
-      expect(response.body.project).toHaveProperty('createdAt');
-      expect(response.body.project).toHaveProperty('updatedAt');
+      expect(response.body.project).toHaveProperty("id");
+      expect(response.body.project).toHaveProperty("createdAt");
+      expect(response.body.project).toHaveProperty("updatedAt");
     });
 
-    it('should return 400 for invalid project data', async () => {
+    it("should return 400 for invalid project data", async () => {
       const invalidData = {
-        name: '', // Invalid: empty name
-        workspacePath: '/invalid/path'
+        name: "", // Invalid: empty name
+        workspacePath: "/invalid/path",
       };
 
       const response = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(invalidData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
 
-    it('should return 400 for missing required fields', async () => {
+    it("should return 400 for missing required fields", async () => {
       const incompleteData = {
-        description: 'Missing name and workspacePath'
+        description: "Missing name and workspacePath",
       };
 
       const response = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(incompleteData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
   });
 
-  describe('GET /api/projects', () => {
-    it('should list projects with pagination', async () => {
+  describe("GET /api/projects", () => {
+    it("should list projects with pagination", async () => {
       const response = await request(app)
-        .get('/api/projects')
+        .get("/api/projects")
         .query({ page: 1, limit: 10 })
         .expect(200);
 
-      expect(response.body).toHaveProperty('projects');
-      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty("projects");
+      expect(response.body).toHaveProperty("total");
       expect(Array.isArray(response.body.projects)).toBe(true);
-      expect(typeof response.body.total).toBe('number');
+      expect(typeof response.body.total).toBe("number");
     });
 
-    it('should support search functionality', async () => {
+    it("should support search functionality", async () => {
       const response = await request(app)
-        .get('/api/projects')
-        .query({ search: 'test' })
+        .get("/api/projects")
+        .query({ search: "test" })
         .expect(200);
 
-      expect(response.body).toHaveProperty('projects');
-      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty("projects");
+      expect(response.body).toHaveProperty("total");
     });
 
-    it('should handle empty results', async () => {
+    it("should handle empty results", async () => {
       const response = await request(app)
-        .get('/api/projects')
-        .query({ search: 'nonexistent' })
+        .get("/api/projects")
+        .query({ search: "nonexistent" })
         .expect(200);
 
       expect(response.body.projects).toEqual([]);
@@ -142,73 +144,73 @@ describe('Project Routes Integration', () => {
     });
   });
 
-  describe('GET /api/projects/:projectId', () => {
+  describe("GET /api/projects/:projectId", () => {
     let testProjectId;
 
     beforeEach(async () => {
       // Create a test project
       const projectData = {
-        name: 'Test Project for Get',
-        workspacePath: '/path/to/test/project/get',
-        description: 'Test project for GET endpoint'
+        name: "Test Project for Get",
+        workspacePath: "/path/to/test/project/get",
+        description: "Test project for GET endpoint",
       };
 
       const createResponse = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(projectData);
-      
+
       testProjectId = createResponse.body.project.id;
     });
 
-    it('should get a project by ID', async () => {
+    it("should get a project by ID", async () => {
       const response = await request(app)
         .get(`/api/projects/${testProjectId}`)
         .expect(200);
 
-      expect(response.body).toHaveProperty('project');
+      expect(response.body).toHaveProperty("project");
       expect(response.body.project.id).toBe(testProjectId);
-      expect(response.body.project.name).toBe('Test Project for Get');
+      expect(response.body.project.name).toBe("Test Project for Get");
     });
 
-    it('should return 404 for non-existent project', async () => {
+    it("should return 404 for non-existent project", async () => {
       const response = await request(app)
-        .get('/api/projects/nonexistent-id')
+        .get("/api/projects/nonexistent-id")
         .expect(404);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
 
-    it('should return 400 for invalid project ID format', async () => {
+    it("should return 400 for invalid project ID format", async () => {
       const response = await request(app)
-        .get('/api/projects/invalid-id-format')
+        .get("/api/projects/invalid-id-format")
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
   });
 
-  describe('PUT /api/projects/:projectId', () => {
+  describe("PUT /api/projects/:projectId", () => {
     let testProjectId;
 
     beforeEach(async () => {
       // Create a test project
       const projectData = {
-        name: 'Test Project for Update',
-        workspacePath: '/path/to/test/project/update',
-        description: 'Test project for PUT endpoint'
+        name: "Test Project for Update",
+        workspacePath: "/path/to/test/project/update",
+        description: "Test project for PUT endpoint",
       };
 
       const createResponse = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(projectData);
-      
+
       testProjectId = createResponse.body.project.id;
     });
 
-    it('should update a project successfully', async () => {
+    it("should update a project successfully", async () => {
       const updateData = {
-        name: 'Updated Project Name',
-        description: 'Updated description'
+        name: "Updated Project Name",
+        description: "Updated description",
       };
 
       const response = await request(app)
@@ -216,29 +218,29 @@ describe('Project Routes Integration', () => {
         .send(updateData)
         .expect(200);
 
-      expect(response.body).toHaveProperty('project');
+      expect(response.body).toHaveProperty("project");
       expect(response.body.project.id).toBe(testProjectId);
       expect(response.body.project.name).toBe(updateData.name);
       expect(response.body.project.description).toBe(updateData.description);
-      expect(response.body.project).toHaveProperty('updatedAt');
+      expect(response.body.project).toHaveProperty("updatedAt");
     });
 
-    it('should return 404 for non-existent project', async () => {
+    it("should return 404 for non-existent project", async () => {
       const updateData = {
-        name: 'Updated Name'
+        name: "Updated Name",
       };
 
       const response = await request(app)
-        .put('/api/projects/nonexistent-id')
+        .put("/api/projects/nonexistent-id")
         .send(updateData)
         .expect(404);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
 
-    it('should return 400 for invalid update data', async () => {
+    it("should return 400 for invalid update data", async () => {
       const invalidData = {
-        name: '' // Invalid: empty name
+        name: "", // Invalid: empty name
       };
 
       const response = await request(app)
@@ -246,78 +248,76 @@ describe('Project Routes Integration', () => {
         .send(invalidData)
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
   });
 
-  describe('DELETE /api/projects/:projectId', () => {
+  describe("DELETE /api/projects/:projectId", () => {
     let testProjectId;
 
     beforeEach(async () => {
       // Create a test project
       const projectData = {
-        name: 'Test Project for Delete',
-        workspacePath: '/path/to/test/project/delete',
-        description: 'Test project for DELETE endpoint'
+        name: "Test Project for Delete",
+        workspacePath: "/path/to/test/project/delete",
+        description: "Test project for DELETE endpoint",
       };
 
       const createResponse = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(projectData);
-      
+
       testProjectId = createResponse.body.project.id;
     });
 
-    it('should delete a project successfully', async () => {
+    it("should delete a project successfully", async () => {
       const response = await request(app)
         .delete(`/api/projects/${testProjectId}`)
         .expect(200);
 
-      expect(response.body).toHaveProperty('message');
-      expect(response.body.message).toContain('deleted successfully');
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toContain("deleted successfully");
 
       // Verify project is deleted
-      await request(app)
-        .get(`/api/projects/${testProjectId}`)
-        .expect(404);
+      await request(app).get(`/api/projects/${testProjectId}`).expect(404);
     });
 
-    it('should return 404 for non-existent project', async () => {
+    it("should return 404 for non-existent project", async () => {
       const response = await request(app)
-        .delete('/api/projects/nonexistent-id')
+        .delete("/api/projects/nonexistent-id")
         .expect(404);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
   });
 
-  describe('Project Interface Endpoints', () => {
+  describe("Project Interface Endpoints", () => {
     let testProjectId;
 
     beforeEach(async () => {
       // Create a test project
       const projectData = {
-        name: 'Test Project for Interfaces',
-        workspacePath: '/path/to/test/project/interfaces',
-        description: 'Test project for interface endpoints'
+        name: "Test Project for Interfaces",
+        workspacePath: "/path/to/test/project/interfaces",
+        description: "Test project for interface endpoints",
       };
 
       const createResponse = await request(app)
-        .post('/api/projects')
+        .post("/api/projects")
         .send(projectData);
-      
+
       testProjectId = createResponse.body.project.id;
     });
 
-    describe('POST /api/projects/:projectId/interfaces', () => {
-      it('should create an interface for a project', async () => {
+    describe("POST /api/projects/:projectId/interfaces", () => {
+      it("should create an interface for a project", async () => {
         const interfaceData = {
-          name: 'Test IDE Interface',
-          type: 'ide',
+          name: "Test IDE Interface",
+          type: "ide",
           configuration: {
             port: 3000,
-            workspacePath: '/workspace'
-          }
+            workspacePath: "/workspace",
+          },
         };
 
         const response = await request(app)
@@ -325,20 +325,20 @@ describe('Project Routes Integration', () => {
           .send(interfaceData)
           .expect(201);
 
-        expect(response.body).toHaveProperty('interface');
+        expect(response.body).toHaveProperty("interface");
         expect(response.body.interface).toMatchObject({
           name: interfaceData.name,
           type: interfaceData.type,
-          projectId: testProjectId
+          projectId: testProjectId,
         });
-        expect(response.body.interface).toHaveProperty('id');
-        expect(response.body.interface).toHaveProperty('status');
+        expect(response.body.interface).toHaveProperty("id");
+        expect(response.body.interface).toHaveProperty("status");
       });
 
-      it('should return 400 for invalid interface data', async () => {
+      it("should return 400 for invalid interface data", async () => {
         const invalidData = {
-          name: '', // Invalid: empty name
-          type: 'invalid-type'
+          name: "", // Invalid: empty name
+          type: "invalid-type",
         };
 
         const response = await request(app)
@@ -346,151 +346,155 @@ describe('Project Routes Integration', () => {
           .send(invalidData)
           .expect(400);
 
-        expect(response.body).toHaveProperty('error');
+        expect(response.body).toHaveProperty("error");
       });
     });
 
-    describe('GET /api/projects/:projectId/interfaces', () => {
-      it('should list interfaces for a project', async () => {
+    describe("GET /api/projects/:projectId/interfaces", () => {
+      it("should list interfaces for a project", async () => {
         const response = await request(app)
           .get(`/api/projects/${testProjectId}/interfaces`)
           .expect(200);
 
-        expect(response.body).toHaveProperty('interfaces');
+        expect(response.body).toHaveProperty("interfaces");
         expect(Array.isArray(response.body.interfaces)).toBe(true);
       });
     });
 
-    describe('Interface Control Endpoints', () => {
+    describe("Interface Control Endpoints", () => {
       let testInterfaceId;
 
       beforeEach(async () => {
         // Create a test interface
         const interfaceData = {
-          name: 'Test Control Interface',
-          type: 'ide',
-          configuration: { port: 3001 }
+          name: "Test Control Interface",
+          type: "ide",
+          configuration: { port: 3001 },
         };
 
         const createResponse = await request(app)
           .post(`/api/projects/${testProjectId}/interfaces`)
           .send(interfaceData);
-        
+
         testInterfaceId = createResponse.body.interface.id;
       });
 
-      describe('POST /api/projects/:projectId/interfaces/:interfaceId/start', () => {
-        it('should start an interface', async () => {
+      describe("POST /api/projects/:projectId/interfaces/:interfaceId/start", () => {
+        it("should start an interface", async () => {
           const response = await request(app)
-            .post(`/api/projects/${testProjectId}/interfaces/${testInterfaceId}/start`)
+            .post(
+              `/api/projects/${testProjectId}/interfaces/${testInterfaceId}/start`,
+            )
             .expect(200);
 
-          expect(response.body).toHaveProperty('message');
-          expect(response.body.message).toContain('started');
+          expect(response.body).toHaveProperty("message");
+          expect(response.body.message).toContain("started");
         });
       });
 
-      describe('POST /api/projects/:projectId/interfaces/:interfaceId/stop', () => {
-        it('should stop an interface', async () => {
+      describe("POST /api/projects/:projectId/interfaces/:interfaceId/stop", () => {
+        it("should stop an interface", async () => {
           const response = await request(app)
-            .post(`/api/projects/${testProjectId}/interfaces/${testInterfaceId}/stop`)
+            .post(
+              `/api/projects/${testProjectId}/interfaces/${testInterfaceId}/stop`,
+            )
             .expect(200);
 
-          expect(response.body).toHaveProperty('message');
-          expect(response.body.message).toContain('stopped');
+          expect(response.body).toHaveProperty("message");
+          expect(response.body.message).toContain("stopped");
         });
       });
 
-      describe('POST /api/projects/:projectId/interfaces/:interfaceId/restart', () => {
-        it('should restart an interface', async () => {
+      describe("POST /api/projects/:projectId/interfaces/:interfaceId/restart", () => {
+        it("should restart an interface", async () => {
           const response = await request(app)
-            .post(`/api/projects/${testProjectId}/interfaces/${testInterfaceId}/restart`)
+            .post(
+              `/api/projects/${testProjectId}/interfaces/${testInterfaceId}/restart`,
+            )
             .expect(200);
 
-          expect(response.body).toHaveProperty('message');
-          expect(response.body.message).toContain('restarted');
+          expect(response.body).toHaveProperty("message");
+          expect(response.body.message).toContain("restarted");
         });
       });
 
-      describe('GET /api/projects/:projectId/interfaces/:interfaceId/status', () => {
-        it('should get interface status', async () => {
+      describe("GET /api/projects/:projectId/interfaces/:interfaceId/status", () => {
+        it("should get interface status", async () => {
           const response = await request(app)
-            .get(`/api/projects/${testProjectId}/interfaces/${testInterfaceId}/status`)
+            .get(
+              `/api/projects/${testProjectId}/interfaces/${testInterfaceId}/status`,
+            )
             .expect(200);
 
-          expect(response.body).toHaveProperty('status');
-          expect(response.body).toHaveProperty('interfaceId', testInterfaceId);
+          expect(response.body).toHaveProperty("status");
+          expect(response.body).toHaveProperty("interfaceId", testInterfaceId);
         });
       });
 
-      describe('GET /api/projects/:projectId/interfaces/:interfaceId/logs', () => {
-        it('should get interface logs', async () => {
+      describe("GET /api/projects/:projectId/interfaces/:interfaceId/logs", () => {
+        it("should get interface logs", async () => {
           const response = await request(app)
-            .get(`/api/projects/${testProjectId}/interfaces/${testInterfaceId}/logs`)
+            .get(
+              `/api/projects/${testProjectId}/interfaces/${testInterfaceId}/logs`,
+            )
             .expect(200);
 
-          expect(response.body).toHaveProperty('logs');
-          expect(response.body).toHaveProperty('interfaceId', testInterfaceId);
+          expect(response.body).toHaveProperty("logs");
+          expect(response.body).toHaveProperty("interfaceId", testInterfaceId);
         });
       });
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle malformed JSON requests', async () => {
+  describe("Error Handling", () => {
+    it("should handle malformed JSON requests", async () => {
       const response = await request(app)
-        .post('/api/projects')
-        .set('Content-Type', 'application/json')
+        .post("/api/projects")
+        .set("Content-Type", "application/json")
         .send('{"invalid": json}')
         .expect(400);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
 
-    it('should handle unsupported HTTP methods', async () => {
-      const response = await request(app)
-        .patch('/api/projects')
-        .expect(405);
+    it("should handle unsupported HTTP methods", async () => {
+      const response = await request(app).patch("/api/projects").expect(405);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
 
-    it('should handle missing route parameters', async () => {
-      const response = await request(app)
-        .get('/api/projects/')
-        .expect(404);
+    it("should handle missing route parameters", async () => {
+      const response = await request(app).get("/api/projects/").expect(404);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("error");
     });
   });
 
-  describe('Performance Tests', () => {
-    it('should handle concurrent project creation', async () => {
+  describe("Performance Tests", () => {
+    it("should handle concurrent project creation", async () => {
       const projectPromises = Array.from({ length: 5 }, (_, i) => {
         const projectData = {
           name: `Concurrent Project ${i}`,
           workspacePath: `/path/to/concurrent/project/${i}`,
-          description: `Concurrent test project ${i}`
+          description: `Concurrent test project ${i}`,
         };
 
-        return request(app)
-          .post('/api/projects')
-          .send(projectData);
+        return request(app).post("/api/projects").send(projectData);
       });
 
       const responses = await Promise.all(projectPromises);
-      
+
       responses.forEach((response, index) => {
         expect(response.status).toBe(201);
         expect(response.body.project.name).toBe(`Concurrent Project ${index}`);
       });
     });
 
-    it('should handle large project lists efficiently', async () => {
+    it("should handle large project lists efficiently", async () => {
       const startTime = Date.now();
-      
+
       const response = await request(app)
-        .get('/api/projects')
+        .get("/api/projects")
         .query({ limit: 100 })
         .expect(200);
 
@@ -498,8 +502,8 @@ describe('Project Routes Integration', () => {
       const responseTime = endTime - startTime;
 
       expect(responseTime).toBeLessThan(1000); // Should respond within 1 second
-      expect(response.body).toHaveProperty('projects');
-      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty("projects");
+      expect(response.body).toHaveProperty("total");
     });
   });
 });

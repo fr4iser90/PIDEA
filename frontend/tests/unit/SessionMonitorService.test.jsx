@@ -222,7 +222,6 @@ describe('SessionMonitorService', () => {
   describe('Session Extension', () => {
     it('should extend session successfully', async () => {
       const mockResponse = {
-        success: true,
         data: {
           sessionId: 'session-1',
           expiresAt: new Date(Date.now() + 15 * 60 * 1000),

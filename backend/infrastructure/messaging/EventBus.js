@@ -1,10 +1,10 @@
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class EventBus {
   constructor() {
     this.handlers = new Map();
     this.middleware = [];
-    this.logger = new ServiceLogger('EventBus');
+    this.logger = new ServiceLogger("EventBus");
   }
 
   // Subscribe to events
@@ -34,7 +34,7 @@ class EventBus {
   // Publish events
   async publish(eventName, eventData) {
     this.logger.info(`Publishing event: ${eventName}`);
-    
+
     // Apply middleware
     let processedEventData = eventData;
     for (const middleware of this.middleware) {
@@ -44,7 +44,7 @@ class EventBus {
     // Execute handlers
     if (this.handlers.has(eventName)) {
       const handlers = this.handlers.get(eventName);
-      const promises = handlers.map(handler => {
+      const promises = handlers.map((handler) => {
         try {
           return handler(processedEventData);
         } catch (error) {
@@ -52,7 +52,7 @@ class EventBus {
           return Promise.resolve();
         }
       });
-      
+
       await Promise.allSettled(promises);
     }
   }
@@ -74,8 +74,10 @@ class EventBus {
 
   // Get handler count for an event
   getHandlerCount(eventName) {
-    return this.handlers.has(eventName) ? this.handlers.get(eventName).length : 0;
+    return this.handlers.has(eventName)
+      ? this.handlers.get(eventName).length
+      : 0;
   }
 }
 
-module.exports = EventBus; 
+module.exports = EventBus;

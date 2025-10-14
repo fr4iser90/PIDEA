@@ -1,12 +1,11 @@
-
 /**
  * CommandHandlerAdapter - Adapter for command-based handlers
- * 
+ *
  * This adapter provides integration with the command bus pattern,
  * allowing command handlers to be executed through the shared
  * handler system.
  */
-const IHandlerAdapter = require('../../../../domain/interfaces/IHandlerAdapter');
+const IHandlerAdapter = require("../../../../domain/interfaces/IHandlerAdapter");
 
 class CommandHandlerAdapter extends IHandlerAdapter {
   /**
@@ -21,7 +20,7 @@ class CommandHandlerAdapter extends IHandlerAdapter {
       enableCaching: options.enableCaching !== false,
       cacheSize: options.cacheSize || 50,
       enableValidation: options.enableValidation !== false,
-      ...options
+      ...options,
     };
   }
 
@@ -34,9 +33,9 @@ class CommandHandlerAdapter extends IHandlerAdapter {
   async createHandler(request, context) {
     try {
       const command = request.command || this.createCommand(request);
-      
+
       if (!command) {
-        throw new Error('Could not create command from request');
+        throw new Error("Could not create command from request");
       }
 
       // Check cache first
@@ -49,15 +48,14 @@ class CommandHandlerAdapter extends IHandlerAdapter {
 
       // Create handler wrapper
       const handler = this.wrapCommandHandler(command, request);
-      
+
       // Cache handler
       if (this.options.enableCaching) {
         const cacheKey = this.generateCacheKey(request, command);
         this.cacheHandler(cacheKey, handler);
       }
-      
-      return handler;
 
+      return handler;
     } catch (error) {
       throw new Error(`Command handler creation failed: ${error.message}`);
     }
@@ -70,11 +68,12 @@ class CommandHandlerAdapter extends IHandlerAdapter {
    */
   createCommand(request) {
     try {
-      const commandType = request.commandType || this.determineCommandType(request);
+      const commandType =
+        request.commandType || this.determineCommandType(request);
       const commandData = request.commandData || {};
-      
+
       if (!commandType) {
-        throw new Error('Could not determine command type');
+        throw new Error("Could not determine command type");
       }
 
       // Load command class
@@ -85,7 +84,6 @@ class CommandHandlerAdapter extends IHandlerAdapter {
 
       // Create command instance
       return new CommandClass(commandData);
-
     } catch (error) {
       throw new Error(`Command creation failed: ${error.message}`);
     }
@@ -99,20 +97,20 @@ class CommandHandlerAdapter extends IHandlerAdapter {
   determineCommandType(request) {
     // Map request types to command types
     const commandMap = {
-      'analyze_architecture': 'AnalyzeArchitectureCommand',
-      'analyze_code_quality': 'AnalyzeCodeQualityCommand',
-      'analyze_tech_stack': 'AnalyzeTechStackCommand',
-      'analyze_repo_structure': 'AnalyzeRepoStructureCommand',
-      'analyze_dependencies': 'AnalyzeDependenciesCommand',
-      'vibecoder_analyze': 'VibeCoderAnalyzeCommand',
-      'vibecoder_generate': 'VibeCoderGenerateCommand',
-      'vibecoder_refactor': 'VibeCoderRefactorCommand',
-      'generate_script': 'GenerateScriptCommand',
-      'auto_refactor': 'AutoRefactorCommand',
-      'create_task': 'CreateTaskCommand',
-      'port_streaming': 'PortStreamingCommand'
+      analyze_architecture: "AnalyzeArchitectureCommand",
+      analyze_code_quality: "AnalyzeCodeQualityCommand",
+      analyze_tech_stack: "AnalyzeTechStackCommand",
+      analyze_repo_structure: "AnalyzeRepoStructureCommand",
+      analyze_dependencies: "AnalyzeDependenciesCommand",
+      vibecoder_analyze: "VibeCoderAnalyzeCommand",
+      vibecoder_generate: "VibeCoderGenerateCommand",
+      vibecoder_refactor: "VibeCoderRefactorCommand",
+      generate_script: "GenerateScriptCommand",
+      auto_refactor: "AutoRefactorCommand",
+      create_task: "CreateTaskCommand",
+      port_streaming: "PortStreamingCommand",
     };
-    
+
     return commandMap[request.type] || null;
   }
 
@@ -129,14 +127,14 @@ class CommandHandlerAdapter extends IHandlerAdapter {
         `@application/commands/categories/analysis/${commandType}`,
         `@application/commands/categories/generate/${commandType}`,
         `@application/commands/categories/refactoring/${commandType}`,
-        `@application/commands/vibecoder/${commandType}`
+        `@application/commands/vibecoder/${commandType}`,
       ];
 
       for (const path of commandPaths) {
         try {
           return require(path);
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+          const Logger = require("@logging/Logger");
+          const logger = new Logger("Logger");
         } catch (error) {
           // Continue to next path
         }
@@ -144,7 +142,10 @@ const logger = new Logger('Logger');
 
       return null;
     } catch (error) {
-      logger.warn(`Failed to load command class ${commandType}:`, error.message);
+      logger.warn(
+        `Failed to load command class ${commandType}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -165,31 +166,29 @@ const logger = new Logger('Logger');
       async execute(context) {
         try {
           if (!this.commandBus) {
-            throw new Error('Command bus not available');
+            throw new Error("Command bus not available");
           }
 
           // Execute command through command bus
           const result = await this.commandBus.execute(command);
-          
+
           return {
-            success: true,
             data: result,
             metadata: {
               commandHandler: true,
               commandType: command.constructor.name,
-              originalRequest: context.getRequest()
-            }
+              originalRequest: context.getRequest(),
+            },
           };
-          
         } catch (error) {
           return {
-            success: false,
+           
             error: error.message,
             metadata: {
               commandHandler: true,
               commandType: command.constructor.name,
-              originalRequest: context.getRequest()
-            }
+              originalRequest: context.getRequest(),
+            },
           };
         }
       },
@@ -201,11 +200,11 @@ const logger = new Logger('Logger');
       getMetadata() {
         return {
           name: `CommandHandler_${command.constructor.name}`,
-          description: 'Command handler adapter',
-          type: 'command',
-          version: '1.0.0',
+          description: "Command handler adapter",
+          type: "command",
+          version: "1.0.0",
           commandType: command.constructor.name,
-          adapter: 'CommandHandlerAdapter'
+          adapter: "CommandHandlerAdapter",
         };
       },
 
@@ -217,7 +216,7 @@ const logger = new Logger('Logger');
       async validate(context) {
         try {
           // Validate command if it has a validate method
-          if (typeof command.validate === 'function') {
+          if (typeof command.validate === "function") {
             const validationResult = await command.validate();
             return validationResult;
           }
@@ -226,13 +225,13 @@ const logger = new Logger('Logger');
           return {
             isValid: true,
             errors: [],
-            warnings: ['Command validation is limited']
+            warnings: ["Command validation is limited"],
           };
         } catch (error) {
           return {
             isValid: false,
             errors: [error.message],
-            warnings: []
+            warnings: [],
           };
         }
       },
@@ -251,7 +250,7 @@ const logger = new Logger('Logger');
        * @returns {Array<string>} Handler dependencies
        */
       getDependencies() {
-        return ['command', 'adapter', 'commandBus'];
+        return ["command", "adapter", "commandBus"];
       },
 
       /**
@@ -259,7 +258,7 @@ const logger = new Logger('Logger');
        * @returns {string} Handler version
        */
       getVersion() {
-        return '1.0.0';
+        return "1.0.0";
       },
 
       /**
@@ -267,7 +266,7 @@ const logger = new Logger('Logger');
        * @returns {string} Handler type
        */
       getType() {
-        return 'command';
+        return "command";
       },
 
       /**
@@ -276,13 +275,13 @@ const logger = new Logger('Logger');
        */
       getStatistics() {
         return {
-          type: 'command',
-          adapter: 'CommandHandlerAdapter',
+          type: "command",
+          adapter: "CommandHandlerAdapter",
           commandType: command.constructor.name,
           cacheSize: this.commandCache.size,
-          cacheEnabled: this.options.enableCaching
+          cacheEnabled: this.options.enableCaching,
         };
-      }
+      },
     };
   }
 
@@ -292,8 +291,11 @@ const logger = new Logger('Logger');
    * @returns {boolean} True if adapter can handle the request
    */
   canHandle(request) {
-    return !!(request.command || request.commandType || 
-              (request.type && this.determineCommandType(request)));
+    return !!(
+      request.command ||
+      request.commandType ||
+      (request.type && this.determineCommandType(request))
+    );
   }
 
   /**
@@ -302,25 +304,25 @@ const logger = new Logger('Logger');
    */
   getMetadata() {
     return {
-      name: 'Command Handler Adapter',
-      description: 'Adapter for command handler patterns',
-      version: '1.0.0',
-      type: 'command',
-      capabilities: ['command_execution', 'command_bus_integration', 'caching'],
+      name: "Command Handler Adapter",
+      description: "Adapter for command handler patterns",
+      version: "1.0.0",
+      type: "command",
+      capabilities: ["command_execution", "command_bus_integration", "caching"],
       supportedTypes: [
-        'analyze_architecture',
-        'analyze_code_quality',
-        'analyze_tech_stack',
-        'analyze_repo_structure',
-        'analyze_dependencies',
-        'vibecoder_analyze',
-        'vibecoder_generate',
-        'vibecoder_refactor',
-        'generate_script',
-        'auto_refactor',
-        'create_task',
-        'port_streaming'
-      ]
+        "analyze_architecture",
+        "analyze_code_quality",
+        "analyze_tech_stack",
+        "analyze_repo_structure",
+        "analyze_dependencies",
+        "vibecoder_analyze",
+        "vibecoder_generate",
+        "vibecoder_refactor",
+        "generate_script",
+        "auto_refactor",
+        "create_task",
+        "port_streaming",
+      ],
     };
   }
 
@@ -329,7 +331,7 @@ const logger = new Logger('Logger');
    * @returns {string} Adapter type
    */
   getType() {
-    return 'command';
+    return "command";
   }
 
   /**
@@ -337,7 +339,7 @@ const logger = new Logger('Logger');
    * @returns {string} Adapter version
    */
   getVersion() {
-    return '1.0.0';
+    return "1.0.0";
   }
 
   /**
@@ -348,7 +350,7 @@ const logger = new Logger('Logger');
   async initialize(config = {}) {
     this.options = {
       ...this.options,
-      ...config
+      ...config,
     };
 
     if (config.commandBus) {
@@ -374,21 +376,21 @@ const logger = new Logger('Logger');
     const warnings = [];
 
     if (!request) {
-      errors.push('Request is required');
+      errors.push("Request is required");
     } else {
       if (!request.command && !request.commandType && !request.type) {
-        errors.push('Request must have command, commandType, or type');
+        errors.push("Request must have command, commandType, or type");
       }
 
       if (!this.commandBus) {
-        warnings.push('Command bus not available');
+        warnings.push("Command bus not available");
       }
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -398,18 +400,18 @@ const logger = new Logger('Logger');
    */
   getSupportedTypes() {
     return [
-      'analyze_architecture',
-      'analyze_code_quality',
-      'analyze_tech_stack',
-      'analyze_repo_structure',
-      'analyze_dependencies',
-      'vibecoder_analyze',
-      'vibecoder_generate',
-      'vibecoder_refactor',
-      'generate_script',
-      'auto_refactor',
-      'create_task',
-      'port_streaming'
+      "analyze_architecture",
+      "analyze_code_quality",
+      "analyze_tech_stack",
+      "analyze_repo_structure",
+      "analyze_dependencies",
+      "vibecoder_analyze",
+      "vibecoder_generate",
+      "vibecoder_refactor",
+      "generate_script",
+      "auto_refactor",
+      "create_task",
+      "port_streaming",
     ];
   }
 
@@ -420,7 +422,7 @@ const logger = new Logger('Logger');
   async isHealthy() {
     try {
       // Test loading a sample command class
-      const testCommand = this.loadCommandClass('AnalyzeArchitectureCommand');
+      const testCommand = this.loadCommandClass("AnalyzeArchitectureCommand");
       return !!testCommand && !!this.commandBus;
     } catch (error) {
       return false;
@@ -434,7 +436,7 @@ const logger = new Logger('Logger');
    * @returns {string} Cache key
    */
   generateCacheKey(request, command) {
-    return `${command.constructor.name}_${request.type || 'unknown'}_${JSON.stringify(request.options || {})}`;
+    return `${command.constructor.name}_${request.type || "unknown"}_${JSON.stringify(request.options || {})}`;
   }
 
   /**
@@ -460,7 +462,7 @@ const logger = new Logger('Logger');
       size: this.commandCache.size,
       maxSize: this.options.cacheSize,
       enabled: this.options.enableCaching,
-      keys: Array.from(this.commandCache.keys())
+      keys: Array.from(this.commandCache.keys()),
     };
   }
 
@@ -488,4 +490,4 @@ const logger = new Logger('Logger');
   }
 }
 
-module.exports = CommandHandlerAdapter; 
+module.exports = CommandHandlerAdapter;

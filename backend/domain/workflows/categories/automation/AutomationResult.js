@@ -2,7 +2,7 @@
  * AutomationResult - Automation result
  * Represents the result of automation execution
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class AutomationResult {
   constructor(
@@ -16,7 +16,7 @@ class AutomationResult {
     errors = [],
     warnings = [],
     executionTime = 0,
-    createdAt = new Date()
+    createdAt = new Date(),
   ) {
     this._id = id;
     this._taskId = taskId;
@@ -210,7 +210,7 @@ class AutomationResult {
       id: uuidv4(),
       message,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -224,7 +224,7 @@ class AutomationResult {
       id: uuidv4(),
       message,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -248,7 +248,7 @@ class AutomationResult {
       step,
       data,
       duration,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -258,7 +258,8 @@ class AutomationResult {
   complete() {
     this._completedAt = new Date();
     if (!this._executionTime && this._createdAt) {
-      this._executionTime = this._completedAt.getTime() - this._createdAt.getTime();
+      this._executionTime =
+        this._completedAt.getTime() - this._createdAt.getTime();
     }
   }
 
@@ -283,7 +284,9 @@ class AutomationResult {
    * @returns {Object|null} Latest error
    */
   getLatestError() {
-    return this._errors.length > 0 ? this._errors[this._errors.length - 1] : null;
+    return this._errors.length > 0
+      ? this._errors[this._errors.length - 1]
+      : null;
   }
 
   /**
@@ -291,7 +294,9 @@ class AutomationResult {
    * @returns {Object|null} Latest warning
    */
   getLatestWarning() {
-    return this._warnings.length > 0 ? this._warnings[this._warnings.length - 1] : null;
+    return this._warnings.length > 0
+      ? this._warnings[this._warnings.length - 1]
+      : null;
   }
 
   /**
@@ -312,7 +317,7 @@ class AutomationResult {
       stepCount: this._executionSteps.length,
       executionTime: this._executionTime,
       createdAt: this._createdAt.toISOString(),
-      completedAt: this._completedAt ? this._completedAt.toISOString() : null
+      completedAt: this._completedAt ? this._completedAt.toISOString() : null,
     };
   }
 
@@ -351,7 +356,7 @@ class AutomationResult {
       executionSteps: this._executionSteps,
       createdAt: this._createdAt.toISOString(),
       completedAt: this._completedAt ? this._completedAt.toISOString() : null,
-      formattedExecutionTime: this.getFormattedExecutionTime()
+      formattedExecutionTime: this.getFormattedExecutionTime(),
     };
   }
 
@@ -372,7 +377,7 @@ class AutomationResult {
       data.errors,
       data.warnings,
       data.executionTime,
-      data.createdAt
+      data.createdAt,
     );
 
     if (data.completedAt) {
@@ -401,7 +406,7 @@ class AutomationResult {
       automationLevel,
       confidenceScore,
       true,
-      data
+      data,
     );
     result.complete();
     return result;
@@ -423,7 +428,7 @@ class AutomationResult {
       false,
       {},
       {},
-      errors
+      errors,
     );
     result.complete();
     return result;
@@ -458,7 +463,8 @@ class AutomationResult {
 
     // Update confidence score (average)
     if (this._confidenceScore !== null && other._confidenceScore !== null) {
-      this._confidenceScore = (this._confidenceScore + other._confidenceScore) / 2;
+      this._confidenceScore =
+        (this._confidenceScore + other._confidenceScore) / 2;
     } else if (other._confidenceScore !== null) {
       this._confidenceScore = other._confidenceScore;
     }
@@ -467,4 +473,4 @@ class AutomationResult {
   }
 }
 
-module.exports = AutomationResult; 
+module.exports = AutomationResult;

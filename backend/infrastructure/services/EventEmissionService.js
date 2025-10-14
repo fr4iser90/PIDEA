@@ -1,4 +1,4 @@
-const { logger } = require('../../infrastructure/logging/Logger');
+const { logger } = require("../../infrastructure/logging/Logger");
 
 /**
  * EventEmissionService - Centralized service to emit refresh events
@@ -11,35 +11,35 @@ class EventEmissionService {
     this.ideManager = dependencies.ideManager;
     this.taskRepository = dependencies.taskRepository;
     this.analysisRepository = dependencies.analysisRepository;
-    
+
     this.isInitialized = false;
     this.eventTypes = {
       // Data change events
-      'data:git:changed': 'Git repository state changed',
-      'data:queue:updated': 'Queue status updated',
-      'data:analysis:completed': 'Analysis completed',
-      'data:ide:state-changed': 'IDE state changed',
-      'data:terminal:output': 'Terminal output updated',
-      'data:auth:session-changed': 'Authentication session changed',
-      
+      "data:git:changed": "Git repository state changed",
+      "data:queue:updated": "Queue status updated",
+      "data:analysis:completed": "Analysis completed",
+      "data:ide:state-changed": "IDE state changed",
+      "data:terminal:output": "Terminal output updated",
+      "data:auth:session-changed": "Authentication session changed",
+
       // Cache events
-      'cache:invalidate': 'Cache invalidation required',
-      'cache:refresh': 'Force refresh data',
-      'cache:preload': 'Preload data for component',
-      
+      "cache:invalidate": "Cache invalidation required",
+      "cache:refresh": "Force refresh data",
+      "cache:preload": "Preload data for component",
+
       // System events
-      'system:user-active': 'User became active',
-      'system:user-inactive': 'User became inactive',
-      'system:network-changed': 'Network quality changed',
-      'system:tab-visible': 'Tab became visible',
-      'system:tab-hidden': 'Tab became hidden'
+      "system:user-active": "User became active",
+      "system:user-inactive": "User became inactive",
+      "system:network-changed": "Network quality changed",
+      "system:tab-visible": "Tab became visible",
+      "system:tab-hidden": "Tab became hidden",
     };
-    
+
     // Event statistics
     this.stats = {
       eventsEmitted: 0,
       eventsByType: new Map(),
-      startTime: Date.now()
+      startTime: Date.now(),
     };
   }
 
@@ -48,20 +48,20 @@ class EventEmissionService {
    */
   async initialize() {
     if (this.isInitialized) {
-      logger.warn('EventEmissionService already initialized');
+      logger.warn("EventEmissionService already initialized");
       return;
     }
 
-    logger.info('🔄 Initializing EventEmissionService...');
-    
+    logger.info("🔄 Initializing EventEmissionService...");
+
     // Set up event listeners for data changes
     this.setupDataChangeListeners();
-    
+
     // Set up periodic event emission
     this.setupPeriodicEvents();
-    
+
     this.isInitialized = true;
-    logger.info('✅ EventEmissionService initialized successfully');
+    logger.info("✅ EventEmissionService initialized successfully");
   }
 
   /**
@@ -69,81 +69,81 @@ class EventEmissionService {
    */
   setupDataChangeListeners() {
     if (!this.eventBus) {
-      logger.warn('EventBus not available, data change listeners not set up');
+      logger.warn("EventBus not available, data change listeners not set up");
       return;
     }
 
     // Git events
-    this.eventBus.on('git:status-changed', (data) => {
-      this.emitDataChange('data:git:changed', data);
+    this.eventBus.on("git:status-changed", (data) => {
+      this.emitDataChange("data:git:changed", data);
     });
-    
-    this.eventBus.on('git:branch-changed', (data) => {
-      this.emitDataChange('data:git:changed', data);
+
+    this.eventBus.on("git:branch-changed", (data) => {
+      this.emitDataChange("data:git:changed", data);
     });
-    
-    this.eventBus.on('git:commit-created', (data) => {
-      this.emitDataChange('data:git:changed', data);
+
+    this.eventBus.on("git:commit-created", (data) => {
+      this.emitDataChange("data:git:changed", data);
     });
 
     // Queue events
-    this.eventBus.on('queue:task-added', (data) => {
-      this.emitDataChange('data:queue:updated', data);
+    this.eventBus.on("queue:task-added", (data) => {
+      this.emitDataChange("data:queue:updated", data);
     });
-    
-    this.eventBus.on('queue:task-removed', (data) => {
-      this.emitDataChange('data:queue:updated', data);
+
+    this.eventBus.on("queue:task-removed", (data) => {
+      this.emitDataChange("data:queue:updated", data);
     });
-    
-    this.eventBus.on('queue:task-updated', (data) => {
-      this.emitDataChange('data:queue:updated', data);
+
+    this.eventBus.on("queue:task-updated", (data) => {
+      this.emitDataChange("data:queue:updated", data);
     });
 
     // Analysis events
-    this.eventBus.on('analysis:completed', (data) => {
-      this.emitDataChange('data:analysis:completed', data);
+    this.eventBus.on("analysis:completed", (data) => {
+      this.emitDataChange("data:analysis:completed", data);
     });
-    
-    this.eventBus.on('analysis:progress', (data) => {
-      this.emitDataChange('data:analysis:completed', data);
+
+    this.eventBus.on("analysis:progress", (data) => {
+      this.emitDataChange("data:analysis:completed", data);
     });
 
     // IDE events
-    this.eventBus.on('ide-started', (data) => {
-      this.emitDataChange('data:ide:state-changed', data);
+    this.eventBus.on("ide-started", (data) => {
+      this.emitDataChange("data:ide:state-changed", data);
     });
-    
-    this.eventBus.on('ide-stopped', (data) => {
-      this.emitDataChange('data:ide:state-changed', data);
+
+    this.eventBus.on("ide-stopped", (data) => {
+      this.emitDataChange("data:ide:state-changed", data);
     });
-    
-    this.eventBus.on('ide-state-changed', (data) => {
-      this.emitDataChange('data:ide:state-changed', data);
+
+    this.eventBus.on("ide-state-changed", (data) => {
+      this.emitDataChange("data:ide:state-changed", data);
     });
 
     // Terminal events
-    this.eventBus.on('terminal:output', (data) => {
-      this.emitDataChange('data:terminal:output', data);
+    this.eventBus.on("terminal:output", (data) => {
+      this.emitDataChange("data:terminal:output", data);
     });
 
     // Auth events
-    this.eventBus.on('auth:session-changed', (data) => {
-      this.emitDataChange('data:auth:session-changed', data);
-    });
-    
-    this.eventBus.on('auth:login', (data) => {
-      this.emitDataChange('data:auth:session-changed', data);
-    });
-    
-    this.eventBus.on('auth:logout', (data) => {
-      this.emitDataChange('data:auth:session-changed', data);
-    });
-    
-    this.eventBus.on('auth:session-expired', (data) => {
-      this.emitDataChange('data:auth:session-changed', data);
+    this.eventBus.on("auth:session-changed", (data) => {
+      this.emitDataChange("data:auth:session-changed", data);
     });
 
-    logger.info('📡 Data change listeners set up');
+    this.eventBus.on("auth:login", (data) => {
+      this.emitDataChange("data:auth:session-changed", data);
+    });
+
+    this.eventBus.on("auth:logout", (data) => {
+      this.emitDataChange("data:auth:session-changed", data);
+    });
+
+    this.eventBus.on("auth:session-expired", (data) => {
+      this.emitDataChange("data:auth:session-changed", data);
+    });
+
+    logger.info("📡 Data change listeners set up");
   }
 
   /**
@@ -156,11 +156,14 @@ class EventEmissionService {
     }, 30000);
 
     // Emit cache invalidation events every 5 minutes
-    setInterval(() => {
-      this.emitCacheInvalidation();
-    }, 5 * 60 * 1000);
+    setInterval(
+      () => {
+        this.emitCacheInvalidation();
+      },
+      5 * 60 * 1000,
+    );
 
-    logger.info('⏰ Periodic events set up');
+    logger.info("⏰ Periodic events set up");
   }
 
   /**
@@ -173,16 +176,16 @@ class EventEmissionService {
       type: eventType,
       data,
       timestamp: Date.now(),
-      source: 'backend'
+      source: "backend",
     };
 
     this.emitEvent(eventType, eventData);
-    
+
     // Also emit generic refresh event
-    this.emitEvent('refresh-event', {
+    this.emitEvent("refresh-event", {
       type: eventType,
       payload: data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -194,15 +197,19 @@ class EventEmissionService {
       timestamp: Date.now(),
       uptime: Date.now() - this.stats.startTime,
       memoryUsage: process.memoryUsage(),
-      activeConnections: this.webSocketManager && typeof this.webSocketManager.getConnectionCount === 'function' 
-        ? this.webSocketManager.getConnectionCount() 
-        : 0,
-      activeIDEs: this.ideManager && typeof this.ideManager.getActiveIDECount === 'function' 
-        ? this.ideManager.getActiveIDECount() 
-        : 0
+      activeConnections:
+        this.webSocketManager &&
+        typeof this.webSocketManager.getConnectionCount === "function"
+          ? this.webSocketManager.getConnectionCount()
+          : 0,
+      activeIDEs:
+        this.ideManager &&
+        typeof this.ideManager.getActiveIDECount === "function"
+          ? this.ideManager.getActiveIDECount()
+          : 0,
     };
 
-    this.emitEvent('system:status', systemStatus);
+    this.emitEvent("system:status", systemStatus);
   }
 
   /**
@@ -211,11 +218,11 @@ class EventEmissionService {
   emitCacheInvalidation() {
     const invalidationData = {
       timestamp: Date.now(),
-      reason: 'periodic-cleanup',
-      affectedComponents: ['all']
+      reason: "periodic-cleanup",
+      affectedComponents: ["all"],
     };
 
-    this.emitEvent('cache:invalidate', invalidationData);
+    this.emitEvent("cache:invalidate", invalidationData);
   }
 
   /**
@@ -231,19 +238,24 @@ class EventEmissionService {
       this.stats.eventsByType.set(eventType, count + 1);
 
       // Emit via WebSocket if available
-      if (this.webSocketManager && typeof this.webSocketManager.broadcastToAll === 'function') {
+      if (
+        this.webSocketManager &&
+        typeof this.webSocketManager.broadcastToAll === "function"
+      ) {
         this.webSocketManager.broadcastToAll(eventType, data);
       }
 
       // Emit via EventBus if available
-      if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      if (this.eventBus && typeof this.eventBus.emit === "function") {
         this.eventBus.emit(eventType, data);
       }
 
       logger.debug(`📤 Emitted event: ${eventType}`, data);
-
     } catch (error) {
-      logger.error(`❌ Failed to emit event ${eventType}:`, error?.message || error || 'Unknown error');
+      logger.error(
+        `❌ Failed to emit event ${eventType}:`,
+        error?.message || error || "Unknown error",
+      );
     }
   }
 
@@ -260,7 +272,6 @@ class EventEmissionService {
       }
 
       logger.debug(`📤 Emitted event to user ${userId}: ${eventType}`, data);
-
     } catch (error) {
       logger.error(`❌ Failed to emit event to user ${userId}:`, error);
     }
@@ -271,14 +282,14 @@ class EventEmissionService {
    * @param {string} componentType - Type of component
    * @param {string} reason - Reason for invalidation
    */
-  emitCacheInvalidationForComponent(componentType, reason = 'manual') {
+  emitCacheInvalidationForComponent(componentType, reason = "manual") {
     const invalidationData = {
       componentType,
       reason,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    this.emitEvent('cache:invalidate', invalidationData);
+    this.emitEvent("cache:invalidate", invalidationData);
   }
 
   /**
@@ -286,14 +297,14 @@ class EventEmissionService {
    * @param {string} componentType - Type of component
    * @param {string} reason - Reason for refresh
    */
-  emitForceRefreshForComponent(componentType, reason = 'manual') {
+  emitForceRefreshForComponent(componentType, reason = "manual") {
     const refreshData = {
       componentType,
       reason,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    this.emitEvent('cache:refresh', refreshData);
+    this.emitEvent("cache:refresh", refreshData);
   }
 
   /**
@@ -305,10 +316,10 @@ class EventEmissionService {
     const preloadData = {
       componentType,
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    this.emitEvent('cache:preload', preloadData);
+    this.emitEvent("cache:preload", preloadData);
   }
 
   /**
@@ -320,7 +331,7 @@ class EventEmissionService {
     const activityData = {
       userId,
       activity,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.emitEventToUser(userId, `system:user-${activity}`, activityData);
@@ -335,10 +346,10 @@ class EventEmissionService {
     const eventData = {
       userId,
       ...networkData,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    this.emitEventToUser(userId, 'system:network-changed', eventData);
+    this.emitEventToUser(userId, "system:network-changed", eventData);
   }
 
   /**
@@ -350,7 +361,7 @@ class EventEmissionService {
     const visibilityData = {
       userId,
       visibility,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.emitEventToUser(userId, `system:tab-${visibility}`, visibilityData);
@@ -368,7 +379,7 @@ class EventEmissionService {
       ...this.stats,
       uptime,
       eventsByType,
-      isInitialized: this.isInitialized
+      isInitialized: this.isInitialized,
     };
   }
 
@@ -385,7 +396,7 @@ class EventEmissionService {
    */
   destroy() {
     this.isInitialized = false;
-    logger.info('🧹 EventEmissionService destroyed');
+    logger.info("🧹 EventEmissionService destroyed");
   }
 }
 

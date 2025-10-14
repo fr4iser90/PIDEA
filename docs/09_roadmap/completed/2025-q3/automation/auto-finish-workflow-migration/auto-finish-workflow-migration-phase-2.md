@@ -186,7 +186,6 @@ class FallbackDetectionStep {
       // Main logic here...
       
       return {
-        success: true,
         stepId,
         projectId,
         message: 'Fallback detection completed',
@@ -201,7 +200,7 @@ class FallbackDetectionStep {
       });
 
       return {
-        success: false,
+       
         error: error.message,
         stepId,
         projectId: context.projectId,

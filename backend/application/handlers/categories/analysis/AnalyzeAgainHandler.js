@@ -3,13 +3,13 @@
  * Handler for re-analyzing projects
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class AnalyzeAgainHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class AnalyzeAgainHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,8 +40,8 @@ class AnalyzeAgainHandler {
       this.logger.info(`Handling command`);
 
       // Validate command
-      if (!command || command.type !== 'AnalyzeAgainCommand') {
-        throw new Error('Invalid command type for AnalyzeAgainHandler');
+      if (!command || command.type !== "AnalyzeAgainCommand") {
+        throw new Error("Invalid command type for AnalyzeAgainHandler");
       }
 
       // Re-analyze project
@@ -49,35 +49,33 @@ class AnalyzeAgainHandler {
         ...command.options,
         clearCache: command.clearCache,
         forceRefresh: command.forceRefresh,
-        workspacePath: command.workspacePath
+        workspacePath: command.workspacePath,
       });
 
       // Publish success event
-      await this.eventBus.publish('project.reanalyzed', {
+      await this.eventBus.publish("project.reanalyzed", {
         commandId: command.commandId,
         userId: command.userId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info(`Project re-analyzed successfully`);
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to re-analyze project:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('project.reanalysis.failed', {
+      await this.eventBus.publish("project.reanalysis.failed", {
         commandId: command.commandId,
         userId: command.userId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -90,12 +88,12 @@ class AnalyzeAgainHandler {
    */
   getInfo() {
     return {
-      name: 'AnalyzeAgainHandler',
-      version: '1.0.0',
-      description: 'Handles IDE project re-analysis operations',
-      supportedCommands: ['AnalyzeAgainCommand']
+      name: "AnalyzeAgainHandler",
+      version: "1.0.0",
+      description: "Handles IDE project re-analysis operations",
+      supportedCommands: ["AnalyzeAgainCommand"],
     };
   }
 }
 
-module.exports = AnalyzeAgainHandler; 
+module.exports = AnalyzeAgainHandler;

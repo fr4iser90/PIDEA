@@ -3,18 +3,18 @@
  * Environment-specific configurations for IDE API and frontend components
  */
 
-const path = require('path');
-const centralizedConfig = require('./centralized-config');
+const path = require("path");
+const centralizedConfig = require("./centralized-config");
 
 class DeploymentConfig {
   constructor() {
     this.environments = {
       development: this.getDevelopmentConfig(),
       staging: this.getStagingConfig(),
-      production: this.getProductionConfig()
+      production: this.getProductionConfig(),
     };
-    
-    this.currentEnv = process.env.NODE_ENV || 'development';
+
+    this.currentEnv = process.env.NODE_ENV || "development";
     this.config = this.environments[this.currentEnv];
   }
 
@@ -31,7 +31,7 @@ class DeploymentConfig {
         port: centralizedConfig.frontendPort,
         hotReload: true,
         sourceMaps: true,
-        devTools: true
+        devTools: true,
       },
 
       // Database Configuration
@@ -52,33 +52,33 @@ class DeploymentConfig {
         autoMerge: false,
         createPullRequests: true,
         requireReview: true,
-        mergeStrategy: 'squash',
+        mergeStrategy: "squash",
         branchStrategies: {
           feature: {
-            prefix: 'feature',
-            startPoint: 'pidea-features',
-            mergeTarget: 'pidea-features'
+            prefix: "feature",
+            startPoint: "pidea-features",
+            mergeTarget: "pidea-features",
           },
           bug: {
-            prefix: 'hotfix',
-            startPoint: 'main',
-            mergeTarget: 'main'
+            prefix: "hotfix",
+            startPoint: "main",
+            mergeTarget: "main",
           },
           refactor: {
-            prefix: 'refactor',
-            startPoint: 'main',
-            mergeTarget: 'develop'
-          }
+            prefix: "refactor",
+            startPoint: "main",
+            mergeTarget: "develop",
+          },
         },
         metrics: {
           enabled: true,
-          collectionInterval: 60000
+          collectionInterval: 60000,
         },
         audit: {
           enabled: true,
-          retentionDays: 90
-        }
-      }
+          retentionDays: 90,
+        },
+      },
     };
   }
 
@@ -95,7 +95,7 @@ class DeploymentConfig {
         port: centralizedConfig.frontendPort,
         hotReload: false,
         sourceMaps: false,
-        devTools: false
+        devTools: false,
       },
 
       // Database Configuration
@@ -116,33 +116,33 @@ class DeploymentConfig {
         autoMerge: false,
         createPullRequests: true,
         requireReview: true,
-        mergeStrategy: 'squash',
+        mergeStrategy: "squash",
         branchStrategies: {
           feature: {
-            prefix: 'feature',
-            startPoint: 'pidea-features',
-            mergeTarget: 'pidea-features'
+            prefix: "feature",
+            startPoint: "pidea-features",
+            mergeTarget: "pidea-features",
           },
           bug: {
-            prefix: 'hotfix',
-            startPoint: 'main',
-            mergeTarget: 'main'
+            prefix: "hotfix",
+            startPoint: "main",
+            mergeTarget: "main",
           },
           refactor: {
-            prefix: 'refactor',
-            startPoint: 'main',
-            mergeTarget: 'develop'
-          }
+            prefix: "refactor",
+            startPoint: "main",
+            mergeTarget: "develop",
+          },
         },
         metrics: {
           enabled: true,
-          collectionInterval: 60000
+          collectionInterval: 60000,
         },
         audit: {
           enabled: true,
-          retentionDays: 90
-        }
-      }
+          retentionDays: 90,
+        },
+      },
     };
   }
 
@@ -159,7 +159,7 @@ class DeploymentConfig {
         port: centralizedConfig.frontendPort,
         hotReload: false,
         sourceMaps: false,
-        devTools: false
+        devTools: false,
       },
 
       // Database Configuration
@@ -180,33 +180,33 @@ class DeploymentConfig {
         autoMerge: false,
         createPullRequests: true,
         requireReview: true,
-        mergeStrategy: 'squash',
+        mergeStrategy: "squash",
         branchStrategies: {
           feature: {
-            prefix: 'feature',
-            startPoint: 'pidea-features',
-            mergeTarget: 'pidea-features'
+            prefix: "feature",
+            startPoint: "pidea-features",
+            mergeTarget: "pidea-features",
           },
           bug: {
-            prefix: 'hotfix',
-            startPoint: 'main',
-            mergeTarget: 'main'
+            prefix: "hotfix",
+            startPoint: "main",
+            mergeTarget: "main",
           },
           refactor: {
-            prefix: 'refactor',
-            startPoint: 'main',
-            mergeTarget: 'develop'
-          }
+            prefix: "refactor",
+            startPoint: "main",
+            mergeTarget: "develop",
+          },
         },
         metrics: {
           enabled: true,
-          collectionInterval: 300000
+          collectionInterval: 300000,
         },
         audit: {
           enabled: true,
-          retentionDays: 365
-        }
-      }
+          retentionDays: 365,
+        },
+      },
     };
   }
 
@@ -231,14 +231,14 @@ class DeploymentConfig {
     const errors = [];
 
     // Validate required environment variables for production
-    if (this.currentEnv === 'production') {
+    if (this.currentEnv === "production") {
       const requiredEnvVars = [
-        'DB_HOST',
-        'DB_NAME',
-        'DB_USER',
-        'DB_PASSWORD',
-        'JWT_SECRET',
-        'VITE_FRONTEND_URL'
+        "DB_HOST",
+        "DB_NAME",
+        "DB_USER",
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "VITE_FRONTEND_URL",
       ];
 
       for (const envVar of requiredEnvVars) {
@@ -251,20 +251,20 @@ class DeploymentConfig {
     // Validate IDE configuration
     const ideConfig = this.config.ide;
     if (!ideConfig.portRange) {
-      errors.push('IDE port range configuration is missing');
+      errors.push("IDE port range configuration is missing");
     }
 
     // Validate database configuration
     const dbConfig = this.config.database;
-    if (dbConfig.type === 'postgresql') {
+    if (dbConfig.type === "postgresql") {
       if (!dbConfig.host || !dbConfig.database || !dbConfig.username) {
-        errors.push('PostgreSQL configuration is incomplete');
+        errors.push("PostgreSQL configuration is incomplete");
       }
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -274,23 +274,23 @@ class DeploymentConfig {
   getHealthCheckConfig() {
     return {
       ide: {
-        endpoint: '/api/ide/health',
+        endpoint: "/api/ide/health",
         interval: this.config.monitoring.healthChecks.interval,
         timeout: this.config.monitoring.healthChecks.timeout,
-        retries: 3
+        retries: 3,
       },
       database: {
-        endpoint: '/api/health/database',
+        endpoint: "/api/health/database",
         interval: this.config.monitoring.healthChecks.interval,
         timeout: this.config.monitoring.healthChecks.timeout,
-        retries: 3
+        retries: 3,
       },
       websocket: {
-        endpoint: '/api/health/websocket',
+        endpoint: "/api/health/websocket",
         interval: this.config.monitoring.healthChecks.interval,
         timeout: this.config.monitoring.healthChecks.timeout,
-        retries: 3
-      }
+        retries: 3,
+      },
     };
   }
 
@@ -303,13 +303,13 @@ class DeploymentConfig {
       metrics: {
         enabled: this.config.monitoring.metrics.enabled,
         port: this.config.monitoring.metrics.port,
-        collectInterval: 60000
+        collectInterval: 60000,
       },
       logging: {
         level: this.config.ide.logLevel,
-        format: 'json',
-        timestamp: true
-      }
+        format: "json",
+        timestamp: true,
+      },
     };
   }
 
@@ -325,25 +325,25 @@ class DeploymentConfig {
       exportConfig: () => ({
         environment: this.currentEnv,
         config: this.config,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       }),
 
       // Health check endpoints
       getHealthEndpoints: () => [
-        '/api/health',
-        '/api/ide/health',
-        '/api/health/database',
-        '/api/health/websocket'
+        "/api/health",
+        "/api/ide/health",
+        "/api/health/database",
+        "/api/health/websocket",
       ],
 
       // Performance metrics endpoints
       getMetricsEndpoints: () => [
-        '/api/metrics',
-        '/api/ide/metrics',
-        '/api/performance/metrics'
-      ]
+        "/api/metrics",
+        "/api/ide/metrics",
+        "/api/performance/metrics",
+      ],
     };
   }
 }
 
-module.exports = DeploymentConfig; 
+module.exports = DeploymentConfig;

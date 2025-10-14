@@ -145,14 +145,14 @@ it('should handle errors and return 500 status', async () => {
 ```javascript
 // ✅ Success Response Format
 expect(mockRes.json).toHaveBeenCalledWith({
-  success: true,
+ 
   data: mockProjects
 });
 
 // ✅ Error Response Format
 expect(mockRes.status).toHaveBeenCalledWith(404);
 expect(mockRes.json).toHaveBeenCalledWith({
-  success: false,
+ 
   error: 'Project not found'
 });
 ```

@@ -1,28 +1,27 @@
-
 /**
  * CompressionEngine Service
- * 
+ *
  * Handles image compression for streaming frames using WebP and JPEG formats
  * with automatic fallback and quality optimization.
  */
-const sharp = require('sharp');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const sharp = require("sharp");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class CompressionEngine {
   constructor() {
-    this.supportedFormats = ['webp', 'jpeg'];
-    this.defaultFormat = 'webp';
+    this.supportedFormats = ["webp", "jpeg"];
+    this.defaultFormat = "webp";
     this.maxRetries = 3;
     this.compressionCache = new Map(); // Cache for repeated compression attempts
-    
+
     // Performance tracking
     this.compressionStats = {
       totalCompressions: 0,
       successfulCompressions: 0,
       failedCompressions: 0,
       averageCompressionTime: 0,
-      formatUsage: { webp: 0, jpeg: 0 }
+      formatUsage: { webp: 0, jpeg: 0 },
     };
   }
 
@@ -34,9 +33,9 @@ class CompressionEngine {
    */
   async compress(imageBuffer, options = {}) {
     const {
-      format = 'jpeg',
+      format = "jpeg",
       quality = 0.4,
-      maxSize = 3 * 1024 * 1024
+      maxSize = 3 * 1024 * 1024,
     } = options;
 
     // Immer nur JPEG komprimieren
@@ -56,9 +55,9 @@ class CompressionEngine {
 
     return {
       buffer: outputBuffer,
-      format: 'jpeg',
+      format: "jpeg",
       size: outputBuffer.length,
-      quality: currentQuality
+      quality: currentQuality,
     };
   }
 
@@ -71,38 +70,37 @@ class CompressionEngine {
    */
   async compressWithFormat(imageBuffer, format, quality) {
     const qualityPercent = Math.round(quality * 100);
-    
+
     try {
       let compressedBuffer;
-      
-      if (format === 'webp') {
+
+      if (format === "webp") {
         compressedBuffer = await sharp(imageBuffer)
-          .webp({ 
+          .webp({
             quality: qualityPercent,
             effort: 4, // Higher effort for better compression
-            nearLossless: quality > 0.9 // Near lossless for high quality
+            nearLossless: quality > 0.9, // Near lossless for high quality
           })
           .toBuffer();
-      } else if (format === 'jpeg') {
+      } else if (format === "jpeg") {
         compressedBuffer = await sharp(imageBuffer)
-          .jpeg({ 
+          .jpeg({
             quality: qualityPercent,
             progressive: true,
-            mozjpeg: true // Use mozjpeg for better compression
+            mozjpeg: true, // Use mozjpeg for better compression
           })
           .toBuffer();
       } else {
         throw new Error(`Unsupported format: ${format}`);
       }
-      
+
       return {
         data: compressedBuffer,
         format: format,
         size: compressedBuffer.length,
         quality: quality,
-        mimeType: `image/${format}`
+        mimeType: `image/${format}`,
       };
-      
     } catch (error) {
       throw new Error(`Compression failed for ${format}: ${error.message}`);
     }
@@ -115,48 +113,51 @@ class CompressionEngine {
    * @param {string} preferredFormat - Preferred format
    * @returns {Promise<Object>} Compressed frame data
    */
-  async compressToTargetSize(imageBuffer, targetSize, preferredFormat = 'webp') {
+  async compressToTargetSize(
+    imageBuffer,
+    targetSize,
+    preferredFormat = "webp",
+  ) {
     const maxAttempts = 5;
     let currentQuality = 0.8;
     let currentFormat = preferredFormat;
-    
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         const result = await this.compress(imageBuffer, {
           format: currentFormat,
           quality: currentQuality,
-          maxSize: targetSize
+          maxSize: targetSize,
         });
-        
+
         if (result.size <= targetSize) {
           return result;
         }
-        
+
         // Reduce quality for next attempt
         currentQuality = Math.max(0.3, currentQuality - 0.15);
-        
+
         // Switch to JPEG if WebP is still too large
-        if (currentFormat === 'webp' && attempt === 2) {
-          currentFormat = 'jpeg';
+        if (currentFormat === "webp" && attempt === 2) {
+          currentFormat = "jpeg";
           currentQuality = 0.8; // Reset quality for JPEG
         }
-        
       } catch (error) {
         logger.warn(`Attempt ${attempt + 1} failed:`, error.message);
-        
+
         // Switch to JPEG on error
-        if (currentFormat === 'webp') {
-          currentFormat = 'jpeg';
+        if (currentFormat === "webp") {
+          currentFormat = "jpeg";
           currentQuality = 0.8;
         }
       }
     }
-    
+
     // Return best attempt even if target size not met
     return await this.compress(imageBuffer, {
       format: currentFormat,
       quality: 0.3,
-      maxSize: targetSize
+      maxSize: targetSize,
     });
   }
 
@@ -169,20 +170,25 @@ class CompressionEngine {
   async compressBatch(imageBuffers, options = {}) {
     const results = [];
     const batchSize = options.batchSize || 5;
-    
+
     for (let i = 0; i < imageBuffers.length; i += batchSize) {
       const batch = imageBuffers.slice(i, i + batchSize);
-      const batchPromises = batch.map(buffer => this.compress(buffer, options));
-      
+      const batchPromises = batch.map((buffer) =>
+        this.compress(buffer, options),
+      );
+
       try {
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       } catch (error) {
-        logger.error(`Batch compression failed for batch ${i / batchSize}:`, error.message);
+        logger.error(
+          `Batch compression failed for batch ${i / batchSize}:`,
+          error.message,
+        );
         // Continue with remaining batches
       }
     }
-    
+
     return results;
   }
 
@@ -199,11 +205,15 @@ class CompressionEngine {
     } else {
       this.compressionStats.failedCompressions++;
     }
-    
+
     // Update average compression time
-    const total = this.compressionStats.successfulCompressions + this.compressionStats.failedCompressions;
-    this.compressionStats.averageCompressionTime = 
-      (this.compressionStats.averageCompressionTime * (total - 1) + compressionTime) / total;
+    const total =
+      this.compressionStats.successfulCompressions +
+      this.compressionStats.failedCompressions;
+    this.compressionStats.averageCompressionTime =
+      (this.compressionStats.averageCompressionTime * (total - 1) +
+        compressionTime) /
+      total;
   }
 
   /**
@@ -212,12 +222,17 @@ class CompressionEngine {
    */
   getStats() {
     const total = this.compressionStats.totalCompressions;
-    const successRate = total > 0 ? (this.compressionStats.successfulCompressions / total) * 100 : 0;
-    
+    const successRate =
+      total > 0
+        ? (this.compressionStats.successfulCompressions / total) * 100
+        : 0;
+
     return {
       ...this.compressionStats,
       successRate: Math.round(successRate * 100) / 100,
-      averageCompressionTime: Math.round(this.compressionStats.averageCompressionTime)
+      averageCompressionTime: Math.round(
+        this.compressionStats.averageCompressionTime,
+      ),
     };
   }
 
@@ -230,7 +245,7 @@ class CompressionEngine {
       successfulCompressions: 0,
       failedCompressions: 0,
       averageCompressionTime: 0,
-      formatUsage: { webp: 0, jpeg: 0 }
+      formatUsage: { webp: 0, jpeg: 0 },
     };
   }
 
@@ -259,4 +274,4 @@ class CompressionEngine {
   }
 }
 
-module.exports = CompressionEngine; 
+module.exports = CompressionEngine;

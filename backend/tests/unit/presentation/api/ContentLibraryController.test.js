@@ -1,16 +1,16 @@
-const ContentLibraryController = require('@api/ContentLibraryController');
-const fs = require('fs').promises;
-const path = require('path');
+const ContentLibraryController = require("@api/ContentLibraryController");
+const fs = require("fs").promises;
+const path = require("path");
 
 // Mock fs.promises
-jest.mock('fs', () => ({
+jest.mock("fs", () => ({
   promises: {
     readdir: jest.fn(),
-    readFile: jest.fn()
-  }
+    readFile: jest.fn(),
+  },
 }));
 
-describe('ContentLibraryController', () => {
+describe("ContentLibraryController", () => {
   let controller;
   let mockReq;
   let mockRes;
@@ -20,7 +20,7 @@ describe('ContentLibraryController', () => {
     mockReq = { params: {}, query: {} };
     mockRes = {
       json: jest.fn(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
     jest.clearAllMocks();
   });

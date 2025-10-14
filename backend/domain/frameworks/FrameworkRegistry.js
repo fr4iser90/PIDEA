@@ -1,4 +1,3 @@
-
 /**
  * Framework Registry - Domain Layer
  * Manages framework configurations and provides framework validation
@@ -6,10 +5,14 @@
  */
 
 // Removed file system imports - domain layer should not handle file operations
-const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
-const IStandardRegistry = require('../interfaces/IStandardRegistry');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const {
+  STANDARD_CATEGORIES,
+  isValidCategory,
+  getDefaultCategory,
+} = require("../constants/Categories");
+const IStandardRegistry = require("../interfaces/IStandardRegistry");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class FrameworkRegistry {
   constructor() {
@@ -27,28 +30,30 @@ class FrameworkRegistry {
   async registerFramework(name, config, category = null) {
     try {
       // Use default category if not provided
-      const finalCategory = category || getDefaultCategory('framework');
-      
+      const finalCategory = category || getDefaultCategory("framework");
+
       // Validate category
       if (!isValidCategory(finalCategory)) {
-        throw new Error(`Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(', ')}`);
+        throw new Error(
+          `Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(", ")}`,
+        );
       }
-      
+
       // Validate framework configuration
       this.validateFrameworkConfig(config);
-      
+
       // Store framework configuration
       this.frameworks.set(name, {
         name,
         config,
         category: finalCategory,
         registeredAt: new Date(),
-        status: 'active',
+        status: "active",
         metadata: {
-          type: 'framework',
+          type: "framework",
           category: finalCategory,
-          version: config.version || '1.0.0'
-        }
+          version: config.version || "1.0.0",
+        },
       });
 
       // Add to category
@@ -57,7 +62,9 @@ class FrameworkRegistry {
       }
       this.categories.get(finalCategory).add(name);
 
-      logger.debug(`✅ Framework "${name}" registered successfully in category "${finalCategory}"`);
+      logger.debug(
+        `✅ Framework "${name}" registered successfully in category "${finalCategory}"`,
+      );
       return true;
     } catch (error) {
       logger.error(`❌ Failed to register framework "${name}":`, error.message);
@@ -75,18 +82,21 @@ class FrameworkRegistry {
       for (const config of configs) {
         try {
           const frameworkName = config.name;
-          const category = config.category || 'general';
-          
+          const category = config.category || "general";
+
           await this.registerFramework(frameworkName, config, category);
           this.configs.set(frameworkName, config);
         } catch (error) {
-          logger.error(`❌ Failed to load config "${config.name}":`, error.message);
+          logger.error(
+            `❌ Failed to load config "${config.name}":`,
+            error.message,
+          );
         }
       }
 
       // Only log summary, not individual framework loading
     } catch (error) {
-      logger.error('❌ Failed to load framework configs:', error.message);
+      logger.error("❌ Failed to load framework configs:", error.message);
       throw error;
     }
   }
@@ -109,7 +119,7 @@ class FrameworkRegistry {
    */
   getFrameworksByCategory(category) {
     const frameworkNames = this.categories.get(category) || new Set();
-    return Array.from(frameworkNames).map(name => this.getFramework(name));
+    return Array.from(frameworkNames).map((name) => this.getFramework(name));
   }
 
   /**
@@ -133,14 +143,14 @@ class FrameworkRegistry {
    */
   async updateFramework(name, newConfig) {
     const framework = this.getFramework(name);
-    
+
     // Validate new configuration
     this.validateFrameworkConfig(newConfig);
-    
+
     // Update framework
     framework.config = { ...framework.config, ...newConfig };
     framework.updatedAt = new Date();
-    
+
     logger.info(`✅ Framework "${name}" updated successfully`);
     return framework;
   }
@@ -151,24 +161,24 @@ class FrameworkRegistry {
    */
   removeFramework(name) {
     const framework = this.getFramework(name);
-    
+
     // Remove from frameworks map
     this.frameworks.delete(name);
-    
+
     // Remove from category
     const category = framework.category;
     if (this.categories.has(category)) {
       this.categories.get(category).delete(name);
-      
+
       // Remove empty category
       if (this.categories.get(category).size === 0) {
         this.categories.delete(category);
       }
     }
-    
+
     // Remove config file reference
     this.configs.delete(name);
-    
+
     logger.info(`🗑️ Framework "${name}" removed successfully`);
     return true;
   }
@@ -178,8 +188,8 @@ class FrameworkRegistry {
    * @param {Object} config - Framework configuration
    */
   validateFrameworkConfig(config) {
-    if (!config || typeof config !== 'object') {
-      throw new Error('Framework configuration must be an object');
+    if (!config || typeof config !== "object") {
+      throw new Error("Framework configuration must be an object");
     }
 
     if (!config.name) {
@@ -191,7 +201,9 @@ class FrameworkRegistry {
     }
 
     if (!config.description) {
-      throw new Error('Framework configuration must have a "description" property');
+      throw new Error(
+        'Framework configuration must have a "description" property',
+      );
     }
 
     // Domain layer only validates metadata - steps validation moved to infrastructure layer
@@ -226,7 +238,7 @@ class FrameworkRegistry {
     const framework = this.getFramework(name);
     framework.status = status;
     framework.updatedAt = new Date();
-    
+
     logger.info(`✅ Framework "${name}" status set to "${status}"`);
     return framework;
   }
@@ -238,8 +250,12 @@ class FrameworkRegistry {
     return {
       totalFrameworks: this.frameworks.size,
       categories: this.categories.size,
-      activeFrameworks: Array.from(this.frameworks.values()).filter(f => f.status === 'active').length,
-      inactiveFrameworks: Array.from(this.frameworks.values()).filter(f => f.status === 'inactive').length
+      activeFrameworks: Array.from(this.frameworks.values()).filter(
+        (f) => f.status === "active",
+      ).length,
+      inactiveFrameworks: Array.from(this.frameworks.values()).filter(
+        (f) => f.status === "inactive",
+      ).length,
     };
   }
 
@@ -265,7 +281,7 @@ class FrameworkRegistry {
   static buildFromCategory(category, name, params = {}) {
     const instance = new FrameworkRegistry();
     const frameworks = instance.getFrameworksByCategory(category);
-    return frameworks.find(f => f.name === name) || null;
+    return frameworks.find((f) => f.name === name) || null;
   }
 
   /**
@@ -291,14 +307,13 @@ class FrameworkRegistry {
   static async execute(name, context = {}, options = {}) {
     const instance = new FrameworkRegistry();
     const framework = instance.getFramework(name);
-    
+
     // Framework execution logic would go here
     return {
-      success: true,
       framework: framework.name,
       category: framework.category,
       context,
-      options
+      options,
     };
   }
 
@@ -426,7 +441,7 @@ class FrameworkRegistry {
     return {
       frameworks: Array.from(instance.frameworks.entries()),
       categories: Array.from(instance.categories.entries()),
-      configs: Array.from(instance.configs.entries())
+      configs: Array.from(instance.configs.entries()),
     };
   }
 
@@ -437,27 +452,27 @@ class FrameworkRegistry {
    */
   static import(data) {
     const instance = new FrameworkRegistry();
-    
+
     if (data.frameworks) {
       data.frameworks.forEach(([name, framework]) => {
         instance.frameworks.set(name, framework);
       });
     }
-    
+
     if (data.categories) {
       data.categories.forEach(([category, names]) => {
         instance.categories.set(category, new Set(names));
       });
     }
-    
+
     if (data.configs) {
       data.configs.forEach(([name, configPath]) => {
         instance.configs.set(name, configPath);
       });
     }
-    
+
     return true;
   }
 }
 
-module.exports = FrameworkRegistry; 
+module.exports = FrameworkRegistry;

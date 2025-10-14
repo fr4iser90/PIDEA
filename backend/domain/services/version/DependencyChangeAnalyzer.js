@@ -3,47 +3,47 @@
  * Detects package.json changes, dependency updates, and breaking changes
  */
 
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
 class DependencyChangeAnalyzer {
   constructor(dependencies = {}) {
-    this.logger = new Logger('DependencyChangeAnalyzer');
+    this.logger = new Logger("DependencyChangeAnalyzer");
     this.fileSystemService = dependencies.fileSystemService;
-    
+
     // Configuration
     this.config = {
       packageFiles: [
-        'package.json',
-        'package-lock.json',
-        'yarn.lock',
-        'pnpm-lock.yaml',
-        'requirements.txt',
-        'Pipfile',
-        'Pipfile.lock',
-        'pyproject.toml',
-        'composer.json',
-        'composer.lock',
-        'Gemfile',
-        'Gemfile.lock',
-        'Cargo.toml',
-        'Cargo.lock',
-        'go.mod',
-        'go.sum',
-        'pom.xml',
-        'build.gradle',
-        'build.gradle.kts'
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        "pnpm-lock.yaml",
+        "requirements.txt",
+        "Pipfile",
+        "Pipfile.lock",
+        "pyproject.toml",
+        "composer.json",
+        "composer.lock",
+        "Gemfile",
+        "Gemfile.lock",
+        "Cargo.toml",
+        "Cargo.lock",
+        "go.mod",
+        "go.sum",
+        "pom.xml",
+        "build.gradle",
+        "build.gradle.kts",
       ],
       breakingChangeIndicators: [
-        'major',
-        'breaking',
-        'incompatible',
-        'deprecated',
-        'removed',
-        'changed'
+        "major",
+        "breaking",
+        "incompatible",
+        "deprecated",
+        "removed",
+        "changed",
       ],
-      ...dependencies.config
+      ...dependencies.config,
     };
   }
 
@@ -55,7 +55,7 @@ class DependencyChangeAnalyzer {
    */
   async analyzeDependencyChanges(projectPath, context = {}) {
     try {
-      this.logger.info('Starting dependency change analysis', { projectPath });
+      this.logger.info("Starting dependency change analysis", { projectPath });
 
       const analysis = {
         hasBreakingChanges: false,
@@ -67,8 +67,8 @@ class DependencyChangeAnalyzer {
         dependencyChanges: [],
         packageFiles: [],
         confidence: 0.5,
-        factors: ['dependency-analysis'],
-        timestamp: new Date()
+        factors: ["dependency-analysis"],
+        timestamp: new Date(),
       };
 
       // Find package files
@@ -76,29 +76,34 @@ class DependencyChangeAnalyzer {
       analysis.packageFiles = packageFiles;
 
       if (packageFiles.length === 0) {
-        this.logger.warn('No package files found for dependency analysis');
+        this.logger.warn("No package files found for dependency analysis");
         return analysis;
       }
 
       // Analyze each package file
       for (const packageFile of packageFiles) {
-        const fileAnalysis = await this.analyzePackageFile(packageFile, projectPath, context);
+        const fileAnalysis = await this.analyzePackageFile(
+          packageFile,
+          projectPath,
+          context,
+        );
         this.mergeFileAnalysis(analysis, fileAnalysis);
       }
 
       // Calculate overall confidence
       analysis.confidence = this.calculateConfidence(analysis);
 
-      this.logger.info('Dependency change analysis completed', {
+      this.logger.info("Dependency change analysis completed", {
         hasBreakingChanges: analysis.hasBreakingChanges,
         hasMajorUpdates: analysis.hasMajorUpdates,
-        dependencyChanges: analysis.dependencyChanges.length
+        dependencyChanges: analysis.dependencyChanges.length,
       });
 
       return analysis;
-
     } catch (error) {
-      this.logger.error('Dependency change analysis failed', { error: error.message });
+      this.logger.error("Dependency change analysis failed", {
+        error: error.message,
+      });
       return this.getFallbackAnalysis(error);
     }
   }
@@ -123,9 +128,10 @@ class DependencyChangeAnalyzer {
       }
 
       return packageFiles;
-
     } catch (error) {
-      this.logger.warn('Failed to find package files', { error: error.message });
+      this.logger.warn("Failed to find package files", {
+        error: error.message,
+      });
       return [];
     }
   }
@@ -140,8 +146,8 @@ class DependencyChangeAnalyzer {
   async analyzePackageFile(packageFile, projectPath, context) {
     try {
       const filePath = path.join(projectPath, packageFile);
-      const content = await fs.readFile(filePath, 'utf8');
-      
+      const content = await fs.readFile(filePath, "utf8");
+
       const analysis = {
         hasBreakingChanges: false,
         hasMajorUpdates: false,
@@ -149,30 +155,29 @@ class DependencyChangeAnalyzer {
         hasPatchUpdates: false,
         hasNewDependencies: false,
         hasRemovedDependencies: false,
-        dependencyChanges: []
+        dependencyChanges: [],
       };
 
       // Analyze based on file type
-      if (packageFile === 'package.json') {
+      if (packageFile === "package.json") {
         this.analyzePackageJson(content, packageFile, analysis);
-      } else if (packageFile.endsWith('.lock')) {
+      } else if (packageFile.endsWith(".lock")) {
         this.analyzeLockFile(content, packageFile, analysis);
-      } else if (packageFile === 'requirements.txt') {
+      } else if (packageFile === "requirements.txt") {
         this.analyzeRequirementsTxt(content, packageFile, analysis);
-      } else if (packageFile === 'go.mod') {
+      } else if (packageFile === "go.mod") {
         this.analyzeGoMod(content, packageFile, analysis);
-      } else if (packageFile === 'Cargo.toml') {
+      } else if (packageFile === "Cargo.toml") {
         this.analyzeCargoToml(content, packageFile, analysis);
       }
 
       return analysis;
-
     } catch (error) {
-      this.logger.warn('Failed to analyze package file', { 
-        packageFile, 
-        error: error.message 
+      this.logger.warn("Failed to analyze package file", {
+        packageFile,
+        error: error.message,
       });
-      
+
       return {
         hasBreakingChanges: false,
         hasMajorUpdates: false,
@@ -180,7 +185,7 @@ class DependencyChangeAnalyzer {
         hasPatchUpdates: false,
         hasNewDependencies: false,
         hasRemovedDependencies: false,
-        dependencyChanges: []
+        dependencyChanges: [],
       };
     }
   }
@@ -194,14 +199,23 @@ class DependencyChangeAnalyzer {
   analyzePackageJson(content, packageFile, analysis) {
     try {
       const packageData = JSON.parse(content);
-      
+
       // Analyze dependencies
-      const dependencySections = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
-      
+      const dependencySections = [
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "optionalDependencies",
+      ];
+
       for (const section of dependencySections) {
         if (packageData[section]) {
           for (const [name, version] of Object.entries(packageData[section])) {
-            const change = this.analyzeDependencyVersion(name, version, packageFile);
+            const change = this.analyzeDependencyVersion(
+              name,
+              version,
+              packageFile,
+            );
             if (change) {
               analysis.dependencyChanges.push(change);
               this.updateAnalysisFromChange(analysis, change);
@@ -209,9 +223,10 @@ class DependencyChangeAnalyzer {
           }
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to analyze package.json', { error: error.message });
+      this.logger.warn("Failed to analyze package.json", {
+        error: error.message,
+      });
     }
   }
 
@@ -226,7 +241,7 @@ class DependencyChangeAnalyzer {
       // Look for version changes in lock file
       const versionPattern = /"version":\s*"([^"]+)"/g;
       let match;
-      
+
       while ((match = versionPattern.exec(content)) !== null) {
         const version = match[1];
         const change = this.analyzeVersionString(version, packageFile);
@@ -235,9 +250,8 @@ class DependencyChangeAnalyzer {
           this.updateAnalysisFromChange(analysis, change);
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to analyze lock file', { error: error.message });
+      this.logger.warn("Failed to analyze lock file", { error: error.message });
     }
   }
 
@@ -249,11 +263,11 @@ class DependencyChangeAnalyzer {
    */
   analyzeRequirementsTxt(content, packageFile, analysis) {
     try {
-      const lines = content.split('\n');
-      
+      const lines = content.split("\n");
+
       for (const line of lines) {
         const trimmedLine = line.trim();
-        if (trimmedLine && !trimmedLine.startsWith('#')) {
+        if (trimmedLine && !trimmedLine.startsWith("#")) {
           const change = this.analyzePythonDependency(trimmedLine, packageFile);
           if (change) {
             analysis.dependencyChanges.push(change);
@@ -261,9 +275,10 @@ class DependencyChangeAnalyzer {
           }
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to analyze requirements.txt', { error: error.message });
+      this.logger.warn("Failed to analyze requirements.txt", {
+        error: error.message,
+      });
     }
   }
 
@@ -277,7 +292,7 @@ class DependencyChangeAnalyzer {
     try {
       const requirePattern = /require\s+([^\s]+)\s+([^\s]+)/g;
       let match;
-      
+
       while ((match = requirePattern.exec(content)) !== null) {
         const [, module, version] = match;
         const change = this.analyzeGoDependency(module, version, packageFile);
@@ -286,9 +301,8 @@ class DependencyChangeAnalyzer {
           this.updateAnalysisFromChange(analysis, change);
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to analyze go.mod', { error: error.message });
+      this.logger.warn("Failed to analyze go.mod", { error: error.message });
     }
   }
 
@@ -302,7 +316,7 @@ class DependencyChangeAnalyzer {
     try {
       const dependencyPattern = /(\w+)\s*=\s*"([^"]+)"/g;
       let match;
-      
+
       while ((match = dependencyPattern.exec(content)) !== null) {
         const [, name, version] = match;
         const change = this.analyzeCargoDependency(name, version, packageFile);
@@ -311,9 +325,10 @@ class DependencyChangeAnalyzer {
           this.updateAnalysisFromChange(analysis, change);
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to analyze Cargo.toml', { error: error.message });
+      this.logger.warn("Failed to analyze Cargo.toml", {
+        error: error.message,
+      });
     }
   }
 
@@ -330,11 +345,11 @@ class DependencyChangeAnalyzer {
         name,
         version,
         packageFile,
-        type: 'unknown',
+        type: "unknown",
         isBreaking: false,
         isMajor: false,
         isMinor: false,
-        isPatch: false
+        isPatch: false,
       };
 
       // Analyze version string
@@ -344,12 +359,11 @@ class DependencyChangeAnalyzer {
       }
 
       return change;
-
     } catch (error) {
-      this.logger.warn('Failed to analyze dependency version', { 
-        name, 
-        version, 
-        error: error.message 
+      this.logger.warn("Failed to analyze dependency version", {
+        name,
+        version,
+        error: error.message,
       });
       return null;
     }
@@ -364,11 +378,11 @@ class DependencyChangeAnalyzer {
   analyzeVersionString(version, packageFile) {
     try {
       const analysis = {
-        type: 'unknown',
+        type: "unknown",
         isBreaking: false,
         isMajor: false,
         isMinor: false,
-        isPatch: false
+        isPatch: false,
       };
 
       // Check for breaking change indicators
@@ -376,7 +390,7 @@ class DependencyChangeAnalyzer {
         if (version.toLowerCase().includes(indicator)) {
           analysis.isBreaking = true;
           analysis.isMajor = true;
-          analysis.type = 'breaking';
+          analysis.type = "breaking";
           break;
         }
       }
@@ -385,26 +399,25 @@ class DependencyChangeAnalyzer {
       const semverMatch = version.match(/^(\d+)\.(\d+)\.(\d+)/);
       if (semverMatch) {
         const [, major, minor, patch] = semverMatch;
-        
+
         // This is a simplified analysis - in reality, we'd need to compare with previous versions
         if (parseInt(major) > 0) {
           analysis.isMajor = true;
-          analysis.type = 'major';
+          analysis.type = "major";
         } else if (parseInt(minor) > 0) {
           analysis.isMinor = true;
-          analysis.type = 'minor';
+          analysis.type = "minor";
         } else {
           analysis.isPatch = true;
-          analysis.type = 'patch';
+          analysis.type = "patch";
         }
       }
 
       return analysis;
-
     } catch (error) {
-      this.logger.warn('Failed to analyze version string', { 
-        version, 
-        error: error.message 
+      this.logger.warn("Failed to analyze version string", {
+        version,
+        error: error.message,
       });
       return null;
     }
@@ -418,26 +431,25 @@ class DependencyChangeAnalyzer {
    */
   analyzePythonDependency(line, packageFile) {
     try {
-      const parts = line.split('==');
+      const parts = line.split("==");
       if (parts.length === 2) {
         const [name, version] = parts;
         return {
           name: name.trim(),
           version: version.trim(),
           packageFile,
-          type: 'python',
+          type: "python",
           isBreaking: false,
           isMajor: false,
           isMinor: false,
-          isPatch: false
+          isPatch: false,
         };
       }
       return null;
-
     } catch (error) {
-      this.logger.warn('Failed to analyze Python dependency', { 
-        line, 
-        error: error.message 
+      this.logger.warn("Failed to analyze Python dependency", {
+        line,
+        error: error.message,
       });
       return null;
     }
@@ -456,18 +468,17 @@ class DependencyChangeAnalyzer {
         name: module,
         version,
         packageFile,
-        type: 'go',
+        type: "go",
         isBreaking: false,
         isMajor: false,
         isMinor: false,
-        isPatch: false
+        isPatch: false,
       };
-
     } catch (error) {
-      this.logger.warn('Failed to analyze Go dependency', { 
-        module, 
-        version, 
-        error: error.message 
+      this.logger.warn("Failed to analyze Go dependency", {
+        module,
+        version,
+        error: error.message,
       });
       return null;
     }
@@ -486,18 +497,17 @@ class DependencyChangeAnalyzer {
         name,
         version,
         packageFile,
-        type: 'rust',
+        type: "rust",
         isBreaking: false,
         isMajor: false,
         isMinor: false,
-        isPatch: false
+        isPatch: false,
       };
-
     } catch (error) {
-      this.logger.warn('Failed to analyze Cargo dependency', { 
-        name, 
-        version, 
-        error: error.message 
+      this.logger.warn("Failed to analyze Cargo dependency", {
+        name,
+        version,
+        error: error.message,
       });
       return null;
     }
@@ -509,7 +519,8 @@ class DependencyChangeAnalyzer {
    * @param {Object} change - Dependency change
    */
   updateAnalysisFromChange(analysis, change) {
-    analysis.hasBreakingChanges = analysis.hasBreakingChanges || change.isBreaking;
+    analysis.hasBreakingChanges =
+      analysis.hasBreakingChanges || change.isBreaking;
     analysis.hasMajorUpdates = analysis.hasMajorUpdates || change.isMajor;
     analysis.hasMinorUpdates = analysis.hasMinorUpdates || change.isMinor;
     analysis.hasPatchUpdates = analysis.hasPatchUpdates || change.isPatch;
@@ -521,12 +532,18 @@ class DependencyChangeAnalyzer {
    * @param {Object} fileAnalysis - File analysis
    */
   mergeFileAnalysis(analysis, fileAnalysis) {
-    analysis.hasBreakingChanges = analysis.hasBreakingChanges || fileAnalysis.hasBreakingChanges;
-    analysis.hasMajorUpdates = analysis.hasMajorUpdates || fileAnalysis.hasMajorUpdates;
-    analysis.hasMinorUpdates = analysis.hasMinorUpdates || fileAnalysis.hasMinorUpdates;
-    analysis.hasPatchUpdates = analysis.hasPatchUpdates || fileAnalysis.hasPatchUpdates;
-    analysis.hasNewDependencies = analysis.hasNewDependencies || fileAnalysis.hasNewDependencies;
-    analysis.hasRemovedDependencies = analysis.hasRemovedDependencies || fileAnalysis.hasRemovedDependencies;
+    analysis.hasBreakingChanges =
+      analysis.hasBreakingChanges || fileAnalysis.hasBreakingChanges;
+    analysis.hasMajorUpdates =
+      analysis.hasMajorUpdates || fileAnalysis.hasMajorUpdates;
+    analysis.hasMinorUpdates =
+      analysis.hasMinorUpdates || fileAnalysis.hasMinorUpdates;
+    analysis.hasPatchUpdates =
+      analysis.hasPatchUpdates || fileAnalysis.hasPatchUpdates;
+    analysis.hasNewDependencies =
+      analysis.hasNewDependencies || fileAnalysis.hasNewDependencies;
+    analysis.hasRemovedDependencies =
+      analysis.hasRemovedDependencies || fileAnalysis.hasRemovedDependencies;
 
     analysis.dependencyChanges.push(...fileAnalysis.dependencyChanges);
   }
@@ -574,9 +591,9 @@ class DependencyChangeAnalyzer {
       dependencyChanges: [],
       packageFiles: [],
       confidence: 0.1,
-      factors: ['dependency-analysis-fallback'],
+      factors: ["dependency-analysis-fallback"],
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -586,12 +603,12 @@ class DependencyChangeAnalyzer {
    */
   getHealthStatus() {
     return {
-      status: 'healthy',
+      status: "healthy",
       config: {
         packageFiles: this.config.packageFiles.length,
-        breakingChangeIndicators: this.config.breakingChangeIndicators.length
+        breakingChangeIndicators: this.config.breakingChangeIndicators.length,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 }

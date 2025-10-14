@@ -1,14 +1,13 @@
-
 /**
  * StreamingSessionRepository
- * 
+ *
  * Repository for managing streaming session persistence and retrieval.
  * Supports both in-memory and database storage for streaming sessions.
  */
-const StreamingSession = require('@entities/StreamingSession');
-const FrameMetrics = require('@entities/FrameMetrics');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const StreamingSession = require("@entities/StreamingSession");
+const FrameMetrics = require("@entities/FrameMetrics");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class StreamingSessionRepository {
   constructor(databaseConnection = null) {
@@ -32,9 +31,9 @@ class StreamingSessionRepository {
         await this.createTables();
       }
       this.isInitialized = true;
-      logger.info('Initialized successfully');
+      logger.info("Initialized successfully");
     } catch (error) {
-      logger.error('Initialization error:', error.message);
+      logger.error("Initialization error:", error.message);
       throw error;
     }
   }
@@ -103,9 +102,9 @@ class StreamingSessionRepository {
     try {
       await this.databaseConnection.execute(createSessionsTable);
       await this.databaseConnection.execute(createMetricsTable);
-      logger.info('Database tables created successfully');
+      logger.info("Database tables created successfully");
     } catch (error) {
-      logger.error('Error creating tables:', error.message);
+      logger.error("Error creating tables:", error.message);
       throw error;
     }
   }
@@ -167,7 +166,7 @@ class StreamingSessionRepository {
       Math.round(session.averageFrameSize),
       Math.round(session.averageLatency),
       Math.round(session.bandwidthUsage),
-      session.memoryUsage
+      session.memoryUsage,
     ];
 
     await this.databaseConnection.execute(query, params);
@@ -205,7 +204,7 @@ class StreamingSessionRepository {
    * @returns {Promise<StreamingSession|null>}
    */
   async getSessionFromDatabase(sessionId) {
-    const query = 'SELECT * FROM streaming_sessions WHERE id = ?';
+    const query = "SELECT * FROM streaming_sessions WHERE id = ?";
     const result = await this.databaseConnection.query(query, [sessionId]);
 
     if (result.length === 0) {
@@ -232,7 +231,7 @@ class StreamingSessionRepository {
       averageFrameSize: data.average_frame_size,
       averageLatency: data.average_latency,
       bandwidthUsage: data.bandwidth_usage,
-      memoryUsage: data.memory_usage
+      memoryUsage: data.memory_usage,
     });
 
     // Cache in memory
@@ -249,7 +248,7 @@ class StreamingSessionRepository {
       await this.initialize();
 
       const activeSessions = [];
-      
+
       // Get from memory
       for (const session of this.sessions.values()) {
         if (session.isActive()) {
@@ -270,7 +269,7 @@ class StreamingSessionRepository {
 
       return activeSessions;
     } catch (error) {
-      logger.error('Error getting active sessions:', error.message);
+      logger.error("Error getting active sessions:", error.message);
       throw error;
     }
   }
@@ -283,27 +282,29 @@ class StreamingSessionRepository {
     const query = "SELECT * FROM streaming_sessions WHERE status = 'active'";
     const results = await this.databaseConnection.query(query);
 
-    return results.map(data => StreamingSession.fromJSON({
-      id: data.id,
-      port: data.port,
-      status: data.status,
-      createdAt: data.created_at,
-      startedAt: data.started_at,
-      stoppedAt: data.stopped_at,
-      lastFrameAt: data.last_frame_at,
-      frameCount: data.frame_count,
-      errorCount: data.error_count,
-      lastError: data.last_error,
-      fps: data.fps,
-      quality: data.quality,
-      format: data.format,
-      maxFrameSize: data.max_frame_size,
-      enableRegionDetection: data.enable_region_detection,
-      averageFrameSize: data.average_frame_size,
-      averageLatency: data.average_latency,
-      bandwidthUsage: data.bandwidth_usage,
-      memoryUsage: data.memory_usage
-    }));
+    return results.map((data) =>
+      StreamingSession.fromJSON({
+        id: data.id,
+        port: data.port,
+        status: data.status,
+        createdAt: data.created_at,
+        startedAt: data.started_at,
+        stoppedAt: data.stopped_at,
+        lastFrameAt: data.last_frame_at,
+        frameCount: data.frame_count,
+        errorCount: data.error_count,
+        lastError: data.last_error,
+        fps: data.fps,
+        quality: data.quality,
+        format: data.format,
+        maxFrameSize: data.max_frame_size,
+        enableRegionDetection: data.enable_region_detection,
+        averageFrameSize: data.average_frame_size,
+        averageLatency: data.average_latency,
+        bandwidthUsage: data.bandwidth_usage,
+        memoryUsage: data.memory_usage,
+      }),
+    );
   }
 
   /**
@@ -337,7 +338,7 @@ class StreamingSessionRepository {
    * @returns {Promise<void>}
    */
   async deleteSessionFromDatabase(sessionId) {
-    const query = 'DELETE FROM streaming_sessions WHERE id = ?';
+    const query = "DELETE FROM streaming_sessions WHERE id = ?";
     await this.databaseConnection.execute(query, [sessionId]);
   }
 
@@ -361,7 +362,10 @@ class StreamingSessionRepository {
         await this.saveMetricsToDatabase(metrics);
       }
     } catch (error) {
-      logger.error(`Error saving metrics for session ${metrics.sessionId}:`, error.message);
+      logger.error(
+        `Error saving metrics for session ${metrics.sessionId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -403,7 +407,7 @@ class StreamingSessionRepository {
       metrics.retryCount,
       metrics.memoryUsageBefore,
       metrics.memoryUsageAfter,
-      metrics.memoryDelta
+      metrics.memoryDelta,
     ];
 
     await this.databaseConnection.execute(query, params);
@@ -430,7 +434,10 @@ class StreamingSessionRepository {
 
       return memoryMetrics.slice(-limit);
     } catch (error) {
-      logger.error(`Error getting metrics for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error getting metrics for session ${sessionId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -448,38 +455,43 @@ class StreamingSessionRepository {
       ORDER BY timestamp DESC 
       LIMIT ?
     `;
-    
-    const results = await this.databaseConnection.query(query, [sessionId, limit]);
 
-    return results.map(data => FrameMetrics.fromJSON({
-      sessionId: data.session_id,
-      frameNumber: data.frame_number,
-      timestamp: data.timestamp,
-      captureStartTime: data.capture_start_time,
-      captureEndTime: data.capture_end_time,
-      compressionStartTime: data.compression_start_time,
-      compressionEndTime: data.compression_end_time,
-      streamingStartTime: data.streaming_start_time,
-      streamingEndTime: data.streaming_end_time,
-      captureLatency: data.capture_latency,
-      compressionLatency: data.compression_latency,
-      streamingLatency: data.streaming_latency,
-      totalLatency: data.total_latency,
-      originalSize: data.original_size,
-      compressedSize: data.compressed_size,
-      format: data.format,
-      quality: data.quality,
-      compressionRatio: data.compression_ratio,
-      hasRegionDetection: data.has_region_detection,
-      changedRegions: JSON.parse(data.changed_regions || '[]'),
-      isFullFrame: data.is_full_frame,
-      hasError: data.has_error,
-      error: data.error,
-      retryCount: data.retry_count,
-      memoryUsageBefore: data.memory_usage_before,
-      memoryUsageAfter: data.memory_usage_after,
-      memoryDelta: data.memory_delta
-    }));
+    const results = await this.databaseConnection.query(query, [
+      sessionId,
+      limit,
+    ]);
+
+    return results.map((data) =>
+      FrameMetrics.fromJSON({
+        sessionId: data.session_id,
+        frameNumber: data.frame_number,
+        timestamp: data.timestamp,
+        captureStartTime: data.capture_start_time,
+        captureEndTime: data.capture_end_time,
+        compressionStartTime: data.compression_start_time,
+        compressionEndTime: data.compression_end_time,
+        streamingStartTime: data.streaming_start_time,
+        streamingEndTime: data.streaming_end_time,
+        captureLatency: data.capture_latency,
+        compressionLatency: data.compression_latency,
+        streamingLatency: data.streaming_latency,
+        totalLatency: data.total_latency,
+        originalSize: data.original_size,
+        compressedSize: data.compressed_size,
+        format: data.format,
+        quality: data.quality,
+        compressionRatio: data.compression_ratio,
+        hasRegionDetection: data.has_region_detection,
+        changedRegions: JSON.parse(data.changed_regions || "[]"),
+        isFullFrame: data.is_full_frame,
+        hasError: data.has_error,
+        error: data.error,
+        retryCount: data.retry_count,
+        memoryUsageBefore: data.memory_usage_before,
+        memoryUsageAfter: data.memory_usage_after,
+        memoryDelta: data.memory_delta,
+      }),
+    );
   }
 
   /**
@@ -496,7 +508,7 @@ class StreamingSessionRepository {
         totalMetrics: 0,
         averageSessionDuration: 0,
         averageFrameRate: 0,
-        totalErrors: 0
+        totalErrors: 0,
       };
 
       let totalDuration = 0;
@@ -507,20 +519,24 @@ class StreamingSessionRepository {
         if (session.isActive()) {
           stats.activeSessions++;
         }
-        
+
         if (session.isStopped()) {
           totalDuration += session.getDuration();
         }
-        
+
         totalFrames += session.frameCount;
         totalFrameRate += session.getFrameRate();
         stats.totalErrors += session.errorCount;
       }
 
       // Calculate metrics
-      const stoppedSessions = Array.from(this.sessions.values()).filter(s => s.isStopped()).length;
-      stats.averageSessionDuration = stoppedSessions > 0 ? totalDuration / stoppedSessions : 0;
-      stats.averageFrameRate = this.sessions.size > 0 ? totalFrameRate / this.sessions.size : 0;
+      const stoppedSessions = Array.from(this.sessions.values()).filter((s) =>
+        s.isStopped(),
+      ).length;
+      stats.averageSessionDuration =
+        stoppedSessions > 0 ? totalDuration / stoppedSessions : 0;
+      stats.averageFrameRate =
+        this.sessions.size > 0 ? totalFrameRate / this.sessions.size : 0;
 
       // Count total metrics
       for (const sessionMetrics of this.metrics.values()) {
@@ -529,7 +545,7 @@ class StreamingSessionRepository {
 
       return stats;
     } catch (error) {
-      logger.error('Error getting stats:', error.message);
+      logger.error("Error getting stats:", error.message);
       throw error;
     }
   }
@@ -539,7 +555,8 @@ class StreamingSessionRepository {
    * @param {number} maxAge - Maximum age in milliseconds
    * @returns {Promise<void>}
    */
-  async cleanup(maxAge = 24 * 60 * 60 * 1000) { // 24 hours default
+  async cleanup(maxAge = 24 * 60 * 60 * 1000) {
+    // 24 hours default
     try {
       await this.initialize();
 
@@ -558,10 +575,10 @@ class StreamingSessionRepository {
 
       logger.info(`Cleaned up ${sessionsToDelete.length} old sessions`);
     } catch (error) {
-      logger.error('Error during cleanup:', error.message);
+      logger.error("Error during cleanup:", error.message);
       throw error;
     }
   }
 }
 
-module.exports = StreamingSessionRepository; 
+module.exports = StreamingSessionRepository;

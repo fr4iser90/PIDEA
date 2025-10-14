@@ -1,6 +1,6 @@
 /**
  * StopStreamingCommand
- * 
+ *
  * Command to stop IDE screenshot streaming for a specific session.
  */
 class StopStreamingCommand {
@@ -23,10 +23,10 @@ class StopStreamingCommand {
    * @returns {boolean} Whether command is valid
    */
   validate() {
-    if (!this.sessionId || typeof this.sessionId !== 'string') {
-      throw new Error('Valid session ID is required');
+    if (!this.sessionId || typeof this.sessionId !== "string") {
+      throw new Error("Valid session ID is required");
     }
-    
+
     return true;
   }
 
@@ -37,9 +37,9 @@ class StopStreamingCommand {
   getMetadata() {
     return {
       commandId: this.commandId,
-      type: 'StopStreamingCommand',
+      type: "StopStreamingCommand",
       sessionId: this.sessionId,
-      timestamp: this.timestamp.toISOString()
+      timestamp: this.timestamp.toISOString(),
     };
   }
 
@@ -50,7 +50,7 @@ class StopStreamingCommand {
   toJSON() {
     return {
       ...this.getMetadata(),
-      validated: true
+      validated: true,
     };
   }
 
@@ -67,4 +67,4 @@ class StopStreamingCommand {
   }
 }
 
-module.exports = StopStreamingCommand; 
+module.exports = StopStreamingCommand;

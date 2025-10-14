@@ -3,13 +3,13 @@
  * Analyzes project manifests and configuration files
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const Logger = require('@logging/Logger');
+const fs = require("fs").promises;
+const path = require("path");
+const Logger = require("@logging/Logger");
 
 class ManifestAnalyzer {
   constructor() {
-    this.logger = new Logger('ManifestAnalyzer');
+    this.logger = new Logger("ManifestAnalyzer");
   }
 
   /**
@@ -27,7 +27,7 @@ class ManifestAnalyzer {
         configFiles: [],
         dockerFiles: [],
         ciFiles: [],
-        summary: {}
+        summary: {},
       };
 
       // 1. Analyze package.json
@@ -55,7 +55,6 @@ class ManifestAnalyzer {
 
       this.logger.info(`✅ Manifest analysis completed successfully`);
       return manifests;
-
     } catch (error) {
       this.logger.error(`❌ Manifest analysis failed: ${error.message}`);
       throw error;
@@ -69,10 +68,10 @@ class ManifestAnalyzer {
    */
   async analyzePackageJson(projectPath) {
     try {
-      const packageJsonPath = path.join(projectPath, 'package.json');
-      const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
+      const packageJsonPath = path.join(projectPath, "package.json");
+      const packageJsonContent = await fs.readFile(packageJsonPath, "utf8");
       const packageJson = JSON.parse(packageJsonContent);
-      
+
       return {
         name: packageJson.name,
         version: packageJson.version,
@@ -81,12 +80,12 @@ class ManifestAnalyzer {
         dependencies: packageJson.dependencies || {},
         devDependencies: packageJson.devDependencies || {},
         engines: packageJson.engines || {},
-        type: packageJson.type || 'commonjs',
+        type: packageJson.type || "commonjs",
         main: packageJson.main,
         bin: packageJson.bin,
         keywords: packageJson.keywords || [],
         author: packageJson.author,
-        license: packageJson.license
+        license: packageJson.license,
       };
     } catch (error) {
       this.logger.warn(`⚠️ Failed to read package.json: ${error.message}`);
@@ -101,12 +100,21 @@ class ManifestAnalyzer {
    */
   async findConfigFiles(projectPath) {
     const configPatterns = [
-      '*.config.js', '*.config.json', '*.config.ts',
-      '.eslintrc*', '.prettierrc*', '.babelrc*',
-      'tsconfig.json', 'jsconfig.json',
-      'webpack.config.js', 'vite.config.js', 'rollup.config.js',
-      'jest.config.js', 'karma.conf.js',
-      '.env*', 'config.*'
+      "*.config.js",
+      "*.config.json",
+      "*.config.ts",
+      ".eslintrc*",
+      ".prettierrc*",
+      ".babelrc*",
+      "tsconfig.json",
+      "jsconfig.json",
+      "webpack.config.js",
+      "vite.config.js",
+      "rollup.config.js",
+      "jest.config.js",
+      "karma.conf.js",
+      ".env*",
+      "config.*",
     ];
 
     return await this.scanDirectory(projectPath, configPatterns);
@@ -119,8 +127,11 @@ class ManifestAnalyzer {
    */
   async findDockerFiles(projectPath) {
     const dockerPatterns = [
-      'Dockerfile*', 'docker-compose*.yml', 'docker-compose*.yaml',
-      '.dockerignore', 'dockerfile*'
+      "Dockerfile*",
+      "docker-compose*.yml",
+      "docker-compose*.yaml",
+      ".dockerignore",
+      "dockerfile*",
     ];
 
     return await this.scanDirectory(projectPath, dockerPatterns);
@@ -133,12 +144,18 @@ class ManifestAnalyzer {
    */
   async findCIFiles(projectPath) {
     const ciPatterns = [
-      '.github/workflows/*.yml', '.github/workflows/*.yaml',
-      '.gitlab-ci.yml', '.gitlab-ci.yaml',
-      '.travis.yml', '.travis.yaml',
-      'azure-pipelines.yml', 'azure-pipelines.yaml',
-      'Jenkinsfile', 'Jenkinsfile.*',
-      '.circleci/config.yml', '.circleci/config.yaml'
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml",
+      ".gitlab-ci.yml",
+      ".gitlab-ci.yaml",
+      ".travis.yml",
+      ".travis.yaml",
+      "azure-pipelines.yml",
+      "azure-pipelines.yaml",
+      "Jenkinsfile",
+      "Jenkinsfile.*",
+      ".circleci/config.yml",
+      ".circleci/config.yaml",
     ];
 
     return await this.scanDirectory(projectPath, ciPatterns);
@@ -152,14 +169,18 @@ class ManifestAnalyzer {
    */
   async scanDirectory(dirPath, patterns) {
     const files = [];
-    
+
     try {
       const items = await fs.readdir(dirPath, { withFileTypes: true });
-      
+
       for (const item of items) {
         const fullPath = path.join(dirPath, item.name);
-        
-        if (item.isDirectory() && !item.name.startsWith('.') && item.name !== 'node_modules') {
+
+        if (
+          item.isDirectory() &&
+          !item.name.startsWith(".") &&
+          item.name !== "node_modules"
+        ) {
           // Recursively scan subdirectories
           const subFiles = await this.scanDirectory(fullPath, patterns);
           files.push(...subFiles);
@@ -175,9 +196,11 @@ class ManifestAnalyzer {
       }
     } catch (error) {
       // Ignore permission errors and continue
-      this.logger.debug(`⚠️ Could not scan directory ${dirPath}: ${error.message}`);
+      this.logger.debug(
+        `⚠️ Could not scan directory ${dirPath}: ${error.message}`,
+      );
     }
-    
+
     return files;
   }
 
@@ -189,8 +212,8 @@ class ManifestAnalyzer {
    */
   matchesPattern(filename, pattern) {
     // Simple pattern matching - can be enhanced with glob patterns
-    if (pattern.includes('*')) {
-      const regexPattern = pattern.replace(/\*/g, '.*');
+    if (pattern.includes("*")) {
+      const regexPattern = pattern.replace(/\*/g, ".*");
       const regex = new RegExp(`^${regexPattern}$`);
       return regex.test(filename);
     }
@@ -211,7 +234,7 @@ class ManifestAnalyzer {
       projectType: this.detectProjectType(manifests),
       packageManager: this.detectPackageManager(manifests),
       frameworks: this.detectFrameworks(manifests),
-      buildTools: this.detectBuildTools(manifests)
+      buildTools: this.detectBuildTools(manifests),
     };
   }
 
@@ -221,20 +244,20 @@ class ManifestAnalyzer {
    * @returns {string} Project type
    */
   detectProjectType(manifests) {
-    if (!manifests.packageJson) return 'unknown';
+    if (!manifests.packageJson) return "unknown";
 
     const { dependencies = {}, devDependencies = {} } = manifests.packageJson;
     const allDeps = { ...dependencies, ...devDependencies };
 
-    if (allDeps.react) return 'react';
-    if (allDeps.vue) return 'vue';
-    if (allDeps.angular) return 'angular';
-    if (allDeps.express) return 'express';
-    if (allDeps.nest) return 'nest';
-    if (allDeps.next) return 'next';
-    if (allDeps.nuxt) return 'nuxt';
+    if (allDeps.react) return "react";
+    if (allDeps.vue) return "vue";
+    if (allDeps.angular) return "angular";
+    if (allDeps.express) return "express";
+    if (allDeps.nest) return "nest";
+    if (allDeps.next) return "next";
+    if (allDeps.nuxt) return "nuxt";
 
-    return 'nodejs';
+    return "nodejs";
   }
 
   /**
@@ -244,16 +267,16 @@ class ManifestAnalyzer {
    */
   detectPackageManager(manifests) {
     // Check for lock files
-    const lockFiles = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'];
+    const lockFiles = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"];
     for (const lockFile of lockFiles) {
-      if (manifests.configFiles.some(file => file.includes(lockFile))) {
-        if (lockFile === 'package-lock.json') return 'npm';
-        if (lockFile === 'yarn.lock') return 'yarn';
-        if (lockFile === 'pnpm-lock.yaml') return 'pnpm';
+      if (manifests.configFiles.some((file) => file.includes(lockFile))) {
+        if (lockFile === "package-lock.json") return "npm";
+        if (lockFile === "yarn.lock") return "yarn";
+        if (lockFile === "pnpm-lock.yaml") return "pnpm";
       }
     }
 
-    return 'npm'; // Default
+    return "npm"; // Default
   }
 
   /**
@@ -268,13 +291,13 @@ class ManifestAnalyzer {
     const allDeps = { ...dependencies, ...devDependencies };
     const frameworks = [];
 
-    if (allDeps.react) frameworks.push('React');
-    if (allDeps.vue) frameworks.push('Vue.js');
-    if (allDeps.angular) frameworks.push('Angular');
-    if (allDeps.express) frameworks.push('Express');
-    if (allDeps.nest) frameworks.push('NestJS');
-    if (allDeps.next) frameworks.push('Next.js');
-    if (allDeps.nuxt) frameworks.push('Nuxt.js');
+    if (allDeps.react) frameworks.push("React");
+    if (allDeps.vue) frameworks.push("Vue.js");
+    if (allDeps.angular) frameworks.push("Angular");
+    if (allDeps.express) frameworks.push("Express");
+    if (allDeps.nest) frameworks.push("NestJS");
+    if (allDeps.next) frameworks.push("Next.js");
+    if (allDeps.nuxt) frameworks.push("Nuxt.js");
 
     return frameworks;
   }
@@ -289,14 +312,14 @@ class ManifestAnalyzer {
 
     // Check config files for build tools
     for (const configFile of manifests.configFiles) {
-      if (configFile.includes('webpack.config')) buildTools.push('Webpack');
-      if (configFile.includes('vite.config')) buildTools.push('Vite');
-      if (configFile.includes('rollup.config')) buildTools.push('Rollup');
-      if (configFile.includes('parcel.config')) buildTools.push('Parcel');
+      if (configFile.includes("webpack.config")) buildTools.push("Webpack");
+      if (configFile.includes("vite.config")) buildTools.push("Vite");
+      if (configFile.includes("rollup.config")) buildTools.push("Rollup");
+      if (configFile.includes("parcel.config")) buildTools.push("Parcel");
     }
 
     return buildTools;
   }
 }
 
-module.exports = ManifestAnalyzer; 
+module.exports = ManifestAnalyzer;

@@ -209,7 +209,6 @@ async execute(context = {}) {
     // Main logic here...
     
     return {
-      success: true,
       stepId,
       projectId,
       message: 'Fallback detection completed',
@@ -224,7 +223,7 @@ async execute(context = {}) {
     });
 
     return {
-      success: false,
+     
       error: error.message,
       stepId,
       projectId: context.projectId,
@@ -312,7 +311,7 @@ logger.error('❌ Fallback detection failed', {
 ```javascript
 // Success case
 return {
-  success: true,
+ 
   stepId,
   projectId,
   message: 'Fallback detection completed',
@@ -327,7 +326,7 @@ return {
 
 // Error case
 return {
-  success: false,
+ 
   error: error.message,
   stepId,
   projectId: context.projectId,

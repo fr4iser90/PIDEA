@@ -1,9 +1,9 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('SessionController');
+const Logger = require("@logging/Logger");
+const logger = new Logger("SessionController");
 
 /**
  * SessionController - API controller for session management endpoints
- * 
+ *
  * Features:
  * - Session extension API
  * - Session monitoring API
@@ -25,30 +25,29 @@ class SessionController {
   async extendSession(req, res) {
     try {
       const { user, session } = req;
-      
+
       if (!user || !session) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
-      logger.info('Session extension request', {
+      logger.info("Session extension request", {
         userId: user.id,
-        sessionId: session.id
+        sessionId: session.id,
       });
 
       const result = await this.sessionActivityService.extendSession(
-        session.id, 
-        'manual'
+        session.id,
+        "manual",
       );
 
       res.success({
-          sessionId: result.sessionId,
-          expiresAt: result.expiresAt,
-          extensionCount: result.extensionCount
-        });
-
+        sessionId: result.sessionId,
+        expiresAt: result.expiresAt,
+        extensionCount: result.extensionCount,
+      });
     } catch (error) {
-      logger.error('Session extension failed:', error);
-      res.error(error.message || 'Failed to extend session', 500);
+      logger.error("Session extension failed:", error);
+      res.error(error.message || "Failed to extend session", 500);
     }
   }
 
@@ -59,19 +58,19 @@ class SessionController {
   async getSessionStatus(req, res) {
     try {
       const { user, session } = req;
-      
+
       if (!user || !session) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
-      const stats = await this.sessionActivityService.getSessionActivityStats(session.id);
-
-      res.success(stats
+      const stats = await this.sessionActivityService.getSessionActivityStats(
+        session.id,
       );
 
+      res.success(stats);
     } catch (error) {
-      logger.error('Failed to get session status:', error);
-      res.error(error.message || 'Failed to get session status', 500);
+      logger.error("Failed to get session status:", error);
+      res.error(error.message || "Failed to get session status", 500);
     }
   }
 
@@ -82,29 +81,30 @@ class SessionController {
   async recordActivity(req, res) {
     try {
       const { user, session } = req;
-      
+
       if (!user || !session) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
       const { type, details, duration } = req.body;
-      const userAgent = req.get('User-Agent');
+      const userAgent = req.get("User-Agent");
       const ipAddress = req.ip || req.connection.remoteAddress;
 
-      const activity = await this.sessionActivityService.recordActivity(session.id, {
-        type,
-        details,
-        duration,
-        userAgent,
-        ipAddress
-      });
-
-      res.success(activity
+      const activity = await this.sessionActivityService.recordActivity(
+        session.id,
+        {
+          type,
+          details,
+          duration,
+          userAgent,
+          ipAddress,
+        },
       );
 
+      res.success(activity);
     } catch (error) {
-      logger.error('Failed to record activity:', error);
-      res.error(error.message || 'Failed to record activity', 500);
+      logger.error("Failed to record activity:", error);
+      res.error(error.message || "Failed to record activity", 500);
     }
   }
 
@@ -115,25 +115,23 @@ class SessionController {
   async getSessionAnalytics(req, res) {
     try {
       const { user } = req;
-      
+
       if (!user) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
       const { timeRange } = req.query;
       const rangeMs = timeRange ? parseInt(timeRange) : 24 * 60 * 60 * 1000; // 24 hours default
 
       const analytics = await this.sessionActivityService.getUserActivityStats(
-        user.id, 
-        rangeMs
+        user.id,
+        rangeMs,
       );
 
-      res.success(analytics
-      );
-
+      res.success(analytics);
     } catch (error) {
-      logger.error('Failed to get session analytics:', error);
-      res.error(error.message || 'Failed to get session analytics', 500);
+      logger.error("Failed to get session analytics:", error);
+      res.error(error.message || "Failed to get session analytics", 500);
     }
   }
 
@@ -144,19 +142,17 @@ class SessionController {
   async getMonitoringData(req, res) {
     try {
       const { user } = req;
-      
-      if (!user || !user.hasPermission('admin:monitor')) {
-        return res.forbidden('Admin permission required');
+
+      if (!user || !user.hasPermission("admin:monitor")) {
+        return res.forbidden("Admin permission required");
       }
 
       const status = this.sessionActivityService.getStatus();
 
-      res.success(status
-      );
-
+      res.success(status);
     } catch (error) {
-      logger.error('Failed to get monitoring data:', error);
-      res.error(error.message || 'Failed to get monitoring data', 500);
+      logger.error("Failed to get monitoring data:", error);
+      res.error(error.message || "Failed to get monitoring data", 500);
     }
   }
 
@@ -167,19 +163,17 @@ class SessionController {
   async triggerCleanup(req, res) {
     try {
       const { user } = req;
-      
-      if (!user || !user.hasPermission('admin:cleanup')) {
-        return res.forbidden('Admin permission required');
+
+      if (!user || !user.hasPermission("admin:cleanup")) {
+        return res.forbidden("Admin permission required");
       }
 
       const result = await this.sessionActivityService.cleanupExpiredSessions();
 
-      res.success(result
-      );
-
+      res.success(result);
     } catch (error) {
-      logger.error('Failed to trigger cleanup:', error);
-      res.error(error.message || 'Failed to trigger cleanup', 500);
+      logger.error("Failed to trigger cleanup:", error);
+      res.error(error.message || "Failed to trigger cleanup", 500);
     }
   }
 
@@ -190,24 +184,23 @@ class SessionController {
   async updateConfig(req, res) {
     try {
       const { user } = req;
-      
-      if (!user || !user.hasPermission('admin:config')) {
-        return res.forbidden('Admin permission required');
+
+      if (!user || !user.hasPermission("admin:config")) {
+        return res.forbidden("Admin permission required");
       }
 
       const { config } = req.body;
-      
-      if (!config || typeof config !== 'object') {
-        return res.badRequest('Invalid configuration data');
+
+      if (!config || typeof config !== "object") {
+        return res.badRequest("Invalid configuration data");
       }
 
       this.sessionActivityService.updateConfig(config);
 
-      res.success({message: 'Configuration updated successfully'});
-
+      res.success({ message: "Configuration updated successfully" });
     } catch (error) {
-      logger.error('Failed to update config:', error);
-      res.error(error.message || 'Failed to update configuration', 500);
+      logger.error("Failed to update config:", error);
+      res.error(error.message || "Failed to update configuration", 500);
     }
   }
 
@@ -218,19 +211,17 @@ class SessionController {
   async healthCheck(req, res) {
     try {
       const status = this.sessionActivityService.getStatus();
-      
-      res.success({
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          service: status
-        });
 
+      res.success({
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        service: status,
+      });
     } catch (error) {
-      logger.error('Health check failed:', error);
-      res.error('Service unhealthy', 500);
+      logger.error("Health check failed:", error);
+      res.error("Service unhealthy", 500);
     }
   }
 }
 
 module.exports = SessionController;
-

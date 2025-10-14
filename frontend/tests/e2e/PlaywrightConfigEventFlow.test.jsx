@@ -16,7 +16,6 @@ jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => {
   return jest.fn().mockImplementation(() => ({
     updatePlaywrightTestConfig: jest.fn(),
     getBrowserEnvironment: jest.fn().mockResolvedValue({
-      success: true,
       data: {
         browsers: ['chromium', 'firefox', 'webkit'],
         versions: { chromium: '120.0', firefox: '119.0', webkit: '17.0' }
@@ -167,7 +166,7 @@ describe('Playwright Config Event Flow E2E', () => {
       const mockUpdateConfig = jest.fn().mockResolvedValue({ success: true });
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,
-        getBrowserEnvironment: jest.fn().mockResolvedValue({ success: true, data: {} })
+        getBrowserEnvironment: jest.fn().mockResolvedValue({ data: {} })
       }));
 
       render(<TestConfiguration {...mockProps} />);
@@ -202,12 +201,12 @@ describe('Playwright Config Event Flow E2E', () => {
       // Arrange
       const mockApiRepository = require('@/infrastructure/repositories/ChatRepository.jsx');
       const mockUpdateConfig = jest.fn().mockResolvedValue({ 
-        success: false, 
+        
         error: 'Validation failed' 
       });
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,
-        getBrowserEnvironment: jest.fn().mockResolvedValue({ success: true, data: {} })
+        getBrowserEnvironment: jest.fn().mockResolvedValue({ data: {} })
       }));
 
       render(<TestConfiguration {...mockProps} />);
@@ -344,7 +343,7 @@ describe('Playwright Config Event Flow E2E', () => {
       const mockUpdateConfig = jest.fn().mockResolvedValue({ success: true });
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,
-        getBrowserEnvironment: jest.fn().mockResolvedValue({ success: true, data: {} })
+        getBrowserEnvironment: jest.fn().mockResolvedValue({ data: {} })
       }));
 
       render(<TestConfiguration {...mockProps} />);

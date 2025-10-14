@@ -1,14 +1,14 @@
-const IDEHealthMonitor = require('@external/ide/IDEHealthMonitor');
+const IDEHealthMonitor = require("@external/ide/IDEHealthMonitor");
 
-describe('IDEHealthMonitor', () => {
+describe("IDEHealthMonitor", () => {
   let monitor;
   let mockConfigManager;
 
   beforeEach(() => {
     mockConfigManager = {
       getGlobalConfig: jest.fn().mockReturnValue({
-        healthCheckInterval: 30000
-      })
+        healthCheckInterval: 30000,
+      }),
     };
 
     monitor = new IDEHealthMonitor(mockConfigManager);
@@ -21,15 +21,15 @@ describe('IDEHealthMonitor', () => {
     jest.clearAllTimers();
   });
 
-  describe('constructor', () => {
-    it('should initialize with config manager', () => {
+  describe("constructor", () => {
+    it("should initialize with config manager", () => {
       expect(monitor.configManager).toBe(mockConfigManager);
       expect(monitor.ideHealth).toBeDefined();
       expect(monitor.healthHistory).toBeDefined();
       expect(monitor.monitoring).toBe(false);
     });
 
-    it('should initialize with default values', () => {
+    it("should initialize with default values", () => {
       expect(monitor.ideHealth.size).toBe(0);
       expect(monitor.healthHistory.size).toBe(0);
       expect(monitor.healthCheckInterval).toBe(30000);
@@ -37,8 +37,8 @@ describe('IDEHealthMonitor', () => {
     });
   });
 
-  describe('startMonitoring', () => {
-    it('should start monitoring with default interval', () => {
+  describe("startMonitoring", () => {
+    it("should start monitoring with default interval", () => {
       monitor.startMonitoring();
 
       expect(monitor.monitoring).toBe(true);
@@ -46,7 +46,7 @@ describe('IDEHealthMonitor', () => {
       expect(mockConfigManager.getGlobalConfig).toHaveBeenCalled();
     });
 
-    it('should start monitoring with custom interval', () => {
+    it("should start monitoring with custom interval", () => {
       const customInterval = 60000;
       monitor.startMonitoring(customInterval);
 
@@ -55,7 +55,7 @@ describe('IDEHealthMonitor', () => {
       expect(monitor.healthCheckInterval).toBe(customInterval);
     });
 
-    it('should not start multiple monitoring sessions', () => {
+    it("should not start multiple monitoring sessions", () => {
       monitor.startMonitoring();
       const firstInterval = monitor.healthInterval;
 
@@ -65,18 +65,18 @@ describe('IDEHealthMonitor', () => {
       expect(firstInterval).toBe(secondInterval);
     });
 
-    it('should emit monitoringStarted event', () => {
+    it("should emit monitoringStarted event", () => {
       const eventSpy = jest.fn();
-      monitor.on('monitoringStarted', eventSpy);
-      
+      monitor.on("monitoringStarted", eventSpy);
+
       monitor.startMonitoring();
 
       expect(eventSpy).toHaveBeenCalledWith({ interval: 30000 });
     });
   });
 
-  describe('stopMonitoring', () => {
-    it('should stop monitoring', () => {
+  describe("stopMonitoring", () => {
+    it("should stop monitoring", () => {
       monitor.startMonitoring();
       expect(monitor.monitoring).toBe(true);
 
@@ -86,7 +86,7 @@ describe('IDEHealthMonitor', () => {
       expect(monitor.healthInterval).toBeNull();
     });
 
-    it('should clear monitoring interval', () => {
+    it("should clear monitoring interval", () => {
       monitor.startMonitoring();
       const interval = monitor.healthInterval;
 
@@ -95,48 +95,48 @@ describe('IDEHealthMonitor', () => {
       expect(monitor.healthInterval).toBeNull();
     });
 
-    it('should emit monitoringStopped event', () => {
+    it("should emit monitoringStopped event", () => {
       const eventSpy = jest.fn();
-      monitor.on('monitoringStopped', eventSpy);
-      
+      monitor.on("monitoringStopped", eventSpy);
+
       monitor.startMonitoring();
       monitor.stopMonitoring();
 
       expect(eventSpy).toHaveBeenCalled();
     });
 
-    it('should handle stop when not monitoring', () => {
+    it("should handle stop when not monitoring", () => {
       expect(() => monitor.stopMonitoring()).not.toThrow();
     });
   });
 
-  describe('registerIDE', () => {
-    it('should register IDE for monitoring', () => {
+  describe("registerIDE", () => {
+    it("should register IDE for monitoring", () => {
       const eventSpy = jest.fn();
-      monitor.on('ideRegistered', eventSpy);
+      monitor.on("ideRegistered", eventSpy);
 
-      monitor.registerIDE(9222, 'cursor');
+      monitor.registerIDE(9222, "cursor");
 
       expect(monitor.ideHealth.has(9222)).toBe(true);
       expect(monitor.healthHistory.has(9222)).toBe(true);
-      expect(eventSpy).toHaveBeenCalledWith({ port: 9222, ideType: 'cursor' });
+      expect(eventSpy).toHaveBeenCalledWith({ port: 9222, ideType: "cursor" });
     });
 
-    it('should update existing IDE registration', () => {
-      monitor.registerIDE(9222, 'cursor');
-      monitor.registerIDE(9222, 'vscode');
+    it("should update existing IDE registration", () => {
+      monitor.registerIDE(9222, "cursor");
+      monitor.registerIDE(9222, "vscode");
 
       const healthInfo = monitor.ideHealth.get(9222);
-      expect(healthInfo.ideType).toBe('vscode');
+      expect(healthInfo.ideType).toBe("vscode");
     });
   });
 
-  describe('unregisterIDE', () => {
-    it('should unregister IDE from monitoring', () => {
+  describe("unregisterIDE", () => {
+    it("should unregister IDE from monitoring", () => {
       const eventSpy = jest.fn();
-      monitor.on('ideUnregistered', eventSpy);
+      monitor.on("ideUnregistered", eventSpy);
 
-      monitor.registerIDE(9222, 'cursor');
+      monitor.registerIDE(9222, "cursor");
       expect(monitor.ideHealth.has(9222)).toBe(true);
 
       monitor.unregisterIDE(9222);
@@ -146,33 +146,33 @@ describe('IDEHealthMonitor', () => {
       expect(eventSpy).toHaveBeenCalledWith({ port: 9222 });
     });
 
-    it('should handle unregistering non-existent IDE', () => {
+    it("should handle unregistering non-existent IDE", () => {
       expect(() => monitor.unregisterIDE(9999)).not.toThrow();
     });
   });
 
-  describe('performHealthCheck', () => {
+  describe("performHealthCheck", () => {
     beforeEach(() => {
-      monitor.registerIDE(9222, 'cursor');
-      monitor.registerIDE(9232, 'vscode');
+      monitor.registerIDE(9222, "cursor");
+      monitor.registerIDE(9232, "vscode");
     });
 
-    it('should perform health check for all registered IDEs', async () => {
+    it("should perform health check for all registered IDEs", async () => {
       const results = await monitor.performHealthCheck();
 
       expect(results).toBeDefined();
-      expect(typeof results).toBe('object');
+      expect(typeof results).toBe("object");
     });
 
-    it('should handle health check errors gracefully', async () => {
-      monitor.registerIDE(9999, 'unknown');
+    it("should handle health check errors gracefully", async () => {
+      monitor.registerIDE(9999, "unknown");
 
       await expect(monitor.performHealthCheck()).resolves.not.toThrow();
     });
 
-    it('should emit healthCheck event', async () => {
+    it("should emit healthCheck event", async () => {
       const eventSpy = jest.fn();
-      monitor.on('healthCheck', eventSpy);
+      monitor.on("healthCheck", eventSpy);
 
       await monitor.performHealthCheck();
 
@@ -180,84 +180,84 @@ describe('IDEHealthMonitor', () => {
     });
   });
 
-  describe('getHealthStatus', () => {
-    it('should return health status for all IDEs', () => {
-      monitor.registerIDE(9222, 'cursor');
-      monitor.registerIDE(9232, 'vscode');
+  describe("getHealthStatus", () => {
+    it("should return health status for all IDEs", () => {
+      monitor.registerIDE(9222, "cursor");
+      monitor.registerIDE(9232, "vscode");
 
       const status = monitor.getHealthStatus();
 
-      expect(status).toHaveProperty('9222');
-      expect(status).toHaveProperty('9232');
-      expect(status['9222'].ideType).toBe('cursor');
-      expect(status['9232'].ideType).toBe('vscode');
+      expect(status).toHaveProperty("9222");
+      expect(status).toHaveProperty("9232");
+      expect(status["9222"].ideType).toBe("cursor");
+      expect(status["9232"].ideType).toBe("vscode");
     });
 
-    it('should return empty object when no IDEs registered', () => {
+    it("should return empty object when no IDEs registered", () => {
       const status = monitor.getHealthStatus();
       expect(status).toEqual({});
     });
   });
 
-  describe('getIDEHealthStatus', () => {
-    it('should return health status for specific IDE', () => {
-      monitor.registerIDE(9222, 'cursor');
+  describe("getIDEHealthStatus", () => {
+    it("should return health status for specific IDE", () => {
+      monitor.registerIDE(9222, "cursor");
 
       const status = monitor.getIDEHealthStatus(9222);
 
       expect(status).toBeDefined();
-      expect(status.ideType).toBe('cursor');
+      expect(status.ideType).toBe("cursor");
       expect(status.port).toBe(9222);
     });
 
-    it('should return null for non-existent IDE', () => {
+    it("should return null for non-existent IDE", () => {
       const status = monitor.getIDEHealthStatus(9999);
       expect(status).toBeNull();
     });
   });
 
-  describe('getHealthHistory', () => {
-    it('should return health history for IDE', () => {
-      monitor.registerIDE(9222, 'cursor');
+  describe("getHealthHistory", () => {
+    it("should return health history for IDE", () => {
+      monitor.registerIDE(9222, "cursor");
 
       const history = monitor.getHealthHistory(9222);
 
       expect(Array.isArray(history)).toBe(true);
     });
 
-    it('should return limited history entries', () => {
-      monitor.registerIDE(9222, 'cursor');
+    it("should return limited history entries", () => {
+      monitor.registerIDE(9222, "cursor");
 
       const history = monitor.getHealthHistory(9222, 5);
 
       expect(Array.isArray(history)).toBe(true);
     });
 
-    it('should return empty array for non-existent IDE', () => {
+    it("should return empty array for non-existent IDE", () => {
       const history = monitor.getHealthHistory(9999);
       expect(history).toEqual([]);
     });
   });
 
-  describe('getHealthStats', () => {
-    it('should return health statistics', () => {
-      monitor.registerIDE(9222, 'cursor');
-      monitor.registerIDE(9232, 'vscode');
+  describe("getHealthStats", () => {
+    it("should return health statistics", () => {
+      monitor.registerIDE(9222, "cursor");
+      monitor.registerIDE(9232, "vscode");
 
       const stats = monitor.getHealthStats();
 
-      expect(stats).toHaveProperty('totalIDEs');
-      expect(stats).toHaveProperty('healthyIDEs');
-      expect(stats).toHaveProperty('unhealthyIDEs');
-      expect(stats).toHaveProperty('errorIDEs');
-      expect(stats).toHaveProperty('monitoring');
-      expect(stats).toHaveProperty('interval');
+      expect(stats).toHaveProperty("totalIDEs");
+      expect(stats).toHaveProperty("healthyIDEs");
+      expect(stats).toHaveProperty("unhealthyIDEs");
+      expect(stats).toHaveProperty("errorIDEs");
+      expect(stats).toHaveProperty("monitoring");
+      expect(stats).toHaveProperty("interval");
       expect(stats.totalIDEs).toBe(2);
     });
   });
 
-  describe('isMonitoring', () => {
-    it('should return monitoring status', () => {
+  describe("isMonitoring", () => {
+    it("should return monitoring status", () => {
       expect(monitor.isMonitoring()).toBe(false);
 
       monitor.startMonitoring();
@@ -268,39 +268,40 @@ describe('IDEHealthMonitor', () => {
     });
   });
 
-  describe('getMonitoringConfig', () => {
-    it('should return monitoring configuration', () => {
+  describe("getMonitoringConfig", () => {
+    it("should return monitoring configuration", () => {
       const config = monitor.getMonitoringConfig();
 
-      expect(config).toHaveProperty('monitoring');
-      expect(config).toHaveProperty('interval');
-      expect(config).toHaveProperty('maxHistorySize');
+      expect(config).toHaveProperty("monitoring");
+      expect(config).toHaveProperty("interval");
+      expect(config).toHaveProperty("maxHistorySize");
       expect(config.monitoring).toBe(false);
       expect(config.interval).toBe(30000);
       expect(config.maxHistorySize).toBe(100);
     });
   });
 
-  describe('addHealthCheck', () => {
-    it('should add health check function', () => {
+  describe("addHealthCheck", () => {
+    it("should add health check function", () => {
       const checkFunction = jest.fn();
 
-      monitor.addHealthCheck('cursor', 9222, checkFunction);
+      monitor.addHealthCheck("cursor", 9222, checkFunction);
 
       expect(monitor.getHealthCheckCount()).toBe(1);
     });
 
-    it('should throw error for non-function', () => {
-      expect(() => monitor.addHealthCheck('cursor', 9222, 'not a function'))
-        .toThrow('Check function must be a function');
+    it("should throw error for non-function", () => {
+      expect(() =>
+        monitor.addHealthCheck("cursor", 9222, "not a function"),
+      ).toThrow("Check function must be a function");
     });
   });
 
-  describe('clearHealthChecks', () => {
-    it('should clear all health checks', () => {
+  describe("clearHealthChecks", () => {
+    it("should clear all health checks", () => {
       const checkFunction = jest.fn();
 
-      monitor.addHealthCheck('cursor', 9222, checkFunction);
+      monitor.addHealthCheck("cursor", 9222, checkFunction);
       expect(monitor.getHealthCheckCount()).toBe(1);
 
       monitor.clearHealthChecks();
@@ -308,15 +309,15 @@ describe('IDEHealthMonitor', () => {
     });
   });
 
-  describe('getHealthCheckCount', () => {
-    it('should return number of health checks', () => {
+  describe("getHealthCheckCount", () => {
+    it("should return number of health checks", () => {
       expect(monitor.getHealthCheckCount()).toBe(0);
 
-      monitor.addHealthCheck('cursor', 9222, jest.fn());
+      monitor.addHealthCheck("cursor", 9222, jest.fn());
       expect(monitor.getHealthCheckCount()).toBe(1);
 
-      monitor.addHealthCheck('vscode', 9232, jest.fn());
+      monitor.addHealthCheck("vscode", 9232, jest.fn());
       expect(monitor.getHealthCheckCount()).toBe(2);
     });
   });
-}); 
+});

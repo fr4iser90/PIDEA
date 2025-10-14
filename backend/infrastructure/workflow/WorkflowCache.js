@@ -2,9 +2,9 @@
  * WorkflowCache
  * Service for managing workflow caching and performance optimization
  */
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class WorkflowCache {
   constructor(options = {}) {
@@ -17,7 +17,7 @@ class WorkflowCache {
       misses: 0,
       sets: 0,
       deletes: 0,
-      evictions: 0
+      evictions: 0,
     };
     this.logger = options.logger || console;
   }
@@ -44,24 +44,24 @@ class WorkflowCache {
         value,
         timestamp,
         expiresAt,
-        metadata: options.metadata || {}
+        metadata: options.metadata || {},
       });
 
       // Set expiration timer
       this.setExpirationTimer(key, ttl);
 
       this.stats.sets++;
-      this.logger.debug('WorkflowCache: Cache entry set', {
+      this.logger.debug("WorkflowCache: Cache entry set", {
         key,
         ttl,
-        cacheSize: this.cache.size
+        cacheSize: this.cache.size,
       });
 
       return true;
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to set cache entry', {
+      this.logger.error("WorkflowCache: Failed to set cache entry", {
         key,
-        error: error.message
+        error: error.message,
       });
       return false;
     }
@@ -75,10 +75,10 @@ class WorkflowCache {
   get(key) {
     try {
       const entry = this.cache.get(key);
-      
+
       if (!entry) {
         this.stats.misses++;
-        this.logger.debug('WorkflowCache: Cache miss', { key });
+        this.logger.debug("WorkflowCache: Cache miss", { key });
         return null;
       }
 
@@ -86,17 +86,17 @@ class WorkflowCache {
       if (Date.now() > entry.expiresAt) {
         this.delete(key);
         this.stats.misses++;
-        this.logger.debug('WorkflowCache: Cache entry expired', { key });
+        this.logger.debug("WorkflowCache: Cache entry expired", { key });
         return null;
       }
 
       this.stats.hits++;
-      this.logger.debug('WorkflowCache: Cache hit', { key });
+      this.logger.debug("WorkflowCache: Cache hit", { key });
       return entry.value;
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to get cache entry', {
+      this.logger.error("WorkflowCache: Failed to get cache entry", {
         key,
-        error: error.message
+        error: error.message,
       });
       return null;
     }
@@ -110,19 +110,19 @@ class WorkflowCache {
   delete(key) {
     try {
       const deleted = this.cache.delete(key);
-      
+
       if (deleted) {
         // Clear expiration timer
         this.clearExpirationTimer(key);
         this.stats.deletes++;
-        this.logger.debug('WorkflowCache: Cache entry deleted', { key });
+        this.logger.debug("WorkflowCache: Cache entry deleted", { key });
       }
 
       return deleted;
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to delete cache entry', {
+      this.logger.error("WorkflowCache: Failed to delete cache entry", {
         key,
-        error: error.message
+        error: error.message,
       });
       return false;
     }
@@ -136,7 +136,7 @@ class WorkflowCache {
   has(key) {
     try {
       const entry = this.cache.get(key);
-      
+
       if (!entry) {
         return false;
       }
@@ -149,9 +149,9 @@ class WorkflowCache {
 
       return true;
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to check cache entry', {
+      this.logger.error("WorkflowCache: Failed to check cache entry", {
         key,
-        error: error.message
+        error: error.message,
       });
       return false;
     }
@@ -169,13 +169,13 @@ class WorkflowCache {
 
       this.cache.clear();
       this.timers.clear();
-      
-      this.logger.info('WorkflowCache: Cache cleared', {
-        previousSize: this.cache.size
+
+      this.logger.info("WorkflowCache: Cache cleared", {
+        previousSize: this.cache.size,
       });
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to clear cache', {
-        error: error.message
+      this.logger.error("WorkflowCache: Failed to clear cache", {
+        error: error.message,
       });
     }
   }
@@ -186,14 +186,15 @@ class WorkflowCache {
    */
   getStats() {
     const totalRequests = this.stats.hits + this.stats.misses;
-    const hitRate = totalRequests > 0 ? (this.stats.hits / totalRequests) * 100 : 0;
+    const hitRate =
+      totalRequests > 0 ? (this.stats.hits / totalRequests) * 100 : 0;
 
     return {
       ...this.stats,
       size: this.cache.size,
       maxSize: this.maxSize,
       hitRate: Math.round(hitRate * 100) / 100,
-      totalRequests
+      totalRequests,
     };
   }
 
@@ -210,7 +211,7 @@ class WorkflowCache {
    * @returns {Array<any>} Cache values
    */
   values() {
-    return Array.from(this.cache.values()).map(entry => entry.value);
+    return Array.from(this.cache.values()).map((entry) => entry.value);
   }
 
   /**
@@ -223,7 +224,7 @@ class WorkflowCache {
       value: entry.value,
       timestamp: entry.timestamp,
       expiresAt: entry.expiresAt,
-      metadata: entry.metadata
+      metadata: entry.metadata,
     }));
   }
 
@@ -240,7 +241,9 @@ class WorkflowCache {
     const timer = setTimeout(() => {
       this.delete(key);
       this.stats.evictions++;
-      this.logger.debug('WorkflowCache: Cache entry expired and removed', { key });
+      this.logger.debug("WorkflowCache: Cache entry expired and removed", {
+        key,
+      });
     }, ttl);
 
     this.timers.set(key, timer);
@@ -276,11 +279,13 @@ class WorkflowCache {
       if (oldestKey) {
         this.delete(oldestKey);
         this.stats.evictions++;
-        this.logger.debug('WorkflowCache: Oldest cache entry evicted', { key: oldestKey });
+        this.logger.debug("WorkflowCache: Oldest cache entry evicted", {
+          key: oldestKey,
+        });
       }
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to evict oldest cache entry', {
-        error: error.message
+      this.logger.error("WorkflowCache: Failed to evict oldest cache entry", {
+        error: error.message,
       });
     }
   }
@@ -302,16 +307,16 @@ class WorkflowCache {
       }
 
       if (cleanedCount > 0) {
-        this.logger.info('WorkflowCache: Cleaned up expired entries', {
+        this.logger.info("WorkflowCache: Cleaned up expired entries", {
           cleanedCount,
-          remainingSize: this.cache.size
+          remainingSize: this.cache.size,
         });
       }
 
       return cleanedCount;
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to cleanup expired entries', {
-        error: error.message
+      this.logger.error("WorkflowCache: Failed to cleanup expired entries", {
+        error: error.message,
       });
       return 0;
     }
@@ -332,9 +337,9 @@ class WorkflowCache {
       this.logger = config.logger;
     }
 
-    this.logger.info('WorkflowCache: Configuration updated', {
+    this.logger.info("WorkflowCache: Configuration updated", {
       maxSize: this.maxSize,
-      ttl: this.ttl
+      ttl: this.ttl,
     });
   }
 
@@ -362,7 +367,7 @@ class WorkflowCache {
   getMetadata(key) {
     try {
       const entry = this.cache.get(key);
-      
+
       if (!entry) {
         return null;
       }
@@ -376,12 +381,12 @@ class WorkflowCache {
       return {
         timestamp: entry.timestamp,
         expiresAt: entry.expiresAt,
-        metadata: entry.metadata
+        metadata: entry.metadata,
       };
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to get cache entry metadata', {
+      this.logger.error("WorkflowCache: Failed to get cache entry metadata", {
         key,
-        error: error.message
+        error: error.message,
       });
       return null;
     }
@@ -396,7 +401,7 @@ class WorkflowCache {
   updateMetadata(key, metadata) {
     try {
       const entry = this.cache.get(key);
-      
+
       if (!entry) {
         return false;
       }
@@ -408,21 +413,24 @@ class WorkflowCache {
       }
 
       entry.metadata = { ...entry.metadata, ...metadata };
-      
-      this.logger.debug('WorkflowCache: Cache entry metadata updated', {
+
+      this.logger.debug("WorkflowCache: Cache entry metadata updated", {
         key,
-        metadata
+        metadata,
       });
 
       return true;
     } catch (error) {
-      this.logger.error('WorkflowCache: Failed to update cache entry metadata', {
-        key,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowCache: Failed to update cache entry metadata",
+        {
+          key,
+          error: error.message,
+        },
+      );
       return false;
     }
   }
 }
 
-module.exports = WorkflowCache; 
+module.exports = WorkflowCache;

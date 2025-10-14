@@ -123,7 +123,6 @@ describe('IDEStore Cache Integration', () => {
       const projectId = 'project';
       const port = '9222';
       const apiResponse = {
-        success: true,
         data: [{ id: 1, title: 'API Task' }]
       };
       const expectedTaskData = {
@@ -275,7 +274,7 @@ describe('IDEStore Cache Integration', () => {
 
     it('should not trigger warming on failed IDE switch', async () => {
       const port = '9222';
-      const switchResponse = { success: false, error: 'Switch failed' };
+      const switchResponse = { error: 'Switch failed' };
 
       // Mock API call
       mockApiCall.mockResolvedValue(switchResponse);
@@ -303,7 +302,7 @@ describe('IDEStore Cache Integration', () => {
 
       mockCacheService.generateHierarchicalKey.mockReturnValue('tasks:9222:project:data');
       mockCacheService.get.mockReturnValue(null);
-      mockApiCall.mockResolvedValue({ success: true, data: [] });
+      mockApiCall.mockResolvedValue({ data: [] });
 
       act(() => {
         useIDEStore.setState({

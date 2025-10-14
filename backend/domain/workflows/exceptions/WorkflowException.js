@@ -5,14 +5,14 @@
 class WorkflowException extends Error {
   constructor(
     message,
-    code = 'WORKFLOW_ERROR',
+    code = "WORKFLOW_ERROR",
     context = null,
     cause = null,
-    metadata = {}
+    metadata = {},
   ) {
     super(message);
-    
-    this.name = 'WorkflowException';
+
+    this.name = "WorkflowException";
     this.code = code;
     this.context = context;
     this.cause = cause;
@@ -85,21 +85,21 @@ class WorkflowException extends Error {
   getErrorChain() {
     const chain = [this];
     let current = this;
-    
+
     while (current.hasCause && current.hasCause()) {
       current = current.getCause();
       chain.push(current);
     }
-    
+
     return chain;
   }
 
   getErrorChainMessages() {
-    return this.getErrorChain().map(error => error.message);
+    return this.getErrorChain().map((error) => error.message);
   }
 
   getErrorChainCodes() {
-    return this.getErrorChain().map(error => error.code);
+    return this.getErrorChain().map((error) => error.code);
   }
 
   // Utility methods
@@ -154,11 +154,11 @@ class WorkflowException extends Error {
       metadata: this.metadata,
       timestamp: this.timestamp.toISOString(),
       stack: this.stack,
-      errorChain: this.getErrorChain().map(error => ({
+      errorChain: this.getErrorChain().map((error) => ({
         name: error.name,
         message: error.message,
-        code: error.code
-      }))
+        code: error.code,
+      })),
     };
   }
 
@@ -168,33 +168,43 @@ class WorkflowException extends Error {
       data.code,
       data.context,
       data.cause ? WorkflowException.fromJSON(data.cause) : null,
-      data.metadata
+      data.metadata,
     );
-    
+
     exception.timestamp = new Date(data.timestamp);
     exception.stack = data.stack;
-    
+
     return exception;
   }
 
   // Factory methods
-  static create(message, code = 'WORKFLOW_ERROR', context = null, cause = null) {
+  static create(
+    message,
+    code = "WORKFLOW_ERROR",
+    context = null,
+    cause = null,
+  ) {
     return new WorkflowException(message, code, context, cause);
   }
 
-  static createWithContext(message, context, code = 'WORKFLOW_ERROR') {
+  static createWithContext(message, context, code = "WORKFLOW_ERROR") {
     return new WorkflowException(message, code, context);
   }
 
-  static createWithCause(message, cause, code = 'WORKFLOW_ERROR') {
+  static createWithCause(message, cause, code = "WORKFLOW_ERROR") {
     return new WorkflowException(message, code, null, cause);
   }
 
-  static createRecoverable(message, code = 'WORKFLOW_ERROR', context = null) {
+  static createRecoverable(message, code = "WORKFLOW_ERROR", context = null) {
     return new WorkflowException(message, code, context).setRecoverable(true);
   }
 
-  static createRetryable(message, code = 'WORKFLOW_ERROR', context = null, maxRetries = 3) {
+  static createRetryable(
+    message,
+    code = "WORKFLOW_ERROR",
+    context = null,
+    maxRetries = 3,
+  ) {
     return new WorkflowException(message, code, context)
       .setRetryable(true)
       .setMaxRetries(maxRetries);
@@ -202,21 +212,21 @@ class WorkflowException extends Error {
 
   // Common error codes
   static CODES = {
-    WORKFLOW_ERROR: 'WORKFLOW_ERROR',
-    VALIDATION_ERROR: 'VALIDATION_ERROR',
-    CONTEXT_ERROR: 'CONTEXT_ERROR',
-    STATE_ERROR: 'STATE_ERROR',
-    EXECUTION_ERROR: 'EXECUTION_ERROR',
-    ROLLBACK_ERROR: 'ROLLBACK_ERROR',
-    TIMEOUT_ERROR: 'TIMEOUT_ERROR',
-    DEPENDENCY_ERROR: 'DEPENDENCY_ERROR',
-    CONFIGURATION_ERROR: 'CONFIGURATION_ERROR',
-    PERMISSION_ERROR: 'PERMISSION_ERROR',
-    RESOURCE_ERROR: 'RESOURCE_ERROR',
-    NETWORK_ERROR: 'NETWORK_ERROR',
-    DATABASE_ERROR: 'DATABASE_ERROR',
-    EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
-    UNKNOWN_ERROR: 'UNKNOWN_ERROR'
+    WORKFLOW_ERROR: "WORKFLOW_ERROR",
+    VALIDATION_ERROR: "VALIDATION_ERROR",
+    CONTEXT_ERROR: "CONTEXT_ERROR",
+    STATE_ERROR: "STATE_ERROR",
+    EXECUTION_ERROR: "EXECUTION_ERROR",
+    ROLLBACK_ERROR: "ROLLBACK_ERROR",
+    TIMEOUT_ERROR: "TIMEOUT_ERROR",
+    DEPENDENCY_ERROR: "DEPENDENCY_ERROR",
+    CONFIGURATION_ERROR: "CONFIGURATION_ERROR",
+    PERMISSION_ERROR: "PERMISSION_ERROR",
+    RESOURCE_ERROR: "RESOURCE_ERROR",
+    NETWORK_ERROR: "NETWORK_ERROR",
+    DATABASE_ERROR: "DATABASE_ERROR",
+    EXTERNAL_SERVICE_ERROR: "EXTERNAL_SERVICE_ERROR",
+    UNKNOWN_ERROR: "UNKNOWN_ERROR",
   };
 
   // Static utility methods
@@ -228,14 +238,14 @@ class WorkflowException extends Error {
     if (WorkflowException.isWorkflowException(error)) {
       return error.code;
     }
-    return 'UNKNOWN_ERROR';
+    return "UNKNOWN_ERROR";
   }
 
   static getErrorMessage(error) {
     if (WorkflowException.isWorkflowException(error)) {
       return error.message;
     }
-    return error.message || 'Unknown error occurred';
+    return error.message || "Unknown error occurred";
   }
 
   static getErrorContext(error) {
@@ -275,21 +285,21 @@ class WorkflowException extends Error {
     }
 
     return new WorkflowException(
-      message || error.message || 'Unknown error occurred',
-      code || 'WORKFLOW_ERROR',
+      message || error.message || "Unknown error occurred",
+      code || "WORKFLOW_ERROR",
       context,
-      error
+      error,
     );
   }
 
   static chain(error, message, code = null, context = null) {
     return new WorkflowException(
       message,
-      code || 'WORKFLOW_ERROR',
+      code || "WORKFLOW_ERROR",
       context,
-      error
+      error,
     );
   }
 }
 
-module.exports = WorkflowException; 
+module.exports = WorkflowException;

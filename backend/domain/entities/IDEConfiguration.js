@@ -7,7 +7,7 @@
 class IDEConfiguration {
   constructor({
     id = null,
-    userId = 'me',
+    userId = "me",
     ideType,
     executablePath,
     version = null,
@@ -22,7 +22,7 @@ class IDEConfiguration {
     startupOptions = {},
     metadata = {},
     createdAt = new Date().toISOString(),
-    updatedAt = new Date().toISOString()
+    updatedAt = new Date().toISOString(),
   }) {
     this.id = id;
     this.userId = userId;
@@ -51,24 +51,30 @@ class IDEConfiguration {
     const errors = [];
 
     if (!this.ideType) {
-      errors.push('IDE type is required');
+      errors.push("IDE type is required");
     }
 
     if (!this.executablePath) {
-      errors.push('Executable path is required');
+      errors.push("Executable path is required");
     }
 
-    if (!['cursor', 'vscode', 'windsurf'].includes(this.ideType)) {
-      errors.push('Invalid IDE type');
+    if (!["cursor", "vscode", "windsurf"].includes(this.ideType)) {
+      errors.push("Invalid IDE type");
     }
 
-    if (this.portRangeStart && this.portRangeEnd && this.portRangeStart > this.portRangeEnd) {
-      errors.push('Port range start must be less than or equal to port range end');
+    if (
+      this.portRangeStart &&
+      this.portRangeEnd &&
+      this.portRangeStart > this.portRangeEnd
+    ) {
+      errors.push(
+        "Port range start must be less than or equal to port range end",
+      );
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -94,7 +100,7 @@ class IDEConfiguration {
       startup_options: JSON.stringify(this.startupOptions),
       metadata: JSON.stringify(this.metadata),
       created_at: this.createdAt,
-      updated_at: this.updatedAt
+      updated_at: this.updatedAt,
     };
   }
 
@@ -118,10 +124,12 @@ class IDEConfiguration {
       usageCount: dbData.usage_count,
       portRangeStart: dbData.port_range_start,
       portRangeEnd: dbData.port_range_end,
-      startupOptions: dbData.startup_options ? JSON.parse(dbData.startup_options) : {},
+      startupOptions: dbData.startup_options
+        ? JSON.parse(dbData.startup_options)
+        : {},
       metadata: dbData.metadata ? JSON.parse(dbData.metadata) : {},
       createdAt: dbData.created_at,
-      updatedAt: dbData.updated_at
+      updatedAt: dbData.updated_at,
     });
   }
 
@@ -142,7 +150,7 @@ class IDEConfiguration {
     const portRanges = {
       cursor: { start: 9222, end: 9231 },
       vscode: { start: 9232, end: 9241 },
-      windsurf: { start: 9242, end: 9251 }
+      windsurf: { start: 9242, end: 9251 },
     };
 
     return portRanges[this.ideType] || { start: null, end: null };

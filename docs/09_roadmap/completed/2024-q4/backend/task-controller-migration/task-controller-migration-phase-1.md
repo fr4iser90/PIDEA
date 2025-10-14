@@ -53,7 +53,6 @@ async getDocsTasks(req, res) {
         this.logger.info(`✅ [TaskController] Found ${tasks.length} docs tasks`);
 
         res.json({
-            success: true,
             data: tasks,
             projectId,
             count: tasks.length,
@@ -63,7 +62,7 @@ async getDocsTasks(req, res) {
     } catch (error) {
         this.logger.error('❌ [TaskController] Failed to get docs tasks:', error);
         res.status(500).json({
-            success: false,
+           
             error: 'Failed to get docs tasks',
             message: error.message
         });
@@ -89,7 +88,7 @@ async getDocsTaskDetails(req, res) {
 
         if (!task) {
             return res.status(404).json({
-                success: false,
+               
                 error: 'Task not found'
             });
         }
@@ -97,7 +96,7 @@ async getDocsTaskDetails(req, res) {
         // Verify it's a docs task
         if (task.type !== 'documentation') {
             return res.status(400).json({
-                success: false,
+               
                 error: 'Task is not a documentation task'
             });
         }
@@ -105,7 +104,6 @@ async getDocsTaskDetails(req, res) {
         this.logger.info(`✅ [TaskController] Found docs task: ${task.title}`);
 
         res.json({
-            success: true,
             data: task,
             projectId,
             timestamp: new Date().toISOString()
@@ -114,7 +112,7 @@ async getDocsTaskDetails(req, res) {
     } catch (error) {
         this.logger.error('❌ [TaskController] Failed to get docs task details:', error);
         res.status(500).json({
-            success: false,
+           
             error: 'Failed to get docs task details',
             message: error.message
         });
@@ -184,7 +182,6 @@ describe('TaskController - Docs Tasks', () => {
             .toHaveBeenCalledWith('test', { type: 'documentation' });
         expect(res.json).toHaveBeenCalledWith(
             expect.objectContaining({
-                success: true,
                 data: mockTasks,
                 count: 2
             })
@@ -211,7 +208,6 @@ describe('TaskController - Docs Tasks', () => {
             .toHaveBeenCalledWith('1', 'test');
         expect(res.json).toHaveBeenCalledWith(
             expect.objectContaining({
-                success: true,
                 data: mockTask
             })
         );
@@ -236,7 +232,7 @@ describe('TaskController - Docs Tasks', () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith(
             expect.objectContaining({
-                success: false,
+               
                 error: 'Task is not a documentation task'
             })
         );

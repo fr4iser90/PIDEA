@@ -513,12 +513,11 @@ class UserController {
       await this.commandBus.execute(command);
       
       res.status(201).json({
-        success: true,
         data: { userId: command.userId }
       });
     } catch (error) {
       res.status(400).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -534,12 +533,11 @@ class UserController {
       const user = await this.queryBus.execute(query);
       
       res.json({
-        success: true,
         data: user
       });
     } catch (error) {
       res.status(404).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -556,12 +554,11 @@ class UserController {
       const users = await this.queryBus.execute(query);
       
       res.json({
-        success: true,
         data: users
       });
     } catch (error) {
       res.status(400).json({
-        success: false,
+       
         error: error.message
       });
     }

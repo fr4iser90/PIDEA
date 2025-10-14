@@ -72,7 +72,6 @@ describe('ManualTasks Integration Tests', () => {
       ];
 
       mockApi.getManualTasks.mockResolvedValue({
-        success: true,
         data: mockManualTasks
       });
 
@@ -111,12 +110,10 @@ describe('ManualTasks Integration Tests', () => {
 
     it('should sync manual tasks successfully', async () => {
       mockApi.getManualTasks.mockResolvedValue({
-        success: true,
         data: []
       });
 
       mockApi.syncManualTasks.mockResolvedValue({
-        success: true,
         data: {
           syncedCount: 3,
           totalFiles: 3,
@@ -156,12 +153,10 @@ describe('ManualTasks Integration Tests', () => {
       ];
 
       mockApi.getManualTasks.mockResolvedValue({
-        success: true,
         data: mockManualTasks
       });
 
       mockApi.cleanManualTasks.mockResolvedValue({
-        success: true,
         data: {
           deletedCount: 1,
           totalTasks: 1
@@ -214,12 +209,10 @@ describe('ManualTasks Integration Tests', () => {
       };
 
       mockApi.getManualTasks.mockResolvedValue({
-        success: true,
         data: mockManualTasks
       });
 
       mockApi.getManualTaskDetails.mockResolvedValue({
-        success: true,
         data: mockTaskDetails
       });
 
@@ -261,7 +254,6 @@ describe('ManualTasks Integration Tests', () => {
       ];
 
       mockApi.getManualTasks.mockResolvedValue({
-        success: true,
         data: mockManualTasks
       });
 
@@ -305,7 +297,6 @@ describe('ManualTasks Integration Tests', () => {
       ];
 
       mockApi.getManualTasks.mockResolvedValue({
-        success: true,
         data: mockManualTasks
       });
 

@@ -4,8 +4,12 @@
  * Implements IStandardRegistry interface for consistent patterns
  */
 
-const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../../domain/constants/Categories');
-const IStandardRegistry = require('../../domain/interfaces/IStandardRegistry');
+const {
+  STANDARD_CATEGORIES,
+  isValidCategory,
+  getDefaultCategory,
+} = require("../../domain/constants/Categories");
+const IStandardRegistry = require("../../domain/interfaces/IStandardRegistry");
 
 class HandlerRegistry {
   constructor(serviceRegistry = null) {
@@ -21,108 +25,163 @@ class HandlerRegistry {
    * @param {Object} dependencies - Handler dependencies
    * @returns {Object|null} Handler instance
    */
-  static buildFromCategory(category, name, dependencies, serviceRegistry = null) {
+  static buildFromCategory(
+    category,
+    name,
+    dependencies,
+    serviceRegistry = null,
+  ) {
     // Lazy loading function to get handler class
     const getHandlerClass = (category, name) => {
       try {
         const handlerMap = {
           analysis: {
-            AdvancedAnalysisHandler: () => require('./categories/analysis/AdvancedAnalysisHandler'),
-            AnalyzeLayerViolationsHandler: () => require('./categories/analysis/AnalyzeLayerViolationsHandler')
+            AdvancedAnalysisHandler: () =>
+              require("./categories/analysis/AdvancedAnalysisHandler"),
+            AnalyzeLayerViolationsHandler: () =>
+              require("./categories/analysis/AnalyzeLayerViolationsHandler"),
           },
           generate: {
-            GenerateConfigsHandler: () => require('./categories/generate/GenerateConfigsHandler'),
-            GenerateDocumentationHandler: () => require('./categories/generate/GenerateDocumentationHandler'),
-            GenerateScriptsHandler: () => require('./categories/generate/GenerateScriptsHandler'),
-            GenerateTestsHandler: () => require('./categories/generate/GenerateTestsHandler')
+            GenerateConfigsHandler: () =>
+              require("./categories/generate/GenerateConfigsHandler"),
+            GenerateDocumentationHandler: () =>
+              require("./categories/generate/GenerateDocumentationHandler"),
+            GenerateScriptsHandler: () =>
+              require("./categories/generate/GenerateScriptsHandler"),
+            GenerateTestsHandler: () =>
+              require("./categories/generate/GenerateTestsHandler"),
           },
           refactoring: {
-            OrganizeModulesHandler: () => require('./categories/refactoring/OrganizeModulesHandler'),
-            RestructureArchitectureHandler: () => require('./categories/refactoring/RestructureArchitectureHandler'),
-            SplitLargeFilesHandler: () => require('./categories/refactoring/SplitLargeFilesHandler'),
-            CleanDependenciesHandler: () => require('./categories/refactoring/CleanDependenciesHandler')
+            OrganizeModulesHandler: () =>
+              require("./categories/refactoring/OrganizeModulesHandler"),
+            RestructureArchitectureHandler: () =>
+              require("./categories/refactoring/RestructureArchitectureHandler"),
+            SplitLargeFilesHandler: () =>
+              require("./categories/refactoring/SplitLargeFilesHandler"),
+            CleanDependenciesHandler: () =>
+              require("./categories/refactoring/CleanDependenciesHandler"),
           },
           management: {
-            CreateTaskHandler: () => require('./categories/management/CreateTaskHandler'),
-            GetChatHistoryHandler: () => require('./categories/management/GetChatHistoryHandler'),
-            PortStreamingHandler: () => require('./categories/management/PortStreamingHandler'),
-            SendMessageHandler: () => require('./categories/management/SendMessageHandler'),
-            StartStreamingHandler: () => require('./categories/management/StartStreamingHandler'),
-            StopStreamingHandler: () => require('./categories/management/StopStreamingHandler'),
-            UpdateTestStatusHandler: () => require('./categories/management/UpdateTestStatusHandler')
+            CreateTaskHandler: () =>
+              require("./categories/management/CreateTaskHandler"),
+            GetChatHistoryHandler: () =>
+              require("./categories/management/GetChatHistoryHandler"),
+            PortStreamingHandler: () =>
+              require("./categories/management/PortStreamingHandler"),
+            SendMessageHandler: () =>
+              require("./categories/management/SendMessageHandler"),
+            StartStreamingHandler: () =>
+              require("./categories/management/StartStreamingHandler"),
+            StopStreamingHandler: () =>
+              require("./categories/management/StopStreamingHandler"),
+            UpdateTestStatusHandler: () =>
+              require("./categories/management/UpdateTestStatusHandler"),
           },
           workflow: {
-            CreateTaskHandler: () => require('./categories/workflow/CreateTaskHandler'),
-            UpdateTestStatusHandler: () => require('./categories/workflow/UpdateTestStatusHandler')
+            CreateTaskHandler: () =>
+              require("./categories/workflow/CreateTaskHandler"),
+            UpdateTestStatusHandler: () =>
+              require("./categories/workflow/UpdateTestStatusHandler"),
           },
           ide: {
-            CreateChatHandler: () => require('./categories/ide/CreateChatHandler'),
-            SendMessageHandler: () => require('./categories/management/SendMessageHandler'),
-            SwitchChatHandler: () => require('./categories/ide/SwitchChatHandler'),
-            ListChatsHandler: () => require('./categories/ide/ListChatsHandler'),
-            CloseChatHandler: () => require('./categories/ide/CloseChatHandler'),
-            GetChatHistoryHandler: () => require('./categories/ide/GetChatHistoryHandler'),
-            OpenTerminalHandler: () => require('./categories/ide/OpenTerminalHandler'),
-            ExecuteTerminalHandler: () => require('./categories/ide/ExecuteTerminalHandler'),
-            MonitorTerminalOutputHandler: () => require('./categories/ide/MonitorTerminalOutputHandler'),
-            RestartUserAppHandler: () => require('./categories/ide/RestartUserAppHandler'),
-            TerminalLogCaptureHandler: () => require('./categories/ide/TerminalLogCaptureHandler'),
-            AnalyzeProjectHandler: () => require('./categories/ide/AnalyzeProjectHandler'),
-            AnalyzeAgainHandler: () => require('./categories/ide/AnalyzeAgainHandler'),
-            GetWorkspaceInfoHandler: () => require('./categories/ide/GetWorkspaceInfoHandler'),
-            DetectPackageJsonHandler: () => require('./categories/ide/DetectPackageJsonHandler'),
-            SwitchIDEPortHandler: () => require('./categories/ide/SwitchIDEPortHandler'),
-            OpenFileExplorerHandler: () => require('./categories/ide/OpenFileExplorerHandler'),
-            OpenCommandPaletteHandler: () => require('./categories/ide/OpenCommandPaletteHandler'),
-            ExecuteIDEActionHandler: () => require('./categories/ide/ExecuteIDEActionHandler'),
-            GetIDESelectorsHandler: () => require('./categories/ide/GetIDESelectorsHandler')
+            CreateChatHandler: () =>
+              require("./categories/ide/CreateChatHandler"),
+            SendMessageHandler: () =>
+              require("./categories/management/SendMessageHandler"),
+            SwitchChatHandler: () =>
+              require("./categories/ide/SwitchChatHandler"),
+            ListChatsHandler: () =>
+              require("./categories/ide/ListChatsHandler"),
+            CloseChatHandler: () =>
+              require("./categories/ide/CloseChatHandler"),
+            GetChatHistoryHandler: () =>
+              require("./categories/ide/GetChatHistoryHandler"),
+            OpenTerminalHandler: () =>
+              require("./categories/ide/OpenTerminalHandler"),
+            ExecuteTerminalHandler: () =>
+              require("./categories/ide/ExecuteTerminalHandler"),
+            MonitorTerminalOutputHandler: () =>
+              require("./categories/ide/MonitorTerminalOutputHandler"),
+            RestartUserAppHandler: () =>
+              require("./categories/ide/RestartUserAppHandler"),
+            TerminalLogCaptureHandler: () =>
+              require("./categories/ide/TerminalLogCaptureHandler"),
+            AnalyzeProjectHandler: () =>
+              require("./categories/ide/AnalyzeProjectHandler"),
+            AnalyzeAgainHandler: () =>
+              require("./categories/ide/AnalyzeAgainHandler"),
+            GetWorkspaceInfoHandler: () =>
+              require("./categories/ide/GetWorkspaceInfoHandler"),
+            DetectPackageJsonHandler: () =>
+              require("./categories/ide/DetectPackageJsonHandler"),
+            SwitchIDEPortHandler: () =>
+              require("./categories/ide/SwitchIDEPortHandler"),
+            OpenFileExplorerHandler: () =>
+              require("./categories/ide/OpenFileExplorerHandler"),
+            OpenCommandPaletteHandler: () =>
+              require("./categories/ide/OpenCommandPaletteHandler"),
+            ExecuteIDEActionHandler: () =>
+              require("./categories/ide/ExecuteIDEActionHandler"),
+            GetIDESelectorsHandler: () =>
+              require("./categories/ide/GetIDESelectorsHandler"),
           },
           git: {
-            GitAddFilesHandler: () => require('./categories/git/GitAddFilesHandler'),
-            GitCommitHandler: () => require('./categories/git/GitCommitHandler'),
-            GitPushHandler: () => require('./categories/git/GitPushHandler'),
-            GitPullHandler: () => require('./categories/git/GitPullHandler'),
-            GitCheckoutHandler: () => require('./categories/git/GitCheckoutHandler'),
-            GitCreateBranchHandler: () => require('./categories/git/GitCreateBranchHandler'),
-            GitMergeHandler: () => require('./categories/git/GitMergeHandler'),
-            GitStatusHandler: () => require('./categories/git/GitStatusHandler'),
-            GitCloneHandler: () => require('./categories/git/GitCloneHandler'),
-            GitInitHandler: () => require('./categories/git/GitInitHandler'),
-            GitResetHandler: () => require('./categories/git/GitResetHandler'),
-            GitDiffHandler: () => require('./categories/git/GitDiffHandler'),
-            GitLogHandler: () => require('./categories/git/GitLogHandler'),
-            GitRemoteHandler: () => require('./categories/git/GitRemoteHandler'),
-            GitBranchHandler: () => require('./categories/git/GitBranchHandler'),
-            GitCreatePullRequestHandler: () => require('./categories/git/GitCreatePullRequestHandler')
-          }
+            GitAddFilesHandler: () =>
+              require("./categories/git/GitAddFilesHandler"),
+            GitCommitHandler: () =>
+              require("./categories/git/GitCommitHandler"),
+            GitPushHandler: () => require("./categories/git/GitPushHandler"),
+            GitPullHandler: () => require("./categories/git/GitPullHandler"),
+            GitCheckoutHandler: () =>
+              require("./categories/git/GitCheckoutHandler"),
+            GitCreateBranchHandler: () =>
+              require("./categories/git/GitCreateBranchHandler"),
+            GitMergeHandler: () => require("./categories/git/GitMergeHandler"),
+            GitStatusHandler: () =>
+              require("./categories/git/GitStatusHandler"),
+            GitCloneHandler: () => require("./categories/git/GitCloneHandler"),
+            GitInitHandler: () => require("./categories/git/GitInitHandler"),
+            GitResetHandler: () => require("./categories/git/GitResetHandler"),
+            GitDiffHandler: () => require("./categories/git/GitDiffHandler"),
+            GitLogHandler: () => require("./categories/git/GitLogHandler"),
+            GitRemoteHandler: () =>
+              require("./categories/git/GitRemoteHandler"),
+            GitBranchHandler: () =>
+              require("./categories/git/GitBranchHandler"),
+            GitCreatePullRequestHandler: () =>
+              require("./categories/git/GitCreatePullRequestHandler"),
+          },
         };
-        
+
         const handlerLoader = handlerMap[category]?.[name];
         if (!handlerLoader) return null;
-        
+
         return handlerLoader();
       } catch (error) {
-        console.error(`Failed to load handler ${category}/${name}:`, error.message);
+        console.error(
+          `Failed to load handler ${category}/${name}:`,
+          error.message,
+        );
         return null;
       }
     };
-    
+
     const HandlerClass = getHandlerClass(category, name);
     if (!HandlerClass) return null;
-    
+
     // If serviceRegistry is provided, enhance dependencies with services
     if (serviceRegistry) {
       const enhancedDependencies = { ...dependencies };
       // Add services that the handler might need
-      if (serviceRegistry.hasService('logger')) {
-        enhancedDependencies.logger = serviceRegistry.getService('logger');
+      if (serviceRegistry.hasService("logger")) {
+        enhancedDependencies.logger = serviceRegistry.getService("logger");
       }
-      if (serviceRegistry.hasService('eventBus')) {
-        enhancedDependencies.eventBus = serviceRegistry.getService('eventBus');
+      if (serviceRegistry.hasService("eventBus")) {
+        enhancedDependencies.eventBus = serviceRegistry.getService("eventBus");
       }
       return new HandlerClass(enhancedDependencies);
     }
-    
+
     return new HandlerClass(dependencies);
   }
 
@@ -134,59 +193,59 @@ class HandlerRegistry {
   static getByCategory(category) {
     // Validate category
     if (!isValidCategory(category)) {
-      throw new Error(`Invalid category: ${category}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(', ')}`);
+      throw new Error(
+        `Invalid category: ${category}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(", ")}`,
+      );
     }
-    
+
     const categoryHandlers = {
-      [STANDARD_CATEGORIES.ANALYSIS]: [
-        'AdvancedAnalysisHandler'
-      ],
+      [STANDARD_CATEGORIES.ANALYSIS]: ["AdvancedAnalysisHandler"],
       [STANDARD_CATEGORIES.GENERATE]: [
-        'GenerateConfigsHandler',
-        'GenerateDocumentationHandler',
-        'GenerateScriptsHandler',
-        'GenerateTestsHandler'
+        "GenerateConfigsHandler",
+        "GenerateDocumentationHandler",
+        "GenerateScriptsHandler",
+        "GenerateTestsHandler",
       ],
       [STANDARD_CATEGORIES.REFACTORING]: [
-        'OrganizeModulesHandler',
-        'RestructureArchitectureHandler',
-        'SplitLargeFilesHandler',
-        'CleanDependenciesHandler'
+        "OrganizeModulesHandler",
+        "RestructureArchitectureHandler",
+        "SplitLargeFilesHandler",
+        "CleanDependenciesHandler",
       ],
       [STANDARD_CATEGORIES.MANAGEMENT]: [
-        'CreateTaskHandler',
-        'GetChatHistoryHandler',
-        'PortStreamingHandler',
+        "CreateTaskHandler",
+        "GetChatHistoryHandler",
+        "PortStreamingHandler",
         // 'ProcessTodoListHandler', // Removed - converted to workflow
-        'SendMessageHandler',
-        'StartStreamingHandler',
-        'StopStreamingHandler',
-        'UpdateTestStatusHandler'
+        "SendMessageHandler",
+        "StartStreamingHandler",
+        "StopStreamingHandler",
+        "UpdateTestStatusHandler",
       ],
       [STANDARD_CATEGORIES.IDE]: [
-        'CreateChatHandler',
-        'SendMessageHandler',
-        'SwitchChatHandler',
-        'ListChatsHandler',
-        'CloseChatHandler',
-        'GetChatHistoryHandler',
-        'OpenTerminalHandler',
-        'ExecuteTerminalHandler',
-        'MonitorTerminalOutputHandler',
-        'RestartUserAppHandler',
-        'TerminalLogCaptureHandler',
-        'AnalyzeProjectHandler',
-        'AnalyzeAgainHandler',
-        'GetWorkspaceInfoHandler',
-        'DetectPackageJsonHandler',
-        'SwitchIDEPortHandler',
-        'OpenFileExplorerHandler',
-        'OpenCommandPaletteHandler',
-        'ExecuteIDEActionHandler',
-        'GetIDESelectorsHandler'
-      ]
+        "CreateChatHandler",
+        "SendMessageHandler",
+        "SwitchChatHandler",
+        "ListChatsHandler",
+        "CloseChatHandler",
+        "GetChatHistoryHandler",
+        "OpenTerminalHandler",
+        "ExecuteTerminalHandler",
+        "MonitorTerminalOutputHandler",
+        "RestartUserAppHandler",
+        "TerminalLogCaptureHandler",
+        "AnalyzeProjectHandler",
+        "AnalyzeAgainHandler",
+        "GetWorkspaceInfoHandler",
+        "DetectPackageJsonHandler",
+        "SwitchIDEPortHandler",
+        "OpenFileExplorerHandler",
+        "OpenCommandPaletteHandler",
+        "ExecuteIDEActionHandler",
+        "GetIDESelectorsHandler",
+      ],
     };
-    
+
     return categoryHandlers[category] || [];
   }
 
@@ -202,15 +261,17 @@ class HandlerRegistry {
    */
   static async register(name, config, category, executor = null) {
     const instance = new HandlerRegistry();
-    
+
     // Use default category if not provided
-    const finalCategory = category || getDefaultCategory('handler');
-    
+    const finalCategory = category || getDefaultCategory("handler");
+
     // Validate category
     if (!isValidCategory(finalCategory)) {
-      throw new Error(`Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(', ')}`);
+      throw new Error(
+        `Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(", ")}`,
+      );
     }
-    
+
     // Store handler
     instance.handlers.set(name, {
       name,
@@ -218,12 +279,12 @@ class HandlerRegistry {
       category: finalCategory,
       executor,
       registeredAt: new Date(),
-      status: 'active',
+      status: "active",
       metadata: {
-        type: 'handler',
+        type: "handler",
         category: finalCategory,
-        version: config.version || '1.0.0'
-      }
+        version: config.version || "1.0.0",
+      },
     });
 
     // Add to category
@@ -243,8 +304,12 @@ class HandlerRegistry {
    * @returns {Promise<Object>} Execution result
    */
   static async execute(name, context = {}, options = {}) {
-    const handler = HandlerRegistry.buildFromCategory(context.category || 'management', name, context);
-    
+    const handler = HandlerRegistry.buildFromCategory(
+      context.category || "management",
+      name,
+      context,
+    );
+
     if (!handler) {
       throw new Error(`Handler "${name}" not found`);
     }
@@ -292,25 +357,25 @@ class HandlerRegistry {
   static remove(name) {
     const instance = new HandlerRegistry();
     const handler = instance.handlers.get(name);
-    
+
     if (!handler) {
       return false;
     }
-    
+
     // Remove from handlers map
     instance.handlers.delete(name);
-    
+
     // Remove from category
     const category = handler.category;
     if (instance.categories.has(category)) {
       instance.categories.get(category).delete(name);
-      
+
       // Remove empty category
       if (instance.categories.get(category).size === 0) {
         instance.categories.delete(category);
       }
     }
-    
+
     return true;
   }
 
@@ -323,8 +388,12 @@ class HandlerRegistry {
     return {
       totalHandlers: instance.handlers.size,
       categories: instance.categories.size,
-      activeHandlers: Array.from(instance.handlers.values()).filter(h => h.status === 'active').length,
-      inactiveHandlers: Array.from(instance.handlers.values()).filter(h => h.status === 'inactive').length
+      activeHandlers: Array.from(instance.handlers.values()).filter(
+        (h) => h.status === "active",
+      ).length,
+      inactiveHandlers: Array.from(instance.handlers.values()).filter(
+        (h) => h.status === "inactive",
+      ).length,
     };
   }
 
@@ -334,12 +403,18 @@ class HandlerRegistry {
    * @returns {Object} Validation result
    */
   static validateConfig(config) {
-    if (!config || typeof config !== 'object') {
-      return { isValid: false, errors: ['Handler configuration must be an object'] };
+    if (!config || typeof config !== "object") {
+      return {
+        isValid: false,
+        errors: ["Handler configuration must be an object"],
+      };
     }
 
     if (!config.name) {
-      return { isValid: false, errors: ['Handler configuration must have a "name" property'] };
+      return {
+        isValid: false,
+        errors: ['Handler configuration must have a "name" property'],
+      };
     }
 
     return { isValid: true, errors: [] };
@@ -365,11 +440,11 @@ class HandlerRegistry {
   static updateMetadata(name, metadata) {
     const instance = new HandlerRegistry();
     const handler = instance.handlers.get(name);
-    
+
     if (!handler) {
       return false;
     }
-    
+
     handler.metadata = { ...handler.metadata, ...metadata };
     handler.updatedAt = new Date();
     return true;
@@ -404,7 +479,7 @@ class HandlerRegistry {
     const instance = new HandlerRegistry();
     return {
       handlers: Array.from(instance.handlers.entries()),
-      categories: Array.from(instance.categories.entries())
+      categories: Array.from(instance.categories.entries()),
     };
   }
 
@@ -415,19 +490,19 @@ class HandlerRegistry {
    */
   static import(data) {
     const instance = new HandlerRegistry();
-    
+
     if (data.handlers) {
       data.handlers.forEach(([name, handler]) => {
         instance.handlers.set(name, handler);
       });
     }
-    
+
     if (data.categories) {
       data.categories.forEach(([category, names]) => {
         instance.categories.set(category, new Set(names));
       });
     }
-    
+
     return true;
   }
 }

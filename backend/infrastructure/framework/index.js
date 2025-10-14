@@ -3,15 +3,15 @@
  * Exports all framework infrastructure components
  */
 
-const path = require('path');
-const Logger = require('@logging/Logger');
-const FrameworkLoader = require('./FrameworkLoader');
-const FrameworkManager = require('./FrameworkManager');
-const FrameworkValidator = require('./FrameworkValidator');
-const FrameworkConfig = require('./FrameworkConfig');
-const FrameworkStepRegistry = require('./FrameworkStepRegistry');
+const path = require("path");
+const Logger = require("@logging/Logger");
+const FrameworkLoader = require("./FrameworkLoader");
+const FrameworkManager = require("./FrameworkManager");
+const FrameworkValidator = require("./FrameworkValidator");
+const FrameworkConfig = require("./FrameworkConfig");
+const FrameworkStepRegistry = require("./FrameworkStepRegistry");
 
-const logger = new Logger('FrameworkInfrastructure');
+const logger = new Logger("FrameworkInfrastructure");
 
 // Create singleton instances
 const frameworkLoader = new FrameworkLoader();
@@ -30,69 +30,82 @@ async function initializeFrameworkInfrastructure(stepRegistry = null) {
       validator: false,
       loader: false,
       manager: false,
-      stepRegistry: false
+      stepRegistry: false,
     };
-    
+
     // Initialize components in order with error handling
     try {
       await frameworkConfig.initialize();
       initializationResults.config = true;
     } catch (error) {
-      logger.warn('⚠️ Framework Config initialization failed:', error.message);
+      logger.warn("⚠️ Framework Config initialization failed:", error.message);
     }
-    
+
     try {
       await frameworkValidator.initialize();
       initializationResults.validator = true;
     } catch (error) {
-      logger.warn('⚠️ Framework Validator initialization failed:', error.message);
+      logger.warn(
+        "⚠️ Framework Validator initialization failed:",
+        error.message,
+      );
     }
-    
+
     try {
       await frameworkLoader.initialize();
       initializationResults.loader = true;
     } catch (error) {
-      logger.warn('⚠️ Framework Loader initialization failed:', error.message);
+      logger.warn("⚠️ Framework Loader initialization failed:", error.message);
     }
-    
+
     try {
       await frameworkManager.initialize();
       initializationResults.manager = true;
     } catch (error) {
-      logger.warn('⚠️ Framework Manager initialization failed:', error.message);
+      logger.warn("⚠️ Framework Manager initialization failed:", error.message);
     }
-    
+
     // Initialize framework step registry if step registry is provided
     if (stepRegistry) {
       try {
-        const frameworkBasePath = path.join(__dirname, '../../framework');
+        const frameworkBasePath = path.join(__dirname, "../../framework");
         await frameworkStepRegistry.initialize(frameworkBasePath, stepRegistry);
         initializationResults.stepRegistry = true;
       } catch (error) {
-        logger.warn('⚠️ Framework Step Registry initialization failed:', error.message);
+        logger.warn(
+          "⚠️ Framework Step Registry initialization failed:",
+          error.message,
+        );
       }
     }
-    
+
     // Check if critical components initialized successfully
-    const criticalComponents = ['loader'];
-    const criticalSuccess = criticalComponents.every(component => initializationResults[component]);
-    
+    const criticalComponents = ["loader"];
+    const criticalSuccess = criticalComponents.every(
+      (component) => initializationResults[component],
+    );
+
     if (!criticalSuccess) {
-      throw new Error(`Critical framework components failed to initialize: ${criticalComponents.filter(c => !initializationResults[c]).join(', ')}`);
+      throw new Error(
+        `Critical framework components failed to initialize: ${criticalComponents.filter((c) => !initializationResults[c]).join(", ")}`,
+      );
     }
-    
+
     // Only log summary, not individual component successes
-    
+
     return {
       loader: frameworkLoader,
       manager: frameworkManager,
       validator: frameworkValidator,
       config: frameworkConfig,
       stepRegistry: frameworkStepRegistry,
-      initializationResults
+      initializationResults,
     };
   } catch (error) {
-    logger.error('❌ Failed to initialize Framework Infrastructure:', error.message);
+    logger.error(
+      "❌ Failed to initialize Framework Infrastructure:",
+      error.message,
+    );
     throw error;
   }
 }
@@ -141,7 +154,7 @@ function getAllFrameworkComponents() {
     manager: frameworkManager,
     validator: frameworkValidator,
     config: frameworkConfig,
-    stepRegistry: frameworkStepRegistry
+    stepRegistry: frameworkStepRegistry,
   };
 }
 
@@ -159,8 +172,8 @@ function getFrameworkInfrastructureStats() {
       manager: frameworkManager.isInitialized,
       validator: frameworkValidator.isInitialized,
       config: frameworkConfig.isInitialized,
-      stepRegistry: frameworkStepRegistry.loadedFrameworks.size > 0
-    }
+      stepRegistry: frameworkStepRegistry.loadedFrameworks.size > 0,
+    },
   };
 }
 
@@ -171,17 +184,17 @@ module.exports = {
   FrameworkValidator,
   FrameworkConfig,
   FrameworkStepRegistry,
-  
+
   // Singleton instances
   frameworkLoader,
   frameworkManager,
   frameworkValidator,
   frameworkConfig,
   frameworkStepRegistry,
-  
+
   // Initialization
   initializeFrameworkInfrastructure,
-  
+
   // Getter functions
   getFrameworkLoader,
   getFrameworkManager,
@@ -189,7 +202,7 @@ module.exports = {
   getFrameworkConfig,
   getFrameworkStepRegistry,
   getAllFrameworkComponents,
-  
+
   // Statistics
-  getFrameworkInfrastructureStats
-}; 
+  getFrameworkInfrastructureStats,
+};

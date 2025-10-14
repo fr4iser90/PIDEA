@@ -6,14 +6,14 @@
 class GitAddFilesCommand {
   constructor(params) {
     this.projectPath = params.projectPath;
-    this.files = params.files || '.';
+    this.files = params.files || ".";
     this.commandId = `git-add-${Date.now()}`;
     this.timestamp = new Date();
   }
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
     return true;
   }
@@ -23,9 +23,9 @@ class GitAddFilesCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       files: this.files,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 }
 
-module.exports = GitAddFilesCommand; 
+module.exports = GitAddFilesCommand;

@@ -1,6 +1,6 @@
 /**
  * StartStreamingCommand
- * 
+ *
  * Command to start IDE screenshot streaming for a specific port.
  */
 class StartStreamingCommand {
@@ -10,11 +10,11 @@ class StartStreamingCommand {
     this.options = {
       fps: options.fps || 10,
       quality: options.quality || 0.8,
-      format: options.format || 'webp',
+      format: options.format || "webp",
       maxFrameSize: options.maxFrameSize || 50 * 1024,
-      enableRegionDetection: options.enableRegionDetection || false
+      enableRegionDetection: options.enableRegionDetection || false,
     };
-    
+
     this.timestamp = new Date();
     this.commandId = this.generateCommandId();
   }
@@ -32,26 +32,31 @@ class StartStreamingCommand {
    * @returns {boolean} Whether command is valid
    */
   validate() {
-    if (!this.sessionId || typeof this.sessionId !== 'string') {
-      throw new Error('Valid session ID is required');
+    if (!this.sessionId || typeof this.sessionId !== "string") {
+      throw new Error("Valid session ID is required");
     }
-    
-    if (!this.port || typeof this.port !== 'number' || this.port < 1 || this.port > 65535) {
-      throw new Error('Valid port number (1-65535) is required');
+
+    if (
+      !this.port ||
+      typeof this.port !== "number" ||
+      this.port < 1 ||
+      this.port > 65535
+    ) {
+      throw new Error("Valid port number (1-65535) is required");
     }
-    
+
     if (this.options.fps < 1 || this.options.fps > 60) {
-      throw new Error('FPS must be between 1 and 60');
+      throw new Error("FPS must be between 1 and 60");
     }
-    
+
     if (this.options.quality < 0.1 || this.options.quality > 1.0) {
-      throw new Error('Quality must be between 0.1 and 1.0');
+      throw new Error("Quality must be between 0.1 and 1.0");
     }
-    
-    if (!['webp', 'jpeg'].includes(this.options.format)) {
+
+    if (!["webp", "jpeg"].includes(this.options.format)) {
       throw new Error('Format must be either "webp" or "jpeg"');
     }
-    
+
     return true;
   }
 
@@ -62,11 +67,11 @@ class StartStreamingCommand {
   getMetadata() {
     return {
       commandId: this.commandId,
-      type: 'StartStreamingCommand',
+      type: "StartStreamingCommand",
       sessionId: this.sessionId,
       port: this.port,
       options: this.options,
-      timestamp: this.timestamp.toISOString()
+      timestamp: this.timestamp.toISOString(),
     };
   }
 
@@ -77,7 +82,7 @@ class StartStreamingCommand {
   toJSON() {
     return {
       ...this.getMetadata(),
-      validated: true
+      validated: true,
     };
   }
 
@@ -87,11 +92,15 @@ class StartStreamingCommand {
    * @returns {StartStreamingCommand} Command instance
    */
   static fromJSON(data) {
-    const command = new StartStreamingCommand(data.sessionId, data.port, data.options);
+    const command = new StartStreamingCommand(
+      data.sessionId,
+      data.port,
+      data.options,
+    );
     command.commandId = data.commandId;
     command.timestamp = new Date(data.timestamp);
     return command;
   }
 }
 
-module.exports = StartStreamingCommand; 
+module.exports = StartStreamingCommand;

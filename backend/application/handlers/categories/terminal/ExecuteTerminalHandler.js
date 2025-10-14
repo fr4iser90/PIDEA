@@ -3,13 +3,13 @@
  * Handler for executing terminal commands
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class ExecuteTerminalHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class ExecuteTerminalHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,8 +40,8 @@ class ExecuteTerminalHandler {
       this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
-      if (!command || command.type !== 'ExecuteTerminalCommand') {
-        throw new Error('Invalid command type for ExecuteTerminalHandler');
+      if (!command || command.type !== "ExecuteTerminalCommand") {
+        throw new Error("Invalid command type for ExecuteTerminalHandler");
       }
 
       // Execute terminal command
@@ -49,38 +49,38 @@ class ExecuteTerminalHandler {
         command.command,
         {
           ...command.options,
-          waitTime: command.waitTime
-        }
+          waitTime: command.waitTime,
+        },
       );
 
       // Publish success event
-      await this.eventBus.publish('terminal.command.executed', {
+      await this.eventBus.publish("terminal.command.executed", {
         commandId: command.commandId,
         userId: command.userId,
         command: command.command,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info(`Terminal command executed successfully: ${command.command}`);
+      this.logger.info(
+        `Terminal command executed successfully: ${command.command}`,
+      );
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to execute terminal command:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('terminal.command.failed', {
+      await this.eventBus.publish("terminal.command.failed", {
         commandId: command.commandId,
         userId: command.userId,
         command: command.command,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -93,12 +93,12 @@ class ExecuteTerminalHandler {
    */
   getInfo() {
     return {
-      name: 'ExecuteTerminalHandler',
-      version: '1.0.0',
-      description: 'Handles IDE terminal command execution',
-      supportedCommands: ['ExecuteTerminalCommand']
+      name: "ExecuteTerminalHandler",
+      version: "1.0.0",
+      description: "Handles IDE terminal command execution",
+      supportedCommands: ["ExecuteTerminalCommand"],
     };
   }
 }
 
-module.exports = ExecuteTerminalHandler; 
+module.exports = ExecuteTerminalHandler;

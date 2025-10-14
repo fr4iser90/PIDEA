@@ -1,11 +1,11 @@
 /**
  * HandlerValidator - Validation for handlers and requests
- * 
+ *
  * This class provides comprehensive validation for handlers, requests,
  * and contexts. It ensures that handlers are properly configured and
  * requests are valid before execution.
  */
-const ValidationResult = require('../../../domain/workflows/validation/ValidationResult');
+const ValidationResult = require("../../../domain/workflows/validation/ValidationResult");
 
 class HandlerValidator {
   /**
@@ -19,7 +19,7 @@ class HandlerValidator {
       validateDependencies: options.validateDependencies !== false,
       maxRequestSize: options.maxRequestSize || 1024 * 1024, // 1MB
       allowedRequestTypes: options.allowedRequestTypes || [],
-      ...options
+      ...options,
     };
   }
 
@@ -35,16 +35,18 @@ class HandlerValidator {
     try {
       // Basic request validation
       if (!request) {
-        errors.push('Request is required');
+        errors.push("Request is required");
         return new ValidationResult(undefined, false, errors, warnings, {});
       }
 
       // Validate request type
       if (request.type) {
-        if (typeof request.type !== 'string') {
-          errors.push('Request type must be a string');
-        } else if (this.options.allowedRequestTypes.length > 0 && 
-                   !this.options.allowedRequestTypes.includes(request.type)) {
+        if (typeof request.type !== "string") {
+          errors.push("Request type must be a string");
+        } else if (
+          this.options.allowedRequestTypes.length > 0 &&
+          !this.options.allowedRequestTypes.includes(request.type)
+        ) {
           errors.push(`Request type '${request.type}' is not allowed`);
         }
       }
@@ -52,7 +54,9 @@ class HandlerValidator {
       // Validate request size
       const requestSize = JSON.stringify(request).length;
       if (requestSize > this.options.maxRequestSize) {
-        errors.push(`Request size (${requestSize} bytes) exceeds maximum allowed size (${this.options.maxRequestSize} bytes)`);
+        errors.push(
+          `Request size (${requestSize} bytes) exceeds maximum allowed size (${this.options.maxRequestSize} bytes)`,
+        );
       }
 
       // Validate required fields based on request type
@@ -68,12 +72,17 @@ class HandlerValidator {
         errors.push(...structureValidation.errors);
         warnings.push(...structureValidation.warnings);
       }
-
     } catch (error) {
       errors.push(`Validation error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -89,7 +98,7 @@ class HandlerValidator {
     try {
       // Basic handler validation
       if (!handler) {
-        errors.push('Handler is required');
+        errors.push("Handler is required");
         return new ValidationResult(undefined, false, errors, warnings, {});
       }
 
@@ -111,7 +120,10 @@ class HandlerValidator {
 
       // Validate handler dependencies
       if (this.options.validateDependencies) {
-        const dependencyValidation = await this.validateHandlerDependencies(handler, context);
+        const dependencyValidation = await this.validateHandlerDependencies(
+          handler,
+          context,
+        );
         if (!dependencyValidation.isValid) {
           errors.push(...dependencyValidation.errors);
           warnings.push(...dependencyValidation.warnings);
@@ -124,12 +136,17 @@ class HandlerValidator {
         errors.push(...healthValidation.errors);
         warnings.push(...healthValidation.warnings);
       }
-
     } catch (error) {
       errors.push(`Handler validation error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -144,27 +161,30 @@ class HandlerValidator {
     try {
       // Basic context validation
       if (!context) {
-        errors.push('Context is required');
+        errors.push("Context is required");
         return new ValidationResult(undefined, false, errors, warnings, {});
       }
 
       // Validate context structure
       if (!context.handlerId) {
-        errors.push('Context must have a handler ID');
+        errors.push("Context must have a handler ID");
       }
 
       if (!context.request) {
-        errors.push('Context must have a request');
+        errors.push("Context must have a request");
       }
 
       if (!context.response) {
-        errors.push('Context must have a response');
+        errors.push("Context must have a response");
       }
 
       // Validate context age
       const contextAge = context.getAge();
-      if (contextAge > 300000) { // 5 minutes
-        warnings.push(`Context is old (${Math.round(contextAge / 1000)}s), consider refreshing`);
+      if (contextAge > 300000) {
+        // 5 minutes
+        warnings.push(
+          `Context is old (${Math.round(contextAge / 1000)}s), consider refreshing`,
+        );
       }
 
       // Validate context data
@@ -173,12 +193,17 @@ class HandlerValidator {
         errors.push(...dataValidation.errors);
         warnings.push(...dataValidation.warnings);
       }
-
     } catch (error) {
       errors.push(`Context validation error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -190,33 +215,35 @@ class HandlerValidator {
     const errors = [];
     const warnings = [];
 
-    const requestType = request.type || 'unknown';
+    const requestType = request.type || "unknown";
 
     switch (requestType) {
-      case 'workflow':
+      case "workflow":
         if (!request.taskId) {
-          errors.push('Workflow requests must have a taskId');
+          errors.push("Workflow requests must have a taskId");
         }
         break;
 
-      case 'command':
+      case "command":
         if (!request.command) {
-          errors.push('Command requests must have a command');
+          errors.push("Command requests must have a command");
         }
         break;
 
-      case 'service':
+      case "service":
         if (!request.service) {
-          errors.push('Service requests must have a service');
+          errors.push("Service requests must have a service");
         }
         if (!request.method) {
-          errors.push('Service requests must have a method');
+          errors.push("Service requests must have a method");
         }
         break;
 
-      case 'legacy':
+      case "legacy":
         if (!request.handlerClass && !request.handlerPath) {
-          errors.push('Legacy requests must have either handlerClass or handlerPath');
+          errors.push(
+            "Legacy requests must have either handlerClass or handlerPath",
+          );
         }
         break;
 
@@ -227,7 +254,13 @@ class HandlerValidator {
         break;
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -243,7 +276,7 @@ class HandlerValidator {
     try {
       JSON.stringify(request);
     } catch (error) {
-      errors.push('Request contains circular references');
+      errors.push("Request contains circular references");
     }
 
     // Check for invalid values
@@ -253,7 +286,13 @@ class HandlerValidator {
       }
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -266,22 +305,28 @@ class HandlerValidator {
     const warnings = [];
 
     const requiredMethods = [
-      'execute',
-      'getMetadata',
-      'validate',
-      'canHandle',
-      'getDependencies',
-      'getVersion',
-      'getType'
+      "execute",
+      "getMetadata",
+      "validate",
+      "canHandle",
+      "getDependencies",
+      "getVersion",
+      "getType",
     ];
 
     for (const method of requiredMethods) {
-      if (typeof handler[method] !== 'function') {
+      if (typeof handler[method] !== "function") {
         errors.push(`Handler must implement ${method} method`);
       }
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -297,27 +342,32 @@ class HandlerValidator {
       const metadata = handler.getMetadata();
 
       if (!metadata) {
-        errors.push('Handler metadata is required');
+        errors.push("Handler metadata is required");
         return new ValidationResult(undefined, false, errors, warnings, {});
       }
 
       if (!metadata.name) {
-        errors.push('Handler metadata must include a name');
+        errors.push("Handler metadata must include a name");
       }
 
       if (!metadata.version) {
-        errors.push('Handler metadata must include a version');
+        errors.push("Handler metadata must include a version");
       }
 
       if (metadata.version && !this.isValidVersion(metadata.version)) {
         warnings.push(`Handler version '${metadata.version}' may not be valid`);
       }
-
     } catch (error) {
       errors.push(`Metadata validation error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -334,7 +384,7 @@ class HandlerValidator {
       const dependencies = handler.getDependencies();
 
       if (!Array.isArray(dependencies)) {
-        errors.push('Handler dependencies must be an array');
+        errors.push("Handler dependencies must be an array");
         return new ValidationResult(undefined, false, errors, warnings, {});
       }
 
@@ -344,12 +394,17 @@ class HandlerValidator {
           warnings.push(`Dependency '${dependency}' not found in context`);
         }
       }
-
     } catch (error) {
       errors.push(`Dependency validation error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -362,17 +417,23 @@ class HandlerValidator {
     const warnings = [];
 
     try {
-      if (typeof handler.isHealthy === 'function') {
+      if (typeof handler.isHealthy === "function") {
         const isHealthy = await handler.isHealthy();
         if (!isHealthy) {
-          errors.push('Handler health check failed');
+          errors.push("Handler health check failed");
         }
       }
     } catch (error) {
       warnings.push(`Health check error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -391,7 +452,7 @@ class HandlerValidator {
       try {
         JSON.stringify(data);
       } catch (error) {
-        errors.push('Context data contains circular references');
+        errors.push("Context data contains circular references");
       }
 
       // Check data size
@@ -399,12 +460,17 @@ class HandlerValidator {
       if (dataSize > this.options.maxRequestSize) {
         warnings.push(`Context data size (${dataSize} bytes) is large`);
       }
-
     } catch (error) {
       errors.push(`Context data validation error: ${error.message}`);
     }
 
-    return new ValidationResult(undefined, errors.length === 0, errors, warnings, {});
+    return new ValidationResult(
+      undefined,
+      errors.length === 0,
+      errors,
+      warnings,
+      {},
+    );
   }
 
   /**
@@ -413,12 +479,13 @@ class HandlerValidator {
    * @returns {boolean} True if valid
    */
   isValidVersion(version) {
-    if (typeof version !== 'string') {
+    if (typeof version !== "string") {
       return false;
     }
 
     // Basic semantic versioning check
-    const semverPattern = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
+    const semverPattern =
+      /^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
     return semverPattern.test(version);
   }
 
@@ -439,4 +506,4 @@ class HandlerValidator {
   }
 }
 
-module.exports = HandlerValidator; 
+module.exports = HandlerValidator;

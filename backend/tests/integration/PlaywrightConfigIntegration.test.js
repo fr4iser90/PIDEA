@@ -1,60 +1,62 @@
-const request = require('supertest');
-const app = require('@server');
-const PlaywrightTestApplicationService = require('@application/services/PlaywrightTestApplicationService');
+const request = require("supertest");
+const app = require("@server");
+const PlaywrightTestApplicationService = require("@application/services/PlaywrightTestApplicationService");
 
-describe('Playwright Configuration Integration Tests', () => {
+describe("Playwright Configuration Integration Tests", () => {
   let playwrightService;
-  let testProjectId = 'test-project-integration';
+  let testProjectId = "test-project-integration";
 
   beforeAll(async () => {
     // Initialize the service with real dependencies
     playwrightService = new PlaywrightTestApplicationService();
   });
 
-  describe('API Endpoints', () => {
-    describe('GET /api/projects/:projectId/tests/playwright/config', () => {
-      it('should return configuration for existing project', async () => {
+  describe("API Endpoints", () => {
+    describe("GET /api/projects/:projectId/tests/playwright/config", () => {
+      it("should return configuration for existing project", async () => {
         const response = await request(app)
           .get(`/api/projects/${testProjectId}/tests/playwright/config`)
           .expect(200);
 
-        expect(response.body).toHaveProperty('success', true);
-        expect(response.body).toHaveProperty('data');
-        expect(response.body.data).toHaveProperty('baseURL');
-        expect(response.body.data).toHaveProperty('timeout');
-        expect(response.body.data).toHaveProperty('browsers');
+        expect(response.body).toHaveProperty("success", true);
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data).toHaveProperty("baseURL");
+        expect(response.body.data).toHaveProperty("timeout");
+        expect(response.body.data).toHaveProperty("browsers");
       });
 
-      it('should return 400 for missing project ID', async () => {
+      it("should return 400 for missing project ID", async () => {
         const response = await request(app)
-          .get('/api/projects//tests/playwright/config')
+          .get("/api/projects//tests/playwright/config")
           .expect(400);
 
-        expect(response.body).toHaveProperty('success', false);
-        expect(response.body).toHaveProperty('error', 'Project ID is required');
+        expect(response.body).toHaveProperty("success", false);
+        expect(response.body).toHaveProperty("error", "Project ID is required");
       });
 
-      it('should return default config for non-existent project', async () => {
+      it("should return default config for non-existent project", async () => {
         const response = await request(app)
-          .get('/api/projects/non-existent/tests/playwright/config')
+          .get("/api/projects/non-existent/tests/playwright/config")
           .expect(200);
 
-        expect(response.body).toHaveProperty('success', true);
-        expect(response.body.data).toEqual(playwrightService.getDefaultPlaywrightConfig());
+        expect(response.body).toHaveProperty("success", true);
+        expect(response.body.data).toEqual(
+          playwrightService.getDefaultPlaywrightConfig(),
+        );
       });
     });
 
-    describe('PUT /api/projects/:projectId/tests/playwright/config', () => {
-      it('should save configuration successfully', async () => {
+    describe("PUT /api/projects/:projectId/tests/playwright/config", () => {
+      it("should save configuration successfully", async () => {
         const config = {
-          baseURL: 'http://localhost:4000',
+          baseURL: "http://localhost:4000",
           timeout: 30000,
-          browsers: ['chromium'],
+          browsers: ["chromium"],
           login: {
             required: true,
-            username: 'test@example.com',
-            password: 'password123'
-          }
+            username: "test@example.com",
+            password: "password123",
+          },
         };
 
         const response = await request(app)
@@ -62,15 +64,15 @@ describe('Playwright Configuration Integration Tests', () => {
           .send(config)
           .expect(200);
 
-        expect(response.body).toHaveProperty('success', true);
-        expect(response.body).toHaveProperty('data');
+        expect(response.body).toHaveProperty("success", true);
+        expect(response.body).toHaveProperty("data");
         expect(response.body.data.config).toEqual(config);
       });
 
-      it('should validate configuration before saving', async () => {
+      it("should validate configuration before saving", async () => {
         const invalidConfig = {
-          baseURL: 'invalid-url',
-          timeout: -1000
+          baseURL: "invalid-url",
+          timeout: -1000,
         };
 
         const response = await request(app)
@@ -78,33 +80,33 @@ describe('Playwright Configuration Integration Tests', () => {
           .send(invalidConfig)
           .expect(400);
 
-        expect(response.body).toHaveProperty('success', false);
-        expect(response.body).toHaveProperty('error');
+        expect(response.body).toHaveProperty("success", false);
+        expect(response.body).toHaveProperty("error");
       });
 
-      it('should return 400 for missing project ID', async () => {
+      it("should return 400 for missing project ID", async () => {
         const response = await request(app)
-          .put('/api/projects//tests/playwright/config')
-          .send({ baseURL: 'http://localhost:4000' })
+          .put("/api/projects//tests/playwright/config")
+          .send({ baseURL: "http://localhost:4000" })
           .expect(400);
 
-        expect(response.body).toHaveProperty('success', false);
-        expect(response.body).toHaveProperty('error', 'Project ID is required');
+        expect(response.body).toHaveProperty("success", false);
+        expect(response.body).toHaveProperty("error", "Project ID is required");
       });
     });
   });
 
-  describe('Configuration Persistence', () => {
-    it('should persist configuration across API calls', async () => {
+  describe("Configuration Persistence", () => {
+    it("should persist configuration across API calls", async () => {
       const config = {
-        baseURL: 'http://localhost:4000',
+        baseURL: "http://localhost:4000",
         timeout: 30000,
-        browsers: ['chromium', 'firefox'],
+        browsers: ["chromium", "firefox"],
         login: {
           required: true,
-          username: 'persistence@test.com',
-          password: 'testpass123'
-        }
+          username: "persistence@test.com",
+          password: "testpass123",
+        },
       };
 
       // Save configuration
@@ -121,17 +123,17 @@ describe('Playwright Configuration Integration Tests', () => {
       expect(response.body.data).toEqual(config);
     });
 
-    it('should handle concurrent configuration updates', async () => {
+    it("should handle concurrent configuration updates", async () => {
       const config1 = {
-        baseURL: 'http://localhost:4000',
+        baseURL: "http://localhost:4000",
         timeout: 30000,
-        browsers: ['chromium']
+        browsers: ["chromium"],
       };
 
       const config2 = {
-        baseURL: 'http://localhost:4000',
+        baseURL: "http://localhost:4000",
         timeout: 60000,
-        browsers: ['firefox']
+        browsers: ["firefox"],
       };
 
       // Save configurations concurrently
@@ -141,7 +143,7 @@ describe('Playwright Configuration Integration Tests', () => {
           .send(config1),
         request(app)
           .put(`/api/projects/${testProjectId}/tests/playwright/config`)
-          .send(config2)
+          .send(config2),
       ]);
 
       expect(response1.status).toBe(200);
@@ -149,15 +151,15 @@ describe('Playwright Configuration Integration Tests', () => {
     });
   });
 
-  describe('Test Execution with Configuration', () => {
-    it('should execute tests with saved configuration', async () => {
+  describe("Test Execution with Configuration", () => {
+    it("should execute tests with saved configuration", async () => {
       const config = {
-        baseURL: 'http://localhost:4000',
+        baseURL: "http://localhost:4000",
         timeout: 30000,
-        browsers: ['chromium'],
+        browsers: ["chromium"],
         login: {
-          required: false
-        }
+          required: false,
+        },
       };
 
       // Save configuration
@@ -170,33 +172,33 @@ describe('Playwright Configuration Integration Tests', () => {
       const response = await request(app)
         .post(`/api/projects/${testProjectId}/tests/playwright/execute`)
         .send({
-          workspacePath: '/test/workspace',
-          testFiles: ['login.test.js']
+          workspacePath: "/test/workspace",
+          testFiles: ["login.test.js"],
         })
         .expect(200);
 
-      expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty('projectId', testProjectId);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body).toHaveProperty("projectId", testProjectId);
     });
 
-    it('should save configuration during test execution', async () => {
+    it("should save configuration during test execution", async () => {
       const config = {
-        baseURL: 'http://localhost:4000',
+        baseURL: "http://localhost:4000",
         timeout: 30000,
-        browsers: ['chromium']
+        browsers: ["chromium"],
       };
 
       // Execute tests with configuration
       const response = await request(app)
         .post(`/api/projects/${testProjectId}/tests/playwright/execute`)
         .send({
-          workspacePath: '/test/workspace',
+          workspacePath: "/test/workspace",
           config: config,
-          testFiles: ['login.test.js']
+          testFiles: ["login.test.js"],
         })
         .expect(200);
 
-      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty("success", true);
 
       // Verify configuration was saved
       const configResponse = await request(app)
@@ -207,24 +209,26 @@ describe('Playwright Configuration Integration Tests', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle database connection errors gracefully', async () => {
+  describe("Error Handling", () => {
+    it("should handle database connection errors gracefully", async () => {
       // This test would require mocking database connection failures
       // For now, we'll test the error response format
       const response = await request(app)
-        .get('/api/projects/invalid-project/tests/playwright/config')
+        .get("/api/projects/invalid-project/tests/playwright/config")
         .expect(200);
 
       // Should return default config even for invalid projects
-      expect(response.body).toHaveProperty('success', true);
-      expect(response.body.data).toEqual(playwrightService.getDefaultPlaywrightConfig());
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.data).toEqual(
+        playwrightService.getDefaultPlaywrightConfig(),
+      );
     });
 
-    it('should handle malformed configuration data', async () => {
+    it("should handle malformed configuration data", async () => {
       const malformedConfig = {
         baseURL: null,
-        timeout: 'not-a-number',
-        browsers: 'not-an-array'
+        timeout: "not-a-number",
+        browsers: "not-an-array",
       };
 
       const response = await request(app)
@@ -232,15 +236,15 @@ describe('Playwright Configuration Integration Tests', () => {
         .send(malformedConfig)
         .expect(400);
 
-      expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty("success", false);
+      expect(response.body).toHaveProperty("error");
     });
   });
 
-  describe('Performance', () => {
-    it('should respond to configuration requests within 200ms', async () => {
+  describe("Performance", () => {
+    it("should respond to configuration requests within 200ms", async () => {
       const startTime = Date.now();
-      
+
       await request(app)
         .get(`/api/projects/${testProjectId}/tests/playwright/config`)
         .expect(200);
@@ -249,17 +253,20 @@ describe('Playwright Configuration Integration Tests', () => {
       expect(responseTime).toBeLessThan(200);
     });
 
-    it('should handle multiple concurrent configuration requests', async () => {
-      const requests = Array(10).fill().map(() =>
-        request(app)
-          .get(`/api/projects/${testProjectId}/tests/playwright/config`)
-      );
+    it("should handle multiple concurrent configuration requests", async () => {
+      const requests = Array(10)
+        .fill()
+        .map(() =>
+          request(app).get(
+            `/api/projects/${testProjectId}/tests/playwright/config`,
+          ),
+        );
 
       const responses = await Promise.all(requests);
-      
-      responses.forEach(response => {
+
+      responses.forEach((response) => {
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('success', true);
+        expect(response.body).toHaveProperty("success", true);
       });
     });
   });

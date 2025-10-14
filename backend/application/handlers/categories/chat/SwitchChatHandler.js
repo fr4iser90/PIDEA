@@ -3,19 +3,19 @@
  * Handler for switching between chat sessions
  */
 
-const SwitchChatCommand = require('@categories/chat/SwitchChatCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const SwitchChatCommand = require("@categories/chat/SwitchChatCommand");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class SwitchChatHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.chatSessionService = dependencies.chatSessionService;
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
-    
+
     this.handlerId = this.generateHandlerId();
   }
 
@@ -25,7 +25,7 @@ class SwitchChatHandler {
    * @throws {Error} If dependencies are invalid
    */
   validateDependencies(dependencies) {
-    const required = ['chatSessionService', 'ideManager', 'eventBus'];
+    const required = ["chatSessionService", "ideManager", "eventBus"];
     for (const dep of required) {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
@@ -52,72 +52,72 @@ class SwitchChatHandler {
       // Validate command
       const validationResult = await this.validateCommand(command);
       if (!validationResult.isValid) {
-        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Command validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
-      this.logger.info('Switching chat session', {
+      this.logger.info("Switching chat session", {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: command.sessionId
+        sessionId: command.sessionId,
       });
 
       // Publish event
-      await this.eventBus.publish('chat.switching', {
+      await this.eventBus.publish("chat.switching", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: command.sessionId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Switch session using ChatSessionService
       const session = await this.chatSessionService.switchSession(
         command.userId,
-        command.sessionId
+        command.sessionId,
       );
 
       // Publish success event
-      await this.eventBus.publish('chat.switched', {
+      await this.eventBus.publish("chat.switched", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: session.id,
         title: session.title,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info('Chat session switched successfully', {
+      this.logger.info("Chat session switched successfully", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        sessionId: session.id
+        sessionId: session.id,
       });
 
       return {
-        success: true,
         session: {
           id: session.id,
           title: session.title,
           userId: session.userId,
           status: session.status,
           createdAt: session.createdAt,
-          metadata: session.metadata
+          metadata: session.metadata,
         },
-        commandId: command.commandId
+        commandId: command.commandId,
       };
-
     } catch (error) {
-      this.logger.error('Failed to switch chat session', {
+      this.logger.error("Failed to switch chat session", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        error: error.message
+        error: error.message,
       });
 
       // Publish failure event
-      await this.eventBus.publish('chat.switching.failed', {
+      await this.eventBus.publish("chat.switching.failed", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: command.sessionId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -134,23 +134,27 @@ class SwitchChatHandler {
     const warnings = [];
 
     if (!command.userId) {
-      errors.push('User ID is required');
+      errors.push("User ID is required");
     }
 
     if (!command.sessionId) {
-      errors.push('Session ID is required');
+      errors.push("Session ID is required");
     }
 
-    if (command.sessionId && (typeof command.sessionId !== 'string' || command.sessionId.trim().length === 0)) {
-      errors.push('Session ID must be a non-empty string');
+    if (
+      command.sessionId &&
+      (typeof command.sessionId !== "string" ||
+        command.sessionId.trim().length === 0)
+    ) {
+      errors.push("Session ID must be a non-empty string");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 }
 
-module.exports = SwitchChatHandler; 
+module.exports = SwitchChatHandler;

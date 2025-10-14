@@ -3,15 +3,15 @@
  * Replaces the old PostgreSQLProjectAnalysisRepository that worked with project_analysis table
  * Handles CRUD operations for unified analysis table with WebSocket event emission
  */
-const Analysis = require('@entities/Analysis');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Analysis = require("@entities/Analysis");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class PostgreSQLAnalysisRepository {
   constructor(databaseConnection, eventBus = null) {
     this.databaseConnection = databaseConnection;
     this.eventBus = eventBus;
-    this.logger = new ServiceLogger('PostgreSQLAnalysisRepository');
-    this.tableName = 'analysis';
+    this.logger = new ServiceLogger("PostgreSQLAnalysisRepository");
+    this.tableName = "analysis";
   }
 
   /**
@@ -24,7 +24,7 @@ class PostgreSQLAnalysisRepository {
   async create(projectId, analysisType, config = {}) {
     try {
       const analysis = Analysis.create(projectId, analysisType, config);
-      
+
       // Save to database
       const query = `
         INSERT INTO ${this.tableName} (
@@ -33,7 +33,7 @@ class PostgreSQLAnalysisRepository {
           warnings_count, recommendations_count, created_at, updated_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       `;
-      
+
       const params = [
         analysis.id,
         analysis.projectId,
@@ -48,16 +48,18 @@ class PostgreSQLAnalysisRepository {
         analysis.warningsCount,
         analysis.recommendationsCount,
         analysis.createdAt,
-        analysis.updatedAt
+        analysis.updatedAt,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
-      this.logger.debug(`Created analysis: ${analysis.id} for project: ${projectId}, type: ${analysisType}`);
-      
+
+      this.logger.debug(
+        `Created analysis: ${analysis.id} for project: ${projectId}, type: ${analysisType}`,
+      );
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:created', analysis);
-      
+      this.emitAnalysisEvent("analysis:created", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to create analysis:`, error);
@@ -78,7 +80,10 @@ class PostgreSQLAnalysisRepository {
         WHERE project_id = $1 AND analysis_type = $2 AND status IN ('pending', 'running')
         ORDER BY created_at ASC LIMIT 1
       `;
-      const rows = await this.databaseConnection.query(query, [analysis.projectId, analysis.analysisType]);
+      const rows = await this.databaseConnection.query(query, [
+        analysis.projectId,
+        analysis.analysisType,
+      ]);
       let existing = null;
       if (rows.length > 0) {
         existing = this.mapRowToAnalysis(rows[0]);
@@ -89,7 +94,7 @@ class PostgreSQLAnalysisRepository {
 
       if (existing) {
         // Update bestehenden Eintrag mit Ergebnis und Status 'completed'
-        existing.status = 'completed';
+        existing.status = "completed";
         existing.progress = 100;
         existing.completedAt = new Date();
         existing.result = analysis.result;
@@ -103,19 +108,26 @@ class PostgreSQLAnalysisRepository {
         return await this.update(existing);
       } else {
         // Neuer Eintrag mit Ergebnis
-        const newAnalysis = await this.create(analysis.projectId, analysis.analysisType, analysis.config);
-        
+        const newAnalysis = await this.create(
+          analysis.projectId,
+          analysis.analysisType,
+          analysis.config,
+        );
+
         // Wenn ein Ergebnis vorhanden ist, direkt als completed speichern
         if (analysis.result) {
-          newAnalysis.status = 'completed';
+          newAnalysis.status = "completed";
           newAnalysis.progress = 100;
           newAnalysis.completedAt = new Date();
           newAnalysis.result = analysis.result;
-          newAnalysis.metadata = { ...newAnalysis.metadata, ...analysis.metadata };
+          newAnalysis.metadata = {
+            ...newAnalysis.metadata,
+            ...analysis.metadata,
+          };
           newAnalysis.updatedAt = new Date();
           return await this.update(newAnalysis);
         }
-        
+
         return newAnalysis;
       }
     } catch (error) {
@@ -137,30 +149,32 @@ class PostgreSQLAnalysisRepository {
       if (!analysis) {
         throw new Error(`Analysis not found: ${analysisId}`);
       }
-      
+
       analysis.updateProgress(progress, metadata);
-      
+
       // Update database
       const query = `
         UPDATE ${this.tableName} 
         SET progress = $1, metadata = $2, updated_at = $3
         WHERE id = $4
       `;
-      
+
       const params = [
         analysis.progress,
         JSON.stringify(analysis.metadata),
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
-      this.logger.debug(`Updated progress for analysis: ${analysisId} to ${progress}%`);
-      
+
+      this.logger.debug(
+        `Updated progress for analysis: ${analysisId} to ${progress}%`,
+      );
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:progress', analysis);
-      
+      this.emitAnalysisEvent("analysis:progress", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to update analysis progress:`, error);
@@ -179,31 +193,31 @@ class PostgreSQLAnalysisRepository {
       if (!analysis) {
         throw new Error(`Analysis not found: ${analysisId}`);
       }
-      
+
       analysis.start();
-      
+
       // Update database
       const query = `
         UPDATE ${this.tableName} 
         SET status = $1, progress = $2, started_at = $3, updated_at = $4
         WHERE id = $5
       `;
-      
+
       const params = [
         analysis.status,
         analysis.progress,
         analysis.startedAt,
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.debug(`Started analysis: ${analysisId}`);
-      
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:started', analysis);
-      
+      this.emitAnalysisEvent("analysis:started", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to start analysis:`, error);
@@ -224,9 +238,9 @@ class PostgreSQLAnalysisRepository {
       if (!analysis) {
         throw new Error(`Analysis not found: ${analysisId}`);
       }
-      
+
       analysis.complete(result, metadata);
-      
+
       // Update database
       const query = `
         UPDATE ${this.tableName} 
@@ -236,7 +250,7 @@ class PostgreSQLAnalysisRepository {
             recommendations_count = $10, updated_at = $11
         WHERE id = $12
       `;
-      
+
       const params = [
         analysis.status,
         analysis.progress,
@@ -249,16 +263,16 @@ class PostgreSQLAnalysisRepository {
         analysis.warningsCount,
         analysis.recommendationsCount,
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.debug(`Completed analysis: ${analysisId}`);
-      
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:completed', analysis);
-      
+      this.emitAnalysisEvent("analysis:completed", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to complete analysis:`, error);
@@ -279,9 +293,9 @@ class PostgreSQLAnalysisRepository {
       if (!analysis) {
         throw new Error(`Analysis not found: ${analysisId}`);
       }
-      
+
       analysis.fail(error, metadata);
-      
+
       // Update database
       const query = `
         UPDATE ${this.tableName} 
@@ -289,7 +303,7 @@ class PostgreSQLAnalysisRepository {
             execution_time = $5, updated_at = $6
         WHERE id = $7
       `;
-      
+
       const params = [
         analysis.status,
         analysis.completedAt,
@@ -297,16 +311,16 @@ class PostgreSQLAnalysisRepository {
         JSON.stringify(analysis.metadata),
         analysis.executionTime,
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.error(`Failed analysis: ${analysisId}`, error);
-      
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:failed', analysis);
-      
+      this.emitAnalysisEvent("analysis:failed", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to mark analysis as failed:`, error);
@@ -325,30 +339,30 @@ class PostgreSQLAnalysisRepository {
       if (!analysis) {
         throw new Error(`Analysis not found: ${analysisId}`);
       }
-      
+
       analysis.cancel();
-      
+
       // Update database
       const query = `
         UPDATE ${this.tableName} 
         SET status = $1, completed_at = $2, updated_at = $3
         WHERE id = $4
       `;
-      
+
       const params = [
         analysis.status,
         analysis.completedAt,
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.debug(`Cancelled analysis: ${analysisId}`);
-      
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:cancelled', analysis);
-      
+      this.emitAnalysisEvent("analysis:cancelled", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to cancel analysis:`, error);
@@ -367,11 +381,11 @@ class PostgreSQLAnalysisRepository {
       if (!analysis) {
         throw new Error(`Analysis not found: ${analysisId}`);
       }
-      
+
       if (!analysis.retry()) {
         throw new Error(`Analysis cannot be retried: ${analysisId}`);
       }
-      
+
       // Update database
       const query = `
         UPDATE ${this.tableName} 
@@ -379,7 +393,7 @@ class PostgreSQLAnalysisRepository {
             completed_at = $5, error = $6, updated_at = $7
         WHERE id = $8
       `;
-      
+
       const params = [
         analysis.status,
         analysis.progress,
@@ -388,16 +402,18 @@ class PostgreSQLAnalysisRepository {
         analysis.completedAt,
         analysis.error,
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
-      this.logger.debug(`Retried analysis: ${analysisId} (attempt ${analysis.retryCount})`);
-      
+
+      this.logger.debug(
+        `Retried analysis: ${analysisId} (attempt ${analysis.retryCount})`,
+      );
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:retried', analysis);
-      
+      this.emitAnalysisEvent("analysis:retried", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to retry analysis:`, error);
@@ -423,7 +439,7 @@ class PostgreSQLAnalysisRepository {
             recommendations_count = $21, updated_at = $22
         WHERE id = $23
       `;
-      
+
       const params = [
         analysis.projectId,
         analysis.analysisType,
@@ -431,8 +447,12 @@ class PostgreSQLAnalysisRepository {
         analysis.progress,
         analysis.startedAt,
         analysis.completedAt,
-        analysis.error ? JSON.stringify(this._sanitizeForJSON(analysis.error)) : null,
-        analysis.result ? JSON.stringify(this._sanitizeForJSON(analysis.result)) : null,
+        analysis.error
+          ? JSON.stringify(this._sanitizeForJSON(analysis.error))
+          : null,
+        analysis.result
+          ? JSON.stringify(this._sanitizeForJSON(analysis.result))
+          : null,
         JSON.stringify(this._sanitizeForJSON(analysis.metadata)),
         JSON.stringify(analysis.config),
         analysis.timeout,
@@ -447,16 +467,16 @@ class PostgreSQLAnalysisRepository {
         analysis.warningsCount,
         analysis.recommendationsCount,
         analysis.updatedAt,
-        analysis.id
+        analysis.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.debug(`Updated analysis: ${analysis.id}`);
-      
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:updated', analysis);
-      
+      this.emitAnalysisEvent("analysis:updated", analysis);
+
       return analysis;
     } catch (error) {
       this.logger.error(`Failed to update analysis:`, error);
@@ -475,13 +495,13 @@ class PostgreSQLAnalysisRepository {
         SELECT * FROM ${this.tableName} 
         WHERE id = $1
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [analysisId]);
-      
+
       if (rows.length === 0) {
         return null;
       }
-      
+
       return this.mapRowToAnalysis(rows[0]);
     } catch (error) {
       this.logger.error(`Failed to find analysis by ID:`, error);
@@ -497,76 +517,114 @@ class PostgreSQLAnalysisRepository {
    */
   async findByProjectId(projectId, options = {}) {
     try {
-      this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] Finding analyses for project: ${projectId}`);
-      
-      const { limit = 100, offset = 0, status = null, analysisType = null } = options;
-      
+      this.logger.debug(
+        `🔍 [PostgreSQLAnalysisRepository] Finding analyses for project: ${projectId}`,
+      );
+
+      const {
+        limit = 100,
+        offset = 0,
+        status = null,
+        analysisType = null,
+      } = options;
+
       let query = `
         SELECT * FROM ${this.tableName} 
         WHERE project_id = $1
       `;
-      
+
       const params = [projectId];
       let paramIndex = 2;
-      
+
       if (status) {
         query += ` AND status = $${paramIndex}`;
         params.push(status);
         paramIndex++;
       }
-      
+
       if (analysisType) {
         query += ` AND analysis_type = $${paramIndex}`;
         params.push(analysisType);
         paramIndex++;
       }
-      
+
       query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
       params.push(limit, offset);
-      
-      this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] Executing query: ${query}`);
-      this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] Query params:`, params);
-      
+
+      this.logger.debug(
+        `🔍 [PostgreSQLAnalysisRepository] Executing query: ${query}`,
+      );
+      this.logger.debug(
+        `🔍 [PostgreSQLAnalysisRepository] Query params:`,
+        params,
+      );
+
       const rows = await this.databaseConnection.query(query, params);
-      
-      this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] Database returned ${rows.length} rows`);
-      
+
+      this.logger.debug(
+        `🔍 [PostgreSQLAnalysisRepository] Database returned ${rows.length} rows`,
+      );
+
       if (rows.length > 0) {
-        this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] First row structure:`, JSON.stringify({
-          id: rows[0].id,
-          project_id: rows[0].project_id,
-          analysis_type: rows[0].analysis_type,
-          status: rows[0].status,
-          has_result: !!rows[0].result,
-          result_type: typeof rows[0].result,
-          result_length: rows[0].result ? rows[0].result.length : 0
-        }, null, 2));
-        
+        this.logger.debug(
+          `🔍 [PostgreSQLAnalysisRepository] First row structure:`,
+          JSON.stringify(
+            {
+              id: rows[0].id,
+              project_id: rows[0].project_id,
+              analysis_type: rows[0].analysis_type,
+              status: rows[0].status,
+              has_result: !!rows[0].result,
+              result_type: typeof rows[0].result,
+              result_length: rows[0].result ? rows[0].result.length : 0,
+            },
+            null,
+            2,
+          ),
+        );
+
         // Log the actual result content
         if (rows[0].result) {
-          this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] First row result:`, JSON.stringify(rows[0].result, null, 2));
+          this.logger.debug(
+            `🔍 [PostgreSQLAnalysisRepository] First row result:`,
+            JSON.stringify(rows[0].result, null, 2),
+          );
         }
       }
-      
-      const mappedAnalyses = rows.map(row => this.mapRowToAnalysis(row));
-      
-      this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] Mapped ${mappedAnalyses.length} analyses`);
-      
+
+      const mappedAnalyses = rows.map((row) => this.mapRowToAnalysis(row));
+
+      this.logger.debug(
+        `🔍 [PostgreSQLAnalysisRepository] Mapped ${mappedAnalyses.length} analyses`,
+      );
+
       if (mappedAnalyses.length > 0) {
-        this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] First mapped analysis:`, JSON.stringify({
-          id: mappedAnalyses[0].id,
-          projectId: mappedAnalyses[0].projectId,
-          analysisType: mappedAnalyses[0].analysisType,
-          status: mappedAnalyses[0].status,
-          hasResult: !!mappedAnalyses[0].result,
-          resultType: typeof mappedAnalyses[0].result,
-          resultKeys: mappedAnalyses[0].result ? Object.keys(mappedAnalyses[0].result) : []
-        }, null, 2));
+        this.logger.debug(
+          `🔍 [PostgreSQLAnalysisRepository] First mapped analysis:`,
+          JSON.stringify(
+            {
+              id: mappedAnalyses[0].id,
+              projectId: mappedAnalyses[0].projectId,
+              analysisType: mappedAnalyses[0].analysisType,
+              status: mappedAnalyses[0].status,
+              hasResult: !!mappedAnalyses[0].result,
+              resultType: typeof mappedAnalyses[0].result,
+              resultKeys: mappedAnalyses[0].result
+                ? Object.keys(mappedAnalyses[0].result)
+                : [],
+            },
+            null,
+            2,
+          ),
+        );
       }
-      
+
       return mappedAnalyses;
     } catch (error) {
-      this.logger.error(`❌ [PostgreSQLAnalysisRepository] Failed to find analyses by project ID:`, error);
+      this.logger.error(
+        `❌ [PostgreSQLAnalysisRepository] Failed to find analyses by project ID:`,
+        error,
+      );
       throw error;
     }
   }
@@ -583,10 +641,10 @@ class PostgreSQLAnalysisRepository {
         WHERE project_id = $1 AND status IN ('pending', 'running')
         ORDER BY created_at ASC
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [projectId]);
-      
-      return rows.map(row => this.mapRowToAnalysis(row));
+
+      return rows.map((row) => this.mapRowToAnalysis(row));
     } catch (error) {
       this.logger.error(`Failed to find active analyses:`, error);
       throw error;
@@ -605,13 +663,13 @@ class PostgreSQLAnalysisRepository {
         WHERE project_id = $1
         ORDER BY created_at DESC LIMIT 1
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [projectId]);
-      
+
       if (rows.length === 0) {
         return null;
       }
-      
+
       return this.mapRowToAnalysis(rows[0]);
     } catch (error) {
       this.logger.error(`Failed to find latest analysis by project ID:`, error);
@@ -633,13 +691,16 @@ class PostgreSQLAnalysisRepository {
         ORDER BY completed_at DESC
         LIMIT 1
       `;
-      
-      const rows = await this.databaseConnection.query(query, [projectId, analysisType]);
-      
+
+      const rows = await this.databaseConnection.query(query, [
+        projectId,
+        analysisType,
+      ]);
+
       if (rows.length === 0) {
         return null;
       }
-      
+
       return this.mapRowToAnalysis(rows[0]);
     } catch (error) {
       this.logger.error(`Failed to find latest completed analysis:`, error);
@@ -660,13 +721,16 @@ class PostgreSQLAnalysisRepository {
         WHERE project_id = $1 AND analysis_type = $2
         ORDER BY created_at DESC LIMIT 1
       `;
-      
-      const rows = await this.databaseConnection.query(query, [projectId, analysisType]);
-      
+
+      const rows = await this.databaseConnection.query(query, [
+        projectId,
+        analysisType,
+      ]);
+
       if (rows.length === 0) {
         return null;
       }
-      
+
       return this.mapRowToAnalysis(rows[0]);
     } catch (error) {
       this.logger.error(`Failed to find latest analysis by type:`, error);
@@ -683,27 +747,27 @@ class PostgreSQLAnalysisRepository {
   async findByType(analysisType, options = {}) {
     try {
       const { limit = 100, offset = 0, status = null } = options;
-      
+
       let query = `
         SELECT * FROM ${this.tableName} 
         WHERE analysis_type = $1
       `;
-      
+
       const params = [analysisType];
       let paramIndex = 2;
-      
+
       if (status) {
         query += ` AND status = $${paramIndex}`;
         params.push(status);
         paramIndex++;
       }
-      
+
       query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
       params.push(limit, offset);
-      
+
       const rows = await this.databaseConnection.query(query, params);
-      
-      return rows.map(row => this.mapRowToAnalysis(row));
+
+      return rows.map((row) => this.mapRowToAnalysis(row));
     } catch (error) {
       this.logger.error(`Failed to find analyses by type:`, error);
       throw error;
@@ -729,9 +793,9 @@ class PostgreSQLAnalysisRepository {
         WHERE project_id = $1
         GROUP BY analysis_type, status
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [projectId]);
-      
+
       const stats = {
         total: 0,
         byType: {},
@@ -740,40 +804,42 @@ class PostgreSQLAnalysisRepository {
           running: 0,
           completed: 0,
           failed: 0,
-          cancelled: 0
-        }
+          cancelled: 0,
+        },
       };
-      
-      rows.forEach(row => {
+
+      rows.forEach((row) => {
         stats.total += parseInt(row.count);
         stats.byStatus[row.status] += parseInt(row.count);
-        
+
         if (!stats.byType[row.analysis_type]) {
           stats.byType[row.analysis_type] = {
             total: 0,
             completed: 0,
             failed: 0,
             avg_execution_time: 0,
-            avg_score: 0
+            avg_score: 0,
           };
         }
-        
+
         stats.byType[row.analysis_type].total += parseInt(row.count);
-        if (row.status === 'completed') {
+        if (row.status === "completed") {
           stats.byType[row.analysis_type].completed += parseInt(row.count);
-        } else if (row.status === 'failed') {
+        } else if (row.status === "failed") {
           stats.byType[row.analysis_type].failed += parseInt(row.count);
         }
-        
+
         if (row.avg_execution_time) {
-          stats.byType[row.analysis_type].avg_execution_time = parseFloat(row.avg_execution_time);
+          stats.byType[row.analysis_type].avg_execution_time = parseFloat(
+            row.avg_execution_time,
+          );
         }
-        
+
         if (row.avg_score) {
           stats.byType[row.analysis_type].avg_score = parseFloat(row.avg_score);
         }
       });
-      
+
       return stats;
     } catch (error) {
       this.logger.error(`Failed to get analysis stats:`, error);
@@ -790,12 +856,12 @@ class PostgreSQLAnalysisRepository {
     try {
       const query = `DELETE FROM ${this.tableName} WHERE id = $1`;
       const result = await this.databaseConnection.execute(query, [analysisId]);
-      
+
       this.logger.debug(`Deleted analysis: ${analysisId}`);
-      
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:deleted', { id: analysisId });
-      
+      this.emitAnalysisEvent("analysis:deleted", { id: analysisId });
+
       return result.rowCount > 0;
     } catch (error) {
       this.logger.error(`Failed to delete analysis:`, error);
@@ -812,12 +878,17 @@ class PostgreSQLAnalysisRepository {
     try {
       const query = `DELETE FROM ${this.tableName} WHERE project_id = $1`;
       const result = await this.databaseConnection.execute(query, [projectId]);
-      
-      this.logger.debug(`Deleted ${result.rowCount} analyses for project: ${projectId}`);
-      
+
+      this.logger.debug(
+        `Deleted ${result.rowCount} analyses for project: ${projectId}`,
+      );
+
       // Emit WebSocket event
-      this.emitAnalysisEvent('analysis:deleted', { projectId, count: result.rowCount });
-      
+      this.emitAnalysisEvent("analysis:deleted", {
+        projectId,
+        count: result.rowCount,
+      });
+
       return result.rowCount;
     } catch (error) {
       this.logger.error(`Failed to delete analyses by project ID:`, error);
@@ -832,36 +903,41 @@ class PostgreSQLAnalysisRepository {
    */
   async findAll(options = {}) {
     try {
-      const { limit = 1000, offset = 0, status = null, analysisType = null } = options;
-      
+      const {
+        limit = 1000,
+        offset = 0,
+        status = null,
+        analysisType = null,
+      } = options;
+
       let query = `SELECT * FROM ${this.tableName}`;
       const params = [];
       let paramIndex = 1;
-      
+
       const conditions = [];
-      
+
       if (status) {
         conditions.push(`status = $${paramIndex}`);
         params.push(status);
         paramIndex++;
       }
-      
+
       if (analysisType) {
         conditions.push(`analysis_type = $${paramIndex}`);
         params.push(analysisType);
         paramIndex++;
       }
-      
+
       if (conditions.length > 0) {
-        query += ` WHERE ${conditions.join(' AND ')}`;
+        query += ` WHERE ${conditions.join(" AND ")}`;
       }
-      
+
       query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
       params.push(limit, offset);
-      
+
       const rows = await this.databaseConnection.query(query, params);
-      
-      return rows.map(row => this.mapRowToAnalysis(row));
+
+      return rows.map((row) => this.mapRowToAnalysis(row));
     } catch (error) {
       this.logger.error(`Failed to find all analyses:`, error);
       throw error;
@@ -874,60 +950,95 @@ class PostgreSQLAnalysisRepository {
    * @returns {Analysis} Analysis instance
    */
   mapRowToAnalysis(row) {
-    this.logger.debug(`🔍 [PostgreSQLAnalysisRepository] Mapping row to Analysis:`, JSON.stringify({
-      id: row.id,
-      project_id: row.project_id,
-      analysis_type: row.analysis_type,
-      status: row.status,
-      has_result: !!row.result,
-      result_type: typeof row.result,
-      result_length: row.result ? row.result.length : 0
-    }, null, 2));
-    
+    this.logger.debug(
+      `🔍 [PostgreSQLAnalysisRepository] Mapping row to Analysis:`,
+      JSON.stringify(
+        {
+          id: row.id,
+          project_id: row.project_id,
+          analysis_type: row.analysis_type,
+          status: row.status,
+          has_result: !!row.result,
+          result_type: typeof row.result,
+          result_length: row.result ? row.result.length : 0,
+        },
+        null,
+        2,
+      ),
+    );
+
     let parsedResult = null;
     let parsedError = null;
     let parsedMetadata = {};
     let parsedConfig = {};
-    
+
     try {
       if (row.result) {
         parsedResult = JSON.parse(row.result);
-        this.logger.debug(`✅ [PostgreSQLAnalysisRepository] Successfully parsed result:`, JSON.stringify({
-          resultType: typeof parsedResult,
-          resultKeys: Object.keys(parsedResult),
-          hasIssues: !!(parsedResult.issues || (parsedResult.result && parsedResult.result.issues)),
-          hasRecommendations: !!(parsedResult.recommendations || (parsedResult.result && parsedResult.result.recommendations))
-        }, null, 2));
+        this.logger.debug(
+          `✅ [PostgreSQLAnalysisRepository] Successfully parsed result:`,
+          JSON.stringify(
+            {
+              resultType: typeof parsedResult,
+              resultKeys: Object.keys(parsedResult),
+              hasIssues: !!(
+                parsedResult.issues ||
+                (parsedResult.result && parsedResult.result.issues)
+              ),
+              hasRecommendations: !!(
+                parsedResult.recommendations ||
+                (parsedResult.result && parsedResult.result.recommendations)
+              ),
+            },
+            null,
+            2,
+          ),
+        );
       }
     } catch (error) {
-      this.logger.error(`❌ [PostgreSQLAnalysisRepository] Failed to parse result:`, error);
-      this.logger.error(`❌ [PostgreSQLAnalysisRepository] Raw result:`, row.result);
+      this.logger.error(
+        `❌ [PostgreSQLAnalysisRepository] Failed to parse result:`,
+        error,
+      );
+      this.logger.error(
+        `❌ [PostgreSQLAnalysisRepository] Raw result:`,
+        row.result,
+      );
     }
-    
+
     try {
       if (row.error) {
         parsedError = JSON.parse(row.error);
       }
     } catch (error) {
-      this.logger.error(`❌ [PostgreSQLAnalysisRepository] Failed to parse error:`, error);
+      this.logger.error(
+        `❌ [PostgreSQLAnalysisRepository] Failed to parse error:`,
+        error,
+      );
     }
-    
+
     try {
       if (row.metadata) {
         parsedMetadata = JSON.parse(row.metadata);
       }
     } catch (error) {
-      this.logger.error(`❌ [PostgreSQLAnalysisRepository] Failed to parse metadata:`, error);
+      this.logger.error(
+        `❌ [PostgreSQLAnalysisRepository] Failed to parse metadata:`,
+        error,
+      );
     }
-    
+
     try {
       if (row.config) {
         parsedConfig = JSON.parse(row.config);
       }
     } catch (error) {
-      this.logger.error(`❌ [PostgreSQLAnalysisRepository] Failed to parse config:`, error);
+      this.logger.error(
+        `❌ [PostgreSQLAnalysisRepository] Failed to parse config:`,
+        error,
+      );
     }
-    
+
     const analysis = Analysis.fromJSON({
       id: row.id,
       project_id: row.project_id,
@@ -952,19 +1063,26 @@ class PostgreSQLAnalysisRepository {
       warnings_count: row.warnings_count,
       recommendations_count: row.recommendations_count,
       created_at: row.created_at,
-      updated_at: row.updated_at
+      updated_at: row.updated_at,
     });
-    
-    this.logger.debug(`✅ [PostgreSQLAnalysisRepository] Successfully mapped to Analysis:`, JSON.stringify({
-      id: analysis.id,
-      projectId: analysis.projectId,
-      analysisType: analysis.analysisType,
-      status: analysis.status,
-      hasResult: !!analysis.result,
-      resultType: typeof analysis.result,
-      resultKeys: analysis.result ? Object.keys(analysis.result) : []
-    }, null, 2));
-    
+
+    this.logger.debug(
+      `✅ [PostgreSQLAnalysisRepository] Successfully mapped to Analysis:`,
+      JSON.stringify(
+        {
+          id: analysis.id,
+          projectId: analysis.projectId,
+          analysisType: analysis.analysisType,
+          status: analysis.status,
+          hasResult: !!analysis.result,
+          resultType: typeof analysis.result,
+          resultKeys: analysis.result ? Object.keys(analysis.result) : [],
+        },
+        null,
+        2,
+      ),
+    );
+
     return analysis;
   }
 
@@ -1012,7 +1130,10 @@ class PostgreSQLAnalysisRepository {
         return rows.length > 0 ? this.mapRowToAnalysis(rows[0]) : null;
       }
     } catch (error) {
-      this.logger.error(`Failed to get latest analysis for project ${projectId}:`, error);
+      this.logger.error(
+        `Failed to get latest analysis for project ${projectId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1026,25 +1147,28 @@ class PostgreSQLAnalysisRepository {
   async getAnalysisHistory(projectId, options = {}) {
     try {
       const { limit = 10, offset = 0, types } = options;
-      
+
       let query = `SELECT * FROM ${this.tableName} WHERE project_id = $1`;
       const params = [projectId];
       let paramIndex = 2;
-      
+
       if (types && types.length > 0) {
         query += ` AND analysis_type = ANY($${paramIndex})`;
         params.push(types);
         paramIndex++;
       }
-      
+
       query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
       params.push(limit, offset);
-      
+
       const rows = await this.databaseConnection.query(query, params);
-      
-      return rows.map(row => this.mapRowToAnalysis(row));
+
+      return rows.map((row) => this.mapRowToAnalysis(row));
     } catch (error) {
-      this.logger.error(`Failed to get analysis history for project ${projectId}:`, error);
+      this.logger.error(
+        `Failed to get analysis history for project ${projectId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -1057,7 +1181,9 @@ class PostgreSQLAnalysisRepository {
    */
   async getCachedAnalysis(projectId, types) {
     // TODO: Implement caching logic
-    this.logger.debug(`Cache not implemented yet, getting latest analysis for project ${projectId}`);
+    this.logger.debug(
+      `Cache not implemented yet, getting latest analysis for project ${projectId}`,
+    );
     return await this.getLatestAnalysis(projectId, types);
   }
 
@@ -1070,7 +1196,9 @@ class PostgreSQLAnalysisRepository {
    */
   async cacheAnalysis(projectId, types, analysis) {
     // TODO: Implement caching logic
-    this.logger.debug(`Cache not implemented yet, skipping cache for project ${projectId}`);
+    this.logger.debug(
+      `Cache not implemented yet, skipping cache for project ${projectId}`,
+    );
   }
 
   /**
@@ -1082,61 +1210,62 @@ class PostgreSQLAnalysisRepository {
     if (obj === null || obj === undefined) {
       return obj;
     }
-    
-    if (typeof obj !== 'object') {
+
+    if (typeof obj !== "object") {
       return obj;
     }
-    
+
     // Handle arrays
     if (Array.isArray(obj)) {
-      return obj.map(item => this._sanitizeForJSON(item));
+      return obj.map((item) => this._sanitizeForJSON(item));
     }
-    
+
     // Handle objects
     const sanitized = {};
     const seen = new WeakSet();
-    
+
     const sanitize = (obj) => {
-      if (obj === null || typeof obj !== 'object') {
+      if (obj === null || typeof obj !== "object") {
         return obj;
       }
-      
+
       // Check for circular references
       if (seen.has(obj)) {
-        return '[Circular Reference]';
+        return "[Circular Reference]";
       }
-      
+
       // Skip Node.js internal objects that cause circular references
-      if (obj.constructor && (
-        obj.constructor.name === 'Timeout' ||
-        obj.constructor.name === 'TimersList' ||
-        obj.constructor.name === 'EventEmitter' ||
-        obj.constructor.name === 'Stream' ||
-        obj.constructor.name === 'Buffer'
-      )) {
+      if (
+        obj.constructor &&
+        (obj.constructor.name === "Timeout" ||
+          obj.constructor.name === "TimersList" ||
+          obj.constructor.name === "EventEmitter" ||
+          obj.constructor.name === "Stream" ||
+          obj.constructor.name === "Buffer")
+      ) {
         return `[${obj.constructor.name}]`;
       }
-      
+
       seen.add(obj);
-      
+
       if (Array.isArray(obj)) {
-        return obj.map(item => sanitize(item));
+        return obj.map((item) => sanitize(item));
       }
-      
+
       const result = {};
       for (const [key, value] of Object.entries(obj)) {
         try {
           result[key] = sanitize(value);
         } catch (error) {
-          result[key] = '[Error serializing]';
+          result[key] = "[Error serializing]";
         }
       }
-      
+
       return result;
     };
-    
+
     return sanitize(obj);
   }
 }
 
-module.exports = PostgreSQLAnalysisRepository; 
+module.exports = PostgreSQLAnalysisRepository;

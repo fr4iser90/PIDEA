@@ -3,13 +3,13 @@
  * Handler for opening IDE terminal
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class OpenTerminalHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class OpenTerminalHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,42 +40,40 @@ class OpenTerminalHandler {
       this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
-      if (!command || command.type !== 'OpenTerminalCommand') {
-        throw new Error('Invalid command type for OpenTerminalHandler');
+      if (!command || command.type !== "OpenTerminalCommand") {
+        throw new Error("Invalid command type for OpenTerminalHandler");
       }
 
       // Execute terminal opening
       const result = await this.ideAutomationService.openTerminal({
         ...command.options,
-        ideType: command.ideType
+        ideType: command.ideType,
       });
 
       // Publish success event
-      await this.eventBus.publish('terminal.open.completed', {
+      await this.eventBus.publish("terminal.open.completed", {
         commandId: command.commandId,
         userId: command.userId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info(`Terminal opened successfully: ${result.success}`);
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to open terminal:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('terminal.open.failed', {
+      await this.eventBus.publish("terminal.open.failed", {
         commandId: command.commandId,
         userId: command.userId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -88,12 +86,12 @@ class OpenTerminalHandler {
    */
   getInfo() {
     return {
-      name: 'OpenTerminalHandler',
-      version: '1.0.0',
-      description: 'Handles IDE terminal opening operations',
-      supportedCommands: ['OpenTerminalCommand']
+      name: "OpenTerminalHandler",
+      version: "1.0.0",
+      description: "Handles IDE terminal opening operations",
+      supportedCommands: ["OpenTerminalCommand"],
     };
   }
 }
 
-module.exports = OpenTerminalHandler; 
+module.exports = OpenTerminalHandler;

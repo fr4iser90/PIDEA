@@ -3,11 +3,11 @@
  * Defines different levels of automation for workflow execution
  */
 class AutomationLevel {
-  static MANUAL = 'manual';
-  static ASSISTED = 'assisted';
-  static SEMI_AUTO = 'semi_auto';
-  static FULL_AUTO = 'full_auto';
-  static ADAPTIVE = 'adaptive';
+  static MANUAL = "manual";
+  static ASSISTED = "assisted";
+  static SEMI_AUTO = "semi_auto";
+  static FULL_AUTO = "full_auto";
+  static ADAPTIVE = "adaptive";
 
   /**
    * Get all automation levels
@@ -19,7 +19,7 @@ class AutomationLevel {
       AutomationLevel.ASSISTED,
       AutomationLevel.SEMI_AUTO,
       AutomationLevel.FULL_AUTO,
-      AutomationLevel.ADAPTIVE
+      AutomationLevel.ADAPTIVE,
     ];
   }
 
@@ -30,13 +30,14 @@ class AutomationLevel {
    */
   static getDescription(level) {
     const descriptions = {
-      [AutomationLevel.MANUAL]: 'Full human control with no automation',
-      [AutomationLevel.ASSISTED]: 'AI assistance with human confirmation',
-      [AutomationLevel.SEMI_AUTO]: 'AI execution with human oversight',
-      [AutomationLevel.FULL_AUTO]: 'Complete automation with minimal human intervention',
-      [AutomationLevel.ADAPTIVE]: 'Dynamic automation level based on context'
+      [AutomationLevel.MANUAL]: "Full human control with no automation",
+      [AutomationLevel.ASSISTED]: "AI assistance with human confirmation",
+      [AutomationLevel.SEMI_AUTO]: "AI execution with human oversight",
+      [AutomationLevel.FULL_AUTO]:
+        "Complete automation with minimal human intervention",
+      [AutomationLevel.ADAPTIVE]: "Dynamic automation level based on context",
     };
-    return descriptions[level] || 'Unknown automation level';
+    return descriptions[level] || "Unknown automation level";
   }
 
   /**
@@ -45,7 +46,9 @@ class AutomationLevel {
    * @returns {boolean} True if confirmation is required
    */
   static requiresConfirmation(level) {
-    return [AutomationLevel.ASSISTED, AutomationLevel.SEMI_AUTO].includes(level);
+    return [AutomationLevel.ASSISTED, AutomationLevel.SEMI_AUTO].includes(
+      level,
+    );
   }
 
   /**
@@ -63,7 +66,9 @@ class AutomationLevel {
    * @returns {boolean} True if fully automated
    */
   static isFullyAutomated(level) {
-    return [AutomationLevel.FULL_AUTO, AutomationLevel.ADAPTIVE].includes(level);
+    return [AutomationLevel.FULL_AUTO, AutomationLevel.ADAPTIVE].includes(
+      level,
+    );
   }
 
   /**
@@ -77,7 +82,7 @@ class AutomationLevel {
       [AutomationLevel.ASSISTED]: 0.6,
       [AutomationLevel.SEMI_AUTO]: 0.7,
       [AutomationLevel.FULL_AUTO]: 0.8,
-      [AutomationLevel.ADAPTIVE]: 0.75
+      [AutomationLevel.ADAPTIVE]: 0.75,
     };
     return thresholds[level] || 0.5;
   }
@@ -114,11 +119,11 @@ class AutomationLevel {
     const levels = AutomationLevel.getAll();
     const index1 = levels.indexOf(level1);
     const index2 = levels.indexOf(level2);
-    
+
     if (index1 === -1 || index2 === -1) {
-      throw new Error('Invalid automation level for comparison');
+      throw new Error("Invalid automation level for comparison");
     }
-    
+
     if (index1 < index2) return -1;
     if (index1 > index2) return 1;
     return 0;
@@ -132,11 +137,11 @@ class AutomationLevel {
   static getNext(level) {
     const levels = AutomationLevel.getAll();
     const currentIndex = levels.indexOf(level);
-    
+
     if (currentIndex === -1 || currentIndex === levels.length - 1) {
       return null;
     }
-    
+
     return levels[currentIndex + 1];
   }
 
@@ -148,13 +153,13 @@ class AutomationLevel {
   static getPrevious(level) {
     const levels = AutomationLevel.getAll();
     const currentIndex = levels.indexOf(level);
-    
+
     if (currentIndex <= 0) {
       return null;
     }
-    
+
     return levels[currentIndex - 1];
   }
 }
 
-module.exports = AutomationLevel; 
+module.exports = AutomationLevel;

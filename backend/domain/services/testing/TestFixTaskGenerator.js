@@ -2,17 +2,17 @@
  * TestFixTaskGenerator - Generate Task entities from parsed test data
  * Converts failing tests, coverage issues, and legacy tests into database tasks
  */
-const Task = require('@entities/Task');
-const TaskType = require('@value-objects/TaskType');
-const TaskPriority = require('@value-objects/TaskPriority');
-const TaskStatus = require('@value-objects/TaskStatus');
-const { v4: uuidv4 } = require('uuid');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Task = require("@entities/Task");
+const TaskType = require("@value-objects/TaskType");
+const TaskPriority = require("@value-objects/TaskPriority");
+const TaskStatus = require("@value-objects/TaskStatus");
+const { v4: uuidv4 } = require("uuid");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class TestFixTaskGenerator {
   constructor(taskRepository) {
     this.taskRepository = taskRepository;
-    this.logger = new ServiceLogger('TestFixTaskGenerator');
+    this.logger = new ServiceLogger("TestFixTaskGenerator");
   }
 
   /**
@@ -23,11 +23,11 @@ class TestFixTaskGenerator {
    */
   async generateTasksFromTestData(parsedData, options = {}) {
     try {
-      this.logger.info('Generating tasks from test data...');
-      
+      this.logger.info("Generating tasks from test data...");
+
       const tasks = [];
-      const projectId = options.projectId || 'system';
-      const userId = options.userId || 'system';
+      const projectId = options.projectId || "system";
+      const userId = options.userId || "system";
 
       // Generate tasks for failing tests
       for (const failingTest of parsedData.failingTests) {
@@ -64,7 +64,9 @@ class TestFixTaskGenerator {
       // Generate tasks for complex tests
       for (const complexTest of parsedData.complexTests) {
         if (this.shouldSkipFile(complexTest.fileName)) {
-          this.logger.debug(`Skipping complex test file: ${complexTest.fileName}`);
+          this.logger.debug(
+            `Skipping complex test file: ${complexTest.fileName}`,
+          );
           continue;
         }
         const task = this.createComplexTestTask(complexTest, projectId, userId);
@@ -72,19 +74,20 @@ class TestFixTaskGenerator {
       }
 
       this.logger.info(`Generated ${tasks.length} tasks from test data`);
-      
+
       // Log summary of what was processed
       const totalFailingTests = parsedData.failingTests?.length || 0;
       const totalCoverageIssues = parsedData.coverageIssues?.length || 0;
       const totalLegacyTests = parsedData.legacyTests?.length || 0;
       const totalComplexTests = parsedData.complexTests?.length || 0;
-      
-      this.logger.info(`Summary: ${totalFailingTests} failing tests, ${totalCoverageIssues} coverage issues, ${totalLegacyTests} legacy tests, ${totalComplexTests} complex tests processed`);
-      
-      return tasks;
 
+      this.logger.info(
+        `Summary: ${totalFailingTests} failing tests, ${totalCoverageIssues} coverage issues, ${totalLegacyTests} legacy tests, ${totalComplexTests} complex tests processed`,
+      );
+
+      return tasks;
     } catch (error) {
-      this.logger.error('Error generating tasks:', error.message);
+      this.logger.error("Error generating tasks:", error.message);
       throw error;
     }
   }
@@ -98,7 +101,7 @@ class TestFixTaskGenerator {
    */
   createFailingTestTask(failingTest, projectId, userId) {
     const taskId = `test-fix-${uuidv4()}`;
-    
+
     return new Task(
       taskId,
       projectId,
@@ -112,11 +115,11 @@ class TestFixTaskGenerator {
         testName: failingTest.testName,
         error: failingTest.error,
         healthScore: failingTest.healthScore,
-        source: failingTest.source || 'test-report',
-        taskType: 'failing_test_fix',
+        source: failingTest.source || "test-report",
+        taskType: "failing_test_fix",
         estimatedDuration: 300000, // 5 minutes
-        autoFixEnabled: true
-      }
+        autoFixEnabled: true,
+      },
     );
   }
 
@@ -130,7 +133,7 @@ class TestFixTaskGenerator {
   createCoverageTask(coverageIssue, projectId, userId) {
     const taskId = `coverage-improve-${uuidv4()}`;
     const targetCoverage = 80;
-    
+
     return new Task(
       taskId,
       projectId,
@@ -146,11 +149,11 @@ class TestFixTaskGenerator {
         functions: coverageIssue.functions,
         lines: coverageIssue.lines,
         branches: coverageIssue.branches,
-        source: coverageIssue.source || 'coverage-report',
-        taskType: 'coverage_improvement',
+        source: coverageIssue.source || "coverage-report",
+        taskType: "coverage_improvement",
         estimatedDuration: 600000, // 10 minutes
-        autoFixEnabled: true
-      }
+        autoFixEnabled: true,
+      },
     );
   }
 
@@ -163,119 +166,179 @@ class TestFixTaskGenerator {
    */
   createLegacyTestTask(legacyTest, projectId, userId) {
     const taskId = `legacy-refactor-${uuidv4()}`;
-    
+
     // Determine specific refactor type based on file extension and project structure
     let refactorType = TaskType.REFACTOR; // Default
     let testType = TaskType.TEST; // Default
-    
+
     if (legacyTest.fileName) {
       // Frontend frameworks
-      if (legacyTest.fileName.includes('.jsx') || legacyTest.fileName.includes('.tsx')) {
+      if (
+        legacyTest.fileName.includes(".jsx") ||
+        legacyTest.fileName.includes(".tsx")
+      ) {
         refactorType = TaskType.REFACTOR_REACT;
         testType = TaskType.TEST_JEST;
-      } else if (legacyTest.fileName.includes('.vue')) {
+      } else if (legacyTest.fileName.includes(".vue")) {
         refactorType = TaskType.REFACTOR_VUE;
         testType = TaskType.TEST_JEST;
-      } else if (legacyTest.fileName.includes('.svelte')) {
+      } else if (legacyTest.fileName.includes(".svelte")) {
         refactorType = TaskType.REFACTOR_SVELTE;
         testType = TaskType.TEST_JEST;
-      } else if (legacyTest.fileName.includes('.ng.') || legacyTest.fileName.includes('angular')) {
+      } else if (
+        legacyTest.fileName.includes(".ng.") ||
+        legacyTest.fileName.includes("angular")
+      ) {
         refactorType = TaskType.REFACTOR_ANGULAR;
         testType = TaskType.TEST_JEST;
       }
       // Backend languages
-      else if (legacyTest.fileName.includes('.py')) {
+      else if (legacyTest.fileName.includes(".py")) {
         refactorType = TaskType.REFACTOR_PYTHON;
         testType = TaskType.TEST_PYTEST;
-      } else if (legacyTest.fileName.includes('.java')) {
+      } else if (legacyTest.fileName.includes(".java")) {
         refactorType = TaskType.REFACTOR_JAVA;
         testType = TaskType.TEST_JUNIT;
-      } else if (legacyTest.fileName.includes('.cs')) {
+      } else if (legacyTest.fileName.includes(".cs")) {
         refactorType = TaskType.REFACTOR_C_SHARP;
         testType = TaskType.TEST_JUNIT;
-      } else if (legacyTest.fileName.includes('.php')) {
+      } else if (legacyTest.fileName.includes(".php")) {
         refactorType = TaskType.REFACTOR_PHP;
         testType = TaskType.TEST_PHPUNIT;
-      } else if (legacyTest.fileName.includes('.rb')) {
+      } else if (legacyTest.fileName.includes(".rb")) {
         refactorType = TaskType.REFACTOR_RUBY;
         testType = TaskType.TEST_RSPEC;
-      } else if (legacyTest.fileName.includes('.go')) {
+      } else if (legacyTest.fileName.includes(".go")) {
         refactorType = TaskType.REFACTOR_GO;
         testType = TaskType.TEST_GO_TEST;
-      } else if (legacyTest.fileName.includes('.rs')) {
+      } else if (legacyTest.fileName.includes(".rs")) {
         refactorType = TaskType.REFACTOR_RUST;
         testType = TaskType.TEST_CARGO_TEST;
-      } else if (legacyTest.fileName.includes('.kt')) {
+      } else if (legacyTest.fileName.includes(".kt")) {
         refactorType = TaskType.REFACTOR_KOTLIN;
         testType = TaskType.TEST_GRADLE;
-      } else if (legacyTest.fileName.includes('.swift')) {
+      } else if (legacyTest.fileName.includes(".swift")) {
         refactorType = TaskType.REFACTOR_SWIFT;
         testType = TaskType.TEST_XCTEST;
-      } else if (legacyTest.fileName.includes('.dart')) {
+      } else if (legacyTest.fileName.includes(".dart")) {
         refactorType = TaskType.REFACTOR_DART;
         testType = TaskType.TEST_FLUTTER;
       }
       // Infrastructure and DevOps
-      else if (legacyTest.fileName.includes('Dockerfile') || legacyTest.fileName.includes('.docker')) {
+      else if (
+        legacyTest.fileName.includes("Dockerfile") ||
+        legacyTest.fileName.includes(".docker")
+      ) {
         refactorType = TaskType.REFACTOR_DOCKER;
         testType = TaskType.TEST_INTEGRATION;
-      } else if (legacyTest.fileName.includes('.tf') || legacyTest.fileName.includes('terraform')) {
+      } else if (
+        legacyTest.fileName.includes(".tf") ||
+        legacyTest.fileName.includes("terraform")
+      ) {
         refactorType = TaskType.REFACTOR_TERRAFORM;
         testType = TaskType.TEST_INTEGRATION;
-      } else if (legacyTest.fileName.includes('.yml') || legacyTest.fileName.includes('.yaml')) {
+      } else if (
+        legacyTest.fileName.includes(".yml") ||
+        legacyTest.fileName.includes(".yaml")
+      ) {
         refactorType = TaskType.REFACTOR_KUBERNETES;
         testType = TaskType.TEST_INTEGRATION;
       }
       // Generic JavaScript/TypeScript
-      else if (legacyTest.fileName.includes('.js') || legacyTest.fileName.includes('.ts')) {
+      else if (
+        legacyTest.fileName.includes(".js") ||
+        legacyTest.fileName.includes(".ts")
+      ) {
         refactorType = TaskType.REFACTOR_NODE;
         testType = TaskType.TEST_JEST;
       }
     }
-    
+
     // Additional detection based on project structure
     if (legacyTest.filePath) {
-      if (legacyTest.filePath.includes('frontend/') || legacyTest.filePath.includes('client/')) {
+      if (
+        legacyTest.filePath.includes("frontend/") ||
+        legacyTest.filePath.includes("client/")
+      ) {
         refactorType = TaskType.REFACTOR_FRONTEND;
-      } else if (legacyTest.filePath.includes('backend/') || legacyTest.filePath.includes('server/')) {
+      } else if (
+        legacyTest.filePath.includes("backend/") ||
+        legacyTest.filePath.includes("server/")
+      ) {
         refactorType = TaskType.REFACTOR_BACKEND;
-      } else if (legacyTest.filePath.includes('database/') || legacyTest.filePath.includes('db/')) {
+      } else if (
+        legacyTest.filePath.includes("database/") ||
+        legacyTest.filePath.includes("db/")
+      ) {
         refactorType = TaskType.REFACTOR_DATABASE;
-      } else if (legacyTest.filePath.includes('api/') || legacyTest.filePath.includes('routes/')) {
+      } else if (
+        legacyTest.filePath.includes("api/") ||
+        legacyTest.filePath.includes("routes/")
+      ) {
         refactorType = TaskType.REFACTOR_API;
-      } else if (legacyTest.filePath.includes('microservices/') || legacyTest.filePath.includes('services/')) {
+      } else if (
+        legacyTest.filePath.includes("microservices/") ||
+        legacyTest.filePath.includes("services/")
+      ) {
         refactorType = TaskType.REFACTOR_MICROSERVICES;
       }
     }
-    
+
     // Framework-specific detection based on file patterns
     if (legacyTest.fileName) {
-      if (legacyTest.fileName.includes('next.config') || legacyTest.fileName.includes('pages/')) {
+      if (
+        legacyTest.fileName.includes("next.config") ||
+        legacyTest.fileName.includes("pages/")
+      ) {
         refactorType = TaskType.REFACTOR_NEXT;
-      } else if (legacyTest.fileName.includes('nuxt.config') || legacyTest.fileName.includes('layouts/')) {
+      } else if (
+        legacyTest.fileName.includes("nuxt.config") ||
+        legacyTest.fileName.includes("layouts/")
+      ) {
         refactorType = TaskType.REFACTOR_NUXT;
-      } else if (legacyTest.fileName.includes('settings.py') || legacyTest.fileName.includes('urls.py')) {
+      } else if (
+        legacyTest.fileName.includes("settings.py") ||
+        legacyTest.fileName.includes("urls.py")
+      ) {
         refactorType = TaskType.REFACTOR_DJANGO;
-      } else if (legacyTest.fileName.includes('app.py') || legacyTest.fileName.includes('flask')) {
+      } else if (
+        legacyTest.fileName.includes("app.py") ||
+        legacyTest.fileName.includes("flask")
+      ) {
         refactorType = TaskType.REFACTOR_FLASK;
-      } else if (legacyTest.fileName.includes('Application.java') || legacyTest.fileName.includes('@SpringBootApplication')) {
+      } else if (
+        legacyTest.fileName.includes("Application.java") ||
+        legacyTest.fileName.includes("@SpringBootApplication")
+      ) {
         refactorType = TaskType.REFACTOR_SPRING;
-      } else if (legacyTest.fileName.includes('artisan') || legacyTest.fileName.includes('Laravel')) {
+      } else if (
+        legacyTest.fileName.includes("artisan") ||
+        legacyTest.fileName.includes("Laravel")
+      ) {
         refactorType = TaskType.REFACTOR_LARAVEL;
-      } else if (legacyTest.fileName.includes('Gemfile') || legacyTest.fileName.includes('rails')) {
+      } else if (
+        legacyTest.fileName.includes("Gemfile") ||
+        legacyTest.fileName.includes("rails")
+      ) {
         refactorType = TaskType.REFACTOR_RAILS;
-      } else if (legacyTest.fileName.includes('app.js') || legacyTest.fileName.includes('express')) {
+      } else if (
+        legacyTest.fileName.includes("app.js") ||
+        legacyTest.fileName.includes("express")
+      ) {
         refactorType = TaskType.REFACTOR_EXPRESS;
-      } else if (legacyTest.fileName.includes('main.py') || legacyTest.fileName.includes('fastapi')) {
+      } else if (
+        legacyTest.fileName.includes("main.py") ||
+        legacyTest.fileName.includes("fastapi")
+      ) {
         refactorType = TaskType.REFACTOR_FASTAPI;
       }
     }
-    
+
     return new Task(
       taskId,
       projectId,
       `Refactor legacy test: ${legacyTest.testName}`,
-      `Refactor the legacy test "${legacyTest.testName}" in ${legacyTest.fileName}. Legacy score: ${legacyTest.legacyScore || 'high'}`,
+      `Refactor the legacy test "${legacyTest.testName}" in ${legacyTest.fileName}. Legacy score: ${legacyTest.legacyScore || "high"}`,
       TaskStatus.PENDING,
       TaskPriority.MEDIUM,
       refactorType,
@@ -284,12 +347,12 @@ class TestFixTaskGenerator {
         testName: legacyTest.testName,
         legacyScore: legacyTest.legacyScore,
         healthScore: legacyTest.healthScore,
-        source: legacyTest.source || 'test-report',
-        taskType: 'legacy_test_refactor',
+        source: legacyTest.source || "test-report",
+        taskType: "legacy_test_refactor",
         refactorType: refactorType,
         estimatedDuration: 900000, // 15 minutes
-        autoFixEnabled: true
-      }
+        autoFixEnabled: true,
+      },
     );
   }
 
@@ -302,26 +365,38 @@ class TestFixTaskGenerator {
    */
   createComplexTestTask(complexTest, projectId, userId) {
     const taskId = `complex-refactor-${uuidv4()}`;
-    
+
     // Determine specific refactor type based on file extension
     let refactorType = TaskType.REFACTOR; // Default
     if (complexTest.fileName) {
-      if (complexTest.fileName.includes('.jsx') || complexTest.fileName.includes('.tsx')) {
+      if (
+        complexTest.fileName.includes(".jsx") ||
+        complexTest.fileName.includes(".tsx")
+      ) {
         refactorType = TaskType.REFACTOR_REACT;
-      } else if (complexTest.fileName.includes('.js') || complexTest.fileName.includes('.ts')) {
+      } else if (
+        complexTest.fileName.includes(".js") ||
+        complexTest.fileName.includes(".ts")
+      ) {
         refactorType = TaskType.REFACTOR_NODE;
-      } else if (complexTest.fileName.includes('frontend/') || complexTest.fileName.includes('src/')) {
+      } else if (
+        complexTest.fileName.includes("frontend/") ||
+        complexTest.fileName.includes("src/")
+      ) {
         refactorType = TaskType.REFACTOR_FRONTEND;
-      } else if (complexTest.fileName.includes('backend/') || complexTest.fileName.includes('server/')) {
+      } else if (
+        complexTest.fileName.includes("backend/") ||
+        complexTest.fileName.includes("server/")
+      ) {
         refactorType = TaskType.REFACTOR_BACKEND;
       }
     }
-    
+
     return new Task(
       taskId,
       projectId,
       `Refactor complex test: ${complexTest.testName}`,
-      `Refactor the complex test "${complexTest.testName}" in ${complexTest.fileName}. Complexity score: ${complexTest.complexityScore || 'high'}`,
+      `Refactor the complex test "${complexTest.testName}" in ${complexTest.fileName}. Complexity score: ${complexTest.complexityScore || "high"}`,
       TaskStatus.PENDING,
       TaskPriority.MEDIUM,
       refactorType,
@@ -330,12 +405,12 @@ class TestFixTaskGenerator {
         testName: complexTest.testName,
         complexityScore: complexTest.complexityScore,
         healthScore: complexTest.healthScore,
-        source: complexTest.source || 'test-report',
-        taskType: 'complex_test_refactor',
+        source: complexTest.source || "test-report",
+        taskType: "complex_test_refactor",
         refactorType: refactorType,
         estimatedDuration: 900000, // 15 minutes
-        autoFixEnabled: true
-      }
+        autoFixEnabled: true,
+      },
     );
   }
 
@@ -369,57 +444,69 @@ class TestFixTaskGenerator {
    */
   shouldSkipFile(filePath) {
     if (!filePath) return true;
-    
+
     // Skip markdown files
-    if (filePath.endsWith('.md') || filePath.endsWith('.markdown')) {
+    if (filePath.endsWith(".md") || filePath.endsWith(".markdown")) {
       return true;
     }
-    
+
     // Skip documentation directories
-    if (filePath.includes('/docs/') || filePath.includes('/documentation/')) {
+    if (filePath.includes("/docs/") || filePath.includes("/documentation/")) {
       return true;
     }
-    
+
     // Skip README files
-    if (filePath.toLowerCase().includes('readme')) {
+    if (filePath.toLowerCase().includes("readme")) {
       return true;
     }
-    
+
     // Skip license files
-    if (filePath.toLowerCase().includes('license')) {
+    if (filePath.toLowerCase().includes("license")) {
       return true;
     }
-    
+
     // Skip configuration files that don't need test coverage
-    if (filePath.endsWith('.json') || filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
+    if (
+      filePath.endsWith(".json") ||
+      filePath.endsWith(".yaml") ||
+      filePath.endsWith(".yml")
+    ) {
       return true;
     }
-    
+
     // Skip lock files
-    if (filePath.endsWith('.lock') || filePath.includes('package-lock.json') || filePath.includes('yarn.lock')) {
+    if (
+      filePath.endsWith(".lock") ||
+      filePath.includes("package-lock.json") ||
+      filePath.includes("yarn.lock")
+    ) {
       return true;
     }
-    
+
     // Skip git files
-    if (filePath.includes('.git/') || filePath.includes('.gitignore')) {
+    if (filePath.includes(".git/") || filePath.includes(".gitignore")) {
       return true;
     }
-    
+
     // Skip node_modules
-    if (filePath.includes('node_modules/')) {
+    if (filePath.includes("node_modules/")) {
       return true;
     }
-    
+
     // Skip build artifacts
-    if (filePath.includes('/dist/') || filePath.includes('/build/') || filePath.includes('/coverage/')) {
+    if (
+      filePath.includes("/dist/") ||
+      filePath.includes("/build/") ||
+      filePath.includes("/coverage/")
+    ) {
       return true;
     }
-    
+
     // Skip log files
-    if (filePath.endsWith('.log')) {
+    if (filePath.endsWith(".log")) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -431,11 +518,11 @@ class TestFixTaskGenerator {
   async saveTasks(tasks) {
     try {
       this.logger.info(`Saving ${tasks.length} tasks to database...`);
-      
+
       const savedTasks = [];
       let savedCount = 0;
       let skippedCount = 0;
-      
+
       for (const task of tasks) {
         try {
           if (this.taskRepository) {
@@ -447,7 +534,7 @@ class TestFixTaskGenerator {
               skippedCount++;
               continue;
             }
-            
+
             const savedTask = await this.taskRepository.save(task);
             savedTasks.push(savedTask);
             savedCount++;
@@ -457,24 +544,28 @@ class TestFixTaskGenerator {
           }
         } catch (error) {
           this.logger.error(`Failed to save task ${task.id}:`, error.message);
-          
+
           // If it's a unique constraint error, skip this task
-          if (error.message.includes('UNIQUE constraint failed') || error.message.includes('already exists')) {
+          if (
+            error.message.includes("UNIQUE constraint failed") ||
+            error.message.includes("already exists")
+          ) {
             this.logger.warn(`Task ${task.id} already exists, skipping`);
             skippedCount++;
             continue;
           }
-          
+
           // For other errors, re-throw
           throw error;
         }
       }
-      
-      this.logger.info(`Successfully saved ${savedCount} tasks, skipped ${skippedCount} existing tasks`);
+
+      this.logger.info(
+        `Successfully saved ${savedCount} tasks, skipped ${skippedCount} existing tasks`,
+      );
       return savedTasks;
-      
     } catch (error) {
-      this.logger.error('Error saving tasks:', error.message);
+      this.logger.error("Error saving tasks:", error.message);
       throw error;
     }
   }
@@ -487,29 +578,28 @@ class TestFixTaskGenerator {
    */
   async generateAndSaveTasks(parsedData, options = {}) {
     try {
-      this.logger.info('Generating tasks from test data...');
-      
+      this.logger.info("Generating tasks from test data...");
+
       // Clear existing tasks if requested
       if (options.clearExisting) {
-        this.logger.info('Clearing existing tasks...');
+        this.logger.info("Clearing existing tasks...");
         if (this.taskRepository) {
           await this.taskRepository.clear();
         }
       }
-      
+
       // Generate tasks
       const tasks = await this.generateTasksFromTestData(parsedData, options);
-      
+
       // Save tasks to database
       const savedTasks = await this.saveTasks(tasks);
-      
+
       return savedTasks;
-      
     } catch (error) {
-      this.logger.error('Error generating and saving tasks:', error.message);
+      this.logger.error("Error generating and saving tasks:", error.message);
       throw error;
     }
   }
 }
 
-module.exports = TestFixTaskGenerator; 
+module.exports = TestFixTaskGenerator;

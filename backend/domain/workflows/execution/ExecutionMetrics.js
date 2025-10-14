@@ -2,8 +2,8 @@
  * ExecutionMetrics - Performance metrics tracking for workflow execution
  * Provides comprehensive metrics collection and analysis for workflow performance
  */
-const { EventEmitter } = require('events');
-const ServiceLogger = require('@logging/ServiceLogger');
+const { EventEmitter } = require("events");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * Execution metrics for workflow performance tracking
@@ -11,20 +11,20 @@ const ServiceLogger = require('@logging/ServiceLogger');
 class ExecutionMetrics extends EventEmitter {
   constructor(options = {}) {
     super();
-    
-    this.logger = options.logger || new ServiceLogger('ExecutionMetrics');
-    
+
+    this.logger = options.logger || new ServiceLogger("ExecutionMetrics");
+
     this.enableMetrics = options.enableMetrics !== false;
     this.enableRealTimeMetrics = options.enableRealTimeMetrics !== false;
     this.metricsRetention = options.metricsRetention || 86400000; // 24 hours
     this.maxMetricsHistory = options.maxMetricsHistory || 10000;
-    
+
     // Metrics storage
     this.executionMetrics = new Map();
     this.stepMetrics = new Map();
     this.performanceMetrics = new Map();
     this.errorMetrics = new Map();
-    
+
     // Aggregated metrics
     this.aggregatedMetrics = {
       totalExecutions: 0,
@@ -35,9 +35,9 @@ class ExecutionMetrics extends EventEmitter {
       totalSteps: 0,
       errorRate: 0,
       throughput: 0,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     };
-    
+
     // Real-time metrics
     this.realTimeMetrics = {
       activeExecutions: 0,
@@ -46,14 +46,14 @@ class ExecutionMetrics extends EventEmitter {
       errorRate: 0,
       resourceUtilization: {
         memory: 0,
-        cpu: 0
-      }
+        cpu: 0,
+      },
     };
-    
+
     // Metrics collection interval
     this.collectionInterval = null;
     this.collectionIntervalMs = options.collectionIntervalMs || 10000; // 10 seconds
-    
+
     // Start metrics collection if enabled
     if (this.enableMetrics) {
       this.startMetricsCollection();
@@ -69,29 +69,29 @@ class ExecutionMetrics extends EventEmitter {
     if (!this.enableMetrics) return;
 
     const startTime = Date.now();
-    
+
     this.executionMetrics.set(executionId, {
       executionId,
       startTime,
       metadata,
-      status: 'running',
+      status: "running",
       steps: [],
       errors: [],
       performance: {
         totalTime: 0,
         stepTimes: {},
-        resourceUsage: {}
-      }
+        resourceUsage: {},
+      },
     });
 
     // Update real-time metrics
     this.realTimeMetrics.activeExecutions++;
-    
-    this.emit('executionStarted', { executionId, startTime, metadata });
-    
-    this.logger.debug('Execution started', {
+
+    this.emit("executionStarted", { executionId, startTime, metadata });
+
+    this.logger.debug("Execution started", {
       executionId,
-      metadata: metadata.name || 'unknown'
+      metadata: metadata.name || "unknown",
     });
   }
 
@@ -105,35 +105,38 @@ class ExecutionMetrics extends EventEmitter {
 
     const endTime = Date.now();
     const execution = this.executionMetrics.get(executionId);
-    
+
     if (!execution) {
-      this.logger.warn('No execution found for end recording', {
-        executionId
+      this.logger.warn("No execution found for end recording", {
+        executionId,
       });
       return;
     }
 
     const duration = endTime - execution.startTime;
     const success = result && result.success !== false;
-    
+
     // Update execution metrics
     execution.endTime = endTime;
     execution.duration = duration;
-    execution.status = success ? 'completed' : 'failed';
+    execution.status = success ? "completed" : "failed";
     execution.result = result;
-    
+
     // Update aggregated metrics
     this.updateAggregatedMetrics(execution, success);
-    
+
     // Update real-time metrics
-    this.realTimeMetrics.activeExecutions = Math.max(0, this.realTimeMetrics.activeExecutions - 1);
-    
-    this.emit('executionEnded', { executionId, duration, success, result });
-    
-    this.logger.debug('Execution ended', {
+    this.realTimeMetrics.activeExecutions = Math.max(
+      0,
+      this.realTimeMetrics.activeExecutions - 1,
+    );
+
+    this.emit("executionEnded", { executionId, duration, success, result });
+
+    this.logger.debug("Execution ended", {
       executionId,
       duration,
-      success
+      success,
     });
   }
 
@@ -149,14 +152,14 @@ class ExecutionMetrics extends EventEmitter {
 
     const startTime = Date.now();
     const stepId = `${executionId}_${stepIndex}`;
-    
+
     this.stepMetrics.set(stepId, {
       executionId,
       stepName,
       stepIndex,
       startTime,
       metadata: stepMetadata,
-      status: 'running'
+      status: "running",
     });
 
     // Add to execution metrics
@@ -166,11 +169,11 @@ class ExecutionMetrics extends EventEmitter {
         stepName,
         stepIndex,
         startTime,
-        metadata: stepMetadata
+        metadata: stepMetadata,
       });
     }
-    
-    this.emit('stepStarted', { executionId, stepName, stepIndex, startTime });
+
+    this.emit("stepStarted", { executionId, stepName, stepIndex, startTime });
   }
 
   /**
@@ -187,30 +190,32 @@ class ExecutionMetrics extends EventEmitter {
     const endTime = Date.now();
     const stepId = `${executionId}_${stepIndex}`;
     const step = this.stepMetrics.get(stepId);
-    
+
     if (!step) {
-      this.logger.warn('No step found for end recording', {
+      this.logger.warn("No step found for end recording", {
         executionId,
         stepName,
-        stepIndex
+        stepIndex,
       });
       return;
     }
 
     const duration = endTime - step.startTime;
     const success = !error;
-    
+
     // Update step metrics
     step.endTime = endTime;
     step.duration = duration;
-    step.status = success ? 'completed' : 'failed';
+    step.status = success ? "completed" : "failed";
     step.result = result;
     step.error = error;
-    
+
     // Update execution metrics
     const execution = this.executionMetrics.get(executionId);
     if (execution) {
-      const stepInExecution = execution.steps.find(s => s.stepIndex === stepIndex);
+      const stepInExecution = execution.steps.find(
+        (s) => s.stepIndex === stepIndex,
+      );
       if (stepInExecution) {
         stepInExecution.endTime = endTime;
         stepInExecution.duration = duration;
@@ -218,18 +223,25 @@ class ExecutionMetrics extends EventEmitter {
         stepInExecution.result = result;
         stepInExecution.error = error;
       }
-      
+
       // Update performance metrics
       execution.performance.stepTimes[stepIndex] = duration;
       execution.performance.totalTime += duration;
     }
-    
+
     // Record error if any
     if (error) {
       this.recordError(executionId, stepName, error);
     }
-    
-    this.emit('stepEnded', { executionId, stepName, stepIndex, duration, success, error });
+
+    this.emit("stepEnded", {
+      executionId,
+      stepName,
+      stepIndex,
+      duration,
+      success,
+      error,
+    });
   }
 
   /**
@@ -247,25 +259,25 @@ class ExecutionMetrics extends EventEmitter {
       error: {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     this.errorMetrics.set(`${executionId}_${Date.now()}`, errorRecord);
-    
+
     // Add to execution metrics
     const execution = this.executionMetrics.get(executionId);
     if (execution) {
       execution.errors.push(errorRecord);
     }
-    
-    this.emit('errorRecorded', errorRecord);
-    
-    this.logger.debug('Error recorded', {
+
+    this.emit("errorRecorded", errorRecord);
+
+    this.logger.debug("Error recorded", {
       executionId,
       source,
-      error: error.message
+      error: error.message,
     });
   }
 
@@ -280,22 +292,27 @@ class ExecutionMetrics extends EventEmitter {
     if (!this.enableMetrics) return;
 
     const metricId = `${executionId}_${metricName}`;
-    
+
     this.performanceMetrics.set(metricId, {
       executionId,
       metricName,
       value,
       metadata,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     // Update execution metrics
     const execution = this.executionMetrics.get(executionId);
     if (execution) {
       execution.performance[metricName] = value;
     }
-    
-    this.emit('performanceMetricRecorded', { executionId, metricName, value, metadata });
+
+    this.emit("performanceMetricRecorded", {
+      executionId,
+      metricName,
+      value,
+      metadata,
+    });
   }
 
   /**
@@ -305,37 +322,47 @@ class ExecutionMetrics extends EventEmitter {
    */
   updateAggregatedMetrics(execution, success) {
     this.aggregatedMetrics.totalExecutions++;
-    
+
     if (success) {
       this.aggregatedMetrics.successfulExecutions++;
     } else {
       this.aggregatedMetrics.failedExecutions++;
     }
-    
+
     // Update average execution time
-    const totalTime = this.aggregatedMetrics.averageExecutionTime * (this.aggregatedMetrics.totalExecutions - 1);
-    this.aggregatedMetrics.averageExecutionTime = (totalTime + execution.duration) / this.aggregatedMetrics.totalExecutions;
-    
+    const totalTime =
+      this.aggregatedMetrics.averageExecutionTime *
+      (this.aggregatedMetrics.totalExecutions - 1);
+    this.aggregatedMetrics.averageExecutionTime =
+      (totalTime + execution.duration) / this.aggregatedMetrics.totalExecutions;
+
     // Update total steps
     this.aggregatedMetrics.totalSteps += execution.steps.length;
-    
+
     // Update average step time
     const stepTimes = Object.values(execution.performance.stepTimes);
     if (stepTimes.length > 0) {
-      const totalStepTime = this.aggregatedMetrics.averageStepTime * (this.aggregatedMetrics.totalSteps - stepTimes.length);
-      const newTotalStepTime = totalStepTime + stepTimes.reduce((sum, time) => sum + time, 0);
-      this.aggregatedMetrics.averageStepTime = newTotalStepTime / this.aggregatedMetrics.totalSteps;
+      const totalStepTime =
+        this.aggregatedMetrics.averageStepTime *
+        (this.aggregatedMetrics.totalSteps - stepTimes.length);
+      const newTotalStepTime =
+        totalStepTime + stepTimes.reduce((sum, time) => sum + time, 0);
+      this.aggregatedMetrics.averageStepTime =
+        newTotalStepTime / this.aggregatedMetrics.totalSteps;
     }
-    
+
     // Update error rate
-    this.aggregatedMetrics.errorRate = this.aggregatedMetrics.failedExecutions / this.aggregatedMetrics.totalExecutions;
-    
+    this.aggregatedMetrics.errorRate =
+      this.aggregatedMetrics.failedExecutions /
+      this.aggregatedMetrics.totalExecutions;
+
     // Update throughput (executions per minute)
     const timeWindow = 60000; // 1 minute
-    const recentExecutions = Array.from(this.executionMetrics.values())
-      .filter(e => e.endTime && (Date.now() - e.endTime) < timeWindow);
+    const recentExecutions = Array.from(this.executionMetrics.values()).filter(
+      (e) => e.endTime && Date.now() - e.endTime < timeWindow,
+    );
     this.aggregatedMetrics.throughput = recentExecutions.length;
-    
+
     this.aggregatedMetrics.lastUpdated = Date.now();
   }
 
@@ -352,8 +379,8 @@ class ExecutionMetrics extends EventEmitter {
       this.cleanupOldMetrics();
     }, this.collectionIntervalMs);
 
-    this.logger.info('Metrics collection started', {
-      interval: this.collectionIntervalMs
+    this.logger.info("Metrics collection started", {
+      interval: this.collectionIntervalMs,
     });
   }
 
@@ -364,7 +391,7 @@ class ExecutionMetrics extends EventEmitter {
     if (this.collectionInterval) {
       clearInterval(this.collectionInterval);
       this.collectionInterval = null;
-      this.logger.info('Metrics collection stopped');
+      this.logger.info("Metrics collection stopped");
     }
   }
 
@@ -374,25 +401,34 @@ class ExecutionMetrics extends EventEmitter {
   collectRealTimeMetrics() {
     const now = Date.now();
     const timeWindow = 60000; // 1 minute
-    
+
     // Calculate executions per minute
-    const recentExecutions = Array.from(this.executionMetrics.values())
-      .filter(e => e.endTime && (now - e.endTime) < timeWindow);
+    const recentExecutions = Array.from(this.executionMetrics.values()).filter(
+      (e) => e.endTime && now - e.endTime < timeWindow,
+    );
     this.realTimeMetrics.executionsPerMinute = recentExecutions.length;
-    
+
     // Calculate average response time
     if (recentExecutions.length > 0) {
-      const totalTime = recentExecutions.reduce((sum, e) => sum + e.duration, 0);
-      this.realTimeMetrics.averageResponseTime = totalTime / recentExecutions.length;
+      const totalTime = recentExecutions.reduce(
+        (sum, e) => sum + e.duration,
+        0,
+      );
+      this.realTimeMetrics.averageResponseTime =
+        totalTime / recentExecutions.length;
     }
-    
+
     // Calculate error rate
-    const failedExecutions = recentExecutions.filter(e => e.status === 'failed');
-    this.realTimeMetrics.errorRate = recentExecutions.length > 0 ? 
-      failedExecutions.length / recentExecutions.length : 0;
-    
+    const failedExecutions = recentExecutions.filter(
+      (e) => e.status === "failed",
+    );
+    this.realTimeMetrics.errorRate =
+      recentExecutions.length > 0
+        ? failedExecutions.length / recentExecutions.length
+        : 0;
+
     // Emit real-time metrics
-    this.emit('realTimeMetricsUpdated', this.realTimeMetrics);
+    this.emit("realTimeMetricsUpdated", this.realTimeMetrics);
   }
 
   /**
@@ -401,7 +437,7 @@ class ExecutionMetrics extends EventEmitter {
   cleanupOldMetrics() {
     const cutoff = Date.now() - this.metricsRetention;
     let cleanedCount = 0;
-    
+
     // Cleanup execution metrics
     for (const [key, execution] of this.executionMetrics.entries()) {
       if (execution.endTime && execution.endTime < cutoff) {
@@ -409,7 +445,7 @@ class ExecutionMetrics extends EventEmitter {
         cleanedCount++;
       }
     }
-    
+
     // Cleanup step metrics
     for (const [key, step] of this.stepMetrics.entries()) {
       if (step.endTime && step.endTime < cutoff) {
@@ -417,7 +453,7 @@ class ExecutionMetrics extends EventEmitter {
         cleanedCount++;
       }
     }
-    
+
     // Cleanup performance metrics
     for (const [key, metric] of this.performanceMetrics.entries()) {
       if (metric.timestamp < cutoff) {
@@ -425,7 +461,7 @@ class ExecutionMetrics extends EventEmitter {
         cleanedCount++;
       }
     }
-    
+
     // Cleanup error metrics
     for (const [key, error] of this.errorMetrics.entries()) {
       if (error.timestamp < cutoff) {
@@ -433,13 +469,13 @@ class ExecutionMetrics extends EventEmitter {
         cleanedCount++;
       }
     }
-    
+
     // Limit metrics history size
     this.limitMetricsHistory();
-    
+
     if (cleanedCount > 0) {
-      this.logger.debug('Cleaned old metrics', {
-        cleanedCount
+      this.logger.debug("Cleaned old metrics", {
+        cleanedCount,
       });
     }
   }
@@ -450,20 +486,22 @@ class ExecutionMetrics extends EventEmitter {
   limitMetricsHistory() {
     // Limit execution metrics
     if (this.executionMetrics.size > this.maxMetricsHistory) {
-      const entries = Array.from(this.executionMetrics.entries())
-        .sort(([, a], [, b]) => (b.endTime || 0) - (a.endTime || 0));
-      
+      const entries = Array.from(this.executionMetrics.entries()).sort(
+        ([, a], [, b]) => (b.endTime || 0) - (a.endTime || 0),
+      );
+
       const toDelete = entries.slice(this.maxMetricsHistory);
       for (const [key] of toDelete) {
         this.executionMetrics.delete(key);
       }
     }
-    
+
     // Limit step metrics
     if (this.stepMetrics.size > this.maxMetricsHistory) {
-      const entries = Array.from(this.stepMetrics.entries())
-        .sort(([, a], [, b]) => (b.endTime || 0) - (a.endTime || 0));
-      
+      const entries = Array.from(this.stepMetrics.entries()).sort(
+        ([, a], [, b]) => (b.endTime || 0) - (a.endTime || 0),
+      );
+
       const toDelete = entries.slice(this.maxMetricsHistory);
       for (const [key] of toDelete) {
         this.stepMetrics.delete(key);
@@ -513,8 +551,9 @@ class ExecutionMetrics extends EventEmitter {
    * @returns {Array} Performance metrics
    */
   getPerformanceMetrics(executionId) {
-    return Array.from(this.performanceMetrics.values())
-      .filter(m => m.executionId === executionId);
+    return Array.from(this.performanceMetrics.values()).filter(
+      (m) => m.executionId === executionId,
+    );
   }
 
   /**
@@ -523,8 +562,9 @@ class ExecutionMetrics extends EventEmitter {
    * @returns {Array} Error metrics
    */
   getErrorMetrics(executionId) {
-    return Array.from(this.errorMetrics.values())
-      .filter(e => e.executionId === executionId);
+    return Array.from(this.errorMetrics.values()).filter(
+      (e) => e.executionId === executionId,
+    );
   }
 
   /**
@@ -539,10 +579,10 @@ class ExecutionMetrics extends EventEmitter {
         executions: this.executionMetrics.size,
         steps: this.stepMetrics.size,
         performance: this.performanceMetrics.size,
-        errors: this.errorMetrics.size
+        errors: this.errorMetrics.size,
       },
       enabled: this.enableMetrics,
-      realTimeEnabled: this.enableRealTimeMetrics
+      realTimeEnabled: this.enableRealTimeMetrics,
     };
   }
 
@@ -553,28 +593,36 @@ class ExecutionMetrics extends EventEmitter {
    * @returns {Object} Metrics for time range
    */
   getMetricsForTimeRange(startTime, endTime) {
-    const executions = Array.from(this.executionMetrics.values())
-      .filter(e => e.endTime && e.endTime >= startTime && e.endTime <= endTime);
-    
-    const steps = Array.from(this.stepMetrics.values())
-      .filter(s => s.endTime && s.endTime >= startTime && s.endTime <= endTime);
-    
-    const errors = Array.from(this.errorMetrics.values())
-      .filter(e => e.timestamp >= startTime && e.timestamp <= endTime);
-    
+    const executions = Array.from(this.executionMetrics.values()).filter(
+      (e) => e.endTime && e.endTime >= startTime && e.endTime <= endTime,
+    );
+
+    const steps = Array.from(this.stepMetrics.values()).filter(
+      (s) => s.endTime && s.endTime >= startTime && s.endTime <= endTime,
+    );
+
+    const errors = Array.from(this.errorMetrics.values()).filter(
+      (e) => e.timestamp >= startTime && e.timestamp <= endTime,
+    );
+
     return {
       executions,
       steps,
       errors,
       summary: {
         totalExecutions: executions.length,
-        successfulExecutions: executions.filter(e => e.status === 'completed').length,
-        failedExecutions: executions.filter(e => e.status === 'failed').length,
-        averageExecutionTime: executions.length > 0 ? 
-          executions.reduce((sum, e) => sum + e.duration, 0) / executions.length : 0,
+        successfulExecutions: executions.filter((e) => e.status === "completed")
+          .length,
+        failedExecutions: executions.filter((e) => e.status === "failed")
+          .length,
+        averageExecutionTime:
+          executions.length > 0
+            ? executions.reduce((sum, e) => sum + e.duration, 0) /
+              executions.length
+            : 0,
         totalSteps: steps.length,
-        totalErrors: errors.length
-      }
+        totalErrors: errors.length,
+      },
     };
   }
 
@@ -586,7 +634,7 @@ class ExecutionMetrics extends EventEmitter {
     this.stepMetrics.clear();
     this.performanceMetrics.clear();
     this.errorMetrics.clear();
-    
+
     // Reset aggregated metrics
     this.aggregatedMetrics = {
       totalExecutions: 0,
@@ -597,26 +645,26 @@ class ExecutionMetrics extends EventEmitter {
       totalSteps: 0,
       errorRate: 0,
       throughput: 0,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     };
-    
-    this.logger.info('All metrics cleared');
+
+    this.logger.info("All metrics cleared");
   }
 
   /**
    * Shutdown metrics
    */
   shutdown() {
-    this.logger.info('Shutting down');
-    
+    this.logger.info("Shutting down");
+
     // Stop metrics collection
     this.stopMetricsCollection();
-    
+
     // Clear metrics
     this.clearMetrics();
-    
-    this.logger.info('Shutdown complete');
+
+    this.logger.info("Shutdown complete");
   }
 }
 
-module.exports = ExecutionMetrics; 
+module.exports = ExecutionMetrics;

@@ -2,95 +2,95 @@
  * BranchStrategy - Manager for branch strategies
  * Unifies and manages different branch strategies with configuration and validation
  */
-const FeatureBranchStrategy = require('./strategies/FeatureBranchStrategy');
-const HotfixBranchStrategy = require('./strategies/HotfixBranchStrategy');
-const ReleaseBranchStrategy = require('./strategies/ReleaseBranchStrategy');
-const UnifiedBranchStrategy = require('@domain/services/version/UnifiedBranchStrategy');
-const BranchStrategyRegistry = require('@domain/services/version/BranchStrategyRegistry');
-const GitWorkflowException = require('./exceptions/GitWorkflowException');
-const Logger = require('@logging/Logger');
-const logger = new Logger('GitBranchStrategy');
+const FeatureBranchStrategy = require("./strategies/FeatureBranchStrategy");
+const HotfixBranchStrategy = require("./strategies/HotfixBranchStrategy");
+const ReleaseBranchStrategy = require("./strategies/ReleaseBranchStrategy");
+const UnifiedBranchStrategy = require("@domain/services/version/UnifiedBranchStrategy");
+const BranchStrategyRegistry = require("@domain/services/version/BranchStrategyRegistry");
+const GitWorkflowException = require("./exceptions/GitWorkflowException");
+const Logger = require("@logging/Logger");
+const logger = new Logger("GitBranchStrategy");
 
 class BranchStrategy {
   constructor(config = {}) {
     this.strategies = new Map();
-    this.defaultStrategy = config.defaultStrategy || 'unified';
+    this.defaultStrategy = config.defaultStrategy || "unified";
     this.logger = config.logger || console;
-    
+
     // Initialize unified strategy registry
     this.strategyRegistry = new BranchStrategyRegistry();
-    
+
     // Initialize strategies
     this.initializeStrategies(config);
-    
+
     // Strategy mappings
     this.strategyMappings = {
       // Task type to strategy mappings
       taskTypeMappings: {
-        'feature': 'feature',
-        'enhancement': 'feature',
-        'improvement': 'feature',
-        'new-feature': 'feature',
-        'story': 'feature',
-        'epic': 'feature',
-        'task': 'feature',
-        'development': 'feature',
-        'bug': 'hotfix',
-        'hotfix': 'hotfix',
-        'fix': 'hotfix',
-        'critical': 'hotfix',
-        'urgent': 'hotfix',
-        'security': 'hotfix',
-        'production-fix': 'hotfix',
-        'emergency': 'hotfix',
-        'patch': 'hotfix',
-        'release': 'release',
-        'version': 'release',
-        'deployment': 'release',
-        'publish': 'release',
-        'ship': 'release',
-        'milestone': 'release',
-        'sprint': 'release',
-        'iteration': 'release',
-        'delivery': 'release',
-        'refactor': 'feature',
-        'analysis': 'feature',
-        'testing': 'feature',
-        'documentation': 'feature'
+        feature: "feature",
+        enhancement: "feature",
+        improvement: "feature",
+        "new-feature": "feature",
+        story: "feature",
+        epic: "feature",
+        task: "feature",
+        development: "feature",
+        bug: "hotfix",
+        hotfix: "hotfix",
+        fix: "hotfix",
+        critical: "hotfix",
+        urgent: "hotfix",
+        security: "hotfix",
+        "production-fix": "hotfix",
+        emergency: "hotfix",
+        patch: "hotfix",
+        release: "release",
+        version: "release",
+        deployment: "release",
+        publish: "release",
+        ship: "release",
+        milestone: "release",
+        sprint: "release",
+        iteration: "release",
+        delivery: "release",
+        refactor: "feature",
+        analysis: "feature",
+        testing: "feature",
+        documentation: "feature",
       },
-      
+
       // Priority to strategy mappings
       priorityMappings: {
-        'critical': 'hotfix',
-        'high': 'hotfix',
-        'urgent': 'hotfix',
-        'emergency': 'hotfix',
-        'medium': 'feature',
-        'low': 'feature',
-        'normal': 'feature'
+        critical: "hotfix",
+        high: "hotfix",
+        urgent: "hotfix",
+        emergency: "hotfix",
+        medium: "feature",
+        low: "feature",
+        normal: "feature",
       },
-      
+
       // Keywords to strategy mappings
       keywordMappings: {
-        'release': 'release',
-        'version': 'release',
-        'deploy': 'release',
-        'publish': 'release',
-        'ship': 'release',
-        'milestone': 'release',
-        'hotfix': 'hotfix',
-        'urgent': 'hotfix',
-        'critical': 'hotfix',
-        'emergency': 'hotfix',
-        'bug': 'hotfix',
-        'fix': 'hotfix',
-        'patch': 'hotfix',
-        'feature': 'feature',
-        'enhancement': 'feature',
-        'improvement': 'feature',
-        'story': 'feature',
-        'epic': 'feature'
-      }
+        release: "release",
+        version: "release",
+        deploy: "release",
+        publish: "release",
+        ship: "release",
+        milestone: "release",
+        hotfix: "hotfix",
+        urgent: "hotfix",
+        critical: "hotfix",
+        emergency: "hotfix",
+        bug: "hotfix",
+        fix: "hotfix",
+        patch: "hotfix",
+        feature: "feature",
+        enhancement: "feature",
+        improvement: "feature",
+        story: "feature",
+        epic: "feature",
+      },
     };
   }
 
@@ -100,42 +100,60 @@ class BranchStrategy {
    */
   initializeStrategies(config) {
     if (this._alreadyLogged) return;
-    
+
     // Initialize unified strategy (primary)
     const unifiedStrategy = new UnifiedBranchStrategy({
       ...config.unified,
-      logger: this.logger
+      logger: this.logger,
     });
-    this.strategies.set('unified', unifiedStrategy);
-    this.strategyRegistry.registerStrategy('unified', unifiedStrategy);
-    
+    this.strategies.set("unified", unifiedStrategy);
+    this.strategyRegistry.registerStrategy("unified", unifiedStrategy);
+
     // Create legacy strategies (for backward compatibility)
-    this.strategies.set('feature', new FeatureBranchStrategy({
-      ...config.feature,
-      logger: this.logger
-    }));
+    this.strategies.set(
+      "feature",
+      new FeatureBranchStrategy({
+        ...config.feature,
+        logger: this.logger,
+      }),
+    );
 
-    this.strategies.set('hotfix', new HotfixBranchStrategy({
-      ...config.hotfix,
-      logger: this.logger
-    }));
+    this.strategies.set(
+      "hotfix",
+      new HotfixBranchStrategy({
+        ...config.hotfix,
+        logger: this.logger,
+      }),
+    );
 
-    this.strategies.set('release', new ReleaseBranchStrategy({
-      ...config.release,
-      logger: this.logger
-    }));
-    
+    this.strategies.set(
+      "release",
+      new ReleaseBranchStrategy({
+        ...config.release,
+        logger: this.logger,
+      }),
+    );
+
     // Register legacy strategies in registry
-    this.strategyRegistry.registerStrategy('feature', this.strategies.get('feature'));
-    this.strategyRegistry.registerStrategy('hotfix', this.strategies.get('hotfix'));
-    this.strategyRegistry.registerStrategy('release', this.strategies.get('release'));
+    this.strategyRegistry.registerStrategy(
+      "feature",
+      this.strategies.get("feature"),
+    );
+    this.strategyRegistry.registerStrategy(
+      "hotfix",
+      this.strategies.get("hotfix"),
+    );
+    this.strategyRegistry.registerStrategy(
+      "release",
+      this.strategies.get("release"),
+    );
 
     // Only log once per instance
     if (!this._alreadyLogged) {
-      this.logger.debug('Initialized branch strategies:', {
+      this.logger.debug("Initialized branch strategies:", {
         strategies: Array.from(this.strategies.keys()),
         defaultStrategy: this.defaultStrategy,
-        unifiedEnabled: true
+        unifiedEnabled: true,
       });
       this._alreadyLogged = true;
     }
@@ -148,14 +166,14 @@ class BranchStrategy {
    */
   getStrategy(strategyName) {
     const strategy = this.strategies.get(strategyName);
-    
+
     if (!strategy) {
       throw GitWorkflowException.createConfigurationError(
         `Unknown branch strategy: ${strategyName}`,
-        { availableStrategies: Array.from(this.strategies.keys()) }
+        { availableStrategies: Array.from(this.strategies.keys()) },
       );
     }
-    
+
     return strategy;
   }
 
@@ -168,16 +186,18 @@ class BranchStrategy {
   determineStrategy(task, context = {}) {
     try {
       // Use unified strategy registry for determination
-      const strategyName = this.strategyRegistry.determineStrategy(task, context);
-      
+      const strategyName = this.strategyRegistry.determineStrategy(
+        task,
+        context,
+      );
+
       this.logger.info(`Determined strategy: ${strategyName}`, {
         taskId: task.id,
         taskType: task.type?.value || task.type,
-        priority: task.priority?.value || task.priority
+        priority: task.priority?.value || task.priority,
       });
-      
-      return strategyName;
 
+      return strategyName;
     } catch (error) {
       this.logger.error(`Error determining strategy: ${error.message}`);
       return this.defaultStrategy;
@@ -190,25 +210,28 @@ class BranchStrategy {
    * @returns {string|null} Strategy name or null
    */
   analyzeKeywords(task) {
-    const text = `${task.title || ''} ${task.description || ''}`.toLowerCase();
-    
+    const text = `${task.title || ""} ${task.description || ""}`.toLowerCase();
+
     // Count keyword matches for each strategy
     const keywordCounts = {};
-    
-    for (const [keyword, strategy] of Object.entries(this.strategyMappings.keywordMappings)) {
+
+    for (const [keyword, strategy] of Object.entries(
+      this.strategyMappings.keywordMappings,
+    )) {
       if (text.includes(keyword)) {
         keywordCounts[strategy] = (keywordCounts[strategy] || 0) + 1;
       }
     }
-    
+
     // Return strategy with most keyword matches
     if (Object.keys(keywordCounts).length > 0) {
-      const bestStrategy = Object.entries(keywordCounts)
-        .sort(([,a], [,b]) => b - a)[0][0];
-      
+      const bestStrategy = Object.entries(keywordCounts).sort(
+        ([, a], [, b]) => b - a,
+      )[0][0];
+
       return bestStrategy;
     }
-    
+
     return null;
   }
 
@@ -222,19 +245,18 @@ class BranchStrategy {
     try {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
-      
+
       this.logger.info(`Generating branch name with strategy: ${strategyName}`);
-      
+
       const branchName = strategy.generateBranchName(task, context);
-      
+
       this.logger.info(`Generated branch name: ${branchName}`);
-      
+
       return branchName;
-      
     } catch (error) {
       throw GitWorkflowException.createBranchError(
         `Failed to generate branch name: ${error.message}`,
-        { taskId: task.id, taskType: task.type?.value }
+        { taskId: task.id, taskType: task.type?.value },
       );
     }
   }
@@ -249,28 +271,28 @@ class BranchStrategy {
     try {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
-      
+
       this.logger.info(`Validating task with strategy: ${strategyName}`);
-      
+
       const validation = strategy.validateTask(task, context);
-      
+
       // Add strategy information to validation result
       validation.strategy = strategyName;
-      validation.strategyType = strategy.strategyType || strategy.type || 'unknown';
-      
+      validation.strategyType =
+        strategy.strategyType || strategy.type || "unknown";
+
       this.logger.info(`Validation result:`, validation);
-      
+
       return validation;
-      
     } catch (error) {
       this.logger.error(`Validation error: ${error.message}`);
-      
+
       return {
         isValid: false,
         strategy: this.defaultStrategy,
-        strategyType: 'unknown',
+        strategyType: "unknown",
         errors: [error.message],
-        warnings: []
+        warnings: [],
       };
     }
   }
@@ -285,21 +307,20 @@ class BranchStrategy {
     try {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
-      
+
       const config = strategy.getConfiguration();
       config.strategyName = strategyName;
-      
+
       return config;
-      
     } catch (error) {
       this.logger.error(`Error getting configuration: ${error.message}`);
-      
+
       // Return default configuration
       const defaultStrategy = this.getStrategy(this.defaultStrategy);
       const config = defaultStrategy.getConfiguration();
       config.strategyName = this.defaultStrategy;
       config.error = error.message;
-      
+
       return config;
     }
   }
@@ -314,12 +335,11 @@ class BranchStrategy {
     try {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
-      
+
       return strategy.getProtectionRules();
-      
     } catch (error) {
       this.logger.error(`Error getting protection rules: ${error.message}`);
-      
+
       // Return default protection rules
       const defaultStrategy = this.getStrategy(this.defaultStrategy);
       return defaultStrategy.getProtectionRules();
@@ -336,12 +356,11 @@ class BranchStrategy {
     try {
       const strategyName = this.determineStrategy(task, context);
       const strategy = this.getStrategy(strategyName);
-      
+
       return strategy.getMergeStrategy();
-      
     } catch (error) {
       this.logger.error(`Error getting merge strategy: ${error.message}`);
-      
+
       // Return default merge strategy
       const defaultStrategy = this.getStrategy(this.defaultStrategy);
       return defaultStrategy.getMergeStrategy();
@@ -357,7 +376,7 @@ class BranchStrategy {
     if (this.strategies.has(name)) {
       this.logger.warn(`Overwriting existing strategy: ${name}`);
     }
-    
+
     this.strategies.set(name, strategy);
     this.logger.info(`Added custom strategy: ${name}`);
   }
@@ -370,7 +389,7 @@ class BranchStrategy {
     if (name === this.defaultStrategy) {
       throw new Error(`Cannot remove default strategy: ${name}`);
     }
-    
+
     if (this.strategies.has(name)) {
       this.strategies.delete(name);
       this.logger.info(`Removed strategy: ${name}`);
@@ -385,24 +404,24 @@ class BranchStrategy {
     if (mappings.taskTypeMappings) {
       this.strategyMappings.taskTypeMappings = {
         ...this.strategyMappings.taskTypeMappings,
-        ...mappings.taskTypeMappings
+        ...mappings.taskTypeMappings,
       };
     }
-    
+
     if (mappings.priorityMappings) {
       this.strategyMappings.priorityMappings = {
         ...this.strategyMappings.priorityMappings,
-        ...mappings.priorityMappings
+        ...mappings.priorityMappings,
       };
     }
-    
+
     if (mappings.keywordMappings) {
       this.strategyMappings.keywordMappings = {
         ...this.strategyMappings.keywordMappings,
-        ...mappings.keywordMappings
+        ...mappings.keywordMappings,
       };
     }
-    
+
     this.logger.info(`Updated strategy mappings`);
   }
 
@@ -426,10 +445,10 @@ class BranchStrategy {
       mappings: {
         taskTypes: Object.keys(this.strategyMappings.taskTypeMappings).length,
         priorities: Object.keys(this.strategyMappings.priorityMappings).length,
-        keywords: Object.keys(this.strategyMappings.keywordMappings).length
-      }
+        keywords: Object.keys(this.strategyMappings.keywordMappings).length,
+      },
     };
-    
+
     return stats;
   }
 
@@ -440,34 +459,42 @@ class BranchStrategy {
   validateConfiguration() {
     const errors = [];
     const warnings = [];
-    
+
     // Check if strategies exist
     if (this.strategies.size === 0) {
-      errors.push('No branch strategies configured');
+      errors.push("No branch strategies configured");
     }
-    
+
     // Check if default strategy exists
     if (!this.strategies.has(this.defaultStrategy)) {
       errors.push(`Default strategy '${this.defaultStrategy}' not found`);
     }
-    
+
     // Check strategy mappings
-    for (const [taskType, strategy] of Object.entries(this.strategyMappings.taskTypeMappings)) {
+    for (const [taskType, strategy] of Object.entries(
+      this.strategyMappings.taskTypeMappings,
+    )) {
       if (!this.strategies.has(strategy)) {
-        warnings.push(`Task type mapping '${taskType}' points to non-existent strategy '${strategy}'`);
+        warnings.push(
+          `Task type mapping '${taskType}' points to non-existent strategy '${strategy}'`,
+        );
       }
     }
-    
-    for (const [priority, strategy] of Object.entries(this.strategyMappings.priorityMappings)) {
+
+    for (const [priority, strategy] of Object.entries(
+      this.strategyMappings.priorityMappings,
+    )) {
       if (!this.strategies.has(strategy)) {
-        warnings.push(`Priority mapping '${priority}' points to non-existent strategy '${strategy}'`);
+        warnings.push(
+          `Priority mapping '${priority}' points to non-existent strategy '${strategy}'`,
+        );
       }
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors: errors,
-      warnings: warnings
+      warnings: warnings,
     };
   }
 
@@ -481,9 +508,9 @@ class BranchStrategy {
       availableStrategies: this.getAvailableStrategies(),
       strategyMappings: this.strategyMappings,
       statistics: this.getStatistics(),
-      validation: this.validateConfiguration()
+      validation: this.validateConfiguration(),
     };
   }
 }
 
-module.exports = BranchStrategy; 
+module.exports = BranchStrategy;

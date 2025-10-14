@@ -34,7 +34,7 @@ const CategoryOverview = ({ data, category, categoryName, loading, onAnalysisSel
     // Data comes as arrays from backend
     totalIssues = data.issues.length;
   } else if (data.issues && data.issues.data && data.issues.data.issues && Array.isArray(data.issues.data.issues)) {
-    // Data comes as { success: true, data: { issues: [...] } } from backend
+    // Data comes as { data: { issues: [...] } } from backend
     totalIssues = data.issues.data.issues.length;
   } else if (data.issues && data.issues.issues && Array.isArray(data.issues.issues)) {
     // Data comes as { issues: [...] } from backend
@@ -54,7 +54,7 @@ const CategoryOverview = ({ data, category, categoryName, loading, onAnalysisSel
     // Data comes as arrays from backend
     totalRecommendations = data.recommendations.length;
   } else if (data.recommendations && data.recommendations.data && data.recommendations.data.recommendations && Array.isArray(data.recommendations.data.recommendations)) {
-    // Data comes as { success: true, data: { recommendations: [...] } } from backend
+    // Data comes as { data: { recommendations: [...] } } from backend
     totalRecommendations = data.recommendations.data.recommendations.length;
   } else if (data.recommendations && data.recommendations.recommendations && Array.isArray(data.recommendations.recommendations)) {
     // Data comes as { recommendations: [...] } from backend

@@ -99,7 +99,6 @@ class DatabaseSchemaAnalysisStep extends BaseAnalysisStep {
     const recommendations = await this.generateRecommendations(schemaAnalysis, indexAnalysis, performanceAnalysis);
     
     return {
-      success: true,
       data: {
         schemaAnalysis,
         indexAnalysis,
@@ -138,7 +137,6 @@ class APIContractAnalysisStep extends BaseAnalysisStep {
     const contractValidation = await this.validateContracts(apiFiles);
     
     return {
-      success: true,
       data: {
         endpointAnalysis,
         documentationAnalysis,
@@ -179,7 +177,6 @@ class ConfigurationDriftAnalysisStep extends BaseAnalysisStep {
     const consistencyMetrics = await this.generateConsistencyMetrics(driftAnalysis);
     
     return {
-      success: true,
       data: {
         environmentAnalysis,
         driftAnalysis,

@@ -3,17 +3,17 @@
  * Orchestrates all performance analysis steps and coordinates results
  */
 
-const Logger = require('@logging/Logger');
-const { 
-  MemoryAnalysisStep, 
-  CpuAnalysisStep, 
-  NetworkAnalysisStep, 
-  DatabaseAnalysisStep 
-} = require('@domain/steps/categories/analysis/performance');
+const Logger = require("@logging/Logger");
+const {
+  MemoryAnalysisStep,
+  CpuAnalysisStep,
+  NetworkAnalysisStep,
+  DatabaseAnalysisStep,
+} = require("@domain/steps/categories/analysis/performance");
 
 class PerformanceAnalysisService {
   constructor() {
-    this.logger = new Logger('PerformanceAnalysisService');
+    this.logger = new Logger("PerformanceAnalysisService");
     this.memoryStep = new MemoryAnalysisStep();
     this.cpuStep = new CpuAnalysisStep();
     this.networkStep = new NetworkAnalysisStep();
@@ -30,27 +30,25 @@ class PerformanceAnalysisService {
    */
   async executePerformanceAnalysis(params) {
     try {
-      this.logger.info('Starting comprehensive performance analysis', { projectId: params.projectId });
+      this.logger.info("Starting comprehensive performance analysis", {
+        projectId: params.projectId,
+      });
 
       // Execute all performance analysis steps in parallel
-      const [
-        memoryResults,
-        cpuResults,
-        networkResults,
-        databaseResults
-      ] = await Promise.allSettled([
-        this.memoryStep.execute(params),
-        this.cpuStep.execute(params),
-        this.networkStep.execute(params),
-        this.databaseStep.execute(params)
-      ]);
+      const [memoryResults, cpuResults, networkResults, databaseResults] =
+        await Promise.allSettled([
+          this.memoryStep.execute(params),
+          this.cpuStep.execute(params),
+          this.networkStep.execute(params),
+          this.databaseStep.execute(params),
+        ]);
 
       // Process results and handle failures
       const results = {
-        memory: this.processResult(memoryResults, 'Memory'),
-        cpu: this.processResult(cpuResults, 'CPU'),
-        network: this.processResult(networkResults, 'Network'),
-        database: this.processResult(databaseResults, 'Database')
+        memory: this.processResult(memoryResults, "Memory"),
+        cpu: this.processResult(cpuResults, "CPU"),
+        network: this.processResult(networkResults, "Network"),
+        database: this.processResult(databaseResults, "Database"),
       };
 
       // Calculate overall performance score
@@ -65,20 +63,19 @@ class PerformanceAnalysisService {
         performanceScore,
         results,
         recommendations,
-        summary: this.generatePerformanceSummary(results)
+        summary: this.generatePerformanceSummary(results),
       };
 
-      this.logger.info('Performance analysis completed', { 
-        projectId: params.projectId, 
-        performanceScore 
+      this.logger.info("Performance analysis completed", {
+        projectId: params.projectId,
+        performanceScore,
       });
 
       return analysisResult;
-
     } catch (error) {
-      this.logger.error('Performance analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Performance analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -91,18 +88,19 @@ class PerformanceAnalysisService {
    * @returns {Object} Processed result
    */
   processResult(result, stepName) {
-    if (result.status === 'fulfilled') {
+    if (result.status === "fulfilled") {
       return {
-        success: true,
         data: result.value,
-        error: null
+        error: null,
       };
     } else {
-      this.logger.warn(`${stepName} analysis failed`, { error: result.reason.message });
+      this.logger.warn(`${stepName} analysis failed`, {
+        error: result.reason.message,
+      });
       return {
-        success: false,
+       
         data: null,
-        error: result.reason.message
+        error: result.reason.message,
       };
     }
   }
@@ -114,10 +112,10 @@ class PerformanceAnalysisService {
    */
   calculatePerformanceScore(results) {
     const weights = {
-      memory: 0.30,
-      cpu: 0.30,
-      network: 0.20,
-      database: 0.20
+      memory: 0.3,
+      cpu: 0.3,
+      network: 0.2,
+      database: 0.2,
     };
 
     let totalScore = 0;
@@ -143,52 +141,60 @@ class PerformanceAnalysisService {
 
     // Memory recommendations
     if (results.memory.success && results.memory.data.issues) {
-      const memoryIssues = results.memory.data.issues.filter(i => i.severity === 'HIGH');
+      const memoryIssues = results.memory.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (memoryIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Memory',
+          priority: "HIGH",
+          category: "Memory",
           message: `Found ${memoryIssues.length} high-severity memory performance issues.`,
-          details: memoryIssues.map(i => i.description)
+          details: memoryIssues.map((i) => i.description),
         });
       }
     }
 
     // CPU recommendations
     if (results.cpu.success && results.cpu.data.issues) {
-      const cpuIssues = results.cpu.data.issues.filter(i => i.severity === 'HIGH');
+      const cpuIssues = results.cpu.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (cpuIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'CPU',
+          priority: "HIGH",
+          category: "CPU",
           message: `Found ${cpuIssues.length} high-severity CPU performance issues.`,
-          details: cpuIssues.map(i => i.description)
+          details: cpuIssues.map((i) => i.description),
         });
       }
     }
 
     // Network recommendations
     if (results.network.success && results.network.data.issues) {
-      const networkIssues = results.network.data.issues.filter(i => i.severity === 'HIGH');
+      const networkIssues = results.network.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (networkIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Network',
+          priority: "HIGH",
+          category: "Network",
           message: `Found ${networkIssues.length} high-severity network performance issues.`,
-          details: networkIssues.map(i => i.description)
+          details: networkIssues.map((i) => i.description),
         });
       }
     }
 
     // Database recommendations
     if (results.database.success && results.database.data.issues) {
-      const databaseIssues = results.database.data.issues.filter(i => i.severity === 'HIGH');
+      const databaseIssues = results.database.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (databaseIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Database',
+          priority: "HIGH",
+          category: "Database",
           message: `Found ${databaseIssues.length} high-severity database performance issues.`,
-          details: databaseIssues.map(i => i.description)
+          details: databaseIssues.map((i) => i.description),
         });
       }
     }
@@ -211,23 +217,27 @@ class PerformanceAnalysisService {
       memoryUsage: 0,
       cpuUsage: 0,
       networkLatency: 0,
-      databaseQueries: 0
+      databaseQueries: 0,
     };
 
     // Aggregate performance metrics
-    Object.values(results).forEach(result => {
+    Object.values(results).forEach((result) => {
       if (result.success && result.data) {
         if (result.data.issues) {
           summary.totalIssues += result.data.issues.length;
-          result.data.issues.forEach(i => {
+          result.data.issues.forEach((i) => {
             summary[`${i.severity.toLowerCase()}Issues`]++;
           });
         }
         if (result.data.metrics) {
-          if (result.data.metrics.memoryUsage) summary.memoryUsage = result.data.metrics.memoryUsage;
-          if (result.data.metrics.cpuUsage) summary.cpuUsage = result.data.metrics.cpuUsage;
-          if (result.data.metrics.networkLatency) summary.networkLatency = result.data.metrics.networkLatency;
-          if (result.data.metrics.databaseQueries) summary.databaseQueries = result.data.metrics.databaseQueries;
+          if (result.data.metrics.memoryUsage)
+            summary.memoryUsage = result.data.metrics.memoryUsage;
+          if (result.data.metrics.cpuUsage)
+            summary.cpuUsage = result.data.metrics.cpuUsage;
+          if (result.data.metrics.networkLatency)
+            summary.networkLatency = result.data.metrics.networkLatency;
+          if (result.data.metrics.databaseQueries)
+            summary.databaseQueries = result.data.metrics.databaseQueries;
         }
       }
     });
@@ -246,7 +256,7 @@ class PerformanceAnalysisService {
       memory: this.memoryStep,
       cpu: this.cpuStep,
       network: this.networkStep,
-      database: this.databaseStep
+      database: this.databaseStep,
     };
 
     const step = stepMap[stepType];
@@ -258,4 +268,4 @@ class PerformanceAnalysisService {
   }
 }
 
-module.exports = PerformanceAnalysisService; 
+module.exports = PerformanceAnalysisService;

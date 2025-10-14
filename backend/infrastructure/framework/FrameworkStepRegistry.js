@@ -1,8 +1,8 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-const path = require('path');
-const fs = require('fs').promises;
-const StepValidator = require('@domain/steps/StepValidator');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
+const path = require("path");
+const fs = require("fs").promises;
+const StepValidator = require("@domain/steps/StepValidator");
 
 /**
  * FrameworkStepRegistry - Integrates framework steps with the main StepRegistry
@@ -24,19 +24,23 @@ class FrameworkStepRegistry {
   async initialize(frameworkBasePath, stepRegistry) {
     this.frameworkBasePath = frameworkBasePath;
     this.stepRegistry = stepRegistry;
-    
+
     try {
       await this.discoverFrameworks();
       await this.loadFrameworkSteps();
       await this.registerFrameworkSteps();
-      
-      this.logger.info(`✅ Framework Step Registry initialized with ${this.frameworkSteps.size} steps`);
-      
+
+      this.logger.info(
+        `✅ Framework Step Registry initialized with ${this.frameworkSteps.size} steps`,
+      );
+
       // Validate integration with domain layer
       await this.validateDomainIntegration();
-      
     } catch (error) {
-      this.logger.error('❌ [FrameworkStepRegistry] Initialization failed:', error.message);
+      this.logger.error(
+        "❌ [FrameworkStepRegistry] Initialization failed:",
+        error.message,
+      );
       throw error;
     }
   }
@@ -47,32 +51,40 @@ class FrameworkStepRegistry {
   async discoverFrameworks() {
     try {
       const frameworkDirs = await fs.readdir(this.frameworkBasePath);
-      
+
       for (const dir of frameworkDirs) {
         const frameworkPath = path.join(this.frameworkBasePath, dir);
         const stats = await fs.stat(frameworkPath);
-        
+
         if (stats.isDirectory()) {
-          const configPath = path.join(frameworkPath, 'framework.json');
-          
+          const configPath = path.join(frameworkPath, "framework.json");
+
           try {
-            const configContent = await fs.readFile(configPath, 'utf8');
+            const configContent = await fs.readFile(configPath, "utf8");
             const config = JSON.parse(configContent);
-            
+
             this.frameworkDirectories.set(dir, {
               path: frameworkPath,
               config: config,
-              stepsPath: path.join(frameworkPath, 'steps')
+              stepsPath: path.join(frameworkPath, "steps"),
             });
-            
-            this.logger.debug(`📁 [FrameworkStepRegistry] Discovered framework: ${dir}`);
+
+            this.logger.debug(
+              `📁 [FrameworkStepRegistry] Discovered framework: ${dir}`,
+            );
           } catch (error) {
-            this.logger.warn(`⚠️ [FrameworkStepRegistry] Invalid framework config in ${dir}:`, error.message);
+            this.logger.warn(
+              `⚠️ [FrameworkStepRegistry] Invalid framework config in ${dir}:`,
+              error.message,
+            );
           }
         }
       }
     } catch (error) {
-      this.logger.error('❌ [FrameworkStepRegistry] Framework discovery failed:', error.message);
+      this.logger.error(
+        "❌ [FrameworkStepRegistry] Framework discovery failed:",
+        error.message,
+      );
       throw error;
     }
   }
@@ -83,9 +95,15 @@ class FrameworkStepRegistry {
   async loadFrameworkSteps() {
     for (const [frameworkName, frameworkInfo] of this.frameworkDirectories) {
       try {
-        await this.loadFrameworkStepsFromDirectory(frameworkName, frameworkInfo);
+        await this.loadFrameworkStepsFromDirectory(
+          frameworkName,
+          frameworkInfo,
+        );
       } catch (error) {
-        this.logger.error(`❌ [FrameworkStepRegistry] Failed to load steps from ${frameworkName}:`, error.message);
+        this.logger.error(
+          `❌ [FrameworkStepRegistry] Failed to load steps from ${frameworkName}:`,
+          error.message,
+        );
       }
     }
   }
@@ -95,26 +113,39 @@ class FrameworkStepRegistry {
    */
   async loadFrameworkStepsFromDirectory(frameworkName, frameworkInfo) {
     const { path: frameworkPath, config, stepsPath } = frameworkInfo;
-    
+
     try {
       // Check if steps directory exists
-      const stepsExists = await fs.access(stepsPath).then(() => true).catch(() => false);
-      
+      const stepsExists = await fs
+        .access(stepsPath)
+        .then(() => true)
+        .catch(() => false);
+
       if (!stepsExists) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Steps directory not found for ${frameworkName}`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Steps directory not found for ${frameworkName}`,
+        );
         return;
       }
 
       // Load steps defined in framework.json
       for (const [stepName, stepConfig] of Object.entries(config.steps || {})) {
         if (stepConfig.file) {
-          await this.loadFrameworkStep(frameworkName, stepName, stepConfig, stepsPath);
+          await this.loadFrameworkStep(
+            frameworkName,
+            stepName,
+            stepConfig,
+            stepsPath,
+          );
         }
       }
-      
+
       // Individual framework step loading logs removed for cleaner output
     } catch (error) {
-      this.logger.error(`❌ [FrameworkStepRegistry] Failed to load steps from ${frameworkName}:`, error.message);
+      this.logger.error(
+        `❌ [FrameworkStepRegistry] Failed to load steps from ${frameworkName}:`,
+        error.message,
+      );
     }
   }
 
@@ -125,14 +156,16 @@ class FrameworkStepRegistry {
     try {
       // Validate step configuration
       if (!stepConfig.file) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Step ${stepName} in ${frameworkName} has no file specified`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Step ${stepName} in ${frameworkName} has no file specified`,
+        );
         return;
       }
 
       // Fix: Remove 'steps/' prefix if it exists in the file path
-      const fileName = stepConfig.file.replace(/^steps\//, '');
+      const fileName = stepConfig.file.replace(/^steps\//, "");
       const stepFilePath = path.join(stepsPath, fileName);
-      
+
       // Check if step file exists with better error handling
       let fileExists = false;
       try {
@@ -141,9 +174,11 @@ class FrameworkStepRegistry {
       } catch (error) {
         fileExists = false;
       }
-      
+
       if (!fileExists) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Step file not found: ${stepFilePath}`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Step file not found: ${stepFilePath}`,
+        );
         this.logger.debug(`📁 Expected path: ${stepFilePath}`);
         this.logger.debug(`📁 Steps directory: ${stepsPath}`);
         this.logger.debug(`📁 Step config: ${JSON.stringify(stepConfig)}`);
@@ -155,30 +190,44 @@ class FrameworkStepRegistry {
       try {
         stepModule = require(stepFilePath);
       } catch (requireError) {
-        this.logger.error(`❌ [FrameworkStepRegistry] Failed to require step file ${stepFilePath}:`, requireError.message);
+        this.logger.error(
+          `❌ [FrameworkStepRegistry] Failed to require step file ${stepFilePath}:`,
+          requireError.message,
+        );
         return;
       }
-      
+
       // Validate step module structure
       if (!stepModule) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Step module is null/undefined: ${stepFilePath}`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Step module is null/undefined: ${stepFilePath}`,
+        );
         return;
       }
 
       // Use StepValidator to validate the module
-      const validation = StepValidator.validateStepModule(stepModule, stepFilePath);
+      const validation = StepValidator.validateStepModule(
+        stepModule,
+        stepFilePath,
+      );
       if (!validation.isValid) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Step validation failed for ${stepFilePath}:`, validation.errors);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Step validation failed for ${stepFilePath}:`,
+          validation.errors,
+        );
         return;
       }
 
       if (validation.warnings.length > 0) {
-        this.logger.debug(`⚠️ [FrameworkStepRegistry] Step warnings for ${stepFilePath}:`, validation.warnings);
+        this.logger.debug(
+          `⚠️ [FrameworkStepRegistry] Step warnings for ${stepFilePath}:`,
+          validation.warnings,
+        );
       }
 
       // Create step key
       const stepKey = `${frameworkName}.${stepName}`;
-      
+
       // Store step information
       this.frameworkSteps.set(stepKey, {
         framework: frameworkName,
@@ -186,12 +235,15 @@ class FrameworkStepRegistry {
         config: stepConfig,
         module: stepModule,
         filePath: stepFilePath,
-        loadedAt: new Date()
+        loadedAt: new Date(),
       });
 
       this.logger.debug(`📦 [FrameworkStepRegistry] Loaded step: ${stepKey}`);
     } catch (error) {
-      this.logger.error(`❌ [FrameworkStepRegistry] Failed to load step ${stepName} from ${frameworkName}:`, error.message);
+      this.logger.error(
+        `❌ [FrameworkStepRegistry] Failed to load step ${stepName} from ${frameworkName}:`,
+        error.message,
+      );
       this.logger.debug(`🔍 Error details:`, error.stack);
     }
   }
@@ -204,7 +256,10 @@ class FrameworkStepRegistry {
       try {
         await this.registerFrameworkStep(stepKey, stepInfo);
       } catch (error) {
-        this.logger.debug(`❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`, error.message);
+        this.logger.debug(
+          `❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`,
+          error.message,
+        );
       }
     }
   }
@@ -214,25 +269,27 @@ class FrameworkStepRegistry {
    */
   async registerFrameworkStep(stepKey, stepInfo) {
     const { framework, name, config, module } = stepInfo;
-    
+
     try {
       // Validate step registry availability
       if (!this.stepRegistry) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Step registry not available for ${stepKey}`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Step registry not available for ${stepKey}`,
+        );
         return;
       }
 
       // Check if step registry has registerStep method (new interface)
-      if (typeof this.stepRegistry.registerStep === 'function') {
+      if (typeof this.stepRegistry.registerStep === "function") {
         // Use new registerStep method with proper parameters
         const stepConfig = {
           name: name,
-          type: config.type || 'framework',
-          category: config.category || 'framework',
+          type: config.type || "framework",
+          category: config.category || "framework",
           description: config.description || `Framework step: ${name}`,
           framework: framework,
           dependencies: config.dependencies || [],
-          version: config.version || '1.0.0'
+          version: config.version || "1.0.0",
         };
 
         // Create executor function
@@ -243,42 +300,45 @@ class FrameworkStepRegistry {
               ...context,
               framework: framework,
               frameworkStep: name,
-              stepRegistry: this.stepRegistry
+              stepRegistry: this.stepRegistry,
             };
-            
+
             // Execute the step based on module type
-            if (typeof module === 'function' && module.prototype) {
+            if (typeof module === "function" && module.prototype) {
               // It's a class, instantiate and execute
               const stepInstance = new module();
-              if (typeof stepInstance.execute === 'function') {
+              if (typeof stepInstance.execute === "function") {
                 return await stepInstance.execute(frameworkContext, options);
               } else {
                 throw new Error(`Step class ${name} has no execute method`);
               }
-            } else if (typeof module.execute === 'function') {
+            } else if (typeof module.execute === "function") {
               // It's an object with execute method
               return await module.execute(frameworkContext, options);
             } else {
               throw new Error(`Step module ${name} has no execute method`);
             }
           } catch (error) {
-            this.logger.error(`❌ [FrameworkStepRegistry] Step execution failed for ${stepKey}:`, error.message);
+            this.logger.error(
+              `❌ [FrameworkStepRegistry] Step execution failed for ${stepKey}:`,
+              error.message,
+            );
             throw error;
           }
         };
 
         // Individual step registration logs removed for cleaner output
-      } else if (typeof this.stepRegistry.register === 'function') {
+      } else if (typeof this.stepRegistry.register === "function") {
         // Fallback to old register method
         const stepWrapper = {
           name: name,
-          type: config.type || 'framework',
-          category: config.category || 'framework',
+          type: config.type || "framework",
+          category: config.category || "framework",
           description: config.description || `Framework step: ${name}`,
           framework: framework,
           dependencies: config.dependencies || [],
-          version: config.version || '1.0.0',
-          
+          version: config.version || "1.0.0",
+
           async execute(context, options = {}) {
             try {
               // Add framework context
@@ -286,40 +346,49 @@ class FrameworkStepRegistry {
                 ...context,
                 framework: framework,
                 frameworkStep: name,
-                stepRegistry: this.stepRegistry
+                stepRegistry: this.stepRegistry,
               };
-              
+
               // Execute the step based on module type
-              if (typeof module === 'function' && module.prototype) {
+              if (typeof module === "function" && module.prototype) {
                 // It's a class, instantiate and execute
                 const stepInstance = new module();
-                if (typeof stepInstance.execute === 'function') {
+                if (typeof stepInstance.execute === "function") {
                   return await stepInstance.execute(frameworkContext, options);
                 } else {
                   throw new Error(`Step class ${name} has no execute method`);
                 }
-              } else if (typeof module.execute === 'function') {
+              } else if (typeof module.execute === "function") {
                 // It's an object with execute method
                 return await module.execute(frameworkContext, options);
               } else {
                 throw new Error(`Step module ${name} has no execute method`);
               }
             } catch (error) {
-              this.logger.error(`❌ [FrameworkStepRegistry] Step execution failed for ${stepKey}:`, error.message);
+              this.logger.error(
+                `❌ [FrameworkStepRegistry] Step execution failed for ${stepKey}:`,
+                error.message,
+              );
               throw error;
             }
-          }
+          },
         };
 
         await this.stepRegistry.register(stepKey, stepWrapper);
-        this.logger.info(`✅ [FrameworkStepRegistry] Registered step with legacy interface: ${stepKey}`);
+        this.logger.info(
+          `✅ [FrameworkStepRegistry] Registered step with legacy interface: ${stepKey}`,
+        );
       } else {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] Step registry has no compatible register method for ${stepKey}`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] Step registry has no compatible register method for ${stepKey}`,
+        );
         return;
       }
-      
     } catch (error) {
-      this.logger.debug(`❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`, error.message);
+      this.logger.debug(
+        `❌ [FrameworkStepRegistry] Failed to register step ${stepKey}:`,
+        error.message,
+      );
       this.logger.debug(`🔍 Registration error details:`, error.stack);
     }
   }
@@ -335,8 +404,9 @@ class FrameworkStepRegistry {
    * Get steps for a specific framework
    */
   getFrameworkStepsByName(frameworkName) {
-    return Array.from(this.frameworkSteps.keys())
-      .filter(key => key.startsWith(`${frameworkName}.`));
+    return Array.from(this.frameworkSteps.keys()).filter((key) =>
+      key.startsWith(`${frameworkName}.`),
+    );
   }
 
   /**
@@ -358,8 +428,10 @@ class FrameworkStepRegistry {
    */
   async reloadFramework(frameworkName) {
     try {
-      this.logger.info(`🔄 [FrameworkStepRegistry] Reloading framework: ${frameworkName}`);
-      
+      this.logger.info(
+        `🔄 [FrameworkStepRegistry] Reloading framework: ${frameworkName}`,
+      );
+
       const frameworkInfo = this.frameworkDirectories.get(frameworkName);
       if (!frameworkInfo) {
         throw new Error(`Framework ${frameworkName} not found`);
@@ -375,9 +447,14 @@ class FrameworkStepRegistry {
       await this.loadFrameworkStepsFromDirectory(frameworkName, frameworkInfo);
       await this.registerFrameworkSteps();
 
-      this.logger.info(`✅ [FrameworkStepRegistry] Reloaded framework: ${frameworkName}`);
+      this.logger.info(
+        `✅ [FrameworkStepRegistry] Reloaded framework: ${frameworkName}`,
+      );
     } catch (error) {
-      this.logger.error(`❌ [FrameworkStepRegistry] Failed to reload framework ${frameworkName}:`, error.message);
+      this.logger.error(
+        `❌ [FrameworkStepRegistry] Failed to reload framework ${frameworkName}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -403,33 +480,40 @@ class FrameworkStepRegistry {
     try {
       // Check if step registry is properly connected
       if (!this.stepRegistry) {
-        throw new Error('Step registry not available for domain integration');
+        throw new Error("Step registry not available for domain integration");
       }
 
       // Validate that framework steps are properly registered
       const registeredSteps = this.frameworkSteps.size;
       const loadedFrameworks = this.loadedFrameworks.size;
-      
-      this.logger.info(`🔍 [FrameworkStepRegistry] Domain integration validation:`);
+
+      this.logger.info(
+        `🔍 [FrameworkStepRegistry] Domain integration validation:`,
+      );
       this.logger.info(`   - Registered steps: ${registeredSteps}`);
       this.logger.info(`   - Loaded frameworks: ${loadedFrameworks}`);
       this.logger.info(`   - Step registry available: ${!!this.stepRegistry}`);
-      
+
       if (registeredSteps === 0 && loadedFrameworks > 0) {
-        this.logger.warn(`⚠️ [FrameworkStepRegistry] No steps registered despite ${loadedFrameworks} loaded frameworks`);
+        this.logger.warn(
+          `⚠️ [FrameworkStepRegistry] No steps registered despite ${loadedFrameworks} loaded frameworks`,
+        );
       }
-      
+
       return {
         isValid: true,
         registeredSteps,
         loadedFrameworks,
-        stepRegistryAvailable: !!this.stepRegistry
+        stepRegistryAvailable: !!this.stepRegistry,
       };
     } catch (error) {
-      this.logger.error(`❌ [FrameworkStepRegistry] Domain integration validation failed:`, error.message);
+      this.logger.error(
+        `❌ [FrameworkStepRegistry] Domain integration validation failed:`,
+        error.message,
+      );
       return {
         isValid: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -442,16 +526,17 @@ class FrameworkStepRegistry {
     const loadedFrameworks = this.loadedFrameworks.size;
     const totalSteps = this.frameworkSteps.size;
     const stepRegistryAvailable = !!this.stepRegistry;
-    
+
     return {
       totalFrameworks,
       loadedFrameworks,
       totalSteps,
       stepRegistryAvailable,
-      healthScore: totalFrameworks > 0 ? (loadedFrameworks / totalFrameworks) * 100 : 100,
-      isHealthy: stepRegistryAvailable && loadedFrameworks > 0
+      healthScore:
+        totalFrameworks > 0 ? (loadedFrameworks / totalFrameworks) * 100 : 100,
+      isHealthy: stepRegistryAvailable && loadedFrameworks > 0,
     };
   }
 }
 
-module.exports = FrameworkStepRegistry; 
+module.exports = FrameworkStepRegistry;

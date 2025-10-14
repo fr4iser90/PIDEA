@@ -118,13 +118,13 @@ class FileHandler {
       const result = await this.fileSystem.readFile(fileSystem.access, filePath);
       
       // Store operation in history
-      this.recordOperation(fsId, 'read', filePath, { success: true, size: result.content?.length || 0 });
+      this.recordOperation(fsId, 'read', filePath, { size: result.content?.length || 0 });
       
       return result;
 
     } catch (error) {
       this.logger.error('Failed to read file:', error);
-      this.recordOperation(fsId, 'read', filePath, { success: false, error: error.message });
+      this.recordOperation(fsId, 'read', filePath, { error: error.message });
       throw new Error(`Failed to read file: ${error.message}`);
     }
   }
@@ -162,13 +162,13 @@ class FileHandler {
       const result = await this.fileSystem.writeFile(fileSystem.access, filePath, content);
       
       // Store operation in history
-      this.recordOperation(fsId, 'write', filePath, { success: true, size: content.length });
+      this.recordOperation(fsId, 'write', filePath, { size: content.length });
       
       return result;
 
     } catch (error) {
       this.logger.error('Failed to write file:', error);
-      this.recordOperation(fsId, 'write', filePath, { success: false, error: error.message });
+      this.recordOperation(fsId, 'write', filePath, { error: error.message });
       throw new Error(`Failed to write file: ${error.message}`);
     }
   }
@@ -192,13 +192,13 @@ class FileHandler {
       const result = await this.fileSystem.listDirectory(fileSystem.access, dirPath);
       
       // Store operation in history
-      this.recordOperation(fsId, 'list', dirPath, { success: true, count: result.files?.length || 0 });
+      this.recordOperation(fsId, 'list', dirPath, { count: result.files?.length || 0 });
       
       return result;
 
     } catch (error) {
       this.logger.error('Failed to list directory:', error);
-      this.recordOperation(fsId, 'list', dirPath, { success: false, error: error.message });
+      this.recordOperation(fsId, 'list', dirPath, { error: error.message });
       throw new Error(`Failed to list directory: ${error.message}`);
     }
   }
@@ -228,7 +228,7 @@ class FileHandler {
 
     } catch (error) {
       this.logger.error('Failed to delete file:', error);
-      this.recordOperation(fsId, 'delete', filePath, { success: false, error: error.message });
+      this.recordOperation(fsId, 'delete', filePath, { error: error.message });
       throw new Error(`Failed to delete file: ${error.message}`);
     }
   }

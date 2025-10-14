@@ -1,16 +1,19 @@
-const path = require('path');
-const fs = require('fs').promises;
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('ContentLibraryController');
+const path = require("path");
+const fs = require("fs").promises;
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("ContentLibraryController");
 
 class ContentLibraryController {
   constructor(dependencies = {}) {
-    this.contentLibraryApplicationService = dependencies.contentLibraryApplicationService;
-    this.contentLibraryPath = path.join(process.cwd(), '../content-library');
-    
+    this.contentLibraryApplicationService =
+      dependencies.contentLibraryApplicationService;
+    this.contentLibraryPath = path.join(process.cwd(), "../content-library");
+
     if (!this.contentLibraryApplicationService) {
-      throw new Error('ContentLibraryController requires contentLibraryApplicationService dependency');
+      throw new Error(
+        "ContentLibraryController requires contentLibraryApplicationService dependency",
+      );
     }
   }
 
@@ -19,24 +22,22 @@ class ContentLibraryController {
   // GET /api/frameworks - Liste aller Frameworks
   async getFrameworks(req, res) {
     try {
-      const frameworksPath = path.join(this.contentLibraryPath, 'frameworks');
+      const frameworksPath = path.join(this.contentLibraryPath, "frameworks");
       const frameworks = await this.scanDirectoryForFrameworks(frameworksPath);
-      
+
       // Filter nach Techstack falls angegeben
       let filteredFrameworks = frameworks;
       const { techstack } = req.query;
       if (techstack) {
-        filteredFrameworks = frameworks.filter(fw => 
-          fw.id.toLowerCase().includes(techstack.toLowerCase())
+        filteredFrameworks = frameworks.filter((fw) =>
+          fw.id.toLowerCase().includes(techstack.toLowerCase()),
         );
       }
-      
-      res.success(filteredFrameworks
-      );
+
+      res.success(filteredFrameworks);
     } catch (error) {
-      logger.error('Error loading frameworks:', error);
-      res.error('Failed to load frameworks', 500, { details: error.message 
-       });
+      logger.error("Error loading frameworks:", error);
+      res.error("Failed to load frameworks", 500, { details: error.message });
     }
   }
 
@@ -45,26 +46,32 @@ class ContentLibraryController {
     try {
       const { frameworkId } = req.params;
       const { category } = req.query;
-      const frameworkPath = path.join(this.contentLibraryPath, 'frameworks', frameworkId, 'prompts');
-      
+      const frameworkPath = path.join(
+        this.contentLibraryPath,
+        "frameworks",
+        frameworkId,
+        "prompts",
+      );
+
       const prompts = await this.scanDirectoryForPrompts(frameworkPath);
-      
+
       // Filter nach Kategorie falls angegeben
       let filteredPrompts = prompts;
       if (category) {
-        filteredPrompts = prompts.filter(p => 
-          p.category.toLowerCase().includes(category.toLowerCase())
+        filteredPrompts = prompts.filter((p) =>
+          p.category.toLowerCase().includes(category.toLowerCase()),
         );
       }
-      
+
       res.success({
-          frameworkId,
-          prompts: filteredPrompts
-        });
+        frameworkId,
+        prompts: filteredPrompts,
+      });
     } catch (error) {
-      logger.error('Error loading framework prompts:', error);
-      res.error('Failed to load framework prompts', 500, { details: error.message 
-       });
+      logger.error("Error loading framework prompts:", error);
+      res.error("Failed to load framework prompts", 500, {
+        details: error.message,
+      });
     }
   }
 
@@ -73,26 +80,32 @@ class ContentLibraryController {
     try {
       const { frameworkId } = req.params;
       const { category } = req.query;
-      const templatesPath = path.join(this.contentLibraryPath, 'frameworks', frameworkId, 'templates');
-      
+      const templatesPath = path.join(
+        this.contentLibraryPath,
+        "frameworks",
+        frameworkId,
+        "templates",
+      );
+
       const templates = await this.scanDirectoryForTemplates(templatesPath);
-      
+
       // Filter nach Kategorie falls angegeben
       let filteredTemplates = templates;
       if (category) {
-        filteredTemplates = templates.filter(t => 
-          t.category.toLowerCase().includes(category.toLowerCase())
+        filteredTemplates = templates.filter((t) =>
+          t.category.toLowerCase().includes(category.toLowerCase()),
         );
       }
-      
+
       res.success({
-          frameworkId,
-          templates: filteredTemplates
-        });
+        frameworkId,
+        templates: filteredTemplates,
+      });
     } catch (error) {
-      logger.error('Error loading framework templates:', error);
-      res.error('Failed to load framework templates', 500, { details: error.message 
-       });
+      logger.error("Error loading framework templates:", error);
+      res.error("Failed to load framework templates", 500, {
+        details: error.message,
+      });
     }
   }
 
@@ -102,23 +115,21 @@ class ContentLibraryController {
   async getPrompts(req, res) {
     try {
       const { category } = req.query;
-      const promptsPath = path.join(this.contentLibraryPath, 'prompts');
+      const promptsPath = path.join(this.contentLibraryPath, "prompts");
       const prompts = await this.scanDirectoryForPrompts(promptsPath);
-      
+
       // Filter nach Kategorie falls angegeben
       let filteredPrompts = prompts;
       if (category) {
-        filteredPrompts = prompts.filter(p => 
-          p.category.toLowerCase().includes(category.toLowerCase())
+        filteredPrompts = prompts.filter((p) =>
+          p.category.toLowerCase().includes(category.toLowerCase()),
         );
       }
-      
-      res.success(filteredPrompts
-      );
+
+      res.success(filteredPrompts);
     } catch (error) {
-      logger.error('Error loading prompts:', error);
-      res.error('Failed to load prompts', 500, { details: error.message 
-       });
+      logger.error("Error loading prompts:", error);
+      res.error("Failed to load prompts", 500, { details: error.message });
     }
   }
 
@@ -126,18 +137,23 @@ class ContentLibraryController {
   async getPromptsByCategory(req, res) {
     try {
       const { category } = req.params;
-      const promptsPath = path.join(this.contentLibraryPath, 'prompts', category);
-      
+      const promptsPath = path.join(
+        this.contentLibraryPath,
+        "prompts",
+        category,
+      );
+
       const prompts = await this.scanDirectoryForPrompts(promptsPath);
-      
+
       res.success({
-          category,
-          prompts
-        });
+        category,
+        prompts,
+      });
     } catch (error) {
-      logger.error('Error loading prompts by category:', error);
-      res.error('Failed to load prompts by category', 500, { details: error.message 
-       });
+      logger.error("Error loading prompts by category:", error);
+      res.error("Failed to load prompts by category", 500, {
+        details: error.message,
+      });
     }
   }
 
@@ -145,11 +161,16 @@ class ContentLibraryController {
   async getPromptFile(req, res) {
     try {
       const { category, filename } = req.params;
-      const filePath = path.join(this.contentLibraryPath, 'prompts', category, filename);
-      const content = await fs.readFile(filePath, 'utf-8');
-      res.success({category, filename, content});
+      const filePath = path.join(
+        this.contentLibraryPath,
+        "prompts",
+        category,
+        filename,
+      );
+      const content = await fs.readFile(filePath, "utf-8");
+      res.success({ category, filename, content });
     } catch (error) {
-      res.notFound('Prompt file not found', {message: error.message });
+      res.notFound("Prompt file not found", { message: error.message });
     }
   }
 
@@ -157,11 +178,17 @@ class ContentLibraryController {
   async getPromptFileWithSubcategory(req, res) {
     try {
       const { category, subcategory, filename } = req.params;
-      const filePath = path.join(this.contentLibraryPath, 'prompts', category, subcategory, filename);
-      const content = await fs.readFile(filePath, 'utf-8');
-      res.success({category, subcategory, filename, content});
+      const filePath = path.join(
+        this.contentLibraryPath,
+        "prompts",
+        category,
+        subcategory,
+        filename,
+      );
+      const content = await fs.readFile(filePath, "utf-8");
+      res.success({ category, subcategory, filename, content });
     } catch (error) {
-      res.notFound('Prompt file not found', {message: error.message });
+      res.notFound("Prompt file not found", { message: error.message });
     }
   }
 
@@ -171,23 +198,21 @@ class ContentLibraryController {
   async getTemplates(req, res) {
     try {
       const { category } = req.query;
-      const templatesPath = path.join(this.contentLibraryPath, 'templates');
+      const templatesPath = path.join(this.contentLibraryPath, "templates");
       const templates = await this.scanDirectoryForTemplates(templatesPath);
-      
+
       // Filter nach Kategorie falls angegeben
       let filteredTemplates = templates;
       if (category) {
-        filteredTemplates = templates.filter(t => 
-          t.category.toLowerCase().includes(category.toLowerCase())
+        filteredTemplates = templates.filter((t) =>
+          t.category.toLowerCase().includes(category.toLowerCase()),
         );
       }
-      
-      res.success(filteredTemplates
-      );
+
+      res.success(filteredTemplates);
     } catch (error) {
-      logger.error('Error loading templates:', error);
-      res.error('Failed to load templates', 500, { details: error.message 
-       });
+      logger.error("Error loading templates:", error);
+      res.error("Failed to load templates", 500, { details: error.message });
     }
   }
 
@@ -195,18 +220,23 @@ class ContentLibraryController {
   async getTemplatesByCategory(req, res) {
     try {
       const { category } = req.params;
-      const templatesPath = path.join(this.contentLibraryPath, 'templates', category);
-      
+      const templatesPath = path.join(
+        this.contentLibraryPath,
+        "templates",
+        category,
+      );
+
       const templates = await this.scanDirectoryForTemplates(templatesPath);
-      
+
       res.success({
-          category,
-          templates
-        });
+        category,
+        templates,
+      });
     } catch (error) {
-      logger.error('Error loading templates by category:', error);
-      res.error('Failed to load templates by category', 500, { details: error.message 
-       });
+      logger.error("Error loading templates by category:", error);
+      res.error("Failed to load templates by category", 500, {
+        details: error.message,
+      });
     }
   }
 
@@ -214,11 +244,16 @@ class ContentLibraryController {
   async getTemplateFile(req, res) {
     try {
       const { category, filename } = req.params;
-      const filePath = path.join(this.contentLibraryPath, 'templates', category, filename);
-      const content = await fs.readFile(filePath, 'utf-8');
-      res.success({category, filename, content});
+      const filePath = path.join(
+        this.contentLibraryPath,
+        "templates",
+        category,
+        filename,
+      );
+      const content = await fs.readFile(filePath, "utf-8");
+      res.success({ category, filename, content });
     } catch (error) {
-      res.notFound('Template file not found', {message: error.message });
+      res.notFound("Template file not found", { message: error.message });
     }
   }
 
@@ -229,27 +264,29 @@ class ContentLibraryController {
     try {
       const filePath = req.params[0]; // Express wildcard parameter
       const fullPath = path.join(this.contentLibraryPath, filePath);
-      
+
       // Sicherheitscheck: Verhindere Directory Traversal
       const normalizedPath = path.normalize(fullPath);
       if (!normalizedPath.startsWith(this.contentLibraryPath)) {
-        return res.forbidden('Access denied');
+        return res.forbidden("Access denied");
       }
-      
-      const content = await fs.readFile(fullPath, 'utf8');
+
+      const content = await fs.readFile(fullPath, "utf8");
       const relativePath = path.relative(this.contentLibraryPath, fullPath);
-      
+
       res.success({
-          id: path.basename(filePath, '.md'),
-          name: path.basename(filePath, '.md').replace(/([A-Z])/g, ' $1').trim(),
-          content: content,
-          file: relativePath,
-          type: relativePath.includes('templates/') ? 'template' : 'prompt'
-        });
-    } catch (error) {
-      logger.error('Error loading file:', error);
-      res.notFound('File not found', {message: error.message 
+        id: path.basename(filePath, ".md"),
+        name: path
+          .basename(filePath, ".md")
+          .replace(/([A-Z])/g, " $1")
+          .trim(),
+        content: content,
+        file: relativePath,
+        type: relativePath.includes("templates/") ? "template" : "prompt",
       });
+    } catch (error) {
+      logger.error("Error loading file:", error);
+      res.notFound("File not found", { message: error.message });
     }
   }
 
@@ -265,20 +302,22 @@ class ContentLibraryController {
         if (item.isDirectory()) {
           const frameworkPath = path.join(dirPath, item.name);
           const frameworkFiles = await fs.readdir(frameworkPath);
-          
+
           frameworks.push({
             id: item.name,
-            name: item.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            name: item.name
+              .replace(/-/g, " ")
+              .replace(/\b\w/g, (l) => l.toUpperCase()),
             description: `${item.name} framework`,
-            hasPrompts: frameworkFiles.includes('prompts'),
-            hasTemplates: frameworkFiles.includes('templates')
+            hasPrompts: frameworkFiles.includes("prompts"),
+            hasTemplates: frameworkFiles.includes("templates"),
           });
         }
       }
 
       return frameworks;
     } catch (error) {
-      logger.error('Error scanning frameworks directory:', error);
+      logger.error("Error scanning frameworks directory:", error);
       return [];
     }
   }
@@ -291,22 +330,25 @@ class ContentLibraryController {
 
       for (const item of items) {
         const fullPath = path.join(dirPath, item.name);
-        
+
         if (item.isDirectory()) {
           // Rekursiv Unterordner scannen
           const subPrompts = await this.scanDirectoryForPrompts(fullPath);
           prompts.push(...subPrompts);
-        } else if (item.isFile() && item.name.endsWith('.md')) {
+        } else if (item.isFile() && item.name.endsWith(".md")) {
           // Prompt-Datei gefunden
           const relativePath = path.relative(this.contentLibraryPath, fullPath);
           const category = path.dirname(relativePath).split(path.sep).pop();
-          
+
           prompts.push({
-            id: path.basename(item.name, '.md'),
-            name: path.basename(item.name, '.md').replace(/([A-Z])/g, ' $1').trim(),
+            id: path.basename(item.name, ".md"),
+            name: path
+              .basename(item.name, ".md")
+              .replace(/([A-Z])/g, " $1")
+              .trim(),
             category: category,
             file: relativePath,
-            type: 'prompt'
+            type: "prompt",
           });
         }
       }
@@ -326,22 +368,25 @@ class ContentLibraryController {
 
       for (const item of items) {
         const fullPath = path.join(dirPath, item.name);
-        
+
         if (item.isDirectory()) {
           // Rekursiv Unterordner scannen
           const subTemplates = await this.scanDirectoryForTemplates(fullPath);
           templates.push(...subTemplates);
-        } else if (item.isFile() && item.name.endsWith('.md')) {
+        } else if (item.isFile() && item.name.endsWith(".md")) {
           // Template-Datei gefunden
           const relativePath = path.relative(this.contentLibraryPath, fullPath);
           const category = path.dirname(relativePath).split(path.sep).pop();
-          
+
           templates.push({
-            id: path.basename(item.name, '.md'),
-            name: path.basename(item.name, '.md').replace(/([A-Z])/g, ' $1').trim(),
+            id: path.basename(item.name, ".md"),
+            name: path
+              .basename(item.name, ".md")
+              .replace(/([A-Z])/g, " $1")
+              .trim(),
             category: category,
             file: relativePath,
-            type: 'template'
+            type: "template",
           });
         }
       }
@@ -357,11 +402,19 @@ class ContentLibraryController {
   async getFrameworkPromptFile(req, res) {
     try {
       const { frameworkId, filename } = req.params;
-      const filePath = path.join(this.contentLibraryPath, 'frameworks', frameworkId, 'prompts', filename);
-      const content = await fs.readFile(filePath, 'utf-8');
-      res.success({frameworkId, filename, content});
+      const filePath = path.join(
+        this.contentLibraryPath,
+        "frameworks",
+        frameworkId,
+        "prompts",
+        filename,
+      );
+      const content = await fs.readFile(filePath, "utf-8");
+      res.success({ frameworkId, filename, content });
     } catch (error) {
-      res.notFound('Framework prompt file not found', {message: error.message });
+      res.notFound("Framework prompt file not found", {
+        message: error.message,
+      });
     }
   }
 
@@ -369,13 +422,21 @@ class ContentLibraryController {
   async getFrameworkTemplateFile(req, res) {
     try {
       const { frameworkId, filename } = req.params;
-      const filePath = path.join(this.contentLibraryPath, 'frameworks', frameworkId, 'templates', filename);
-      const content = await fs.readFile(filePath, 'utf-8');
-      res.success({frameworkId, filename, content});
+      const filePath = path.join(
+        this.contentLibraryPath,
+        "frameworks",
+        frameworkId,
+        "templates",
+        filename,
+      );
+      const content = await fs.readFile(filePath, "utf-8");
+      res.success({ frameworkId, filename, content });
     } catch (error) {
-      res.notFound('Framework template file not found', {message: error.message });
+      res.notFound("Framework template file not found", {
+        message: error.message,
+      });
     }
   }
 }
 
-module.exports = ContentLibraryController; 
+module.exports = ContentLibraryController;

@@ -5,8 +5,8 @@
  * Includes request deduplication to prevent duplicate API calls
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('ChatCacheService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("ChatCacheService");
 
 class ChatCacheService {
   constructor(options = {}) {
@@ -14,11 +14,11 @@ class ChatCacheService {
     this.cacheTTL = options.cacheTTL || 300000; // 5 minutes default
     this.maxCacheSize = options.maxCacheSize || 100; // Maximum cache entries
     this.cleanupInterval = options.cleanupInterval || 60000; // 1 minute cleanup
-    
+
     // Request deduplication to prevent duplicate API calls
     this.pendingRequests = new Map(); // port -> Promise
     this.requestTimeout = options.requestTimeout || 10000; // 10 seconds timeout
-    
+
     // Performance monitoring
     this.stats = {
       hits: 0,
@@ -26,17 +26,17 @@ class ChatCacheService {
       sets: 0,
       deletes: 0,
       pendingRequests: 0,
-      duplicateRequests: 0
+      duplicateRequests: 0,
     };
-    
+
     // Start cleanup timer
     this.startCleanupTimer();
-    
-    logger.info('ChatCacheService initialized', {
+
+    logger.info("ChatCacheService initialized", {
       cacheTTL: this.cacheTTL,
       maxCacheSize: this.maxCacheSize,
       cleanupInterval: this.cleanupInterval,
-      requestTimeout: this.requestTimeout
+      requestTimeout: this.requestTimeout,
     });
   }
 
@@ -48,16 +48,18 @@ class ChatCacheService {
   async getChatHistory(port) {
     try {
       const portKey = this.normalizePortKey(port);
-      
+
       // Check cache first
       const cached = this.memoryCache.get(portKey);
       if (cached) {
         const now = Date.now();
         const age = now - cached.timestamp;
-        
+
         if (age <= this.cacheTTL) {
           this.stats.hits++;
-          logger.debug(`Cache hit for port ${portKey}, age: ${age}ms, messages: ${cached.messages.length}`);
+          logger.debug(
+            `Cache hit for port ${portKey}, age: ${age}ms, messages: ${cached.messages.length}`,
+          );
           return cached.messages;
         } else {
           logger.debug(`Cache expired for port ${portKey}, age: ${age}ms`);
@@ -68,18 +70,26 @@ class ChatCacheService {
       // Cache miss - check if there's already a pending request
       if (this.pendingRequests.has(portKey)) {
         this.stats.duplicateRequests++;
-        logger.info(`Duplicate request detected for port ${portKey}, waiting for existing request`);
-        
+        logger.info(
+          `Duplicate request detected for port ${portKey}, waiting for existing request`,
+        );
+
         try {
           const result = await Promise.race([
             this.pendingRequests.get(portKey),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Request timeout')), this.requestTimeout)
-            )
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Request timeout")),
+                this.requestTimeout,
+              ),
+            ),
           ]);
           return result;
         } catch (error) {
-          logger.warn(`Pending request failed for port ${portKey}:`, error.message);
+          logger.warn(
+            `Pending request failed for port ${portKey}:`,
+            error.message,
+          );
           this.pendingRequests.delete(portKey);
           // Return empty array instead of null to prevent cascading failures
           return [];
@@ -90,7 +100,7 @@ class ChatCacheService {
       this.stats.misses++;
       this.stats.pendingRequests++;
       logger.debug(`Cache miss for port ${portKey}, creating new request`);
-      
+
       // Create a promise for this request to prevent duplicates
       const requestPromise = new Promise(async (resolve) => {
         try {
@@ -107,11 +117,14 @@ class ChatCacheService {
           }, 1000);
         }
       });
-      
+
       this.pendingRequests.set(portKey, requestPromise);
       return [];
     } catch (error) {
-      logger.error(`Error getting chat history from cache for port ${port}:`, error);
+      logger.error(
+        `Error getting chat history from cache for port ${port}:`,
+        error,
+      );
       return [];
     }
   }
@@ -125,9 +138,11 @@ class ChatCacheService {
   setChatHistory(port, messages, metadata = {}) {
     try {
       const portKey = this.normalizePortKey(port);
-      
+
       if (!Array.isArray(messages)) {
-        logger.warn(`Invalid messages format for port ${portKey}, expected array`);
+        logger.warn(
+          `Invalid messages format for port ${portKey}, expected array`,
+        );
         return;
       }
 
@@ -142,16 +157,19 @@ class ChatCacheService {
         metadata: {
           port: portKey,
           messageCount: messages.length,
-          ...metadata
-        }
+          ...metadata,
+        },
       };
 
       this.memoryCache.set(portKey, cacheEntry);
       this.stats.sets++;
-      
+
       logger.debug(`Cached ${messages.length} messages for port ${portKey}`);
     } catch (error) {
-      logger.error(`Error setting chat history in cache for port ${port}:`, error);
+      logger.error(
+        `Error setting chat history in cache for port ${port}:`,
+        error,
+      );
     }
   }
 
@@ -163,22 +181,30 @@ class ChatCacheService {
    */
   async executeWithDeduplication(port, requestFn) {
     const portKey = this.normalizePortKey(port);
-    
+
     // Check if there's already a pending request
     if (this.pendingRequests.has(portKey)) {
       this.stats.duplicateRequests++;
-      logger.info(`Duplicate request detected for port ${portKey}, waiting for existing request`);
-      
+      logger.info(
+        `Duplicate request detected for port ${portKey}, waiting for existing request`,
+      );
+
       try {
         const result = await Promise.race([
           this.pendingRequests.get(portKey),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Request timeout')), this.requestTimeout)
-          )
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Request timeout")),
+              this.requestTimeout,
+            ),
+          ),
         ]);
         return result;
       } catch (error) {
-        logger.warn(`Pending request failed for port ${portKey}:`, error.message);
+        logger.warn(
+          `Pending request failed for port ${portKey}:`,
+          error.message,
+        );
         this.pendingRequests.delete(portKey);
         throw error;
       }
@@ -187,18 +213,18 @@ class ChatCacheService {
     // Create new pending request
     this.stats.pendingRequests++;
     const requestPromise = requestFn();
-    
+
     this.pendingRequests.set(portKey, requestPromise);
-    
+
     try {
       const result = await requestPromise;
-      
+
       // Cache the result
       this.setChatHistory(port, result, {
         extractedAt: new Date().toISOString(),
-        source: 'deduplicated_request'
+        source: "deduplicated_request",
       });
-      
+
       return result;
     } finally {
       // Always clean up the pending request
@@ -227,10 +253,14 @@ class ChatCacheService {
    * @returns {Object} Cache statistics
    */
   getStats() {
-    const hitRate = this.stats.hits + this.stats.misses > 0 
-      ? (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(2)
-      : 0;
-    
+    const hitRate =
+      this.stats.hits + this.stats.misses > 0
+        ? (
+            (this.stats.hits / (this.stats.hits + this.stats.misses)) *
+            100
+          ).toFixed(2)
+        : 0;
+
     return {
       hits: this.stats.hits,
       misses: this.stats.misses,
@@ -240,7 +270,7 @@ class ChatCacheService {
       duplicateRequests: this.stats.duplicateRequests,
       hitRate: `${hitRate}%`,
       cacheSize: this.memoryCache.size,
-      maxCacheSize: this.maxCacheSize
+      maxCacheSize: this.maxCacheSize,
     };
   }
 
@@ -251,19 +281,19 @@ class ChatCacheService {
     try {
       const now = Date.now();
       let cleanedCount = 0;
-      
+
       for (const [portKey, entry] of this.memoryCache.entries()) {
         if (now - entry.timestamp > this.cacheTTL) {
           this.memoryCache.delete(portKey);
           cleanedCount++;
         }
       }
-      
+
       if (cleanedCount > 0) {
         logger.info(`Cleaned up ${cleanedCount} expired cache entries`);
       }
     } catch (error) {
-      logger.error('Error during cache cleanup:', error);
+      logger.error("Error during cache cleanup:", error);
     }
   }
 
@@ -274,20 +304,20 @@ class ChatCacheService {
     try {
       let oldestKey = null;
       let oldestTime = Date.now();
-      
+
       for (const [key, entry] of this.memoryCache.entries()) {
         if (entry.timestamp < oldestTime) {
           oldestTime = entry.timestamp;
           oldestKey = key;
         }
       }
-      
+
       if (oldestKey) {
         this.memoryCache.delete(oldestKey);
         logger.debug(`Evicted oldest cache entry for port ${oldestKey}`);
       }
     } catch (error) {
-      logger.error('Error evicting oldest cache entry:', error);
+      logger.error("Error evicting oldest cache entry:", error);
     }
   }
 
@@ -322,13 +352,13 @@ class ChatCacheService {
         sets: 0,
         deletes: 0,
         pendingRequests: 0,
-        duplicateRequests: 0
+        duplicateRequests: 0,
       };
-      logger.info('All cache and pending requests cleared');
+      logger.info("All cache and pending requests cleared");
     } catch (error) {
-      logger.error('Error clearing cache:', error);
+      logger.error("Error clearing cache:", error);
     }
   }
 }
 
-module.exports = ChatCacheService; 
+module.exports = ChatCacheService;

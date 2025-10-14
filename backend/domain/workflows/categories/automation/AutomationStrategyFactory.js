@@ -2,7 +2,7 @@
  * AutomationStrategyFactory - Strategy factory
  * Creates automation strategies based on task type and context
  */
-const AutomationStrategy = require('./AutomationStrategy');
+const AutomationStrategy = require("./AutomationStrategy");
 
 class AutomationStrategyFactory {
   constructor() {
@@ -17,7 +17,7 @@ class AutomationStrategyFactory {
    */
   registerStrategy(name, strategy) {
     if (!(strategy instanceof AutomationStrategy)) {
-      throw new Error('Strategy must extend AutomationStrategy');
+      throw new Error("Strategy must extend AutomationStrategy");
     }
     this._strategies.set(name, strategy);
   }
@@ -63,7 +63,7 @@ class AutomationStrategyFactory {
    */
   setDefaultStrategy(strategy) {
     if (!(strategy instanceof AutomationStrategy)) {
-      throw new Error('Default strategy must extend AutomationStrategy');
+      throw new Error("Default strategy must extend AutomationStrategy");
     }
     this._defaultStrategy = strategy;
   }
@@ -118,9 +118,11 @@ class AutomationStrategyFactory {
       totalStrategies: this._strategies.size,
       strategyNames: this.getStrategyNames(),
       hasDefaultStrategy: this._defaultStrategy !== null,
-      defaultStrategyName: this._defaultStrategy ? this._defaultStrategy.name : null
+      defaultStrategyName: this._defaultStrategy
+        ? this._defaultStrategy.name
+        : null,
     };
   }
 }
 
-module.exports = AutomationStrategyFactory; 
+module.exports = AutomationStrategyFactory;

@@ -1,13 +1,15 @@
-require('module-alias/register');
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
-const bcrypt = require('bcryptjs');
-const Logger = require('@logging/Logger');
-const AutoSecurityManager = require('@infrastructure/auto/AutoSecurityManager');
-const DatabaseConnection = require('@infrastructure/database/DatabaseConnection');
-const logger = new Logger('CreateDefaultUser');
+require("module-alias/register");
+require("dotenv").config({
+  path: require("path").join(__dirname, "../../.env"),
+});
+const bcrypt = require("bcryptjs");
+const Logger = require("@logging/Logger");
+const AutoSecurityManager = require("@infrastructure/auto/AutoSecurityManager");
+const DatabaseConnection = require("@infrastructure/database/DatabaseConnection");
+const logger = new Logger("CreateDefaultUser");
 
 function getParam(n, dbType) {
-  return dbType === 'postgresql' ? `$${n}` : '?';
+  return dbType === "postgresql" ? `$${n}` : "?";
 }
 
 async function createDefaultUser() {
@@ -15,44 +17,44 @@ async function createDefaultUser() {
   const autoSecurityManager = new AutoSecurityManager();
   const dbConfig = autoSecurityManager.getDatabaseConfig();
 
-  logger.info('🔧 Database config:', JSON.stringify(dbConfig, null, 2));
+  logger.info("🔧 Database config:", JSON.stringify(dbConfig, null, 2));
 
   const databaseConnection = new DatabaseConnection(dbConfig);
 
   try {
     await databaseConnection.connect();
-    logger.info('✅ Connected to database');
+    logger.info("✅ Connected to database");
 
     const dbType = databaseConnection.getType();
     // Check if user already exists
-    logger.info('🔍 Checking if user already exists...');
+    logger.info("🔍 Checking if user already exists...");
     const checkResult = await databaseConnection.query(
       `SELECT id, email, username FROM users WHERE id = ${getParam(1, dbType)}`,
-      ['me']
+      ["me"],
     );
 
-    logger.info('📊 Check result:', JSON.stringify(checkResult, null, 2));
+    logger.info("📊 Check result:", JSON.stringify(checkResult, null, 2));
 
     if (checkResult && checkResult.length > 0) {
-      logger.info('✅ Default user already exists');
+      logger.info("✅ Default user already exists");
       return;
     }
 
     // Create default user
-    const email = process.env.ADMIN_EMAIL || 'test@test.com';
-    const password = process.env.ADMIN_PASSWORD || 'test123';
-    const username = process.env.ADMIN_USERNAME || 'test';
+    const email = process.env.ADMIN_EMAIL || "test@test.com";
+    const password = process.env.ADMIN_PASSWORD || "test123";
+    const username = process.env.ADMIN_USERNAME || "test";
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
     const now = new Date().toISOString();
 
-    logger.info('👤 Creating new default user...');
-    logger.info('📝 User data:', {
-      id: 'me',
+    logger.info("👤 Creating new default user...");
+    logger.info("📝 User data:", {
+      id: "me",
       email: email,
       username: username,
-      role: 'admin',
-      status: 'active'
+      role: "admin",
+      status: "active",
     });
 
     const insertSql = `
@@ -72,42 +74,46 @@ async function createDefaultUser() {
     `;
 
     const insertResult = await databaseConnection.execute(insertSql, [
-      'me',
+      "me",
       email,
       username,
       passwordHash,
-      'admin',
-      'active',
+      "admin",
+      "active",
       now,
       now,
-      '{}'
+      "{}",
     ]);
 
-    logger.info('✅ Insert result:', JSON.stringify(insertResult, null, 2));
+    logger.info("✅ Insert result:", JSON.stringify(insertResult, null, 2));
 
     // Verify user was created
-    logger.info('🔍 Verifying user was created...');
+    logger.info("🔍 Verifying user was created...");
     const verifyResult = await databaseConnection.query(
       `SELECT * FROM users WHERE id = ${getParam(1, dbType)}`,
-      ['me']
+      ["me"],
     );
 
-    logger.info('✅ Verification result (full user row):', JSON.stringify(verifyResult, null, 2));
+    logger.info(
+      "✅ Verification result (full user row):",
+      JSON.stringify(verifyResult, null, 2),
+    );
 
-    logger.info('✅ Default user created successfully!');
-    logger.info('📧 Email: ' + email);
-    logger.info('🔑 Password: ' + password);
-    logger.info('🆔 User ID: me');
-
+    logger.info("✅ Default user created successfully!");
+    logger.info("📧 Email: " + email);
+    logger.info("🔑 Password: " + password);
+    logger.info("🆔 User ID: me");
   } catch (error) {
     // Check if it's a duplicate key error (user already exists)
-    if (error.message.includes('duplicate key value violates unique constraint')) {
-      logger.info('✅ Default user already exists, skipping creation');
+    if (
+      error.message.includes("duplicate key value violates unique constraint")
+    ) {
+      logger.info("✅ Default user already exists, skipping creation");
       return; // Don't throw error for duplicate user
     }
-    
-    logger.error('❌ Error creating default user:', error.message);
-    logger.error('❌ Error stack:', error.stack);
+
+    logger.error("❌ Error creating default user:", error.message);
+    logger.error("❌ Error stack:", error.stack);
     throw error;
   } finally {
     // Only disconnect if this script is run directly (not from main app)
@@ -121,13 +127,13 @@ async function createDefaultUser() {
 if (require.main === module) {
   createDefaultUser()
     .then(() => {
-      logger.info('✅ Default user setup completed');
+      logger.info("✅ Default user setup completed");
       process.exit(0);
     })
     .catch((error) => {
-      logger.error('❌ Default user setup failed:', error.message);
+      logger.error("❌ Default user setup failed:", error.message);
       process.exit(1);
     });
 }
 
-module.exports = createDefaultUser; 
+module.exports = createDefaultUser;

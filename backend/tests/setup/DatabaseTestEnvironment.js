@@ -1,30 +1,30 @@
 /**
  * Database Test Environment
- * 
+ *
  * Provides a complete test environment for database testing including
  * setup, teardown, isolation, and configuration management.
  */
 
-const TestDatabaseManager = require('./TestDatabaseManager');
-const TestDataManager = require('../fixtures/TestDataManager');
-const Logger = require('../../infrastructure/logging/Logger');
+const TestDatabaseManager = require("./TestDatabaseManager");
+const TestDataManager = require("../fixtures/TestDataManager");
+const Logger = require("../../infrastructure/logging/Logger");
 
 class DatabaseTestEnvironment {
   constructor(config = {}) {
     this.config = {
-      databaseType: 'sqlite',
+      databaseType: "sqlite",
       databaseName: null,
       isolation: true,
       cleanup: true,
       monitoring: false,
       optimization: false,
-      ...config
+      ...config,
     };
 
     this.databaseManager = new TestDatabaseManager();
     this.testDataManager = null;
     this.connections = new Map();
-    this.logger = new Logger('DatabaseTestEnvironment');
+    this.logger = new Logger("DatabaseTestEnvironment");
   }
 
   /**
@@ -33,7 +33,7 @@ class DatabaseTestEnvironment {
    */
   async initialize() {
     try {
-      this.logger.info('Initializing database test environment');
+      this.logger.info("Initializing database test environment");
 
       // Create main test database
       const mainConnection = await this.databaseManager.createTestDatabase(
@@ -41,11 +41,11 @@ class DatabaseTestEnvironment {
         this.config.databaseName,
         {
           monitoring: this.config.monitoring,
-          optimization: this.config.optimization
-        }
+          optimization: this.config.optimization,
+        },
       );
 
-      this.connections.set('main', mainConnection);
+      this.connections.set("main", mainConnection);
 
       // Initialize test data manager
       this.testDataManager = new TestDataManager(mainConnection);
@@ -53,9 +53,12 @@ class DatabaseTestEnvironment {
       // Create test tables
       await this.databaseManager.createTestTables(mainConnection);
 
-      this.logger.info('Database test environment initialized successfully');
+      this.logger.info("Database test environment initialized successfully");
     } catch (error) {
-      this.logger.error('Failed to initialize database test environment:', error);
+      this.logger.error(
+        "Failed to initialize database test environment:",
+        error,
+      );
       throw error;
     }
   }
@@ -65,7 +68,7 @@ class DatabaseTestEnvironment {
    * @returns {DatabaseConnection} Main database connection
    */
   getMainConnection() {
-    return this.connections.get('main');
+    return this.connections.get("main");
   }
 
   /**
@@ -82,8 +85,8 @@ class DatabaseTestEnvironment {
         {
           monitoring: this.config.monitoring,
           optimization: this.config.optimization,
-          ...config
-        }
+          ...config,
+        },
       );
 
       this.connections.set(name, connection);
@@ -92,7 +95,10 @@ class DatabaseTestEnvironment {
       this.logger.info(`Created isolated test database: ${name}`);
       return connection;
     } catch (error) {
-      this.logger.error(`Failed to create isolated test database ${name}:`, error);
+      this.logger.error(
+        `Failed to create isolated test database ${name}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -115,12 +121,17 @@ class DatabaseTestEnvironment {
     try {
       const connection = this.connections.get(name);
       if (connection) {
-        await this.databaseManager.cleanupTestDatabase(`${this.config.databaseType}-${name}`);
+        await this.databaseManager.cleanupTestDatabase(
+          `${this.config.databaseType}-${name}`,
+        );
         this.connections.delete(name);
         this.logger.info(`Cleaned up isolated test database: ${name}`);
       }
     } catch (error) {
-      this.logger.error(`Failed to cleanup isolated test database ${name}:`, error);
+      this.logger.error(
+        `Failed to cleanup isolated test database ${name}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -134,13 +145,16 @@ class DatabaseTestEnvironment {
   async setupTestData(fixtureName, options = {}) {
     try {
       if (!this.testDataManager) {
-        throw new Error('Test data manager not initialized');
+        throw new Error("Test data manager not initialized");
       }
 
       await this.testDataManager.loadFixture(fixtureName, options);
       this.logger.info(`Setup test data for fixture: ${fixtureName}`);
     } catch (error) {
-      this.logger.error(`Failed to setup test data for fixture ${fixtureName}:`, error);
+      this.logger.error(
+        `Failed to setup test data for fixture ${fixtureName}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -159,14 +173,14 @@ class DatabaseTestEnvironment {
 
       // Cleanup isolated databases
       for (const [name, connection] of this.connections) {
-        if (name !== 'main') {
+        if (name !== "main") {
           await this.databaseManager.cleanupTestData(connection, tables);
         }
       }
 
-      this.logger.info('Cleaned up test data');
+      this.logger.info("Cleaned up test data");
     } catch (error) {
-      this.logger.error('Failed to cleanup test data:', error);
+      this.logger.error("Failed to cleanup test data:", error);
       throw error;
     }
   }
@@ -177,7 +191,7 @@ class DatabaseTestEnvironment {
    */
   async reset() {
     try {
-      this.logger.info('Resetting database test environment');
+      this.logger.info("Resetting database test environment");
 
       // Reset main database
       const mainConnection = this.getMainConnection();
@@ -188,15 +202,15 @@ class DatabaseTestEnvironment {
 
       // Reset isolated databases
       for (const [name, connection] of this.connections) {
-        if (name !== 'main') {
+        if (name !== "main") {
           await this.databaseManager.resetTestDatabase(connection);
           await this.databaseManager.createTestTables(connection);
         }
       }
 
-      this.logger.info('Database test environment reset successfully');
+      this.logger.info("Database test environment reset successfully");
     } catch (error) {
-      this.logger.error('Failed to reset database test environment:', error);
+      this.logger.error("Failed to reset database test environment:", error);
       throw error;
     }
   }
@@ -214,31 +228,33 @@ class DatabaseTestEnvironment {
           connectionCount: this.connections.size,
           databaseCount: 0,
           tableCount: 0,
-          recordCount: 0
-        }
+          recordCount: 0,
+        },
       };
 
       // Verify main database
       const mainConnection = this.getMainConnection();
       if (mainConnection) {
-        result.main = await this.databaseManager.verifyTestDatabaseSetup(mainConnection);
+        result.main =
+          await this.databaseManager.verifyTestDatabaseSetup(mainConnection);
         result.overall.databaseCount++;
         result.overall.tableCount += result.main.tables.length;
       }
 
       // Verify isolated databases
       for (const [name, connection] of this.connections) {
-        if (name !== 'main') {
-          result.isolated[name] = await this.databaseManager.verifyTestDatabaseSetup(connection);
+        if (name !== "main") {
+          result.isolated[name] =
+            await this.databaseManager.verifyTestDatabaseSetup(connection);
           result.overall.databaseCount++;
           result.overall.tableCount += result.isolated[name].tables.length;
         }
       }
 
-      this.logger.info('Test environment integrity verified');
+      this.logger.info("Test environment integrity verified");
       return result;
     } catch (error) {
-      this.logger.error('Failed to verify test environment integrity:', error);
+      this.logger.error("Failed to verify test environment integrity:", error);
       throw error;
     }
   }
@@ -256,15 +272,16 @@ class DatabaseTestEnvironment {
           totalConnections: 0,
           totalTables: 0,
           totalRecords: 0,
-          totalIndexes: 0
-        }
+          totalIndexes: 0,
+        },
       };
 
       // Get statistics for each connection
       for (const [name, connection] of this.connections) {
-        const connectionStats = await this.databaseManager.getTestDatabaseStats(connection);
+        const connectionStats =
+          await this.databaseManager.getTestDatabaseStats(connection);
         stats.databases[name] = connectionStats;
-        
+
         stats.overall.totalConnections += connectionStats.connectionCount;
         stats.overall.totalTables += connectionStats.tables;
         stats.overall.totalRecords += connectionStats.records;
@@ -273,7 +290,7 @@ class DatabaseTestEnvironment {
 
       return stats;
     } catch (error) {
-      this.logger.error('Failed to get test environment statistics:', error);
+      this.logger.error("Failed to get test environment statistics:", error);
       throw error;
     }
   }
@@ -289,11 +306,11 @@ class DatabaseTestEnvironment {
       fixtureName = null,
       isolatedDatabase = null,
       cleanup = true,
-      reset = false
+      reset = false,
     } = options;
 
     try {
-      this.logger.info('Running test with automatic setup and cleanup');
+      this.logger.info("Running test with automatic setup and cleanup");
 
       // Setup test data if specified
       if (fixtureName) {
@@ -303,7 +320,8 @@ class DatabaseTestEnvironment {
       // Create isolated database if specified
       let isolatedConnection = null;
       if (isolatedDatabase) {
-        isolatedConnection = await this.createIsolatedDatabase(isolatedDatabase);
+        isolatedConnection =
+          await this.createIsolatedDatabase(isolatedDatabase);
       }
 
       // Run the test
@@ -311,7 +329,7 @@ class DatabaseTestEnvironment {
         mainConnection: this.getMainConnection(),
         isolatedConnection,
         testDataManager: this.testDataManager,
-        databaseManager: this.databaseManager
+        databaseManager: this.databaseManager,
       });
 
       // Cleanup
@@ -327,11 +345,11 @@ class DatabaseTestEnvironment {
         await this.reset();
       }
 
-      this.logger.info('Test completed successfully');
+      this.logger.info("Test completed successfully");
       return result;
     } catch (error) {
-      this.logger.error('Test failed:', error);
-      
+      this.logger.error("Test failed:", error);
+
       // Cleanup on failure
       try {
         if (isolatedDatabase) {
@@ -339,7 +357,7 @@ class DatabaseTestEnvironment {
         }
         await this.cleanupTestData();
       } catch (cleanupError) {
-        this.logger.error('Cleanup failed:', cleanupError);
+        this.logger.error("Cleanup failed:", cleanupError);
       }
 
       throw error;
@@ -358,16 +376,16 @@ class DatabaseTestEnvironment {
       const testPromises = tests.map(async (testConfig, index) => {
         const { testFunction, options = {} } = testConfig;
         const testName = options.name || `test-${index}`;
-        
+
         // Create isolated database for each test
         const isolatedConnection = await this.createIsolatedDatabase(testName);
-        
+
         try {
           const result = await testFunction({
             mainConnection: this.getMainConnection(),
             isolatedConnection,
             testDataManager: this.testDataManager,
-            databaseManager: this.databaseManager
+            databaseManager: this.databaseManager,
           });
 
           await this.cleanupIsolatedDatabase(testName);
@@ -379,10 +397,10 @@ class DatabaseTestEnvironment {
       });
 
       const results = await Promise.all(testPromises);
-      this.logger.info('Parallel tests completed');
+      this.logger.info("Parallel tests completed");
       return results;
     } catch (error) {
-      this.logger.error('Parallel tests failed:', error);
+      this.logger.error("Parallel tests failed:", error);
       throw error;
     }
   }
@@ -393,7 +411,7 @@ class DatabaseTestEnvironment {
    */
   async destroy() {
     try {
-      this.logger.info('Destroying database test environment');
+      this.logger.info("Destroying database test environment");
 
       // Cleanup all connections
       await this.databaseManager.cleanupAllTestDatabases();
@@ -402,9 +420,9 @@ class DatabaseTestEnvironment {
       // Destroy database manager
       await this.databaseManager.destroy();
 
-      this.logger.info('Database test environment destroyed successfully');
+      this.logger.info("Database test environment destroyed successfully");
     } catch (error) {
-      this.logger.error('Failed to destroy database test environment:', error);
+      this.logger.error("Failed to destroy database test environment:", error);
       throw error;
     }
   }

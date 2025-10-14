@@ -1,7 +1,10 @@
-const PerformanceAnalyzer = require('@strategies/single-repo/services/performanceAnalyzer');
-const { PERFORMANCE_FILES, PERFORMANCE_DEPENDENCIES } = require('@strategies/single-repo/constants');
+const PerformanceAnalyzer = require("@strategies/single-repo/services/performanceAnalyzer");
+const {
+  PERFORMANCE_FILES,
+  PERFORMANCE_DEPENDENCIES,
+} = require("@strategies/single-repo/constants");
 
-describe('PerformanceAnalyzer', () => {
+describe("PerformanceAnalyzer", () => {
   let performanceAnalyzer;
   let mockLogger;
   let mockFileUtils;
@@ -11,12 +14,12 @@ describe('PerformanceAnalyzer', () => {
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     mockFileUtils = {
       readJsonFile: jest.fn(),
-      hasAnyFile: jest.fn()
+      hasAnyFile: jest.fn(),
     };
 
     performanceAnalyzer = new PerformanceAnalyzer(mockLogger, mockFileUtils);
@@ -26,38 +29,44 @@ describe('PerformanceAnalyzer', () => {
     jest.clearAllMocks();
   });
 
-  describe('constructor', () => {
-    it('should initialize with logger and fileUtils', () => {
+  describe("constructor", () => {
+    it("should initialize with logger and fileUtils", () => {
       expect(performanceAnalyzer.logger).toBe(mockLogger);
       expect(performanceAnalyzer.fileUtils).toBe(mockFileUtils);
     });
 
-    it('should handle undefined logger gracefully', () => {
-      const analyzerWithoutLogger = new PerformanceAnalyzer(undefined, mockFileUtils);
+    it("should handle undefined logger gracefully", () => {
+      const analyzerWithoutLogger = new PerformanceAnalyzer(
+        undefined,
+        mockFileUtils,
+      );
       expect(analyzerWithoutlogger.infoger).toBeUndefined();
       expect(analyzerWithoutLogger.fileUtils).toBe(mockFileUtils);
     });
 
-    it('should handle undefined fileUtils gracefully', () => {
-      const analyzerWithoutFileUtils = new PerformanceAnalyzer(mockLogger, undefined);
+    it("should handle undefined fileUtils gracefully", () => {
+      const analyzerWithoutFileUtils = new PerformanceAnalyzer(
+        mockLogger,
+        undefined,
+      );
       expect(analyzerWithoutFileUtils.logger).toBe(mockLogger);
       expect(analyzerWithoutFileUtils.fileUtils).toBeUndefined();
     });
   });
 
-  describe('analyzePerformance', () => {
-    const projectPath = '/test/project/path';
+  describe("analyzePerformance", () => {
+    const projectPath = "/test/project/path";
 
-    it('should analyze performance successfully with all features detected', async () => {
+    it("should analyze performance successfully with all features detected", async () => {
       const mockPackageJson = {
         dependencies: {
-          'winston': '^3.0.0',
-          'redis': '^4.0.0',
-          'compression': '^1.7.0'
+          winston: "^3.0.0",
+          redis: "^4.0.0",
+          compression: "^1.7.0",
         },
         devDependencies: {
-          'express-status-monitor': '^1.3.0'
-        }
+          "express-status-monitor": "^1.3.0",
+        },
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -69,21 +78,24 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: true,
         hasMonitoring: true,
         hasCaching: true,
-        hasOptimization: true
+        hasOptimization: true,
       });
 
       expect(mockFileUtils.readJsonFile).toHaveBeenCalledWith(
-        expect.stringContaining('package.json')
+        expect.stringContaining("package.json"),
       );
-      expect(mockFileUtils.hasAnyFile).toHaveBeenCalledWith(projectPath, PERFORMANCE_FILES);
+      expect(mockFileUtils.hasAnyFile).toHaveBeenCalledWith(
+        projectPath,
+        PERFORMANCE_FILES,
+      );
     });
 
-    it('should analyze performance with no features detected', async () => {
+    it("should analyze performance with no features detected", async () => {
       const mockPackageJson = {
         dependencies: {
-          'express': '^4.0.0'
+          express: "^4.0.0",
         },
-        devDependencies: {}
+        devDependencies: {},
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -95,12 +107,12 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle package.json read errors gracefully', async () => {
-      mockFileUtils.readJsonFile.mockRejectedValue(new Error('File not found'));
+    it("should handle package.json read errors gracefully", async () => {
+      mockFileUtils.readJsonFile.mockRejectedValue(new Error("File not found"));
       mockFileUtils.hasAnyFile.mockResolvedValue(false);
 
       const result = await performanceAnalyzer.analyzePerformance(projectPath);
@@ -109,14 +121,14 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
 
       expect(mockFileUtils.readJsonFile).toHaveBeenCalled();
       expect(mockFileUtils.hasAnyFile).toHaveBeenCalled();
     });
 
-    it('should handle null package.json gracefully', async () => {
+    it("should handle null package.json gracefully", async () => {
       mockFileUtils.readJsonFile.mockResolvedValue(null);
       mockFileUtils.hasAnyFile.mockResolvedValue(false);
 
@@ -126,14 +138,14 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle package.json without dependencies', async () => {
+    it("should handle package.json without dependencies", async () => {
       const mockPackageJson = {
-        name: 'test-project',
-        version: '1.0.0'
+        name: "test-project",
+        version: "1.0.0",
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -145,15 +157,15 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle package.json with only dependencies', async () => {
+    it("should handle package.json with only dependencies", async () => {
       const mockPackageJson = {
         dependencies: {
-          'winston': '^3.0.0'
-        }
+          winston: "^3.0.0",
+        },
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -165,15 +177,15 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: true,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle package.json with only devDependencies', async () => {
+    it("should handle package.json with only devDependencies", async () => {
       const mockPackageJson = {
         devDependencies: {
-          'redis': '^4.0.0'
-        }
+          redis: "^4.0.0",
+        },
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -185,16 +197,16 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: true,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle monitoring dependencies detection', async () => {
+    it("should handle monitoring dependencies detection", async () => {
       const mockPackageJson = {
         dependencies: {
-          'winston': '^3.0.0',
-          'morgan': '^1.10.0'
-        }
+          winston: "^3.0.0",
+          morgan: "^1.10.0",
+        },
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -205,12 +217,12 @@ describe('PerformanceAnalyzer', () => {
       expect(result.hasMonitoring).toBe(true);
     });
 
-    it('should handle caching dependencies detection', async () => {
+    it("should handle caching dependencies detection", async () => {
       const mockPackageJson = {
         dependencies: {
-          'redis': '^4.0.0',
-          'memcached': '^2.2.2'
-        }
+          redis: "^4.0.0",
+          memcached: "^2.2.2",
+        },
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -221,12 +233,12 @@ describe('PerformanceAnalyzer', () => {
       expect(result.hasCaching).toBe(true);
     });
 
-    it('should handle optimization dependencies detection', async () => {
+    it("should handle optimization dependencies detection", async () => {
       const mockPackageJson = {
         dependencies: {
-          'compression': '^1.7.0',
-          'express-static-gzip': '^2.1.0'
-        }
+          compression: "^1.7.0",
+          "express-static-gzip": "^2.1.0",
+        },
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -237,9 +249,9 @@ describe('PerformanceAnalyzer', () => {
       expect(result.hasOptimization).toBe(true);
     });
 
-    it('should handle performance config files detection', async () => {
+    it("should handle performance config files detection", async () => {
       const mockPackageJson = {
-        dependencies: {}
+        dependencies: {},
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
@@ -250,43 +262,47 @@ describe('PerformanceAnalyzer', () => {
       expect(result.hasPerformanceConfig).toBe(true);
     });
 
-    it('should handle undefined projectPath gracefully', async () => {
+    it("should handle undefined projectPath gracefully", async () => {
       const result = await performanceAnalyzer.analyzePerformance(undefined);
 
       expect(result).toEqual({
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle null projectPath gracefully', async () => {
+    it("should handle null projectPath gracefully", async () => {
       const result = await performanceAnalyzer.analyzePerformance(null);
 
       expect(result).toEqual({
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle empty projectPath gracefully', async () => {
-      const result = await performanceAnalyzer.analyzePerformance('');
+    it("should handle empty projectPath gracefully", async () => {
+      const result = await performanceAnalyzer.analyzePerformance("");
 
       expect(result).toEqual({
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle  errors and return empty object', async () => {
+    it("should handle  errors and return empty object", async () => {
       // Mock both methods to throw errors to trigger the main catch block
-      mockFileUtils.readJsonFile.mockRejectedValue(new Error('Unexpected error'));
-      mockFileUtils.hasAnyFile.mockRejectedValue(new Error('File system error'));
+      mockFileUtils.readJsonFile.mockRejectedValue(
+        new Error("Unexpected error"),
+      );
+      mockFileUtils.hasAnyFile.mockRejectedValue(
+        new Error("File system error"),
+      );
 
       const result = await performanceAnalyzer.analyzePerformance(projectPath);
 
@@ -294,17 +310,19 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle fileUtils.hasAnyFile errors gracefully', async () => {
+    it("should handle fileUtils.hasAnyFile errors gracefully", async () => {
       const mockPackageJson = {
-        dependencies: {}
+        dependencies: {},
       };
 
       mockFileUtils.readJsonFile.mockResolvedValue(mockPackageJson);
-      mockFileUtils.hasAnyFile.mockRejectedValue(new Error('File system error'));
+      mockFileUtils.hasAnyFile.mockRejectedValue(
+        new Error("File system error"),
+      );
 
       const result = await performanceAnalyzer.analyzePerformance(projectPath);
 
@@ -312,113 +330,139 @@ describe('PerformanceAnalyzer', () => {
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle undefined fileUtils gracefully', async () => {
-      const analyzerWithoutFileUtils = new PerformanceAnalyzer(mockLogger, undefined);
+    it("should handle undefined fileUtils gracefully", async () => {
+      const analyzerWithoutFileUtils = new PerformanceAnalyzer(
+        mockLogger,
+        undefined,
+      );
 
-      const result = await analyzerWithoutFileUtils.analyzePerformance(projectPath);
+      const result =
+        await analyzerWithoutFileUtils.analyzePerformance(projectPath);
 
       expect(result).toEqual({
         hasPerformanceConfig: false,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
     });
 
-    it('should handle undefined logger gracefully', async () => {
-      const analyzerWithoutLogger = new PerformanceAnalyzer(undefined, mockFileUtils);
-      mockFileUtils.readJsonFile.mockRejectedValue(new Error('Test error'));
+    it("should handle undefined logger gracefully", async () => {
+      const analyzerWithoutLogger = new PerformanceAnalyzer(
+        undefined,
+        mockFileUtils,
+      );
+      mockFileUtils.readJsonFile.mockRejectedValue(new Error("Test error"));
 
-      const result = await analyzerWithoutLogger.analyzePerformance(projectPath);
+      const result =
+        await analyzerWithoutLogger.analyzePerformance(projectPath);
 
       expect(result).toEqual({
         hasPerformanceConfig: undefined,
         hasMonitoring: false,
         hasCaching: false,
-        hasOptimization: false
+        hasOptimization: false,
       });
       // Should not throw error when logger is undefined
     });
   });
 
-  describe('hasAnyDependency', () => {
-    it('should return true when dependency exists', () => {
+  describe("hasAnyDependency", () => {
+    it("should return true when dependency exists", () => {
       const dependencies = {
-        'winston': '^3.0.0',
-        'express': '^4.0.0'
+        winston: "^3.0.0",
+        express: "^4.0.0",
       };
-      const targetDeps = ['winston', 'morgan'];
+      const targetDeps = ["winston", "morgan"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(true);
     });
 
-    it('should return false when no dependency exists', () => {
+    it("should return false when no dependency exists", () => {
       const dependencies = {
-        'express': '^4.0.0',
-        'cors': '^2.8.5'
+        express: "^4.0.0",
+        cors: "^2.8.5",
       };
-      const targetDeps = ['winston', 'morgan'];
+      const targetDeps = ["winston", "morgan"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should return false for empty dependencies', () => {
+    it("should return false for empty dependencies", () => {
       const dependencies = {};
-      const targetDeps = ['winston', 'morgan'];
+      const targetDeps = ["winston", "morgan"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should return false for empty target dependencies', () => {
+    it("should return false for empty target dependencies", () => {
       const dependencies = {
-        'winston': '^3.0.0'
+        winston: "^3.0.0",
       };
       const targetDeps = [];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should return false for undefined dependencies', () => {
-      const targetDeps = ['winston', 'morgan'];
+    it("should return false for undefined dependencies", () => {
+      const targetDeps = ["winston", "morgan"];
 
-      const result = performanceAnalyzer.hasAnyDependency(undefined, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        undefined,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should return false for null dependencies', () => {
-      const targetDeps = ['winston', 'morgan'];
+    it("should return false for null dependencies", () => {
+      const targetDeps = ["winston", "morgan"];
 
       const result = performanceAnalyzer.hasAnyDependency(null, targetDeps);
 
       expect(result).toBe(false);
     });
 
-    it('should return false for undefined target dependencies', () => {
+    it("should return false for undefined target dependencies", () => {
       const dependencies = {
-        'winston': '^3.0.0'
+        winston: "^3.0.0",
       };
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, undefined);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        undefined,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should return false for null target dependencies', () => {
+    it("should return false for null target dependencies", () => {
       const dependencies = {
-        'winston': '^3.0.0'
+        winston: "^3.0.0",
       };
 
       const result = performanceAnalyzer.hasAnyDependency(dependencies, null);
@@ -426,60 +470,72 @@ describe('PerformanceAnalyzer', () => {
       expect(result).toBe(false);
     });
 
-    it('should handle dependencies with falsy values', () => {
+    it("should handle dependencies with falsy values", () => {
       const dependencies = {
-        'winston': false,
-        'morgan': null,
-        'express': undefined,
-        'redis': 0
+        winston: false,
+        morgan: null,
+        express: undefined,
+        redis: 0,
       };
-      const targetDeps = ['winston', 'morgan', 'express', 'redis'];
+      const targetDeps = ["winston", "morgan", "express", "redis"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should handle dependencies with truthy values', () => {
+    it("should handle dependencies with truthy values", () => {
       const dependencies = {
-        'winston': '^3.0.0',
-        'morgan': '^1.10.0',
-        'express': '^4.0.0'
+        winston: "^3.0.0",
+        morgan: "^1.10.0",
+        express: "^4.0.0",
       };
-      const targetDeps = ['winston', 'morgan', 'express'];
+      const targetDeps = ["winston", "morgan", "express"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(true);
     });
 
-    it('should handle case-sensitive dependency matching', () => {
+    it("should handle case-sensitive dependency matching", () => {
       const dependencies = {
-        'Winston': '^3.0.0',
-        'MORGAN': '^1.10.0'
+        Winston: "^3.0.0",
+        MORGAN: "^1.10.0",
       };
-      const targetDeps = ['winston', 'morgan'];
+      const targetDeps = ["winston", "morgan"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
 
-    it('should handle partial dependency name matching', () => {
+    it("should handle partial dependency name matching", () => {
       const dependencies = {
-        'winston-transport': '^3.0.0',
-        'morgan-json': '^1.10.0'
+        "winston-transport": "^3.0.0",
+        "morgan-json": "^1.10.0",
       };
-      const targetDeps = ['winston', 'morgan'];
+      const targetDeps = ["winston", "morgan"];
 
-      const result = performanceAnalyzer.hasAnyDependency(dependencies, targetDeps);
+      const result = performanceAnalyzer.hasAnyDependency(
+        dependencies,
+        targetDeps,
+      );
 
       expect(result).toBe(false);
     });
   });
 
-  describe('integration with constants', () => {
-    it('should use PERFORMANCE_DEPENDENCIES from constants', () => {
+  describe("integration with constants", () => {
+    it("should use PERFORMANCE_DEPENDENCIES from constants", () => {
       expect(PERFORMANCE_DEPENDENCIES).toBeDefined();
       expect(PERFORMANCE_DEPENDENCIES.monitoring).toBeDefined();
       expect(PERFORMANCE_DEPENDENCIES.caching).toBeDefined();
@@ -489,9 +545,9 @@ describe('PerformanceAnalyzer', () => {
       expect(Array.isArray(PERFORMANCE_DEPENDENCIES.optimization)).toBe(true);
     });
 
-    it('should use PERFORMANCE_FILES from constants', () => {
+    it("should use PERFORMANCE_FILES from constants", () => {
       expect(PERFORMANCE_FILES).toBeDefined();
       expect(Array.isArray(PERFORMANCE_FILES)).toBe(true);
     });
   });
-}); 
+});

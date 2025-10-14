@@ -1,6 +1,6 @@
-const ChatRepository = require('@repositories/ChatRepository');
-const ChatSession = require('@entities/ChatSession');
-const ChatMessage = require('@entities/ChatMessage');
+const ChatRepository = require("@repositories/ChatRepository");
+const ChatSession = require("@entities/ChatSession");
+const ChatMessage = require("@entities/ChatMessage");
 
 class InMemoryChatRepository extends ChatRepository {
   constructor() {
@@ -11,7 +11,7 @@ class InMemoryChatRepository extends ChatRepository {
 
   async saveSession(session) {
     if (!(session instanceof ChatSession)) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
     this.sessions.set(session.id, session.toJSON());
   }
@@ -23,7 +23,9 @@ class InMemoryChatRepository extends ChatRepository {
   }
 
   async getAllSessions() {
-    return Array.from(this.sessions.values()).map(s => ChatSession.fromJSON(s));
+    return Array.from(this.sessions.values()).map((s) =>
+      ChatSession.fromJSON(s),
+    );
   }
 
   async findAllSessions() {
@@ -38,11 +40,11 @@ class InMemoryChatRepository extends ChatRepository {
   async addMessageToSession(sessionId, message) {
     const session = await this.findSessionById(sessionId);
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     if (!(message instanceof ChatMessage)) {
-      throw new Error('message must be an instance of ChatMessage');
+      throw new Error("message must be an instance of ChatMessage");
     }
 
     session.addMessage(message);
@@ -53,7 +55,7 @@ class InMemoryChatRepository extends ChatRepository {
   async getSessionMessages(sessionId) {
     const session = await this.findSessionById(sessionId);
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
     return session.messages;
   }
@@ -73,11 +75,11 @@ class InMemoryChatRepository extends ChatRepository {
   }
 
   async findSessionsByDateRange(startDate, endDate) {
-    return Array.from(this.sessions.values()).filter(session => {
+    return Array.from(this.sessions.values()).filter((session) => {
       const sessionDate = session.createdAt;
       return sessionDate >= startDate && sessionDate <= endDate;
     });
   }
 }
 
-module.exports = InMemoryChatRepository; 
+module.exports = InMemoryChatRepository;

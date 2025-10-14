@@ -1,8 +1,8 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const fs = require('fs');
-const Logger = require('@logging/Logger');
-const logger = new Logger('MemoryConnection');
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+const fs = require("fs");
+const Logger = require("@logging/Logger");
+const logger = new Logger("MemoryConnection");
 
 class MemoryConnection {
   constructor(config) {
@@ -13,16 +13,16 @@ class MemoryConnection {
 
   async connect() {
     return new Promise((resolve, reject) => {
-      const db = new sqlite3.Database(':memory:', async (err) => {
+      const db = new sqlite3.Database(":memory:", async (err) => {
         if (err) {
           reject(err);
         } else {
           this.connection = db;
           this.isConnected = true;
-          db.run('PRAGMA foreign_keys = ON');
+          db.run("PRAGMA foreign_keys = ON");
           try {
             await this.initializeDatabase();
-            logger.info('✅ Memory database initialized');
+            logger.info("✅ Memory database initialized");
             resolve();
           } catch (error) {
             reject(error);
@@ -34,23 +34,23 @@ class MemoryConnection {
 
   async initializeDatabase() {
     // Use absolute path resolution for better reliability
-    const projectRoot = path.resolve(__dirname, '../../../');
-    const initSqlPath = path.join(projectRoot, 'database', 'init-sqlite.sql');
-    
+    const projectRoot = path.resolve(__dirname, "../../../");
+    const initSqlPath = path.join(projectRoot, "database", "init-sqlite.sql");
+
     // Enhanced error handling and validation
     if (!fs.existsSync(initSqlPath)) {
       logger.error(`❌ SQL file not found: ${initSqlPath}`);
       throw new Error(`SQL initialization file not found: ${initSqlPath}`);
     }
-    
-    const sql = fs.readFileSync(initSqlPath, 'utf8');
-    
+
+    const sql = fs.readFileSync(initSqlPath, "utf8");
+
     try {
       await this.executeSQLFile(sql);
       // Verify tables were created successfully
       await this.verifyTablesCreated();
     } catch (error) {
-      logger.error('❌ Database initialization failed:', error.message);
+      logger.error("❌ Database initialization failed:", error.message);
       throw error;
     }
   }
@@ -58,30 +58,37 @@ class MemoryConnection {
   async executeSQLFile(sql) {
     // Split SQL into individual statements and execute them in the correct order
     const statements = this.parseSQLStatements(sql);
-    
+
     // Separate CREATE TABLE and CREATE INDEX statements
-    const createTableStatements = statements.filter(stmt => 
-      stmt.toUpperCase().includes('CREATE TABLE')
+    const createTableStatements = statements.filter((stmt) =>
+      stmt.toUpperCase().includes("CREATE TABLE"),
     );
-    const createIndexStatements = statements.filter(stmt => 
-      stmt.toUpperCase().includes('CREATE INDEX')
+    const createIndexStatements = statements.filter((stmt) =>
+      stmt.toUpperCase().includes("CREATE INDEX"),
     );
-    const otherStatements = statements.filter(stmt => 
-      !stmt.toUpperCase().includes('CREATE TABLE') && !stmt.toUpperCase().includes('CREATE INDEX')
+    const otherStatements = statements.filter(
+      (stmt) =>
+        !stmt.toUpperCase().includes("CREATE TABLE") &&
+        !stmt.toUpperCase().includes("CREATE INDEX"),
     );
-    
+
     // Execute CREATE TABLE statements first
     for (let i = 0; i < createTableStatements.length; i++) {
       const statement = createTableStatements[i];
       if (statement.trim()) {
         try {
-          await this.executeStatement(statement, `CREATE TABLE statement ${i + 1}`);
+          await this.executeStatement(
+            statement,
+            `CREATE TABLE statement ${i + 1}`,
+          );
         } catch (error) {
-          logger.warn(`⚠️ Skipping CREATE TABLE statement ${i + 1} due to error: ${error.message}`);
+          logger.warn(
+            `⚠️ Skipping CREATE TABLE statement ${i + 1} due to error: ${error.message}`,
+          );
         }
       }
     }
-    
+
     // Execute other statements (like INSERT, etc.)
     for (let i = 0; i < otherStatements.length; i++) {
       const statement = otherStatements[i];
@@ -89,19 +96,26 @@ class MemoryConnection {
         try {
           await this.executeStatement(statement, `Other statement ${i + 1}`);
         } catch (error) {
-          logger.warn(`⚠️ Skipping other statement ${i + 1} due to error: ${error.message}`);
+          logger.warn(
+            `⚠️ Skipping other statement ${i + 1} due to error: ${error.message}`,
+          );
         }
       }
     }
-    
+
     // Execute CREATE INDEX statements last
     for (let i = 0; i < createIndexStatements.length; i++) {
       const statement = createIndexStatements[i];
       if (statement.trim()) {
         try {
-          await this.executeStatement(statement, `CREATE INDEX statement ${i + 1}`);
+          await this.executeStatement(
+            statement,
+            `CREATE INDEX statement ${i + 1}`,
+          );
         } catch (error) {
-          logger.warn(`⚠️ Skipping CREATE INDEX statement ${i + 1} due to error: ${error.message}`);
+          logger.warn(
+            `⚠️ Skipping CREATE INDEX statement ${i + 1} due to error: ${error.message}`,
+          );
         }
       }
     }
@@ -110,19 +124,19 @@ class MemoryConnection {
   parseSQLStatements(sql) {
     // Split by semicolons and filter out comments and empty statements
     return sql
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+      .split(";")
+      .map((stmt) => stmt.trim())
+      .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
   }
 
   async executeStatement(statement, description) {
     return new Promise((resolve, reject) => {
-      this.connection.run(statement, [], function(err) {
+      this.connection.run(statement, [], function (err) {
         if (err) {
           logger.warn(`⚠️ ${description} failed: ${err.message}`);
           logger.warn(`⚠️ Failed statement: ${statement.substring(0, 100)}...`);
           // Don't reject for CREATE TABLE IF NOT EXISTS or CREATE INDEX IF NOT EXISTS failures
-          if (!err.message.includes('already exists')) {
+          if (!err.message.includes("already exists")) {
             reject(err);
           } else {
             resolve();
@@ -136,45 +150,51 @@ class MemoryConnection {
 
   async verifyTablesCreated() {
     const requiredTables = [
-      'users',
-      'user_sessions', 
-      'projects',
-      'tasks',
-      'analysis_results',
-      'analysis_steps',
-      'chat_sessions',
-      'chat_messages',
-      'workflows',
-      'workflow_executions',
-      'task_templates',
-      'task_suggestions',
-      'task_sessions',
-      'project_analysis'
+      "users",
+      "user_sessions",
+      "projects",
+      "tasks",
+      "analysis_results",
+      "analysis_steps",
+      "chat_sessions",
+      "chat_messages",
+      "workflows",
+      "workflow_executions",
+      "task_templates",
+      "task_suggestions",
+      "task_sessions",
+      "project_analysis",
     ];
-    
+
     try {
-      const tables = await this.query("SELECT name FROM sqlite_master WHERE type='table'");
-      const existingTables = tables.map(t => t.name);
-      
-      const missingTables = requiredTables.filter(table => !existingTables.includes(table));
-      
+      const tables = await this.query(
+        "SELECT name FROM sqlite_master WHERE type='table'",
+      );
+      const existingTables = tables.map((t) => t.name);
+
+      const missingTables = requiredTables.filter(
+        (table) => !existingTables.includes(table),
+      );
+
       if (missingTables.length > 0) {
-        logger.error(`❌ Missing tables: ${missingTables.join(', ')}`);
-        throw new Error(`Database initialization incomplete. Missing tables: ${missingTables.join(', ')}`);
+        logger.error(`❌ Missing tables: ${missingTables.join(", ")}`);
+        throw new Error(
+          `Database initialization incomplete. Missing tables: ${missingTables.join(", ")}`,
+        );
       }
     } catch (error) {
-      logger.error('❌ Table verification failed:', error.message);
+      logger.error("❌ Table verification failed:", error.message);
       throw error;
     }
   }
 
   async execute(sql, params = []) {
     if (!this.isConnected) {
-      throw new Error('Database not connected');
+      throw new Error("Database not connected");
     }
 
     return new Promise((resolve, reject) => {
-      this.connection.run(sql, params, function(err) {
+      this.connection.run(sql, params, function (err) {
         if (err) {
           reject(err);
         } else {
@@ -186,7 +206,7 @@ class MemoryConnection {
 
   async query(sql, params = []) {
     if (!this.isConnected) {
-      throw new Error('Database not connected');
+      throw new Error("Database not connected");
     }
 
     return new Promise((resolve, reject) => {
@@ -210,7 +230,7 @@ class MemoryConnection {
       return new Promise((resolve) => {
         this.connection.close((err) => {
           if (err) {
-            logger.warn('⚠️ Error closing memory connection:', err.message);
+            logger.warn("⚠️ Error closing memory connection:", err.message);
           }
           this.connection = null;
           this.isConnected = false;
@@ -225,16 +245,16 @@ class MemoryConnection {
   }
 
   getType() {
-    return 'memory';
+    return "memory";
   }
 
   getConnectionStatus() {
     return {
-      type: 'memory',
+      type: "memory",
       isConnected: this.isConnected,
-      database: ':memory:'
+      database: ":memory:",
     };
   }
 }
 
-module.exports = MemoryConnection; 
+module.exports = MemoryConnection;

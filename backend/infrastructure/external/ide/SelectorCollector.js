@@ -3,9 +3,9 @@
  * Handles DOM collection and selector generation with integrated script functionality
  */
 
-const { chromium } = require('playwright');
-const Logger = require('@logging/Logger');
-const logger = new Logger('SelectorCollector');
+const { chromium } = require("playwright");
+const Logger = require("@logging/Logger");
+const logger = new Logger("SelectorCollector");
 
 class SelectorCollector {
   constructor(options = {}) {
@@ -13,8 +13,8 @@ class SelectorCollector {
       timeout: options.timeout || 10000,
       retries: options.retries || 3,
       retryDelay: options.retryDelay || 2000,
-      host: options.host || '127.0.0.1',
-      ...options
+      host: options.host || "127.0.0.1",
+      ...options,
     };
     this.logger = options.logger || logger;
   }
@@ -34,17 +34,17 @@ class SelectorCollector {
       // Connect to IDE via CDP
       browser = await chromium.connectOverCDP({
         endpointURL: `http://${this.options.host}:${port}`,
-        timeout: this.options.timeout
+        timeout: this.options.timeout,
       });
 
       const contexts = browser.contexts();
       if (contexts.length === 0) {
-        throw new Error('No browser contexts available');
+        throw new Error("No browser contexts available");
       }
 
       const pages = contexts[0].pages();
       if (pages.length === 0) {
-        throw new Error('No pages available');
+        throw new Error("No pages available");
       }
 
       page = pages[0];
@@ -55,7 +55,7 @@ class SelectorCollector {
 
       // Collect comprehensive chat selectors
       const chatSelectors = await this.collectChatSelectors(page);
-      
+
       // Detect chat state
       const chatState = await this.detectChatState(page);
 
@@ -63,21 +63,25 @@ class SelectorCollector {
       const allSelectors = {
         ...selectors,
         ...chatSelectors,
-        _chatState: chatState
+        _chatState: chatState,
       };
 
-      this.logger.info(`Successfully collected ${Object.keys(allSelectors).length} selectors from port ${port} (${Object.keys(chatSelectors).length} chat selectors)`);
+      this.logger.info(
+        `Successfully collected ${Object.keys(allSelectors).length} selectors from port ${port} (${Object.keys(chatSelectors).length} chat selectors)`,
+      );
       return allSelectors;
-
     } catch (error) {
-      this.logger.error(`Selector collection failed for port ${port}:`, error.message);
+      this.logger.error(
+        `Selector collection failed for port ${port}:`,
+        error.message,
+      );
       throw error;
     } finally {
       if (browser) {
         try {
           await browser.close();
         } catch (closeError) {
-          this.logger.warn('Error closing browser:', closeError.message);
+          this.logger.warn("Error closing browser:", closeError.message);
         }
       }
     }
@@ -90,126 +94,218 @@ class SelectorCollector {
    */
   async analyzeDOM(page) {
     try {
-      this.logger.info('Analyzing DOM structure');
+      this.logger.info("Analyzing DOM structure");
 
       // Execute DOM analysis script in page context
       const domData = await page.evaluate(() => {
         const elements = {
           // Comprehensive Chat Controls
-          newChatButton: document.querySelector('[aria-label*="New Chat"], [data-testid*="new-chat"], button[title*="New Chat"], .new-chat-button'),
-          sendButton: document.querySelector('[aria-label*="Send"], [data-testid*="send"], button[title*="Send"], .send-button'),
-          deleteChatButton: document.querySelector('[aria-label*="Delete"], [data-testid*="delete"], button[title*="Delete"], .delete-chat-button'),
-          renameChatButton: document.querySelector('[aria-label*="Rename"], [data-testid*="rename"], button[title*="Rename"], .rename-chat-button'),
-          
+          newChatButton: document.querySelector(
+            '[aria-label*="New Chat"], [data-testid*="new-chat"], button[title*="New Chat"], .new-chat-button',
+          ),
+          sendButton: document.querySelector(
+            '[aria-label*="Send"], [data-testid*="send"], button[title*="Send"], .send-button',
+          ),
+          deleteChatButton: document.querySelector(
+            '[aria-label*="Delete"], [data-testid*="delete"], button[title*="Delete"], .delete-chat-button',
+          ),
+          renameChatButton: document.querySelector(
+            '[aria-label*="Rename"], [data-testid*="rename"], button[title*="Rename"], .rename-chat-button',
+          ),
+
           // Chat History Elements
-          chatHistory: document.querySelector('[class*="chat-history"], [data-testid*="chat-history"], .chat-history'),
-          chatHistoryItem: document.querySelectorAll('[class*="chat-history-item"], [data-testid*="chat-history-item"], .chat-history-item'),
-          chatHistoryTitle: document.querySelectorAll('[class*="chat-title"], [data-testid*="chat-title"], .chat-title'),
-          
+          chatHistory: document.querySelector(
+            '[class*="chat-history"], [data-testid*="chat-history"], .chat-history',
+          ),
+          chatHistoryItem: document.querySelectorAll(
+            '[class*="chat-history-item"], [data-testid*="chat-history-item"], .chat-history-item',
+          ),
+          chatHistoryTitle: document.querySelectorAll(
+            '[class*="chat-title"], [data-testid*="chat-title"], .chat-title',
+          ),
+
           // Chat Status Indicators
-          connectionStatus: document.querySelector('[class*="connection-status"], [data-testid*="connection-status"], .connection-status'),
-          loadingIndicator: document.querySelector('[class*="loading"], [data-testid*="loading"], .loading-indicator, .spinner'),
-          thinkingIndicator: document.querySelector('[class*="thinking"], [data-testid*="thinking"], .thinking-indicator'),
-          
+          connectionStatus: document.querySelector(
+            '[class*="connection-status"], [data-testid*="connection-status"], .connection-status',
+          ),
+          loadingIndicator: document.querySelector(
+            '[class*="loading"], [data-testid*="loading"], .loading-indicator, .spinner',
+          ),
+          thinkingIndicator: document.querySelector(
+            '[class*="thinking"], [data-testid*="thinking"], .thinking-indicator',
+          ),
+
           // Chat Settings
-          settingsButton: document.querySelector('[aria-label*="Settings"], [data-testid*="settings"], button[title*="Settings"], .settings-button'),
-          modelSelector: document.querySelector('[aria-label*="Model"], [data-testid*="model"], select[name*="model"], .model-selector'),
-          webSearchToggle: document.querySelector('[aria-label*="Web Search"], [data-testid*="web-search"], input[type="checkbox"][name*="web"], .web-search-toggle'),
-          
+          settingsButton: document.querySelector(
+            '[aria-label*="Settings"], [data-testid*="settings"], button[title*="Settings"], .settings-button',
+          ),
+          modelSelector: document.querySelector(
+            '[aria-label*="Model"], [data-testid*="model"], select[name*="model"], .model-selector',
+          ),
+          webSearchToggle: document.querySelector(
+            '[aria-label*="Web Search"], [data-testid*="web-search"], input[type="checkbox"][name*="web"], .web-search-toggle',
+          ),
+
           // Chat Context Controls
-          contextButton: document.querySelector('[aria-label*="Context"], [data-testid*="context"], button[title*="Context"], .context-button'),
-          attachFileButton: document.querySelector('[aria-label*="Attach"], [data-testid*="attach"], button[title*="Attach"], .attach-file-button'),
-          helpButton: document.querySelector('[aria-label*="Help"], [data-testid*="help"], button[title*="Help"], .help-button'),
-          premiumPill: document.querySelector('[class*="premium"], [data-testid*="premium"], .premium-pill'),
-          atSignButton: document.querySelector('[aria-label*="@"], [data-testid*="at-sign"], button[title*="@"], .at-sign-button'),
-          
+          contextButton: document.querySelector(
+            '[aria-label*="Context"], [data-testid*="context"], button[title*="Context"], .context-button',
+          ),
+          attachFileButton: document.querySelector(
+            '[aria-label*="Attach"], [data-testid*="attach"], button[title*="Attach"], .attach-file-button',
+          ),
+          helpButton: document.querySelector(
+            '[aria-label*="Help"], [data-testid*="help"], button[title*="Help"], .help-button',
+          ),
+          premiumPill: document.querySelector(
+            '[class*="premium"], [data-testid*="premium"], .premium-pill',
+          ),
+          atSignButton: document.querySelector(
+            '[aria-label*="@"], [data-testid*="at-sign"], button[title*="@"], .at-sign-button',
+          ),
+
           // Chat Messages
-          chatInput: document.querySelector('[contenteditable="true"], textarea, input[type="text"], .chat-input'),
-          chatContainer: document.querySelector('[class*="chat"], [class*="conversation"], .chat-container'),
-          userMessages: document.querySelectorAll('[class*="user"], [class*="human"], .user-message'),
-          aiMessages: document.querySelectorAll('[class*="ai"], [class*="assistant"], [class*="bot"], .ai-message'),
-          messageTimestamp: document.querySelectorAll('[class*="timestamp"], [data-testid*="timestamp"], .message-timestamp'),
-          messageActions: document.querySelectorAll('[class*="message-actions"], [data-testid*="message-actions"], .message-actions'),
-          messageCopyButton: document.querySelectorAll('[aria-label*="Copy"], [data-testid*="copy"], button[title*="Copy"], .copy-button'),
-          
+          chatInput: document.querySelector(
+            '[contenteditable="true"], textarea, input[type="text"], .chat-input',
+          ),
+          chatContainer: document.querySelector(
+            '[class*="chat"], [class*="conversation"], .chat-container',
+          ),
+          userMessages: document.querySelectorAll(
+            '[class*="user"], [class*="human"], .user-message',
+          ),
+          aiMessages: document.querySelectorAll(
+            '[class*="ai"], [class*="assistant"], [class*="bot"], .ai-message',
+          ),
+          messageTimestamp: document.querySelectorAll(
+            '[class*="timestamp"], [data-testid*="timestamp"], .message-timestamp',
+          ),
+          messageActions: document.querySelectorAll(
+            '[class*="message-actions"], [data-testid*="message-actions"], .message-actions',
+          ),
+          messageCopyButton: document.querySelectorAll(
+            '[aria-label*="Copy"], [data-testid*="copy"], button[title*="Copy"], .copy-button',
+          ),
+
           // Chat Code Blocks
-          codeBlockRejectButton: document.querySelectorAll('[aria-label*="Reject"], [data-testid*="reject"], button[title*="Reject"], .reject-button'),
-          codeBlockCopyButton: document.querySelectorAll('[aria-label*="Copy Code"], [data-testid*="copy-code"], button[title*="Copy Code"], .copy-code-button'),
-          codeBlockDownloadButton: document.querySelectorAll('[aria-label*="Download"], [data-testid*="download"], button[title*="Download"], .download-button'),
-          
+          codeBlockRejectButton: document.querySelectorAll(
+            '[aria-label*="Reject"], [data-testid*="reject"], button[title*="Reject"], .reject-button',
+          ),
+          codeBlockCopyButton: document.querySelectorAll(
+            '[aria-label*="Copy Code"], [data-testid*="copy-code"], button[title*="Copy Code"], .copy-code-button',
+          ),
+          codeBlockDownloadButton: document.querySelectorAll(
+            '[aria-label*="Download"], [data-testid*="download"], button[title*="Download"], .download-button',
+          ),
+
           // Chat Modals
-          chatSettingsModal: document.querySelector('[class*="settings-modal"], [data-testid*="settings-modal"], .settings-modal'),
-          chatHistoryModal: document.querySelector('[class*="history-modal"], [data-testid*="history-modal"], .history-modal'),
-          chatExportModal: document.querySelector('[class*="export-modal"], [data-testid*="export-modal"], .export-modal'),
-          
+          chatSettingsModal: document.querySelector(
+            '[class*="settings-modal"], [data-testid*="settings-modal"], .settings-modal',
+          ),
+          chatHistoryModal: document.querySelector(
+            '[class*="history-modal"], [data-testid*="history-modal"], .history-modal',
+          ),
+          chatExportModal: document.querySelector(
+            '[class*="export-modal"], [data-testid*="export-modal"], .export-modal',
+          ),
+
           // Chat Error States
-          errorMessage: document.querySelector('[class*="error"], [data-testid*="error"], .error-message'),
-          retryButton: document.querySelector('[aria-label*="Retry"], [data-testid*="retry"], button[title*="Retry"], .retry-button'),
-          connectionError: document.querySelector('[class*="connection-error"], [data-testid*="connection-error"], .connection-error'),
-          
+          errorMessage: document.querySelector(
+            '[class*="error"], [data-testid*="error"], .error-message',
+          ),
+          retryButton: document.querySelector(
+            '[aria-label*="Retry"], [data-testid*="retry"], button[title*="Retry"], .retry-button',
+          ),
+          connectionError: document.querySelector(
+            '[class*="connection-error"], [data-testid*="connection-error"], .connection-error',
+          ),
+
           // Chat UI Elements
-          userAvatar: document.querySelector('[class*="avatar"], [data-testid*="avatar"], .user-avatar'),
-          userName: document.querySelector('[class*="username"], [data-testid*="username"], .user-name'),
-          themeToggle: document.querySelector('[aria-label*="Theme"], [data-testid*="theme"], button[title*="Theme"], .theme-toggle'),
-          agentAutoButton: document.querySelector('[aria-label*="Agent"], [data-testid*="agent"], button[title*="Agent"], .agent-auto-button'),
-          contextPercentage: document.querySelector('[class*="context-percentage"], [data-testid*="context-percentage"], .context-percentage'),
-          
+          userAvatar: document.querySelector(
+            '[class*="avatar"], [data-testid*="avatar"], .user-avatar',
+          ),
+          userName: document.querySelector(
+            '[class*="username"], [data-testid*="username"], .user-name',
+          ),
+          themeToggle: document.querySelector(
+            '[aria-label*="Theme"], [data-testid*="theme"], button[title*="Theme"], .theme-toggle',
+          ),
+          agentAutoButton: document.querySelector(
+            '[aria-label*="Agent"], [data-testid*="agent"], button[title*="Agent"], .agent-auto-button',
+          ),
+          contextPercentage: document.querySelector(
+            '[class*="context-percentage"], [data-testid*="context-percentage"], .context-percentage',
+          ),
+
           // Agent Controls
-          agentModeSelector: document.querySelector('[aria-label*="Agent Mode"], [data-testid*="agent-mode"], select[name*="agent-mode"], .agent-mode-selector'),
-          agentModeDropdown: document.querySelector('[class*="agent-mode-dropdown"], [data-testid*="agent-mode-dropdown"], .agent-mode-dropdown'),
-          askModeButton: document.querySelector('[aria-label*="Ask Mode"], [data-testid*="ask-mode"], button[title*="Ask Mode"], .ask-mode-button'),
-          agentModeButton: document.querySelector('[aria-label*="Agent Mode"], [data-testid*="agent-mode"], button[title*="Agent Mode"], .agent-mode-button'),
-          modelDropdown: document.querySelector('[class*="model-dropdown"], [data-testid*="model-dropdown"], .model-dropdown'),
-          autoModelToggle: document.querySelector('[aria-label*="Auto Model"], [data-testid*="auto-model"], input[type="checkbox"][name*="auto"], .auto-model-toggle'),
-          modelOptions: document.querySelectorAll('[class*="model-option"], [data-testid*="model-option"], .model-option'),
-          
+          agentModeSelector: document.querySelector(
+            '[aria-label*="Agent Mode"], [data-testid*="agent-mode"], select[name*="agent-mode"], .agent-mode-selector',
+          ),
+          agentModeDropdown: document.querySelector(
+            '[class*="agent-mode-dropdown"], [data-testid*="agent-mode-dropdown"], .agent-mode-dropdown',
+          ),
+          askModeButton: document.querySelector(
+            '[aria-label*="Ask Mode"], [data-testid*="ask-mode"], button[title*="Ask Mode"], .ask-mode-button',
+          ),
+          agentModeButton: document.querySelector(
+            '[aria-label*="Agent Mode"], [data-testid*="agent-mode"], button[title*="Agent Mode"], .agent-mode-button',
+          ),
+          modelDropdown: document.querySelector(
+            '[class*="model-dropdown"], [data-testid*="model-dropdown"], .model-dropdown',
+          ),
+          autoModelToggle: document.querySelector(
+            '[aria-label*="Auto Model"], [data-testid*="auto-model"], input[type="checkbox"][name*="auto"], .auto-model-toggle',
+          ),
+          modelOptions: document.querySelectorAll(
+            '[class*="model-option"], [data-testid*="model-option"], .model-option',
+          ),
+
           // Editor elements
-          monacoEditor: document.querySelector('.monaco-editor'),
-          editorLines: document.querySelectorAll('.view-line'),
-          editorTabs: document.querySelectorAll('.tab'),
-          
+          monacoEditor: document.querySelector(".monaco-editor"),
+          editorLines: document.querySelectorAll(".view-line"),
+          editorTabs: document.querySelectorAll(".tab"),
+
           // Explorer elements
-          fileExplorer: document.querySelector('.explorer, .pane'),
-          fileTree: document.querySelector('.monaco-list, .tree'),
-          
+          fileExplorer: document.querySelector(".explorer, .pane"),
+          fileTree: document.querySelector(".monaco-list, .tree"),
+
           // Terminal elements
-          terminal: document.querySelector('.terminal, .xterm'),
-          
+          terminal: document.querySelector(".terminal, .xterm"),
+
           // Panel elements
-          sidebar: document.querySelector('.sidebar, .activitybar'),
-          statusbar: document.querySelector('.statusbar'),
-          
+          sidebar: document.querySelector(".sidebar, .activitybar"),
+          statusbar: document.querySelector(".statusbar"),
+
           // Command elements
-          commandPalette: document.querySelector('.quick-input-widget'),
-          
+          commandPalette: document.querySelector(".quick-input-widget"),
+
           // Code blocks
-          codeBlocks: document.querySelectorAll('pre, .code-block'),
-          
+          codeBlocks: document.querySelectorAll("pre, .code-block"),
+
           // All interactive elements
-          buttons: document.querySelectorAll('button'),
-          inputs: document.querySelectorAll('input'),
-          links: document.querySelectorAll('a')
+          buttons: document.querySelectorAll("button"),
+          inputs: document.querySelectorAll("input"),
+          links: document.querySelectorAll("a"),
         };
 
         // Extract selector information
         const extractSelector = (element) => {
           if (!element) return null;
-          
+
           // Try data-testid first
-          if (element.getAttribute('data-testid')) {
-            return `[data-testid="${element.getAttribute('data-testid')}"]`;
+          if (element.getAttribute("data-testid")) {
+            return `[data-testid="${element.getAttribute("data-testid")}"]`;
           }
-          
+
           // Try ID
           if (element.id) {
             return `#${element.id}`;
           }
-          
+
           // Try unique class
           const classes = Array.from(element.classList);
           if (classes.length > 0) {
-            const uniqueClass = classes.find(cls => 
-              document.querySelectorAll(`.${cls}`).length === 1
+            const uniqueClass = classes.find(
+              (cls) => document.querySelectorAll(`.${cls}`).length === 1,
             );
             if (uniqueClass) {
               return `.${uniqueClass}`;
@@ -217,7 +313,7 @@ class SelectorCollector {
             // Return first class as fallback
             return `.${classes[0]}`;
           }
-          
+
           // Fallback to tag name
           return element.tagName.toLowerCase();
         };
@@ -240,11 +336,12 @@ class SelectorCollector {
         return result;
       });
 
-      this.logger.info(`DOM analysis completed, found ${Object.keys(domData).length} elements`);
+      this.logger.info(
+        `DOM analysis completed, found ${Object.keys(domData).length} elements`,
+      );
       return domData;
-
     } catch (error) {
-      this.logger.error('DOM analysis failed:', error.message);
+      this.logger.error("DOM analysis failed:", error.message);
       throw error;
     }
   }
@@ -256,13 +353,13 @@ class SelectorCollector {
    */
   async generateSelectors(domData) {
     try {
-      this.logger.info('Generating selectors from DOM data');
+      this.logger.info("Generating selectors from DOM data");
 
       const selectors = {};
 
       // Filter out null values and format selectors
       for (const [key, value] of Object.entries(domData)) {
-        if (value && typeof value === 'string') {
+        if (value && typeof value === "string") {
           // Clean up selector
           const cleanedSelector = value.trim();
           if (cleanedSelector.length > 0) {
@@ -273,9 +370,8 @@ class SelectorCollector {
 
       this.logger.info(`Generated ${Object.keys(selectors).length} selectors`);
       return selectors;
-
     } catch (error) {
-      this.logger.error('Selector generation failed:', error.message);
+      this.logger.error("Selector generation failed:", error.message);
       throw error;
     }
   }
@@ -287,98 +383,190 @@ class SelectorCollector {
    */
   async collectChatSelectors(page) {
     try {
-      this.logger.info('Collecting comprehensive chat selectors');
+      this.logger.info("Collecting comprehensive chat selectors");
 
       const chatSelectors = await page.evaluate(() => {
         const chatElements = {
           // Chat Controls
-          newChatButton: document.querySelector('[aria-label*="New Chat"], [data-testid*="new-chat"], button[title*="New Chat"], .new-chat-button'),
-          sendButton: document.querySelector('[aria-label*="Send"], [data-testid*="send"], button[title*="Send"], .send-button'),
-          deleteChatButton: document.querySelector('[aria-label*="Delete"], [data-testid*="delete"], button[title*="Delete"], .delete-chat-button'),
-          renameChatButton: document.querySelector('[aria-label*="Rename"], [data-testid*="rename"], button[title*="Rename"], .rename-chat-button'),
-          
+          newChatButton: document.querySelector(
+            '[aria-label*="New Chat"], [data-testid*="new-chat"], button[title*="New Chat"], .new-chat-button',
+          ),
+          sendButton: document.querySelector(
+            '[aria-label*="Send"], [data-testid*="send"], button[title*="Send"], .send-button',
+          ),
+          deleteChatButton: document.querySelector(
+            '[aria-label*="Delete"], [data-testid*="delete"], button[title*="Delete"], .delete-chat-button',
+          ),
+          renameChatButton: document.querySelector(
+            '[aria-label*="Rename"], [data-testid*="rename"], button[title*="Rename"], .rename-chat-button',
+          ),
+
           // Chat History
-          chatHistory: document.querySelector('[class*="chat-history"], [data-testid*="chat-history"], .chat-history'),
-          chatHistoryItem: document.querySelectorAll('[class*="chat-history-item"], [data-testid*="chat-history-item"], .chat-history-item'),
-          chatHistoryTitle: document.querySelectorAll('[class*="chat-title"], [data-testid*="chat-title"], .chat-title'),
-          
+          chatHistory: document.querySelector(
+            '[class*="chat-history"], [data-testid*="chat-history"], .chat-history',
+          ),
+          chatHistoryItem: document.querySelectorAll(
+            '[class*="chat-history-item"], [data-testid*="chat-history-item"], .chat-history-item',
+          ),
+          chatHistoryTitle: document.querySelectorAll(
+            '[class*="chat-title"], [data-testid*="chat-title"], .chat-title',
+          ),
+
           // Chat Status
-          connectionStatus: document.querySelector('[class*="connection-status"], [data-testid*="connection-status"], .connection-status'),
-          loadingIndicator: document.querySelector('[class*="loading"], [data-testid*="loading"], .loading-indicator, .spinner'),
-          thinkingIndicator: document.querySelector('[class*="thinking"], [data-testid*="thinking"], .thinking-indicator'),
-          
+          connectionStatus: document.querySelector(
+            '[class*="connection-status"], [data-testid*="connection-status"], .connection-status',
+          ),
+          loadingIndicator: document.querySelector(
+            '[class*="loading"], [data-testid*="loading"], .loading-indicator, .spinner',
+          ),
+          thinkingIndicator: document.querySelector(
+            '[class*="thinking"], [data-testid*="thinking"], .thinking-indicator',
+          ),
+
           // Chat Settings
-          settingsButton: document.querySelector('[aria-label*="Settings"], [data-testid*="settings"], button[title*="Settings"], .settings-button'),
-          modelSelector: document.querySelector('[aria-label*="Model"], [data-testid*="model"], select[name*="model"], .model-selector'),
-          webSearchToggle: document.querySelector('[aria-label*="Web Search"], [data-testid*="web-search"], input[type="checkbox"][name*="web"], .web-search-toggle'),
-          
+          settingsButton: document.querySelector(
+            '[aria-label*="Settings"], [data-testid*="settings"], button[title*="Settings"], .settings-button',
+          ),
+          modelSelector: document.querySelector(
+            '[aria-label*="Model"], [data-testid*="model"], select[name*="model"], .model-selector',
+          ),
+          webSearchToggle: document.querySelector(
+            '[aria-label*="Web Search"], [data-testid*="web-search"], input[type="checkbox"][name*="web"], .web-search-toggle',
+          ),
+
           // Chat Context
-          contextButton: document.querySelector('[aria-label*="Context"], [data-testid*="context"], button[title*="Context"], .context-button'),
-          attachFileButton: document.querySelector('[aria-label*="Attach"], [data-testid*="attach"], button[title*="Attach"], .attach-file-button'),
-          helpButton: document.querySelector('[aria-label*="Help"], [data-testid*="help"], button[title*="Help"], .help-button'),
-          premiumPill: document.querySelector('[class*="premium"], [data-testid*="premium"], .premium-pill'),
-          atSignButton: document.querySelector('[aria-label*="@"], [data-testid*="at-sign"], button[title*="@"], .at-sign-button'),
-          
+          contextButton: document.querySelector(
+            '[aria-label*="Context"], [data-testid*="context"], button[title*="Context"], .context-button',
+          ),
+          attachFileButton: document.querySelector(
+            '[aria-label*="Attach"], [data-testid*="attach"], button[title*="Attach"], .attach-file-button',
+          ),
+          helpButton: document.querySelector(
+            '[aria-label*="Help"], [data-testid*="help"], button[title*="Help"], .help-button',
+          ),
+          premiumPill: document.querySelector(
+            '[class*="premium"], [data-testid*="premium"], .premium-pill',
+          ),
+          atSignButton: document.querySelector(
+            '[aria-label*="@"], [data-testid*="at-sign"], button[title*="@"], .at-sign-button',
+          ),
+
           // Chat Messages
-          chatInput: document.querySelector('[contenteditable="true"], textarea, input[type="text"], .chat-input'),
-          chatContainer: document.querySelector('[class*="chat"], [class*="conversation"], .chat-container'),
-          userMessages: document.querySelectorAll('[class*="user"], [class*="human"], .user-message'),
-          aiMessages: document.querySelectorAll('[class*="ai"], [class*="assistant"], [class*="bot"], .ai-message'),
-          messageTimestamp: document.querySelectorAll('[class*="timestamp"], [data-testid*="timestamp"], .message-timestamp'),
-          messageActions: document.querySelectorAll('[class*="message-actions"], [data-testid*="message-actions"], .message-actions'),
-          messageCopyButton: document.querySelectorAll('[aria-label*="Copy"], [data-testid*="copy"], button[title*="Copy"], .copy-button'),
-          
+          chatInput: document.querySelector(
+            '[contenteditable="true"], textarea, input[type="text"], .chat-input',
+          ),
+          chatContainer: document.querySelector(
+            '[class*="chat"], [class*="conversation"], .chat-container',
+          ),
+          userMessages: document.querySelectorAll(
+            '[class*="user"], [class*="human"], .user-message',
+          ),
+          aiMessages: document.querySelectorAll(
+            '[class*="ai"], [class*="assistant"], [class*="bot"], .ai-message',
+          ),
+          messageTimestamp: document.querySelectorAll(
+            '[class*="timestamp"], [data-testid*="timestamp"], .message-timestamp',
+          ),
+          messageActions: document.querySelectorAll(
+            '[class*="message-actions"], [data-testid*="message-actions"], .message-actions',
+          ),
+          messageCopyButton: document.querySelectorAll(
+            '[aria-label*="Copy"], [data-testid*="copy"], button[title*="Copy"], .copy-button',
+          ),
+
           // Chat Code Blocks
-          codeBlockRejectButton: document.querySelectorAll('[aria-label*="Reject"], [data-testid*="reject"], button[title*="Reject"], .reject-button'),
-          codeBlockCopyButton: document.querySelectorAll('[aria-label*="Copy Code"], [data-testid*="copy-code"], button[title*="Copy Code"], .copy-code-button'),
-          codeBlockDownloadButton: document.querySelectorAll('[aria-label*="Download"], [data-testid*="download"], button[title*="Download"], .download-button'),
-          
+          codeBlockRejectButton: document.querySelectorAll(
+            '[aria-label*="Reject"], [data-testid*="reject"], button[title*="Reject"], .reject-button',
+          ),
+          codeBlockCopyButton: document.querySelectorAll(
+            '[aria-label*="Copy Code"], [data-testid*="copy-code"], button[title*="Copy Code"], .copy-code-button',
+          ),
+          codeBlockDownloadButton: document.querySelectorAll(
+            '[aria-label*="Download"], [data-testid*="download"], button[title*="Download"], .download-button',
+          ),
+
           // Chat Modals
-          chatSettingsModal: document.querySelector('[class*="settings-modal"], [data-testid*="settings-modal"], .settings-modal'),
-          chatHistoryModal: document.querySelector('[class*="history-modal"], [data-testid*="history-modal"], .history-modal'),
-          chatExportModal: document.querySelector('[class*="export-modal"], [data-testid*="export-modal"], .export-modal'),
-          
+          chatSettingsModal: document.querySelector(
+            '[class*="settings-modal"], [data-testid*="settings-modal"], .settings-modal',
+          ),
+          chatHistoryModal: document.querySelector(
+            '[class*="history-modal"], [data-testid*="history-modal"], .history-modal',
+          ),
+          chatExportModal: document.querySelector(
+            '[class*="export-modal"], [data-testid*="export-modal"], .export-modal',
+          ),
+
           // Chat Error States
-          errorMessage: document.querySelector('[class*="error"], [data-testid*="error"], .error-message'),
-          retryButton: document.querySelector('[aria-label*="Retry"], [data-testid*="retry"], button[title*="Retry"], .retry-button'),
-          connectionError: document.querySelector('[class*="connection-error"], [data-testid*="connection-error"], .connection-error'),
-          
+          errorMessage: document.querySelector(
+            '[class*="error"], [data-testid*="error"], .error-message',
+          ),
+          retryButton: document.querySelector(
+            '[aria-label*="Retry"], [data-testid*="retry"], button[title*="Retry"], .retry-button',
+          ),
+          connectionError: document.querySelector(
+            '[class*="connection-error"], [data-testid*="connection-error"], .connection-error',
+          ),
+
           // Chat UI
-          userAvatar: document.querySelector('[class*="avatar"], [data-testid*="avatar"], .user-avatar'),
-          userName: document.querySelector('[class*="username"], [data-testid*="username"], .user-name'),
-          themeToggle: document.querySelector('[aria-label*="Theme"], [data-testid*="theme"], button[title*="Theme"], .theme-toggle'),
-          agentAutoButton: document.querySelector('[aria-label*="Agent"], [data-testid*="agent"], button[title*="Agent"], .agent-auto-button'),
-          contextPercentage: document.querySelector('[class*="context-percentage"], [data-testid*="context-percentage"], .context-percentage'),
-          
+          userAvatar: document.querySelector(
+            '[class*="avatar"], [data-testid*="avatar"], .user-avatar',
+          ),
+          userName: document.querySelector(
+            '[class*="username"], [data-testid*="username"], .user-name',
+          ),
+          themeToggle: document.querySelector(
+            '[aria-label*="Theme"], [data-testid*="theme"], button[title*="Theme"], .theme-toggle',
+          ),
+          agentAutoButton: document.querySelector(
+            '[aria-label*="Agent"], [data-testid*="agent"], button[title*="Agent"], .agent-auto-button',
+          ),
+          contextPercentage: document.querySelector(
+            '[class*="context-percentage"], [data-testid*="context-percentage"], .context-percentage',
+          ),
+
           // Agent Controls
-          agentModeSelector: document.querySelector('[aria-label*="Agent Mode"], [data-testid*="agent-mode"], select[name*="agent-mode"], .agent-mode-selector'),
-          agentModeDropdown: document.querySelector('[class*="agent-mode-dropdown"], [data-testid*="agent-mode-dropdown"], .agent-mode-dropdown'),
-          askModeButton: document.querySelector('[aria-label*="Ask Mode"], [data-testid*="ask-mode"], button[title*="Ask Mode"], .ask-mode-button'),
-          agentModeButton: document.querySelector('[aria-label*="Agent Mode"], [data-testid*="agent-mode"], button[title*="Agent Mode"], .agent-mode-button'),
-          modelDropdown: document.querySelector('[class*="model-dropdown"], [data-testid*="model-dropdown"], .model-dropdown'),
-          autoModelToggle: document.querySelector('[aria-label*="Auto Model"], [data-testid*="auto-model"], input[type="checkbox"][name*="auto"], .auto-model-toggle'),
-          modelOptions: document.querySelectorAll('[class*="model-option"], [data-testid*="model-option"], .model-option')
+          agentModeSelector: document.querySelector(
+            '[aria-label*="Agent Mode"], [data-testid*="agent-mode"], select[name*="agent-mode"], .agent-mode-selector',
+          ),
+          agentModeDropdown: document.querySelector(
+            '[class*="agent-mode-dropdown"], [data-testid*="agent-mode-dropdown"], .agent-mode-dropdown',
+          ),
+          askModeButton: document.querySelector(
+            '[aria-label*="Ask Mode"], [data-testid*="ask-mode"], button[title*="Ask Mode"], .ask-mode-button',
+          ),
+          agentModeButton: document.querySelector(
+            '[aria-label*="Agent Mode"], [data-testid*="agent-mode"], button[title*="Agent Mode"], .agent-mode-button',
+          ),
+          modelDropdown: document.querySelector(
+            '[class*="model-dropdown"], [data-testid*="model-dropdown"], .model-dropdown',
+          ),
+          autoModelToggle: document.querySelector(
+            '[aria-label*="Auto Model"], [data-testid*="auto-model"], input[type="checkbox"][name*="auto"], .auto-model-toggle',
+          ),
+          modelOptions: document.querySelectorAll(
+            '[class*="model-option"], [data-testid*="model-option"], .model-option',
+          ),
         };
 
         // Extract selector information with enhanced logic
         const extractSelector = (element) => {
           if (!element) return null;
-          
+
           // Try data-testid first (most reliable)
-          if (element.getAttribute('data-testid')) {
-            return `[data-testid="${element.getAttribute('data-testid')}"]`;
+          if (element.getAttribute("data-testid")) {
+            return `[data-testid="${element.getAttribute("data-testid")}"]`;
           }
-          
+
           // Try aria-label (good for accessibility)
-          if (element.getAttribute('aria-label')) {
-            return `[aria-label="${element.getAttribute('aria-label')}"]`;
+          if (element.getAttribute("aria-label")) {
+            return `[aria-label="${element.getAttribute("aria-label")}"]`;
           }
-          
+
           // Try ID
           if (element.id) {
             return `#${element.id}`;
           }
-          
+
           // Try unique class combinations
           const classes = Array.from(element.classList);
           if (classes.length > 0) {
@@ -391,26 +579,26 @@ class SelectorCollector {
                 }
               }
             }
-            
+
             // Try single unique class
-            const uniqueClass = classes.find(cls => 
-              document.querySelectorAll(`.${cls}`).length === 1
+            const uniqueClass = classes.find(
+              (cls) => document.querySelectorAll(`.${cls}`).length === 1,
             );
             if (uniqueClass) {
               return `.${uniqueClass}`;
             }
-            
+
             // Return first class as fallback
             return `.${classes[0]}`;
           }
-          
+
           // Fallback to tag name with attributes
           const tagName = element.tagName.toLowerCase();
           const attributes = Array.from(element.attributes)
-            .filter(attr => !['class', 'id'].includes(attr.name))
-            .map(attr => `[${attr.name}="${attr.value}"]`)
-            .join('');
-          
+            .filter((attr) => !["class", "id"].includes(attr.name))
+            .map((attr) => `[${attr.name}="${attr.value}"]`)
+            .join("");
+
           return attributes ? `${tagName}${attributes}` : tagName;
         };
 
@@ -432,11 +620,12 @@ class SelectorCollector {
         return result;
       });
 
-      this.logger.info(`Collected ${Object.keys(chatSelectors).length} chat selectors`);
+      this.logger.info(
+        `Collected ${Object.keys(chatSelectors).length} chat selectors`,
+      );
       return chatSelectors;
-
     } catch (error) {
-      this.logger.error('Chat selector collection failed:', error.message);
+      this.logger.error("Chat selector collection failed:", error.message);
       throw error;
     }
   }
@@ -448,7 +637,7 @@ class SelectorCollector {
    */
   async detectChatState(page) {
     try {
-      this.logger.info('Detecting chat state');
+      this.logger.info("Detecting chat state");
 
       const chatState = await page.evaluate(() => {
         const state = {
@@ -457,37 +646,49 @@ class SelectorCollector {
           agentMode: null,
           modelType: null,
           webSearchEnabled: false,
-          contextAttached: false
+          contextAttached: false,
         };
 
         // Detect active chat
-        const chatInput = document.querySelector('[contenteditable="true"], textarea, input[type="text"]');
+        const chatInput = document.querySelector(
+          '[contenteditable="true"], textarea, input[type="text"]',
+        );
         state.isActive = chatInput !== null && chatInput.offsetParent !== null;
 
         // Detect premium features
-        const premiumElements = document.querySelectorAll('[class*="premium"], [data-testid*="premium"]');
+        const premiumElements = document.querySelectorAll(
+          '[class*="premium"], [data-testid*="premium"]',
+        );
         state.isPremium = premiumElements.length > 0;
 
         // Detect agent mode
-        const agentElements = document.querySelectorAll('[class*="agent"], [data-testid*="agent"]');
+        const agentElements = document.querySelectorAll(
+          '[class*="agent"], [data-testid*="agent"]',
+        );
         if (agentElements.length > 0) {
-          state.agentMode = 'enabled';
+          state.agentMode = "enabled";
         }
 
         // Detect model type
-        const modelSelector = document.querySelector('[aria-label*="Model"], [data-testid*="model"]');
+        const modelSelector = document.querySelector(
+          '[aria-label*="Model"], [data-testid*="model"]',
+        );
         if (modelSelector) {
-          state.modelType = modelSelector.textContent || 'unknown';
+          state.modelType = modelSelector.textContent || "unknown";
         }
 
         // Detect web search
-        const webSearchToggle = document.querySelector('[aria-label*="Web Search"], [data-testid*="web-search"]');
+        const webSearchToggle = document.querySelector(
+          '[aria-label*="Web Search"], [data-testid*="web-search"]',
+        );
         if (webSearchToggle) {
           state.webSearchEnabled = webSearchToggle.checked || false;
         }
 
         // Detect context attachment
-        const contextElements = document.querySelectorAll('[class*="context"], [data-testid*="context"]');
+        const contextElements = document.querySelectorAll(
+          '[class*="context"], [data-testid*="context"]',
+        );
         state.contextAttached = contextElements.length > 0;
 
         return state;
@@ -495,16 +696,15 @@ class SelectorCollector {
 
       this.logger.info(`Chat state detected: ${JSON.stringify(chatState)}`);
       return chatState;
-
     } catch (error) {
-      this.logger.error('Chat state detection failed:', error.message);
+      this.logger.error("Chat state detection failed:", error.message);
       return {
         isActive: false,
         isPremium: false,
         agentMode: null,
         modelType: null,
         webSearchEnabled: false,
-        contextAttached: false
+        contextAttached: false,
       };
     }
   }
@@ -516,18 +716,20 @@ class SelectorCollector {
    */
   async discoverSelectors(page) {
     try {
-      this.logger.info('Discovering additional selectors');
+      this.logger.info("Discovering additional selectors");
 
       const discovered = await page.evaluate(() => {
         const selectors = {};
 
         // Find all elements with data attributes
-        const dataElements = document.querySelectorAll('[data-testid], [data-id], [data-component]');
+        const dataElements = document.querySelectorAll(
+          "[data-testid], [data-id], [data-component]",
+        );
         dataElements.forEach((el, index) => {
-          const testId = el.getAttribute('data-testid');
-          const dataId = el.getAttribute('data-id');
-          const component = el.getAttribute('data-component');
-          
+          const testId = el.getAttribute("data-testid");
+          const dataId = el.getAttribute("data-id");
+          const component = el.getAttribute("data-component");
+
           if (testId) {
             selectors[`testid_${testId}`] = `[data-testid="${testId}"]`;
           }
@@ -535,16 +737,19 @@ class SelectorCollector {
             selectors[`dataid_${dataId}`] = `[data-id="${dataId}"]`;
           }
           if (component) {
-            selectors[`component_${component}`] = `[data-component="${component}"]`;
+            selectors[`component_${component}`] =
+              `[data-component="${component}"]`;
           }
         });
 
         // Find elements with aria labels
-        const ariaElements = document.querySelectorAll('[aria-label], [aria-labelledby]');
+        const ariaElements = document.querySelectorAll(
+          "[aria-label], [aria-labelledby]",
+        );
         ariaElements.forEach((el, index) => {
-          const ariaLabel = el.getAttribute('aria-label');
+          const ariaLabel = el.getAttribute("aria-label");
           if (ariaLabel) {
-            const key = ariaLabel.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const key = ariaLabel.toLowerCase().replace(/[^a-z0-9]/g, "_");
             selectors[`aria_${key}`] = `[aria-label="${ariaLabel}"]`;
           }
         });
@@ -552,11 +757,12 @@ class SelectorCollector {
         return selectors;
       });
 
-      this.logger.info(`Discovered ${Object.keys(discovered).length} additional selectors`);
+      this.logger.info(
+        `Discovered ${Object.keys(discovered).length} additional selectors`,
+      );
       return discovered;
-
     } catch (error) {
-      this.logger.error('Selector discovery failed:', error.message);
+      this.logger.error("Selector discovery failed:", error.message);
       return {};
     }
   }
@@ -572,7 +778,10 @@ class SelectorCollector {
       const element = await page.$(selector);
       return element !== null;
     } catch (error) {
-      this.logger.warn(`Selector validation failed for ${selector}:`, error.message);
+      this.logger.warn(
+        `Selector validation failed for ${selector}:`,
+        error.message,
+      );
       return false;
     }
   }
@@ -586,9 +795,9 @@ class SelectorCollector {
     try {
       const browser = await chromium.connectOverCDP({
         endpointURL: `http://${this.options.host}:${port}`,
-        timeout: 3000
+        timeout: 3000,
       });
-      
+
       await browser.close();
       return true;
     } catch (error) {
@@ -603,10 +812,9 @@ class SelectorCollector {
   getStats() {
     return {
       options: this.options,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
 
 module.exports = SelectorCollector;
-

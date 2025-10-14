@@ -1,42 +1,43 @@
 /**
  * Compliance Security Step - Specialized Security Compliance Analysis
  * Analyzes security compliance and configuration standards
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Specialized step for security compliance and configuration analysis
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('compliance_security_step');
+const logger = new Logger("compliance_security_step");
 
 // Step configuration
 const config = {
-  name: 'ComplianceSecurityStep',
-  type: 'analysis',
-  description: 'Analyzes security compliance and configuration standards',
-  category: 'security',
-  version: '1.0.0',
+  name: "ComplianceSecurityStep",
+  type: "analysis",
+  description: "Analyzes security compliance and configuration standards",
+  category: "security",
+  version: "1.0.0",
   dependencies: [],
   settings: {
     timeout: 30000,
     includeVulnerabilities: true,
-    includeBestPractices: true
+    includeBestPractices: true,
   },
   validation: {
-    requiredFiles: ['package.json'],
-    supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
-  }
+    requiredFiles: ["package.json"],
+    supportedProjects: ["nodejs", "react", "vue", "angular", "express", "nest"],
+  },
 };
 
 class ComplianceSecurityStep {
   constructor() {
-    this.name = 'ComplianceSecurityStep';
-    this.description = 'Analyzes security compliance and configuration standards';
-    this.category = 'security';
+    this.name = "ComplianceSecurityStep";
+    this.description =
+      "Analyzes security compliance and configuration standards";
+    this.category = "security";
     this.dependencies = [];
   }
 
@@ -47,22 +48,24 @@ class ComplianceSecurityStep {
   async execute(context = {}) {
     const config = ComplianceSecurityStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔒 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
 
       const projectPath = context.projectPath;
       const projectId = context.projectId;
-      
-      logger.info(`📊 Starting compliance security analysis for: ${projectPath}`);
+
+      logger.info(
+        `📊 Starting compliance security analysis for: ${projectPath}`,
+      );
 
       // Execute compliance security analysis
       const compliance = await this.analyzeCompliance(projectPath, {
         includeVulnerabilities: context.includeVulnerabilities !== false,
-        includeBestPractices: context.includeBestPractices !== false
+        includeBestPractices: context.includeBestPractices !== false,
       });
 
       // Clean and format result
@@ -85,33 +88,35 @@ class ComplianceSecurityStep {
 
       // Generate documentation if requested
       if (context.includeDocumentation !== false) {
-        cleanResult.documentation = await this.createDocumentation(cleanResult, projectPath, context);
+        cleanResult.documentation = await this.createDocumentation(
+          cleanResult,
+          projectPath,
+          context,
+        );
       }
 
       logger.info(`✅ Compliance security analysis completed successfully`);
 
       return {
-        success: true,
         result: cleanResult,
         metadata: {
-          stepName: 'ComplianceSecurityStep',
+          stepName: "ComplianceSecurityStep",
           projectPath,
           projectId,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
-
     } catch (error) {
       logger.error(`❌ Compliance security analysis failed: ${error.message}`);
-      
+
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
-          stepName: 'ComplianceSecurityStep',
+          stepName: "ComplianceSecurityStep",
           projectPath: context.projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
     }
   }
@@ -142,7 +147,10 @@ class ComplianceSecurityStep {
       // Calculate compliance metrics
       const complianceScore = this.calculateComplianceScore(vulnerabilities);
       const coverage = this.calculateCoverage(projectPath);
-      const confidence = this.calculateConfidence({ vulnerabilities, bestPractices });
+      const confidence = this.calculateConfidence({
+        vulnerabilities,
+        bestPractices,
+      });
 
       return {
         vulnerabilities,
@@ -152,10 +160,9 @@ class ComplianceSecurityStep {
           coverage,
           confidence,
           vulnerabilitiesFound: vulnerabilities.length,
-          bestPracticesFound: bestPractices.length
-        }
+          bestPracticesFound: bestPractices.length,
+        },
       };
-
     } catch (error) {
       logger.error(`Compliance analysis failed: ${error.message}`);
       return {
@@ -166,8 +173,8 @@ class ComplianceSecurityStep {
           coverage: 0,
           confidence: 0,
           vulnerabilitiesFound: 0,
-          bestPracticesFound: 0
-        }
+          bestPracticesFound: 0,
+        },
       };
     }
   }
@@ -181,20 +188,20 @@ class ComplianceSecurityStep {
 
     try {
       const configFiles = [
-        'package.json',
-        'webpack.config.js',
-        'next.config.js',
-        'vite.config.js',
-        'rollup.config.js',
-        'babel.config.js',
-        'eslint.config.js',
-        'jest.config.js'
+        "package.json",
+        "webpack.config.js",
+        "next.config.js",
+        "vite.config.js",
+        "rollup.config.js",
+        "babel.config.js",
+        "eslint.config.js",
+        "jest.config.js",
       ];
 
       for (const configFile of configFiles) {
         const filePath = path.join(projectPath, configFile);
         try {
-          const content = await fs.readFile(filePath, 'utf8');
+          const content = await fs.readFile(filePath, "utf8");
           const configIssues = this.analyzeConfigFile(configFile, content);
           vulnerabilities.push(...configIssues.vulnerabilities);
           bestPractices.push(...configIssues.bestPractices);
@@ -217,88 +224,93 @@ class ComplianceSecurityStep {
     const bestPractices = [];
 
     switch (filename) {
-      case 'package.json':
+      case "package.json":
         try {
           const pkg = JSON.parse(content);
-          
+
           // Check for security-related scripts
           if (pkg.scripts) {
             if (pkg.scripts.audit) {
               bestPractices.push({
-                type: 'compliance',
-                message: 'Security audit script configured',
-                suggestion: 'Run npm audit regularly',
-                category: 'security-scripts',
-                scanner: 'ComplianceSecurityStep'
+                type: "compliance",
+                message: "Security audit script configured",
+                suggestion: "Run npm audit regularly",
+                category: "security-scripts",
+                scanner: "ComplianceSecurityStep",
               });
             } else {
               vulnerabilities.push({
-                type: 'compliance',
-                severity: 'low',
+                type: "compliance",
+                severity: "low",
                 file: filename,
-                message: 'No security audit script found',
+                message: "No security audit script found",
                 suggestion: 'Add "audit": "npm audit" to package.json scripts',
-                category: 'security-scripts',
-                scanner: 'ComplianceSecurityStep'
+                category: "security-scripts",
+                scanner: "ComplianceSecurityStep",
               });
             }
 
-            if (pkg.scripts.start && pkg.scripts.start.includes('--inspect')) {
+            if (pkg.scripts.start && pkg.scripts.start.includes("--inspect")) {
               vulnerabilities.push({
-                type: 'compliance',
-                severity: 'high',
+                type: "compliance",
+                severity: "high",
                 file: filename,
-                message: 'Debug mode enabled in production script',
-                suggestion: 'Remove --inspect flag from production start script',
-                category: 'debug-mode',
-                scanner: 'ComplianceSecurityStep'
+                message: "Debug mode enabled in production script",
+                suggestion:
+                  "Remove --inspect flag from production start script",
+                category: "debug-mode",
+                scanner: "ComplianceSecurityStep",
               });
             }
           }
 
           // Check for security dependencies
-          const securityDeps = ['helmet', 'express-rate-limit', 'bcrypt', 'jsonwebtoken'];
-          securityDeps.forEach(dep => {
+          const securityDeps = [
+            "helmet",
+            "express-rate-limit",
+            "bcrypt",
+            "jsonwebtoken",
+          ];
+          securityDeps.forEach((dep) => {
             if (pkg.dependencies && pkg.dependencies[dep]) {
               bestPractices.push({
-                type: 'compliance',
+                type: "compliance",
                 message: `Security dependency detected: ${dep}`,
                 suggestion: `Ensure ${dep} is properly configured`,
-                category: 'security-dependencies',
-                scanner: 'ComplianceSecurityStep'
+                category: "security-dependencies",
+                scanner: "ComplianceSecurityStep",
               });
             }
           });
-
         } catch (error) {
           // Invalid JSON
         }
         break;
 
-      case 'webpack.config.js':
+      case "webpack.config.js":
         if (content.includes('devtool: "eval"')) {
           vulnerabilities.push({
-            type: 'compliance',
-            severity: 'medium',
+            type: "compliance",
+            severity: "medium",
             file: filename,
-            message: 'Eval source map enabled in webpack',
-            suggestion: 'Use safer source map options for production',
-            category: 'source-maps',
-            scanner: 'ComplianceSecurityStep'
+            message: "Eval source map enabled in webpack",
+            suggestion: "Use safer source map options for production",
+            category: "source-maps",
+            scanner: "ComplianceSecurityStep",
           });
         }
         break;
 
-      case 'next.config.js':
-        if (content.includes('poweredByHeader: true')) {
+      case "next.config.js":
+        if (content.includes("poweredByHeader: true")) {
           vulnerabilities.push({
-            type: 'compliance',
-            severity: 'low',
+            type: "compliance",
+            severity: "low",
             file: filename,
-            message: 'X-Powered-By header enabled',
-            suggestion: 'Disable X-Powered-By header for security',
-            category: 'security-headers',
-            scanner: 'ComplianceSecurityStep'
+            message: "X-Powered-By header enabled",
+            suggestion: "Disable X-Powered-By header for security",
+            category: "security-headers",
+            scanner: "ComplianceSecurityStep",
           });
         }
         break;
@@ -316,11 +328,14 @@ class ComplianceSecurityStep {
 
     try {
       const envFiles = await this.findEnvFiles(projectPath);
-      
+
       for (const envFile of envFiles) {
         try {
-          const content = await fs.readFile(envFile, 'utf8');
-          const envIssues = this.analyzeEnvFile(content, path.basename(envFile));
+          const content = await fs.readFile(envFile, "utf8");
+          const envIssues = this.analyzeEnvFile(
+            content,
+            path.basename(envFile),
+          );
           vulnerabilities.push(...envIssues.vulnerabilities);
           bestPractices.push(...envIssues.bestPractices);
         } catch (error) {
@@ -342,26 +357,26 @@ class ComplianceSecurityStep {
     const bestPractices = [];
 
     // Check for development environment variables in production files
-    if (filename === '.env' && content.includes('NODE_ENV=development')) {
+    if (filename === ".env" && content.includes("NODE_ENV=development")) {
       vulnerabilities.push({
-        type: 'compliance',
-        severity: 'medium',
+        type: "compliance",
+        severity: "medium",
         file: filename,
-        message: 'Development environment variables in .env',
-        suggestion: 'Use .env.example for development variables',
-        category: 'environment-config',
-        scanner: 'ComplianceSecurityStep'
+        message: "Development environment variables in .env",
+        suggestion: "Use .env.example for development variables",
+        category: "environment-config",
+        scanner: "ComplianceSecurityStep",
       });
     }
 
     // Check for best practices
-    if (filename === '.env.example') {
+    if (filename === ".env.example") {
       bestPractices.push({
-        type: 'compliance',
-        message: 'Environment example file found',
-        suggestion: 'Good practice: providing environment template',
-        category: 'environment-config',
-        scanner: 'ComplianceSecurityStep'
+        type: "compliance",
+        message: "Environment example file found",
+        suggestion: "Good practice: providing environment template",
+        category: "environment-config",
+        scanner: "ComplianceSecurityStep",
       });
     }
 
@@ -377,16 +392,16 @@ class ComplianceSecurityStep {
 
     try {
       const dockerFiles = [
-        'Dockerfile',
-        'docker-compose.yml',
-        'docker-compose.yaml',
-        '.dockerignore'
+        "Dockerfile",
+        "docker-compose.yml",
+        "docker-compose.yaml",
+        ".dockerignore",
       ];
 
       for (const dockerFile of dockerFiles) {
         const filePath = path.join(projectPath, dockerFile);
         try {
-          const content = await fs.readFile(filePath, 'utf8');
+          const content = await fs.readFile(filePath, "utf8");
           const dockerIssues = this.analyzeDockerFile(dockerFile, content);
           vulnerabilities.push(...dockerIssues.vulnerabilities);
           bestPractices.push(...dockerIssues.bestPractices);
@@ -408,63 +423,66 @@ class ComplianceSecurityStep {
     const vulnerabilities = [];
     const bestPractices = [];
 
-    if (filename === 'Dockerfile') {
+    if (filename === "Dockerfile") {
       // Check for security issues in Dockerfile
-      if (content.includes('USER root')) {
+      if (content.includes("USER root")) {
         vulnerabilities.push({
-          type: 'compliance',
-          severity: 'high',
+          type: "compliance",
+          severity: "high",
           file: filename,
-          message: 'Running as root user in Docker',
-          suggestion: 'Use non-root user for security',
-          category: 'docker-security',
-          scanner: 'ComplianceSecurityStep'
+          message: "Running as root user in Docker",
+          suggestion: "Use non-root user for security",
+          category: "docker-security",
+          scanner: "ComplianceSecurityStep",
         });
       }
 
-      if (content.includes('COPY . .')) {
+      if (content.includes("COPY . .")) {
         vulnerabilities.push({
-          type: 'compliance',
-          severity: 'medium',
+          type: "compliance",
+          severity: "medium",
           file: filename,
-          message: 'Copying entire directory to Docker image',
-          suggestion: 'Use .dockerignore and copy specific files only',
-          category: 'docker-security',
-          scanner: 'ComplianceSecurityStep'
+          message: "Copying entire directory to Docker image",
+          suggestion: "Use .dockerignore and copy specific files only",
+          category: "docker-security",
+          scanner: "ComplianceSecurityStep",
         });
       }
 
-      if (content.includes('RUN npm install')) {
+      if (content.includes("RUN npm install")) {
         bestPractices.push({
-          type: 'compliance',
-          message: 'Using npm install in Docker',
-          suggestion: 'Consider using npm ci for reproducible builds',
-          category: 'docker-best-practices',
-          scanner: 'ComplianceSecurityStep'
+          type: "compliance",
+          message: "Using npm install in Docker",
+          suggestion: "Consider using npm ci for reproducible builds",
+          category: "docker-best-practices",
+          scanner: "ComplianceSecurityStep",
         });
       }
     }
 
-    if (filename === 'docker-compose.yml' || filename === 'docker-compose.yaml') {
-      if (content.includes('privileged: true')) {
+    if (
+      filename === "docker-compose.yml" ||
+      filename === "docker-compose.yaml"
+    ) {
+      if (content.includes("privileged: true")) {
         vulnerabilities.push({
-          type: 'compliance',
-          severity: 'high',
+          type: "compliance",
+          severity: "high",
           file: filename,
-          message: 'Privileged mode enabled in Docker Compose',
-          suggestion: 'Avoid using privileged mode unless absolutely necessary',
-          category: 'docker-security',
-          scanner: 'ComplianceSecurityStep'
+          message: "Privileged mode enabled in Docker Compose",
+          suggestion: "Avoid using privileged mode unless absolutely necessary",
+          category: "docker-security",
+          scanner: "ComplianceSecurityStep",
         });
       }
 
-      if (content.includes('ports:')) {
+      if (content.includes("ports:")) {
         bestPractices.push({
-          type: 'compliance',
-          message: 'Port mapping configured in Docker Compose',
-          suggestion: 'Ensure only necessary ports are exposed',
-          category: 'docker-best-practices',
-          scanner: 'ComplianceSecurityStep'
+          type: "compliance",
+          message: "Port mapping configured in Docker Compose",
+          suggestion: "Ensure only necessary ports are exposed",
+          category: "docker-best-practices",
+          scanner: "ComplianceSecurityStep",
         });
       }
     }
@@ -477,20 +495,24 @@ class ComplianceSecurityStep {
    */
   async findEnvFiles(projectPath) {
     const envFiles = [];
-    
+
     try {
       const allFiles = await this.getAllFiles(projectPath);
-      
+
       for (const file of allFiles) {
         const basename = path.basename(file);
-        if (basename.startsWith('.env') || basename === 'environment.js' || basename === 'config.js') {
+        if (
+          basename.startsWith(".env") ||
+          basename === "environment.js" ||
+          basename === "config.js"
+        ) {
           envFiles.push(file);
         }
       }
     } catch (error) {
       logger.warn(`Could not find environment files: ${error.message}`);
     }
-    
+
     return envFiles;
   }
 
@@ -499,18 +521,27 @@ class ComplianceSecurityStep {
    */
   async getAllFiles(dir) {
     const files = [];
-    
+
     try {
       const items = await fs.readdir(dir);
-      
+
       for (const item of items) {
         const fullPath = path.join(dir, item);
         const stat = await fs.stat(fullPath);
-        
+
         if (stat.isDirectory()) {
           // Skip node_modules and other common exclusions
-          if (!['node_modules', '.git', 'dist', 'build', 'coverage', '.next'].includes(item)) {
-            files.push(...await this.getAllFiles(fullPath));
+          if (
+            ![
+              "node_modules",
+              ".git",
+              "dist",
+              "build",
+              "coverage",
+              ".next",
+            ].includes(item)
+          ) {
+            files.push(...(await this.getAllFiles(fullPath)));
           }
         } else {
           files.push(fullPath);
@@ -519,7 +550,7 @@ class ComplianceSecurityStep {
     } catch (error) {
       logger.warn(`Could not read directory: ${dir}`);
     }
-    
+
     return files;
   }
 
@@ -536,8 +567,8 @@ class ComplianceSecurityStep {
         totalBestPractices: (result.bestPractices || []).length,
         complianceScore: result.metrics?.complianceScore || 0,
         coverage: result.metrics?.coverage || 0,
-        confidence: result.metrics?.confidence || 0
-      }
+        confidence: result.metrics?.confidence || 0,
+      },
     };
   }
 
@@ -546,7 +577,7 @@ class ComplianceSecurityStep {
    */
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
   }
 
@@ -560,7 +591,7 @@ class ComplianceSecurityStep {
       critical: 20,
       high: 15,
       medium: 8,
-      low: 3
+      low: 3,
     };
 
     const totalWeight = issues.reduce((sum, issue) => {
@@ -569,7 +600,7 @@ class ComplianceSecurityStep {
 
     const maxScore = 100;
     const score = Math.max(0, maxScore - totalWeight);
-    
+
     return Math.round(score);
   }
 
@@ -586,15 +617,16 @@ class ComplianceSecurityStep {
    */
   calculateConfidence(result) {
     const { vulnerabilities, bestPractices } = result;
-    
+
     if (!vulnerabilities && !bestPractices) return 0;
-    
-    const totalIssues = (vulnerabilities?.length || 0) + (bestPractices?.length || 0);
-    
+
+    const totalIssues =
+      (vulnerabilities?.length || 0) + (bestPractices?.length || 0);
+
     if (totalIssues === 0) return 75; // High confidence when no issues found
-    
+
     // Higher confidence when more issues are found (indicates thorough analysis)
-    return Math.min(100, Math.round(55 + (totalIssues * 2)));
+    return Math.min(100, Math.round(55 + totalIssues * 2));
   }
 
   /**
@@ -604,49 +636,55 @@ class ComplianceSecurityStep {
    */
   generateIssues(result) {
     const issues = [];
-    
+
     // Check for low analysis score
     if (result.score < 70) {
       issues.push({
-        type: 'low-analysis-score',
-        title: 'Low Analysis Score',
+        type: "low-analysis-score",
+        title: "Low Analysis Score",
         description: `Analysis score of ${result.score}% indicates areas for improvement`,
-        severity: 'medium',
-        priority: 'medium',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        location: 'analysis-results',
-        suggestion: 'Improve analysis results by addressing identified issues'
+        severity: "medium",
+        priority: "medium",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        location: "analysis-results",
+        suggestion: "Improve analysis results by addressing identified issues",
       });
     }
 
     // Check for critical issues
-    if (result.vulnerabilities && result.vulnerabilities.some(v => v.severity === 'critical')) {
+    if (
+      result.vulnerabilities &&
+      result.vulnerabilities.some((v) => v.severity === "critical")
+    ) {
       issues.push({
-        type: 'critical-issues',
-        title: 'Critical Issues Detected',
-        description: 'Critical issues found in the analysis',
-        severity: 'critical',
-        priority: 'critical',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        location: 'analysis-results',
-        suggestion: 'Immediately address critical issues'
+        type: "critical-issues",
+        title: "Critical Issues Detected",
+        description: "Critical issues found in the analysis",
+        severity: "critical",
+        priority: "critical",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        location: "analysis-results",
+        suggestion: "Immediately address critical issues",
       });
     }
 
     // Check for high severity issues
-    if (result.vulnerabilities && result.vulnerabilities.some(v => v.severity === 'high')) {
+    if (
+      result.vulnerabilities &&
+      result.vulnerabilities.some((v) => v.severity === "high")
+    ) {
       issues.push({
-        type: 'high-issues',
-        title: 'High Severity Issues Detected',
-        description: 'High severity issues found in the analysis',
-        severity: 'high',
-        priority: 'high',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        location: 'analysis-results',
-        suggestion: 'Address high severity issues promptly'
+        type: "high-issues",
+        title: "High Severity Issues Detected",
+        description: "High severity issues found in the analysis",
+        severity: "high",
+        priority: "high",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        location: "analysis-results",
+        suggestion: "Address high severity issues promptly",
       });
     }
 
@@ -659,60 +697,60 @@ class ComplianceSecurityStep {
    */
   generateRecommendations(result) {
     const recommendations = [];
-    
+
     // Check for low analysis score
     if (result.score < 80) {
       recommendations.push({
-        type: 'improve-score',
-        title: 'Improve Analysis Score',
+        type: "improve-score",
+        title: "Improve Analysis Score",
         description: `Current score of ${result.score}% can be improved`,
-        priority: 'medium',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        action: 'Implement best practices to improve analysis score',
-        impact: 'Better code quality and maintainability'
+        priority: "medium",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        action: "Implement best practices to improve analysis score",
+        impact: "Better code quality and maintainability",
       });
     }
 
     // Check for missing patterns
     if (result.patterns && result.patterns.length < 3) {
       recommendations.push({
-        type: 'add-patterns',
-        title: 'Add More Design Patterns',
-        description: 'Consider implementing additional design patterns',
-        priority: 'medium',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        action: 'Research and implement appropriate design patterns',
-        impact: 'Improved code organization and maintainability'
+        type: "add-patterns",
+        title: "Add More Design Patterns",
+        description: "Consider implementing additional design patterns",
+        priority: "medium",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        action: "Research and implement appropriate design patterns",
+        impact: "Improved code organization and maintainability",
       });
     }
 
     // Check for security improvements
     if (result.vulnerabilities && result.vulnerabilities.length > 0) {
       recommendations.push({
-        type: 'security-improvements',
-        title: 'Address Security Vulnerabilities',
+        type: "security-improvements",
+        title: "Address Security Vulnerabilities",
         description: `${result.vulnerabilities.length} vulnerabilities found`,
-        priority: 'high',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        action: 'Review and fix identified security vulnerabilities',
-        impact: 'Enhanced security posture'
+        priority: "high",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        action: "Review and fix identified security vulnerabilities",
+        impact: "Enhanced security posture",
       });
     }
 
     // Check for performance improvements
     if (result.metrics && result.metrics.performanceScore < 80) {
       recommendations.push({
-        type: 'performance-improvements',
-        title: 'Improve Performance',
-        description: 'Performance analysis indicates room for improvement',
-        priority: 'medium',
-        category: 'security',
-        source: 'ComplianceSecurityStep',
-        action: 'Optimize code for better performance',
-        impact: 'Faster execution and better user experience'
+        type: "performance-improvements",
+        title: "Improve Performance",
+        description: "Performance analysis indicates room for improvement",
+        priority: "medium",
+        category: "security",
+        source: "ComplianceSecurityStep",
+        action: "Optimize code for better performance",
+        impact: "Faster execution and better user experience",
       });
     }
 
@@ -726,77 +764,87 @@ class ComplianceSecurityStep {
    */
   async generateTasks(result, context) {
     const tasks = [];
-    const projectId = context.projectId || 'default-project';
-    
+    const projectId = context.projectId || "default-project";
+
     // Create main improvement task
     const mainTask = {
       id: `${this.name.toLowerCase()}-improvement-${Date.now()}`,
       title: `Improve ${this.name} Results`,
       description: `Address issues and implement recommendations from ${this.name} analysis`,
-      type: 'improvement',
-      category: 'security',
-      priority: 'medium',
-      status: 'pending',
+      type: "improvement",
+      category: "security",
+      priority: "medium",
+      status: "pending",
       projectId: projectId,
       metadata: {
-        source: 'ComplianceSecurityStep',
+        source: "ComplianceSecurityStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations ? result.recommendations.length : 0
+        recommendations: result.recommendations
+          ? result.recommendations.length
+          : 0,
       },
       estimatedHours: 4,
-      phase: 'improvement',
-      stage: 'planning'
+      phase: "improvement",
+      stage: "planning",
     };
-    
+
     tasks.push(mainTask);
-    
+
     // Create subtasks for critical issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "critical")
+    ) {
       const criticalTask = {
         id: `${this.name.toLowerCase()}-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${this.name}`,
-        description: 'Address critical issues identified in analysis',
-        type: 'fix',
-        category: 'security',
-        priority: 'critical',
-        status: 'pending',
+        description: "Address critical issues identified in analysis",
+        type: "fix",
+        category: "security",
+        priority: "critical",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'ComplianceSecurityStep',
-          issues: result.issues.filter(issue => issue.severity === 'critical')
+          source: "ComplianceSecurityStep",
+          issues: result.issues.filter(
+            (issue) => issue.severity === "critical",
+          ),
         },
         estimatedHours: 4,
-        phase: 'critical-fixes',
-        stage: 'implementation'
+        phase: "critical-fixes",
+        stage: "implementation",
       };
       tasks.push(criticalTask);
     }
-    
+
     // Create subtasks for high priority issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "high")
+    ) {
       const highTask = {
         id: `${this.name.toLowerCase()}-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${this.name}`,
-        description: 'Address high priority issues identified in analysis',
-        type: 'fix',
-        category: 'security',
-        priority: 'high',
-        status: 'pending',
+        description: "Address high priority issues identified in analysis",
+        type: "fix",
+        category: "security",
+        priority: "high",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'ComplianceSecurityStep',
-          issues: result.issues.filter(issue => issue.severity === 'high')
+          source: "ComplianceSecurityStep",
+          issues: result.issues.filter((issue) => issue.severity === "high"),
         },
         estimatedHours: 3,
-        phase: 'high-fixes',
-        stage: 'implementation'
+        phase: "high-fixes",
+        stage: "implementation",
       };
       tasks.push(highTask);
     }
-    
+
     return tasks;
   }
 
@@ -807,30 +855,30 @@ class ComplianceSecurityStep {
    */
   calculateEstimatedHours(result) {
     let totalHours = 2; // Base hours for improvement
-    
+
     if (result.issues) {
-      result.issues.forEach(issue => {
+      result.issues.forEach((issue) => {
         switch (issue.severity) {
-          case 'critical':
+          case "critical":
             totalHours += 2;
             break;
-          case 'high':
+          case "high":
             totalHours += 1.5;
             break;
-          case 'medium':
+          case "medium":
             totalHours += 1;
             break;
-          case 'low':
+          case "low":
             totalHours += 0.5;
             break;
         }
       });
     }
-    
+
     if (result.recommendations) {
       totalHours += result.recommendations.length * 0.5;
     }
-    
+
     return Math.round(totalHours * 10) / 10; // Round to 1 decimal place
   }
 
@@ -843,24 +891,32 @@ class ComplianceSecurityStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, 'docs', 'analysis', 'security', 'compliance-security-step');
-    
+    const docsDir = path.join(
+      projectPath,
+      "docs",
+      "analysis",
+      "security",
+      "compliance-security-step",
+    );
+
     // Ensure directory exists
     try {
       await fs.mkdir(docsDir, { recursive: true });
     } catch (error) {
       // Directory might already exist, continue
     }
-    
-    
+
     // Create implementation file
-    const implementationDoc = await this.createImplementationDoc(result, docsDir);
+    const implementationDoc = await this.createImplementationDoc(
+      result,
+      docsDir,
+    );
     docs.push(implementationDoc);
-    
+
     // Create analysis report
     const analysisReport = await this.createAnalysisReport(result, docsDir);
     docs.push(analysisReport);
-    
+
     return docs;
   }
 
@@ -871,8 +927,8 @@ class ComplianceSecurityStep {
    * @returns {Object} Implementation document
    */
   async createImplementationDoc(result, docsDir) {
-    const docPath = path.join(docsDir, 'compliance-security-implementation.md');
-    
+    const docPath = path.join(docsDir, "compliance-security-implementation.md");
+
     const content = `# Compliance Security Analysis Implementation
 
 ## 📋 Analysis Overview
@@ -888,23 +944,23 @@ class ComplianceSecurityStep {
 - **Confidence**: ${result.summary?.confidence || 0}%
 
 ## 🎯 Key Findings
-${result.complianceIssues ? result.complianceIssues.map(issue => `- **${issue.type}**: ${issue.description}`).join('\n') : '- No compliance issues detected'}
+${result.complianceIssues ? result.complianceIssues.map((issue) => `- **${issue.type}**: ${issue.description}`).join("\n") : "- No compliance issues detected"}
 
 ## 📝 Recommendations
-${result.recommendations ? result.recommendations.map(rec => `- **${rec.title}**: ${rec.description}`).join('\n') : '- No recommendations'}
+${result.recommendations ? result.recommendations.map((rec) => `- **${rec.title}**: ${rec.description}`).join("\n") : "- No recommendations"}
 
 ## 🔧 Implementation Tasks
-${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join('\n') : '- No tasks generated'}
+${result.tasks ? result.tasks.map((task) => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join("\n") : "- No tasks generated"}
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'implementation',
-      title: 'Compliance Security Analysis Implementation',
+      type: "implementation",
+      title: "Compliance Security Analysis Implementation",
       path: docPath,
-      category: 'security',
-      source: "TrivySecurityStep"
+      category: "security",
+      source: "TrivySecurityStep",
     };
   }
 
@@ -915,21 +971,29 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
    * @returns {Object} Analysis report
    */
   async createAnalysisReport(result, docsDir) {
-    const docPath = path.join(docsDir, 'compliance-security-report.md');
-    
+    const docPath = path.join(docsDir, "compliance-security-report.md");
+
     const content = `# Compliance Security Analysis Report
 
 ## 📊 Executive Summary
 Compliance security analysis completed with a score of ${result.summary?.complianceScore || 0}% and ${result.summary?.coverage || 0}% coverage.
 
 ## 🔍 Detailed Analysis
-${result.complianceIssues ? result.complianceIssues.map(issue => `
+${
+  result.complianceIssues
+    ? result.complianceIssues
+        .map(
+          (issue) => `
 ### ${issue.type} Compliance Issue
-- **File**: ${issue.file || 'N/A'}
+- **File**: ${issue.file || "N/A"}
 - **Description**: ${issue.description}
 - **Severity**: ${issue.severity}
 - **Suggestion**: ${issue.suggestion}
-`).join('\n') : 'No compliance issues found'}
+`,
+        )
+        .join("\n")
+    : "No compliance issues found"
+}
 
 ## 📈 Metrics
 - **Compliance Issues**: ${result.summary?.totalComplianceIssues || 0} found
@@ -940,14 +1004,14 @@ ${result.complianceIssues ? result.complianceIssues.map(issue => `
 Based on the analysis, consider addressing identified compliance issues and implementing security best practices.
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'report',
-      title: 'Compliance Security Analysis Report',
+      type: "report",
+      title: "Compliance Security Analysis Report",
       path: docPath,
-      category: 'security',
-      source: "TrivySecurityStep"
+      category: "security",
+      source: "TrivySecurityStep",
     };
   }
 }
@@ -958,5 +1022,5 @@ const stepInstance = new ComplianceSecurityStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

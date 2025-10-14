@@ -8,19 +8,19 @@ class GitPullCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitpullcommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
-    this.remote = params.remote || 'origin';
+
+    this.remote = params.remote || "origin";
     this.branch = params.branch;
     this.rebase = params.rebase || false;
   }
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     return true;
   }
 
@@ -29,7 +29,7 @@ class GitPullCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       remote: this.remote,
       branch: this.branch,
       rebase: this.rebase,

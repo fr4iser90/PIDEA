@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * Check Container Status - Analysis Step
@@ -7,10 +7,10 @@ const logger = new Logger('Logger');
  */
 
 const config = {
-  name: 'CheckContainerStatus',
-  type: 'analysis',
-  description: 'Check the status of Docker containers and related services',
-  category: 'analysis',
+  name: "CheckContainerStatus",
+  type: "analysis",
+  description: "Check the status of Docker containers and related services",
+  category: "analysis",
   order: 1,
   required: true,
   settings: {
@@ -18,14 +18,14 @@ const config = {
     checkKubernetes: false,
     checkServices: true,
     timeout: 30000,
-    retryAttempts: 3
+    retryAttempts: 3,
   },
   dependencies: [],
   properties: {
     supportsDocker: true,
     supportsKubernetes: false,
-    supportsServices: true
-  }
+    supportsServices: true,
+  },
 };
 
 /**
@@ -35,19 +35,19 @@ const config = {
  */
 async function execute(context = {}, options = {}) {
   try {
-    logger.info('🐳 Checking container status...');
-    
+    logger.info("🐳 Checking container status...");
+
     const stepOptions = { ...config.settings, ...options };
     const results = {
       step: config.name,
-      status: 'completed',
+      status: "completed",
       timestamp: new Date(),
       data: {
         containers: [],
         services: [],
-        health: {}
+        health: {},
       },
-      issues: []
+      issues: [],
     };
 
     // Check Docker containers if enabled
@@ -67,23 +67,26 @@ async function execute(context = {}, options = {}) {
     // Calculate overall health
     results.data.health = calculateHealth(results.data);
 
-    logger.info(`✅ Container status check completed. Health: ${results.data.health.status}`);
+    logger.info(
+      `✅ Container status check completed. Health: ${results.data.health.status}`,
+    );
     return results;
-
   } catch (error) {
-    logger.error('❌ Container status check failed:', error.message);
-    
+    logger.error("❌ Container status check failed:", error.message);
+
     return {
       step: config.name,
-      status: 'failed',
+      status: "failed",
       timestamp: new Date(),
       error: error.message,
       data: {},
-      issues: [{
-        severity: 'critical',
-        message: `Container status check failed: ${error.message}`,
-        timestamp: new Date()
-      }]
+      issues: [
+        {
+          severity: "critical",
+          message: `Container status check failed: ${error.message}`,
+          timestamp: new Date(),
+        },
+      ],
     };
   }
 }
@@ -99,47 +102,52 @@ async function checkDockerContainers(context, options) {
 
   try {
     // Real Docker container check using Docker API
-    const { exec } = require('child_process');
-    const util = require('util');
+    const { exec } = require("child_process");
+    const util = require("util");
     const execAsync = util.promisify(exec);
-    
+
     try {
       // Get running containers using docker ps
-      const { stdout } = await execAsync('docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}"');
-      
-      const lines = stdout.trim().split('\n').slice(1); // Skip header
-      
+      const { stdout } = await execAsync(
+        'docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}"',
+      );
+
+      const lines = stdout.trim().split("\n").slice(1); // Skip header
+
       for (const line of lines) {
-        const [id, name, status, image, ports] = line.split('\t');
-        
+        const [id, name, status, image, ports] = line.split("\t");
+
         if (id && name) {
           const container = {
             id: id.trim(),
             name: name.trim(),
-            status: status.includes('Up') ? 'running' : 'stopped',
+            status: status.includes("Up") ? "running" : "stopped",
             image: image.trim(),
-            ports: ports ? ports.trim().split(', ') : [],
-            health: status.includes('healthy') ? 'healthy' : 'unknown'
+            ports: ports ? ports.trim().split(", ") : [],
+            health: status.includes("healthy") ? "healthy" : "unknown",
           };
-          
+
           containers.push(container);
-          
+
           // Check for issues
-          if (container.status !== 'running') {
+          if (container.status !== "running") {
             issues.push({
-              severity: 'critical',
+              severity: "critical",
               message: `Container ${container.name} is not running (status: ${container.status})`,
               container: container.name,
-              timestamp: new Date()
+              timestamp: new Date(),
             });
           }
-          
-          if (container.health !== 'healthy' && container.health !== 'unknown') {
+
+          if (
+            container.health !== "healthy" &&
+            container.health !== "unknown"
+          ) {
             issues.push({
-              severity: 'warning',
+              severity: "warning",
               message: `Container ${container.name} health check failed (health: ${container.health})`,
               container: container.name,
-              timestamp: new Date()
+              timestamp: new Date(),
             });
           }
         }
@@ -147,18 +155,17 @@ async function checkDockerContainers(context, options) {
     } catch (dockerError) {
       // Docker not available or command failed
       issues.push({
-        severity: 'warning',
-        message: 'Docker not available or command failed',
+        severity: "warning",
+        message: "Docker not available or command failed",
         details: dockerError.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
-
   } catch (error) {
     issues.push({
-      severity: 'critical',
+      severity: "critical",
       message: `Failed to check Docker containers: ${error.message}`,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -176,44 +183,46 @@ async function checkServices(context, options) {
 
   try {
     // Real service check using netstat and process checking
-    const { exec } = require('child_process');
-    const util = require('util');
+    const { exec } = require("child_process");
+    const util = require("util");
     const execAsync = util.promisify(exec);
-    
+
     try {
       // Check for common services using netstat
-      const { stdout } = await execAsync('netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null');
-      
-      const lines = stdout.trim().split('\n').slice(1); // Skip header
-      
+      const { stdout } = await execAsync(
+        "netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null",
+      );
+
+      const lines = stdout.trim().split("\n").slice(1); // Skip header
+
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
         if (parts.length >= 4) {
           const address = parts[3];
           const portMatch = address.match(/:(\d+)$/);
-          
+
           if (portMatch) {
             const port = parseInt(portMatch[1]);
-                         const serviceName = getServiceNameByPort(port);
-            
+            const serviceName = getServiceNameByPort(port);
+
             if (serviceName) {
               const service = {
                 name: serviceName,
-                status: 'running',
+                status: "running",
                 port: port,
-                health: 'healthy',
-                responseTime: 0 // Would need actual health check
+                health: "healthy",
+                responseTime: 0, // Would need actual health check
               };
-              
+
               services.push(service);
-              
+
               // Check for issues
-              if (service.status !== 'running') {
+              if (service.status !== "running") {
                 issues.push({
-                  severity: 'critical',
+                  severity: "critical",
                   message: `Service ${service.name} is not running (status: ${service.status})`,
                   service: service.name,
-                  timestamp: new Date()
+                  timestamp: new Date(),
                 });
               }
             }
@@ -223,18 +232,17 @@ async function checkServices(context, options) {
     } catch (netstatError) {
       // Netstat not available or command failed
       issues.push({
-        severity: 'warning',
-        message: 'Service check failed - netstat/ss not available',
+        severity: "warning",
+        message: "Service check failed - netstat/ss not available",
         details: netstatError.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
-
   } catch (error) {
     issues.push({
-      severity: 'critical',
+      severity: "critical",
       message: `Failed to check services: ${error.message}`,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -248,23 +256,23 @@ async function checkServices(context, options) {
  */
 function getServiceNameByPort(port) {
   const commonServices = {
-    22: 'SSH',
-    25: 'SMTP',
-    53: 'DNS',
-    80: 'HTTP',
-    443: 'HTTPS',
-    3306: 'MySQL',
-    5432: 'PostgreSQL',
-    27017: 'MongoDB',
-    6379: 'Redis',
-    8080: 'HTTP-Alt',
-    3000: 'Node.js-App',
-    4000: 'Frontend-App',
-    5000: 'Python-App',
-    8000: 'Django-App',
-    9000: 'Jenkins'
+    22: "SSH",
+    25: "SMTP",
+    53: "DNS",
+    80: "HTTP",
+    443: "HTTPS",
+    3306: "MySQL",
+    5432: "PostgreSQL",
+    27017: "MongoDB",
+    6379: "Redis",
+    8080: "HTTP-Alt",
+    3000: "Node.js-App",
+    4000: "Frontend-App",
+    5000: "Python-App",
+    8000: "Django-App",
+    9000: "Jenkins",
   };
-  
+
   return commonServices[port] || `Service-${port}`;
 }
 
@@ -274,18 +282,18 @@ function getServiceNameByPort(port) {
  */
 function calculateHealth(data) {
   const { containers, services } = data;
-  
+
   let totalItems = 0;
   let healthyItems = 0;
   let criticalIssues = 0;
   let warnings = 0;
 
   // Count containers
-  containers.forEach(container => {
+  containers.forEach((container) => {
     totalItems++;
-    if (container.status === 'running' && container.health === 'healthy') {
+    if (container.status === "running" && container.health === "healthy") {
       healthyItems++;
-    } else if (container.status !== 'running') {
+    } else if (container.status !== "running") {
       criticalIssues++;
     } else {
       warnings++;
@@ -293,11 +301,11 @@ function calculateHealth(data) {
   });
 
   // Count services
-  services.forEach(service => {
+  services.forEach((service) => {
     totalItems++;
-    if (service.status === 'running' && service.health === 'healthy') {
+    if (service.status === "running" && service.health === "healthy") {
       healthyItems++;
-    } else if (service.status !== 'running') {
+    } else if (service.status !== "running") {
       criticalIssues++;
     } else {
       warnings++;
@@ -306,13 +314,13 @@ function calculateHealth(data) {
 
   // Calculate health score
   const healthScore = totalItems > 0 ? (healthyItems / totalItems) * 100 : 100;
-  
+
   // Determine status
-  let status = 'healthy';
+  let status = "healthy";
   if (criticalIssues > 0) {
-    status = 'critical';
+    status = "critical";
   } else if (warnings > 0) {
-    status = 'warning';
+    status = "warning";
   }
 
   return {
@@ -321,11 +329,11 @@ function calculateHealth(data) {
     totalItems,
     healthyItems,
     criticalIssues,
-    warnings
+    warnings,
   };
 }
 
 module.exports = {
   config,
-  execute
-}; 
+  execute,
+};

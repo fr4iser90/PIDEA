@@ -1,6 +1,6 @@
 /**
  * HandlerFactory - Factory for creating handlers
- * 
+ *
  * This class provides a factory pattern for creating handlers from
  * different sources using adapters. It supports legacy handlers,
  * external services, and new handlers.
@@ -17,7 +17,7 @@ class HandlerFactory {
       enableCaching: options.enableCaching !== false,
       cacheSize: options.cacheSize || 100,
       enableValidation: options.enableValidation !== false,
-      ...options
+      ...options,
     };
   }
 
@@ -31,7 +31,7 @@ class HandlerFactory {
     try {
       // Determine handler type
       const handlerType = this.determineHandlerType(request);
-      
+
       // Check cache first
       if (this.options.enableCaching) {
         const cacheKey = this.generateCacheKey(request, handlerType);
@@ -39,7 +39,7 @@ class HandlerFactory {
           return this.handlerCache.get(cacheKey);
         }
       }
-      
+
       // Get appropriate adapter
       let adapter = this.adapters.get(handlerType);
       if (!adapter) {
@@ -51,23 +51,22 @@ class HandlerFactory {
         // Register the compatible adapter for future use
         this.registerAdapter(handlerType, adapter);
       }
-      
+
       // Create handler using adapter
       const handler = await adapter.createHandler(request, context);
-      
+
       // Validate handler if enabled
       if (this.options.enableValidation) {
         await this.validateCreatedHandler(handler, context);
       }
-      
+
       // Cache handler
       if (this.options.enableCaching) {
         const cacheKey = this.generateCacheKey(request, handlerType);
         this.cacheHandler(cacheKey, handler);
       }
-      
-      return handler;
 
+      return handler;
     } catch (error) {
       throw new Error(`Handler creation failed: ${error.message}`);
     }
@@ -80,14 +79,11 @@ class HandlerFactory {
    */
   findCompatibleAdapter(request) {
     // Load only existing adapters
-    const CommandHandlerAdapter = require('./adapters/CommandHandlerAdapter');
-    const ServiceHandlerAdapter = require('./adapters/ServiceHandlerAdapter');
+    const CommandHandlerAdapter = require("./adapters/CommandHandlerAdapter");
+    const ServiceHandlerAdapter = require("./adapters/ServiceHandlerAdapter");
 
     // Create adapter instances for existing adapters only
-    const adapters = [
-      new CommandHandlerAdapter(),
-      new ServiceHandlerAdapter()
-    ];
+    const adapters = [new CommandHandlerAdapter(), new ServiceHandlerAdapter()];
 
     // Find adapter that can handle the request
     for (const adapter of adapters) {
@@ -107,26 +103,26 @@ class HandlerFactory {
   determineHandlerType(request) {
     // Check for command handler patterns
     if (request.command || request.commandType) {
-      return 'command';
+      return "command";
     }
-    
+
     // Check for service handler patterns
     if (request.service || request.serviceMethod) {
-      return 'service';
+      return "service";
     }
-    
+
     // Check for workflow handler patterns
     if (request.workflow || request.taskMode) {
-      return 'workflow';
+      return "workflow";
     }
-    
+
     // Check for explicit type
     if (request.type) {
       return request.type;
     }
-    
+
     // Default to service for unknown types
-    return 'service';
+    return "service";
   }
 
   /**
@@ -135,12 +131,12 @@ class HandlerFactory {
    * @param {IHandlerAdapter} adapter - Handler adapter
    */
   registerAdapter(type, adapter) {
-    if (!type || typeof type !== 'string') {
-      throw new Error('Adapter type must be a non-empty string');
+    if (!type || typeof type !== "string") {
+      throw new Error("Adapter type must be a non-empty string");
     }
 
     if (!adapter) {
-      throw new Error('Adapter instance is required');
+      throw new Error("Adapter instance is required");
     }
 
     // Validate adapter interface
@@ -173,11 +169,11 @@ class HandlerFactory {
    */
   unregisterAdapter(type) {
     const wasRegistered = this.adapters.has(type);
-    
+
     if (wasRegistered) {
       this.adapters.delete(type);
     }
-    
+
     return wasRegistered;
   }
 
@@ -196,8 +192,8 @@ class HandlerFactory {
    */
   generateCacheKey(request, handlerType) {
     const requestStr = JSON.stringify(request);
-    const crypto = require('crypto');
-    return `${handlerType}_${crypto.createHash('md5').update(requestStr).digest('hex')}`;
+    const crypto = require("crypto");
+    return `${handlerType}_${crypto.createHash("md5").update(requestStr).digest("hex")}`;
   }
 
   /**
@@ -212,7 +208,7 @@ class HandlerFactory {
       const firstKey = this.handlerCache.keys().next().value;
       this.handlerCache.delete(firstKey);
     }
-    
+
     this.handlerCache.set(key, handler);
   }
 
@@ -232,7 +228,7 @@ class HandlerFactory {
       size: this.handlerCache.size,
       maxSize: this.options.cacheSize,
       hitRate: 0, // Would need to track hits/misses
-      enabled: this.options.enableCaching
+      enabled: this.options.enableCaching,
     };
   }
 
@@ -244,22 +240,22 @@ class HandlerFactory {
    */
   async validateCreatedHandler(handler, context) {
     if (!handler) {
-      throw new Error('Created handler is null or undefined');
+      throw new Error("Created handler is null or undefined");
     }
 
     // Check if handler implements required interface
     const requiredMethods = [
-      'execute',
-      'getMetadata',
-      'validate',
-      'canHandle',
-      'getDependencies',
-      'getVersion',
-      'getType'
+      "execute",
+      "getMetadata",
+      "validate",
+      "canHandle",
+      "getDependencies",
+      "getVersion",
+      "getType",
     ];
 
     for (const method of requiredMethods) {
-      if (typeof handler[method] !== 'function') {
+      if (typeof handler[method] !== "function") {
         throw new Error(`Created handler must implement ${method} method`);
       }
     }
@@ -267,8 +263,8 @@ class HandlerFactory {
     // Validate handler metadata
     try {
       const metadata = handler.getMetadata();
-      if (!metadata || typeof metadata !== 'object') {
-        throw new Error('Handler must return valid metadata object');
+      if (!metadata || typeof metadata !== "object") {
+        throw new Error("Handler must return valid metadata object");
       }
     } catch (error) {
       throw new Error(`Handler metadata validation failed: ${error.message}`);
@@ -278,7 +274,7 @@ class HandlerFactory {
     try {
       const canHandle = handler.canHandle(context.getRequest());
       if (!canHandle) {
-        throw new Error('Handler cannot handle the given request');
+        throw new Error("Handler cannot handle the given request");
       }
     } catch (error) {
       throw new Error(`Handler canHandle validation failed: ${error.message}`);
@@ -292,15 +288,15 @@ class HandlerFactory {
    */
   validateAdapter(adapter) {
     const requiredMethods = [
-      'createHandler',
-      'canHandle',
-      'getMetadata',
-      'getType',
-      'getVersion'
+      "createHandler",
+      "canHandle",
+      "getMetadata",
+      "getType",
+      "getVersion",
     ];
 
     for (const method of requiredMethods) {
-      if (typeof adapter[method] !== 'function') {
+      if (typeof adapter[method] !== "function") {
         throw new Error(`Adapter must implement ${method} method`);
       }
     }
@@ -308,8 +304,8 @@ class HandlerFactory {
     // Validate adapter metadata
     try {
       const metadata = adapter.getMetadata();
-      if (!metadata || typeof metadata !== 'object') {
-        throw new Error('Adapter must return valid metadata object');
+      if (!metadata || typeof metadata !== "object") {
+        throw new Error("Adapter must return valid metadata object");
       }
     } catch (error) {
       throw new Error(`Adapter metadata validation failed: ${error.message}`);
@@ -342,7 +338,7 @@ class HandlerFactory {
       cacheSize: this.handlerCache.size,
       cacheEnabled: this.options.enableCaching,
       validationEnabled: this.options.enableValidation,
-      maxCacheSize: this.options.cacheSize
+      maxCacheSize: this.options.cacheSize,
     };
   }
 
@@ -354,7 +350,7 @@ class HandlerFactory {
     return {
       async createHandler(request, context) {
         // This would be implemented to handle legacy handler patterns
-        throw new Error('Legacy adapter not implemented');
+        throw new Error("Legacy adapter not implemented");
       },
 
       canHandle(request) {
@@ -363,20 +359,20 @@ class HandlerFactory {
 
       getMetadata() {
         return {
-          name: 'Legacy Handler Adapter',
-          description: 'Adapter for legacy handler patterns',
-          version: '1.0.0',
-          type: 'legacy'
+          name: "Legacy Handler Adapter",
+          description: "Adapter for legacy handler patterns",
+          version: "1.0.0",
+          type: "legacy",
         };
       },
 
       getType() {
-        return 'legacy';
+        return "legacy";
       },
 
       getVersion() {
-        return '1.0.0';
-      }
+        return "1.0.0";
+      },
     };
   }
 
@@ -388,7 +384,7 @@ class HandlerFactory {
     return {
       async createHandler(request, context) {
         // This would be implemented to handle command patterns
-        throw new Error('Command adapter not implemented');
+        throw new Error("Command adapter not implemented");
       },
 
       canHandle(request) {
@@ -397,20 +393,20 @@ class HandlerFactory {
 
       getMetadata() {
         return {
-          name: 'Command Handler Adapter',
-          description: 'Adapter for command handler patterns',
-          version: '1.0.0',
-          type: 'command'
+          name: "Command Handler Adapter",
+          description: "Adapter for command handler patterns",
+          version: "1.0.0",
+          type: "command",
         };
       },
 
       getType() {
-        return 'command';
+        return "command";
       },
 
       getVersion() {
-        return '1.0.0';
-      }
+        return "1.0.0";
+      },
     };
   }
 
@@ -422,7 +418,7 @@ class HandlerFactory {
     return {
       async createHandler(request, context) {
         // This would be implemented to handle service patterns
-        throw new Error('Service adapter not implemented');
+        throw new Error("Service adapter not implemented");
       },
 
       canHandle(request) {
@@ -431,22 +427,22 @@ class HandlerFactory {
 
       getMetadata() {
         return {
-          name: 'Service Handler Adapter',
-          description: 'Adapter for service handler patterns',
-          version: '1.0.0',
-          type: 'service'
+          name: "Service Handler Adapter",
+          description: "Adapter for service handler patterns",
+          version: "1.0.0",
+          type: "service",
         };
       },
 
       getType() {
-        return 'service';
+        return "service";
       },
 
       getVersion() {
-        return '1.0.0';
-      }
+        return "1.0.0";
+      },
     };
   }
 }
 
-module.exports = HandlerFactory; 
+module.exports = HandlerFactory;

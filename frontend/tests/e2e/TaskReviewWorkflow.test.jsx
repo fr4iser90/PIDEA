@@ -98,7 +98,6 @@ describe('Task Review Button - End-to-End Workflow', () => {
     
     // Mock successful API responses
     mockApiCall.mockResolvedValue({
-      success: true,
       data: { importedCount: 3 }
     });
   });
@@ -111,11 +110,10 @@ describe('Task Review Button - End-to-End Workflow', () => {
     it('completes full task review workflow successfully', async () => {
       // Mock successful review workflow
       mockTaskReviewService.executeTaskReviewWorkflow.mockResolvedValue({
-        success: true,
         data: {
           results: [
-            { taskId: '1', success: true, result: 'completed' },
-            { taskId: '2', success: true, result: 'completed' }
+            { taskId: '1', result: 'completed' },
+            { taskId: '2', result: 'completed' }
           ],
           summary: {
             totalTasks: 2,
@@ -192,11 +190,10 @@ describe('Task Review Button - End-to-End Workflow', () => {
     it('handles partial task review success', async () => {
       // Mock partial success
       mockTaskReviewService.executeTaskReviewWorkflow.mockResolvedValue({
-        success: true,
         data: {
           results: [
-            { taskId: '1', success: true, result: 'completed' },
-            { taskId: '2', success: false, error: 'Task processing failed' }
+            { taskId: '1', result: 'completed' },
+            { taskId: '2', error: 'Task processing failed' }
           ],
           summary: {
             totalTasks: 2,
@@ -409,7 +406,6 @@ describe('Task Review Button - End-to-End Workflow', () => {
       // Mock delayed response
       mockTaskReviewService.executeTaskReviewWorkflow.mockImplementation(
         () => new Promise(resolve => setTimeout(() => resolve({
-          success: true,
           data: { summary: { completedTasks: 1, totalTasks: 1 } },
           message: 'Review completed'
         }), 100))

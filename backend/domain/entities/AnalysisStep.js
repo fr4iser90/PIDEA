@@ -7,7 +7,7 @@ class AnalysisStep {
     this.id = data.id || this.generateId();
     this.projectId = data.projectId;
     this.analysisType = data.analysisType; // 'code-quality', 'security', 'performance', 'architecture'
-    this.status = data.status || 'pending'; // 'pending', 'running', 'completed', 'failed', 'cancelled'
+    this.status = data.status || "pending"; // 'pending', 'running', 'completed', 'failed', 'cancelled'
     this.progress = data.progress || 0; // 0-100 percentage
     this.startedAt = data.startedAt || null;
     this.completedAt = data.completedAt || null;
@@ -16,13 +16,13 @@ class AnalysisStep {
     this.metadata = data.metadata || {};
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
-    
+
     // Step-specific configuration
     this.config = data.config || {};
     this.timeout = data.timeout || 300000; // 5 minutes default
     this.retryCount = data.retryCount || 0;
     this.maxRetries = data.maxRetries || 2;
-    
+
     // Performance tracking
     this.memoryUsage = data.memoryUsage || null;
     this.executionTime = data.executionTime || null;
@@ -41,7 +41,7 @@ class AnalysisStep {
    * Start the analysis step
    */
   start() {
-    this.status = 'running';
+    this.status = "running";
     this.startedAt = new Date();
     this.updatedAt = new Date();
     this.progress = 0;
@@ -61,7 +61,7 @@ class AnalysisStep {
    * Complete the analysis step successfully
    */
   complete(result, metadata = {}) {
-    this.status = 'completed';
+    this.status = "completed";
     this.progress = 100;
     this.completedAt = new Date();
     this.updatedAt = new Date();
@@ -74,7 +74,7 @@ class AnalysisStep {
    * Mark the analysis step as failed
    */
   fail(error, metadata = {}) {
-    this.status = 'failed';
+    this.status = "failed";
     this.completedAt = new Date();
     this.updatedAt = new Date();
     this.error = error;
@@ -85,11 +85,11 @@ class AnalysisStep {
   /**
    * Cancel the analysis step
    */
-  cancel(reason = 'User cancelled') {
-    this.status = 'cancelled';
+  cancel(reason = "User cancelled") {
+    this.status = "cancelled";
     this.completedAt = new Date();
     this.updatedAt = new Date();
-    this.error = { message: reason, type: 'cancelled' };
+    this.error = { message: reason, type: "cancelled" };
   }
 
   /**
@@ -98,7 +98,7 @@ class AnalysisStep {
   retry() {
     if (this.retryCount < this.maxRetries) {
       this.retryCount++;
-      this.status = 'pending';
+      this.status = "pending";
       this.startedAt = null;
       this.completedAt = null;
       this.error = null;
@@ -113,21 +113,21 @@ class AnalysisStep {
    * Check if step is active (running or pending)
    */
   isActive() {
-    return this.status === 'running' || this.status === 'pending';
+    return this.status === "running" || this.status === "pending";
   }
 
   /**
    * Check if step is completed successfully
    */
   isCompleted() {
-    return this.status === 'completed';
+    return this.status === "completed";
   }
 
   /**
    * Check if step has failed
    */
   isFailed() {
-    return this.status === 'failed';
+    return this.status === "failed";
   }
 
   /**
@@ -172,7 +172,7 @@ class AnalysisStep {
       executionTime: this.executionTime,
       retryCount: this.retryCount,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
     };
   }
 
@@ -200,7 +200,7 @@ class AnalysisStep {
       fileCount: this.fileCount,
       lineCount: this.lineCount,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
     };
   }
 
@@ -220,9 +220,9 @@ class AnalysisStep {
       analysisType,
       config,
       timeout: config.timeout || 300000,
-      maxRetries: config.maxRetries || 2
+      maxRetries: config.maxRetries || 2,
     });
   }
 }
 
-module.exports = AnalysisStep; 
+module.exports = AnalysisStep;

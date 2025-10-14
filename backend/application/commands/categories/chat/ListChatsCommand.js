@@ -28,19 +28,22 @@ class ListChatsCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.limit && (typeof this.limit !== 'number' || this.limit < 1 || this.limit > 1000)) {
-      throw new Error('Limit must be a number between 1 and 1000');
+    if (
+      this.limit &&
+      (typeof this.limit !== "number" || this.limit < 1 || this.limit > 1000)
+    ) {
+      throw new Error("Limit must be a number between 1 and 1000");
     }
 
-    if (this.offset && (typeof this.offset !== 'number' || this.offset < 0)) {
-      throw new Error('Offset must be a non-negative number');
+    if (this.offset && (typeof this.offset !== "number" || this.offset < 0)) {
+      throw new Error("Offset must be a non-negative number");
     }
 
-    if (typeof this.includeArchived !== 'boolean') {
-      throw new Error('includeArchived must be a boolean');
+    if (typeof this.includeArchived !== "boolean") {
+      throw new Error("includeArchived must be a boolean");
     }
   }
 
@@ -52,19 +55,19 @@ class ListChatsCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'ListChatsCommand',
+      type: "ListChatsCommand",
       userId: this.userId,
       limit: this.limit,
       offset: this.offset,
       includeArchived: this.includeArchived,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = ListChatsCommand; 
+module.exports = ListChatsCommand;

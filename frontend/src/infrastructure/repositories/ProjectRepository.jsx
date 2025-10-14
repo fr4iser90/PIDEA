@@ -184,11 +184,10 @@ class ProjectRepository {
         }));
       
       return {
-        success: true,
         data: projects
       };
     }
-    return { success: false, error: 'No active IDEs found' };
+    return { error: 'No active IDEs found' };
   }
 
   /**
@@ -210,11 +209,10 @@ class ProjectRepository {
         }));
       
       return {
-        success: true,
         data: ides
       };
     }
-    return { success: false, error: 'Failed to get available IDEs' };
+    return { error: 'Failed to get available IDEs' };
   }
 
   /**
@@ -255,15 +253,15 @@ class ProjectRepository {
         if (projectsResult.success && projectsResult.data) {
           const project = projectsResult.data.find(p => p.workspacePath === workspacePath);
           if (project) {
-            return { success: true, data: project };
+            return { data: project };
           }
         }
       }
       
-      return { success: false, error: 'Project not found for workspace path' };
+      return { error: 'Project not found for workspace path' };
     } catch (error) {
       logger.error('Failed to get project by workspace path:', error);
-      return { success: false, error: 'Failed to get project' };
+      return { error: 'Failed to get project' };
     }
   }
 
@@ -282,7 +280,7 @@ class ProjectRepository {
       });
     } catch (error) {
       logger.error('Failed to save project port:', error);
-      return { success: false, error: 'Failed to save port' };
+      return { error: 'Failed to save port' };
     }
   }
 
@@ -301,7 +299,7 @@ class ProjectRepository {
       });
     } catch (error) {
       logger.error('Failed to update project port:', error);
-      return { success: false, error: 'Failed to update port' };
+      return { error: 'Failed to update port' };
     }
   }
 
@@ -333,7 +331,7 @@ class ProjectRepository {
       return apiCall(`/api/projects/${currentProjectId}/commands`);
     } catch (error) {
       logger.error('Failed to get project commands:', error);
-      return { success: false, error: 'Failed to get project commands' };
+      return { error: 'Failed to get project commands' };
     }
   }
 
@@ -355,7 +353,7 @@ class ProjectRepository {
       });
     } catch (error) {
       logger.error('Failed to execute project command:', error);
-      return { success: false, error: 'Failed to execute command' };
+      return { error: 'Failed to execute command' };
     }
   }
 }

@@ -1,14 +1,14 @@
-const { chromium } = require('playwright');
-const Logger = require('@logging/Logger');
-const ConnectionPool = require('../ConnectionPool');
-const logger = new Logger('CDPConnectionManager');
+const { chromium } = require("playwright");
+const Logger = require("@logging/Logger");
+const ConnectionPool = require("../ConnectionPool");
+const logger = new Logger("CDPConnectionManager");
 
 /**
  * CDP Connection Manager for Workspace Detection
- * 
+ *
  * Manages Chrome DevTools Protocol connections specifically for workspace detection.
  * Provides optimized connection pooling and error handling for workspace detection operations.
- * 
+ *
  * @class CDPConnectionManager
  */
 class CDPConnectionManager {
@@ -18,8 +18,8 @@ class CDPConnectionManager {
       connectionTimeout: options.connectionTimeout || 5000, // Reduced timeout for faster failure detection
       healthCheckInterval: options.healthCheckInterval || 60000, // 1 minute - less frequent health checks
       cleanupInterval: options.cleanupInterval || 180000, // 3 minutes - less frequent cleanup
-      host: options.host || '127.0.0.1',
-      ...options
+      host: options.host || "127.0.0.1",
+      ...options,
     };
 
     // Initialize connection pool specifically for workspace detection
@@ -28,7 +28,7 @@ class CDPConnectionManager {
       connectionTimeout: this.options.connectionTimeout,
       healthCheckInterval: this.options.healthCheckInterval,
       cleanupInterval: this.options.cleanupInterval,
-      host: this.options.host
+      host: this.options.host,
     });
 
     // Workspace detection specific state
@@ -36,9 +36,9 @@ class CDPConnectionManager {
     this.detectionTimeouts = new Map(); // port -> timeout reference
     this.isInitialized = false;
 
-    logger.debug('CDPConnectionManager initialized for workspace detection', {
+    logger.debug("CDPConnectionManager initialized for workspace detection", {
       maxConnections: this.options.maxConnections,
-      connectionTimeout: this.options.connectionTimeout
+      connectionTimeout: this.options.connectionTimeout,
     });
   }
 
@@ -48,21 +48,20 @@ class CDPConnectionManager {
    */
   async initialize() {
     if (this.isInitialized) {
-      logger.debug('CDPConnectionManager already initialized');
+      logger.debug("CDPConnectionManager already initialized");
       return;
     }
 
     try {
-      logger.debug('Initializing CDPConnectionManager...');
-      
+      logger.debug("Initializing CDPConnectionManager...");
+
       // Test connection to ensure CDP is available
       await this.testCDPAvailability();
-      
+
       this.isInitialized = true;
-      logger.debug('CDPConnectionManager initialized successfully');
-      
+      logger.debug("CDPConnectionManager initialized successfully");
     } catch (error) {
-      logger.error('Failed to initialize CDPConnectionManager:', error.message);
+      logger.error("Failed to initialize CDPConnectionManager:", error.message);
       throw error;
     }
   }
@@ -75,29 +74,30 @@ class CDPConnectionManager {
     try {
       // Try to connect to a common CDP port to test availability
       const testPorts = [9222, 9223, 9224];
-      
+
       for (const port of testPorts) {
         try {
-          const browser = await chromium.connectOverCDP(`http://${this.options.host}:${port}`, {
-            timeout: 5000 // Short timeout for test
-          });
-          
+          const browser = await chromium.connectOverCDP(
+            `http://${this.options.host}:${port}`,
+            {
+              timeout: 5000, // Short timeout for test
+            },
+          );
+
           // If we can connect, CDP is available
           await browser.close();
           logger.debug(`CDP availability test passed on port ${port}`);
           return true;
-          
         } catch (portError) {
           logger.debug(`CDP test failed on port ${port}: ${portError.message}`);
           continue;
         }
       }
-      
-      logger.warn('CDP availability test failed on all test ports');
+
+      logger.warn("CDP availability test failed on all test ports");
       return false;
-      
     } catch (error) {
-      logger.error('CDP availability test failed:', error.message);
+      logger.error("CDP availability test failed:", error.message);
       return false;
     }
   }
@@ -110,19 +110,23 @@ class CDPConnectionManager {
   async getWorkspaceDetectionConnection(port) {
     try {
       logger.debug(`Getting workspace detection connection for port ${port}`);
-      
+
       // Get connection from pool
       const connection = await this.connectionPool.getConnection(port);
-      
+
       if (!connection || !connection.browser || !connection.page) {
         throw new Error(`Invalid connection received for port ${port}`);
       }
 
-      logger.debug(`Successfully obtained workspace detection connection for port ${port}`);
+      logger.debug(
+        `Successfully obtained workspace detection connection for port ${port}`,
+      );
       return connection;
-      
     } catch (error) {
-      logger.error(`Failed to get workspace detection connection for port ${port}:`, error.message);
+      logger.error(
+        `Failed to get workspace detection connection for port ${port}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -135,24 +139,28 @@ class CDPConnectionManager {
    */
   async executeWorkspaceDetection(port, operation) {
     const startTime = Date.now();
-    
+
     try {
       logger.debug(`Executing workspace detection operation for port ${port}`);
-      
+
       // Get connection
       const connection = await this.getWorkspaceDetectionConnection(port);
-      
+
       // Execute the operation
       const result = await operation(connection);
-      
+
       const duration = Date.now() - startTime;
-      logger.debug(`Workspace detection operation completed for port ${port} in ${duration}ms`);
-      
+      logger.debug(
+        `Workspace detection operation completed for port ${port} in ${duration}ms`,
+      );
+
       return result;
-      
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error(`Workspace detection operation failed for port ${port} after ${duration}ms:`, error.message);
+      logger.error(
+        `Workspace detection operation failed for port ${port} after ${duration}ms:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -165,9 +173,9 @@ class CDPConnectionManager {
   async extractWorkspaceInfo(connection) {
     try {
       const { page } = connection;
-      
-      logger.debug('Extracting workspace information from IDE page');
-      
+
+      logger.debug("Extracting workspace information from IDE page");
+
       // Extract workspace info using multiple methods
       const workspaceInfo = await page.evaluate(() => {
         const info = {
@@ -175,26 +183,28 @@ class CDPConnectionManager {
           workspaceName: null,
           currentFile: null,
           ideType: null,
-          extractionMethod: null
+          extractionMethod: null,
         };
 
         // Method 1: Extract from page title (most reliable for Cursor)
         const pageTitle = document.title;
         if (pageTitle) {
           // Format: "filename - workspace - Cursor" or "workspace - Cursor"
-          const titleMatch = pageTitle.match(/([^-]+)\s*-\s*(?:Cursor|VSCode|Windsurf)/);
+          const titleMatch = pageTitle.match(
+            /([^-]+)\s*-\s*(?:Cursor|VSCode|Windsurf)/,
+          );
           if (titleMatch) {
             const workspaceName = titleMatch[1].trim();
             info.workspaceName = workspaceName;
-            info.extractionMethod = 'page_title';
-            
+            info.extractionMethod = "page_title";
+
             // Determine IDE type from title
-            if (pageTitle.includes('Cursor')) {
-              info.ideType = 'cursor';
-            } else if (pageTitle.includes('VSCode')) {
-              info.ideType = 'vscode';
-            } else if (pageTitle.includes('Windsurf')) {
-              info.ideType = 'windsurf';
+            if (pageTitle.includes("Cursor")) {
+              info.ideType = "cursor";
+            } else if (pageTitle.includes("VSCode")) {
+              info.ideType = "vscode";
+            } else if (pageTitle.includes("Windsurf")) {
+              info.ideType = "windsurf";
             }
           }
         }
@@ -202,12 +212,16 @@ class CDPConnectionManager {
         // Method 2: Try VS Code API
         if (!info.workspacePath && window.vscode) {
           try {
-            if (window.vscode.workspace && window.vscode.workspace.workspaceFolders) {
-              const workspaceFolder = window.vscode.workspace.workspaceFolders[0];
+            if (
+              window.vscode.workspace &&
+              window.vscode.workspace.workspaceFolders
+            ) {
+              const workspaceFolder =
+                window.vscode.workspace.workspaceFolders[0];
               if (workspaceFolder && workspaceFolder.uri) {
                 info.workspacePath = workspaceFolder.uri.fsPath;
                 info.workspaceName = workspaceFolder.name;
-                info.extractionMethod = 'vscode_api';
+                info.extractionMethod = "vscode_api";
               }
             }
           } catch (vscodeError) {
@@ -216,7 +230,11 @@ class CDPConnectionManager {
         }
 
         // Method 3: Try to get current file
-        if (window.vscode && window.vscode.window && window.vscode.window.activeTextEditor) {
+        if (
+          window.vscode &&
+          window.vscode.window &&
+          window.vscode.window.activeTextEditor
+        ) {
           try {
             const activeEditor = window.vscode.window.activeTextEditor;
             if (activeEditor && activeEditor.document) {
@@ -229,14 +247,17 @@ class CDPConnectionManager {
 
         // Method 4: Try DOM elements
         if (!info.workspacePath) {
-          const workspaceElements = document.querySelectorAll('[data-workspace], .workspace-name, .folder-name');
+          const workspaceElements = document.querySelectorAll(
+            "[data-workspace], .workspace-name, .folder-name",
+          );
           for (const element of workspaceElements) {
-            const workspaceData = element.getAttribute('data-workspace') || 
-                                element.getAttribute('title') || 
-                                element.textContent;
-            if (workspaceData && workspaceData.includes('/')) {
+            const workspaceData =
+              element.getAttribute("data-workspace") ||
+              element.getAttribute("title") ||
+              element.textContent;
+            if (workspaceData && workspaceData.includes("/")) {
               info.workspacePath = workspaceData;
-              info.extractionMethod = 'dom_element';
+              info.extractionMethod = "dom_element";
               break;
             }
           }
@@ -245,17 +266,16 @@ class CDPConnectionManager {
         return info;
       });
 
-      logger.debug('Workspace information extracted:', {
+      logger.debug("Workspace information extracted:", {
         workspaceName: workspaceInfo.workspaceName,
         workspacePath: workspaceInfo.workspacePath,
         ideType: workspaceInfo.ideType,
-        extractionMethod: workspaceInfo.extractionMethod
+        extractionMethod: workspaceInfo.extractionMethod,
       });
 
       return workspaceInfo;
-      
     } catch (error) {
-      logger.error('Failed to extract workspace information:', error.message);
+      logger.error("Failed to extract workspace information:", error.message);
       throw error;
     }
   }
@@ -271,7 +291,7 @@ class CDPConnectionManager {
     const cacheEntry = {
       workspaceInfo,
       timestamp: Date.now(),
-      ttl
+      ttl,
     };
 
     this.workspaceDetectionCache.set(cacheKey, cacheEntry);
@@ -289,8 +309,10 @@ class CDPConnectionManager {
     }, ttl);
 
     this.detectionTimeouts.set(port, timeout);
-    
-    logger.debug(`Cached workspace detection result for port ${port} with TTL ${ttl}ms`);
+
+    logger.debug(
+      `Cached workspace detection result for port ${port} with TTL ${ttl}ms`,
+    );
   }
 
   /**
@@ -328,12 +350,12 @@ class CDPConnectionManager {
   clearWorkspaceDetectionCache(port) {
     const cacheKey = `workspace-${port}`;
     this.workspaceDetectionCache.delete(cacheKey);
-    
+
     if (this.detectionTimeouts.has(port)) {
       clearTimeout(this.detectionTimeouts.get(port));
       this.detectionTimeouts.delete(port);
     }
-    
+
     logger.debug(`Cleared workspace detection cache for port ${port}`);
   }
 
@@ -342,13 +364,13 @@ class CDPConnectionManager {
    */
   clearAllWorkspaceDetectionCache() {
     this.workspaceDetectionCache.clear();
-    
+
     for (const timeout of this.detectionTimeouts.values()) {
       clearTimeout(timeout);
     }
     this.detectionTimeouts.clear();
-    
-    logger.debug('Cleared all workspace detection cache');
+
+    logger.debug("Cleared all workspace detection cache");
   }
 
   /**
@@ -358,12 +380,12 @@ class CDPConnectionManager {
   getHealthStatus() {
     const poolHealth = this.connectionPool.getHealth();
     const cacheSize = this.workspaceDetectionCache.size;
-    
+
     return {
       ...poolHealth,
       cacheSize,
       isInitialized: this.isInitialized,
-      cacheEntries: Array.from(this.workspaceDetectionCache.keys())
+      cacheEntries: Array.from(this.workspaceDetectionCache.keys()),
     };
   }
 
@@ -373,19 +395,21 @@ class CDPConnectionManager {
    */
   getStatistics() {
     const poolStats = this.connectionPool.getStats();
-    
+
     return {
       connectionPool: poolStats,
       workspaceDetectionCache: {
         size: this.workspaceDetectionCache.size,
-        entries: Array.from(this.workspaceDetectionCache.entries()).map(([key, value]) => ({
-          key,
-          timestamp: value.timestamp,
-          ttl: value.ttl,
-          age: Date.now() - value.timestamp
-        }))
+        entries: Array.from(this.workspaceDetectionCache.entries()).map(
+          ([key, value]) => ({
+            key,
+            timestamp: value.timestamp,
+            ttl: value.ttl,
+            age: Date.now() - value.timestamp,
+          }),
+        ),
       },
-      options: this.options
+      options: this.options,
     };
   }
 
@@ -394,21 +418,20 @@ class CDPConnectionManager {
    * @returns {Promise<void>}
    */
   async destroy() {
-    logger.info('Destroying CDPConnectionManager...');
-    
+    logger.info("Destroying CDPConnectionManager...");
+
     try {
       // Clear all cache
       this.clearAllWorkspaceDetectionCache();
-      
+
       // Destroy connection pool
       this.connectionPool.destroy();
-      
+
       this.isInitialized = false;
-      
-      logger.info('CDPConnectionManager destroyed successfully');
-      
+
+      logger.info("CDPConnectionManager destroyed successfully");
     } catch (error) {
-      logger.error('Error destroying CDPConnectionManager:', error.message);
+      logger.error("Error destroying CDPConnectionManager:", error.message);
       throw error;
     }
   }

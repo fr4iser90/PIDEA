@@ -3,24 +3,28 @@
  * Uses snake_case column names to match PostgreSQL schema
  */
 
-const TaskTemplateRepository = require('@domain/repositories/TaskTemplateRepository');
-const TaskTemplate = require('@domain/entities/TaskTemplate');
-const logger = require('@infrastructure/logging/Logger');
+const TaskTemplateRepository = require("@domain/repositories/TaskTemplateRepository");
+const TaskTemplate = require("@domain/entities/TaskTemplate");
+const logger = require("@infrastructure/logging/Logger");
 
 class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
   constructor(databaseConnection) {
     super();
     this.databaseConnection = databaseConnection;
-    this.tableName = 'task_templates';
+    this.tableName = "task_templates";
   }
 
   async init() {
     try {
       // Create index for active templates
-      await this.databaseConnection.execute(`CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (is_active)`);
+      await this.databaseConnection.execute(
+        `CREATE INDEX IF NOT EXISTS idx_task_templates_active ON ${this.tableName} (is_active)`,
+      );
       logger.info(`✅ TaskTemplateRepository initialized for PostgreSQL`);
     } catch (error) {
-      logger.error(`❌ Failed to initialize TaskTemplateRepository: ${error.message}`);
+      logger.error(
+        `❌ Failed to initialize TaskTemplateRepository: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -49,8 +53,12 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
         taskTemplate.isActive ? 1 : 0,
         taskTemplate.version,
         taskTemplate.createdBy,
-        taskTemplate.createdAt ? taskTemplate.createdAt.toISOString() : new Date().toISOString(),
-        taskTemplate.updatedAt ? taskTemplate.updatedAt.toISOString() : new Date().toISOString()
+        taskTemplate.createdAt
+          ? taskTemplate.createdAt.toISOString()
+          : new Date().toISOString(),
+        taskTemplate.updatedAt
+          ? taskTemplate.updatedAt.toISOString()
+          : new Date().toISOString(),
       ];
 
       await this.databaseConnection.execute(sql, params);
@@ -83,7 +91,7 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
         taskTemplate.isActive ? 1 : 0,
         taskTemplate.version,
         new Date().toISOString(),
-        taskTemplate.id
+        taskTemplate.id,
       ];
 
       await this.databaseConnection.execute(sql, params);
@@ -117,9 +125,11 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE type = ? AND is_active = 1 ORDER BY name`;
       const rows = await this.databaseConnection.query(sql, [type]);
-      return rows.map(row => this._rowToTaskTemplate(row));
+      return rows.map((row) => this._rowToTaskTemplate(row));
     } catch (error) {
-      throw new Error(`Failed to find task templates by type: ${error.message}`);
+      throw new Error(
+        `Failed to find task templates by type: ${error.message}`,
+      );
     }
   }
 
@@ -127,7 +137,7 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE is_active = 1 ORDER BY name`;
       const rows = await this.databaseConnection.query(sql);
-      return rows.map(row => this._rowToTaskTemplate(row));
+      return rows.map((row) => this._rowToTaskTemplate(row));
     } catch (error) {
       throw new Error(`Failed to find all task templates: ${error.message}`);
     }
@@ -137,7 +147,7 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE is_active = 1 ORDER BY name`;
       const rows = await this.databaseConnection.query(sql);
-      return rows.map(row => this._rowToTaskTemplate(row));
+      return rows.map((row) => this._rowToTaskTemplate(row));
     } catch (error) {
       throw new Error(`Failed to find active task templates: ${error.message}`);
     }
@@ -150,29 +160,31 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
       const conditions = [];
 
       if (query) {
-        conditions.push('(name LIKE ? OR description LIKE ? OR content LIKE ?)');
+        conditions.push(
+          "(name LIKE ? OR description LIKE ? OR content LIKE ?)",
+        );
         const searchTerm = `%${query}%`;
         params.push(searchTerm, searchTerm, searchTerm);
       }
 
       if (filters.type) {
-        conditions.push('type = ?');
+        conditions.push("type = ?");
         params.push(filters.type);
       }
 
       if (filters.priority) {
-        conditions.push('default_priority = ?');
+        conditions.push("default_priority = ?");
         params.push(filters.priority);
       }
 
       if (conditions.length > 0) {
-        sql += ` AND ${conditions.join(' AND ')}`;
+        sql += ` AND ${conditions.join(" AND ")}`;
       }
 
-      sql += ' ORDER BY name';
+      sql += " ORDER BY name";
 
       const rows = await this.databaseConnection.query(sql, params);
-      return rows.map(row => this._rowToTaskTemplate(row));
+      return rows.map((row) => this._rowToTaskTemplate(row));
     } catch (error) {
       throw new Error(`Failed to search task templates: ${error.message}`);
     }
@@ -181,7 +193,10 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
   async delete(id) {
     try {
       const sql = `UPDATE ${this.tableName} SET is_active = 0, updated_at = ? WHERE id = ?`;
-      await this.databaseConnection.execute(sql, [new Date().toISOString(), id]);
+      await this.databaseConnection.execute(sql, [
+        new Date().toISOString(),
+        id,
+      ]);
       return true;
     } catch (error) {
       throw new Error(`Failed to delete task template: ${error.message}`);
@@ -201,7 +216,10 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
   async restore(id) {
     try {
       const sql = `UPDATE ${this.tableName} SET is_active = 1, updated_at = ? WHERE id = ?`;
-      await this.databaseConnection.execute(sql, [new Date().toISOString(), id]);
+      await this.databaseConnection.execute(sql, [
+        new Date().toISOString(),
+        id,
+      ]);
       return true;
     } catch (error) {
       throw new Error(`Failed to restore task template: ${error.message}`);
@@ -225,7 +243,7 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
         active: row.active,
         inactive: row.inactive,
         types: row.types,
-        priorities: row.priorities
+        priorities: row.priorities,
       };
     } catch (error) {
       throw new Error(`Failed to get task template stats: ${error.message}`);
@@ -236,15 +254,17 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE is_active = 1`;
       const rows = await this.databaseConnection.query(sql);
-      
+
       return rows
-        .map(row => this._rowToTaskTemplate(row))
-        .filter(template => {
+        .map((row) => this._rowToTaskTemplate(row))
+        .filter((template) => {
           const templateTags = template.tags || [];
-          return tags.some(tag => templateTags.includes(tag));
+          return tags.some((tag) => templateTags.includes(tag));
         });
     } catch (error) {
-      throw new Error(`Failed to find task templates by tags: ${error.message}`);
+      throw new Error(
+        `Failed to find task templates by tags: ${error.message}`,
+      );
     }
   }
 
@@ -252,9 +272,11 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE version = ? AND is_active = 1 ORDER BY name`;
       const rows = await this.databaseConnection.query(sql, [version]);
-      return rows.map(row => this._rowToTaskTemplate(row));
+      return rows.map((row) => this._rowToTaskTemplate(row));
     } catch (error) {
-      throw new Error(`Failed to get task templates by version: ${error.message}`);
+      throw new Error(
+        `Failed to get task templates by version: ${error.message}`,
+      );
     }
   }
 
@@ -264,7 +286,9 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
       const row = await this.databaseConnection.getOne(sql);
       return row.active;
     } catch (error) {
-      throw new Error(`Failed to get active task template count: ${error.message}`);
+      throw new Error(
+        `Failed to get active task template count: ${error.message}`,
+      );
     }
   }
 
@@ -284,9 +308,9 @@ class PostgreSQLTaskTemplateRepository extends TaskTemplateRepository {
       version: row.version,
       createdBy: row.created_by,
       createdAt: row.created_at ? new Date(row.created_at) : new Date(),
-      updatedAt: row.updated_at ? new Date(row.updated_at) : new Date()
+      updatedAt: row.updated_at ? new Date(row.updated_at) : new Date(),
     });
   }
 }
 
-module.exports = PostgreSQLTaskTemplateRepository; 
+module.exports = PostgreSQLTaskTemplateRepository;

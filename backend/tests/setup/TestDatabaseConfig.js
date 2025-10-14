@@ -1,56 +1,56 @@
 /**
  * Test Database Configuration
- * 
+ *
  * Centralized configuration management for test databases including
  * connection settings, test data setup, and environment-specific options.
  */
 
-const path = require('path');
-const fs = require('fs').promises;
+const path = require("path");
+const fs = require("fs").promises;
 
 class TestDatabaseConfig {
   constructor() {
     this.config = {
       databases: {
         sqlite: {
-          type: 'sqlite',
-          database: ':memory:',
+          type: "sqlite",
+          database: ":memory:",
           options: {
             enableForeignKeys: true,
             enableWAL: true,
-            synchronous: 'NORMAL',
-            journalMode: 'WAL',
+            synchronous: "NORMAL",
+            journalMode: "WAL",
             cacheSize: 1000,
-            tempStore: 'MEMORY'
-          }
+            tempStore: "MEMORY",
+          },
         },
         postgresql: {
-          type: 'postgresql',
-          host: 'localhost',
+          type: "postgresql",
+          host: "localhost",
           port: 5432,
-          database: 'pidea_test',
-          username: 'test_user',
-          password: 'test_password',
+          database: "pidea_test",
+          username: "test_user",
+          password: "test_password",
           options: {
             ssl: false,
             connectionTimeoutMillis: 5000,
             idleTimeoutMillis: 30000,
             max: 10,
-            min: 2
-          }
-        }
+            min: 2,
+          },
+        },
       },
       testData: {
         fixtures: {
-          path: path.join(__dirname, '../fixtures'),
-          format: 'json',
-          encoding: 'utf8'
+          path: path.join(__dirname, "../fixtures"),
+          format: "json",
+          encoding: "utf8",
         },
         generators: {
-          path: path.join(__dirname, '../generators'),
-          format: 'js',
-          encoding: 'utf8'
-        }
+          path: path.join(__dirname, "../generators"),
+          format: "js",
+          encoding: "utf8",
+        },
       },
       environment: {
         isolation: true,
@@ -58,27 +58,27 @@ class TestDatabaseConfig {
         monitoring: false,
         optimization: false,
         parallel: false,
-        timeout: 30000
+        timeout: 30000,
       },
       performance: {
         monitoring: {
           enabled: false,
           threshold: 1000,
-          metrics: ['execution_time', 'memory_usage', 'query_count']
+          metrics: ["execution_time", "memory_usage", "query_count"],
         },
         optimization: {
           enabled: false,
           indexes: true,
           constraints: true,
-          triggers: true
-        }
+          triggers: true,
+        },
       },
       security: {
         encryption: false,
         authentication: false,
         authorization: false,
-        audit: false
-      }
+        audit: false,
+      },
     };
 
     this.loadedConfigs = new Map();
@@ -93,13 +93,15 @@ class TestDatabaseConfig {
   async loadConfig(configPath) {
     try {
       const fullPath = path.resolve(configPath);
-      const configData = await fs.readFile(fullPath, 'utf8');
+      const configData = await fs.readFile(fullPath, "utf8");
       const config = JSON.parse(configData);
-      
+
       this.loadedConfigs.set(configPath, config);
       return config;
     } catch (error) {
-      throw new Error(`Failed to load configuration from ${configPath}: ${error.message}`);
+      throw new Error(
+        `Failed to load configuration from ${configPath}: ${error.message}`,
+      );
     }
   }
 
@@ -113,11 +115,13 @@ class TestDatabaseConfig {
     try {
       const fullPath = path.resolve(configPath);
       const configData = JSON.stringify(config, null, 2);
-      await fs.writeFile(fullPath, configData, 'utf8');
-      
+      await fs.writeFile(fullPath, configData, "utf8");
+
       this.loadedConfigs.set(configPath, config);
     } catch (error) {
-      throw new Error(`Failed to save configuration to ${configPath}: ${error.message}`);
+      throw new Error(
+        `Failed to save configuration to ${configPath}: ${error.message}`,
+      );
     }
   }
 
@@ -204,7 +208,7 @@ class TestDatabaseConfig {
    */
   getCompleteConfig(overrides = {}) {
     const config = { ...this.config };
-    
+
     // Apply environment overrides
     for (const [key, value] of this.environmentOverrides) {
       this.setNestedValue(config, key, value);
@@ -223,7 +227,7 @@ class TestDatabaseConfig {
     const result = {
       valid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     // Validate database configurations
@@ -271,11 +275,11 @@ class TestDatabaseConfig {
     const result = {
       valid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     // Required fields validation
-    const requiredFields = ['type'];
+    const requiredFields = ["type"];
     for (const field of requiredFields) {
       if (!config[field]) {
         result.valid = false;
@@ -284,12 +288,14 @@ class TestDatabaseConfig {
     }
 
     // Type-specific validation
-    if (type === 'sqlite') {
+    if (type === "sqlite") {
       if (!config.database) {
-        result.warnings.push('SQLite database path not specified, using in-memory database');
+        result.warnings.push(
+          "SQLite database path not specified, using in-memory database",
+        );
       }
-    } else if (type === 'postgresql') {
-      const requiredPostgresFields = ['host', 'port', 'database', 'username'];
+    } else if (type === "postgresql") {
+      const requiredPostgresFields = ["host", "port", "database", "username"];
       for (const field of requiredPostgresFields) {
         if (!config[field]) {
           result.valid = false;
@@ -310,20 +316,20 @@ class TestDatabaseConfig {
     const result = {
       valid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     if (config.fixtures) {
       if (!config.fixtures.path) {
         result.valid = false;
-        result.errors.push('Test data fixtures path not specified');
+        result.errors.push("Test data fixtures path not specified");
       }
     }
 
     if (config.generators) {
       if (!config.generators.path) {
         result.valid = false;
-        result.errors.push('Test data generators path not specified');
+        result.errors.push("Test data generators path not specified");
       }
     }
 
@@ -339,16 +345,16 @@ class TestDatabaseConfig {
     const result = {
       valid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
-    if (config.timeout && typeof config.timeout !== 'number') {
+    if (config.timeout && typeof config.timeout !== "number") {
       result.valid = false;
-      result.errors.push('Environment timeout must be a number');
+      result.errors.push("Environment timeout must be a number");
     }
 
     if (config.timeout && config.timeout < 1000) {
-      result.warnings.push('Environment timeout is very low, tests may fail');
+      result.warnings.push("Environment timeout is very low, tests may fail");
     }
 
     return result;
@@ -364,7 +370,11 @@ class TestDatabaseConfig {
     const result = { ...base };
 
     for (const [key, value] of Object.entries(override)) {
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         result[key] = this.mergeConfig(result[key] || {}, value);
       } else {
         result[key] = value;
@@ -381,12 +391,12 @@ class TestDatabaseConfig {
    * @param {any} value - Value to set
    */
   setNestedValue(config, key, value) {
-    const keys = key.split('.');
+    const keys = key.split(".");
     let current = config;
 
     for (let i = 0; i < keys.length - 1; i++) {
       const k = keys[i];
-      if (!current[k] || typeof current[k] !== 'object') {
+      if (!current[k] || typeof current[k] !== "object") {
         current[k] = {};
       }
       current = current[k];
@@ -402,11 +412,11 @@ class TestDatabaseConfig {
    * @returns {any} Value
    */
   getNestedValue(config, key) {
-    const keys = key.split('.');
+    const keys = key.split(".");
     let current = config;
 
     for (const k of keys) {
-      if (current && typeof current === 'object' && k in current) {
+      if (current && typeof current === "object" && k in current) {
         current = current[k];
       } else {
         return undefined;
@@ -426,7 +436,7 @@ class TestDatabaseConfig {
     try {
       const exportConfig = config || this.getCompleteConfig();
       const configData = JSON.stringify(exportConfig, null, 2);
-      await fs.writeFile(filePath, configData, 'utf8');
+      await fs.writeFile(filePath, configData, "utf8");
     } catch (error) {
       throw new Error(`Failed to export configuration: ${error.message}`);
     }
@@ -439,18 +449,20 @@ class TestDatabaseConfig {
    */
   async importConfig(filePath) {
     try {
-      const configData = await fs.readFile(filePath, 'utf8');
+      const configData = await fs.readFile(filePath, "utf8");
       const config = JSON.parse(configData);
-      
+
       // Validate imported configuration
       const validation = this.validateConfig(config);
       if (!validation.valid) {
-        throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid configuration: ${validation.errors.join(", ")}`,
+        );
       }
 
       // Merge with current configuration
       this.config = this.mergeConfig(this.config, config);
-      
+
       return config;
     } catch (error) {
       throw new Error(`Failed to import configuration: ${error.message}`);
@@ -464,44 +476,44 @@ class TestDatabaseConfig {
     this.config = {
       databases: {
         sqlite: {
-          type: 'sqlite',
-          database: ':memory:',
+          type: "sqlite",
+          database: ":memory:",
           options: {
             enableForeignKeys: true,
             enableWAL: true,
-            synchronous: 'NORMAL',
-            journalMode: 'WAL',
+            synchronous: "NORMAL",
+            journalMode: "WAL",
             cacheSize: 1000,
-            tempStore: 'MEMORY'
-          }
+            tempStore: "MEMORY",
+          },
         },
         postgresql: {
-          type: 'postgresql',
-          host: 'localhost',
+          type: "postgresql",
+          host: "localhost",
           port: 5432,
-          database: 'pidea_test',
-          username: 'test_user',
-          password: 'test_password',
+          database: "pidea_test",
+          username: "test_user",
+          password: "test_password",
           options: {
             ssl: false,
             connectionTimeoutMillis: 5000,
             idleTimeoutMillis: 30000,
             max: 10,
-            min: 2
-          }
-        }
+            min: 2,
+          },
+        },
       },
       testData: {
         fixtures: {
-          path: path.join(__dirname, '../fixtures'),
-          format: 'json',
-          encoding: 'utf8'
+          path: path.join(__dirname, "../fixtures"),
+          format: "json",
+          encoding: "utf8",
         },
         generators: {
-          path: path.join(__dirname, '../generators'),
-          format: 'js',
-          encoding: 'utf8'
-        }
+          path: path.join(__dirname, "../generators"),
+          format: "js",
+          encoding: "utf8",
+        },
       },
       environment: {
         isolation: true,
@@ -509,27 +521,27 @@ class TestDatabaseConfig {
         monitoring: false,
         optimization: false,
         parallel: false,
-        timeout: 30000
+        timeout: 30000,
       },
       performance: {
         monitoring: {
           enabled: false,
           threshold: 1000,
-          metrics: ['execution_time', 'memory_usage', 'query_count']
+          metrics: ["execution_time", "memory_usage", "query_count"],
         },
         optimization: {
           enabled: false,
           indexes: true,
           constraints: true,
-          triggers: true
-        }
+          triggers: true,
+        },
       },
       security: {
         encryption: false,
         authentication: false,
         authorization: false,
-        audit: false
-      }
+        audit: false,
+      },
     };
 
     this.loadedConfigs.clear();

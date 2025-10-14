@@ -1,17 +1,16 @@
-
 /**
  * Step Builder - Domain Layer
  * Builds step instances from configurations and handles step customization
  */
 
-const path = require('path');
-const ServiceLogger = require('@logging/ServiceLogger');
+const path = require("path");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class StepBuilder {
   constructor(stepRegistry) {
     this.registry = stepRegistry;
     this.buildCache = new Map();
-    this.logger = new ServiceLogger('StepBuilder');
+    this.logger = new ServiceLogger("StepBuilder");
   }
 
   /**
@@ -23,7 +22,7 @@ class StepBuilder {
     try {
       // Get step configuration from registry
       const step = this.registry.getStep(stepName);
-      
+
       // Check cache first
       const cacheKey = this.getCacheKey(stepName, options);
       if (this.buildCache.has(cacheKey)) {
@@ -43,7 +42,10 @@ class StepBuilder {
       this.logger.info(`🔨 Step "${stepName}" built successfully`);
       return instance;
     } catch (error) {
-      this.logger.error(`❌ Failed to build step "${stepName}":`, error.message);
+      this.logger.error(
+        `❌ Failed to build step "${stepName}":`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -54,8 +56,8 @@ class StepBuilder {
    * @param {Object} context - Execution context
    */
   static build(config, context = {}) {
-    const logger = new ServiceLogger('StepBuilder');
-    
+    const logger = new ServiceLogger("StepBuilder");
+
     try {
       // Create a simple step instance from config
       const instance = {
@@ -70,21 +72,21 @@ class StepBuilder {
         metadata: {
           builtAt: new Date(),
           buildContext: context,
-          originalConfig: config
-        }
+          originalConfig: config,
+        },
       };
 
       // Validate instance
       if (!instance.name) {
-        throw new Error('Step config must have a name');
+        throw new Error("Step config must have a name");
       }
 
       if (!instance.type) {
-        throw new Error('Step config must have a type');
+        throw new Error("Step config must have a type");
       }
 
       if (!instance.description) {
-        throw new Error('Step config must have a description');
+        throw new Error("Step config must have a description");
       }
 
       logger.info(`🔨 Step "${instance.name}" built from config`);
@@ -102,7 +104,7 @@ class StepBuilder {
    */
   async createStepInstance(step, options) {
     const { config } = step;
-    
+
     // Create base instance
     const instance = {
       name: config.name,
@@ -118,8 +120,8 @@ class StepBuilder {
         builtAt: new Date(),
         buildOptions: options,
         originalConfig: config,
-        registryStep: step
-      }
+        registryStep: step,
+      },
     };
 
     // Add custom properties
@@ -146,8 +148,11 @@ class StepBuilder {
         const instance = await this.buildStep(stepName, options);
         instances.push(instance);
       } catch (error) {
-        this.logger.error(`❌ Failed to build step "${stepName}":`, error.message);
-        
+        this.logger.error(
+          `❌ Failed to build step "${stepName}":`,
+          error.message,
+        );
+
         // Continue with other steps if this one fails
         if (options.continueOnError !== false) {
           continue;
@@ -170,7 +175,7 @@ class StepBuilder {
    */
   async buildStepsByCategory(category, options = {}) {
     const steps = this.registry.getStepsByCategory(category);
-    const stepNames = steps.map(step => step.name);
+    const stepNames = steps.map((step) => step.name);
     return await this.buildSteps(stepNames, options);
   }
 
@@ -179,12 +184,15 @@ class StepBuilder {
    * @param {Object} options - Build options
    */
   validateBuildOptions(options) {
-    if (options.settings && typeof options.settings !== 'object') {
-      throw new Error('Build options settings must be an object');
+    if (options.settings && typeof options.settings !== "object") {
+      throw new Error("Build options settings must be an object");
     }
 
-    if (options.continueOnError !== undefined && typeof options.continueOnError !== 'boolean') {
-      throw new Error('Build options continueOnError must be a boolean');
+    if (
+      options.continueOnError !== undefined &&
+      typeof options.continueOnError !== "boolean"
+    ) {
+      throw new Error("Build options continueOnError must be a boolean");
     }
 
     return true;
@@ -196,23 +204,23 @@ class StepBuilder {
    */
   validateStepInstance(instance) {
     if (!instance.name) {
-      throw new Error('Step instance must have a name');
+      throw new Error("Step instance must have a name");
     }
 
     if (!instance.type) {
-      throw new Error('Step instance must have a type');
+      throw new Error("Step instance must have a type");
     }
 
     if (!instance.description) {
-      throw new Error('Step instance must have a description');
+      throw new Error("Step instance must have a description");
     }
 
-    if (typeof instance.order !== 'number') {
-      throw new Error('Step instance must have a numeric order');
+    if (typeof instance.order !== "number") {
+      throw new Error("Step instance must have a numeric order");
     }
 
-    if (typeof instance.required !== 'boolean') {
-      throw new Error('Step instance must have a boolean required property');
+    if (typeof instance.required !== "boolean") {
+      throw new Error("Step instance must have a boolean required property");
     }
 
     return true;
@@ -235,15 +243,16 @@ class StepBuilder {
   clearCache(stepName = null) {
     if (stepName) {
       // Clear cache for specific step
-      const keysToDelete = Array.from(this.buildCache.keys())
-        .filter(key => key.startsWith(stepName + ':'));
-      
-      keysToDelete.forEach(key => this.buildCache.delete(key));
+      const keysToDelete = Array.from(this.buildCache.keys()).filter((key) =>
+        key.startsWith(stepName + ":"),
+      );
+
+      keysToDelete.forEach((key) => this.buildCache.delete(key));
       this.logger.info(`🗑️ Cleared cache for step "${stepName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      this.logger.info('🗑️ Cleared all step build cache');
+      this.logger.info("🗑️ Cleared all step build cache");
     }
   }
 
@@ -253,7 +262,7 @@ class StepBuilder {
   getCacheStats() {
     return {
       totalCached: this.buildCache.size,
-      steps: Array.from(this.buildCache.keys()).map(key => key.split(':')[0])
+      steps: Array.from(this.buildCache.keys()).map((key) => key.split(":")[0]),
     };
   }
 
@@ -267,7 +276,10 @@ class StepBuilder {
 
     // Apply customizations
     if (customizations.settings) {
-      customized.settings = { ...customized.settings, ...customizations.settings };
+      customized.settings = {
+        ...customized.settings,
+        ...customizations.settings,
+      };
     }
 
     if (customizations.properties) {
@@ -296,7 +308,7 @@ class StepBuilder {
    */
   async createStepChain(stepNames, options = {}) {
     const instances = await this.buildSteps(stepNames, options);
-    
+
     // Create chain with dependencies
     const chain = {
       steps: instances,
@@ -305,8 +317,8 @@ class StepBuilder {
       metadata: {
         createdAt: new Date(),
         totalSteps: instances.length,
-        buildOptions: options
-      }
+        buildOptions: options,
+      },
     };
 
     return chain;
@@ -321,14 +333,14 @@ class StepBuilder {
 
     for (const instance of instances) {
       const stepDeps = [];
-      
+
       for (const dep of instance.dependencies) {
-        const depInstance = instances.find(i => i.name === dep);
+        const depInstance = instances.find((i) => i.name === dep);
         if (depInstance) {
           stepDeps.push(depInstance);
         }
       }
-      
+
       dependencies.set(instance.name, stepDeps);
     }
 
@@ -346,7 +358,9 @@ class StepBuilder {
 
     const visit = (instance) => {
       if (visiting.has(instance.name)) {
-        throw new Error(`Circular dependency detected involving step "${instance.name}"`);
+        throw new Error(
+          `Circular dependency detected involving step "${instance.name}"`,
+        );
       }
 
       if (visited.has(instance.name)) {
@@ -357,7 +371,7 @@ class StepBuilder {
 
       // Visit dependencies first
       for (const dep of instance.dependencies) {
-        const depInstance = instances.find(i => i.name === dep);
+        const depInstance = instances.find((i) => i.name === dep);
         if (depInstance) {
           visit(depInstance);
         }
@@ -370,7 +384,7 @@ class StepBuilder {
 
     // Sort by order first, then resolve dependencies
     const sortedInstances = [...instances].sort((a, b) => a.order - b.order);
-    
+
     for (const instance of sortedInstances) {
       visit(instance);
     }
@@ -384,11 +398,11 @@ class StepBuilder {
    */
   validateStepChain(chain) {
     if (!chain.steps || !Array.isArray(chain.steps)) {
-      throw new Error('Step chain must have a steps array');
+      throw new Error("Step chain must have a steps array");
     }
 
     if (chain.steps.length === 0) {
-      throw new Error('Step chain cannot be empty');
+      throw new Error("Step chain cannot be empty");
     }
 
     // Check for circular dependencies
@@ -402,4 +416,4 @@ class StepBuilder {
   }
 }
 
-module.exports = StepBuilder; 
+module.exports = StepBuilder;

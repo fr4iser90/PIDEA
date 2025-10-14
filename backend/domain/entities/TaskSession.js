@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * TaskSession - Entity representing an auto-finish processing session
@@ -9,9 +9,9 @@ class TaskSession {
     this.id = data.id || uuidv4();
     this.userId = data.userId || null;
     this.projectId = data.projectId || null;
-    this.todoInput = data.todoInput || '';
+    this.todoInput = data.todoInput || "";
     this.options = data.options || {};
-    this.status = data.status || 'pending'; // pending, started, running, completed, failed, cancelled
+    this.status = data.status || "pending"; // pending, started, running, completed, failed, cancelled
     this.tasks = data.tasks || [];
     this.totalTasks = data.totalTasks || 0;
     this.completedTasks = data.completedTasks || 0;
@@ -32,7 +32,7 @@ class TaskSession {
    * Start the session
    */
   start() {
-    this.status = 'started';
+    this.status = "started";
     this.startTime = new Date();
     this.updatedAt = new Date();
   }
@@ -41,7 +41,7 @@ class TaskSession {
    * Mark session as running
    */
   setRunning() {
-    this.status = 'running';
+    this.status = "running";
     this.updatedAt = new Date();
   }
 
@@ -55,7 +55,8 @@ class TaskSession {
     this.completedTasks = completedTasks;
     this.totalTasks = totalTasks;
     this.currentTaskIndex = currentTaskIndex;
-    this.progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    this.progress =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     this.updatedAt = new Date();
   }
 
@@ -64,7 +65,7 @@ class TaskSession {
    * @param {Object} result - Session result
    */
   complete(result) {
-    this.status = 'completed';
+    this.status = "completed";
     this.endTime = new Date();
     this.duration = this.endTime.getTime() - this.startTime.getTime();
     this.result = result;
@@ -77,7 +78,7 @@ class TaskSession {
    * @param {string} error - Error message
    */
   fail(error) {
-    this.status = 'failed';
+    this.status = "failed";
     this.endTime = new Date();
     this.duration = this.endTime.getTime() - this.startTime.getTime();
     this.error = error;
@@ -88,7 +89,7 @@ class TaskSession {
    * Cancel the session
    */
   cancel() {
-    this.status = 'cancelled';
+    this.status = "cancelled";
     this.endTime = new Date();
     this.duration = this.endTime.getTime() - this.startTime.getTime();
     this.updatedAt = new Date();
@@ -111,20 +112,24 @@ class TaskSession {
    * @param {Object} result - Task result
    */
   updateTaskStatus(taskId, status, result = null) {
-    const task = this.tasks.find(t => t.id === taskId);
+    const task = this.tasks.find((t) => t.id === taskId);
     if (task) {
       task.status = status;
       if (result) {
         task.result = result;
       }
-      
-      if (status === 'completed') {
+
+      if (status === "completed") {
         this.completedTasks++;
-      } else if (status === 'failed') {
+      } else if (status === "failed") {
         this.failedTasks++;
       }
-      
-      this.updateProgress(this.completedTasks, this.totalTasks, this.currentTaskIndex);
+
+      this.updateProgress(
+        this.completedTasks,
+        this.totalTasks,
+        this.currentTaskIndex,
+      );
     }
   }
 
@@ -133,7 +138,10 @@ class TaskSession {
    * @returns {Object|null} Current task
    */
   getCurrentTask() {
-    if (this.currentTaskIndex >= 0 && this.currentTaskIndex < this.tasks.length) {
+    if (
+      this.currentTaskIndex >= 0 &&
+      this.currentTaskIndex < this.tasks.length
+    ) {
       return this.tasks[this.currentTaskIndex];
     }
     return null;
@@ -157,7 +165,7 @@ class TaskSession {
    * @returns {boolean} Is active
    */
   isActive() {
-    return ['pending', 'started', 'running'].includes(this.status);
+    return ["pending", "started", "running"].includes(this.status);
   }
 
   /**
@@ -165,7 +173,7 @@ class TaskSession {
    * @returns {boolean} Is completed
    */
   isCompleted() {
-    return this.status === 'completed';
+    return this.status === "completed";
   }
 
   /**
@@ -173,7 +181,7 @@ class TaskSession {
    * @returns {boolean} Is failed
    */
   isFailed() {
-    return this.status === 'failed';
+    return this.status === "failed";
   }
 
   /**
@@ -181,7 +189,7 @@ class TaskSession {
    * @returns {boolean} Is cancelled
    */
   isCancelled() {
-    return this.status === 'cancelled';
+    return this.status === "cancelled";
   }
 
   /**
@@ -189,9 +197,13 @@ class TaskSession {
    * @returns {Object} Statistics
    */
   getStats() {
-    const pendingTasks = this.tasks.filter(t => t.status === 'pending').length;
-    const runningTasks = this.tasks.filter(t => t.status === 'running').length;
-    
+    const pendingTasks = this.tasks.filter(
+      (t) => t.status === "pending",
+    ).length;
+    const runningTasks = this.tasks.filter(
+      (t) => t.status === "running",
+    ).length;
+
     return {
       totalTasks: this.totalTasks,
       completedTasks: this.completedTasks,
@@ -200,7 +212,8 @@ class TaskSession {
       runningTasks,
       progress: this.progress,
       duration: this.duration,
-      successRate: this.totalTasks > 0 ? (this.completedTasks / this.totalTasks) * 100 : 0
+      successRate:
+        this.totalTasks > 0 ? (this.completedTasks / this.totalTasks) * 100 : 0,
     };
   }
 
@@ -219,7 +232,7 @@ class TaskSession {
       duration: this.duration,
       startTime: this.startTime,
       endTime: this.endTime,
-      error: this.error
+      error: this.error,
     };
   }
 
@@ -248,7 +261,7 @@ class TaskSession {
       error: this.error,
       metadata: this.metadata,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
     };
   }
 
@@ -268,28 +281,38 @@ class TaskSession {
    */
   static validate(data) {
     const errors = [];
-    
-    if (!data.todoInput || typeof data.todoInput !== 'string') {
-      errors.push('todoInput must be a non-empty string');
+
+    if (!data.todoInput || typeof data.todoInput !== "string") {
+      errors.push("todoInput must be a non-empty string");
     }
-    
-    if (data.userId && typeof data.userId !== 'string') {
-      errors.push('userId must be a string');
+
+    if (data.userId && typeof data.userId !== "string") {
+      errors.push("userId must be a string");
     }
-    
-    if (data.projectId && typeof data.projectId !== 'string') {
-      errors.push('projectId must be a string');
+
+    if (data.projectId && typeof data.projectId !== "string") {
+      errors.push("projectId must be a string");
     }
-    
-    if (data.status && !['pending', 'started', 'running', 'completed', 'failed', 'cancelled'].includes(data.status)) {
-      errors.push('Invalid status value');
+
+    if (
+      data.status &&
+      ![
+        "pending",
+        "started",
+        "running",
+        "completed",
+        "failed",
+        "cancelled",
+      ].includes(data.status)
+    ) {
+      errors.push("Invalid status value");
     }
-    
+
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }
 
-module.exports = TaskSession; 
+module.exports = TaskSession;

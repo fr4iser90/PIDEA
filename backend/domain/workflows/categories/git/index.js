@@ -4,28 +4,28 @@
  */
 
 // Core components
-const GitWorkflowManager = require('./GitWorkflowManager');
-const GitWorkflowContext = require('./GitWorkflowContext');
-const GitWorkflowResult = require('./GitWorkflowResult');
-const GitWorkflowValidator = require('./GitWorkflowValidator');
-const GitWorkflowMetrics = require('./GitWorkflowMetrics');
-const GitWorkflowAudit = require('./GitWorkflowAudit');
+const GitWorkflowManager = require("./GitWorkflowManager");
+const GitWorkflowContext = require("./GitWorkflowContext");
+const GitWorkflowResult = require("./GitWorkflowResult");
+const GitWorkflowValidator = require("./GitWorkflowValidator");
+const GitWorkflowMetrics = require("./GitWorkflowMetrics");
+const GitWorkflowAudit = require("./GitWorkflowAudit");
 
 // Strategy components
-const BranchStrategy = require('./BranchStrategy');
-const MergeStrategy = require('./MergeStrategy');
+const BranchStrategy = require("./BranchStrategy");
+const MergeStrategy = require("./MergeStrategy");
 
 // Service components
-const PullRequestManager = require('./PullRequestManager');
-const AutoReviewService = require('./AutoReviewService');
+const PullRequestManager = require("./PullRequestManager");
+const AutoReviewService = require("./AutoReviewService");
 
 // Branch strategies
-const FeatureBranchStrategy = require('./strategies/FeatureBranchStrategy');
-const HotfixBranchStrategy = require('./strategies/HotfixBranchStrategy');
-const ReleaseBranchStrategy = require('./strategies/ReleaseBranchStrategy');
+const FeatureBranchStrategy = require("./strategies/FeatureBranchStrategy");
+const HotfixBranchStrategy = require("./strategies/HotfixBranchStrategy");
+const ReleaseBranchStrategy = require("./strategies/ReleaseBranchStrategy");
 
 // Exceptions
-const GitWorkflowException = require('./exceptions/GitWorkflowException');
+const GitWorkflowException = require("./exceptions/GitWorkflowException");
 
 // Factory function for creating a complete git workflow system
 function createGitWorkflowSystem(dependencies = {}) {
@@ -37,7 +37,7 @@ function createGitWorkflowSystem(dependencies = {}) {
     performanceService,
     logger,
     eventBus,
-    config = {}
+    config = {},
   } = dependencies;
 
   // Create shared dependencies
@@ -45,7 +45,7 @@ function createGitWorkflowSystem(dependencies = {}) {
     gitService,
     logger,
     eventBus,
-    ...config
+    ...config,
   };
 
   // Create components
@@ -53,7 +53,7 @@ function createGitWorkflowSystem(dependencies = {}) {
   const mergeStrategy = new MergeStrategy(sharedDeps);
   const pullRequestManager = new PullRequestManager({
     ...sharedDeps,
-    ...config.pullRequest
+    ...config.pullRequest,
   });
   const autoReviewService = new AutoReviewService({
     ...sharedDeps,
@@ -61,7 +61,7 @@ function createGitWorkflowSystem(dependencies = {}) {
     testService,
     securityService,
     performanceService,
-    ...config.review
+    ...config.review,
   });
   const validator = new GitWorkflowValidator();
   const metrics = new GitWorkflowMetrics(sharedDeps);
@@ -78,7 +78,7 @@ function createGitWorkflowSystem(dependencies = {}) {
     metrics,
     audit,
     logger,
-    eventBus
+    eventBus,
   });
 
   return {
@@ -92,7 +92,7 @@ function createGitWorkflowSystem(dependencies = {}) {
     audit,
     context: GitWorkflowContext,
     result: GitWorkflowResult,
-    exception: GitWorkflowException
+    exception: GitWorkflowException,
   };
 }
 
@@ -105,27 +105,27 @@ module.exports = {
   GitWorkflowValidator,
   GitWorkflowMetrics,
   GitWorkflowAudit,
-  
+
   // Strategy components
   BranchStrategy,
   MergeStrategy,
-  
+
   // Service components
   PullRequestManager,
   AutoReviewService,
-  
+
   // Branch strategies
   FeatureBranchStrategy,
   HotfixBranchStrategy,
   ReleaseBranchStrategy,
-  
+
   // Exceptions
   GitWorkflowException,
-  
+
   // Factory function
   createGitWorkflowSystem,
-  
+
   // Version info
-  version: '2.0.0',
-  description: 'Enhanced Git Integration for Workflow Automation'
-}; 
+  version: "2.0.0",
+  description: "Enhanced Git Integration for Workflow Automation",
+};

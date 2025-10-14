@@ -9,15 +9,12 @@ jest.mock('@/infrastructure/stores/IDEStore.jsx');
 jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => {
   return jest.fn().mockImplementation(() => ({
     getUserAppUrl: jest.fn().mockResolvedValue({
-      success: true,
       data: { url: 'http://localhost:3000', port: 3000 }
     }),
     getUserAppUrlForPort: jest.fn().mockResolvedValue({
-      success: true,
       data: { url: 'http://localhost:3000', port: 3000 }
     }),
     getProjectCommands: jest.fn().mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start',
         dev_command: 'npm run dev',
@@ -26,7 +23,6 @@ jest.mock('@/infrastructure/repositories/ChatRepository.jsx', () => {
       }
     }),
     executeProjectCommand: jest.fn().mockResolvedValue({
-      success: true,
       data: { status: 'executing' }
     })
   }));
@@ -226,7 +222,7 @@ describe('PreviewComponent Integration Tests', () => {
     it('should fallback to general URL when port-specific fails', async () => {
       // Mock port-specific call to fail
       mockAPIRepository.getUserAppUrlForPort.mockResolvedValueOnce({
-        success: false,
+       
         error: 'Port not found'
       });
 
@@ -274,7 +270,7 @@ describe('PreviewComponent Integration Tests', () => {
     it('should handle command execution errors', async () => {
       // Mock command execution to fail
       mockAPIRepository.executeProjectCommand.mockResolvedValueOnce({
-        success: false,
+       
         error: 'Command failed'
       });
 

@@ -52,12 +52,10 @@ jest.mock('@/infrastructure/stores/selectors/ProjectSelectors', () => ({
 jest.mock('@/application/services/TaskReviewService', () => {
   return jest.fn().mockImplementation(() => ({
     executeTaskReviewWorkflow: jest.fn().mockResolvedValue({
-      success: true,
       message: 'Review completed successfully',
       data: { summary: { completedTasks: 1, totalTasks: 1 } }
     }),
     validateTaskStatus: jest.fn().mockResolvedValue({
-      success: true,
       validTasks: [{ id: 'task-1', title: 'Test Task 1' }],
       completedTasks: [{ id: 'task-2', title: 'Test Task 2' }],
       totalTasks: 2,
@@ -76,7 +74,6 @@ describe('TasksPanelComponent Sync Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     apiCall.mockResolvedValue({
-      success: true,
       data: { importedCount: 2 }
     });
   });
@@ -125,7 +122,7 @@ describe('TasksPanelComponent Sync Integration', () => {
       // Mock a delayed sync response
       apiCall.mockImplementation(() => 
         new Promise(resolve => 
-          setTimeout(() => resolve({ success: true, data: { importedCount: 2 } }), 100)
+          setTimeout(() => resolve({ data: { importedCount: 2 } }), 100)
         )
       );
 
@@ -182,7 +179,7 @@ describe('TasksPanelComponent Sync Integration', () => {
 
     test('should handle partial sync failures', async () => {
       apiCall.mockResolvedValueOnce({
-        success: false,
+       
         error: 'Partial sync failed'
       });
 

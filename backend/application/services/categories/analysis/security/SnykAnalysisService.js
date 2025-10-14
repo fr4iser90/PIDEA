@@ -3,12 +3,14 @@
  * Specialized service for Snyk dependency vulnerability analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { SnykSecurityStep } = require('@domain/steps/categories/analysis/security');
+const Logger = require("@logging/Logger");
+const {
+  SnykSecurityStep,
+} = require("@domain/steps/categories/analysis/security");
 
 class SnykAnalysisService {
   constructor() {
-    this.logger = new Logger('SnykAnalysisService');
+    this.logger = new Logger("SnykAnalysisService");
     this.snykStep = new SnykSecurityStep();
   }
 
@@ -22,22 +24,23 @@ class SnykAnalysisService {
    */
   async executeSnykAnalysis(params) {
     try {
-      this.logger.info('Starting Snyk dependency analysis', { projectId: params.projectId });
+      this.logger.info("Starting Snyk dependency analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.snykStep.execute(params);
 
-      this.logger.info('Snyk analysis completed', { 
+      this.logger.info("Snyk analysis completed", {
         projectId: params.projectId,
         dependenciesAnalyzed: result.dependencies?.length || 0,
-        vulnerabilitiesFound: result.vulnerabilities?.length || 0
+        vulnerabilitiesFound: result.vulnerabilities?.length || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Snyk analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Snyk analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,18 @@ class SnykAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Snyk Dependency Scanner',
-      version: '1.0.0',
-      description: 'Dependency vulnerability and license analysis',
-      supportedManifests: ['package.json', 'requirements.txt', 'pom.xml', 'build.gradle'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Snyk Dependency Scanner",
+      version: "1.0.0",
+      description: "Dependency vulnerability and license analysis",
+      supportedManifests: [
+        "package.json",
+        "requirements.txt",
+        "pom.xml",
+        "build.gradle",
+      ],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = SnykAnalysisService; 
+module.exports = SnykAnalysisService;

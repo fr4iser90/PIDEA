@@ -2,41 +2,41 @@
  * AIPrompts - Comprehensive AI prompt templates for different scenarios
  */
 class AIPrompts {
-    constructor(dependencies = {}) {
-        this.logger = dependencies.logger || console;
-        this.eventBus = dependencies.eventBus;
-    }
+  constructor(dependencies = {}) {
+    this.logger = dependencies.logger || console;
+    this.eventBus = dependencies.eventBus;
+  }
 
-    /**
-     * Get all available AI prompt templates
-     * @returns {Object} All AI prompt templates
-     */
-    getAllPrompts() {
-        return {
-            analysis: this.getAnalysisPrompts(),
-            development: this.getDevelopmentPrompts(),
-            testing: this.getTestingPrompts(),
-            optimization: this.getOptimizationPrompts(),
-            security: this.getSecurityPrompts(),
-            documentation: this.getDocumentationPrompts(),
-            refactoring: this.getRefactoringPrompts(),
-            debugging: this.getDebuggingPrompts(),
-            architecture: this.getArchitecturePrompts(),
-            deployment: this.getDeploymentPrompts()
-        };
-    }
+  /**
+   * Get all available AI prompt templates
+   * @returns {Object} All AI prompt templates
+   */
+  getAllPrompts() {
+    return {
+      analysis: this.getAnalysisPrompts(),
+      development: this.getDevelopmentPrompts(),
+      testing: this.getTestingPrompts(),
+      optimization: this.getOptimizationPrompts(),
+      security: this.getSecurityPrompts(),
+      documentation: this.getDocumentationPrompts(),
+      refactoring: this.getRefactoringPrompts(),
+      debugging: this.getDebuggingPrompts(),
+      architecture: this.getArchitecturePrompts(),
+      deployment: this.getDeploymentPrompts(),
+    };
+  }
 
-    /**
-     * Get analysis AI prompts
-     * @returns {Object} Analysis prompts
-     */
-    getAnalysisPrompts() {
-        return {
-            projectAnalysis: {
-                name: 'Project Analysis',
-                description: 'Analyze project structure and architecture',
-                category: 'analysis',
-                prompt: `Analyze the following project structure and provide insights:
+  /**
+   * Get analysis AI prompts
+   * @returns {Object} Analysis prompts
+   */
+  getAnalysisPrompts() {
+    return {
+      projectAnalysis: {
+        name: "Project Analysis",
+        description: "Analyze project structure and architecture",
+        category: "analysis",
+        prompt: `Analyze the following project structure and provide insights:
 
 Project Context:
 - Project Type: {{PROJECT_TYPE}}
@@ -54,18 +54,18 @@ Please analyze:
 8. **Performance**: Identify potential performance issues
 
 Provide specific recommendations for improvements and prioritize them by impact and effort.`,
-                variables: {
-                    PROJECT_TYPE: 'web-application',
-                    TECH_STACK: 'Node.js, React, Express',
-                    PROJECT_SIZE: 'medium'
-                }
-            },
+        variables: {
+          PROJECT_TYPE: "web-application",
+          TECH_STACK: "Node.js, React, Express",
+          PROJECT_SIZE: "medium",
+        },
+      },
 
-            codeQualityAnalysis: {
-                name: 'Code Quality Analysis',
-                description: 'Analyze code quality and identify issues',
-                category: 'analysis',
-                prompt: `Perform a comprehensive code quality analysis:
+      codeQualityAnalysis: {
+        name: "Code Quality Analysis",
+        description: "Analyze code quality and identify issues",
+        category: "analysis",
+        prompt: `Perform a comprehensive code quality analysis:
 
 Code Context:
 - Language: {{LANGUAGE}}
@@ -85,18 +85,18 @@ Please analyze:
 10. **Readability**: Evaluate code readability
 
 Provide specific recommendations with code examples for improvements.`,
-                variables: {
-                    LANGUAGE: 'JavaScript',
-                    FRAMEWORK: 'React',
-                    FILE_PATH: 'src/components/'
-                }
-            },
+        variables: {
+          LANGUAGE: "JavaScript",
+          FRAMEWORK: "React",
+          FILE_PATH: "src/components/",
+        },
+      },
 
-            dependencyAnalysis: {
-                name: 'Dependency Analysis',
-                description: 'Analyze project dependencies',
-                category: 'analysis',
-                prompt: `Analyze the project dependencies and provide insights:
+      dependencyAnalysis: {
+        name: "Dependency Analysis",
+        description: "Analyze project dependencies",
+        category: "analysis",
+        prompt: `Analyze the project dependencies and provide insights:
 
 Dependency Context:
 - Package Manager: {{PACKAGE_MANAGER}}
@@ -116,18 +116,18 @@ Please analyze:
 10. **Update Strategy**: Provide recommendations for dependency updates
 
 Prioritize recommendations by security risk, performance impact, and maintenance effort.`,
-                variables: {
-                    PACKAGE_MANAGER: 'npm',
-                    TOTAL_DEPS: '50',
-                    DEV_DEPS: '20'
-                }
-            },
+        variables: {
+          PACKAGE_MANAGER: "npm",
+          TOTAL_DEPS: "50",
+          DEV_DEPS: "20",
+        },
+      },
 
-            performanceAnalysis: {
-                name: 'Performance Analysis',
-                description: 'Analyze application performance',
-                category: 'analysis',
-                prompt: `Analyze the application performance and provide optimization recommendations:
+      performanceAnalysis: {
+        name: "Performance Analysis",
+        description: "Analyze application performance",
+        category: "analysis",
+        prompt: `Analyze the application performance and provide optimization recommendations:
 
 Performance Context:
 - Application Type: {{APP_TYPE}}
@@ -147,26 +147,26 @@ Please analyze:
 10. **Monitoring**: Suggest performance monitoring approaches
 
 Provide specific, actionable recommendations with implementation details.`,
-                variables: {
-                    APP_TYPE: 'SPA',
-                    METRICS: 'load time, memory usage, API response time',
-                    ISSUES: 'slow initial load, high memory usage'
-                }
-            }
-        };
-    }
+        variables: {
+          APP_TYPE: "SPA",
+          METRICS: "load time, memory usage, API response time",
+          ISSUES: "slow initial load, high memory usage",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get development AI prompts
-     * @returns {Object} Development prompts
-     */
-    getDevelopmentPrompts() {
-        return {
-            featureImplementation: {
-                name: 'Feature Implementation',
-                description: 'Help implement new features',
-                category: 'development',
-                prompt: `Help implement a new feature with best practices:
+  /**
+   * Get development AI prompts
+   * @returns {Object} Development prompts
+   */
+  getDevelopmentPrompts() {
+    return {
+      featureImplementation: {
+        name: "Feature Implementation",
+        description: "Help implement new features",
+        category: "development",
+        prompt: `Help implement a new feature with best practices:
 
 Feature Context:
 - Feature Name: {{FEATURE_NAME}}
@@ -187,19 +187,20 @@ Please provide:
 10. **Documentation**: Suggest documentation requirements
 
 Include code examples and best practices for the technology stack.`,
-                variables: {
-                    FEATURE_NAME: 'User Authentication',
-                    FEATURE_DESCRIPTION: 'Implement secure user authentication system',
-                    TECH_STACK: 'Node.js, Express, React, JWT',
-                    REQUIREMENTS: 'Login, registration, password reset, session management'
-                }
-            },
+        variables: {
+          FEATURE_NAME: "User Authentication",
+          FEATURE_DESCRIPTION: "Implement secure user authentication system",
+          TECH_STACK: "Node.js, Express, React, JWT",
+          REQUIREMENTS:
+            "Login, registration, password reset, session management",
+        },
+      },
 
-            codeReview: {
-                name: 'Code Review',
-                description: 'Perform comprehensive code review',
-                category: 'development',
-                prompt: `Perform a comprehensive code review:
+      codeReview: {
+        name: "Code Review",
+        description: "Perform comprehensive code review",
+        category: "development",
+        prompt: `Perform a comprehensive code review:
 
 Code Context:
 - Language: {{LANGUAGE}}
@@ -219,18 +220,18 @@ Please review:
 10. **Accessibility**: Check accessibility considerations if applicable
 
 Provide specific feedback with suggestions for improvements.`,
-                variables: {
-                    LANGUAGE: 'JavaScript',
-                    FRAMEWORK: 'React',
-                    PURPOSE: 'User authentication component'
-                }
-            },
+        variables: {
+          LANGUAGE: "JavaScript",
+          FRAMEWORK: "React",
+          PURPOSE: "User authentication component",
+        },
+      },
 
-            bugFix: {
-                name: 'Bug Fix',
-                description: 'Help fix bugs and issues',
-                category: 'development',
-                prompt: `Help fix the following bug:
+      bugFix: {
+        name: "Bug Fix",
+        description: "Help fix bugs and issues",
+        category: "development",
+        prompt: `Help fix the following bug:
 
 Bug Context:
 - Bug Description: {{BUG_DESCRIPTION}}
@@ -251,19 +252,20 @@ Please provide:
 10. **Deployment**: Consider deployment implications
 
 Include code examples and explain the reasoning behind the fix.`,
-                variables: {
-                    BUG_DESCRIPTION: 'User authentication fails intermittently',
-                    ERROR_MESSAGE: 'JWT authentication validation error',
-                    ENVIRONMENT: 'Production',
-                    STEPS: 'Login with valid credentials, authentication expires after 1 hour'
-                }
-            },
+        variables: {
+          BUG_DESCRIPTION: "User authentication fails intermittently",
+          ERROR_MESSAGE: "JWT authentication validation error",
+          ENVIRONMENT: "Production",
+          STEPS:
+            "Login with valid credentials, authentication expires after 1 hour",
+        },
+      },
 
-            optimization: {
-                name: 'Code Optimization',
-                description: 'Optimize code for better performance',
-                category: 'development',
-                prompt: `Help optimize the following code for better performance:
+      optimization: {
+        name: "Code Optimization",
+        description: "Optimize code for better performance",
+        category: "development",
+        prompt: `Help optimize the following code for better performance:
 
 Optimization Context:
 - Code Purpose: {{PURPOSE}}
@@ -283,26 +285,26 @@ Please provide:
 10. **Monitoring**: Implement performance monitoring
 
 Provide optimized code examples with performance benchmarks.`,
-                variables: {
-                    PURPOSE: 'Data processing component',
-                    ISSUES: 'Slow rendering, high memory usage',
-                    IMPLEMENTATION: 'Current implementation details'
-                }
-            }
-        };
-    }
+        variables: {
+          PURPOSE: "Data processing component",
+          ISSUES: "Slow rendering, high memory usage",
+          IMPLEMENTATION: "Current implementation details",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get testing AI prompts
-     * @returns {Object} Testing prompts
-     */
-    getTestingPrompts() {
-        return {
-            testGeneration: {
-                name: 'Test Generation',
-                description: 'Generate comprehensive tests',
-                category: 'testing',
-                prompt: `Generate comprehensive tests for the following code:
+  /**
+   * Get testing AI prompts
+   * @returns {Object} Testing prompts
+   */
+  getTestingPrompts() {
+    return {
+      testGeneration: {
+        name: "Test Generation",
+        description: "Generate comprehensive tests",
+        category: "testing",
+        prompt: `Generate comprehensive tests for the following code:
 
 Test Context:
 - Code Purpose: {{PURPOSE}}
@@ -322,18 +324,18 @@ Please generate:
 10. **Documentation**: Test documentation and examples
 
 Include test examples with proper assertions and error handling.`,
-                variables: {
-                    PURPOSE: 'User authentication service',
-                    TECH_STACK: 'Node.js, Express, JWT',
-                    TESTING_FRAMEWORK: 'Jest'
-                }
-            },
+        variables: {
+          PURPOSE: "User authentication service",
+          TECH_STACK: "Node.js, Express, JWT",
+          TESTING_FRAMEWORK: "Jest",
+        },
+      },
 
-            testStrategy: {
-                name: 'Test Strategy',
-                description: 'Design comprehensive testing strategy',
-                category: 'testing',
-                prompt: `Design a comprehensive testing strategy for the project:
+      testStrategy: {
+        name: "Test Strategy",
+        description: "Design comprehensive testing strategy",
+        category: "testing",
+        prompt: `Design a comprehensive testing strategy for the project:
 
 Project Context:
 - Project Type: {{PROJECT_TYPE}}
@@ -353,18 +355,18 @@ Please design:
 10. **Quality Metrics**: Define testing quality metrics
 
 Provide a detailed testing strategy with implementation guidelines.`,
-                variables: {
-                    PROJECT_TYPE: 'Full-stack web application',
-                    TECH_STACK: 'React, Node.js, PostgreSQL',
-                    TEAM_SIZE: '5 developers'
-                }
-            },
+        variables: {
+          PROJECT_TYPE: "Full-stack web application",
+          TECH_STACK: "React, Node.js, PostgreSQL",
+          TEAM_SIZE: "5 developers",
+        },
+      },
 
-            testOptimization: {
-                name: 'Test Optimization',
-                description: 'Optimize existing tests',
-                category: 'testing',
-                prompt: `Optimize the existing test suite:
+      testOptimization: {
+        name: "Test Optimization",
+        description: "Optimize existing tests",
+        category: "testing",
+        prompt: `Optimize the existing test suite:
 
 Test Context:
 - Current Coverage: {{COVERAGE}}
@@ -384,26 +386,26 @@ Please optimize:
 10. **Test Documentation**: Better document test cases
 
 Provide specific optimization recommendations with examples.`,
-                variables: {
-                    COVERAGE: '75%',
-                    ISSUES: 'Flaky tests, slow execution',
-                    PERFORMANCE: 'Tests take 10 minutes to run'
-                }
-            }
-        };
-    }
+        variables: {
+          COVERAGE: "75%",
+          ISSUES: "Flaky tests, slow execution",
+          PERFORMANCE: "Tests take 10 minutes to run",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get optimization AI prompts
-     * @returns {Object} Optimization prompts
-     */
-    getOptimizationPrompts() {
-        return {
-            performanceOptimization: {
-                name: 'Performance Optimization',
-                description: 'Optimize application performance',
-                category: 'optimization',
-                prompt: `Optimize the application performance:
+  /**
+   * Get optimization AI prompts
+   * @returns {Object} Optimization prompts
+   */
+  getOptimizationPrompts() {
+    return {
+      performanceOptimization: {
+        name: "Performance Optimization",
+        description: "Optimize application performance",
+        category: "optimization",
+        prompt: `Optimize the application performance:
 
 Performance Context:
 - Application Type: {{APP_TYPE}}
@@ -423,18 +425,18 @@ Please optimize:
 10. **Monitoring**: Set up performance monitoring
 
 Provide specific optimization techniques with implementation details.`,
-                variables: {
-                    APP_TYPE: 'Single Page Application',
-                    ISSUES: 'Slow initial load, high memory usage',
-                    GOALS: 'Load time < 2s, memory usage < 100MB'
-                }
-            },
+        variables: {
+          APP_TYPE: "Single Page Application",
+          ISSUES: "Slow initial load, high memory usage",
+          GOALS: "Load time < 2s, memory usage < 100MB",
+        },
+      },
 
-            bundleOptimization: {
-                name: 'Bundle Optimization',
-                description: 'Optimize application bundle size',
-                category: 'optimization',
-                prompt: `Optimize the application bundle size:
+      bundleOptimization: {
+        name: "Bundle Optimization",
+        description: "Optimize application bundle size",
+        category: "optimization",
+        prompt: `Optimize the application bundle size:
 
 Bundle Context:
 - Current Bundle Size: {{BUNDLE_SIZE}}
@@ -454,18 +456,18 @@ Please optimize:
 10. **Caching Strategy**: Implement effective caching
 
 Provide specific techniques with configuration examples.`,
-                variables: {
-                    BUNDLE_SIZE: '2.5MB',
-                    BUILD_TOOL: 'Webpack',
-                    DEPENDENCIES: 'React, Lodash, Moment.js'
-                }
-            },
+        variables: {
+          BUNDLE_SIZE: "2.5MB",
+          BUILD_TOOL: "Webpack",
+          DEPENDENCIES: "React, Lodash, Moment.js",
+        },
+      },
 
-            databaseOptimization: {
-                name: 'Database Optimization',
-                description: 'Optimize database performance',
-                category: 'optimization',
-                prompt: `Optimize the database performance:
+      databaseOptimization: {
+        name: "Database Optimization",
+        description: "Optimize database performance",
+        category: "optimization",
+        prompt: `Optimize the database performance:
 
 Database Context:
 - Database Type: {{DB_TYPE}}
@@ -485,26 +487,26 @@ Please optimize:
 10. **Scaling Strategy**: Plan for database scaling
 
 Provide specific optimization techniques with SQL examples.`,
-                variables: {
-                    DB_TYPE: 'PostgreSQL',
-                    ISSUES: 'Slow queries, high connection usage',
-                    DATA_VOLUME: '10GB with 1M records'
-                }
-            }
-        };
-    }
+        variables: {
+          DB_TYPE: "PostgreSQL",
+          ISSUES: "Slow queries, high connection usage",
+          DATA_VOLUME: "10GB with 1M records",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get security AI prompts
-     * @returns {Object} Security prompts
-     */
-    getSecurityPrompts() {
-        return {
-            securityAudit: {
-                name: 'Security Audit',
-                description: 'Perform security audit',
-                category: 'security',
-                prompt: `Perform a comprehensive security audit:
+  /**
+   * Get security AI prompts
+   * @returns {Object} Security prompts
+   */
+  getSecurityPrompts() {
+    return {
+      securityAudit: {
+        name: "Security Audit",
+        description: "Perform security audit",
+        category: "security",
+        prompt: `Perform a comprehensive security audit:
 
 Security Context:
 - Application Type: {{APP_TYPE}}
@@ -524,18 +526,18 @@ Please audit:
 10. **Security Headers**: Review security headers
 
 Provide specific security recommendations with implementation details.`,
-                variables: {
-                    APP_TYPE: 'Web application with user data',
-                    TECH_STACK: 'Node.js, Express, React, PostgreSQL',
-                    CONCERNS: 'User authentication, data privacy'
-                }
-            },
+        variables: {
+          APP_TYPE: "Web application with user data",
+          TECH_STACK: "Node.js, Express, React, PostgreSQL",
+          CONCERNS: "User authentication, data privacy",
+        },
+      },
 
-            vulnerabilityAssessment: {
-                name: 'Vulnerability Assessment',
-                description: 'Assess security vulnerabilities',
-                category: 'security',
-                prompt: `Assess security vulnerabilities in the codebase:
+      vulnerabilityAssessment: {
+        name: "Vulnerability Assessment",
+        description: "Assess security vulnerabilities",
+        category: "security",
+        prompt: `Assess security vulnerabilities in the codebase:
 
 Vulnerability Context:
 - Code Language: {{LANGUAGE}}
@@ -555,18 +557,18 @@ Please assess:
 10. **Security Best Practices**: Assess adherence to security best practices
 
 Provide specific vulnerability details with remediation steps.`,
-                variables: {
-                    LANGUAGE: 'JavaScript',
-                    FRAMEWORK: 'Express.js',
-                    FOCUS: 'API security and data protection'
-                }
-            },
+        variables: {
+          LANGUAGE: "JavaScript",
+          FRAMEWORK: "Express.js",
+          FOCUS: "API security and data protection",
+        },
+      },
 
-            securityImplementation: {
-                name: 'Security Implementation',
-                description: 'Implement security measures',
-                category: 'security',
-                prompt: `Implement security measures for the application:
+      securityImplementation: {
+        name: "Security Implementation",
+        description: "Implement security measures",
+        category: "security",
+        prompt: `Implement security measures for the application:
 
 Security Context:
 - Security Requirements: {{REQUIREMENTS}}
@@ -586,26 +588,26 @@ Please implement:
 10. **Security Testing**: Implement security testing framework
 
 Provide implementation details with code examples and configuration.`,
-                variables: {
-                    REQUIREMENTS: 'Secure user authentication, data protection',
-                    TECH_STACK: 'Node.js, Express, JWT, bcrypt',
-                    COMPLIANCE: 'GDPR, SOC 2'
-                }
-            }
-        };
-    }
+        variables: {
+          REQUIREMENTS: "Secure user authentication, data protection",
+          TECH_STACK: "Node.js, Express, JWT, bcrypt",
+          COMPLIANCE: "GDPR, SOC 2",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get documentation AI prompts
-     * @returns {Object} Documentation prompts
-     */
-    getDocumentationPrompts() {
-        return {
-            apiDocumentation: {
-                name: 'API Documentation',
-                description: 'Generate API documentation',
-                category: 'documentation',
-                prompt: `Generate comprehensive API documentation:
+  /**
+   * Get documentation AI prompts
+   * @returns {Object} Documentation prompts
+   */
+  getDocumentationPrompts() {
+    return {
+      apiDocumentation: {
+        name: "API Documentation",
+        description: "Generate API documentation",
+        category: "documentation",
+        prompt: `Generate comprehensive API documentation:
 
 API Context:
 - API Type: {{API_TYPE}}
@@ -625,18 +627,18 @@ Please document:
 10. **Testing**: Provide testing examples and tools
 
 Generate documentation in OpenAPI/Swagger format with examples.`,
-                variables: {
-                    API_TYPE: 'REST API',
-                    FRAMEWORK: 'Express.js',
-                    ENDPOINTS: 'User management, authentication, data operations'
-                }
-            },
+        variables: {
+          API_TYPE: "REST API",
+          FRAMEWORK: "Express.js",
+          ENDPOINTS: "User management, authentication, data operations",
+        },
+      },
 
-            codeDocumentation: {
-                name: 'Code Documentation',
-                description: 'Generate code documentation',
-                category: 'documentation',
-                prompt: `Generate comprehensive code documentation:
+      codeDocumentation: {
+        name: "Code Documentation",
+        description: "Generate code documentation",
+        category: "documentation",
+        prompt: `Generate comprehensive code documentation:
 
 Code Context:
 - Language: {{LANGUAGE}}
@@ -656,18 +658,18 @@ Please document:
 10. **Contributing**: Document contribution guidelines
 
 Generate documentation with proper formatting and examples.`,
-                variables: {
-                    LANGUAGE: 'JavaScript',
-                    FRAMEWORK: 'React',
-                    PURPOSE: 'User authentication component library'
-                }
-            },
+        variables: {
+          LANGUAGE: "JavaScript",
+          FRAMEWORK: "React",
+          PURPOSE: "User authentication component library",
+        },
+      },
 
-            userDocumentation: {
-                name: 'User Documentation',
-                description: 'Generate user documentation',
-                category: 'documentation',
-                prompt: `Generate user documentation:
+      userDocumentation: {
+        name: "User Documentation",
+        description: "Generate user documentation",
+        category: "documentation",
+        prompt: `Generate user documentation:
 
 Documentation Context:
 - Application Type: {{APP_TYPE}}
@@ -687,26 +689,26 @@ Please create:
 10. **Feedback**: Include feedback and support information
 
 Create user-friendly documentation with clear instructions and examples.`,
-                variables: {
-                    APP_TYPE: 'Project management application',
-                    AUDIENCE: 'Project managers and team members',
-                    FEATURES: 'Task management, team collaboration, reporting'
-                }
-            }
-        };
-    }
+        variables: {
+          APP_TYPE: "Project management application",
+          AUDIENCE: "Project managers and team members",
+          FEATURES: "Task management, team collaboration, reporting",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get refactoring AI prompts
-     * @returns {Object} Refactoring prompts
-     */
-    getRefactoringPrompts() {
-        return {
-            codeRefactoring: {
-                name: 'Code Refactoring',
-                description: 'Refactor code for better maintainability',
-                category: 'refactoring',
-                prompt: `Refactor the following code for better maintainability:
+  /**
+   * Get refactoring AI prompts
+   * @returns {Object} Refactoring prompts
+   */
+  getRefactoringPrompts() {
+    return {
+      codeRefactoring: {
+        name: "Code Refactoring",
+        description: "Refactor code for better maintainability",
+        category: "refactoring",
+        prompt: `Refactor the following code for better maintainability:
 
 Refactoring Context:
 - Code Purpose: {{PURPOSE}}
@@ -726,18 +728,18 @@ Please refactor:
 10. **Testing**: Ensure refactored code is testable
 
 Provide refactored code with explanations of changes.`,
-                variables: {
-                    PURPOSE: 'Data processing utility',
-                    ISSUES: 'High complexity, code duplication',
-                    GOALS: 'Improve maintainability and readability'
-                }
-            },
+        variables: {
+          PURPOSE: "Data processing utility",
+          ISSUES: "High complexity, code duplication",
+          GOALS: "Improve maintainability and readability",
+        },
+      },
 
-            architectureRefactoring: {
-                name: 'Architecture Refactoring',
-                description: 'Refactor application architecture',
-                category: 'refactoring',
-                prompt: `Refactor the application architecture:
+      architectureRefactoring: {
+        name: "Architecture Refactoring",
+        description: "Refactor application architecture",
+        category: "refactoring",
+        prompt: `Refactor the application architecture:
 
 Architecture Context:
 - Current Architecture: {{CURRENT_ARCH}}
@@ -757,26 +759,26 @@ Please refactor:
 10. **Documentation**: Update architecture documentation
 
 Provide architectural recommendations with implementation guidance.`,
-                variables: {
-                    CURRENT_ARCH: 'Monolithic application',
-                    ISSUES: 'Tight coupling, difficult to scale',
-                    GOALS: 'Microservices architecture, better scalability'
-                }
-            }
-        };
-    }
+        variables: {
+          CURRENT_ARCH: "Monolithic application",
+          ISSUES: "Tight coupling, difficult to scale",
+          GOALS: "Microservices architecture, better scalability",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get debugging AI prompts
-     * @returns {Object} Debugging prompts
-     */
-    getDebuggingPrompts() {
-        return {
-            errorDebugging: {
-                name: 'Error Debugging',
-                description: 'Help debug errors and issues',
-                category: 'debugging',
-                prompt: `Help debug the following error:
+  /**
+   * Get debugging AI prompts
+   * @returns {Object} Debugging prompts
+   */
+  getDebuggingPrompts() {
+    return {
+      errorDebugging: {
+        name: "Error Debugging",
+        description: "Help debug errors and issues",
+        category: "debugging",
+        prompt: `Help debug the following error:
 
 Error Context:
 - Error Message: {{ERROR_MESSAGE}}
@@ -797,19 +799,19 @@ Please help:
 10. **Learning**: Extract lessons learned from the debugging
 
 Provide comprehensive debugging guidance with examples.`,
-                variables: {
-                    ERROR_MESSAGE: 'JWT authentication validation failed',
-                    ERROR_TYPE: 'Authentication Error',
-                    ENVIRONMENT: 'Production',
-                    CODE_CONTEXT: 'User authentication middleware'
-                }
-            },
+        variables: {
+          ERROR_MESSAGE: "JWT authentication validation failed",
+          ERROR_TYPE: "Authentication Error",
+          ENVIRONMENT: "Production",
+          CODE_CONTEXT: "User authentication middleware",
+        },
+      },
 
-            performanceDebugging: {
-                name: 'Performance Debugging',
-                description: 'Debug performance issues',
-                category: 'debugging',
-                prompt: `Help debug performance issues:
+      performanceDebugging: {
+        name: "Performance Debugging",
+        description: "Debug performance issues",
+        category: "debugging",
+        prompt: `Help debug performance issues:
 
 Performance Context:
 - Performance Issue: {{ISSUE}}
@@ -829,26 +831,26 @@ Please help:
 10. **Testing**: Implement performance testing
 
 Provide comprehensive performance debugging guidance.`,
-                variables: {
-                    ISSUE: 'Slow application response time',
-                    SYMPTOMS: 'High CPU usage, slow page loads',
-                    ENVIRONMENT: 'Production with high traffic'
-                }
-            }
-        };
-    }
+        variables: {
+          ISSUE: "Slow application response time",
+          SYMPTOMS: "High CPU usage, slow page loads",
+          ENVIRONMENT: "Production with high traffic",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get architecture AI prompts
-     * @returns {Object} Architecture prompts
-     */
-    getArchitecturePrompts() {
-        return {
-            systemDesign: {
-                name: 'System Design',
-                description: 'Design system architecture',
-                category: 'architecture',
-                prompt: `Design system architecture for the following requirements:
+  /**
+   * Get architecture AI prompts
+   * @returns {Object} Architecture prompts
+   */
+  getArchitecturePrompts() {
+    return {
+      systemDesign: {
+        name: "System Design",
+        description: "Design system architecture",
+        category: "architecture",
+        prompt: `Design system architecture for the following requirements:
 
 System Context:
 - System Type: {{SYSTEM_TYPE}}
@@ -868,18 +870,18 @@ Please design:
 10. **Deployment Design**: Design deployment architecture
 
 Provide comprehensive architecture design with diagrams and explanations.`,
-                variables: {
-                    SYSTEM_TYPE: 'E-commerce platform',
-                    REQUIREMENTS: 'High availability, scalability, security',
-                    CONSTRAINTS: 'Budget, timeline, team size'
-                }
-            },
+        variables: {
+          SYSTEM_TYPE: "E-commerce platform",
+          REQUIREMENTS: "High availability, scalability, security",
+          CONSTRAINTS: "Budget, timeline, team size",
+        },
+      },
 
-            microservicesDesign: {
-                name: 'Microservices Design',
-                description: 'Design microservices architecture',
-                category: 'architecture',
-                prompt: `Design microservices architecture:
+      microservicesDesign: {
+        name: "Microservices Design",
+        description: "Design microservices architecture",
+        category: "architecture",
+        prompt: `Design microservices architecture:
 
 Microservices Context:
 - Application Type: {{APP_TYPE}}
@@ -899,26 +901,26 @@ Please design:
 10. **Testing**: Design testing strategy
 
 Provide comprehensive microservices design with implementation guidance.`,
-                variables: {
-                    APP_TYPE: 'Online marketplace',
-                    CURRENT_ARCH: 'Monolithic application',
-                    REQUIREMENTS: 'Scalability, maintainability, team autonomy'
-                }
-            }
-        };
-    }
+        variables: {
+          APP_TYPE: "Online marketplace",
+          CURRENT_ARCH: "Monolithic application",
+          REQUIREMENTS: "Scalability, maintainability, team autonomy",
+        },
+      },
+    };
+  }
 
-    /**
-     * Get deployment AI prompts
-     * @returns {Object} Deployment prompts
-     */
-    getDeploymentPrompts() {
-        return {
-            deploymentStrategy: {
-                name: 'Deployment Strategy',
-                description: 'Design deployment strategy',
-                category: 'deployment',
-                prompt: `Design deployment strategy for the application:
+  /**
+   * Get deployment AI prompts
+   * @returns {Object} Deployment prompts
+   */
+  getDeploymentPrompts() {
+    return {
+      deploymentStrategy: {
+        name: "Deployment Strategy",
+        description: "Design deployment strategy",
+        category: "deployment",
+        prompt: `Design deployment strategy for the application:
 
 Deployment Context:
 - Application Type: {{APP_TYPE}}
@@ -938,18 +940,18 @@ Please design:
 10. **Disaster Recovery**: Design disaster recovery plan
 
 Provide comprehensive deployment strategy with implementation details.`,
-                variables: {
-                    APP_TYPE: 'Web application',
-                    INFRASTRUCTURE: 'Cloud (AWS/Azure/GCP)',
-                    REQUIREMENTS: 'High availability, zero downtime, security'
-                }
-            },
+        variables: {
+          APP_TYPE: "Web application",
+          INFRASTRUCTURE: "Cloud (AWS/Azure/GCP)",
+          REQUIREMENTS: "High availability, zero downtime, security",
+        },
+      },
 
-            infrastructureDesign: {
-                name: 'Infrastructure Design',
-                description: 'Design infrastructure architecture',
-                category: 'deployment',
-                prompt: `Design infrastructure architecture:
+      infrastructureDesign: {
+        name: "Infrastructure Design",
+        description: "Design infrastructure architecture",
+        category: "deployment",
+        prompt: `Design infrastructure architecture:
 
 Infrastructure Context:
 - Application Requirements: {{REQUIREMENTS}}
@@ -969,146 +971,150 @@ Please design:
 10. **Compliance**: Design compliance requirements
 
 Provide comprehensive infrastructure design with cost estimates.`,
-                variables: {
-                    REQUIREMENTS: 'High availability, scalability, security',
-                    CLOUD_PROVIDER: 'AWS',
-                    BUDGET: 'Medium budget with cost optimization'
-                }
-            }
-        };
+        variables: {
+          REQUIREMENTS: "High availability, scalability, security",
+          CLOUD_PROVIDER: "AWS",
+          BUDGET: "Medium budget with cost optimization",
+        },
+      },
+    };
+  }
+
+  /**
+   * Get prompt by category and name
+   * @param {string} category - Prompt category
+   * @param {string} name - Prompt name
+   * @returns {Object|null} Prompt or null if not found
+   */
+  getPrompt(category, name) {
+    const prompts = this.getAllPrompts();
+    return prompts[category]?.[name] || null;
+  }
+
+  /**
+   * Get prompts by category
+   * @param {string} category - Prompt category
+   * @returns {Object} Prompts in category
+   */
+  getPromptsByCategory(category) {
+    const prompts = this.getAllPrompts();
+    return prompts[category] || {};
+  }
+
+  /**
+   * Generate prompt with variables
+   * @param {string} category - Prompt category
+   * @param {string} name - Prompt name
+   * @param {Object} variables - Variables to substitute
+   * @returns {string} Generated prompt
+   */
+  generatePrompt(category, name, variables = {}) {
+    const promptTemplate = this.getPrompt(category, name);
+    if (!promptTemplate) {
+      throw new Error(`Prompt not found: ${category}/${name}`);
     }
 
-    /**
-     * Get prompt by category and name
-     * @param {string} category - Prompt category
-     * @param {string} name - Prompt name
-     * @returns {Object|null} Prompt or null if not found
-     */
-    getPrompt(category, name) {
-        const prompts = this.getAllPrompts();
-        return prompts[category]?.[name] || null;
+    let prompt = promptTemplate.prompt;
+
+    // Substitute variables
+    for (const [key, value] of Object.entries(variables)) {
+      const placeholder = `{{${key}}}`;
+      prompt = prompt.replace(new RegExp(placeholder, "g"), value);
     }
 
-    /**
-     * Get prompts by category
-     * @param {string} category - Prompt category
-     * @returns {Object} Prompts in category
-     */
-    getPromptsByCategory(category) {
-        const prompts = this.getAllPrompts();
-        return prompts[category] || {};
+    // Substitute default variables if not provided
+    for (const [key, defaultValue] of Object.entries(
+      promptTemplate.variables || {},
+    )) {
+      const placeholder = `{{${key}}}`;
+      if (!variables[key] && prompt.includes(placeholder)) {
+        prompt = prompt.replace(new RegExp(placeholder, "g"), defaultValue);
+      }
     }
 
-    /**
-     * Generate prompt with variables
-     * @param {string} category - Prompt category
-     * @param {string} name - Prompt name
-     * @param {Object} variables - Variables to substitute
-     * @returns {string} Generated prompt
-     */
-    generatePrompt(category, name, variables = {}) {
-        const promptTemplate = this.getPrompt(category, name);
-        if (!promptTemplate) {
-            throw new Error(`Prompt not found: ${category}/${name}`);
+    return prompt;
+  }
+
+  /**
+   * Search prompts by keyword
+   * @param {string} keyword - Search keyword
+   * @returns {Array} Matching prompts
+   */
+  searchPrompts(keyword) {
+    const allPrompts = this.getAllPrompts();
+    const results = [];
+
+    for (const [category, prompts] of Object.entries(allPrompts)) {
+      for (const [name, prompt] of Object.entries(prompts)) {
+        if (
+          prompt.name.toLowerCase().includes(keyword.toLowerCase()) ||
+          prompt.description.toLowerCase().includes(keyword.toLowerCase()) ||
+          prompt.category.toLowerCase().includes(keyword.toLowerCase())
+        ) {
+          results.push({
+            category,
+            name,
+            prompt,
+          });
         }
-
-        let prompt = promptTemplate.prompt;
-
-        // Substitute variables
-        for (const [key, value] of Object.entries(variables)) {
-            const placeholder = `{{${key}}}`;
-            prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
-        }
-
-        // Substitute default variables if not provided
-        for (const [key, defaultValue] of Object.entries(promptTemplate.variables || {})) {
-            const placeholder = `{{${key}}}`;
-            if (!variables[key] && prompt.includes(placeholder)) {
-                prompt = prompt.replace(new RegExp(placeholder, 'g'), defaultValue);
-            }
-        }
-
-        return prompt;
+      }
     }
 
-    /**
-     * Search prompts by keyword
-     * @param {string} keyword - Search keyword
-     * @returns {Array} Matching prompts
-     */
-    searchPrompts(keyword) {
-        const allPrompts = this.getAllPrompts();
-        const results = [];
+    return results;
+  }
 
-        for (const [category, prompts] of Object.entries(allPrompts)) {
-            for (const [name, prompt] of Object.entries(prompts)) {
-                if (prompt.name.toLowerCase().includes(keyword.toLowerCase()) ||
-                    prompt.description.toLowerCase().includes(keyword.toLowerCase()) ||
-                    prompt.category.toLowerCase().includes(keyword.toLowerCase())) {
-                    results.push({
-                        category,
-                        name,
-                        prompt
-                    });
-                }
-            }
-        }
+  /**
+   * Create custom prompt
+   * @param {Object} prompt - Prompt definition
+   * @returns {Object} Created prompt
+   */
+  createCustomPrompt(prompt) {
+    const customPrompt = {
+      ...prompt,
+      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      isCustom: true,
+      createdAt: new Date(),
+    };
 
-        return results;
+    if (this.eventBus) {
+      this.eventBus.publish("ai-prompt.created", {
+        prompt: customPrompt,
+        timestamp: new Date(),
+      });
     }
 
-    /**
-     * Create custom prompt
-     * @param {Object} prompt - Prompt definition
-     * @returns {Object} Created prompt
-     */
-    createCustomPrompt(prompt) {
-        const customPrompt = {
-            ...prompt,
-            id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            isCustom: true,
-            createdAt: new Date()
-        };
+    return customPrompt;
+  }
 
-        if (this.eventBus) {
-            this.eventBus.publish('ai-prompt.created', {
-                prompt: customPrompt,
-                timestamp: new Date()
-            });
-        }
+  /**
+   * Validate prompt
+   * @param {Object} prompt - Prompt to validate
+   * @returns {Object} Validation result
+   */
+  validatePrompt(prompt) {
+    const errors = [];
 
-        return customPrompt;
+    if (!prompt.name) {
+      errors.push("Prompt name is required");
     }
 
-    /**
-     * Validate prompt
-     * @param {Object} prompt - Prompt to validate
-     * @returns {Object} Validation result
-     */
-    validatePrompt(prompt) {
-        const errors = [];
-
-        if (!prompt.name) {
-            errors.push('Prompt name is required');
-        }
-
-        if (!prompt.description) {
-            errors.push('Prompt description is required');
-        }
-
-        if (!prompt.category) {
-            errors.push('Prompt category is required');
-        }
-
-        if (!prompt.prompt) {
-            errors.push('Prompt content is required');
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors
-        };
+    if (!prompt.description) {
+      errors.push("Prompt description is required");
     }
+
+    if (!prompt.category) {
+      errors.push("Prompt category is required");
+    }
+
+    if (!prompt.prompt) {
+      errors.push("Prompt content is required");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
 }
 
-module.exports = AIPrompts; 
+module.exports = AIPrompts;

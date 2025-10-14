@@ -1,21 +1,24 @@
-
 /**
  * PostgreSQLTaskRepository
  * PostgreSQL/SQLite implementation of TaskRepository interface using DatabaseConnection
  */
-const TaskRepository = require('@repositories/TaskRepository');
-const Task = require('@entities/Task');
-const TaskStatus = require('@value-objects/TaskStatus');
-const TaskPriority = require('@value-objects/TaskPriority');
-const TaskType = require('@value-objects/TaskType');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const TaskRepository = require("@repositories/TaskRepository");
+const Task = require("@entities/Task");
+const TaskStatus = require("@value-objects/TaskStatus");
+const TaskPriority = require("@value-objects/TaskPriority");
+const TaskType = require("@value-objects/TaskType");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class PostgreSQLTaskRepository extends TaskRepository {
-  constructor(databaseConnection, eventBus = null, statusTransitionService = null) {
+  constructor(
+    databaseConnection,
+    eventBus = null,
+    statusTransitionService = null,
+  ) {
     super();
     this.databaseConnection = databaseConnection;
-    this.tableName = 'tasks';
+    this.tableName = "tasks";
     this.eventBus = eventBus;
     this.statusTransitionService = statusTransitionService;
     // Disable init() to prevent overriding the correct schema from DatabaseConnection.js
@@ -106,14 +109,18 @@ class PostgreSQLTaskRepository extends TaskRepository {
         taskPriority,
         taskStatus,
         task.projectId, // camelCase property
-        task.userId || 'me', // Use userId or default to 'me'
+        task.userId || "me", // Use userId or default to 'me'
         task.estimatedTime || null,
         JSON.stringify(task.metadata || {}),
-        task.createdAt ? task.createdAt.toISOString() : new Date().toISOString(),
-        task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
+        task.createdAt
+          ? task.createdAt.toISOString()
+          : new Date().toISOString(),
+        task.updatedAt
+          ? task.updatedAt.toISOString()
+          : new Date().toISOString(),
         task.completedAt ? task.completedAt.toISOString() : null,
         task.dueDate ? task.dueDate.toISOString() : null,
-        JSON.stringify(task.tags || [])
+        JSON.stringify(task.tags || []),
       ];
 
       await this.databaseConnection.execute(sql, params);
@@ -221,14 +228,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
       }
 
       if (conditions.length > 0) {
-        sql += ' WHERE ' + conditions.join(' AND ');
+        sql += " WHERE " + conditions.join(" AND ");
       }
 
       // Add sorting
-      sql += ' ORDER BY created_at DESC';
+      sql += " ORDER BY created_at DESC";
 
       const rows = await this.databaseConnection.query(sql, params);
-      return rows.map(row => this._rowToTask(row));
+      return rows.map((row) => this._rowToTask(row));
     } catch (error) {
       throw new Error(`Failed to find tasks: ${error.message}`);
     }
@@ -246,10 +253,14 @@ class PostgreSQLTaskRepository extends TaskRepository {
       let taskId;
 
       // ✅ FIXED: Handle both parameter patterns
-      if (typeof idOrTask === 'string') {
+      if (typeof idOrTask === "string") {
         // Called as: update(id, task) or update(id, updates)
         taskId = idOrTask;
-        if (taskOrUpdates && typeof taskOrUpdates === 'object' && taskOrUpdates.id === taskId) {
+        if (
+          taskOrUpdates &&
+          typeof taskOrUpdates === "object" &&
+          taskOrUpdates.id === taskId
+        ) {
           // Second parameter is a complete task object
           task = taskOrUpdates;
         } else {
@@ -270,65 +281,73 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       // ✅ FIXED: Handle updates properly
       let sql, params;
-      
-      if (taskOrUpdates && typeof taskOrUpdates === 'object' && !taskOrUpdates.id) {
+
+      if (
+        taskOrUpdates &&
+        typeof taskOrUpdates === "object" &&
+        !taskOrUpdates.id
+      ) {
         // We have specific updates to apply
         const updates = [];
         const updateParams = [];
         let paramIndex = 1;
-        
+
         // Build dynamic SQL for specific updates
         if (taskOrUpdates.title !== undefined) {
           updates.push(`title = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.title);
         }
-        
+
         if (taskOrUpdates.description !== undefined) {
           updates.push(`description = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.description);
         }
-        
+
         if (taskOrUpdates.type !== undefined) {
           updates.push(`type = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.type?.value || taskOrUpdates.type);
         }
-        
+
         if (taskOrUpdates.status !== undefined) {
           updates.push(`status = $${paramIndex++}`);
-          updateParams.push(taskOrUpdates.status?.value || taskOrUpdates.status);
+          updateParams.push(
+            taskOrUpdates.status?.value || taskOrUpdates.status,
+          );
         }
-        
+
         if (taskOrUpdates.priority !== undefined) {
           updates.push(`priority = $${paramIndex++}`);
-          updateParams.push(taskOrUpdates.priority?.value || taskOrUpdates.priority);
+          updateParams.push(
+            taskOrUpdates.priority?.value || taskOrUpdates.priority,
+          );
         }
-        
+
         if (taskOrUpdates.createdAt !== undefined) {
           updates.push(`created_at = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.createdAt.toISOString());
         }
-        
+
         if (taskOrUpdates.updatedAt !== undefined) {
           updates.push(`updated_at = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.updatedAt.toISOString());
         }
-        
+
         if (taskOrUpdates.completedAt !== undefined) {
           updates.push(`completed_at = $${paramIndex++}`);
           updateParams.push(taskOrUpdates.completedAt.toISOString());
         }
-        
+
         if (taskOrUpdates.metadata !== undefined) {
           updates.push(`metadata = $${paramIndex++}`);
           updateParams.push(JSON.stringify(taskOrUpdates.metadata));
         }
-        
+
         if (updates.length === 0) {
           // No updates to apply
           return task;
         }
-        
-        sql = `UPDATE ${this.tableName} SET ${updates.join(', ')} WHERE id = $${paramIndex}`;
+
+        sql = `UPDATE ${this.tableName} SET ${updates.join(", ")} WHERE id = $${paramIndex}`;
         updateParams.push(taskId);
         params = updateParams;
       } else {
@@ -354,22 +373,24 @@ class PostgreSQLTaskRepository extends TaskRepository {
           taskPriority,
           taskStatus,
           task.projectId, // camelCase property
-          task.userId || 'me', // camelCase property with fallback
+          task.userId || "me", // camelCase property with fallback
           task.estimatedTime || null,
           JSON.stringify(task.metadata || {}),
-          task.updatedAt ? task.updatedAt.toISOString() : new Date().toISOString(),
+          task.updatedAt
+            ? task.updatedAt.toISOString()
+            : new Date().toISOString(),
           JSON.stringify(task.tags || []),
           task.dueDate ? task.dueDate.toISOString() : null,
           task.completedAt ? task.completedAt.toISOString() : null,
-          taskId
+          taskId,
         ];
       }
 
       await this.databaseConnection.execute(sql, params);
-      
+
       // 🔄 AUTOMATIC FILE MOVING: Check if status changed and trigger file movement
       await this.handleStatusChange(taskId, task, taskOrUpdates);
-      
+
       return task;
     } catch (error) {
       throw new Error(`Failed to update task: ${error.message}`);
@@ -386,12 +407,12 @@ class PostgreSQLTaskRepository extends TaskRepository {
     try {
       // Create TaskStatusTransitionService if not provided
       if (!this.statusTransitionService) {
-        const TaskStatusTransitionService = require('@domain/services/task/TaskStatusTransitionService');
-        const FileSystemService = require('@domain/services/shared/FileSystemService');
+        const TaskStatusTransitionService = require("@domain/services/task/TaskStatusTransitionService");
+        const FileSystemService = require("@domain/services/shared/FileSystemService");
         this.statusTransitionService = new TaskStatusTransitionService(
           this,
           new FileSystemService(),
-          this.eventBus
+          this.eventBus,
         );
       }
 
@@ -400,7 +421,11 @@ class PostgreSQLTaskRepository extends TaskRepository {
       let newStatus = null;
       let oldStatus = null;
 
-      if (updates && typeof updates === 'object' && updates.status !== undefined) {
+      if (
+        updates &&
+        typeof updates === "object" &&
+        updates.status !== undefined
+      ) {
         // Direct status update
         newStatus = updates.status;
         oldStatus = task.status?.value || task.status;
@@ -415,45 +440,49 @@ class PostgreSQLTaskRepository extends TaskRepository {
       }
 
       if (statusChanged && newStatus && oldStatus) {
-        logger.info(`🔄 Status changed detected: ${taskId} ${oldStatus} -> ${newStatus}`);
-        
+        logger.info(
+          `🔄 Status changed detected: ${taskId} ${oldStatus} -> ${newStatus}`,
+        );
+
         // Trigger automatic file movement based on status change
         try {
           switch (newStatus) {
-            case 'completed':
+            case "completed":
               await this.statusTransitionService.moveTaskToCompleted(taskId);
               break;
-            case 'in-progress':
-            case 'in_progress':
+            case "in-progress":
+            case "in_progress":
               await this.statusTransitionService.moveTaskToInProgress(taskId);
               break;
-            case 'blocked':
+            case "blocked":
               await this.statusTransitionService.moveTaskToBlocked(taskId);
               break;
-            case 'cancelled':
+            case "cancelled":
               await this.statusTransitionService.moveTaskToCancelled(taskId);
               break;
             default:
-              logger.debug(`No automatic file movement for status: ${newStatus}`);
+              logger.debug(
+                `No automatic file movement for status: ${newStatus}`,
+              );
           }
-          
+
           // Emit event if eventBus is available
           if (this.eventBus) {
-            this.eventBus.emit('task:status:changed', {
+            this.eventBus.emit("task:status:changed", {
               taskId,
               oldStatus,
               newStatus,
               timestamp: new Date(),
-              source: 'database_update'
+              source: "database_update",
             });
           }
-          
         } catch (fileMoveError) {
-          logger.error(`❌ Failed to move files for status change: ${fileMoveError.message}`);
+          logger.error(
+            `❌ Failed to move files for status change: ${fileMoveError.message}`,
+          );
           // Don't throw - we don't want to break the database update
         }
       }
-      
     } catch (error) {
       logger.error(`❌ Error handling status change: ${error.message}`);
       // Don't throw - we don't want to break the database update
@@ -483,34 +512,34 @@ class PostgreSQLTaskRepository extends TaskRepository {
   _rowToTask(row) {
     try {
       // Provide default title if missing
-      const title = row.title || 'Untitled Task';
-      
+      const title = row.title || "Untitled Task";
+
       // Use Task constructor with parameters in correct order
       // Map snake_case database columns to camelCase properties
       const task = new Task(
-        row.id || '',
+        row.id || "",
         row.project_id || null, // snake_case from DB
         title,
-        row.description || '',
-        row.status || 'pending',
-        row.priority || 'medium',
-        row.type || 'feature',
+        row.description || "",
+        row.status || "pending",
+        row.priority || "medium",
+        row.type || "feature",
         row.category || null,
         row.metadata ? JSON.parse(row.metadata) : {},
         row.created_at ? new Date(row.created_at) : new Date(), // snake_case from DB
-        row.updated_at ? new Date(row.updated_at) : new Date() // snake_case from DB
+        row.updated_at ? new Date(row.updated_at) : new Date(), // snake_case from DB
       );
 
       // Set additional properties that aren't in the constructor
 
       if (row.dependencies) {
         const deps = JSON.parse(row.dependencies);
-        deps.forEach(dep => task.addDependency(dep));
+        deps.forEach((dep) => task.addDependency(dep));
       }
 
       if (row.tags) {
         const tags = JSON.parse(row.tags);
-        tags.forEach(tag => task.addTag(tag));
+        tags.forEach((tag) => task.addTag(tag));
       }
 
       if (row.assignee) {
@@ -571,7 +600,7 @@ class PostgreSQLTaskRepository extends TaskRepository {
       // if (row.blocked_by) {
       //   phaseMetadata.blockedBy = JSON.parse(row.blocked_by);
       // }
-      
+
       // Add phase metadata to task metadata
       // if (Object.keys(phaseMetadata).length > 0) {
       //   Object.assign(task._metadata, phaseMetadata);
@@ -579,11 +608,13 @@ class PostgreSQLTaskRepository extends TaskRepository {
 
       return task;
     } catch (error) {
-      logger.error('Error converting row to task:', error);
-      logger.error('Row data:', row);
-      throw new Error(`Failed to convert database row to Task: ${error.message}`);
+      logger.error("Error converting row to task:", error);
+      logger.error("Row data:", row);
+      throw new Error(
+        `Failed to convert database row to Task: ${error.message}`,
+      );
     }
   }
 }
 
-module.exports = PostgreSQLTaskRepository; 
+module.exports = PostgreSQLTaskRepository;

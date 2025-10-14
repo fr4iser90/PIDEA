@@ -3,7 +3,7 @@
  * All services should use this instead of hardcoded versions
  */
 
-const CentralVersionManager = require('../../../config/version/CentralVersionManager');
+const CentralVersionManager = require("../../../config/version/CentralVersionManager");
 
 class VersionService {
   constructor() {

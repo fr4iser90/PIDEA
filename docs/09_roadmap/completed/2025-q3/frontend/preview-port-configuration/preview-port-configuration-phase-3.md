@@ -220,13 +220,13 @@ async executeProjectCommand(projectId, commandType) {
     
     // Use existing error response patterns
     if (error.status === 404) {
-      return { success: false, error: 'Project not found' };
+      return { error: 'Project not found' };
     } else if (error.status === 400) {
-      return { success: false, error: 'Invalid command type' };
+      return { error: 'Invalid command type' };
     } else if (error.status === 500) {
-      return { success: false, error: 'Command execution failed' };
+      return { error: 'Command execution failed' };
     } else {
-      return { success: false, error: 'Failed to execute command' };
+      return { error: 'Failed to execute command' };
     }
   }
 }

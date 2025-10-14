@@ -4,35 +4,35 @@
  * Wrapper for SwitchChatHandler (which handles both business logic AND browser automation)
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('switch_chat_step');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("switch_chat_step");
 
 // Step configuration
 const config = {
-  name: 'switch_chat_step',
-  type: 'ide',
-  category: 'ide',
-  description: 'Switch to different chat session with IDE integration',
-  version: '1.0.0',
-  dependencies: ['switchChatHandler'],
+  name: "switch_chat_step",
+  type: "ide",
+  category: "ide",
+  description: "Switch to different chat session with IDE integration",
+  version: "1.0.0",
+  dependencies: ["switchChatHandler"],
   settings: {
     includeTimeout: true,
     includeRetry: true,
-    timeout: 30000
+    timeout: 30000,
   },
   validation: {
-    required: ['userId', 'sessionId'],
-    optional: ['ideType']
-  }
+    required: ["userId", "sessionId"],
+    optional: ["ideType"],
+  },
 };
 
 class SwitchChatStep {
   constructor() {
-    this.name = 'SwitchChatStep';
-    this.description = 'Switch to different chat session with IDE integration';
-    this.category = 'ide';
-    this.dependencies = ['switchChatHandler'];
+    this.name = "SwitchChatStep";
+    this.description = "Switch to different chat session with IDE integration";
+    this.category = "ide";
+    this.dependencies = ["switchChatHandler"];
   }
 
   static getConfig() {
@@ -42,51 +42,53 @@ class SwitchChatStep {
   async execute(context = {}) {
     const config = SwitchChatStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       const { userId, sessionId, ideType } = context;
-      
-      logger.info(`📝 Switching to chat session ${sessionId} for user ${userId}`);
-      
+
+      logger.info(
+        `📝 Switching to chat session ${sessionId} for user ${userId}`,
+      );
+
       // ✅ 1. BUSINESS LOGIC + BROWSER AUTOMATION über Handler
-      const switchChatHandler = context.getService('switchChatHandler');
+      const switchChatHandler = context.getService("switchChatHandler");
       if (!switchChatHandler) {
-        throw new Error('SwitchChatHandler not available in context');
+        throw new Error("SwitchChatHandler not available in context");
       }
-      
+
       // Create command for business logic
-      const SwitchChatCommand = require('@categories/chat/SwitchChatCommand');
+      const SwitchChatCommand = require("@categories/chat/SwitchChatCommand");
       const command = new SwitchChatCommand({
         userId: userId,
-        sessionId: sessionId
-      });
-      
-      // ✅ Handler macht BEIDES: Business Logic + Browser Automation
-      logger.info('📝 Executing SwitchChatHandler (Business Logic + Browser Automation)...');
-      const result = await switchChatHandler.handle(command);
-      
-      logger.info(`✅ Switched to chat session successfully via Handler`, {
-        sessionId: sessionId
-      });
-      
-      return {
-        success: true,
         sessionId: sessionId,
-        message: 'Switched to chat session successfully via Handler'
-      };
-      
-    } catch (error) {
-      logger.error('❌ Failed to switch chat session:', error);
-      
+      });
+
+      // ✅ Handler macht BEIDES: Business Logic + Browser Automation
+      logger.info(
+        "📝 Executing SwitchChatHandler (Business Logic + Browser Automation)...",
+      );
+      const result = await switchChatHandler.handle(command);
+
+      logger.info(`✅ Switched to chat session successfully via Handler`, {
+        sessionId: sessionId,
+      });
+
       return {
-        success: false,
+        sessionId: sessionId,
+        message: "Switched to chat session successfully via Handler",
+      };
+    } catch (error) {
+      logger.error("❌ Failed to switch chat session:", error);
+
+      return {
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -98,17 +100,17 @@ class SwitchChatStep {
    */
   validateContext(context) {
     const errors = [];
-    
+
     if (!context.userId) {
-      errors.push('User ID is required');
+      errors.push("User ID is required");
     }
-    
+
     if (!context.sessionId) {
-      errors.push('Session ID is required');
+      errors.push("Session ID is required");
     }
-    
+
     if (errors.length > 0) {
-      throw new Error(`Context validation failed: ${errors.join(', ')}`);
+      throw new Error(`Context validation failed: ${errors.join(", ")}`);
     }
   }
 }
@@ -119,8 +121,8 @@ module.exports = {
   execute: async (context) => {
     const stepInstance = new SwitchChatStep();
     return await stepInstance.execute(context);
-  }
+  },
 };
 
 // Also export the class for testing
-module.exports.SwitchChatStep = SwitchChatStep; 
+module.exports.SwitchChatStep = SwitchChatStep;

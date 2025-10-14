@@ -1,17 +1,17 @@
 /**
  * Audit Trail Manager - Audit Trail Pattern Implementation
- * 
+ *
  * Provides audit trail capabilities for tracking database changes
  * Records all INSERT, UPDATE, DELETE, and SOFT_DELETE operations
  */
 
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
 
 class AuditTrailManager {
   constructor(databaseConnection) {
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('AuditTrailManager');
+    this.logger = new Logger("AuditTrailManager");
   }
 
   /**
@@ -28,7 +28,18 @@ class AuditTrailManager {
    * @param {Object} metadata - Additional metadata
    * @returns {Promise<string>} Audit trail entry ID
    */
-  async recordAuditTrail(tableName, recordId, operation, oldValues = null, newValues = null, userId = 'system', sessionId = null, ipAddress = null, userAgent = null, metadata = {}) {
+  async recordAuditTrail(
+    tableName,
+    recordId,
+    operation,
+    oldValues = null,
+    newValues = null,
+    userId = "system",
+    sessionId = null,
+    ipAddress = null,
+    userAgent = null,
+    metadata = {},
+  ) {
     try {
       // Calculate changed fields
       const changedFields = this.calculateChangedFields(oldValues, newValues);
@@ -55,17 +66,23 @@ class AuditTrailManager {
         ipAddress,
         userAgent,
         new Date().toISOString(),
-        JSON.stringify(metadata)
+        JSON.stringify(metadata),
       ]);
 
       // Update audit trail summary
-      await this.updateAuditTrailSummary(tableName, recordId, operation, userId);
+      await this.updateAuditTrailSummary(
+        tableName,
+        recordId,
+        operation,
+        userId,
+      );
 
-      this.logger.debug(`Audit trail recorded: ${operation} on ${tableName}:${recordId}`);
+      this.logger.debug(
+        `Audit trail recorded: ${operation} on ${tableName}:${recordId}`,
+      );
       return auditId;
-
     } catch (error) {
-      this.logger.error('Error recording audit trail:', error);
+      this.logger.error("Error recording audit trail:", error);
       throw new Error(`Failed to record audit trail: ${error.message}`);
     }
   }
@@ -90,9 +107,14 @@ class AuditTrailManager {
         LIMIT ? OFFSET ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [tableName, recordId, limit, offset]);
-      
-      return rows.map(row => ({
+      const rows = await this.databaseConnection.query(sql, [
+        tableName,
+        recordId,
+        limit,
+        offset,
+      ]);
+
+      return rows.map((row) => ({
         id: row.id,
         tableName: row.table_name,
         recordId: row.record_id,
@@ -105,11 +127,10 @@ class AuditTrailManager {
         ipAddress: row.ip_address,
         userAgent: row.user_agent,
         timestamp: row.timestamp,
-        metadata: JSON.parse(row.metadata)
+        metadata: JSON.parse(row.metadata),
       }));
-
     } catch (error) {
-      this.logger.error('Error getting audit trail for record:', error);
+      this.logger.error("Error getting audit trail for record:", error);
       throw new Error(`Failed to get audit trail for record: ${error.message}`);
     }
   }
@@ -133,9 +154,13 @@ class AuditTrailManager {
         LIMIT ? OFFSET ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [userId, limit, offset]);
-      
-      return rows.map(row => ({
+      const rows = await this.databaseConnection.query(sql, [
+        userId,
+        limit,
+        offset,
+      ]);
+
+      return rows.map((row) => ({
         id: row.id,
         tableName: row.table_name,
         recordId: row.record_id,
@@ -148,11 +173,10 @@ class AuditTrailManager {
         ipAddress: row.ip_address,
         userAgent: row.user_agent,
         timestamp: row.timestamp,
-        metadata: JSON.parse(row.metadata)
+        metadata: JSON.parse(row.metadata),
       }));
-
     } catch (error) {
-      this.logger.error('Error getting audit trail by user:', error);
+      this.logger.error("Error getting audit trail by user:", error);
       throw new Error(`Failed to get audit trail by user: ${error.message}`);
     }
   }
@@ -176,9 +200,13 @@ class AuditTrailManager {
         LIMIT ? OFFSET ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [operation, limit, offset]);
-      
-      return rows.map(row => ({
+      const rows = await this.databaseConnection.query(sql, [
+        operation,
+        limit,
+        offset,
+      ]);
+
+      return rows.map((row) => ({
         id: row.id,
         tableName: row.table_name,
         recordId: row.record_id,
@@ -191,12 +219,13 @@ class AuditTrailManager {
         ipAddress: row.ip_address,
         userAgent: row.user_agent,
         timestamp: row.timestamp,
-        metadata: JSON.parse(row.metadata)
+        metadata: JSON.parse(row.metadata),
       }));
-
     } catch (error) {
-      this.logger.error('Error getting audit trail by operation:', error);
-      throw new Error(`Failed to get audit trail by operation: ${error.message}`);
+      this.logger.error("Error getting audit trail by operation:", error);
+      throw new Error(
+        `Failed to get audit trail by operation: ${error.message}`,
+      );
     }
   }
 
@@ -215,8 +244,11 @@ class AuditTrailManager {
         WHERE table_name = ? AND record_id = ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [tableName, recordId]);
-      
+      const rows = await this.databaseConnection.query(sql, [
+        tableName,
+        recordId,
+      ]);
+
       if (rows.length === 0) {
         return null;
       }
@@ -231,11 +263,10 @@ class AuditTrailManager {
         lastChange: row.last_change,
         lastChangedBy: row.last_changed_by,
         changeTypes: row.change_types,
-        metadata: JSON.parse(row.metadata)
+        metadata: JSON.parse(row.metadata),
       };
-
     } catch (error) {
-      this.logger.error('Error getting audit trail summary:', error);
+      this.logger.error("Error getting audit trail summary:", error);
       throw new Error(`Failed to get audit trail summary: ${error.message}`);
     }
   }
@@ -292,11 +323,10 @@ class AuditTrailManager {
       return {
         ...stats,
         operationBreakdown,
-        tableBreakdown
+        tableBreakdown,
       };
-
     } catch (error) {
-      this.logger.error('Error getting audit trail statistics:', error);
+      this.logger.error("Error getting audit trail statistics:", error);
       throw new Error(`Failed to get audit trail statistics: ${error.message}`);
     }
   }
@@ -326,7 +356,7 @@ class AuditTrailManager {
         const result = await this.databaseConnection.execute(sql, [
           beforeDate.toISOString(),
           beforeDate.toISOString(),
-          batchSize
+          batchSize,
         ]);
 
         const deletedCount = result.affectedRows || 0;
@@ -338,12 +368,15 @@ class AuditTrailManager {
         }
       }
 
-      this.logger.debug(`Total deleted ${totalDeleted} old audit trail entries`);
+      this.logger.debug(
+        `Total deleted ${totalDeleted} old audit trail entries`,
+      );
       return totalDeleted;
-
     } catch (error) {
-      this.logger.error('Error cleaning up old audit trail entries:', error);
-      throw new Error(`Failed to clean up old audit trail entries: ${error.message}`);
+      this.logger.error("Error cleaning up old audit trail entries:", error);
+      throw new Error(
+        `Failed to clean up old audit trail entries: ${error.message}`,
+      );
     }
   }
 
@@ -358,7 +391,10 @@ class AuditTrailManager {
   async updateAuditTrailSummary(tableName, recordId, operation, userId) {
     try {
       // Check if summary exists
-      const existingSummary = await this.getAuditTrailSummary(tableName, recordId);
+      const existingSummary = await this.getAuditTrailSummary(
+        tableName,
+        recordId,
+      );
 
       if (existingSummary) {
         // Update existing summary
@@ -376,7 +412,7 @@ class AuditTrailManager {
           userId,
           operation,
           tableName,
-          recordId
+          recordId,
         ]);
       } else {
         // Create new summary
@@ -397,12 +433,11 @@ class AuditTrailManager {
           now,
           userId,
           JSON.stringify([operation]),
-          JSON.stringify({})
+          JSON.stringify({}),
         ]);
       }
-
     } catch (error) {
-      this.logger.error('Error updating audit trail summary:', error);
+      this.logger.error("Error updating audit trail summary:", error);
       // Don't throw error here as it's not critical
     }
   }
@@ -419,7 +454,10 @@ class AuditTrailManager {
     if (!newValues) return Object.keys(oldValues || {});
 
     const changedFields = [];
-    const allKeys = new Set([...Object.keys(oldValues), ...Object.keys(newValues)]);
+    const allKeys = new Set([
+      ...Object.keys(oldValues),
+      ...Object.keys(newValues),
+    ]);
 
     for (const key of allKeys) {
       const oldValue = oldValues[key];
@@ -446,7 +484,7 @@ class AuditTrailManager {
         operation = null,
         startDate = null,
         endDate = null,
-        limit = 1000
+        limit = 1000,
       } = filters;
 
       let sql = `
@@ -460,39 +498,39 @@ class AuditTrailManager {
       const params = [];
 
       if (tableName) {
-        sql += ' AND table_name = ?';
+        sql += " AND table_name = ?";
         params.push(tableName);
       }
 
       if (userId) {
-        sql += ' AND user_id = ?';
+        sql += " AND user_id = ?";
         params.push(userId);
       }
 
       if (operation) {
-        sql += ' AND operation = ?';
+        sql += " AND operation = ?";
         params.push(operation);
       }
 
       if (startDate) {
-        sql += ' AND timestamp >= ?';
+        sql += " AND timestamp >= ?";
         params.push(startDate.toISOString());
       }
 
       if (endDate) {
-        sql += ' AND timestamp <= ?';
+        sql += " AND timestamp <= ?";
         params.push(endDate.toISOString());
       }
 
-      sql += ' ORDER BY timestamp DESC LIMIT ?';
+      sql += " ORDER BY timestamp DESC LIMIT ?";
       params.push(limit);
 
       const rows = await this.databaseConnection.query(sql, params);
-      
+
       const report = {
         filters,
         totalEntries: rows.length,
-        entries: rows.map(row => ({
+        entries: rows.map((row) => ({
           id: row.id,
           tableName: row.table_name,
           recordId: row.record_id,
@@ -505,16 +543,17 @@ class AuditTrailManager {
           ipAddress: row.ip_address,
           userAgent: row.user_agent,
           timestamp: row.timestamp,
-          metadata: JSON.parse(row.metadata)
+          metadata: JSON.parse(row.metadata),
         })),
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       };
 
       return report;
-
     } catch (error) {
-      this.logger.error('Error generating audit trail report:', error);
-      throw new Error(`Failed to generate audit trail report: ${error.message}`);
+      this.logger.error("Error generating audit trail report:", error);
+      throw new Error(
+        `Failed to generate audit trail report: ${error.message}`,
+      );
     }
   }
 }

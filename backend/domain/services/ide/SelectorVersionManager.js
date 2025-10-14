@@ -3,9 +3,9 @@
  * Provides unified access to version-specific selectors with fallback mechanisms
  */
 
-const IDETypes = require('./IDETypes');
-const Logger = require('@logging/Logger');
-const logger = new Logger('SelectorVersionManager');
+const IDETypes = require("./IDETypes");
+const Logger = require("@logging/Logger");
+const logger = new Logger("SelectorVersionManager");
 
 class SelectorVersionManager {
   constructor(dependencies = {}) {
@@ -28,32 +28,38 @@ class SelectorVersionManager {
     try {
       // Version is REQUIRED - no fallbacks allowed
       if (!version) {
-        throw new Error(`Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`);
+        throw new Error(
+          `Version is required for ${ideType}. No fallbacks allowed. Please specify exact version.`,
+        );
       }
 
       // Check cache first
       const cacheKey = `${ideType}:${version}`;
       const cached = this.versionCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        this.logger.info(`Using cached selectors for ${ideType} version ${version}`);
+        this.logger.info(
+          `Using cached selectors for ${ideType} version ${version}`,
+        );
         return cached.selectors;
       }
 
       // Get version-specific selectors - NO FALLBACKS
       const selectors = this.ideTypes.getSelectorsForVersion(ideType, version);
-      
+
       this.logger.info(`Retrieved selectors for ${ideType} version ${version}`);
 
       // Cache the result
       this.versionCache.set(cacheKey, {
         selectors: selectors,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       return selectors;
-
     } catch (error) {
-      this.logger.error(`Error getting selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(
+        `Error getting selectors for ${ideType} version ${version}:`,
+        error.message,
+      );
       throw error; // Re-throw - NO FALLBACKS!
     }
   }
@@ -69,22 +75,34 @@ class SelectorVersionManager {
     try {
       // Port is REQUIRED for version detection
       if (!port) {
-        throw new Error(`Port is required for version detection of ${ideType}. No fallbacks allowed.`);
+        throw new Error(
+          `Port is required for version detection of ${ideType}. No fallbacks allowed.`,
+        );
       }
 
       // Try to use VersionDetectionService if available
       if (this.versionDetectionService) {
-        const result = await this.versionDetectionService.detectVersion(port, ideType);
+        const result = await this.versionDetectionService.detectVersion(
+          port,
+          ideType,
+        );
         if (result && result.currentVersion) {
           return result.currentVersion;
         }
-        throw new Error(`VersionDetectionService failed to detect version for ${ideType} on port ${port}`);
+        throw new Error(
+          `VersionDetectionService failed to detect version for ${ideType} on port ${port}`,
+        );
       }
-      
+
       // No fallback - throw error
-      throw new Error(`VersionDetectionService not available for ${ideType} on port ${port}. No fallbacks allowed.`);
+      throw new Error(
+        `VersionDetectionService not available for ${ideType} on port ${port}. No fallbacks allowed.`,
+      );
     } catch (error) {
-      this.logger.error(`Error detecting version for ${ideType} on port ${port}:`, error.message);
+      this.logger.error(
+        `Error detecting version for ${ideType} on port ${port}:`,
+        error.message,
+      );
       throw error; // Re-throw - NO FALLBACKS!
     }
   }
@@ -115,22 +133,23 @@ class SelectorVersionManager {
   getFallbackSelectors() {
     return {
       input: 'input[type="text"], textarea, [contenteditable="true"]',
-      inputContainer: '.input-container, .chat-input, .message-input',
-      userMessages: '.user-message, .human-message, .request-message',
-      aiMessages: '.ai-message, .assistant-message, .response-message',
-      messagesContainer: '.messages, .chat-messages, .conversation',
-      chatContainer: '.chat, .conversation, .messages',
-      isActive: '.chat, .conversation, .messages',
-      isInputReady: 'input:not([disabled]), textarea:not([disabled]), [contenteditable="true"]:not([disabled])',
-      codeBlocks: 'pre, .code-block, .code',
-      codeBlockContent: 'code, .code-content',
-      inlineCode: 'code:not(pre code)',
+      inputContainer: ".input-container, .chat-input, .message-input",
+      userMessages: ".user-message, .human-message, .request-message",
+      aiMessages: ".ai-message, .assistant-message, .response-message",
+      messagesContainer: ".messages, .chat-messages, .conversation",
+      chatContainer: ".chat, .conversation, .messages",
+      isActive: ".chat, .conversation, .messages",
+      isInputReady:
+        'input:not([disabled]), textarea:not([disabled]), [contenteditable="true"]:not([disabled])',
+      codeBlocks: "pre, .code-block, .code",
+      codeBlockContent: "code, .code-content",
+      inlineCode: "code:not(pre code)",
       syntaxClasses: {
-        keyword: '.keyword, .kw',
-        string: '.string, .str',
-        comment: '.comment, .cmt',
-        function: '.function, .fn'
-      }
+        keyword: ".keyword, .kw",
+        string: ".string, .str",
+        comment: ".comment, .cmt",
+        function: ".function, .fn",
+      },
     };
   }
 
@@ -139,7 +158,7 @@ class SelectorVersionManager {
    */
   clearCache() {
     this.versionCache.clear();
-    this.logger.info('Version cache cleared');
+    this.logger.info("Version cache cleared");
   }
 
   /**
@@ -151,37 +170,59 @@ class SelectorVersionManager {
    */
   async collectSelectorsForVersion(ideType, version, port) {
     try {
-      this.logger.info(`Collecting selectors for ${ideType} version ${version} on port ${port}`);
-      
+      this.logger.info(
+        `Collecting selectors for ${ideType} version ${version} on port ${port}`,
+      );
+
       if (!this.selectorCollectionBot) {
-        throw new Error('SelectorCollectionBot not available');
+        throw new Error("SelectorCollectionBot not available");
       }
 
       // Collect selectors using the bot
-      const collectedSelectors = await this.selectorCollectionBot.collectSelectors(ideType, version, port);
-      
+      const collectedSelectors =
+        await this.selectorCollectionBot.collectSelectors(
+          ideType,
+          version,
+          port,
+        );
+
       // Test the collected selectors
-      const testResults = await this.selectorCollectionBot.testSelectors(ideType, version, collectedSelectors, port);
-      
+      const testResults = await this.selectorCollectionBot.testSelectors(
+        ideType,
+        version,
+        collectedSelectors,
+        port,
+      );
+
       if (testResults.failed > testResults.passed) {
-        this.logger.warn(`Selector collection quality is low: ${testResults.passed}/${testResults.tested} passed`);
+        this.logger.warn(
+          `Selector collection quality is low: ${testResults.passed}/${testResults.tested} passed`,
+        );
       }
 
       // Save the selectors
-      await this.selectorCollectionBot.saveSelectors(ideType, version, collectedSelectors);
-      
-      this.logger.info(`Successfully collected and saved selectors for ${ideType} version ${version}`);
+      await this.selectorCollectionBot.saveSelectors(
+        ideType,
+        version,
+        collectedSelectors,
+      );
+
+      this.logger.info(
+        `Successfully collected and saved selectors for ${ideType} version ${version}`,
+      );
       return {
         selectors: collectedSelectors,
         testResults,
-        success: true
+       
       };
-
     } catch (error) {
-      this.logger.error(`Selector collection failed for ${ideType} version ${version}:`, error.message);
+      this.logger.error(
+        `Selector collection failed for ${ideType} version ${version}:`,
+        error.message,
+      );
       return {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       };
     }
   }
@@ -194,7 +235,7 @@ class SelectorVersionManager {
     return {
       size: this.versionCache.size,
       keys: Array.from(this.versionCache.keys()),
-      timeout: this.cacheTimeout
+      timeout: this.cacheTimeout,
     };
   }
 }

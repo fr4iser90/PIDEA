@@ -46,15 +46,12 @@ describe('PreviewComponent Integration Tests', () => {
     // Mock ChatRepository
     mockAPIRepository = {
       getUserAppUrl: vi.fn().mockResolvedValue({
-        success: true,
         data: { url: 'http://localhost:3000', port: 3000 }
       }),
       getUserAppUrlForPort: vi.fn().mockResolvedValue({
-        success: true,
         data: { url: 'http://localhost:3000', port: 3000 }
       }),
       getProjectCommands: vi.fn().mockResolvedValue({
-        success: true,
         data: {
           start_command: 'npm start',
           dev_command: 'npm run dev',
@@ -63,7 +60,6 @@ describe('PreviewComponent Integration Tests', () => {
         }
       }),
       executeProjectCommand: vi.fn().mockResolvedValue({
-        success: true,
         data: { status: 'executing' }
       })
     };
@@ -231,7 +227,7 @@ describe('PreviewComponent Integration Tests', () => {
     it('should fallback to general URL when port-specific fails', async () => {
       // Mock port-specific call to fail
       mockAPIRepository.getUserAppUrlForPort.mockResolvedValueOnce({
-        success: false,
+       
         error: 'Port not found'
       });
 
@@ -279,7 +275,7 @@ describe('PreviewComponent Integration Tests', () => {
     it('should handle command execution errors', async () => {
       // Mock command execution to fail
       mockAPIRepository.executeProjectCommand.mockResolvedValueOnce({
-        success: false,
+       
         error: 'Command failed'
       });
 

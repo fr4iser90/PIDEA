@@ -80,7 +80,6 @@ describe('Project Form IDE Selection Integration', () => {
       ];
 
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
 
@@ -114,7 +113,6 @@ describe('Project Form IDE Selection Integration', () => {
       ];
 
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
 
@@ -150,7 +148,6 @@ describe('Project Form IDE Selection Integration', () => {
 
     it('should handle no IDEs found scenario', async () => {
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: []
       });
 
@@ -173,7 +170,7 @@ describe('Project Form IDE Selection Integration', () => {
 
     it('should handle API error scenario', async () => {
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: false,
+       
         error: 'Failed to connect to IDE service'
       });
 
@@ -208,11 +205,10 @@ describe('Project Form IDE Selection Integration', () => {
 
       mockProjectRepository.getAvailableIDEs
         .mockResolvedValueOnce({
-          success: false,
+         
           error: 'Network error'
         })
         .mockResolvedValueOnce({
-          success: true,
           data: mockIDEs
         });
 
@@ -256,7 +252,6 @@ describe('Project Form IDE Selection Integration', () => {
       ];
 
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
 
@@ -297,7 +292,6 @@ describe('Project Form IDE Selection Integration', () => {
       ];
 
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
 

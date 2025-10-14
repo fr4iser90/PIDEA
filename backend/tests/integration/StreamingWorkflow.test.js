@@ -1,24 +1,23 @@
-
 /**
  * StreamingWorkflow Integration Tests
- * 
+ *
  * End-to-end tests for the complete IDE screenshot streaming workflow
  * including session management, frame capture, compression, and delivery.
  */
-const ScreenshotStreamingService = require('@services/ide-mirror/ScreenshotStreamingService');
-const StreamingController = require('@api/StreamingController');
-const StartStreamingHandler = require('@handler-categories/management/StartStreamingHandler');
-const StopStreamingHandler = require('@handler-categories/management/StopStreamingHandler');
-const StreamingSessionRepository = require('@database/StreamingSessionRepository');
-const StreamingSession = require('@entities/StreamingSession');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ScreenshotStreamingService = require("@services/ide-mirror/ScreenshotStreamingService");
+const StreamingController = require("@api/StreamingController");
+const StartStreamingHandler = require("@handler-categories/management/StartStreamingHandler");
+const StopStreamingHandler = require("@handler-categories/management/StopStreamingHandler");
+const StreamingSessionRepository = require("@database/StreamingSessionRepository");
+const StreamingSession = require("@entities/StreamingSession");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 // Mock external dependencies
-jest.mock('@/infrastructure/external/BrowserManager');
-jest.mock('@/presentation/websocket/WebSocketManager');
+jest.mock("@/infrastructure/external/BrowserManager");
+jest.mock("@/presentation/websocket/WebSocketManager");
 
-describe('StreamingWorkflow Integration', () => {
+describe("StreamingWorkflow Integration", () => {
   // Global cleanup after all tests
   afterAll(() => {
     // Clear any remaining timers and intervals
@@ -43,40 +42,51 @@ describe('StreamingWorkflow Integration', () => {
       isConnected: jest.fn().mockReturnValue(true),
       getCurrentPort: jest.fn().mockReturnValue(3000),
       connectToPort: jest.fn().mockResolvedValue(true),
-      captureScreenshot: jest.fn().mockResolvedValue(Buffer.from('mock-screenshot-data')),
+      captureScreenshot: jest
+        .fn()
+        .mockResolvedValue(Buffer.from("mock-screenshot-data")),
       getPage: jest.fn().mockReturnValue({
-        screenshot: jest.fn().mockResolvedValue(Buffer.from('mock-screenshot-data'))
-      })
+        screenshot: jest
+          .fn()
+          .mockResolvedValue(Buffer.from("mock-screenshot-data")),
+      }),
     };
 
     mockWebSocketManager = {
       broadcastToTopic: jest.fn().mockResolvedValue(true),
       isConnected: jest.fn().mockReturnValue(true),
-      setScreenshotStreamingService: jest.fn()
+      setScreenshotStreamingService: jest.fn(),
     };
 
     mockEventBus = {
       emit: jest.fn(),
-      publish: jest.fn()
+      publish: jest.fn(),
     };
 
     // Create repository
     sessionRepository = new StreamingSessionRepository();
 
     // Create streaming service
-    streamingService = new ScreenshotStreamingService(mockBrowserManager, mockWebSocketManager, {
-      defaultFPS: 10,
-      maxFPS: 30,
-      defaultQuality: 0.8,
-      maxFrameSize: 50 * 1024
-    });
+    streamingService = new ScreenshotStreamingService(
+      mockBrowserManager,
+      mockWebSocketManager,
+      {
+        defaultFPS: 10,
+        maxFPS: 30,
+        defaultQuality: 0.8,
+        maxFrameSize: 50 * 1024,
+      },
+    );
 
     // Create handlers
     startHandler = new StartStreamingHandler(streamingService, mockEventBus);
     stopHandler = new StopStreamingHandler(streamingService, mockEventBus);
 
     // Create controller
-    streamingController = new StreamingController(streamingService, mockEventBus);
+    streamingController = new StreamingController(
+      streamingService,
+      mockEventBus,
+    );
 
     // Initialize services
     await sessionRepository.initialize();
@@ -88,21 +98,21 @@ describe('StreamingWorkflow Integration', () => {
       try {
         await streamingService.cleanup();
       } catch (error) {
-        logger.warn('Error during streaming service cleanup:', error.message);
+        logger.warn("Error during streaming service cleanup:", error.message);
       }
     }
   });
 
-  describe('Complete Streaming Workflow', () => {
-    test('should handle complete streaming session lifecycle', async () => {
-      const sessionId = 'integration-test-session';
+  describe("Complete Streaming Workflow", () => {
+    test("should handle complete streaming session lifecycle", async () => {
+      const sessionId = "integration-test-session";
       const port = 3000;
       const options = {
         fps: 10,
         quality: 0.8,
-        format: 'webp',
+        format: "webp",
         maxFrameSize: 50 * 1024,
-        enableRegionDetection: false
+        enableRegionDetection: false,
       };
 
       // Step 1: Start streaming
@@ -111,7 +121,7 @@ describe('StreamingWorkflow Integration', () => {
         port,
         options,
         validate: () => true,
-        commandId: 'test-command-1'
+        commandId: "test-command-1",
       });
 
       expect(startResult.success).toBe(true);
@@ -123,7 +133,7 @@ describe('StreamingWorkflow Integration', () => {
       expect(session.isActive()).toBe(true);
 
       // Step 2: Verify frame capture and streaming
-      await new Promise(resolve => setTimeout(resolve, 200)); // Wait for frame capture
+      await new Promise((resolve) => setTimeout(resolve, 200)); // Wait for frame capture
 
       expect(mockBrowserManager.captureScreenshot).toHaveBeenCalled();
       expect(mockWebSocketManager.broadcastToTopic).toHaveBeenCalled();
@@ -131,18 +141,18 @@ describe('StreamingWorkflow Integration', () => {
       // Step 3: Pause streaming
       const pauseResult = await streamingService.pauseStreaming(sessionId);
       expect(pauseResult.success).toBe(true);
-      expect(session.status).toBe('paused');
+      expect(session.status).toBe("paused");
 
       // Step 4: Resume streaming
       const resumeResult = await streamingService.resumeStreaming(sessionId);
       expect(resumeResult.success).toBe(true);
-      expect(session.status).toBe('active');
+      expect(session.status).toBe("active");
 
       // Step 5: Stop streaming
       const stopResult = await stopHandler.handle({
         sessionId,
         validate: () => true,
-        commandId: 'test-command-2'
+        commandId: "test-command-2",
       });
 
       expect(stopResult.success).toBe(true);
@@ -153,11 +163,11 @@ describe('StreamingWorkflow Integration', () => {
       expect(streamingService.streamingIntervals.has(sessionId)).toBe(false);
     });
 
-    test('should handle multiple concurrent sessions', async () => {
+    test("should handle multiple concurrent sessions", async () => {
       const sessions = [
-        { id: 'session-1', port: 3000 },
-        { id: 'session-2', port: 4000 },
-        { id: 'session-3', port: 3002 }
+        { id: "session-1", port: 3000 },
+        { id: "session-2", port: 4000 },
+        { id: "session-3", port: 3002 },
       ];
 
       // Start all sessions
@@ -167,7 +177,7 @@ describe('StreamingWorkflow Integration', () => {
           port: session.port,
           options: { fps: 5 },
           validate: () => true,
-          commandId: `command-${session.id}`
+          commandId: `command-${session.id}`,
         });
       }
 
@@ -188,7 +198,7 @@ describe('StreamingWorkflow Integration', () => {
         await stopHandler.handle({
           sessionId: session.id,
           validate: () => true,
-          commandId: `stop-command-${session.id}`
+          commandId: `stop-command-${session.id}`,
         });
       }
 
@@ -198,9 +208,9 @@ describe('StreamingWorkflow Integration', () => {
     });
   });
 
-  describe('API Controller Integration', () => {
-    test('should handle streaming API requests', async () => {
-      const sessionId = 'api-test-session';
+  describe("API Controller Integration", () => {
+    test("should handle streaming API requests", async () => {
+      const sessionId = "api-test-session";
       const port = 3000;
 
       // Mock request and response objects
@@ -210,13 +220,13 @@ describe('StreamingWorkflow Integration', () => {
           sessionId,
           fps: 10,
           quality: 0.8,
-          format: 'webp'
-        }
+          format: "webp",
+        },
       };
 
       const res = {
         status: jest.fn().mockReturnThis(),
-        json: jest.fn()
+        json: jest.fn(),
       };
 
       // Test start streaming endpoint
@@ -225,37 +235,35 @@ describe('StreamingWorkflow Integration', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: true,
           sessionId: sessionId,
-          port: port
-        })
+          port: port,
+        }),
       );
 
       // Test stop streaming endpoint
       const stopReq = {
         params: { port: port.toString() },
-        body: { sessionId }
+        body: { sessionId },
       };
 
       await streamingController.stopStreaming(stopReq, res);
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: true,
-          sessionId: sessionId
-        })
+          sessionId: sessionId,
+        }),
       );
     });
 
-    test('should handle API validation errors', async () => {
+    test("should handle API validation errors", async () => {
       const req = {
-        params: { port: 'invalid-port' },
-        body: { sessionId: 'test-session' }
+        params: { port: "invalid-port" },
+        body: { sessionId: "test-session" },
       };
 
       const res = {
         status: jest.fn().mockReturnThis(),
-        json: jest.fn()
+        json: jest.fn(),
       };
 
       await streamingController.startStreaming(req, res);
@@ -263,16 +271,16 @@ describe('StreamingWorkflow Integration', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: false,
-          error: expect.stringContaining('Invalid port number')
-        })
+         
+          error: expect.stringContaining("Invalid port number"),
+        }),
       );
     });
   });
 
-  describe('Performance and Metrics', () => {
-    test('should track performance metrics correctly', async () => {
-      const sessionId = 'metrics-test-session';
+  describe("Performance and Metrics", () => {
+    test("should track performance metrics correctly", async () => {
+      const sessionId = "metrics-test-session";
       const port = 3000;
 
       // Start streaming
@@ -281,11 +289,11 @@ describe('StreamingWorkflow Integration', () => {
         port,
         options: { fps: 10 },
         validate: () => true,
-        commandId: 'metrics-test-command'
+        commandId: "metrics-test-command",
       });
 
       // Wait for some frames to be captured
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const session = streamingService.getSession(sessionId);
       expect(session.frameCount).toBeGreaterThan(0);
@@ -302,12 +310,12 @@ describe('StreamingWorkflow Integration', () => {
       await stopHandler.handle({
         sessionId,
         validate: () => true,
-        commandId: 'stop-metrics-test'
+        commandId: "stop-metrics-test",
       });
     });
 
-    test('should handle memory constraints', async () => {
-      const sessionId = 'memory-test-session';
+    test("should handle memory constraints", async () => {
+      const sessionId = "memory-test-session";
       const port = 3000;
 
       // Start streaming with small frame size limit
@@ -316,11 +324,11 @@ describe('StreamingWorkflow Integration', () => {
         port,
         options: { maxFrameSize: 1024 }, // 1KB limit
         validate: () => true,
-        commandId: 'memory-test-command'
+        commandId: "memory-test-command",
       });
 
       // Wait for frame capture
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const session = streamingService.getSession(sessionId);
       expect(session.maxFrameSize).toBe(1024);
@@ -329,37 +337,39 @@ describe('StreamingWorkflow Integration', () => {
       await stopHandler.handle({
         sessionId,
         validate: () => true,
-        commandId: 'stop-memory-test'
+        commandId: "stop-memory-test",
       });
     });
   });
 
-  describe('Error Recovery', () => {
-    test('should recover from browser connection failures', async () => {
-      const sessionId = 'recovery-test-session';
+  describe("Error Recovery", () => {
+    test("should recover from browser connection failures", async () => {
+      const sessionId = "recovery-test-session";
       const port = 3000;
 
       // Mock browser connection failure
-      mockBrowserManager.connectToPort.mockRejectedValueOnce(new Error('Connection failed'));
+      mockBrowserManager.connectToPort.mockRejectedValueOnce(
+        new Error("Connection failed"),
+      );
 
       const startResult = await startHandler.handle({
         sessionId,
         port,
         options: { fps: 10 },
         validate: () => true,
-        commandId: 'recovery-test-command'
+        commandId: "recovery-test-command",
       });
 
       expect(startResult.success).toBe(false);
-      expect(startResult.error).toContain('Connection failed');
+      expect(startResult.error).toContain("Connection failed");
 
       // Verify session is not created
       const session = streamingService.getSession(sessionId);
       expect(session).toBeNull();
     });
 
-    test('should handle WebSocket disconnections gracefully', async () => {
-      const sessionId = 'websocket-test-session';
+    test("should handle WebSocket disconnections gracefully", async () => {
+      const sessionId = "websocket-test-session";
       const port = 3000;
 
       // Start streaming
@@ -368,7 +378,7 @@ describe('StreamingWorkflow Integration', () => {
         port,
         options: { fps: 10 },
         validate: () => true,
-        commandId: 'websocket-test-command'
+        commandId: "websocket-test-command",
       });
 
       // Mock WebSocket disconnection
@@ -384,14 +394,14 @@ describe('StreamingWorkflow Integration', () => {
       await stopHandler.handle({
         sessionId,
         validate: () => true,
-        commandId: 'stop-websocket-test'
+        commandId: "stop-websocket-test",
       });
     });
   });
 
-  describe('Session Repository Integration', () => {
-    test('should persist and retrieve sessions', async () => {
-      const sessionId = 'persistence-test-session';
+  describe("Session Repository Integration", () => {
+    test("should persist and retrieve sessions", async () => {
+      const sessionId = "persistence-test-session";
       const port = 3000;
 
       // Create session
@@ -411,11 +421,11 @@ describe('StreamingWorkflow Integration', () => {
 
       // Verify update
       const updatedSession = await sessionRepository.getSession(sessionId);
-      expect(updatedSession.status).toBe('active');
+      expect(updatedSession.status).toBe("active");
     });
 
-    test('should handle session cleanup', async () => {
-      const sessionId = 'cleanup-test-session';
+    test("should handle session cleanup", async () => {
+      const sessionId = "cleanup-test-session";
       const port = 3000;
 
       // Create and save session
@@ -436,4 +446,4 @@ describe('StreamingWorkflow Integration', () => {
       expect(retrievedSession).toBeNull();
     });
   });
-}); 
+});

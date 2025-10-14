@@ -1,5 +1,5 @@
-const ServiceLogger = require('@logging/ServiceLogger');
-const AnalysisStepRepository = require('../../repositories/AnalysisStepRepository');
+const ServiceLogger = require("@logging/ServiceLogger");
+const AnalysisStepRepository = require("../../repositories/AnalysisStepRepository");
 
 /**
  * IndividualAnalysisService - Manages individual analysis steps with progress tracking
@@ -12,7 +12,7 @@ class IndividualAnalysisService {
     performanceService,
     architectureService,
     analysisStepRepository,
-    eventBus = null
+    eventBus = null,
   ) {
     this.codeQualityService = codeQualityService;
     this.securityService = securityService;
@@ -20,81 +20,84 @@ class IndividualAnalysisService {
     this.architectureService = architectureService;
     this.analysisStepRepository = analysisStepRepository;
     this.eventBus = eventBus;
-    this.logger = new ServiceLogger('IndividualAnalysisService');
-    
+    this.logger = new ServiceLogger("IndividualAnalysisService");
+
     // Analysis type configurations
     this.analysisConfigs = {
-      'code-quality': {
+      "code-quality": {
         service: this.codeQualityService,
-        method: 'analyzeCodeQuality',
+        method: "analyzeCodeQuality",
         timeout: 2 * 60 * 1000, // 2 minutes
         progressSteps: [
-          { progress: 10, description: 'Initializing code quality analysis' },
-          { progress: 30, description: 'Scanning source files' },
-          { progress: 60, description: 'Analyzing code patterns' },
-          { progress: 80, description: 'Generating quality metrics' },
-          { progress: 100, description: 'Code quality analysis completed' }
-        ]
+          { progress: 10, description: "Initializing code quality analysis" },
+          { progress: 30, description: "Scanning source files" },
+          { progress: 60, description: "Analyzing code patterns" },
+          { progress: 80, description: "Generating quality metrics" },
+          { progress: 100, description: "Code quality analysis completed" },
+        ],
       },
-      'security': {
+      security: {
         service: this.securityService,
-        method: 'analyzeSecurity',
+        method: "analyzeSecurity",
         timeout: 3 * 60 * 1000, // 3 minutes
         progressSteps: [
-          { progress: 10, description: 'Initializing security analysis' },
-          { progress: 25, description: 'Scanning dependencies' },
-          { progress: 50, description: 'Analyzing code vulnerabilities' },
-          { progress: 75, description: 'Checking security patterns' },
-          { progress: 100, description: 'Security analysis completed' }
-        ]
+          { progress: 10, description: "Initializing security analysis" },
+          { progress: 25, description: "Scanning dependencies" },
+          { progress: 50, description: "Analyzing code vulnerabilities" },
+          { progress: 75, description: "Checking security patterns" },
+          { progress: 100, description: "Security analysis completed" },
+        ],
       },
-      'performance': {
+      performance: {
         service: this.performanceService,
-        method: 'analyzePerformance',
+        method: "analyzePerformance",
         timeout: 4 * 60 * 1000, // 4 minutes
         progressSteps: [
-          { progress: 10, description: 'Initializing performance analysis' },
-          { progress: 30, description: 'Analyzing code complexity' },
-          { progress: 50, description: 'Measuring performance metrics' },
-          { progress: 75, description: 'Identifying bottlenecks' },
-          { progress: 100, description: 'Performance analysis completed' }
-        ]
+          { progress: 10, description: "Initializing performance analysis" },
+          { progress: 30, description: "Analyzing code complexity" },
+          { progress: 50, description: "Measuring performance metrics" },
+          { progress: 75, description: "Identifying bottlenecks" },
+          { progress: 100, description: "Performance analysis completed" },
+        ],
       },
-      'architecture': {
+      architecture: {
         service: this.architectureService,
-        method: 'analyzeArchitecture',
+        method: "analyzeArchitecture",
         timeout: 5 * 60 * 1000, // 5 minutes
         progressSteps: [
-          { progress: 10, description: 'Initializing architecture analysis' },
-          { progress: 30, description: 'Mapping project structure' },
-          { progress: 50, description: 'Analyzing dependencies' },
-          { progress: 75, description: 'Evaluating architectural patterns' },
-          { progress: 100, description: 'Architecture analysis completed' }
-        ]
+          { progress: 10, description: "Initializing architecture analysis" },
+          { progress: 30, description: "Mapping project structure" },
+          { progress: 50, description: "Analyzing dependencies" },
+          { progress: 75, description: "Evaluating architectural patterns" },
+          { progress: 100, description: "Architecture analysis completed" },
+        ],
       },
-      'techstack': {
+      techstack: {
         service: this.getTechStackAnalyzer(),
-        method: 'analyzeTechStack',
+        method: "analyzeTechStack",
         timeout: 3 * 60 * 1000, // 3 minutes
         progressSteps: [
-          { progress: 10, description: 'Initializing tech stack analysis' },
-          { progress: 30, description: 'Scanning package files' },
-          { progress: 60, description: 'Analyzing dependencies' },
-          { progress: 80, description: 'Detecting frameworks and tools' },
-          { progress: 100, description: 'Tech stack analysis completed' }
-        ]
+          { progress: 10, description: "Initializing tech stack analysis" },
+          { progress: 30, description: "Scanning package files" },
+          { progress: 60, description: "Analyzing dependencies" },
+          { progress: 80, description: "Detecting frameworks and tools" },
+          { progress: 100, description: "Tech stack analysis completed" },
+        ],
       },
-      'recommendations': {
+      recommendations: {
         service: this.getRecommendationsService(),
-        method: 'generateRecommendations',
+        method: "generateRecommendations",
         timeout: 2 * 60 * 1000, // 2 minutes
         progressSteps: [
-          { progress: 10, description: 'Initializing recommendations analysis' },
-          { progress: 40, description: 'Analyzing project structure' },
-          { progress: 70, description: 'Generating recommendations' },
-          { progress: 100, description: 'Recommendations analysis completed' }
-        ]
-      }
+          {
+            progress: 10,
+            description: "Initializing recommendations analysis",
+          },
+          { progress: 40, description: "Analyzing project structure" },
+          { progress: 70, description: "Generating recommendations" },
+          { progress: 100, description: "Recommendations analysis completed" },
+        ],
+      },
     };
   }
 
@@ -114,12 +117,18 @@ class IndividualAnalysisService {
     let step = null;
     try {
       // Create analysis step
-      step = await this.analysisStepRepository.createStep(projectId, analysisType, {
-        timeout: config.timeout,
-        ...options
-      });
+      step = await this.analysisStepRepository.createStep(
+        projectId,
+        analysisType,
+        {
+          timeout: config.timeout,
+          ...options,
+        },
+      );
 
-      this.logger.info(`Starting ${analysisType} analysis for project: ${projectId}`);
+      this.logger.info(
+        `Starting ${analysisType} analysis for project: ${projectId}`,
+      );
 
       // Start the step
       step = await this.analysisStepRepository.startStep(step.id);
@@ -128,25 +137,29 @@ class IndividualAnalysisService {
       const result = await this.executeAnalysisWithProgress(
         step.id,
         config,
-        options
+        options,
       );
 
       // Complete the step
-      step = await this.analysisStepRepository.completeStep(step.id, this._sanitizeForJSON(result), {
-        fileCount: result.fileCount || null,
-        lineCount: result.lineCount || null,
-        memoryUsage: result.memoryUsage || null
-      });
+      step = await this.analysisStepRepository.completeStep(
+        step.id,
+        this._sanitizeForJSON(result),
+        {
+          fileCount: result.fileCount || null,
+          lineCount: result.lineCount || null,
+          memoryUsage: result.memoryUsage || null,
+        },
+      );
 
-      this.logger.info(`Completed ${analysisType} analysis for project: ${projectId}`);
+      this.logger.info(
+        `Completed ${analysisType} analysis for project: ${projectId}`,
+      );
 
       return {
-        success: true,
         stepId: step.id,
         result: result,
-        step: step.toSummary()
+        step: step.toSummary(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to execute ${analysisType} analysis:`, error);
 
@@ -154,7 +167,7 @@ class IndividualAnalysisService {
         await this.analysisStepRepository.failStep(step.id, {
           message: error.message,
           type: error.name,
-          stack: error.stack
+          stack: error.stack,
         });
       }
 
@@ -171,7 +184,7 @@ class IndividualAnalysisService {
    */
   async executeAnalysisWithProgress(stepId, config, options) {
     const { service, method, progressSteps } = config;
-    
+
     // Progress tracking interval
     let currentProgressIndex = 0;
     const progressInterval = setInterval(async () => {
@@ -180,7 +193,7 @@ class IndividualAnalysisService {
         await this.analysisStepRepository.updateProgress(
           stepId,
           progressStep.progress,
-          { currentStep: progressStep.description }
+          { currentStep: progressStep.description },
         );
         currentProgressIndex++;
       }
@@ -188,18 +201,17 @@ class IndividualAnalysisService {
 
     try {
       // Execute the analysis
-      const result = await service[method](options.projectPath || '', options);
-      
+      const result = await service[method](options.projectPath || "", options);
+
       // Clear progress interval
       clearInterval(progressInterval);
-      
+
       // Update to 100% completion
       await this.analysisStepRepository.updateProgress(stepId, 100, {
-        currentStep: 'Analysis completed successfully'
+        currentStep: "Analysis completed successfully",
       });
 
       return result;
-
     } catch (error) {
       // Clear progress interval
       clearInterval(progressInterval);
@@ -220,27 +232,31 @@ class IndividualAnalysisService {
 
     for (const analysisType of analysisTypes) {
       try {
-        this.logger.info(`Executing ${analysisType} analysis for project: ${projectId}`);
-        
-        const result = await this.executeAnalysisStep(projectId, analysisType, options);
+        this.logger.info(
+          `Executing ${analysisType} analysis for project: ${projectId}`,
+        );
+
+        const result = await this.executeAnalysisStep(
+          projectId,
+          analysisType,
+          options,
+        );
         results[analysisType] = result;
         steps.push(result.step);
-
       } catch (error) {
         this.logger.error(`Failed to execute ${analysisType} analysis:`, error);
         results[analysisType] = {
-          success: false,
+         
           error: error.message,
-          step: null
+          step: null,
         };
       }
     }
 
     return {
-      success: true,
       results,
       steps,
-      completedAt: new Date()
+      completedAt: new Date(),
     };
   }
 
@@ -264,8 +280,11 @@ class IndividualAnalysisService {
    * @returns {Promise<Array>} Array of step summaries
    */
   async getProjectSteps(projectId, options = {}) {
-    const steps = await this.analysisStepRepository.findByProjectId(projectId, options);
-    return steps.map(step => step.toSummary());
+    const steps = await this.analysisStepRepository.findByProjectId(
+      projectId,
+      options,
+    );
+    return steps.map((step) => step.toSummary());
   }
 
   /**
@@ -275,7 +294,7 @@ class IndividualAnalysisService {
    */
   async getActiveSteps(projectId) {
     const steps = await this.analysisStepRepository.findActiveSteps(projectId);
-    return steps.map(step => step.toSummary());
+    return steps.map((step) => step.toSummary());
   }
 
   /**
@@ -285,7 +304,10 @@ class IndividualAnalysisService {
    * @returns {Promise<Object|null>} Latest completed step or null
    */
   async getLatestCompletedStep(projectId, analysisType) {
-    const step = await this.analysisStepRepository.findLatestCompleted(projectId, analysisType);
+    const step = await this.analysisStepRepository.findLatestCompleted(
+      projectId,
+      analysisType,
+    );
     return step ? step.toSummary() : null;
   }
 
@@ -295,7 +317,7 @@ class IndividualAnalysisService {
    * @param {string} reason - Cancellation reason
    * @returns {Promise<Object>} Cancelled step information
    */
-  async cancelStep(stepId, reason = 'User cancelled') {
+  async cancelStep(stepId, reason = "User cancelled") {
     const step = await this.analysisStepRepository.cancelStep(stepId, reason);
     return step.toSummary();
   }
@@ -319,7 +341,7 @@ class IndividualAnalysisService {
     // Retry the step
     step.retry();
     await this.analysisStepRepository.updateProgress(stepId, 0, {
-      currentStep: 'Retrying analysis step'
+      currentStep: "Retrying analysis step",
     });
 
     // Execute the analysis again
@@ -368,7 +390,7 @@ class IndividualAnalysisService {
   getTechStackAnalyzer() {
     const application = global.application;
     if (!application || !application.techStackAnalyzer) {
-      throw new Error('Tech stack analyzer not available');
+      throw new Error("Tech stack analyzer not available");
     }
     return application.techStackAnalyzer;
   }
@@ -380,7 +402,7 @@ class IndividualAnalysisService {
   getRecommendationsService() {
     const application = global.application;
     if (!application || !application.recommendationsService) {
-      throw new Error('Recommendations service not available');
+      throw new Error("Recommendations service not available");
     }
     return application.recommendationsService;
   }
@@ -394,79 +416,92 @@ class IndividualAnalysisService {
     if (obj === null || obj === undefined) {
       return obj;
     }
-    
-    if (typeof obj !== 'object') {
+
+    if (typeof obj !== "object") {
       return obj;
     }
-    
+
     // Handle arrays
     if (Array.isArray(obj)) {
-      return obj.map(item => this._sanitizeForJSON(item));
+      return obj.map((item) => this._sanitizeForJSON(item));
     }
-    
+
     // Handle objects
     const sanitized = {};
     const seen = new WeakSet();
-    
+
     const sanitize = (obj) => {
-      if (obj === null || typeof obj !== 'object') {
+      if (obj === null || typeof obj !== "object") {
         return obj;
       }
-      
+
       // Check for circular references
       if (seen.has(obj)) {
         // For analysis results, try to extract serializable data
         if (obj.issues && Array.isArray(obj.issues)) {
-          return { issues: obj.issues, recommendations: obj.recommendations || [], summary: obj.summary || null };
+          return {
+            issues: obj.issues,
+            recommendations: obj.recommendations || [],
+            summary: obj.summary || null,
+          };
         }
         if (obj.recommendations && Array.isArray(obj.recommendations)) {
-          return { issues: obj.issues || [], recommendations: obj.recommendations, summary: obj.summary || null };
+          return {
+            issues: obj.issues || [],
+            recommendations: obj.recommendations,
+            summary: obj.summary || null,
+          };
         }
         if (obj.summary) {
-          return { issues: obj.issues || [], recommendations: obj.recommendations || [], summary: obj.summary };
+          return {
+            issues: obj.issues || [],
+            recommendations: obj.recommendations || [],
+            summary: obj.summary,
+          };
         }
         // For other objects with circular references, try to extract common properties
-        if (obj.result && typeof obj.result === 'object') {
+        if (obj.result && typeof obj.result === "object") {
           return { result: obj.result };
         }
         if (obj.success !== undefined) {
           return { success: obj.success };
         }
         // Only return '[Circular Reference]' as last resort
-        return '[Circular Reference]';
+        return "[Circular Reference]";
       }
-      
+
       // Skip Node.js internal objects that cause circular references
-      if (obj.constructor && (
-        obj.constructor.name === 'Timeout' ||
-        obj.constructor.name === 'TimersList' ||
-        obj.constructor.name === 'EventEmitter' ||
-        obj.constructor.name === 'Stream' ||
-        obj.constructor.name === 'Buffer'
-      )) {
+      if (
+        obj.constructor &&
+        (obj.constructor.name === "Timeout" ||
+          obj.constructor.name === "TimersList" ||
+          obj.constructor.name === "EventEmitter" ||
+          obj.constructor.name === "Stream" ||
+          obj.constructor.name === "Buffer")
+      ) {
         return `[${obj.constructor.name}]`;
       }
-      
+
       seen.add(obj);
-      
+
       if (Array.isArray(obj)) {
-        return obj.map(item => sanitize(item));
+        return obj.map((item) => sanitize(item));
       }
-      
+
       const result = {};
       for (const [key, value] of Object.entries(obj)) {
         try {
           result[key] = sanitize(value);
         } catch (error) {
-          result[key] = '[Error serializing]';
+          result[key] = "[Error serializing]";
         }
       }
-      
+
       return result;
     };
-    
+
     return sanitize(obj);
   }
 }
 
-module.exports = IndividualAnalysisService; 
+module.exports = IndividualAnalysisService;

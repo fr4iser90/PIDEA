@@ -7,7 +7,7 @@ class GitPushCommand {
   constructor(params) {
     this.projectPath = params.projectPath;
     this.branch = params.branch;
-    this.remote = params.remote || 'origin';
+    this.remote = params.remote || "origin";
     this.setUpstream = params.setUpstream || false;
     this.commandId = `git-push-${Date.now()}`;
     this.timestamp = new Date();
@@ -15,7 +15,7 @@ class GitPushCommand {
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
     return true;
   }
@@ -27,9 +27,9 @@ class GitPushCommand {
       branch: this.branch,
       remote: this.remote,
       setUpstream: this.setUpstream,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 }
 
-module.exports = GitPushCommand; 
+module.exports = GitPushCommand;

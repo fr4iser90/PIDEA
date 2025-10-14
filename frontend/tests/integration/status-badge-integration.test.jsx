@@ -62,7 +62,6 @@ describe('Status Badge Integration Tests', () => {
     });
     
     mockApiCall.mockResolvedValue({
-      success: true,
       data: { ides: [] }
     });
   });
@@ -164,11 +163,10 @@ describe('Status Badge Integration Tests', () => {
       mockApiCall.mockImplementation((url) => {
         if (url === '/api/ide/start') {
           return Promise.resolve({
-            success: true,
             data: { port: 9223, ideType: 'cursor' }
           });
         }
-        return Promise.resolve({ success: true, data: {} });
+        return Promise.resolve({ data: {} });
       });
       
       render(
@@ -205,17 +203,15 @@ describe('Status Badge Integration Tests', () => {
       mockApiCall.mockImplementation((url) => {
         if (url === '/api/ide/start') {
           return Promise.resolve({
-            success: true,
             data: { port: 9223, ideType: 'vscode' }
           });
         }
         if (url === '/api/ide/detect-workspace-paths') {
           return Promise.resolve({
-            success: true,
             data: { paths: ['/test/workspace1', '/test/workspace2'] }
           });
         }
-        return Promise.resolve({ success: true, data: {} });
+        return Promise.resolve({ data: {} });
       });
       
       render(
@@ -274,11 +270,11 @@ describe('Status Badge Integration Tests', () => {
       mockApiCall.mockImplementation((url) => {
         if (url === '/api/ide/start') {
           return Promise.resolve({
-            success: false,
+           
             error: 'Failed to start IDE'
           });
         }
-        return Promise.resolve({ success: true, data: {} });
+        return Promise.resolve({ data: {} });
       });
       
       render(

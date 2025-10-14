@@ -2,13 +2,13 @@
  * TaskStatus - Value object for task status
  */
 class TaskStatus {
-  static PENDING = 'pending';
-  static IN_PROGRESS = 'in_progress';
-  static COMPLETED = 'completed';
-  static CANCELLED = 'cancelled';
-  static FAILED = 'failed';
-  static PAUSED = 'paused';
-  static SCHEDULED = 'scheduled';
+  static PENDING = "pending";
+  static IN_PROGRESS = "in_progress";
+  static COMPLETED = "completed";
+  static CANCELLED = "cancelled";
+  static FAILED = "failed";
+  static PAUSED = "paused";
+  static SCHEDULED = "scheduled";
 
   constructor(value = TaskStatus.PENDING) {
     this.value = value;
@@ -58,9 +58,9 @@ class TaskStatus {
       TaskStatus.CANCELLED,
       TaskStatus.FAILED,
       TaskStatus.PAUSED,
-      TaskStatus.SCHEDULED
+      TaskStatus.SCHEDULED,
     ];
   }
 }
 
-module.exports = TaskStatus; 
+module.exports = TaskStatus;

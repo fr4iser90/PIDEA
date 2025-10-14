@@ -2,7 +2,7 @@
  * AutomationMetrics - Automation metrics
  * Tracks and analyzes automation performance metrics
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class AutomationMetrics {
   constructor() {
@@ -25,7 +25,7 @@ class AutomationMetrics {
       executionTime: execution.executionTime,
       timestamp: new Date(),
       errors: execution.errors || [],
-      warnings: execution.warnings || []
+      warnings: execution.warnings || [],
     };
 
     this._executions.push(executionRecord);
@@ -38,7 +38,7 @@ class AutomationMetrics {
    */
   _updateMetrics(execution) {
     const level = execution.automationLevel;
-    
+
     if (!this._metrics.has(level)) {
       this._metrics.set(level, {
         totalExecutions: 0,
@@ -50,14 +50,15 @@ class AutomationMetrics {
         averageConfidenceScore: 0,
         totalErrors: 0,
         totalWarnings: 0,
-        lastExecution: null
+        lastExecution: null,
       });
     }
 
     const metrics = this._metrics.get(level);
     metrics.totalExecutions++;
     metrics.totalExecutionTime += execution.executionTime;
-    metrics.averageExecutionTime = metrics.totalExecutionTime / metrics.totalExecutions;
+    metrics.averageExecutionTime =
+      metrics.totalExecutionTime / metrics.totalExecutions;
 
     if (execution.success) {
       metrics.successfulExecutions++;
@@ -67,7 +68,8 @@ class AutomationMetrics {
 
     if (execution.confidenceScore !== null) {
       metrics.totalConfidenceScore += execution.confidenceScore;
-      metrics.averageConfidenceScore = metrics.totalConfidenceScore / metrics.totalExecutions;
+      metrics.averageConfidenceScore =
+        metrics.totalConfidenceScore / metrics.totalExecutions;
     }
 
     metrics.totalErrors += execution.errors.length;
@@ -185,8 +187,9 @@ class AutomationMetrics {
    * @returns {Array} Executions in time period
    */
   getExecutionsForPeriod(startTime, endTime) {
-    return this._executions.filter(execution => 
-      execution.timestamp >= startTime && execution.timestamp <= endTime
+    return this._executions.filter(
+      (execution) =>
+        execution.timestamp >= startTime && execution.timestamp <= endTime,
     );
   }
 
@@ -231,7 +234,9 @@ class AutomationMetrics {
   getFormattedUptime() {
     const uptime = this.getUptime();
     const days = Math.floor(uptime / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((uptime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(
+      (uptime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    );
     const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((uptime % (1000 * 60)) / 1000);
 
@@ -256,7 +261,7 @@ class AutomationMetrics {
       formattedUptime: this.getFormattedUptime(),
       totalExecutions: this.getTotalExecutions(),
       overallSuccessRate: this.getOverallSuccessRate(),
-      levels: {}
+      levels: {},
     };
 
     for (const [level, metrics] of this._metrics.entries()) {
@@ -267,7 +272,7 @@ class AutomationMetrics {
         averageConfidenceScore: metrics.averageConfidenceScore,
         errorRate: this.getErrorRate(level),
         warningRate: this.getWarningRate(level),
-        lastExecution: metrics.lastExecution
+        lastExecution: metrics.lastExecution,
       };
     }
 
@@ -292,7 +297,7 @@ class AutomationMetrics {
       metrics: this.getAllMetrics(),
       executions: this._executions,
       startTime: this._startTime,
-      summary: this.getSummary()
+      summary: this.getSummary(),
     };
   }
 
@@ -303,26 +308,26 @@ class AutomationMetrics {
    */
   static fromJSON(data) {
     const metrics = new AutomationMetrics();
-    
+
     if (data.startTime) {
       metrics._startTime = data.startTime;
     }
-    
+
     if (data.metrics) {
       for (const [level, levelMetrics] of Object.entries(data.metrics)) {
         metrics._metrics.set(level, levelMetrics);
       }
     }
-    
+
     if (data.executions) {
-      metrics._executions = data.executions.map(execution => ({
+      metrics._executions = data.executions.map((execution) => ({
         ...execution,
-        timestamp: new Date(execution.timestamp)
+        timestamp: new Date(execution.timestamp),
       }));
     }
-    
+
     return metrics;
   }
 }
 
-module.exports = AutomationMetrics; 
+module.exports = AutomationMetrics;

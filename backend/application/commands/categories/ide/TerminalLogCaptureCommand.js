@@ -8,7 +8,7 @@ class TerminalLogCaptureCommand {
     this.userId = params.userId;
     this.maxLines = params.maxLines || 100;
     this.includeTimestamps = params.includeTimestamps || true;
-    this.filterLevel = params.filterLevel || 'all'; // all, error, warning, info, debug
+    this.filterLevel = params.filterLevel || "all"; // all, error, warning, info, debug
     this.options = params.options || {};
     this.timestamp = new Date();
     this.commandId = this.generateCommandId();
@@ -28,25 +28,30 @@ class TerminalLogCaptureCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.maxLines && (typeof this.maxLines !== 'number' || this.maxLines < 1 || this.maxLines > 10000)) {
-      throw new Error('Max lines must be a number between 1 and 10000');
+    if (
+      this.maxLines &&
+      (typeof this.maxLines !== "number" ||
+        this.maxLines < 1 ||
+        this.maxLines > 10000)
+    ) {
+      throw new Error("Max lines must be a number between 1 and 10000");
     }
 
-    if (typeof this.includeTimestamps !== 'boolean') {
-      throw new Error('includeTimestamps must be a boolean');
+    if (typeof this.includeTimestamps !== "boolean") {
+      throw new Error("includeTimestamps must be a boolean");
     }
 
-    const validLevels = ['all', 'error', 'warning', 'info', 'debug'];
+    const validLevels = ["all", "error", "warning", "info", "debug"];
     if (this.filterLevel && !validLevels.includes(this.filterLevel)) {
-      throw new Error(`Filter level must be one of: ${validLevels.join(', ')}`);
+      throw new Error(`Filter level must be one of: ${validLevels.join(", ")}`);
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -58,19 +63,19 @@ class TerminalLogCaptureCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'TerminalLogCaptureCommand',
+      type: "TerminalLogCaptureCommand",
       userId: this.userId,
       maxLines: this.maxLines,
       includeTimestamps: this.includeTimestamps,
       filterLevel: this.filterLevel,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = TerminalLogCaptureCommand; 
+module.exports = TerminalLogCaptureCommand;

@@ -2,7 +2,7 @@
  * ExecutionContext - Manages execution context for workflow execution
  * Provides execution-specific context and state management
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Execution context for workflow execution
@@ -15,24 +15,24 @@ class ExecutionContext {
     this.strategy = options.strategy;
     this.startTime = options.startTime || Date.now();
     this.options = { ...options.options };
-    
+
     // Execution state
-    this.status = 'initialized';
+    this.status = "initialized";
     this.currentStep = 0;
     this.totalSteps = 0;
     this.results = [];
     this.errors = [];
     this.metrics = {};
     this.logs = [];
-    
+
     // Performance tracking
     this.stepStartTimes = new Map();
     this.stepDurations = new Map();
-    
+
     // Dependencies and constraints
     this.dependencies = options.dependencies || [];
     this.constraints = options.constraints || {};
-    
+
     this._validate();
   }
 
@@ -42,15 +42,15 @@ class ExecutionContext {
    */
   _validate() {
     if (!this.workflow) {
-      throw new Error('Workflow is required for execution context');
+      throw new Error("Workflow is required for execution context");
     }
-    
+
     if (!this.context) {
-      throw new Error('Context is required for execution context');
+      throw new Error("Context is required for execution context");
     }
-    
+
     if (!this.strategy) {
-      throw new Error('Strategy is required for execution context');
+      throw new Error("Strategy is required for execution context");
     }
   }
 
@@ -100,7 +100,7 @@ class ExecutionContext {
    */
   setStatus(status) {
     this.status = status;
-    this.addLog('info', `Execution status changed to: ${status}`);
+    this.addLog("info", `Execution status changed to: ${status}`);
   }
 
   /**
@@ -151,7 +151,7 @@ class ExecutionContext {
     this.results.push({
       ...result,
       timestamp: new Date(),
-      stepIndex: this.currentStep
+      stepIndex: this.currentStep,
     });
   }
 
@@ -172,7 +172,7 @@ class ExecutionContext {
       message: error.message,
       stack: error.stack,
       timestamp: new Date(),
-      stepIndex: this.currentStep
+      stepIndex: this.currentStep,
     });
   }
 
@@ -234,7 +234,7 @@ class ExecutionContext {
       message,
       data,
       timestamp: new Date(),
-      stepIndex: this.currentStep
+      stepIndex: this.currentStep,
     });
   }
 
@@ -244,7 +244,7 @@ class ExecutionContext {
    * @returns {Array} Logs with specified level
    */
   getLogsByLevel(level) {
-    return this.logs.filter(log => log.level === level);
+    return this.logs.filter((log) => log.level === level);
   }
 
   /**
@@ -263,8 +263,8 @@ class ExecutionContext {
    * @returns {Array} Logs in time range
    */
   getLogsInRange(startTime, endTime) {
-    return this.logs.filter(log => 
-      log.timestamp >= startTime && log.timestamp <= endTime
+    return this.logs.filter(
+      (log) => log.timestamp >= startTime && log.timestamp <= endTime,
     );
   }
 
@@ -285,7 +285,7 @@ class ExecutionContext {
     const seconds = Math.floor(duration / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
@@ -352,7 +352,7 @@ class ExecutionContext {
       errorsCount: this.errors.length,
       logsCount: this.logs.length,
       metrics: this.getMetrics(),
-      strategy: this.strategy?.name || 'unknown'
+      strategy: this.strategy?.name || "unknown",
     };
   }
 
@@ -361,7 +361,11 @@ class ExecutionContext {
    * @returns {boolean} True if completed
    */
   isCompleted() {
-    return this.status === 'completed' || this.status === 'failed' || this.status === 'cancelled';
+    return (
+      this.status === "completed" ||
+      this.status === "failed" ||
+      this.status === "cancelled"
+    );
   }
 
   /**
@@ -369,7 +373,7 @@ class ExecutionContext {
    * @returns {boolean} True if running
    */
   isRunning() {
-    return this.status === 'running';
+    return this.status === "running";
   }
 
   /**
@@ -377,7 +381,7 @@ class ExecutionContext {
    * @returns {boolean} True if failed
    */
   isFailed() {
-    return this.status === 'failed';
+    return this.status === "failed";
   }
 
   /**
@@ -462,7 +466,7 @@ class ExecutionContext {
       options: this.options,
       dependencies: this.dependencies,
       constraints: this.constraints,
-      duration: this.getDuration()
+      duration: this.getDuration(),
     };
   }
 
@@ -480,9 +484,9 @@ class ExecutionContext {
       startTime: data.startTime,
       options: data.options,
       dependencies: data.dependencies,
-      constraints: data.constraints
+      constraints: data.constraints,
     });
   }
 }
 
-module.exports = ExecutionContext; 
+module.exports = ExecutionContext;

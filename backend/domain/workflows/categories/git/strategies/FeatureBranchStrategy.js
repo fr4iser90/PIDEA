@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 /**
  * FeatureBranchStrategy - Strategy for feature branch creation and management
  * Implements feature branch naming conventions and validation
@@ -7,18 +7,18 @@ const logger = new Logger('Logger');
 class FeatureBranchStrategy {
   constructor(config = {}) {
     this.config = {
-      prefix: config.prefix || 'feature',
-      separator: config.separator || '/',
+      prefix: config.prefix || "feature",
+      separator: config.separator || "/",
       maxLength: config.maxLength || 50,
       includeTaskId: config.includeTaskId !== false,
       includeDate: config.includeDate || false,
-      dateFormat: config.dateFormat || 'YYYYMMDD',
+      dateFormat: config.dateFormat || "YYYYMMDD",
       sanitizeTitle: config.sanitizeTitle !== false,
-      ...config
+      ...config,
     };
-    
+
     this.logger = config.logger || console;
-    this.strategyType = 'FeatureBranchStrategy';
+    this.strategyType = "FeatureBranchStrategy";
   }
 
   /**
@@ -45,50 +45,52 @@ class FeatureBranchStrategy {
    */
   generateBranchName(task, context = {}) {
     try {
-      const taskId = task.id || context.get('taskId') || 'unknown';
-      const title = task.title || task.description || 'feature';
-      
+      const taskId = task.id || context.get("taskId") || "unknown";
+      const title = task.title || task.description || "feature";
+
       let branchName = this.config.prefix;
-      
+
       // Add task ID if enabled
       if (this.config.includeTaskId) {
         branchName += this.config.separator + taskId;
       }
-      
+
       // Add sanitized title
       if (this.config.sanitizeTitle) {
         const sanitizedTitle = this.sanitizeTitle(title);
         branchName += this.config.separator + sanitizedTitle;
       }
-      
+
       // Add date if enabled
       if (this.config.includeDate) {
         const date = this.formatDate(new Date(), this.config.dateFormat);
         branchName += this.config.separator + date;
       }
-      
+
       // Truncate if too long
       if (branchName.length > this.config.maxLength) {
         branchName = this.truncateBranchName(branchName, this.config.maxLength);
       }
-      
-      this.logger.info('FeatureBranchStrategy: Generated branch name', {
+
+      this.logger.info("FeatureBranchStrategy: Generated branch name", {
         taskId,
         originalTitle: title,
         branchName,
-        config: this.config
+        config: this.config,
       });
-      
+
       return branchName;
-      
     } catch (error) {
-      this.logger.error('FeatureBranchStrategy: Failed to generate branch name', {
-        taskId: task.id,
-        error: error.message
-      });
-      
+      this.logger.error(
+        "FeatureBranchStrategy: Failed to generate branch name",
+        {
+          taskId: task.id,
+          error: error.message,
+        },
+      );
+
       // Fallback to simple naming
-      return `${this.config.prefix}/${task.id || 'feature'}`;
+      return `${this.config.prefix}/${task.id || "feature"}`;
     }
   }
 
@@ -98,22 +100,24 @@ class FeatureBranchStrategy {
    * @returns {string} Sanitized title
    */
   sanitizeTitle(title) {
-    if (!title || typeof title !== 'string') {
-      return 'feature';
+    if (!title || typeof title !== "string") {
+      return "feature";
     }
-    
-    return title
-      // Convert to lowercase
-      .toLowerCase()
-      // Replace spaces and special characters with hyphens
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      // Remove multiple consecutive hyphens
-      .replace(/-+/g, '-')
-      // Remove leading and trailing hyphens
-      .replace(/^-+|-+$/g, '')
-      // Limit length
-      .substring(0, 30);
+
+    return (
+      title
+        // Convert to lowercase
+        .toLowerCase()
+        // Replace spaces and special characters with hyphens
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        // Remove multiple consecutive hyphens
+        .replace(/-+/g, "-")
+        // Remove leading and trailing hyphens
+        .replace(/^-+|-+$/g, "")
+        // Limit length
+        .substring(0, 30)
+    );
   }
 
   /**
@@ -124,13 +128,10 @@ class FeatureBranchStrategy {
    */
   formatDate(date, format) {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    
-    return format
-      .replace('YYYY', year)
-      .replace('MM', month)
-      .replace('DD', day);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return format.replace("YYYY", year).replace("MM", month).replace("DD", day);
   }
 
   /**
@@ -143,15 +144,15 @@ class FeatureBranchStrategy {
     if (branchName.length <= maxLength) {
       return branchName;
     }
-    
+
     // Try to preserve prefix and task ID
     const parts = branchName.split(this.config.separator);
-    
+
     if (parts.length >= 2) {
       const prefix = parts[0];
       const taskId = parts[1];
       const remainingLength = maxLength - prefix.length - taskId.length - 2; // 2 for separators
-      
+
       if (remainingLength > 0) {
         const title = parts.slice(2).join(this.config.separator);
         const truncatedTitle = title.substring(0, remainingLength);
@@ -160,7 +161,7 @@ class FeatureBranchStrategy {
         return `${prefix}${this.config.separator}${taskId}`;
       }
     }
-    
+
     // Fallback: simple truncation
     return branchName.substring(0, maxLength);
   }
@@ -173,53 +174,61 @@ class FeatureBranchStrategy {
   validateBranchName(branchName) {
     const errors = [];
     const warnings = [];
-    
-    if (!branchName || typeof branchName !== 'string') {
-      errors.push('Branch name must be a non-empty string');
+
+    if (!branchName || typeof branchName !== "string") {
+      errors.push("Branch name must be a non-empty string");
       return { isValid: false, errors, warnings };
     }
-    
+
     // Check length
     if (branchName.length > this.config.maxLength) {
-      errors.push(`Branch name exceeds maximum length of ${this.config.maxLength} characters`);
+      errors.push(
+        `Branch name exceeds maximum length of ${this.config.maxLength} characters`,
+      );
     }
-    
+
     // Check for invalid characters
     const invalidChars = /[^a-zA-Z0-9\-_\/]/;
     if (invalidChars.test(branchName)) {
-      errors.push('Branch name contains invalid characters (only letters, numbers, hyphens, underscores, and slashes allowed)');
+      errors.push(
+        "Branch name contains invalid characters (only letters, numbers, hyphens, underscores, and slashes allowed)",
+      );
     }
-    
+
     // Check for consecutive dots
-    if (branchName.includes('..')) {
-      errors.push('Branch name cannot contain consecutive dots');
+    if (branchName.includes("..")) {
+      errors.push("Branch name cannot contain consecutive dots");
     }
-    
+
     // Check for leading/trailing dots
-    if (branchName.startsWith('.') || branchName.endsWith('.')) {
-      errors.push('Branch name cannot start or end with a dot');
+    if (branchName.startsWith(".") || branchName.endsWith(".")) {
+      errors.push("Branch name cannot start or end with a dot");
     }
-    
+
     // Check for reserved names
-    const reservedNames = ['HEAD', 'ORIG_HEAD', 'FETCH_HEAD', 'MERGE_HEAD'];
+    const reservedNames = ["HEAD", "ORIG_HEAD", "FETCH_HEAD", "MERGE_HEAD"];
     if (reservedNames.includes(branchName.toUpperCase())) {
-      errors.push('Branch name is a reserved Git name');
+      errors.push("Branch name is a reserved Git name");
     }
-    
+
     // Check prefix
     if (!branchName.startsWith(this.config.prefix)) {
-      warnings.push(`Branch name should start with '${this.config.prefix}' prefix`);
+      warnings.push(
+        `Branch name should start with '${this.config.prefix}' prefix`,
+      );
     }
-    
+
     // Check for common patterns
-    if (branchName.includes(' ')) {
-      warnings.push('Branch name should not contain spaces (use hyphens instead)');
+    if (branchName.includes(" ")) {
+      warnings.push(
+        "Branch name should not contain spaces (use hyphens instead)",
+      );
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -229,7 +238,7 @@ class FeatureBranchStrategy {
    */
   getConfiguration() {
     return {
-      type: 'feature',
+      type: "feature",
       prefix: this.config.prefix,
       separator: this.config.separator,
       maxLength: this.config.maxLength,
@@ -237,10 +246,10 @@ class FeatureBranchStrategy {
       includeDate: this.config.includeDate,
       dateFormat: this.config.dateFormat,
       sanitizeTitle: this.config.sanitizeTitle,
-      protection: 'medium',
+      protection: "medium",
       autoMerge: false,
       requiresReview: true,
-      mergeTarget: 'develop'
+      mergeTarget: "develop",
     };
   }
 
@@ -250,16 +259,16 @@ class FeatureBranchStrategy {
    */
   getProtectionRules() {
     return {
-      requiredStatusChecks: ['ci', 'test'],
+      requiredStatusChecks: ["ci", "test"],
       enforceAdmins: false,
       requiredPullRequestReviews: {
         requiredApprovingReviewCount: 1,
         dismissStaleReviews: true,
-        requireCodeOwnerReviews: false
+        requireCodeOwnerReviews: false,
       },
       restrictions: null,
       allowForcePushes: false,
-      allowDeletions: false
+      allowDeletions: false,
     };
   }
 
@@ -269,10 +278,10 @@ class FeatureBranchStrategy {
    */
   getMergeStrategy() {
     return {
-      method: 'squash',
+      method: "squash",
       deleteBranch: true,
       requireReview: true,
-      autoMerge: false
+      autoMerge: false,
     };
   }
 
@@ -282,14 +291,14 @@ class FeatureBranchStrategy {
    * @returns {string} Branch description
    */
   getBranchDescription(task) {
-    return `Feature branch for: ${task.title || task.description || 'Unknown feature'}
+    return `Feature branch for: ${task.title || task.description || "Unknown feature"}
 
 Task ID: ${task.id}
 Created: ${new Date().toISOString()}
 Type: Feature Implementation
 
 Description:
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 Acceptance Criteria:
 - [ ] Feature implementation completed
@@ -305,15 +314,15 @@ Acceptance Criteria:
    * @param {string} action - Commit action (feat, fix, etc.)
    * @returns {string} Commit message
    */
-  getCommitMessageTemplate(task, action = 'feat') {
-    const title = task.title || task.description || 'feature';
+  getCommitMessageTemplate(task, action = "feat") {
+    const title = task.title || task.description || "feature";
     const sanitizedTitle = this.sanitizeTitle(title);
-    
+
     return `${action}: ${sanitizedTitle}
 
 Task ID: ${task.id}
 
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 - [ ] Feature implementation
 - [ ] Tests added
@@ -328,7 +337,7 @@ ${task.description || 'No description provided'}
    */
   getPullRequestTemplate(task, branchName) {
     return {
-      title: `Feature: ${task.title || task.description || 'New feature'}`,
+      title: `Feature: ${task.title || task.description || "New feature"}`,
       description: `## Feature Implementation
 
 **Task ID:** ${task.id}
@@ -336,7 +345,7 @@ ${task.description || 'No description provided'}
 **Type:** Feature
 
 ### Description
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 ### Changes Made
 - [ ] Feature implementation
@@ -356,11 +365,11 @@ ${task.description || 'No description provided'}
 
 ### Related Issues
 Closes #${task.id}`,
-      labels: ['feature', 'enhancement'],
+      labels: ["feature", "enhancement"],
       assignees: [],
-      reviewers: []
+      reviewers: [],
     };
   }
 }
 
-module.exports = FeatureBranchStrategy; 
+module.exports = FeatureBranchStrategy;

@@ -8,7 +8,7 @@ class ProjectRepository {
    * @returns {Promise<Project>} Created project
    */
   async create(project) {
-    throw new Error('create method must be implemented');
+    throw new Error("create method must be implemented");
   }
 
   /**
@@ -17,7 +17,7 @@ class ProjectRepository {
    * @returns {Promise<Project>} Saved project
    */
   async save(project) {
-    throw new Error('save method must be implemented');
+    throw new Error("save method must be implemented");
   }
 
   /**
@@ -26,7 +26,7 @@ class ProjectRepository {
    * @returns {Promise<Project|null>} Project or null
    */
   async findById(id) {
-    throw new Error('findById method must be implemented');
+    throw new Error("findById method must be implemented");
   }
 
   /**
@@ -35,7 +35,7 @@ class ProjectRepository {
    * @returns {Promise<Project|null>} Project or null
    */
   async findByWorkspacePath(workspacePath) {
-    throw new Error('findByWorkspacePath method must be implemented');
+    throw new Error("findByWorkspacePath method must be implemented");
   }
 
   /**
@@ -45,7 +45,7 @@ class ProjectRepository {
    * @returns {Promise<Project>} Project (created or existing)
    */
   async findOrCreateByWorkspacePath(workspacePath, options = {}) {
-    throw new Error('findOrCreateByWorkspacePath method must be implemented');
+    throw new Error("findOrCreateByWorkspacePath method must be implemented");
   }
 
   /**
@@ -53,7 +53,7 @@ class ProjectRepository {
    * @returns {Promise<Project[]>} All projects
    */
   async findAll() {
-    throw new Error('findAll method must be implemented');
+    throw new Error("findAll method must be implemented");
   }
 
   /**
@@ -63,7 +63,7 @@ class ProjectRepository {
    * @returns {Promise<Project>} Updated project
    */
   async updateMetadata(projectId, metadata) {
-    throw new Error('updateMetadata method must be implemented');
+    throw new Error("updateMetadata method must be implemented");
   }
 
   /**
@@ -75,7 +75,7 @@ class ProjectRepository {
    * @returns {Promise<Array<Project>>} Array of projects
    */
   async findAll(options = {}) {
-    throw new Error('findAll method must be implemented');
+    throw new Error("findAll method must be implemented");
   }
 
   /**
@@ -85,7 +85,7 @@ class ProjectRepository {
    * @returns {Promise<number>} Number of projects
    */
   async count(options = {}) {
-    throw new Error('count method must be implemented');
+    throw new Error("count method must be implemented");
   }
 
   /**
@@ -94,8 +94,8 @@ class ProjectRepository {
    * @returns {Promise<boolean>} Success
    */
   async delete(id) {
-    throw new Error('delete method must be implemented');
+    throw new Error("delete method must be implemented");
   }
 }
 
-module.exports = ProjectRepository; 
+module.exports = ProjectRepository;

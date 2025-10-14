@@ -135,7 +135,6 @@ class AgentMessageHandler {
       });
 
       return {
-        success: true,
         messageId: result.id,
         timestamp: result.timestamp
       };

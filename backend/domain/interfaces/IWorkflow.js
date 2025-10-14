@@ -1,6 +1,6 @@
 /**
  * IWorkflow - Interface for workflow implementations
- * 
+ *
  * This interface defines the contract that all workflows must implement
  * in the domain layer. It provides a consistent API for workflow
  * execution, validation, and metadata access.
@@ -12,7 +12,7 @@ class IWorkflow {
    * @returns {Promise<Object>} Execution result
    */
   async execute(context) {
-    throw new Error('execute method must be implemented');
+    throw new Error("execute method must be implemented");
   }
 
   /**
@@ -21,7 +21,7 @@ class IWorkflow {
    * @returns {Promise<Object>} Validation result
    */
   async validate(context) {
-    throw new Error('validate method must be implemented');
+    throw new Error("validate method must be implemented");
   }
 
   /**
@@ -31,7 +31,7 @@ class IWorkflow {
    * @returns {Promise<Object>} Rollback result
    */
   async rollback(context, stepId) {
-    throw new Error('rollback method must be implemented');
+    throw new Error("rollback method must be implemented");
   }
 
   /**
@@ -39,7 +39,7 @@ class IWorkflow {
    * @returns {Object} Workflow metadata
    */
   getMetadata() {
-    throw new Error('getMetadata method must be implemented');
+    throw new Error("getMetadata method must be implemented");
   }
 
   /**
@@ -48,7 +48,7 @@ class IWorkflow {
    * @returns {Promise<boolean>} True if workflow can be executed
    */
   async canExecute(context) {
-    throw new Error('canExecute method must be implemented');
+    throw new Error("canExecute method must be implemented");
   }
 
   /**
@@ -56,7 +56,7 @@ class IWorkflow {
    * @returns {Array<string>} List of dependency IDs
    */
   getDependencies() {
-    throw new Error('getDependencies method must be implemented');
+    throw new Error("getDependencies method must be implemented");
   }
 
   /**
@@ -64,7 +64,7 @@ class IWorkflow {
    * @returns {Array<IWorkflowStep>} List of workflow steps
    */
   getSteps() {
-    throw new Error('getSteps method must be implemented');
+    throw new Error("getSteps method must be implemented");
   }
 
   /**
@@ -72,7 +72,7 @@ class IWorkflow {
    * @returns {string} Workflow type
    */
   getType() {
-    throw new Error('getType method must be implemented');
+    throw new Error("getType method must be implemented");
   }
 
   /**
@@ -80,8 +80,8 @@ class IWorkflow {
    * @returns {string} Workflow version
    */
   getVersion() {
-    throw new Error('getVersion method must be implemented');
+    throw new Error("getVersion method must be implemented");
   }
 }
 
-module.exports = IWorkflow; 
+module.exports = IWorkflow;

@@ -41,7 +41,7 @@ it('should initialize with authApplicationService', () => {
 it('should get user profile via application service', async () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
   mockAuthApplicationService.getUserProfile.mockResolvedValue({
-    success: true,
+   
     data: { user: mockUser }
   });
 
@@ -49,7 +49,7 @@ it('should get user profile via application service', async () => {
 
   expect(mockAuthApplicationService.getUserProfile).toHaveBeenCalledWith('user-123');
   expect(mockRes.json).toHaveBeenCalledWith({
-    success: true,
+   
     data: { user: mockUser }
   });
 });
@@ -63,7 +63,7 @@ it('should update user profile via application service', async () => {
   const mockUser = { id: 'user-123', email: 'new@example.com' };
   
   mockAuthApplicationService.updateUserProfile.mockResolvedValue({
-    success: true,
+   
     data: { user: mockUser }
   });
 
@@ -71,7 +71,7 @@ it('should update user profile via application service', async () => {
 
   expect(mockAuthApplicationService.updateUserProfile).toHaveBeenCalledWith('user-123', profileData);
   expect(mockRes.json).toHaveBeenCalledWith({
-    success: true,
+   
     data: { user: mockUser }
   });
 });
@@ -86,7 +86,7 @@ it('should get user sessions via application service', async () => {
   ];
   
   mockAuthApplicationService.getUserSessions.mockResolvedValue({
-    success: true,
+   
     data: { sessions: mockSessions }
   });
 
@@ -94,7 +94,7 @@ it('should get user sessions via application service', async () => {
 
   expect(mockAuthApplicationService.getUserSessions).toHaveBeenCalledWith('user-123');
   expect(mockRes.json).toHaveBeenCalledWith({
-    success: true,
+   
     data: { sessions: mockSessions }
   });
 });
@@ -113,7 +113,7 @@ it('should handle application service errors properly', async () => {
 
   expect(mockRes.status).toHaveBeenCalledWith(500);
   expect(mockRes.json).toHaveBeenCalledWith({
-    success: false,
+   
     error: 'Failed to get profile'
   });
 });

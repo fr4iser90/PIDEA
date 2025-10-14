@@ -1,6 +1,6 @@
 /**
  * IHandler - Interface for workflow handlers
- * 
+ *
  * This interface defines the contract that all handlers must implement
  * in the workflow system. It provides a consistent API for
  * handler execution, validation, and metadata access.
@@ -12,7 +12,7 @@ class IHandler {
    * @returns {Promise<HandlerResult>} Handler result with success status, data, and metadata
    */
   async execute(context) {
-    throw new Error('execute method must be implemented');
+    throw new Error("execute method must be implemented");
   }
 
   /**
@@ -20,7 +20,7 @@ class IHandler {
    * @returns {Object} Handler metadata including name, description, version, and capabilities
    */
   getMetadata() {
-    throw new Error('getMetadata method must be implemented');
+    throw new Error("getMetadata method must be implemented");
   }
 
   /**
@@ -29,7 +29,7 @@ class IHandler {
    * @returns {Promise<ValidationResult>} Validation result with success status and errors
    */
   async validate(context) {
-    throw new Error('validate method must be implemented');
+    throw new Error("validate method must be implemented");
   }
 
   /**
@@ -38,7 +38,7 @@ class IHandler {
    * @returns {boolean} True if handler can handle the request
    */
   canHandle(request) {
-    throw new Error('canHandle method must be implemented');
+    throw new Error("canHandle method must be implemented");
   }
 
   /**
@@ -46,7 +46,7 @@ class IHandler {
    * @returns {Array<string>} Array of dependency identifiers
    */
   getDependencies() {
-    throw new Error('getDependencies method must be implemented');
+    throw new Error("getDependencies method must be implemented");
   }
 
   /**
@@ -54,7 +54,7 @@ class IHandler {
    * @returns {string} Handler version string
    */
   getVersion() {
-    throw new Error('getVersion method must be implemented');
+    throw new Error("getVersion method must be implemented");
   }
 
   /**
@@ -62,7 +62,7 @@ class IHandler {
    * @returns {string} Handler type identifier
    */
   getType() {
-    throw new Error('getType method must be implemented');
+    throw new Error("getType method must be implemented");
   }
 
   /**
@@ -71,7 +71,7 @@ class IHandler {
    * @returns {Promise<void>} Initialization result
    */
   async initialize(config = {}) {
-    throw new Error('initialize method must be implemented');
+    throw new Error("initialize method must be implemented");
   }
 
   /**
@@ -79,7 +79,7 @@ class IHandler {
    * @returns {Promise<void>} Cleanup result
    */
   async cleanup() {
-    throw new Error('cleanup method must be implemented');
+    throw new Error("cleanup method must be implemented");
   }
 
   /**
@@ -87,7 +87,7 @@ class IHandler {
    * @returns {Object} Handler statistics and metrics
    */
   getStatistics() {
-    throw new Error('getStatistics method must be implemented');
+    throw new Error("getStatistics method must be implemented");
   }
 
   /**
@@ -95,8 +95,8 @@ class IHandler {
    * @returns {Promise<boolean>} True if handler is healthy
    */
   async isHealthy() {
-    throw new Error('isHealthy method must be implemented');
+    throw new Error("isHealthy method must be implemented");
   }
 }
 
-module.exports = IHandler; 
+module.exports = IHandler;

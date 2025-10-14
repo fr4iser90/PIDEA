@@ -4,10 +4,10 @@
  * Created: 2025-09-29T19:51:09.000Z
  */
 
-const Logger = require('@logging/Logger');
-const IDEConfiguration = require('@domain/entities/IDEConfiguration');
+const Logger = require("@logging/Logger");
+const IDEConfiguration = require("@domain/entities/IDEConfiguration");
 
-const logger = new Logger('IDEConfigurationRepository');
+const logger = new Logger("IDEConfigurationRepository");
 
 class IDEConfigurationRepository {
   constructor(database) {
@@ -23,7 +23,9 @@ class IDEConfigurationRepository {
     try {
       const validation = config.validate();
       if (!validation.valid) {
-        throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid configuration: ${validation.errors.join(", ")}`,
+        );
       }
 
       const dbData = config.toDatabase();
@@ -38,19 +40,30 @@ class IDEConfigurationRepository {
       `;
 
       const values = [
-        dbData.user_id, dbData.ide_type, dbData.executable_path, dbData.version,
-        dbData.build_number, dbData.installation_path, dbData.is_default,
-        dbData.is_active, dbData.last_used, dbData.usage_count,
-        dbData.port_range_start, dbData.port_range_end, dbData.startup_options,
-        dbData.metadata, dbData.created_at, dbData.updated_at
+        dbData.user_id,
+        dbData.ide_type,
+        dbData.executable_path,
+        dbData.version,
+        dbData.build_number,
+        dbData.installation_path,
+        dbData.is_default,
+        dbData.is_active,
+        dbData.last_used,
+        dbData.usage_count,
+        dbData.port_range_start,
+        dbData.port_range_end,
+        dbData.startup_options,
+        dbData.metadata,
+        dbData.created_at,
+        dbData.updated_at,
       ];
 
       const result = await this.database.query(query, values);
-      logger.info('Created IDE configuration:', result[0]);
-      
+      logger.info("Created IDE configuration:", result[0]);
+
       return IDEConfiguration.fromDatabase(result[0]);
     } catch (error) {
-      logger.error('Error creating IDE configuration:', error);
+      logger.error("Error creating IDE configuration:", error);
       throw error;
     }
   }
@@ -62,16 +75,16 @@ class IDEConfigurationRepository {
    */
   async findById(id) {
     try {
-      const query = 'SELECT * FROM ide_configurations WHERE id = ?';
+      const query = "SELECT * FROM ide_configurations WHERE id = ?";
       const result = await this.database.query(query, [id]);
-      
+
       if (result.length === 0) {
         return null;
       }
 
       return IDEConfiguration.fromDatabase(result[0]);
     } catch (error) {
-      logger.error('Error finding IDE configuration by ID:', error);
+      logger.error("Error finding IDE configuration by ID:", error);
       throw error;
     }
   }
@@ -81,14 +94,15 @@ class IDEConfigurationRepository {
    * @param {string} userId User ID
    * @returns {Promise<IDEConfiguration[]>} Array of configurations
    */
-  async findByUserId(userId = 'me') {
+  async findByUserId(userId = "me") {
     try {
-      const query = 'SELECT * FROM ide_configurations WHERE user_id = ? ORDER BY created_at DESC';
+      const query =
+        "SELECT * FROM ide_configurations WHERE user_id = ? ORDER BY created_at DESC";
       const result = await this.database.query(query, [userId]);
-      
-      return result.map(row => IDEConfiguration.fromDatabase(row));
+
+      return result.map((row) => IDEConfiguration.fromDatabase(row));
     } catch (error) {
-      logger.error('Error finding IDE configurations by user ID:', error);
+      logger.error("Error finding IDE configurations by user ID:", error);
       throw error;
     }
   }
@@ -98,14 +112,15 @@ class IDEConfigurationRepository {
    * @param {string} userId User ID
    * @returns {Promise<IDEConfiguration[]>} Array of active configurations
    */
-  async findActiveByUserId(userId = 'me') {
+  async findActiveByUserId(userId = "me") {
     try {
-      const query = 'SELECT * FROM ide_configurations WHERE user_id = ? AND is_active = true ORDER BY is_default DESC, usage_count DESC';
+      const query =
+        "SELECT * FROM ide_configurations WHERE user_id = ? AND is_active = true ORDER BY is_default DESC, usage_count DESC";
       const result = await this.database.query(query, [userId]);
-      
-      return result.map(row => IDEConfiguration.fromDatabase(row));
+
+      return result.map((row) => IDEConfiguration.fromDatabase(row));
     } catch (error) {
-      logger.error('Error finding active IDE configurations:', error);
+      logger.error("Error finding active IDE configurations:", error);
       throw error;
     }
   }
@@ -116,18 +131,19 @@ class IDEConfigurationRepository {
    * @param {string} userId User ID
    * @returns {Promise<IDEConfiguration|null>} Default configuration or null
    */
-  async findDefaultByType(ideType, userId = 'me') {
+  async findDefaultByType(ideType, userId = "me") {
     try {
-      const query = 'SELECT * FROM ide_configurations WHERE user_id = ? AND ide_type = ? AND is_default = true AND is_active = true';
+      const query =
+        "SELECT * FROM ide_configurations WHERE user_id = ? AND ide_type = ? AND is_default = true AND is_active = true";
       const result = await this.database.query(query, [userId, ideType]);
-      
+
       if (result.length === 0) {
         return null;
       }
 
       return IDEConfiguration.fromDatabase(result[0]);
     } catch (error) {
-      logger.error('Error finding default IDE configuration:', error);
+      logger.error("Error finding default IDE configuration:", error);
       throw error;
     }
   }
@@ -146,7 +162,7 @@ class IDEConfigurationRepository {
       }
 
       // Apply updates
-      Object.keys(updates).forEach(key => {
+      Object.keys(updates).forEach((key) => {
         if (config.hasOwnProperty(key)) {
           config[key] = updates[key];
         }
@@ -156,7 +172,9 @@ class IDEConfigurationRepository {
 
       const validation = config.validate();
       if (!validation.valid) {
-        throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid configuration: ${validation.errors.join(", ")}`,
+        );
       }
 
       const dbData = config.toDatabase();
@@ -170,19 +188,28 @@ class IDEConfigurationRepository {
       `;
 
       const values = [
-        dbData.executable_path, dbData.version, dbData.build_number,
-        dbData.installation_path, dbData.is_default, dbData.is_active,
-        dbData.last_used, dbData.usage_count, dbData.port_range_start,
-        dbData.port_range_end, dbData.startup_options, dbData.metadata,
-        dbData.updated_at, id
+        dbData.executable_path,
+        dbData.version,
+        dbData.build_number,
+        dbData.installation_path,
+        dbData.is_default,
+        dbData.is_active,
+        dbData.last_used,
+        dbData.usage_count,
+        dbData.port_range_start,
+        dbData.port_range_end,
+        dbData.startup_options,
+        dbData.metadata,
+        dbData.updated_at,
+        id,
       ];
 
       await this.database.query(query, values);
-      logger.info('Updated IDE configuration:', id);
-      
+      logger.info("Updated IDE configuration:", id);
+
       return config;
     } catch (error) {
-      logger.error('Error updating IDE configuration:', error);
+      logger.error("Error updating IDE configuration:", error);
       throw error;
     }
   }
@@ -194,17 +221,17 @@ class IDEConfigurationRepository {
    */
   async delete(id) {
     try {
-      const query = 'DELETE FROM ide_configurations WHERE id = ?';
+      const query = "DELETE FROM ide_configurations WHERE id = ?";
       const result = await this.database.query(query, [id]);
-      
+
       const deleted = result.affectedRows > 0;
       if (deleted) {
-        logger.info('Deleted IDE configuration:', id);
+        logger.info("Deleted IDE configuration:", id);
       }
-      
+
       return deleted;
     } catch (error) {
-      logger.error('Error deleting IDE configuration:', error);
+      logger.error("Error deleting IDE configuration:", error);
       throw error;
     }
   }
@@ -226,10 +253,10 @@ class IDEConfigurationRepository {
 
       const now = new Date().toISOString();
       const result = await this.database.query(query, [now, now, id]);
-      
+
       return result.affectedRows > 0;
     } catch (error) {
-      logger.error('Error updating IDE configuration usage:', error);
+      logger.error("Error updating IDE configuration usage:", error);
       throw error;
     }
   }
@@ -241,23 +268,23 @@ class IDEConfigurationRepository {
    * @param {string} userId User ID
    * @returns {Promise<boolean>} True if updated
    */
-  async setDefault(ideType, configId, userId = 'me') {
+  async setDefault(ideType, configId, userId = "me") {
     try {
       // First, unset all defaults for this IDE type
       await this.database.query(
-        'UPDATE ide_configurations SET is_default = false WHERE user_id = ? AND ide_type = ?',
-        [userId, ideType]
+        "UPDATE ide_configurations SET is_default = false WHERE user_id = ? AND ide_type = ?",
+        [userId, ideType],
       );
 
       // Then set the specified configuration as default
       const result = await this.database.query(
-        'UPDATE ide_configurations SET is_default = true WHERE id = ? AND user_id = ?',
-        [configId, userId]
+        "UPDATE ide_configurations SET is_default = true WHERE id = ? AND user_id = ?",
+        [configId, userId],
       );
 
       return result.affectedRows > 0;
     } catch (error) {
-      logger.error('Error setting default IDE configuration:', error);
+      logger.error("Error setting default IDE configuration:", error);
       throw error;
     }
   }

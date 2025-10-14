@@ -1,13 +1,19 @@
 /**
  * SecurityService - Domain service for security analysis
  */
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class SecurityService {
-  constructor(securityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
+  constructor(
+    securityAnalyzer,
+    eventBus,
+    logger,
+    analysisOutputService,
+    analysisRepository,
+  ) {
     this.securityAnalyzer = securityAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
-    this.logger = logger || new ServiceLogger('SecurityService');
+    this.logger = logger || new ServiceLogger("SecurityService");
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
   }
@@ -23,36 +29,46 @@ class SecurityService {
     try {
       this.logger.info(`Starting security analysis for project`);
 
-      const analysis = await this.securityAnalyzer.analyzeSecurity(projectPath, options);
+      const analysis = await this.securityAnalyzer.analyzeSecurity(
+        projectPath,
+        options,
+      );
 
       // Save to file ONLY if explicitly requested
       if (this.analysisOutputService && options.saveToFile !== false) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
-          projectId, 
-          'security', 
-          analysis
+          projectId,
+          "security",
+          analysis,
         );
-        
+
         // Save to database ONLY if explicitly requested
         if (this.analysisRepository && options.saveToDatabase !== false) {
-          const AnalysisResult = require('@entities/AnalysisResult');
+          const AnalysisResult = require("@entities/AnalysisResult");
           const analysisResult = AnalysisResult.create(
-            projectId, 
-            'security', 
-            analysis, 
-            fileResult.filepath
+            projectId,
+            "security",
+            analysis,
+            fileResult.filepath,
           );
           await this.analysisRepository.save(analysisResult);
         }
       }
 
       this.logger.info(`Security analysis completed for project`);
-      this.eventBus.emit('security:analysis:completed', { projectPath, analysis, projectId });
+      this.eventBus.emit("security:analysis:completed", {
+        projectPath,
+        analysis,
+        projectId,
+      });
 
       return analysis;
     } catch (error) {
       this.logger.error(`Security analysis failed:`, error.message);
-      this.eventBus.emit('security:analysis:failed', { projectPath, error: error.message });
+      this.eventBus.emit("security:analysis:failed", {
+        projectPath,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -64,7 +80,9 @@ class SecurityService {
    */
   async analyzeDependencyVulnerabilities(projectPath) {
     try {
-      return await this.securityAnalyzer.analyzeDependencyVulnerabilities(projectPath);
+      return await this.securityAnalyzer.analyzeDependencyVulnerabilities(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Dependency vulnerability analysis failed:`, error);
       throw error;
@@ -78,7 +96,9 @@ class SecurityService {
    */
   async analyzeSecurityConfiguration(projectPath) {
     try {
-      return await this.securityAnalyzer.analyzeSecurityConfiguration(projectPath);
+      return await this.securityAnalyzer.analyzeSecurityConfiguration(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Security configuration analysis failed:`, error);
       throw error;
@@ -120,7 +140,9 @@ class SecurityService {
    */
   async generateRecommendations(analysis) {
     try {
-      return await this.securityAnalyzer.generateSecurityRecommendations(analysis);
+      return await this.securityAnalyzer.generateSecurityRecommendations(
+        analysis,
+      );
     } catch (error) {
       this.logger.error(`Security recommendation generation failed:`, error);
       throw error;
@@ -143,10 +165,10 @@ class SecurityService {
    * @returns {string} Risk level
    */
   getRiskLevel(score) {
-    if (score >= 90) return 'low';
-    if (score >= 70) return 'medium';
-    if (score >= 50) return 'high';
-    return 'critical';
+    if (score >= 90) return "low";
+    if (score >= 70) return "medium";
+    if (score >= 50) return "high";
+    return "critical";
   }
 
   /**
@@ -164,9 +186,11 @@ class SecurityService {
    * @returns {boolean} Has critical vulnerabilities
    */
   hasCriticalVulnerabilities(analysis) {
-    return analysis.dependencies.critical > 0 || 
-           analysis.codeIssues.some(issue => issue.severity === 'critical') ||
-           analysis.secrets.found.some(secret => secret.severity === 'critical');
+    return (
+      analysis.dependencies.critical > 0 ||
+      analysis.codeIssues.some((issue) => issue.severity === "critical") ||
+      analysis.secrets.found.some((secret) => secret.severity === "critical")
+    );
   }
 
   /**
@@ -182,7 +206,7 @@ class SecurityService {
       medium: analysis.dependencies.medium,
       low: analysis.dependencies.low,
       codeIssues: analysis.codeIssues.length,
-      secrets: analysis.secrets.found.length
+      secrets: analysis.secrets.found.length,
     };
   }
 
@@ -192,11 +216,11 @@ class SecurityService {
    * @returns {string} Security level
    */
   getSecurityLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -206,29 +230,37 @@ class SecurityService {
    */
   getCriticalIssues(analysis) {
     if (!analysis) return [];
-    
+
     const criticalIssues = [];
-    
+
     // Add critical dependency vulnerabilities
     if (analysis.dependencies && analysis.dependencies.critical) {
-      criticalIssues.push(...analysis.dependencies.critical.map(vuln => ({
-        type: 'dependency',
-        severity: 'critical',
-        title: vuln.title,
-        description: vuln.description
-      })));
+      criticalIssues.push(
+        ...analysis.dependencies.critical.map((vuln) => ({
+          type: "dependency",
+          severity: "critical",
+          title: vuln.title,
+          description: vuln.description,
+        })),
+      );
     }
-    
+
     // Add critical code issues
     if (analysis.codeIssues) {
-      criticalIssues.push(...analysis.codeIssues.filter(issue => issue.severity === 'critical'));
+      criticalIssues.push(
+        ...analysis.codeIssues.filter((issue) => issue.severity === "critical"),
+      );
     }
-    
+
     // Add critical secrets
     if (analysis.secrets && analysis.secrets.found) {
-      criticalIssues.push(...analysis.secrets.found.filter(secret => secret.severity === 'critical'));
+      criticalIssues.push(
+        ...analysis.secrets.found.filter(
+          (secret) => secret.severity === "critical",
+        ),
+      );
     }
-    
+
     return criticalIssues;
   }
 
@@ -239,10 +271,10 @@ class SecurityService {
    */
   getSecuritySummary(analysis) {
     if (!analysis) return {};
-    
+
     const criticalIssues = this.getCriticalIssues(analysis);
     const score = this.getSecurityScore(analysis);
-    
+
     return {
       totalVulnerabilities: analysis.dependencies?.total || 0,
       criticalVulnerabilities: analysis.dependencies?.critical?.length || 0,
@@ -253,9 +285,9 @@ class SecurityService {
       secretsFound: analysis.secrets?.found?.length || 0,
       criticalIssues: criticalIssues.length,
       overallScore: score,
-      securityLevel: this.getSecurityLevel(score)
+      securityLevel: this.getSecurityLevel(score),
     };
   }
 }
 
-module.exports = SecurityService; 
+module.exports = SecurityService;

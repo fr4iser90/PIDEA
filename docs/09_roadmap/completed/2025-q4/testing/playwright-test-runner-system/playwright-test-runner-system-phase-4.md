@@ -75,7 +75,7 @@ describe('PlaywrightTestService', () => {
 
   describe('executeTest', () => {
     it('should execute test successfully', async () => {
-      const mockResult = { success: true, duration: 1000 };
+      const mockResult = { duration: 1000 };
       mockTestManager.executeTest.mockResolvedValue(mockResult);
 
       const result = await testService.executeTest('login-test', '/test/project');

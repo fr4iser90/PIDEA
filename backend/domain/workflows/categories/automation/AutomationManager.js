@@ -2,13 +2,13 @@
  * AutomationManager - Automation level management
  * Manages automation levels with confidence-based decision making
  */
-const AutomationLevel = require('./AutomationLevel');
-const ConfidenceCalculator = require('./ConfidenceCalculator');
-const UserPreferenceManager = require('./UserPreferenceManager');
-const ProjectAutomationSettings = require('./ProjectAutomationSettings');
-const AutomationRuleEngine = require('./AutomationRuleEngine');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const AutomationLevel = require("./AutomationLevel");
+const ConfidenceCalculator = require("./ConfidenceCalculator");
+const UserPreferenceManager = require("./UserPreferenceManager");
+const ProjectAutomationSettings = require("./ProjectAutomationSettings");
+const AutomationRuleEngine = require("./AutomationRuleEngine");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class AutomationManager {
   constructor(options = {}) {
@@ -32,9 +32,10 @@ class AutomationManager {
       this.logger.info(`Determining automation level for task ${task.id}`);
 
       // Check user preferences first
-      const userId = context.get('userId');
+      const userId = context.get("userId");
       if (userId) {
-        const userLevel = await this.userPreferences.getUserAutomationLevel(userId);
+        const userLevel =
+          await this.userPreferences.getUserAutomationLevel(userId);
         if (userLevel) {
           this.logger.info(`Using user preference: ${userLevel}`);
           return userLevel;
@@ -42,9 +43,10 @@ class AutomationManager {
       }
 
       // Check project settings
-      const projectId = task.projectId || context.get('projectId');
+      const projectId = task.projectId || context.get("projectId");
       if (projectId) {
-        const projectLevel = await this.projectSettings.getProjectAutomationLevel(projectId);
+        const projectLevel =
+          await this.projectSettings.getProjectAutomationLevel(projectId);
         if (projectLevel) {
           this.logger.info(`Using project setting: ${projectLevel}`);
           return projectLevel;
@@ -74,7 +76,6 @@ class AutomationManager {
 
       this.logger.info(`Using default level: ${this.defaultLevel}`);
       return this.defaultLevel;
-
     } catch (error) {
       this.logger.error(`Error determining automation level:`, error.message);
       return this.defaultLevel;
@@ -163,17 +164,17 @@ class AutomationManager {
    */
   getTaskTypeLevel(taskType) {
     const typeLevels = {
-      'refactor': AutomationLevel.SEMI_AUTO,
-      'analysis': AutomationLevel.FULL_AUTO,
-      'testing': AutomationLevel.SEMI_AUTO,
-      'documentation': AutomationLevel.FULL_AUTO,
-      'deployment': AutomationLevel.MANUAL,
-      'security': AutomationLevel.ASSISTED,
-      'feature': AutomationLevel.SEMI_AUTO,
-      'bug': AutomationLevel.ASSISTED,
-      'optimization': AutomationLevel.SEMI_AUTO
+      refactor: AutomationLevel.SEMI_AUTO,
+      analysis: AutomationLevel.FULL_AUTO,
+      testing: AutomationLevel.SEMI_AUTO,
+      documentation: AutomationLevel.FULL_AUTO,
+      deployment: AutomationLevel.MANUAL,
+      security: AutomationLevel.ASSISTED,
+      feature: AutomationLevel.SEMI_AUTO,
+      bug: AutomationLevel.ASSISTED,
+      optimization: AutomationLevel.SEMI_AUTO,
     };
-    
+
     return typeLevels[taskType] || null;
   }
 
@@ -188,7 +189,10 @@ class AutomationManager {
       const level = await this.determineAutomationLevel(task, context);
       return AutomationLevel.requiresConfirmation(level);
     } catch (error) {
-      this.logger.error(`Error checking confirmation requirement:`, error.message);
+      this.logger.error(
+        `Error checking confirmation requirement:`,
+        error.message,
+      );
       return true; // Default to requiring confirmation
     }
   }
@@ -204,7 +208,10 @@ class AutomationManager {
       const level = await this.determineAutomationLevel(task, context);
       return AutomationLevel.requiresHumanReview(level);
     } catch (error) {
-      this.logger.error(`Error checking human review requirement:`, error.message);
+      this.logger.error(
+        `Error checking human review requirement:`,
+        error.message,
+      );
       return true; // Default to requiring human review
     }
   }
@@ -300,9 +307,9 @@ class AutomationManager {
       confidenceFactors: this.confidenceCalculator.getFactors(),
       rules: this.ruleEngine.getRules().length,
       defaultLevel: this.defaultLevel,
-      confidenceThreshold: this.confidenceThreshold
+      confidenceThreshold: this.confidenceThreshold,
     };
   }
 }
 
-module.exports = AutomationManager; 
+module.exports = AutomationManager;

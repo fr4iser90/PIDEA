@@ -2,9 +2,9 @@
  * WorkflowEventHandlers
  * Service for managing workflow event handling and processing
  */
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class WorkflowEventHandlers {
   constructor(workflowRepository, eventBus, logger = console) {
@@ -23,7 +23,7 @@ class WorkflowEventHandlers {
       return;
     }
 
-    this.logger.info('WorkflowEventHandlers: Initializing event handlers');
+    this.logger.info("WorkflowEventHandlers: Initializing event handlers");
 
     // Register event handlers
     this.registerEventHandlers();
@@ -32,7 +32,9 @@ class WorkflowEventHandlers {
     await this.subscribeToEvents();
 
     this.isInitialized = true;
-    this.logger.info('WorkflowEventHandlers: Event handlers initialized successfully');
+    this.logger.info(
+      "WorkflowEventHandlers: Event handlers initialized successfully",
+    );
   }
 
   /**
@@ -40,32 +42,74 @@ class WorkflowEventHandlers {
    */
   registerEventHandlers() {
     // Workflow execution events
-    this.handlers.set('workflow.execution.started', this.handleWorkflowExecutionStarted.bind(this));
-    this.handlers.set('workflow.execution.completed', this.handleWorkflowExecutionCompleted.bind(this));
-    this.handlers.set('workflow.execution.failed', this.handleWorkflowExecutionFailed.bind(this));
-    this.handlers.set('workflow.execution.cancelled', this.handleWorkflowExecutionCancelled.bind(this));
+    this.handlers.set(
+      "workflow.execution.started",
+      this.handleWorkflowExecutionStarted.bind(this),
+    );
+    this.handlers.set(
+      "workflow.execution.completed",
+      this.handleWorkflowExecutionCompleted.bind(this),
+    );
+    this.handlers.set(
+      "workflow.execution.failed",
+      this.handleWorkflowExecutionFailed.bind(this),
+    );
+    this.handlers.set(
+      "workflow.execution.cancelled",
+      this.handleWorkflowExecutionCancelled.bind(this),
+    );
 
     // Workflow step events
-    this.handlers.set('workflow.step.started', this.handleWorkflowStepStarted.bind(this));
-    this.handlers.set('workflow.step.completed', this.handleWorkflowStepCompleted.bind(this));
-    this.handlers.set('workflow.step.failed', this.handleWorkflowStepFailed.bind(this));
+    this.handlers.set(
+      "workflow.step.started",
+      this.handleWorkflowStepStarted.bind(this),
+    );
+    this.handlers.set(
+      "workflow.step.completed",
+      this.handleWorkflowStepCompleted.bind(this),
+    );
+    this.handlers.set(
+      "workflow.step.failed",
+      this.handleWorkflowStepFailed.bind(this),
+    );
 
     // Handler events
-    this.handlers.set('handler.execution.started', this.handleHandlerExecutionStarted.bind(this));
-    this.handlers.set('handler.execution.completed', this.handleHandlerExecutionCompleted.bind(this));
-    this.handlers.set('handler.execution.failed', this.handleHandlerExecutionFailed.bind(this));
+    this.handlers.set(
+      "handler.execution.started",
+      this.handleHandlerExecutionStarted.bind(this),
+    );
+    this.handlers.set(
+      "handler.execution.completed",
+      this.handleHandlerExecutionCompleted.bind(this),
+    );
+    this.handlers.set(
+      "handler.execution.failed",
+      this.handleHandlerExecutionFailed.bind(this),
+    );
 
     // Performance events
-    this.handlers.set('workflow.performance.metric', this.handleWorkflowPerformanceMetric.bind(this));
-    this.handlers.set('workflow.performance.alert', this.handleWorkflowPerformanceAlert.bind(this));
+    this.handlers.set(
+      "workflow.performance.metric",
+      this.handleWorkflowPerformanceMetric.bind(this),
+    );
+    this.handlers.set(
+      "workflow.performance.alert",
+      this.handleWorkflowPerformanceAlert.bind(this),
+    );
 
     // System events
-    this.handlers.set('workflow.cleanup.required', this.handleWorkflowCleanupRequired.bind(this));
-    this.handlers.set('workflow.maintenance.required', this.handleWorkflowMaintenanceRequired.bind(this));
+    this.handlers.set(
+      "workflow.cleanup.required",
+      this.handleWorkflowCleanupRequired.bind(this),
+    );
+    this.handlers.set(
+      "workflow.maintenance.required",
+      this.handleWorkflowMaintenanceRequired.bind(this),
+    );
 
-    this.logger.debug('WorkflowEventHandlers: Registered event handlers', {
+    this.logger.debug("WorkflowEventHandlers: Registered event handlers", {
       handlerCount: this.handlers.size,
-      handlers: Array.from(this.handlers.keys())
+      handlers: Array.from(this.handlers.keys()),
     });
   }
 
@@ -76,14 +120,17 @@ class WorkflowEventHandlers {
     for (const [eventType, handler] of this.handlers) {
       try {
         await this.eventBus.subscribe(eventType, handler);
-        this.logger.debug('WorkflowEventHandlers: Subscribed to event', {
-          eventType
+        this.logger.debug("WorkflowEventHandlers: Subscribed to event", {
+          eventType,
         });
       } catch (error) {
-        this.logger.error('WorkflowEventHandlers: Failed to subscribe to event', {
-          eventType,
-          error: error.message
-        });
+        this.logger.error(
+          "WorkflowEventHandlers: Failed to subscribe to event",
+          {
+            eventType,
+            error: error.message,
+          },
+        );
       }
     }
   }
@@ -94,35 +141,44 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowExecutionStarted(event) {
     try {
-      this.logger.info('WorkflowEventHandlers: Handling workflow execution started', {
-        executionId: event.executionId,
-        workflowId: event.workflowId
-      });
+      this.logger.info(
+        "WorkflowEventHandlers: Handling workflow execution started",
+        {
+          executionId: event.executionId,
+          workflowId: event.workflowId,
+        },
+      );
 
       // Update execution status
       await this.workflowRepository.updateExecution(event.executionId, {
-        status: 'running',
-        startTime: new Date()
+        status: "running",
+        startTime: new Date(),
       });
 
       // Record performance metric
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'workflow_start_time',
+        metricName: "workflow_start_time",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'timing',
-        metadata: { event: 'execution_started' }
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "timing",
+        metadata: { event: "execution_started" },
       });
 
-      this.logger.debug('WorkflowEventHandlers: Workflow execution started handled successfully', {
-        executionId: event.executionId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow execution started handled successfully",
+        {
+          executionId: event.executionId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow execution started', {
-        executionId: event.executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow execution started",
+        {
+          executionId: event.executionId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -132,54 +188,71 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowExecutionCompleted(event) {
     try {
-      this.logger.info('WorkflowEventHandlers: Handling workflow execution completed', {
-        executionId: event.executionId,
-        workflowId: event.workflowId
-      });
+      this.logger.info(
+        "WorkflowEventHandlers: Handling workflow execution completed",
+        {
+          executionId: event.executionId,
+          workflowId: event.workflowId,
+        },
+      );
 
       const endTime = new Date();
-      const execution = await this.workflowRepository.getExecutionWithMetrics(event.executionId);
-      
+      const execution = await this.workflowRepository.getExecutionWithMetrics(
+        event.executionId,
+      );
+
       if (execution) {
         const startTime = new Date(execution.start_time);
         const actualDuration = endTime.getTime() - startTime.getTime();
 
         // Update execution status
         await this.workflowRepository.updateExecution(event.executionId, {
-          status: 'completed',
+          status: "completed",
           endTime,
           actualDuration,
-          resultData: event.result
+          resultData: event.result,
         });
 
         // Record completion metrics
-        await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-          metricName: 'workflow_completion_time',
-          metricValue: endTime.getTime(),
-          metricUnit: 'timestamp',
-          metricType: 'performance',
-          metricCategory: 'timing',
-          metadata: { event: 'execution_completed' }
-        });
+        await this.workflowRepository.recordExecutionMetrics(
+          event.executionId,
+          {
+            metricName: "workflow_completion_time",
+            metricValue: endTime.getTime(),
+            metricUnit: "timestamp",
+            metricType: "performance",
+            metricCategory: "timing",
+            metadata: { event: "execution_completed" },
+          },
+        );
 
-        await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-          metricName: 'workflow_total_duration',
-          metricValue: actualDuration,
-          metricUnit: 'milliseconds',
-          metricType: 'performance',
-          metricCategory: 'duration',
-          metadata: { event: 'execution_completed' }
-        });
+        await this.workflowRepository.recordExecutionMetrics(
+          event.executionId,
+          {
+            metricName: "workflow_total_duration",
+            metricValue: actualDuration,
+            metricUnit: "milliseconds",
+            metricType: "performance",
+            metricCategory: "duration",
+            metadata: { event: "execution_completed" },
+          },
+        );
       }
 
-      this.logger.debug('WorkflowEventHandlers: Workflow execution completed handled successfully', {
-        executionId: event.executionId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow execution completed handled successfully",
+        {
+          executionId: event.executionId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow execution completed', {
-        executionId: event.executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow execution completed",
+        {
+          executionId: event.executionId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -189,49 +262,63 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowExecutionFailed(event) {
     try {
-      this.logger.info('WorkflowEventHandlers: Handling workflow execution failed', {
-        executionId: event.executionId,
-        workflowId: event.workflowId
-      });
+      this.logger.info(
+        "WorkflowEventHandlers: Handling workflow execution failed",
+        {
+          executionId: event.executionId,
+          workflowId: event.workflowId,
+        },
+      );
 
       const endTime = new Date();
-      const execution = await this.workflowRepository.getExecutionWithMetrics(event.executionId);
-      
+      const execution = await this.workflowRepository.getExecutionWithMetrics(
+        event.executionId,
+      );
+
       if (execution) {
         const startTime = new Date(execution.start_time);
         const actualDuration = endTime.getTime() - startTime.getTime();
 
         // Update execution status
         await this.workflowRepository.updateExecution(event.executionId, {
-          status: 'failed',
+          status: "failed",
           endTime,
           actualDuration,
           errorData: {
             error: event.error,
             stack: event.stack,
-            timestamp: endTime.toISOString()
-          }
+            timestamp: endTime.toISOString(),
+          },
         });
 
         // Record failure metrics
-        await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-          metricName: 'workflow_failure_time',
-          metricValue: endTime.getTime(),
-          metricUnit: 'timestamp',
-          metricType: 'performance',
-          metricCategory: 'timing',
-          metadata: { event: 'execution_failed', error: event.error }
-        });
+        await this.workflowRepository.recordExecutionMetrics(
+          event.executionId,
+          {
+            metricName: "workflow_failure_time",
+            metricValue: endTime.getTime(),
+            metricUnit: "timestamp",
+            metricType: "performance",
+            metricCategory: "timing",
+            metadata: { event: "execution_failed", error: event.error },
+          },
+        );
       }
 
-      this.logger.debug('WorkflowEventHandlers: Workflow execution failed handled successfully', {
-        executionId: event.executionId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow execution failed handled successfully",
+        {
+          executionId: event.executionId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow execution failed', {
-        executionId: event.executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow execution failed",
+        {
+          executionId: event.executionId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -241,49 +328,63 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowExecutionCancelled(event) {
     try {
-      this.logger.info('WorkflowEventHandlers: Handling workflow execution cancelled', {
-        executionId: event.executionId,
-        workflowId: event.workflowId
-      });
+      this.logger.info(
+        "WorkflowEventHandlers: Handling workflow execution cancelled",
+        {
+          executionId: event.executionId,
+          workflowId: event.workflowId,
+        },
+      );
 
       const endTime = new Date();
-      const execution = await this.workflowRepository.getExecutionWithMetrics(event.executionId);
-      
+      const execution = await this.workflowRepository.getExecutionWithMetrics(
+        event.executionId,
+      );
+
       if (execution) {
         const startTime = new Date(execution.start_time);
         const actualDuration = endTime.getTime() - startTime.getTime();
 
         // Update execution status
         await this.workflowRepository.updateExecution(event.executionId, {
-          status: 'cancelled',
+          status: "cancelled",
           endTime,
           actualDuration,
           metadata: {
             ...execution.metadata,
             cancelledBy: event.cancelledBy,
-            cancellationReason: event.reason
-          }
+            cancellationReason: event.reason,
+          },
         });
 
         // Record cancellation metrics
-        await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-          metricName: 'workflow_cancellation_time',
-          metricValue: endTime.getTime(),
-          metricUnit: 'timestamp',
-          metricType: 'performance',
-          metricCategory: 'timing',
-          metadata: { event: 'execution_cancelled', reason: event.reason }
-        });
+        await this.workflowRepository.recordExecutionMetrics(
+          event.executionId,
+          {
+            metricName: "workflow_cancellation_time",
+            metricValue: endTime.getTime(),
+            metricUnit: "timestamp",
+            metricType: "performance",
+            metricCategory: "timing",
+            metadata: { event: "execution_cancelled", reason: event.reason },
+          },
+        );
       }
 
-      this.logger.debug('WorkflowEventHandlers: Workflow execution cancelled handled successfully', {
-        executionId: event.executionId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow execution cancelled handled successfully",
+        {
+          executionId: event.executionId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow execution cancelled', {
-        executionId: event.executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow execution cancelled",
+        {
+          executionId: event.executionId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -293,36 +394,45 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowStepStarted(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling workflow step started', {
-        executionId: event.executionId,
-        stepId: event.stepId,
-        stepName: event.stepName
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling workflow step started",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+          stepName: event.stepName,
+        },
+      );
 
       // Record step start metric
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'step_started',
+        metricName: "step_started",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'step_timing',
-        metadata: { 
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "step_timing",
+        metadata: {
           stepId: event.stepId,
           stepName: event.stepName,
-          event: 'step_started'
-        }
+          event: "step_started",
+        },
       });
 
-      this.logger.debug('WorkflowEventHandlers: Workflow step started handled successfully', {
-        executionId: event.executionId,
-        stepId: event.stepId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow step started handled successfully",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow step started', {
-        executionId: event.executionId,
-        stepId: event.stepId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow step started",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -332,50 +442,62 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowStepCompleted(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling workflow step completed', {
-        executionId: event.executionId,
-        stepId: event.stepId,
-        stepName: event.stepName
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling workflow step completed",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+          stepName: event.stepName,
+        },
+      );
 
       // Record step completion metrics
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'step_completed',
+        metricName: "step_completed",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'step_timing',
-        metadata: { 
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "step_timing",
+        metadata: {
           stepId: event.stepId,
           stepName: event.stepName,
-          event: 'step_completed'
-        }
+          event: "step_completed",
+        },
       });
 
       if (event.duration) {
-        await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-          metricName: 'step_duration',
-          metricValue: event.duration,
-          metricUnit: 'milliseconds',
-          metricType: 'performance',
-          metricCategory: 'step_duration',
-          metadata: { 
-            stepId: event.stepId,
-            stepName: event.stepName
-          }
-        });
+        await this.workflowRepository.recordExecutionMetrics(
+          event.executionId,
+          {
+            metricName: "step_duration",
+            metricValue: event.duration,
+            metricUnit: "milliseconds",
+            metricType: "performance",
+            metricCategory: "step_duration",
+            metadata: {
+              stepId: event.stepId,
+              stepName: event.stepName,
+            },
+          },
+        );
       }
 
-      this.logger.debug('WorkflowEventHandlers: Workflow step completed handled successfully', {
-        executionId: event.executionId,
-        stepId: event.stepId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow step completed handled successfully",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow step completed', {
-        executionId: event.executionId,
-        stepId: event.stepId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow step completed",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -385,37 +507,46 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowStepFailed(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling workflow step failed', {
-        executionId: event.executionId,
-        stepId: event.stepId,
-        stepName: event.stepName
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling workflow step failed",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+          stepName: event.stepName,
+        },
+      );
 
       // Record step failure metrics
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'step_failed',
+        metricName: "step_failed",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'step_timing',
-        metadata: { 
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "step_timing",
+        metadata: {
           stepId: event.stepId,
           stepName: event.stepName,
           error: event.error,
-          event: 'step_failed'
-        }
+          event: "step_failed",
+        },
       });
 
-      this.logger.debug('WorkflowEventHandlers: Workflow step failed handled successfully', {
-        executionId: event.executionId,
-        stepId: event.stepId
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow step failed handled successfully",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow step failed', {
-        executionId: event.executionId,
-        stepId: event.stepId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow step failed",
+        {
+          executionId: event.executionId,
+          stepId: event.stepId,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -425,34 +556,43 @@ class WorkflowEventHandlers {
    */
   async handleHandlerExecutionStarted(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling handler execution started', {
-        executionId: event.executionId,
-        handlerType: event.handlerType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling handler execution started",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+        },
+      );
 
       // Record handler start metric
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'handler_started',
+        metricName: "handler_started",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'handler_timing',
-        metadata: { 
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "handler_timing",
+        metadata: {
           handlerType: event.handlerType,
-          event: 'handler_started'
-        }
+          event: "handler_started",
+        },
       });
 
-      this.logger.debug('WorkflowEventHandlers: Handler execution started handled successfully', {
-        executionId: event.executionId,
-        handlerType: event.handlerType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handler execution started handled successfully",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle handler execution started', {
-        executionId: event.executionId,
-        handlerType: event.handlerType,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle handler execution started",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -462,47 +602,59 @@ class WorkflowEventHandlers {
    */
   async handleHandlerExecutionCompleted(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling handler execution completed', {
-        executionId: event.executionId,
-        handlerType: event.handlerType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling handler execution completed",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+        },
+      );
 
       // Record handler completion metrics
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'handler_completed',
+        metricName: "handler_completed",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'handler_timing',
-        metadata: { 
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "handler_timing",
+        metadata: {
           handlerType: event.handlerType,
-          event: 'handler_completed'
-        }
+          event: "handler_completed",
+        },
       });
 
       if (event.duration) {
-        await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-          metricName: 'handler_duration',
-          metricValue: event.duration,
-          metricUnit: 'milliseconds',
-          metricType: 'performance',
-          metricCategory: 'handler_duration',
-          metadata: { 
-            handlerType: event.handlerType
-          }
-        });
+        await this.workflowRepository.recordExecutionMetrics(
+          event.executionId,
+          {
+            metricName: "handler_duration",
+            metricValue: event.duration,
+            metricUnit: "milliseconds",
+            metricType: "performance",
+            metricCategory: "handler_duration",
+            metadata: {
+              handlerType: event.handlerType,
+            },
+          },
+        );
       }
 
-      this.logger.debug('WorkflowEventHandlers: Handler execution completed handled successfully', {
-        executionId: event.executionId,
-        handlerType: event.handlerType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handler execution completed handled successfully",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle handler execution completed', {
-        executionId: event.executionId,
-        handlerType: event.handlerType,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle handler execution completed",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -512,35 +664,44 @@ class WorkflowEventHandlers {
    */
   async handleHandlerExecutionFailed(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling handler execution failed', {
-        executionId: event.executionId,
-        handlerType: event.handlerType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling handler execution failed",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+        },
+      );
 
       // Record handler failure metrics
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'handler_failed',
+        metricName: "handler_failed",
         metricValue: Date.now(),
-        metricUnit: 'timestamp',
-        metricType: 'performance',
-        metricCategory: 'handler_timing',
-        metadata: { 
+        metricUnit: "timestamp",
+        metricType: "performance",
+        metricCategory: "handler_timing",
+        metadata: {
           handlerType: event.handlerType,
           error: event.error,
-          event: 'handler_failed'
-        }
+          event: "handler_failed",
+        },
       });
 
-      this.logger.debug('WorkflowEventHandlers: Handler execution failed handled successfully', {
-        executionId: event.executionId,
-        handlerType: event.handlerType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handler execution failed handled successfully",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle handler execution failed', {
-        executionId: event.executionId,
-        handlerType: event.handlerType,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle handler execution failed",
+        {
+          executionId: event.executionId,
+          handlerType: event.handlerType,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -550,31 +711,40 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowPerformanceMetric(event) {
     try {
-      this.logger.debug('WorkflowEventHandlers: Handling workflow performance metric', {
-        executionId: event.executionId,
-        metricName: event.metricName
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Handling workflow performance metric",
+        {
+          executionId: event.executionId,
+          metricName: event.metricName,
+        },
+      );
 
       // Record performance metric
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
         metricName: event.metricName,
         metricValue: event.metricValue,
         metricUnit: event.metricUnit,
-        metricType: event.metricType || 'performance',
+        metricType: event.metricType || "performance",
         metricCategory: event.metricCategory,
-        metadata: event.metadata
+        metadata: event.metadata,
       });
 
-      this.logger.debug('WorkflowEventHandlers: Workflow performance metric handled successfully', {
-        executionId: event.executionId,
-        metricName: event.metricName
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow performance metric handled successfully",
+        {
+          executionId: event.executionId,
+          metricName: event.metricName,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow performance metric', {
-        executionId: event.executionId,
-        metricName: event.metricName,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow performance metric",
+        {
+          executionId: event.executionId,
+          metricName: event.metricName,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -584,48 +754,57 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowPerformanceAlert(event) {
     try {
-      this.logger.warn('WorkflowEventHandlers: Handling workflow performance alert', {
-        executionId: event.executionId,
-        alertType: event.alertType,
-        threshold: event.threshold,
-        actualValue: event.actualValue
-      });
+      this.logger.warn(
+        "WorkflowEventHandlers: Handling workflow performance alert",
+        {
+          executionId: event.executionId,
+          alertType: event.alertType,
+          threshold: event.threshold,
+          actualValue: event.actualValue,
+        },
+      );
 
       // Record performance alert metric
       await this.workflowRepository.recordExecutionMetrics(event.executionId, {
-        metricName: 'performance_alert',
+        metricName: "performance_alert",
         metricValue: event.actualValue,
         metricUnit: event.metricUnit,
-        metricType: 'performance',
-        metricCategory: 'alerts',
+        metricType: "performance",
+        metricCategory: "alerts",
         metadata: {
           alertType: event.alertType,
           threshold: event.threshold,
           actualValue: event.actualValue,
-          severity: event.severity
-        }
+          severity: event.severity,
+        },
       });
 
       // Emit alert event for external systems
-      await this.eventBus.publish('workflow.alert.performance', {
+      await this.eventBus.publish("workflow.alert.performance", {
         executionId: event.executionId,
         alertType: event.alertType,
         threshold: event.threshold,
         actualValue: event.actualValue,
         severity: event.severity,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
-      this.logger.debug('WorkflowEventHandlers: Workflow performance alert handled successfully', {
-        executionId: event.executionId,
-        alertType: event.alertType
-      });
+      this.logger.debug(
+        "WorkflowEventHandlers: Workflow performance alert handled successfully",
+        {
+          executionId: event.executionId,
+          alertType: event.alertType,
+        },
+      );
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow performance alert', {
-        executionId: event.executionId,
-        alertType: event.alertType,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow performance alert",
+        {
+          executionId: event.executionId,
+          alertType: event.alertType,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -635,28 +814,36 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowCleanupRequired(event) {
     try {
-      this.logger.info('WorkflowEventHandlers: Handling workflow cleanup required', {
-        daysOld: event.daysOld
-      });
+      this.logger.info(
+        "WorkflowEventHandlers: Handling workflow cleanup required",
+        {
+          daysOld: event.daysOld,
+        },
+      );
 
-      const deletedCount = await this.workflowRepository.cleanupOldExecutions(event.daysOld || 30);
-      
-      this.logger.info('WorkflowEventHandlers: Workflow cleanup completed', {
+      const deletedCount = await this.workflowRepository.cleanupOldExecutions(
+        event.daysOld || 30,
+      );
+
+      this.logger.info("WorkflowEventHandlers: Workflow cleanup completed", {
         deletedCount,
-        daysOld: event.daysOld || 30
+        daysOld: event.daysOld || 30,
       });
 
       // Emit cleanup completed event
-      await this.eventBus.publish('workflow.cleanup.completed', {
+      await this.eventBus.publish("workflow.cleanup.completed", {
         deletedCount,
         daysOld: event.daysOld || 30,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow cleanup required', {
-        daysOld: event.daysOld,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow cleanup required",
+        {
+          daysOld: event.daysOld,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -666,35 +853,45 @@ class WorkflowEventHandlers {
    */
   async handleWorkflowMaintenanceRequired(event) {
     try {
-      this.logger.info('WorkflowEventHandlers: Handling workflow maintenance required', {
-        maintenanceType: event.maintenanceType
-      });
+      this.logger.info(
+        "WorkflowEventHandlers: Handling workflow maintenance required",
+        {
+          maintenanceType: event.maintenanceType,
+        },
+      );
 
       // Perform maintenance tasks based on type
       switch (event.maintenanceType) {
-        case 'cleanup':
-          await this.handleWorkflowCleanupRequired({ daysOld: event.daysOld || 30 });
+        case "cleanup":
+          await this.handleWorkflowCleanupRequired({
+            daysOld: event.daysOld || 30,
+          });
           break;
-        case 'optimize':
+        case "optimize":
           // Add optimization logic here
-          this.logger.info('WorkflowEventHandlers: Optimization maintenance completed');
+          this.logger.info(
+            "WorkflowEventHandlers: Optimization maintenance completed",
+          );
           break;
         default:
-          this.logger.warn('WorkflowEventHandlers: Unknown maintenance type', {
-            maintenanceType: event.maintenanceType
+          this.logger.warn("WorkflowEventHandlers: Unknown maintenance type", {
+            maintenanceType: event.maintenanceType,
           });
       }
 
       // Emit maintenance completed event
-      await this.eventBus.publish('workflow.maintenance.completed', {
+      await this.eventBus.publish("workflow.maintenance.completed", {
         maintenanceType: event.maintenanceType,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      this.logger.error('WorkflowEventHandlers: Failed to handle workflow maintenance required', {
-        maintenanceType: event.maintenanceType,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowEventHandlers: Failed to handle workflow maintenance required",
+        {
+          maintenanceType: event.maintenanceType,
+          error: error.message,
+        },
+      );
     }
   }
 
@@ -707,4 +904,4 @@ class WorkflowEventHandlers {
   }
 }
 
-module.exports = WorkflowEventHandlers; 
+module.exports = WorkflowEventHandlers;

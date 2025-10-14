@@ -3,8 +3,8 @@
  * Handler for Initialize a Git repository
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitInitHandler {
@@ -20,41 +20,43 @@ class GitInitHandler {
 
       const commandData = command.getCommandData();
 
-      this.logger.info('GitInitHandler: Executing gitinitcommand', commandData);
+      this.logger.info("GitInitHandler: Executing gitinitcommand", commandData);
 
-      
       // Build init command
-      let initCommand = 'git init';
+      let initCommand = "git init";
       if (commandData.bare) {
-        initCommand += ' --bare';
+        initCommand += " --bare";
       }
       if (commandData.initialBranch) {
         initCommand += ` -b ${commandData.initialBranch}`;
       }
 
       // Execute git init command
-      const result = await execAsync(initCommand, { cwd: commandData.projectPath });
-
-      this.logger.info('GitInitHandler: GitInitCommand completed successfully', {
-        result: result.stdout
+      const result = await execAsync(initCommand, {
+        cwd: commandData.projectPath,
       });
 
+      this.logger.info(
+        "GitInitHandler: GitInitCommand completed successfully",
+        {
+          result: result.stdout,
+        },
+      );
+
       return {
-        success: true,
         result: result.stdout,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('GitInitHandler: GitInitCommand failed', {
+      this.logger.error("GitInitHandler: GitInitCommand failed", {
         error: error.message,
-        command: command.getCommandData()
+        command: command.getCommandData(),
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }

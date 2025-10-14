@@ -99,13 +99,13 @@ describe('AnalysisDataViewer', () => {
     // Mock ChatRepository
     mockChatRepository = {
       getCurrentProjectId: jest.fn().mockResolvedValue('test-project'),
-      getAnalysisMetrics: jest.fn().mockResolvedValue({ success: true, data: { totalAnalyses: 5 } }),
-      getAnalysisStatus: jest.fn().mockResolvedValue({ success: true, data: { isRunning: false } }),
-      getAnalysisHistory: jest.fn().mockResolvedValue({ success: true, data: [] }),
-      getAnalysisIssues: jest.fn().mockResolvedValue({ success: true, data: { issues: [] } }),
-      getAnalysisTechStack: jest.fn().mockResolvedValue({ success: true, data: { dependencies: {} } }),
-      getAnalysisArchitecture: jest.fn().mockResolvedValue({ success: true, data: { structure: {} } }),
-      getAnalysisRecommendations: jest.fn().mockResolvedValue({ success: true, data: { recommendations: [] } })
+      getAnalysisMetrics: jest.fn().mockResolvedValue({ data: { totalAnalyses: 5 } }),
+      getAnalysisStatus: jest.fn().mockResolvedValue({ data: { isRunning: false } }),
+      getAnalysisHistory: jest.fn().mockResolvedValue({ data: [] }),
+      getAnalysisIssues: jest.fn().mockResolvedValue({ data: { issues: [] } }),
+      getAnalysisTechStack: jest.fn().mockResolvedValue({ data: { dependencies: {} } }),
+      getAnalysisArchitecture: jest.fn().mockResolvedValue({ data: { structure: {} } }),
+      getAnalysisRecommendations: jest.fn().mockResolvedValue({ data: { recommendations: [] } })
     };
 
     // Mock useAnalysisCache hook
@@ -228,7 +228,7 @@ describe('AnalysisDataViewer', () => {
     it('should show loading spinner during initial load', () => {
       // Mock loading state
       mockChatRepository.getAnalysisMetrics.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ success: true, data: {} }), 100))
+        new Promise(resolve => setTimeout(() => resolve({ data: {} }), 100))
       );
       
       render(<AnalysisDataViewer />);
@@ -273,7 +273,7 @@ describe('AnalysisDataViewer', () => {
       });
       
       // Mock successful response for retry
-      mockChatRepository.getAnalysisMetrics.mockResolvedValue({ success: true, data: {} });
+      mockChatRepository.getAnalysisMetrics.mockResolvedValue({ data: {} });
       
       fireEvent.click(screen.getByText('Retry'));
       

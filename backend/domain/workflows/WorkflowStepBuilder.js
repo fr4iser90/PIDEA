@@ -2,7 +2,7 @@
  * WorkflowStepBuilder - Builder for workflow steps
  * Provides fluent interface for creating and configuring workflow steps
  */
-const StepRegistry = require('../steps/StepRegistry');
+const StepRegistry = require("../steps/StepRegistry");
 
 /**
  * Workflow step builder with fluent interface
@@ -82,7 +82,7 @@ class WorkflowStepBuilder {
    */
   build() {
     if (!this._stepType) {
-      throw new Error('Step type is required');
+      throw new Error("Step type is required");
     }
 
     const stepClass = StepRegistry.getStep(this._stepType);
@@ -115,11 +115,11 @@ class WorkflowStepBuilder {
   static fromTemplate(templateName, options = {}) {
     const builder = new WorkflowStepBuilder();
     const template = StepRegistry.getTemplate(templateName);
-    
+
     if (!template) {
       throw new Error(`Step template not found: ${templateName}`);
     }
-    
+
     return template.apply(builder, options);
   }
 
@@ -130,7 +130,7 @@ class WorkflowStepBuilder {
    */
   static analysis(options = {}) {
     return new WorkflowStepBuilder()
-      .setType('ProjectAnalysisStep')
+      .setType("ProjectAnalysisStep")
       .setOptions(options);
   }
 
@@ -140,9 +140,7 @@ class WorkflowStepBuilder {
    * @returns {WorkflowStepBuilder} Builder instance
    */
   static refactoring(options = {}) {
-    return new WorkflowStepBuilder()
-      .setType('refactoring')
-      .setOptions(options);
+    return new WorkflowStepBuilder().setType("refactoring").setOptions(options);
   }
 
   /**
@@ -151,9 +149,7 @@ class WorkflowStepBuilder {
    * @returns {WorkflowStepBuilder} Builder instance
    */
   static testing(options = {}) {
-    return new WorkflowStepBuilder()
-      .setType('testing')
-      .setOptions(options);
+    return new WorkflowStepBuilder().setType("testing").setOptions(options);
   }
 
   /**
@@ -163,7 +159,7 @@ class WorkflowStepBuilder {
    */
   static documentation(options = {}) {
     return new WorkflowStepBuilder()
-      .setType('documentation')
+      .setType("documentation")
       .setOptions(options);
   }
 
@@ -173,9 +169,7 @@ class WorkflowStepBuilder {
    * @returns {WorkflowStepBuilder} Builder instance
    */
   static validation(options = {}) {
-    return new WorkflowStepBuilder()
-      .setType('validation')
-      .setOptions(options);
+    return new WorkflowStepBuilder().setType("validation").setOptions(options);
   }
 
   /**
@@ -184,9 +178,7 @@ class WorkflowStepBuilder {
    * @returns {WorkflowStepBuilder} Builder instance
    */
   static deployment(options = {}) {
-    return new WorkflowStepBuilder()
-      .setType('deployment')
-      .setOptions(options);
+    return new WorkflowStepBuilder().setType("deployment").setOptions(options);
   }
 
   /**
@@ -195,9 +187,7 @@ class WorkflowStepBuilder {
    * @returns {WorkflowStepBuilder} Builder instance
    */
   static security(options = {}) {
-    return new WorkflowStepBuilder()
-      .setType('security')
-      .setOptions(options);
+    return new WorkflowStepBuilder().setType("security").setOptions(options);
   }
 
   /**
@@ -207,7 +197,7 @@ class WorkflowStepBuilder {
    */
   static optimization(options = {}) {
     return new WorkflowStepBuilder()
-      .setType('optimization')
+      .setType("optimization")
       .setOptions(options);
   }
 
@@ -328,4 +318,4 @@ class WorkflowStepBuilder {
   }
 }
 
-module.exports = WorkflowStepBuilder; 
+module.exports = WorkflowStepBuilder;

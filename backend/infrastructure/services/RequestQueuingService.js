@@ -1,12 +1,12 @@
 /**
  * Request Queuing Service
- * 
+ *
  * Manages concurrent requests to prevent request stacking
  * and provide proper request lifecycle management.
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('RequestQueuingService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("RequestQueuingService");
 
 class RequestQueuingService {
   constructor(options = {}) {
@@ -21,9 +21,9 @@ class RequestQueuingService {
       failedRequests: 0,
       averageWaitTime: 0,
       averageProcessingTime: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
-    
+
     // Performance tracking
     this.waitTimes = [];
     this.processingTimes = [];
@@ -39,7 +39,7 @@ class RequestQueuingService {
   async queueRequest(key, requestFn, options = {}) {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
-    
+
     this.stats.totalRequests++;
     this.stats.queuedRequests++;
 
@@ -52,14 +52,16 @@ class RequestQueuingService {
         startTime,
         resolve,
         reject,
-        status: 'queued'
+        status: "queued",
       };
 
       // Check if already processing
       if (this.processing.has(key)) {
-        logger.info(`Request ${key} already processing, waiting for completion`);
+        logger.info(
+          `Request ${key} already processing, waiting for completion`,
+        );
         this.stats.queuedRequests++;
-        
+
         // Wait for existing request
         this.waitForExistingRequest(key, resolve, reject);
         return;
@@ -67,13 +69,19 @@ class RequestQueuingService {
 
       // Add to queue
       this.queue.push(request);
-      logger.debug(`Request ${key} added to queue, position: ${this.queue.length}`);
+      logger.debug(
+        `Request ${key} added to queue, position: ${this.queue.length}`,
+      );
 
       // Clear old requests if queue is too long (prevent memory buildup)
       if (this.queue.length > 20) {
         const removed = this.queue.splice(0, 10);
-        logger.warn(`Cleared ${removed.length} old requests from queue to prevent buildup`);
-        removed.forEach(req => req.reject(new Error('Request cancelled - queue overflow')));
+        logger.warn(
+          `Cleared ${removed.length} old requests from queue to prevent buildup`,
+        );
+        removed.forEach((req) =>
+          req.reject(new Error("Request cancelled - queue overflow")),
+        );
       }
 
       // Process queue
@@ -89,9 +97,9 @@ class RequestQueuingService {
    */
   async waitForExistingRequest(key, resolve, reject) {
     const processingRequest = this.processing.get(key);
-    
+
     if (!processingRequest) {
-      reject(new Error('Processing request not found'));
+      reject(new Error("Processing request not found"));
       return;
     }
 
@@ -128,8 +136,8 @@ class RequestQueuingService {
    */
   async startProcessing(request) {
     const { id, key, requestFn, options, startTime, resolve, reject } = request;
-    
-    request.status = 'processing';
+
+    request.status = "processing";
     this.stats.queuedRequests--;
 
     // Create promise for this request
@@ -140,24 +148,29 @@ class RequestQueuingService {
 
     try {
       const result = await requestPromise;
-      
+
       // Update statistics
       const processingTime = Date.now() - startTime;
       this.updateStats(processingTime, true);
-      
-      logger.debug(`Request ${key} completed successfully in ${processingTime}ms`);
+
+      logger.debug(
+        `Request ${key} completed successfully in ${processingTime}ms`,
+      );
       resolve(result);
     } catch (error) {
       // Update statistics
       const processingTime = Date.now() - startTime;
       this.updateStats(processingTime, false);
-      
-      logger.error(`Request ${key} failed after ${processingTime}ms:`, error.message);
+
+      logger.error(
+        `Request ${key} failed after ${processingTime}ms:`,
+        error.message,
+      );
       reject(error);
     } finally {
       // Remove from processing
       this.processing.delete(key);
-      
+
       // Process next request in queue
       setImmediate(() => this.processQueue());
     }
@@ -171,12 +184,12 @@ class RequestQueuingService {
    */
   async executeRequest(requestFn, options = {}) {
     const timeout = options.timeout || this.requestTimeout;
-    
+
     return Promise.race([
       requestFn(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), timeout)
-      )
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timeout")), timeout),
+      ),
     ]);
   }
 
@@ -188,19 +201,20 @@ class RequestQueuingService {
   updateStats(processingTime, success) {
     this.stats.processedRequests++;
     this.processingTimes.push(processingTime);
-    
+
     if (!success) {
       this.stats.failedRequests++;
     }
 
     // Calculate averages
     if (this.processingTimes.length > 0) {
-      this.stats.averageProcessingTime = 
-        this.processingTimes.reduce((a, b) => a + b, 0) / this.processingTimes.length;
+      this.stats.averageProcessingTime =
+        this.processingTimes.reduce((a, b) => a + b, 0) /
+        this.processingTimes.length;
     }
 
     if (this.waitTimes.length > 0) {
-      this.stats.averageWaitTime = 
+      this.stats.averageWaitTime =
         this.waitTimes.reduce((a, b) => a + b, 0) / this.waitTimes.length;
     }
   }
@@ -222,7 +236,7 @@ class RequestQueuingService {
       queueLength: this.queue.length,
       processingCount: this.processing.size,
       maxConcurrent: this.maxConcurrent,
-      isFull: this.processing.size >= this.maxConcurrent
+      isFull: this.processing.size >= this.maxConcurrent,
     };
   }
 
@@ -232,9 +246,14 @@ class RequestQueuingService {
    */
   getStats() {
     const uptime = Date.now() - this.stats.startTime;
-    const successRate = this.stats.processedRequests > 0 
-      ? ((this.stats.processedRequests - this.stats.failedRequests) / this.stats.processedRequests * 100).toFixed(2)
-      : 0;
+    const successRate =
+      this.stats.processedRequests > 0
+        ? (
+            ((this.stats.processedRequests - this.stats.failedRequests) /
+              this.stats.processedRequests) *
+            100
+          ).toFixed(2)
+        : 0;
 
     return {
       ...this.stats,
@@ -242,7 +261,7 @@ class RequestQueuingService {
       successRate: `${successRate}%`,
       averageProcessingTime: Math.round(this.stats.averageProcessingTime),
       averageWaitTime: Math.round(this.stats.averageWaitTime),
-      queueStatus: this.getQueueStatus()
+      queueStatus: this.getQueueStatus(),
     };
   }
 
@@ -261,10 +280,10 @@ class RequestQueuingService {
    */
   cancelRequest(key) {
     // Remove from queue
-    const queueIndex = this.queue.findIndex(req => req.key === key);
+    const queueIndex = this.queue.findIndex((req) => req.key === key);
     if (queueIndex !== -1) {
       const request = this.queue.splice(queueIndex, 1)[0];
-      request.reject(new Error('Request cancelled'));
+      request.reject(new Error("Request cancelled"));
       logger.info(`Cancelled queued request: ${key}`);
     }
 
@@ -285,7 +304,7 @@ class RequestQueuingService {
       failedRequests: 0,
       averageWaitTime: 0,
       averageProcessingTime: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
     this.waitTimes = [];
     this.processingTimes = [];
@@ -296,18 +315,18 @@ class RequestQueuingService {
    */
   destroy() {
     // Cancel all queued requests
-    this.queue.forEach(request => {
-      request.reject(new Error('Service destroyed'));
+    this.queue.forEach((request) => {
+      request.reject(new Error("Service destroyed"));
     });
-    
+
     this.clearQueue();
     this.processing.clear();
-    
-    logger.info('RequestQueuingService destroyed');
+
+    logger.info("RequestQueuingService destroyed");
   }
 }
 
 // Create singleton instance
 const requestQueuingService = new RequestQueuingService();
 
-module.exports = requestQueuingService; 
+module.exports = requestQueuingService;

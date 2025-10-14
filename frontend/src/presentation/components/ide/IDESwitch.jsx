@@ -76,7 +76,7 @@ const IDESwitch = ({
         from: currentPort,
         to: data.targetPort,
         timestamp: new Date(),
-        success: false,
+       
         error: data.error
       }]);
 
@@ -191,7 +191,6 @@ const IDESwitch = ({
           fromPort: currentPort, 
           toPort: targetPort,
           targetPort,
-          success: true,
           timing: {
             totalTime: totalSwitchTime.toFixed(2),
             validationTime: validationTime.toFixed(2),
@@ -205,7 +204,6 @@ const IDESwitch = ({
         from: currentPort,
         to: targetPort,
         timestamp: new Date(),
-        success: true,
         duration: totalSwitchTime.toFixed(2)
       }]);
 
@@ -242,7 +240,7 @@ const IDESwitch = ({
         from: currentPort,
         to: targetPort,
         timestamp: new Date(),
-        success: false,
+       
         error: error.message
       }]);
 

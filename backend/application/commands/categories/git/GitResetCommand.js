@@ -8,18 +8,18 @@ class GitResetCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitresetcommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
-    this.mode = params.mode || 'mixed';
-    this.commit = params.commit || 'HEAD';
+
+    this.mode = params.mode || "mixed";
+    this.commit = params.commit || "HEAD";
   }
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     return true;
   }
 
@@ -28,7 +28,7 @@ class GitResetCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       mode: this.mode,
       commit: this.commit,
     };

@@ -3,8 +3,8 @@
  * Handler for committing changes to Git repository
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitCommitHandler {
@@ -18,12 +18,13 @@ class GitCommitHandler {
       // Validate command
       command.validate();
 
-      const { projectPath, message, files, author, email } = command.getCommandData();
+      const { projectPath, message, files, author, email } =
+        command.getCommandData();
 
-      this.logger.info('GitCommitHandler: Executing git commit', {
+      this.logger.info("GitCommitHandler: Executing git commit", {
         projectPath,
         message,
-        files
+        files,
       });
 
       // Add files to staging first
@@ -39,33 +40,31 @@ class GitCommitHandler {
       // Execute git commit command
       const result = await execAsync(commitCommand, { cwd: projectPath });
 
-      this.logger.info('GitCommitHandler: Git commit completed successfully', {
-        message,
-        files,
-        result: result.stdout
-      });
-
-      return {
-        success: true,
+      this.logger.info("GitCommitHandler: Git commit completed successfully", {
         message,
         files,
         result: result.stdout,
-        timestamp: new Date()
-      };
-
-    } catch (error) {
-      this.logger.error('GitCommitHandler: Git commit failed', {
-        error: error.message,
-        command: command.getCommandData()
       });
 
       return {
-        success: false,
+        message,
+        files,
+        result: result.stdout,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      this.logger.error("GitCommitHandler: Git commit failed", {
         error: error.message,
-        timestamp: new Date()
+        command: command.getCommandData(),
+      });
+
+      return {
+       
+        error: error.message,
+        timestamp: new Date(),
       };
     }
   }
 }
 
-module.exports = GitCommitHandler; 
+module.exports = GitCommitHandler;

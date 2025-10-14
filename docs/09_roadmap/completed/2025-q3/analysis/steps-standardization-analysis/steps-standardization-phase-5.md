@@ -110,7 +110,6 @@ async execute(context = {}) {
     };
     
     return {
-      success: true,
       result: result,
       metadata: {
         stepName: this.name,
@@ -153,7 +152,6 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
       };
       
       return {
-        success: true,
         result: result,
         metadata: {
           stepName: this.name,
@@ -197,7 +195,6 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
       };
       
       return {
-        success: true,
         result: result,
         metadata: {
           stepName: this.name,
@@ -240,7 +237,6 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
       };
       
       return {
-        success: true,
         result: result,
         metadata: {
           stepName: this.name,

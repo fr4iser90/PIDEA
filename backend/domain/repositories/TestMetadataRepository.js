@@ -2,7 +2,7 @@
  * TestMetadataRepository - Repository for managing test metadata
  * Provides data access methods for test metadata storage and retrieval
  */
-const TestMetadata = require('@entities/TestMetadata');
+const TestMetadata = require("@entities/TestMetadata");
 
 class TestMetadataRepository {
   constructor() {
@@ -20,7 +20,7 @@ class TestMetadataRepository {
    */
   async save(testMetadata) {
     if (!testMetadata || !(testMetadata instanceof TestMetadata)) {
-      throw new Error('Valid TestMetadata instance is required');
+      throw new Error("Valid TestMetadata instance is required");
     }
 
     const existing = this._testMetadata.get(testMetadata.id);
@@ -31,7 +31,7 @@ class TestMetadataRepository {
 
     // Save to main storage
     this._testMetadata.set(testMetadata.id, testMetadata);
-    
+
     // Update indexes
     this._addToIndexes(testMetadata);
 
@@ -45,7 +45,7 @@ class TestMetadataRepository {
    */
   async findById(id) {
     if (!id) {
-      throw new Error('ID is required');
+      throw new Error("ID is required");
     }
     return this._testMetadata.get(id) || null;
   }
@@ -57,7 +57,7 @@ class TestMetadataRepository {
    */
   async findByFilePath(filePath) {
     if (!filePath) {
-      throw new Error('File path is required');
+      throw new Error("File path is required");
     }
     const id = this._filePathIndex.get(filePath);
     return id ? this._testMetadata.get(id) : null;
@@ -71,22 +71,22 @@ class TestMetadataRepository {
    */
   async findByFilePathAndTestName(filePath, testName) {
     if (!filePath || !testName) {
-      throw new Error('File path and test name are required');
+      throw new Error("File path and test name are required");
     }
-    
+
     const allTests = await this.findByFilePath(filePath);
     if (!allTests) return null;
-    
+
     // If it's a single test, check if it matches
     if (allTests.testName === testName) {
       return allTests;
     }
-    
+
     // If it's a collection, find the specific test
     if (Array.isArray(allTests)) {
-      return allTests.find(test => test.testName === testName) || null;
+      return allTests.find((test) => test.testName === testName) || null;
     }
-    
+
     return null;
   }
 
@@ -97,11 +97,11 @@ class TestMetadataRepository {
    */
   async findByStatus(status) {
     if (!status) {
-      throw new Error('Status is required');
+      throw new Error("Status is required");
     }
-    
+
     const ids = this._statusIndex.get(status) || [];
-    return ids.map(id => this._testMetadata.get(id)).filter(Boolean);
+    return ids.map((id) => this._testMetadata.get(id)).filter(Boolean);
   }
 
   /**
@@ -110,7 +110,7 @@ class TestMetadataRepository {
    */
   async findLegacyTests() {
     const ids = this._legacyIndex.get(true) || [];
-    return ids.map(id => this._testMetadata.get(id)).filter(Boolean);
+    return ids.map((id) => this._testMetadata.get(id)).filter(Boolean);
   }
 
   /**
@@ -120,11 +120,11 @@ class TestMetadataRepository {
    */
   async findByTag(tag) {
     if (!tag) {
-      throw new Error('Tag is required');
+      throw new Error("Tag is required");
     }
-    
+
     const ids = this._tagIndex.get(tag) || [];
-    return ids.map(id => this._testMetadata.get(id)).filter(Boolean);
+    return ids.map((id) => this._testMetadata.get(id)).filter(Boolean);
   }
 
   /**
@@ -147,13 +147,13 @@ class TestMetadataRepository {
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const data = allTests.slice(startIndex, endIndex);
-    
+
     return {
       data,
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -165,7 +165,7 @@ class TestMetadataRepository {
    */
   async findByHealthScoreRange(minScore, maxScore) {
     const allTests = await this.findAll();
-    return allTests.filter(test => {
+    return allTests.filter((test) => {
       const healthScore = test.getHealthScore();
       return healthScore >= minScore && healthScore <= maxScore;
     });
@@ -177,7 +177,7 @@ class TestMetadataRepository {
    */
   async findNeedingMaintenance() {
     const allTests = await this.findAll();
-    return allTests.filter(test => test.needsMaintenance());
+    return allTests.filter((test) => test.needsMaintenance());
   }
 
   /**
@@ -187,13 +187,17 @@ class TestMetadataRepository {
    */
   async findByComplexity(complexity) {
     const allTests = await this.findAll();
-    return allTests.filter(test => {
+    return allTests.filter((test) => {
       const score = test.complexityScore;
       switch (complexity) {
-        case 'low': return score < 30;
-        case 'medium': return score >= 30 && score < 70;
-        case 'high': return score >= 70;
-        default: return false;
+        case "low":
+          return score < 30;
+        case "medium":
+          return score >= 30 && score < 70;
+        case "high":
+          return score >= 70;
+        default:
+          return false;
       }
     });
   }
@@ -205,14 +209,14 @@ class TestMetadataRepository {
    */
   async deleteById(id) {
     if (!id) {
-      throw new Error('ID is required');
+      throw new Error("ID is required");
     }
-    
+
     const testMetadata = this._testMetadata.get(id);
     if (!testMetadata) {
       return false;
     }
-    
+
     this._removeFromIndexes(testMetadata);
     this._testMetadata.delete(id);
     return true;
@@ -225,14 +229,14 @@ class TestMetadataRepository {
    */
   async deleteByFilePath(filePath) {
     if (!filePath) {
-      throw new Error('File path is required');
+      throw new Error("File path is required");
     }
-    
+
     const testMetadata = await this.findByFilePath(filePath);
     if (!testMetadata) {
       return 0;
     }
-    
+
     await this.deleteById(testMetadata.id);
     return 1;
   }
@@ -244,12 +248,12 @@ class TestMetadataRepository {
   async countByStatus() {
     const counts = {};
     const allTests = await this.findAll();
-    
-    allTests.forEach(test => {
+
+    allTests.forEach((test) => {
       const status = test.status;
       counts[status] = (counts[status] || 0) + 1;
     });
-    
+
     return counts;
   }
 
@@ -260,7 +264,7 @@ class TestMetadataRepository {
   async getStatistics() {
     const allTests = await this.findAll();
     const total = allTests.length;
-    
+
     if (total === 0) {
       return {
         total: 0,
@@ -271,20 +275,29 @@ class TestMetadataRepository {
         legacy: 0,
         averageHealthScore: 0,
         averageComplexityScore: 0,
-        averageMaintenanceScore: 0
+        averageMaintenanceScore: 0,
       };
     }
-    
-    const passing = allTests.filter(test => test.isPassing()).length;
-    const failing = allTests.filter(test => test.isFailing()).length;
-    const skipped = allTests.filter(test => test.isSkipped()).length;
-    const pending = allTests.filter(test => test.isPending()).length;
-    const legacy = allTests.filter(test => test.isLegacy).length;
-    
-    const totalHealthScore = allTests.reduce((sum, test) => sum + test.getHealthScore(), 0);
-    const totalComplexityScore = allTests.reduce((sum, test) => sum + test.complexityScore, 0);
-    const totalMaintenanceScore = allTests.reduce((sum, test) => sum + test.maintenanceScore, 0);
-    
+
+    const passing = allTests.filter((test) => test.isPassing()).length;
+    const failing = allTests.filter((test) => test.isFailing()).length;
+    const skipped = allTests.filter((test) => test.isSkipped()).length;
+    const pending = allTests.filter((test) => test.isPending()).length;
+    const legacy = allTests.filter((test) => test.isLegacy).length;
+
+    const totalHealthScore = allTests.reduce(
+      (sum, test) => sum + test.getHealthScore(),
+      0,
+    );
+    const totalComplexityScore = allTests.reduce(
+      (sum, test) => sum + test.complexityScore,
+      0,
+    );
+    const totalMaintenanceScore = allTests.reduce(
+      (sum, test) => sum + test.maintenanceScore,
+      0,
+    );
+
     return {
       total,
       passing,
@@ -294,7 +307,7 @@ class TestMetadataRepository {
       legacy,
       averageHealthScore: Math.round(totalHealthScore / total),
       averageComplexityScore: Math.round(totalComplexityScore / total),
-      averageMaintenanceScore: Math.round(totalMaintenanceScore / total)
+      averageMaintenanceScore: Math.round(totalMaintenanceScore / total),
     };
   }
 
@@ -314,14 +327,14 @@ class TestMetadataRepository {
   _addToIndexes(testMetadata) {
     // File path index
     this._filePathIndex.set(testMetadata.filePath, testMetadata.id);
-    
+
     // Status index
     const status = testMetadata.status;
     if (!this._statusIndex.has(status)) {
       this._statusIndex.set(status, []);
     }
     this._statusIndex.get(status).push(testMetadata.id);
-    
+
     // Legacy index
     if (testMetadata.isLegacy) {
       if (!this._legacyIndex.has(true)) {
@@ -329,9 +342,9 @@ class TestMetadataRepository {
       }
       this._legacyIndex.get(true).push(testMetadata.id);
     }
-    
+
     // Tag index
-    testMetadata.tags.forEach(tag => {
+    testMetadata.tags.forEach((tag) => {
       if (!this._tagIndex.has(tag)) {
         this._tagIndex.set(tag, []);
       }
@@ -342,7 +355,7 @@ class TestMetadataRepository {
   _removeFromIndexes(testMetadata) {
     // File path index
     this._filePathIndex.delete(testMetadata.filePath);
-    
+
     // Status index
     const status = testMetadata.status;
     const statusIds = this._statusIndex.get(status);
@@ -355,7 +368,7 @@ class TestMetadataRepository {
         this._statusIndex.delete(status);
       }
     }
-    
+
     // Legacy index
     if (testMetadata.isLegacy) {
       const legacyIds = this._legacyIndex.get(true);
@@ -369,9 +382,9 @@ class TestMetadataRepository {
         }
       }
     }
-    
+
     // Tag index
-    testMetadata.tags.forEach(tag => {
+    testMetadata.tags.forEach((tag) => {
       const tagIds = this._tagIndex.get(tag);
       if (tagIds) {
         const index = tagIds.indexOf(testMetadata.id);
@@ -386,4 +399,4 @@ class TestMetadataRepository {
   }
 }
 
-module.exports = TestMetadataRepository; 
+module.exports = TestMetadataRepository;

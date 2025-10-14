@@ -1,18 +1,18 @@
 /**
  * Test Data Manager
- * 
+ *
  * Manages test data fixtures, generators, and data setup for database tests.
  * Provides utilities for loading, generating, and cleaning up test data.
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const Logger = require('../../infrastructure/logging/Logger');
+const fs = require("fs").promises;
+const path = require("path");
+const Logger = require("../../infrastructure/logging/Logger");
 
 class TestDataManager {
   constructor(databaseConnection) {
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('TestDataManager');
+    this.logger = new Logger("TestDataManager");
     this.fixtures = new Map();
     this.generators = new Map();
     this.loadedFixtures = new Set();
@@ -27,21 +27,22 @@ class TestDataManager {
   async loadFixture(fixtureName, options = {}) {
     try {
       const {
-        format = 'json',
-        encoding = 'utf8',
-        path: fixturePath = null
+        format = "json",
+        encoding = "utf8",
+        path: fixturePath = null,
       } = options;
 
-      const fixtureFile = fixturePath || path.join(__dirname, `${fixtureName}.${format}`);
+      const fixtureFile =
+        fixturePath || path.join(__dirname, `${fixtureName}.${format}`);
       const fixtureData = await fs.readFile(fixtureFile, encoding);
 
       let parsedData;
-      if (format === 'json') {
+      if (format === "json") {
         parsedData = JSON.parse(fixtureData);
-      } else if (format === 'js') {
+      } else if (format === "js") {
         // For JavaScript fixtures, we need to evaluate them
         const module = require(fixtureFile);
-        parsedData = typeof module === 'function' ? module() : module;
+        parsedData = typeof module === "function" ? module() : module;
       } else {
         throw new Error(`Unsupported fixture format: ${format}`);
       }
@@ -67,14 +68,16 @@ class TestDataManager {
     try {
       const {
         count = 1,
-        format = 'json',
-        path: generatorPath = null
+        format = "json",
+        path: generatorPath = null,
       } = options;
 
-      const generatorFile = generatorPath || path.join(__dirname, `../generators/${generatorName}.${format}`);
+      const generatorFile =
+        generatorPath ||
+        path.join(__dirname, `../generators/${generatorName}.${format}`);
       const generatorModule = require(generatorFile);
 
-      if (typeof generatorModule !== 'function') {
+      if (typeof generatorModule !== "function") {
         throw new Error(`Generator ${generatorName} must export a function`);
       }
 
@@ -84,7 +87,10 @@ class TestDataManager {
       this.logger.info(`Generated test data using generator: ${generatorName}`);
       return generatedData;
     } catch (error) {
-      this.logger.error(`Failed to generate test data with generator ${generatorName}:`, error);
+      this.logger.error(
+        `Failed to generate test data with generator ${generatorName}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -97,11 +103,7 @@ class TestDataManager {
    */
   async setupTestData(fixtureName, options = {}) {
     try {
-      const {
-        tables = [],
-        clearExisting = true,
-        validate = true
-      } = options;
+      const { tables = [], clearExisting = true, validate = true } = options;
 
       // Load fixture if not already loaded
       if (!this.fixtures.has(fixtureName)) {
@@ -129,7 +131,10 @@ class TestDataManager {
 
       this.logger.info(`Setup test data for fixture: ${fixtureName}`);
     } catch (error) {
-      this.logger.error(`Failed to setup test data for fixture ${fixtureName}:`, error);
+      this.logger.error(
+        `Failed to setup test data for fixture ${fixtureName}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -143,7 +148,7 @@ class TestDataManager {
   async insertTestData(tableName, data) {
     try {
       if (!this.databaseConnection) {
-        throw new Error('Database connection not available');
+        throw new Error("Database connection not available");
       }
 
       const dataArray = Array.isArray(data) ? data : [data];
@@ -151,15 +156,20 @@ class TestDataManager {
       for (const record of dataArray) {
         const columns = Object.keys(record);
         const values = Object.values(record);
-        const placeholders = columns.map(() => '?').join(', ');
+        const placeholders = columns.map(() => "?").join(", ");
 
-        const query = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
+        const query = `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${placeholders})`;
         await this.databaseConnection.query(query, values);
       }
 
-      this.logger.info(`Inserted ${dataArray.length} records into table: ${tableName}`);
+      this.logger.info(
+        `Inserted ${dataArray.length} records into table: ${tableName}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to insert test data into table ${tableName}:`, error);
+      this.logger.error(
+        `Failed to insert test data into table ${tableName}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -172,14 +182,15 @@ class TestDataManager {
   async clearTestData(tables = []) {
     try {
       if (!this.databaseConnection) {
-        throw new Error('Database connection not available');
+        throw new Error("Database connection not available");
       }
 
       if (tables.length === 0) {
         // Clear all tables
-        const tableQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+        const tableQuery =
+          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
         const tableResult = await this.databaseConnection.query(tableQuery);
-        tables = tableResult.map(row => row.name);
+        tables = tableResult.map((row) => row.name);
       }
 
       for (const tableName of tables) {
@@ -187,7 +198,7 @@ class TestDataManager {
         this.logger.info(`Cleared table: ${tableName}`);
       }
     } catch (error) {
-      this.logger.error('Failed to clear test data:', error);
+      this.logger.error("Failed to clear test data:", error);
       throw error;
     }
   }
@@ -203,11 +214,14 @@ class TestDataManager {
         valid: true,
         errors: [],
         warnings: [],
-        tables: {}
+        tables: {},
       };
 
       for (const [tableName, tableData] of Object.entries(fixtureData)) {
-        const tableValidation = await this.validateTableData(tableName, tableData);
+        const tableValidation = await this.validateTableData(
+          tableName,
+          tableData,
+        );
         result.tables[tableName] = tableValidation;
 
         if (!tableValidation.valid) {
@@ -217,10 +231,10 @@ class TestDataManager {
         result.warnings.push(...tableValidation.warnings);
       }
 
-      this.logger.info('Test data validation completed');
+      this.logger.info("Test data validation completed");
       return result;
     } catch (error) {
-      this.logger.error('Failed to validate test data:', error);
+      this.logger.error("Failed to validate test data:", error);
       throw error;
     }
   }
@@ -238,15 +252,19 @@ class TestDataManager {
         errors: [],
         warnings: [],
         recordCount: 0,
-        expectedCount: 0
+        expectedCount: 0,
       };
 
       const dataArray = Array.isArray(tableData) ? tableData : [tableData];
       result.expectedCount = dataArray.length;
 
       // Check if table exists
-      const tableExistsQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name = ?";
-      const tableExists = await this.databaseConnection.query(tableExistsQuery, [tableName]);
+      const tableExistsQuery =
+        "SELECT name FROM sqlite_master WHERE type='table' AND name = ?";
+      const tableExists = await this.databaseConnection.query(
+        tableExistsQuery,
+        [tableName],
+      );
 
       if (tableExists.length === 0) {
         result.valid = false;
@@ -274,12 +292,17 @@ class TestDataManager {
       result.recordCount = countResult[0].count;
 
       if (result.recordCount !== result.expectedCount) {
-        result.warnings.push(`Record count mismatch: expected ${result.expectedCount}, got ${result.recordCount}`);
+        result.warnings.push(
+          `Record count mismatch: expected ${result.expectedCount}, got ${result.recordCount}`,
+        );
       }
 
       return result;
     } catch (error) {
-      this.logger.error(`Failed to validate table data for ${tableName}:`, error);
+      this.logger.error(
+        `Failed to validate table data for ${tableName}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -294,11 +317,11 @@ class TestDataManager {
     const result = {
       valid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     const recordKeys = Object.keys(record);
-    const schemaColumns = schema.map(col => col.name);
+    const schemaColumns = schema.map((col) => col.name);
 
     // Check for missing required columns
     for (const column of schema) {
@@ -318,10 +341,15 @@ class TestDataManager {
     // Validate data types
     for (const column of schema) {
       if (record[column.name] !== undefined) {
-        const typeValidation = this.validateDataType(record[column.name], column.type);
+        const typeValidation = this.validateDataType(
+          record[column.name],
+          column.type,
+        );
         if (!typeValidation.valid) {
           result.valid = false;
-          result.errors.push(`Invalid data type for column ${column.name}: ${typeValidation.error}`);
+          result.errors.push(
+            `Invalid data type for column ${column.name}: ${typeValidation.error}`,
+          );
         }
       }
     }
@@ -338,21 +366,21 @@ class TestDataManager {
   validateDataType(value, expectedType) {
     const result = {
       valid: true,
-      error: null
+      error: null,
     };
 
     const type = expectedType.toLowerCase();
 
-    if (type.includes('int') && typeof value !== 'number') {
+    if (type.includes("int") && typeof value !== "number") {
       result.valid = false;
       result.error = `Expected integer, got ${typeof value}`;
-    } else if (type.includes('text') && typeof value !== 'string') {
+    } else if (type.includes("text") && typeof value !== "string") {
       result.valid = false;
       result.error = `Expected string, got ${typeof value}`;
-    } else if (type.includes('real') && typeof value !== 'number') {
+    } else if (type.includes("real") && typeof value !== "number") {
       result.valid = false;
       result.error = `Expected number, got ${typeof value}`;
-    } else if (type.includes('blob') && !Buffer.isBuffer(value)) {
+    } else if (type.includes("blob") && !Buffer.isBuffer(value)) {
       result.valid = false;
       result.error = `Expected buffer, got ${typeof value}`;
     }
@@ -370,11 +398,12 @@ class TestDataManager {
         fixtures: this.fixtures.size,
         generators: this.generators.size,
         loadedFixtures: this.loadedFixtures.size,
-        tables: {}
+        tables: {},
       };
 
       // Get table statistics
-      const tableQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+      const tableQuery =
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
       const tables = await this.databaseConnection.query(tableQuery);
 
       for (const table of tables) {
@@ -385,7 +414,7 @@ class TestDataManager {
 
       return stats;
     } catch (error) {
-      this.logger.error('Failed to get test data statistics:', error);
+      this.logger.error("Failed to get test data statistics:", error);
       throw error;
     }
   }
@@ -398,11 +427,7 @@ class TestDataManager {
    */
   async exportTestData(filePath, options = {}) {
     try {
-      const {
-        format = 'json',
-        tables = [],
-        includeSchema = false
-      } = options;
+      const { format = "json", tables = [], includeSchema = false } = options;
 
       const exportData = {
         tables: {},
@@ -410,14 +435,16 @@ class TestDataManager {
         metadata: {
           exportedAt: new Date().toISOString(),
           format,
-          includeSchema
-        }
+          includeSchema,
+        },
       };
 
       // Get table list
-      const tableQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+      const tableQuery =
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
       const tableList = await this.databaseConnection.query(tableQuery);
-      const tablesToExport = tables.length > 0 ? tables : tableList.map(t => t.name);
+      const tablesToExport =
+        tables.length > 0 ? tables : tableList.map((t) => t.name);
 
       // Export table data
       for (const tableName of tablesToExport) {
@@ -434,8 +461,9 @@ class TestDataManager {
       }
 
       // Write to file
-      const dataString = format === 'json' ? JSON.stringify(exportData, null, 2) : exportData;
-      await fs.writeFile(filePath, dataString, 'utf8');
+      const dataString =
+        format === "json" ? JSON.stringify(exportData, null, 2) : exportData;
+      await fs.writeFile(filePath, dataString, "utf8");
 
       this.logger.info(`Exported test data to: ${filePath}`);
     } catch (error) {
@@ -452,12 +480,9 @@ class TestDataManager {
    */
   async importTestData(filePath, options = {}) {
     try {
-      const {
-        clearExisting = true,
-        validate = true
-      } = options;
+      const { clearExisting = true, validate = true } = options;
 
-      const fileData = await fs.readFile(filePath, 'utf8');
+      const fileData = await fs.readFile(filePath, "utf8");
       const importData = JSON.parse(fileData);
 
       if (clearExisting) {
@@ -493,9 +518,9 @@ class TestDataManager {
       // Clear all test data
       await this.clearTestData();
 
-      this.logger.info('Test data manager reset');
+      this.logger.info("Test data manager reset");
     } catch (error) {
-      this.logger.error('Failed to reset test data manager:', error);
+      this.logger.error("Failed to reset test data manager:", error);
       throw error;
     }
   }

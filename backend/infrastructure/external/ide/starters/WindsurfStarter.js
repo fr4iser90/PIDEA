@@ -1,24 +1,23 @@
-
 /**
  * Windsurf IDE Starter
  * Starts Windsurf IDE instances and manages Windsurf-specific startup logic
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
+const { spawn } = require("child_process");
+const path = require("path");
 
 class WindsurfStarter {
   constructor() {
     this.config = {
-      name: 'Windsurf',
-      executable: 'windsurf',
+      name: "Windsurf",
+      executable: "windsurf",
       defaultArgs: [
-        '--remote-debugging-port=',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        "--remote-debugging-port=",
+        "--disable-web-security",
+        "--disable-features=VizDisplayCompositor",
       ],
       startupTimeout: 4000,
-      portRange: { start: 9242, end: 9251 }
+      portRange: { start: 9242, end: 9251 },
     };
   }
 
@@ -30,27 +29,33 @@ class WindsurfStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.info('Starting Windsurf IDE on port', port);
-    
+    logger.info("Starting Windsurf IDE on port", port);
+
     // Validate port is in range
-    if (port < this.config.portRange.start || port > this.config.portRange.end) {
-      throw new Error(`Port ${port} is outside Windsurf's allowed range ${this.config.portRange.start}-${this.config.portRange.end}`);
+    if (
+      port < this.config.portRange.start ||
+      port > this.config.portRange.end
+    ) {
+      throw new Error(
+        `Port ${port} is outside Windsurf's allowed range ${this.config.portRange.start}-${this.config.portRange.end}`,
+      );
     }
 
     // Check if Windsurf is installed
     const isInstalled = await this.isInstalled();
     if (!isInstalled) {
-      throw new Error('Windsurf is not installed on this system');
+      throw new Error("Windsurf is not installed on this system");
     }
 
     const args = [
       `--remote-debugging-port=${port}`,
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor'
+      "--disable-web-security",
+      "--disable-features=VizDisplayCompositor",
     ];
 
     // Add user data directory to avoid conflicts
-    const userDataDir = options.userDataDir || path.join(process.cwd(), 'windsurf-data-' + port);
+    const userDataDir =
+      options.userDataDir || path.join(process.cwd(), "windsurf-data-" + port);
     args.push(`--user-data-dir=${userDataDir}`);
 
     // Add workspace path if provided
@@ -64,66 +69,67 @@ class WindsurfStarter {
     }
 
     if (options.disableExtensions) {
-      args.push('--disable-extensions');
+      args.push("--disable-extensions");
     }
 
     if (options.verbose) {
-      args.push('--verbose');
+      args.push("--verbose");
     }
 
     if (options.newWindow) {
-      args.push('--new-window');
+      args.push("--new-window");
     }
 
     try {
       // Find Windsurf executable
       const windsurfCommand = this.findWindsurfExecutable();
       if (!windsurfCommand) {
-        throw new Error('Windsurf executable not found');
+        throw new Error("Windsurf executable not found");
       }
 
       const process = spawn(windsurfCommand, args, {
         detached: true,
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: ["ignore", "pipe", "pipe"],
         env: {
           ...process.env,
-          ...options.env
-        }
+          ...options.env,
+        },
       });
 
       // Handle process events
-      process.stdout.on('data', (data) => {
+      process.stdout.on("data", (data) => {
         logger.info(`Windsurf IDE ${port} stdout received`);
       });
 
-      process.stderr.on('data', (data) => {
+      process.stderr.on("data", (data) => {
         logger.info(`Windsurf IDE ${port} stderr received`);
       });
 
-      process.on('close', (code) => {
+      process.on("close", (code) => {
         logger.info(`Windsurf IDE ${port} process closed with code ${code}`);
       });
 
-      process.on('error', (error) => {
+      process.on("error", (error) => {
         logger.error(`Windsurf IDE ${port} process error:`, error);
       });
 
       // Wait for Windsurf to start
-      await new Promise(resolve => setTimeout(resolve, this.config.startupTimeout));
+      await new Promise((resolve) =>
+        setTimeout(resolve, this.config.startupTimeout),
+      );
 
       return {
         port: port,
         pid: process.pid,
-        status: 'starting',
-        ideType: 'windsurf',
+        status: "starting",
+        ideType: "windsurf",
         process: process,
         args: args,
         workspacePath: workspacePath,
-        userDataDir: userDataDir
+        userDataDir: userDataDir,
       };
-
     } catch (error) {
-      logger.error('Failed to start Windsurf IDE:', error);
+      logger.error("Failed to start Windsurf IDE:", error);
       throw error;
     }
   }
@@ -134,25 +140,25 @@ class WindsurfStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.info('Stopping Windsurf IDE on port', port);
-    
+    logger.info("Stopping Windsurf IDE on port", port);
+
     try {
       // Find and kill Windsurf processes on the specified port
-      const { exec } = require('child_process');
-      
+      const { exec } = require("child_process");
+
       return new Promise((resolve, reject) => {
         exec(`lsof -ti:${port}`, (error, stdout) => {
           if (error || !stdout.trim()) {
             resolve({
               port: port,
-              status: 'not_running',
-              ideType: 'windsurf'
+              status: "not_running",
+              ideType: "windsurf",
             });
             return;
           }
 
-          const pids = stdout.trim().split('\n');
-          const killPromises = pids.map(pid => {
+          const pids = stdout.trim().split("\n");
+          const killPromises = pids.map((pid) => {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
@@ -166,15 +172,15 @@ class WindsurfStarter {
           Promise.all(killPromises).then(() => {
             resolve({
               port: port,
-              status: 'stopped',
-              ideType: 'windsurf',
-              killedPids: pids
+              status: "stopped",
+              ideType: "windsurf",
+              killedPids: pids,
             });
           });
         });
       });
     } catch (error) {
-      logger.error('Error stopping Windsurf IDE:', error);
+      logger.error("Error stopping Windsurf IDE:", error);
       throw error;
     }
   }
@@ -185,14 +191,14 @@ class WindsurfStarter {
    */
   async isInstalled() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('which', ['windsurf'], { stdio: 'ignore' });
-      
-      process.on('close', (code) => {
+      const { spawn } = require("child_process");
+      const process = spawn("which", ["windsurf"], { stdio: "ignore" });
+
+      process.on("close", (code) => {
         resolve(code === 0);
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(false);
       });
     });
@@ -204,23 +210,23 @@ class WindsurfStarter {
    */
   async getVersion() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('windsurf', ['--version'], { stdio: 'pipe' });
-      
-      let output = '';
-      process.stdout.on('data', (data) => {
+      const { spawn } = require("child_process");
+      const process = spawn("windsurf", ["--version"], { stdio: "pipe" });
+
+      let output = "";
+      process.stdout.on("data", (data) => {
         output += data.toString();
       });
-      
-      process.on('close', (code) => {
+
+      process.on("close", (code) => {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
           resolve(null);
         }
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(null);
       });
     });
@@ -231,14 +237,17 @@ class WindsurfStarter {
    * @returns {string|null} Path to Windsurf executable or null if not found
    */
   findWindsurfExecutable() {
-    const { spawn } = require('child_process');
-    
+    const { spawn } = require("child_process");
+
     // Try common Windsurf executable names
-    const possibleExecutables = ['windsurf', 'windsurf-ide', 'windsurf-editor'];
-    
+    const possibleExecutables = ["windsurf", "windsurf-ide", "windsurf-editor"];
+
     for (const executable of possibleExecutables) {
       try {
-        const result = require('child_process').execSync(`which ${executable}`, { encoding: 'utf8' });
+        const result = require("child_process").execSync(
+          `which ${executable}`,
+          { encoding: "utf8" },
+        );
         if (result.trim()) {
           return result.trim();
         }
@@ -246,26 +255,26 @@ class WindsurfStarter {
         // Continue to next executable
       }
     }
-    
+
     // Try common installation paths
     const commonPaths = [
-      '/usr/bin/windsurf',
-      '/usr/local/bin/windsurf',
-      '/opt/windsurf/bin/windsurf',
-      '/Applications/Windsurf.app/Contents/MacOS/windsurf'
+      "/usr/bin/windsurf",
+      "/usr/local/bin/windsurf",
+      "/opt/windsurf/bin/windsurf",
+      "/Applications/Windsurf.app/Contents/MacOS/windsurf",
     ];
-    
+
     for (const path of commonPaths) {
       try {
-        require('fs').accessSync(path, require('fs').constants.X_OK);
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+        require("fs").accessSync(path, require("fs").constants.X_OK);
+        const Logger = require("@logging/Logger");
+        const logger = new Logger("Logger");
         return path;
       } catch (error) {
         // Continue to next path
       }
     }
-    
+
     return null;
   }
 
@@ -285,13 +294,13 @@ const logger = new Logger('Logger');
     const isInstalled = await this.isInstalled();
     const version = isInstalled ? await this.getVersion() : null;
     const executablePath = this.findWindsurfExecutable();
-    
+
     return {
       isInstalled,
       version,
       executablePath,
       isValid: isInstalled && version !== null && executablePath !== null,
-      executable: this.config.executable
+      executable: this.config.executable,
     };
   }
 
@@ -301,12 +310,12 @@ const logger = new Logger('Logger');
    */
   getStartupOptions() {
     return {
-      userDataDir: 'Custom user data directory',
-      extensionsDir: 'Custom extensions directory',
-      disableExtensions: 'Disable all extensions',
-      verbose: 'Enable verbose logging',
-      newWindow: 'Open in new window',
-      env: 'Environment variables'
+      userDataDir: "Custom user data directory",
+      extensionsDir: "Custom extensions directory",
+      disableExtensions: "Disable all extensions",
+      verbose: "Enable verbose logging",
+      newWindow: "Open in new window",
+      env: "Environment variables",
     };
   }
 
@@ -323,9 +332,9 @@ const logger = new Logger('Logger');
       supportsAI: true, // Windsurf has AI capabilities
       supportsCustomUserData: true,
       supportsCustomExtensions: true,
-      defaultPortRange: this.config.portRange
+      defaultPortRange: this.config.portRange,
     };
   }
 }
 
-module.exports = WindsurfStarter; 
+module.exports = WindsurfStarter;

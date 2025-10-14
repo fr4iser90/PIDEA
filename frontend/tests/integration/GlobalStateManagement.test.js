@@ -110,9 +110,9 @@ describe('Global State Management Integration', () => {
       ];
 
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: mockIDEs }) // /api/interfaces/available-ides
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } }) // git status
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } }); // analysis status
+        .mockResolvedValueOnce({ data: mockIDEs }) // /api/interfaces/available-ides
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } }) // git status
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } }); // analysis status
 
       render(
         <BrowserRouter>
@@ -141,9 +141,9 @@ describe('Global State Management Integration', () => {
       ];
 
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: mockIDEs })
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } });
+        .mockResolvedValueOnce({ data: mockIDEs })
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } });
 
       render(
         <BrowserRouter>
@@ -166,8 +166,8 @@ describe('Global State Management Integration', () => {
       const workspacePath = '/home/user/projects/PIDEA';
       
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } });
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } });
 
       await act(async () => {
         await store.loadProjectData(workspacePath);
@@ -184,10 +184,10 @@ describe('Global State Management Integration', () => {
       const workspace2 = '/home/user/projects/OtherProject';
 
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'develop' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: true } } });
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } })
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'develop' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: true } } });
 
       await act(async () => {
         await store.loadProjectData(workspace1);
@@ -269,8 +269,8 @@ describe('Global State Management Integration', () => {
       const workspacePath = '/home/user/projects/PIDEA';
       
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main', modified: ['file1.js'] } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } });
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main', modified: ['file1.js'] } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } });
 
       await act(async () => {
         await store.loadProjectData(workspacePath);
@@ -297,8 +297,8 @@ describe('Global State Management Integration', () => {
       const workspacePath = '/home/user/projects/PIDEA';
       
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: true, progress: 50 } } });
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: true, progress: 50 } } });
 
       await act(async () => {
         await store.loadProjectData(workspacePath);
@@ -328,10 +328,10 @@ describe('Global State Management Integration', () => {
       const workspace2 = '/home/user/projects/OtherProject';
 
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'develop' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: true } } });
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } })
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'develop' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: true } } });
 
       // Load data for first workspace
       await act(async () => {
@@ -408,8 +408,8 @@ describe('Global State Management Integration', () => {
       const workspacePath = '/home/user/projects/PIDEA';
       
       mockApiCall
-        .mockResolvedValueOnce({ success: true, data: { status: { currentBranch: 'main' } } })
-        .mockResolvedValueOnce({ success: true, data: { status: { isRunning: false } } });
+        .mockResolvedValueOnce({ data: { status: { currentBranch: 'main' } } })
+        .mockResolvedValueOnce({ data: { status: { isRunning: false } } });
 
       // Load data multiple times
       await act(async () => {

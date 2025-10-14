@@ -1,6 +1,6 @@
 /**
  * Centralized Response Manager
- * 
+ *
  * This module provides a single, consistent way to handle all API responses
  * across the entire application. It eliminates the need for manual response
  * formatting in every controller.
@@ -8,8 +8,8 @@
 
 class ResponseManager {
   constructor() {
-    const Logger = require('../logging/Logger');
-    this.logger = new Logger('ResponseManager');
+    const Logger = require("../logging/Logger");
+    this.logger = new Logger("ResponseManager");
   }
 
   /**
@@ -22,24 +22,24 @@ class ResponseManager {
   success(res, data = null, statusCode = 200, options = {}) {
     // 2025 Standard: Direct data, no wrapping!
     let response = data;
-    
+
     // Only add metadata if explicitly requested
     if (options.meta || options.pagination) {
       response = {
         ...data,
         ...(options.meta && { meta: options.meta }),
-        ...(options.pagination && { pagination: options.pagination })
+        ...(options.pagination && { pagination: options.pagination }),
       };
     }
 
     // Remove null/undefined values
     const cleanResponse = this.cleanResponse(response);
-    
-    this.logger.debug('Sending success response', { 
-      statusCode, 
-      dataKeys: Object.keys(cleanResponse) 
+
+    this.logger.debug("Sending success response", {
+      statusCode,
+      dataKeys: Object.keys(cleanResponse),
     });
-    
+
     return res.status(statusCode).json(cleanResponse);
   }
 
@@ -57,16 +57,16 @@ class ResponseManager {
         code: this.getErrorCode(statusCode),
         statusCode,
         timestamp: new Date().toISOString(),
-        ...details
-      }
+        ...details,
+      },
     };
 
-    this.logger.warn('Sending error response', { 
-      statusCode, 
+    this.logger.warn("Sending error response", {
+      statusCode,
       message,
-      details: Object.keys(details)
+      details: Object.keys(details),
     });
-    
+
     return res.status(statusCode).json(response);
   }
 
@@ -85,18 +85,20 @@ class ResponseManager {
         page: pagination.page || 1,
         limit: pagination.limit || 10,
         total: pagination.total || data.length,
-        totalPages: Math.ceil((pagination.total || data.length) / (pagination.limit || 10)),
+        totalPages: Math.ceil(
+          (pagination.total || data.length) / (pagination.limit || 10),
+        ),
         hasNext: pagination.hasNext || false,
-        hasPrev: pagination.hasPrev || false
-      }
+        hasPrev: pagination.hasPrev || false,
+      },
     };
 
-    this.logger.debug('Sending paginated response', { 
-      statusCode, 
+    this.logger.debug("Sending paginated response", {
+      statusCode,
       itemCount: data.length,
-      pagination: response.pagination
+      pagination: response.pagination,
     });
-    
+
     return res.status(statusCode).json(response);
   }
 
@@ -111,14 +113,14 @@ class ResponseManager {
     let response = data;
 
     if (location) {
-      res.set('Location', location);
+      res.set("Location", location);
     }
 
-    this.logger.debug('Sending created response', { 
+    this.logger.debug("Sending created response", {
       dataKeys: Object.keys(response),
-      location 
+      location,
     });
-    
+
     return res.status(201).json(response);
   }
 
@@ -127,7 +129,7 @@ class ResponseManager {
    * @param {Object} res - Express response object
    */
   noContent(res) {
-    this.logger.debug('Sending no content response');
+    this.logger.debug("Sending no content response");
     return res.status(204).send();
   }
 
@@ -136,7 +138,7 @@ class ResponseManager {
    * @param {Object} res - Express response object
    * @param {string} resource - Resource name
    */
-  notFound(res, resource = 'Resource') {
+  notFound(res, resource = "Resource") {
     return this.error(res, `${resource} not found`, 404);
   }
 
@@ -145,7 +147,7 @@ class ResponseManager {
    * @param {Object} res - Express response object
    * @param {string} message - Error message
    */
-  unauthorized(res, message = 'Unauthorized') {
+  unauthorized(res, message = "Unauthorized") {
     return this.error(res, message, 401);
   }
 
@@ -154,7 +156,7 @@ class ResponseManager {
    * @param {Object} res - Express response object
    * @param {string} message - Error message
    */
-  forbidden(res, message = 'Forbidden') {
+  forbidden(res, message = "Forbidden") {
     return this.error(res, message, 403);
   }
 
@@ -164,7 +166,7 @@ class ResponseManager {
    * @param {string} message - Error message
    * @param {Object} validation - Validation errors
    */
-  badRequest(res, message = 'Bad Request', validation = {}) {
+  badRequest(res, message = "Bad Request", validation = {}) {
     return this.error(res, message, 400, { validation });
   }
 
@@ -173,7 +175,7 @@ class ResponseManager {
    * @param {Object} res - Express response object
    * @param {string} message - Error message
    */
-  conflict(res, message = 'Conflict') {
+  conflict(res, message = "Conflict") {
     return this.error(res, message, 409);
   }
 
@@ -183,7 +185,7 @@ class ResponseManager {
    * @param {string} message - Error message
    * @param {Object} details - Error details
    */
-  internalError(res, message = 'Internal Server Error', details = {}) {
+  internalError(res, message = "Internal Server Error", details = {}) {
     return this.error(res, message, 500, details);
   }
 
@@ -194,17 +196,17 @@ class ResponseManager {
    */
   getErrorCode(statusCode) {
     const codes = {
-      400: 'BAD_REQUEST',
-      401: 'UNAUTHORIZED',
-      403: 'FORBIDDEN',
-      404: 'NOT_FOUND',
-      409: 'CONFLICT',
-      422: 'UNPROCESSABLE_ENTITY',
-      500: 'INTERNAL_SERVER_ERROR',
-      502: 'BAD_GATEWAY',
-      503: 'SERVICE_UNAVAILABLE'
+      400: "BAD_REQUEST",
+      401: "UNAUTHORIZED",
+      403: "FORBIDDEN",
+      404: "NOT_FOUND",
+      409: "CONFLICT",
+      422: "UNPROCESSABLE_ENTITY",
+      500: "INTERNAL_SERVER_ERROR",
+      502: "BAD_GATEWAY",
+      503: "SERVICE_UNAVAILABLE",
     };
-    return codes[statusCode] || 'UNKNOWN_ERROR';
+    return codes[statusCode] || "UNKNOWN_ERROR";
   }
 
   /**
@@ -216,12 +218,12 @@ class ResponseManager {
     if (obj === null || obj === undefined) {
       return null;
     }
-    
+
     if (Array.isArray(obj)) {
-      return obj.map(item => this.cleanResponse(item));
+      return obj.map((item) => this.cleanResponse(item));
     }
-    
-    if (typeof obj === 'object') {
+
+    if (typeof obj === "object") {
       const cleaned = {};
       for (const [key, value] of Object.entries(obj)) {
         if (value !== null && value !== undefined) {
@@ -230,7 +232,7 @@ class ResponseManager {
       }
       return cleaned;
     }
-    
+
     return obj;
   }
 
@@ -242,18 +244,23 @@ class ResponseManager {
    */
   middleware(req, res, next) {
     // Attach response methods to res object
-    res.success = (data, statusCode, options) => this.success(res, data, statusCode, options);
-    res.error = (message, statusCode, details) => this.error(res, message, statusCode, details);
-    res.paginated = (data, pagination, statusCode) => this.paginated(res, data, pagination, statusCode);
+    res.success = (data, statusCode, options) =>
+      this.success(res, data, statusCode, options);
+    res.error = (message, statusCode, details) =>
+      this.error(res, message, statusCode, details);
+    res.paginated = (data, pagination, statusCode) =>
+      this.paginated(res, data, pagination, statusCode);
     res.created = (data, location) => this.created(res, data, location);
     res.noContent = () => this.noContent(res);
     res.notFound = (resource) => this.notFound(res, resource);
     res.unauthorized = (message) => this.unauthorized(res, message);
     res.forbidden = (message) => this.forbidden(res, message);
-    res.badRequest = (message, validation) => this.badRequest(res, message, validation);
+    res.badRequest = (message, validation) =>
+      this.badRequest(res, message, validation);
     res.conflict = (message) => this.conflict(res, message);
-    res.internalError = (message, details) => this.internalError(res, message, details);
-    
+    res.internalError = (message, details) =>
+      this.internalError(res, message, details);
+
     next();
   }
 }

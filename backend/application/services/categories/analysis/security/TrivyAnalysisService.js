@@ -3,12 +3,14 @@
  * Specialized service for Trivy vulnerability analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { TrivySecurityStep } = require('@domain/steps/categories/analysis/security');
+const Logger = require("@logging/Logger");
+const {
+  TrivySecurityStep,
+} = require("@domain/steps/categories/analysis/security");
 
 class TrivyAnalysisService {
   constructor() {
-    this.logger = new Logger('TrivyAnalysisService');
+    this.logger = new Logger("TrivyAnalysisService");
     this.trivyStep = new TrivySecurityStep();
   }
 
@@ -22,21 +24,22 @@ class TrivyAnalysisService {
    */
   async executeTrivyAnalysis(params) {
     try {
-      this.logger.info('Starting Trivy vulnerability analysis', { projectId: params.projectId });
+      this.logger.info("Starting Trivy vulnerability analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.trivyStep.execute(params);
 
-      this.logger.info('Trivy analysis completed', { 
+      this.logger.info("Trivy analysis completed", {
         projectId: params.projectId,
-        vulnerabilitiesFound: result.vulnerabilities?.length || 0
+        vulnerabilitiesFound: result.vulnerabilities?.length || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Trivy analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Trivy analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -48,13 +51,13 @@ class TrivyAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Trivy Vulnerability Scanner',
-      version: '1.0.0',
-      description: 'Container and dependency vulnerability scanning',
-      supportedFormats: ['docker', 'filesystem', 'git', 'rootfs', 'image'],
-      severityLevels: ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Trivy Vulnerability Scanner",
+      version: "1.0.0",
+      description: "Container and dependency vulnerability scanning",
+      supportedFormats: ["docker", "filesystem", "git", "rootfs", "image"],
+      severityLevels: ["UNKNOWN", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = TrivyAnalysisService; 
+module.exports = TrivyAnalysisService;

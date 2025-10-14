@@ -282,12 +282,11 @@ class OrderController {
       const result = await this.createOrderUseCase.execute(command);
       
       res.status(201).json({
-        success: true,
         data: result
       });
     } catch (error) {
       res.status(400).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -304,12 +303,11 @@ class OrderController {
       const orders = await this.getUserOrdersUseCase.execute(query);
       
       res.json({
-        success: true,
         data: orders
       });
     } catch (error) {
       res.status(400).json({
-        success: false,
+       
         error: error.message
       });
     }

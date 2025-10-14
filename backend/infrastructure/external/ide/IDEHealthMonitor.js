@@ -1,13 +1,12 @@
-
 /**
  * IDE Health Monitor
  * Monitors IDE health, status, and performance
  */
 
-const EventEmitter = require('events');
+const EventEmitter = require("events");
 
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('IDEHealthMonitor');
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("IDEHealthMonitor");
 
 class IDEHealthMonitor extends EventEmitter {
   constructor(configManager = null) {
@@ -19,7 +18,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthHistory = new Map(); // port -> health history
     this.maxHistorySize = 100;
     this.healthCheckInterval = 15000; // 30 seconds
-    
+
     // Stale detection configuration
     this.failureCounts = new Map(); // port -> failure count
     this.maxFailures = 1; // Consider stale after X consecutive failures
@@ -32,7 +31,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async startMonitoring(interval = null) {
     if (this.monitoring) {
-      logger.info('Monitoring already active');
+      logger.info("Monitoring already active");
       return;
     }
 
@@ -42,7 +41,7 @@ class IDEHealthMonitor extends EventEmitter {
         const globalConfig = this.configManager.getGlobalConfig();
         interval = globalConfig.healthCheckInterval || this.healthCheckInterval;
       } catch (error) {
-        logger.warn('Could not get config, using default interval');
+        logger.warn("Could not get config, using default interval");
         interval = this.healthCheckInterval;
       }
     }
@@ -50,7 +49,9 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthCheckInterval = interval || this.healthCheckInterval;
     this.monitoring = true;
 
-    logger.info(`Starting health monitoring with ${this.healthCheckInterval}ms interval`);
+    logger.info(
+      `Starting health monitoring with ${this.healthCheckInterval}ms interval`,
+    );
 
     // Start periodic health checks
     this.healthInterval = setInterval(() => {
@@ -58,7 +59,7 @@ class IDEHealthMonitor extends EventEmitter {
     }, this.healthCheckInterval);
 
     // Emit start event
-    this.emit('monitoringStarted', { interval: this.healthCheckInterval });
+    this.emit("monitoringStarted", { interval: this.healthCheckInterval });
   }
 
   /**
@@ -66,7 +67,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   stopMonitoring() {
     if (!this.monitoring) {
-      logger.info('Monitoring not active');
+      logger.info("Monitoring not active");
       return;
     }
 
@@ -77,10 +78,10 @@ class IDEHealthMonitor extends EventEmitter {
       this.healthInterval = null;
     }
 
-    logger.info('Health monitoring stopped');
+    logger.info("Health monitoring stopped");
 
     // Emit stop event
-    this.emit('monitoringStopped');
+    this.emit("monitoringStopped");
   }
 
   /**
@@ -95,35 +96,35 @@ class IDEHealthMonitor extends EventEmitter {
     for (const [port, healthInfo] of this.ideHealth) {
       checkPromises.push(
         this.checkIDEHealth(port, healthInfo.ideType)
-          .then(result => {
+          .then((result) => {
             healthResults[port] = result;
             return result;
           })
-          .catch(error => {
+          .catch((error) => {
             logger.error(`Error checking health for port ${port}:`, error);
             healthResults[port] = {
               port: port,
-              status: 'error',
+              status: "error",
               error: error.message,
-              timestamp: Date.now()
+              timestamp: Date.now(),
             };
             return healthResults[port];
-          })
+          }),
       );
     }
 
     const results = await Promise.allSettled(checkPromises);
-    
+
     // Update health information
     for (const result of results) {
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         const healthInfo = result.value;
         this.updateHealthInfo(healthInfo.port, healthInfo);
       }
     }
 
     // Emit health check event
-    this.emit('healthCheck', healthResults);
+    this.emit("healthCheck", healthResults);
 
     return healthResults;
   }
@@ -136,25 +137,28 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async checkIDEHealth(port, ideType) {
     const startTime = Date.now();
-    
+
     try {
       // Check if IDE is responding
       const isResponding = await this.checkIDEResponse(port);
-      
+
       const responseTime = Date.now() - startTime;
-      
+
       const healthInfo = {
         port: port,
         ideType: ideType,
-        status: isResponding ? 'healthy' : 'unhealthy',
+        status: isResponding ? "healthy" : "unhealthy",
         responseTime: responseTime,
         timestamp: Date.now(),
-        lastCheck: new Date().toISOString()
+        lastCheck: new Date().toISOString(),
       };
 
       // Add additional health metrics if IDE is responding
       if (isResponding) {
-        const additionalMetrics = await this.getAdditionalHealthMetrics(port, ideType);
+        const additionalMetrics = await this.getAdditionalHealthMetrics(
+          port,
+          ideType,
+        );
         Object.assign(healthInfo, additionalMetrics);
       }
 
@@ -163,11 +167,11 @@ class IDEHealthMonitor extends EventEmitter {
       return {
         port: port,
         ideType: ideType,
-        status: 'error',
+        status: "error",
         error: error.message,
         responseTime: Date.now() - startTime,
         timestamp: Date.now(),
-        lastCheck: new Date().toISOString()
+        lastCheck: new Date().toISOString(),
       };
     }
   }
@@ -179,18 +183,21 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async checkIDEResponse(port) {
     return new Promise((resolve) => {
-      const http = require('http');
-      const req = http.get({
-        hostname: '127.0.0.1',
-        port: port,
-        path: '/json/version',
-        timeout: 1000 // 1 second timeout
-      }, (res) => {
-        resolve(res.statusCode === 200);
-      });
-      
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => {
+      const http = require("http");
+      const req = http.get(
+        {
+          hostname: "127.0.0.1",
+          port: port,
+          path: "/json/version",
+          timeout: 1000, // 1 second timeout
+        },
+        (res) => {
+          resolve(res.statusCode === 200);
+        },
+      );
+
+      req.on("error", () => resolve(false));
+      req.on("timeout", () => {
         req.destroy();
         resolve(false);
       });
@@ -224,7 +231,6 @@ class IDEHealthMonitor extends EventEmitter {
       if (uptime) {
         metrics.uptime = uptime;
       }
-
     } catch (error) {
       logger.warn(`Error getting additional metrics for port ${port}:`, error);
     }
@@ -239,7 +245,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async getProcessInfo(port) {
     return new Promise((resolve) => {
-      const { exec } = require('child_process');
+      const { exec } = require("child_process");
       exec(`lsof -ti:${port}`, (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(null);
@@ -251,14 +257,14 @@ class IDEHealthMonitor extends EventEmitter {
           if (psError) {
             resolve({ pid: pid });
           } else {
-            const lines = psOutput.trim().split('\n');
+            const lines = psOutput.trim().split("\n");
             if (lines.length > 1) {
               const parts = lines[1].trim().split(/\s+/);
               resolve({
                 pid: parts[0],
                 ppid: parts[1],
-                cmd: parts.slice(2, -1).join(' '),
-                etime: parts[parts.length - 1]
+                cmd: parts.slice(2, -1).join(" "),
+                etime: parts[parts.length - 1],
               });
             } else {
               resolve({ pid: pid });
@@ -276,7 +282,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async getMemoryUsage(port) {
     return new Promise((resolve) => {
-      const { exec } = require('child_process');
+      const { exec } = require("child_process");
       exec(`lsof -ti:${port}`, (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(null);
@@ -288,12 +294,12 @@ class IDEHealthMonitor extends EventEmitter {
           if (psError) {
             resolve(null);
           } else {
-            const lines = psOutput.trim().split('\n');
+            const lines = psOutput.trim().split("\n");
             if (lines.length > 1) {
               const parts = lines[1].trim().split(/\s+/);
               resolve({
                 rss: parseInt(parts[0]) || 0, // Resident Set Size in KB
-                vsz: parseInt(parts[1]) || 0   // Virtual Memory Size in KB
+                vsz: parseInt(parts[1]) || 0, // Virtual Memory Size in KB
               });
             } else {
               resolve(null);
@@ -311,7 +317,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   async getUptime(port) {
     return new Promise((resolve) => {
-      const { exec } = require('child_process');
+      const { exec } = require("child_process");
       exec(`lsof -ti:${port}`, (error, stdout) => {
         if (error || !stdout.trim()) {
           resolve(null);
@@ -325,26 +331,26 @@ class IDEHealthMonitor extends EventEmitter {
           } else {
             const etime = psOutput.trim();
             // Convert etime (DD-HH:MM:SS or HH:MM:SS) to seconds
-            const parts = etime.split('-');
+            const parts = etime.split("-");
             let seconds = 0;
-            
+
             if (parts.length === 2) {
               // DD-HH:MM:SS format
               const days = parseInt(parts[0]) || 0;
-              const timeParts = parts[1].split(':');
+              const timeParts = parts[1].split(":");
               const hours = parseInt(timeParts[0]) || 0;
               const minutes = parseInt(timeParts[1]) || 0;
               const secs = parseInt(timeParts[2]) || 0;
               seconds = days * 86400 + hours * 3600 + minutes * 60 + secs;
             } else {
               // HH:MM:SS format
-              const timeParts = etime.split(':');
+              const timeParts = etime.split(":");
               const hours = parseInt(timeParts[0]) || 0;
               const minutes = parseInt(timeParts[1]) || 0;
               const secs = parseInt(timeParts[2]) || 0;
               seconds = hours * 3600 + minutes * 60 + secs;
             }
-            
+
             resolve(seconds);
           }
         });
@@ -361,15 +367,15 @@ class IDEHealthMonitor extends EventEmitter {
     this.ideHealth.set(port, {
       port: port,
       ideType: ideType,
-      status: 'unknown',
+      status: "unknown",
       timestamp: Date.now(),
-      lastCheck: null
+      lastCheck: null,
     });
 
     this.healthHistory.set(port, []);
 
     // Don't log individual registrations - will be logged in batch
-    this.emit('ideRegistered', { port, ideType });
+    this.emit("ideRegistered", { port, ideType });
   }
 
   /**
@@ -378,8 +384,8 @@ class IDEHealthMonitor extends EventEmitter {
   logRegisteredIDEs() {
     const registeredIDEs = Array.from(this.ideHealth.entries())
       .map(([port, health]) => `${health.ideType}:${port}`)
-      .join(', ');
-    
+      .join(", ");
+
     if (registeredIDEs) {
       logger.info(`Registered IDEs for health monitoring: ${registeredIDEs}`);
     }
@@ -394,7 +400,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthHistory.delete(port);
 
     logger.info(`Unregistered IDE on port ${port} from health monitoring`);
-    this.emit('ideUnregistered', { port });
+    this.emit("ideUnregistered", { port });
   }
 
   /**
@@ -421,7 +427,7 @@ class IDEHealthMonitor extends EventEmitter {
     this.healthHistory.set(port, history);
 
     // Emit health update event
-    this.emit('healthUpdate', { port, healthInfo });
+    this.emit("healthUpdate", { port, healthInfo });
   }
 
   /**
@@ -431,37 +437,43 @@ class IDEHealthMonitor extends EventEmitter {
    */
   handleStaleDetection(port, healthInfo) {
     const currentFailureCount = this.failureCounts.get(port) || 0;
-    
-    if (healthInfo.status === 'unhealthy' || healthInfo.status === 'error') {
+
+    if (healthInfo.status === "unhealthy" || healthInfo.status === "error") {
       // Increment failure count
       const newFailureCount = currentFailureCount + 1;
       this.failureCounts.set(port, newFailureCount);
-      
-      logger.warn(`IDE on port ${port} failed health check (${newFailureCount}/${this.maxFailures})`);
-      
+
+      logger.warn(
+        `IDE on port ${port} failed health check (${newFailureCount}/${this.maxFailures})`,
+      );
+
       // Check if IDE is now stale
       if (newFailureCount >= this.maxFailures) {
-        logger.error(`IDE on port ${port} is now STALE after ${newFailureCount} consecutive failures`);
-        
+        logger.error(
+          `IDE on port ${port} is now STALE after ${newFailureCount} consecutive failures`,
+        );
+
         // Emit stale event
-        this.emit('ideStale', {
+        this.emit("ideStale", {
           port: port,
           ideType: healthInfo.ideType,
           failureCount: newFailureCount,
           lastHealthInfo: healthInfo,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
-        
+
         // Mark as stale in health info
         healthInfo.stale = true;
         healthInfo.staleSince = Date.now();
       }
-    } else if (healthInfo.status === 'healthy') {
+    } else if (healthInfo.status === "healthy") {
       // Reset failure count on successful health check
       if (currentFailureCount > 0) {
-        logger.info(`IDE on port ${port} recovered, resetting failure count from ${currentFailureCount} to 0`);
+        logger.info(
+          `IDE on port ${port} recovered, resetting failure count from ${currentFailureCount} to 0`,
+        );
         this.failureCounts.set(port, 0);
-        
+
         // Remove stale flag if it was set
         if (healthInfo.stale) {
           healthInfo.stale = false;
@@ -478,7 +490,7 @@ class IDEHealthMonitor extends EventEmitter {
    */
   getStaleIDEs() {
     const staleIDEs = [];
-    
+
     for (const [port, healthInfo] of this.ideHealth) {
       if (healthInfo.stale) {
         staleIDEs.push({
@@ -486,11 +498,11 @@ class IDEHealthMonitor extends EventEmitter {
           ideType: healthInfo.ideType,
           failureCount: this.failureCounts.get(port) || 0,
           staleSince: healthInfo.staleSince,
-          lastHealthInfo: healthInfo
+          lastHealthInfo: healthInfo,
         });
       }
     }
-    
+
     return staleIDEs;
   }
 
@@ -577,18 +589,18 @@ class IDEHealthMonitor extends EventEmitter {
       unhealthyIDEs: 0,
       errorIDEs: 0,
       monitoring: this.monitoring,
-      interval: this.healthCheckInterval
+      interval: this.healthCheckInterval,
     };
 
     for (const [_, healthInfo] of this.ideHealth) {
       switch (healthInfo.status) {
-        case 'healthy':
+        case "healthy":
           stats.healthyIDEs++;
           break;
-        case 'unhealthy':
+        case "unhealthy":
           stats.unhealthyIDEs++;
           break;
-        case 'error':
+        case "error":
           stats.errorIDEs++;
           break;
       }
@@ -613,7 +625,7 @@ class IDEHealthMonitor extends EventEmitter {
     return {
       monitoring: this.monitoring,
       interval: this.healthCheckInterval,
-      maxHistorySize: this.maxHistorySize
+      maxHistorySize: this.maxHistorySize,
     };
   }
 
@@ -624,8 +636,8 @@ class IDEHealthMonitor extends EventEmitter {
    * @param {Function} checkFunction - Health check function
    */
   addHealthCheck(ideType, port, checkFunction) {
-    if (typeof checkFunction !== 'function') {
-      throw new Error('Check function must be a function');
+    if (typeof checkFunction !== "function") {
+      throw new Error("Check function must be a function");
     }
 
     const key = `${ideType}:${port}`;
@@ -641,7 +653,7 @@ class IDEHealthMonitor extends EventEmitter {
   clearHealthChecks() {
     this.healthChecks = this.healthChecks || new Map();
     this.healthChecks.clear();
-    logger.info('Cleared all health checks');
+    logger.info("Cleared all health checks");
   }
 
   /**
@@ -662,4 +674,4 @@ class IDEHealthMonitor extends EventEmitter {
   }
 }
 
-module.exports = IDEHealthMonitor; 
+module.exports = IDEHealthMonitor;

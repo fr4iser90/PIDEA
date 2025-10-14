@@ -2,16 +2,16 @@
  * OptimizedSequentialStrategy - Advanced sequential execution strategy with optimization
  * Provides intelligent step optimization, caching, and resource management
  */
-const crypto = require('crypto');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const crypto = require("crypto");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * Optimized sequential execution strategy
  */
 class OptimizedSequentialStrategy {
   constructor(options = {}) {
-    this.name = 'optimized_sequential';
+    this.name = "optimized_sequential";
     this.optimizationEnabled = options.optimizationEnabled !== false;
     this.cachingEnabled = options.cachingEnabled !== false;
     this.preWarmingEnabled = options.preWarmingEnabled !== false;
@@ -31,93 +31,99 @@ class OptimizedSequentialStrategy {
    */
   async execute(workflow, context, executionContext) {
     const startTime = Date.now();
-    
+
     try {
-      this.logger.info('OptimizedSequentialStrategy: Starting optimized execution', {
-        workflowName: workflow.getMetadata().name,
-        executionId: executionContext.id
-      });
+      this.logger.info(
+        "OptimizedSequentialStrategy: Starting optimized execution",
+        {
+          workflowName: workflow.getMetadata().name,
+          executionId: executionContext.id,
+        },
+      );
 
       // Get workflow steps
       const steps = this.getWorkflowSteps(workflow);
-      
+
       // Pre-optimize steps
-      const optimizedSteps = this.optimizationEnabled ? 
-        this.optimizeSteps(steps, context) : steps;
-      
-      this.logger.info('OptimizedSequentialStrategy: Steps optimized', {
+      const optimizedSteps = this.optimizationEnabled
+        ? this.optimizeSteps(steps, context)
+        : steps;
+
+      this.logger.info("OptimizedSequentialStrategy: Steps optimized", {
         originalSteps: steps.length,
         optimizedSteps: optimizedSteps.length,
-        optimizations: this.getAppliedOptimizations(optimizedSteps, steps)
+        optimizations: this.getAppliedOptimizations(optimizedSteps, steps),
       });
-      
+
       // Execute steps sequentially with optimization
       const results = [];
       for (let i = 0; i < optimizedSteps.length; i++) {
         const step = optimizedSteps[i];
-        
+
         // Pre-warm resources for next step
         if (this.preWarmingEnabled && i < optimizedSteps.length - 1) {
           this.preWarmNextStep(optimizedSteps[i + 1], context);
         }
-        
+
         // Execute step with optimization
         const result = await this.executeStep(step, context, executionContext);
         results.push(result);
-        
+
         // Early termination if step failed
         if (!result.success) {
-          this.logger.warn('OptimizedSequentialStrategy: Step failed, stopping execution', {
-            stepName: step.getMetadata().name,
-            error: result.error
-          });
+          this.logger.warn(
+            "OptimizedSequentialStrategy: Step failed, stopping execution",
+            {
+              stepName: step.getMetadata().name,
+              error: result.error,
+            },
+          );
           break;
         }
-        
+
         // Update context with step result
         context.set(`step_${i}_result`, result);
-        
+
         // Learn from step execution
         this.learnFromStepExecution(step, result, context);
       }
-      
+
       const duration = Date.now() - startTime;
-      
+
       const executionResult = {
-        success: results.every(r => r.success),
+        success: results.every((r) => r.success),
         strategy: this.name,
         duration,
         results,
         stepCount: steps.length,
         optimizedStepCount: optimizedSteps.length,
         optimizations: this.getAppliedOptimizations(optimizedSteps, steps),
-        cacheHits: results.filter(r => r.cached).length,
-        retryAttempts: results.reduce((sum, r) => sum + (r.attempts || 1), 0)
+        cacheHits: results.filter((r) => r.cached).length,
+        retryAttempts: results.reduce((sum, r) => sum + (r.attempts || 1), 0),
       };
 
-      this.logger.info('OptimizedSequentialStrategy: Execution completed', {
+      this.logger.info("OptimizedSequentialStrategy: Execution completed", {
         success: executionResult.success,
         duration,
         stepCount: steps.length,
         optimizedStepCount: optimizedSteps.length,
-        cacheHits: executionResult.cacheHits
+        cacheHits: executionResult.cacheHits,
       });
 
       return executionResult;
-      
     } catch (error) {
       const duration = Date.now() - startTime;
-      
-      this.logger.error('OptimizedSequentialStrategy: Execution failed', {
+
+      this.logger.error("OptimizedSequentialStrategy: Execution failed", {
         error: error.message,
-        duration
+        duration,
       });
-      
+
       return {
-        success: false,
+       
         strategy: this.name,
         error: error.message,
-        duration
+        duration,
       };
     }
   }
@@ -132,7 +138,7 @@ class OptimizedSequentialStrategy {
     if (workflow._steps) {
       return workflow._steps;
     }
-    
+
     // For other workflows, return single step
     return [workflow];
   }
@@ -149,13 +155,13 @@ class OptimizedSequentialStrategy {
     }
 
     // Apply step-level optimizations
-    let optimizedSteps = steps.map(step => this.optimizeStep(step, context));
-    
+    let optimizedSteps = steps.map((step) => this.optimizeStep(step, context));
+
     // Apply workflow-level optimizations
     optimizedSteps = this.combineSimilarSteps(optimizedSteps);
     optimizedSteps = this.reorderSteps(optimizedSteps);
     optimizedSteps = this.removeRedundantSteps(optimizedSteps);
-    
+
     return optimizedSteps;
   }
 
@@ -167,18 +173,18 @@ class OptimizedSequentialStrategy {
    */
   optimizeStep(step, context) {
     const metadata = step.getMetadata();
-    
+
     // Apply step-specific optimizations
     switch (metadata.type) {
-      case 'analysis':
+      case "analysis":
         return this.optimizeAnalysisStep(step, context);
-      case 'testing':
+      case "testing":
         return this.optimizeTestingStep(step, context);
-      case 'deployment':
+      case "deployment":
         return this.optimizeDeploymentStep(step, context);
-      case 'refactoring':
+      case "refactoring":
         return this.optimizeRefactoringStep(step, context);
-      case 'documentation':
+      case "documentation":
         return this.optimizeDocumentationStep(step, context);
       default:
         return step;
@@ -200,28 +206,28 @@ class OptimizedSequentialStrategy {
         if (this.cachingEnabled) {
           const cacheKey = this.generateCacheKey(step, ctx);
           const cachedResult = await this.getCachedResult(cacheKey);
-          
+
           if (cachedResult) {
             return {
               ...cachedResult,
-              cached: true
+              cached: true,
             };
           }
         }
-        
+
         // Execute step
         const result = await step.execute(ctx);
-        
+
         // Cache result if successful
         if (this.cachingEnabled && result.success) {
           const cacheKey = this.generateCacheKey(step, ctx);
           await this.cacheResult(cacheKey, result);
         }
-        
+
         return result;
-      }
+      },
     };
-    
+
     return optimizedStep;
   }
 
@@ -238,52 +244,55 @@ class OptimizedSequentialStrategy {
       execute: async (ctx) => {
         let lastError = null;
         const maxRetries = this.retryEnabled ? this.maxRetries : 0;
-        
+
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
           try {
             const result = await step.execute(ctx);
-            
+
             if (result.success) {
               return {
                 ...result,
-                attempts: attempt + 1
+                attempts: attempt + 1,
               };
             }
-            
+
             lastError = result.error;
-            
+
             // Don't retry on certain errors
             if (this.isNonRetryableError(result.error)) {
               break;
             }
-            
+
             // Wait before retry
             if (attempt < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * (attempt + 1)),
+              );
             }
-            
           } catch (error) {
             lastError = error.message;
-            
+
             if (this.isNonRetryableError(error.message)) {
               break;
             }
-            
+
             // Wait before retry
             if (attempt < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * (attempt + 1)),
+              );
             }
           }
         }
-        
+
         return {
-          success: false,
+         
           error: lastError,
-          attempts: maxRetries + 1
+          attempts: maxRetries + 1,
         };
-      }
+      },
     };
-    
+
     return optimizedStep;
   }
 
@@ -299,22 +308,22 @@ class OptimizedSequentialStrategy {
       ...step,
       execute: async (ctx) => {
         // Check if dry-run is enabled
-        const dryRun = ctx.get('dryRun') || false;
-        
+        const dryRun = ctx.get("dryRun") || false;
+
         if (dryRun) {
           // Simulate deployment
           const simulationResult = await this.simulateDeployment(step, ctx);
           return {
             ...simulationResult,
-            dryRun: true
+            dryRun: true,
           };
         }
-        
+
         // Execute actual deployment
         return await step.execute(ctx);
-      }
+      },
     };
-    
+
     return optimizedStep;
   }
 
@@ -331,10 +340,10 @@ class OptimizedSequentialStrategy {
       execute: async (ctx) => {
         // Create backup before refactoring
         const backupResult = await this.createBackup(ctx);
-        
+
         // Execute refactoring
         const result = await step.execute(ctx);
-        
+
         // Validate refactoring result
         if (result.success) {
           const validationResult = await this.validateRefactoring(ctx, result);
@@ -342,17 +351,17 @@ class OptimizedSequentialStrategy {
             // Restore from backup
             await this.restoreFromBackup(ctx, backupResult);
             return {
-              success: false,
-              error: 'Refactoring validation failed',
-              validationErrors: validationResult.errors
+             
+              error: "Refactoring validation failed",
+              validationErrors: validationResult.errors,
             };
           }
         }
-        
+
         return result;
-      }
+      },
     };
-    
+
     return optimizedStep;
   }
 
@@ -369,18 +378,21 @@ class OptimizedSequentialStrategy {
       execute: async (ctx) => {
         // Check if documentation template exists
         const template = await this.getDocumentationTemplate(ctx);
-        
+
         if (template) {
           // Use template for faster documentation generation
-          const result = await this.generateDocumentationFromTemplate(ctx, template);
+          const result = await this.generateDocumentationFromTemplate(
+            ctx,
+            template,
+          );
           return result;
         }
-        
+
         // Fallback to original step
         return await step.execute(ctx);
-      }
+      },
     };
-    
+
     return optimizedStep;
   }
 
@@ -431,13 +443,13 @@ class OptimizedSequentialStrategy {
 
     // Define step priority (lower number = higher priority)
     const stepPriority = {
-      'setup': 1,
-      'validation': 2,
-      'analysis': 3,
-      'processing': 4,
-      'testing': 5,
-      'deployment': 6,
-      'cleanup': 7
+      setup: 1,
+      validation: 2,
+      analysis: 3,
+      processing: 4,
+      testing: 5,
+      deployment: 6,
+      cleanup: 7,
     };
 
     // Sort steps by priority
@@ -487,11 +499,11 @@ class OptimizedSequentialStrategy {
 
     // Pre-load dependencies for next step
     const metadata = nextStep.getMetadata();
-    
+
     if (metadata.dependencies) {
       // Pre-load dependencies in background
       setImmediate(() => {
-        metadata.dependencies.forEach(dependency => {
+        metadata.dependencies.forEach((dependency) => {
           this.preloadDependency(dependency, context);
         });
       });
@@ -507,26 +519,24 @@ class OptimizedSequentialStrategy {
    */
   async executeStep(step, context, executionContext) {
     const startTime = Date.now();
-    
+
     try {
       const result = await step.execute(context);
-      
+
       return {
-        success: true,
         stepName: step.getMetadata().name,
         stepType: step.getMetadata().type,
         result,
         duration: Date.now() - startTime,
-        cached: result.cached || false
+        cached: result.cached || false,
       };
-      
     } catch (error) {
       return {
-        success: false,
+       
         stepName: step.getMetadata().name,
         stepType: step.getMetadata().type,
         error: error.message,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     }
   }
@@ -539,35 +549,35 @@ class OptimizedSequentialStrategy {
    */
   getAppliedOptimizations(optimizedSteps, originalSteps) {
     const optimizations = [];
-    
+
     // Check for step count reduction
     if (optimizedSteps.length < originalSteps.length) {
       optimizations.push({
-        type: 'step_reduction',
-        description: `Reduced steps from ${originalSteps.length} to ${optimizedSteps.length}`
+        type: "step_reduction",
+        description: `Reduced steps from ${originalSteps.length} to ${optimizedSteps.length}`,
       });
     }
-    
+
     // Check for caching optimizations
-    const cachedSteps = optimizedSteps.filter(step => step.cached);
+    const cachedSteps = optimizedSteps.filter((step) => step.cached);
     if (cachedSteps.length > 0) {
       optimizations.push({
-        type: 'caching',
-        description: `${cachedSteps.length} steps use cached results`
+        type: "caching",
+        description: `${cachedSteps.length} steps use cached results`,
       });
     }
-    
+
     // Check for step reordering
     if (optimizedSteps.length === originalSteps.length) {
       const reordered = this.hasStepReordering(originalSteps, optimizedSteps);
       if (reordered) {
         optimizations.push({
-          type: 'reordering',
-          description: 'Steps reordered for optimal execution'
+          type: "reordering",
+          description: "Steps reordered for optimal execution",
         });
       }
     }
-    
+
     return optimizations;
   }
 
@@ -581,17 +591,19 @@ class OptimizedSequentialStrategy {
     if (originalSteps.length !== optimizedSteps.length) {
       return false;
     }
-    
+
     for (let i = 0; i < originalSteps.length; i++) {
       const original = originalSteps[i];
       const optimized = optimizedSteps[i];
-      
-      if (original.getMetadata().name !== optimized.getMetadata().name ||
-          original.getMetadata().type !== optimized.getMetadata().type) {
+
+      if (
+        original.getMetadata().name !== optimized.getMetadata().name ||
+        original.getMetadata().type !== optimized.getMetadata().type
+      ) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -615,7 +627,7 @@ class OptimizedSequentialStrategy {
   hashContext(context) {
     // Simple hash for context
     const contextStr = JSON.stringify(context.getAll());
-    return crypto.createHash('md5').update(contextStr).digest('hex');
+    return crypto.createHash("md5").update(contextStr).digest("hex");
   }
 
   /**
@@ -628,12 +640,12 @@ class OptimizedSequentialStrategy {
     if (cached && Date.now() < cached.expiry) {
       return cached.result;
     }
-    
+
     // Remove expired cache entry
     if (cached) {
       this.cache.delete(cacheKey);
     }
-    
+
     return null;
   }
 
@@ -645,7 +657,7 @@ class OptimizedSequentialStrategy {
   async cacheResult(cacheKey, result) {
     this.cache.set(cacheKey, {
       result,
-      expiry: Date.now() + 3600000 // 1 hour TTL
+      expiry: Date.now() + 3600000, // 1 hour TTL
     });
   }
 
@@ -656,15 +668,15 @@ class OptimizedSequentialStrategy {
    */
   isNonRetryableError(error) {
     const nonRetryablePatterns = [
-      'permission denied',
-      'not found',
-      'invalid input',
-      'syntax error',
-      'validation failed'
+      "permission denied",
+      "not found",
+      "invalid input",
+      "syntax error",
+      "validation failed",
     ];
-    
-    return nonRetryablePatterns.some(pattern => 
-      error.toLowerCase().includes(pattern)
+
+    return nonRetryablePatterns.some((pattern) =>
+      error.toLowerCase().includes(pattern),
     );
   }
 
@@ -677,9 +689,8 @@ class OptimizedSequentialStrategy {
   async simulateDeployment(step, context) {
     // Simulate deployment without actually deploying
     return {
-      success: true,
       simulated: true,
-      message: 'Deployment simulation completed successfully'
+      message: "Deployment simulation completed successfully",
     };
   }
 
@@ -691,9 +702,8 @@ class OptimizedSequentialStrategy {
   async createBackup(context) {
     // Create backup of current state
     return {
-      success: true,
       backupId: `backup_${Date.now()}`,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -706,8 +716,7 @@ class OptimizedSequentialStrategy {
   async validateRefactoring(context, result) {
     // Validate refactoring changes
     return {
-      success: true,
-      errors: []
+      errors: [],
     };
   }
 
@@ -720,8 +729,7 @@ class OptimizedSequentialStrategy {
   async restoreFromBackup(context, backupResult) {
     // Restore from backup
     return {
-      success: true,
-      restoredFrom: backupResult.backupId
+      restoredFrom: backupResult.backupId,
     };
   }
 
@@ -744,9 +752,8 @@ class OptimizedSequentialStrategy {
   async generateDocumentationFromTemplate(context, template) {
     // Generate documentation using template
     return {
-      success: true,
       generated: true,
-      template: template.name
+      template: template.name,
     };
   }
 
@@ -757,7 +764,7 @@ class OptimizedSequentialStrategy {
    */
   preloadDependency(dependency, context) {
     // Implementation would preload specific dependency
-    this.logger.debug('Preloading dependency', { dependency });
+    this.logger.debug("Preloading dependency", { dependency });
   }
 
   /**
@@ -774,30 +781,29 @@ class OptimizedSequentialStrategy {
         description: `Combined ${steps.length} ${type} steps`,
         metadata: {
           originalSteps: steps.length,
-          combined: true
-        }
+          combined: true,
+        },
       }),
       execute: async (context) => {
         const results = [];
         for (const step of steps) {
           const result = await step.execute(context);
           results.push(result);
-          
+
           if (!result.success) {
             return {
-              success: false,
+             
               error: `Combined step failed: ${result.error}`,
-              results
+              results,
             };
           }
         }
-        
+
         return {
-          success: true,
           results,
-          combined: true
+          combined: true,
         };
-      }
+      },
     };
   }
 
@@ -809,13 +815,13 @@ class OptimizedSequentialStrategy {
    */
   learnFromStepExecution(step, result, context) {
     const stepKey = `${step.getMetadata().type}_${step.getMetadata().name}`;
-    
+
     this.executionHistory.set(stepKey, {
       result,
       timestamp: new Date(),
-      context: context.getAll()
+      context: context.getAll(),
     });
-    
+
     // Keep only last 100 executions per step
     if (this.executionHistory.size > 100) {
       const entries = Array.from(this.executionHistory.entries());
@@ -839,7 +845,7 @@ class OptimizedSequentialStrategy {
       cachingEnabled: this.cachingEnabled,
       preWarmingEnabled: this.preWarmingEnabled,
       retryEnabled: this.retryEnabled,
-      maxRetries: this.maxRetries
+      maxRetries: this.maxRetries,
     };
   }
 
@@ -858,4 +864,4 @@ class OptimizedSequentialStrategy {
   }
 }
 
-module.exports = OptimizedSequentialStrategy; 
+module.exports = OptimizedSequentialStrategy;

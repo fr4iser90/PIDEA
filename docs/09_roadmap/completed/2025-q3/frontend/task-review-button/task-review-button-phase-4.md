@@ -61,7 +61,6 @@ class TaskReviewService {
       this.logger.info('Task review workflow completed:', response.data);
       
       return {
-        success: true,
         data: response.data,
         message: `Review completed for ${response.data.completedTasks}/${response.data.totalTasks} tasks`
       };

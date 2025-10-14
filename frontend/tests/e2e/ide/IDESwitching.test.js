@@ -20,7 +20,6 @@ test.describe('IDE Switching E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
         })
       });
@@ -39,7 +38,6 @@ test.describe('IDE Switching E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: [
             { port: 9222, name: 'VS Code', status: 'running' },
             { port: 9223, name: 'Cursor', status: 'running' },
@@ -64,7 +62,6 @@ test.describe('IDE Switching E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
         })
       });
@@ -85,7 +82,6 @@ test.describe('IDE Switching E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
         })
       });
@@ -106,7 +102,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { 
               previousPort: 9222, 
               currentPort: 9223, 
@@ -119,7 +114,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -143,7 +137,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { currentPort: 9223, reason: 'manual' }
           })
         });
@@ -152,7 +145,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -177,7 +169,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { 
               previousPort: 9222, 
               currentPort: 9223, 
@@ -191,7 +182,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -215,7 +205,7 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 500,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: false,
+           
             error: 'Failed to switch IDE: Connection timeout'
           })
         });
@@ -224,7 +214,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -250,7 +239,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { currentPort: 9223, reason: 'manual' }
           })
         });
@@ -259,7 +247,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -299,7 +286,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { currentPort: 9223, reason: 'auto' }
           })
         });
@@ -308,7 +294,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -334,7 +319,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { 
               previousPort: 9222, 
               currentPort: 9223, 
@@ -348,7 +332,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -372,7 +355,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { 
               previousPort: 9222, 
               currentPort: 9223, 
@@ -386,7 +368,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -407,7 +388,6 @@ test.describe('IDE Switching E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: { currentPort: 9223, reason: 'manual' }
         })
       });
@@ -447,7 +427,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { 
               currentPort: 9223, 
               reason: 'manual',
@@ -461,7 +440,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });
@@ -485,7 +463,6 @@ test.describe('IDE Switching E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          success: true,
           data: { currentPort: 9223, reason: 'manual' }
         })
       });
@@ -511,7 +488,7 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 400,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: false,
+           
             error: 'Prerequisites not met',
             missingPrerequisites: ['target_ide_running', 'valid_connection']
           })
@@ -521,7 +498,6 @@ test.describe('IDE Switching E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             data: { port: 9222, name: 'VS Code', selectedAt: new Date().toISOString() }
           })
         });

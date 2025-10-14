@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class TestCorrection {
   constructor({
@@ -8,8 +8,8 @@ class TestCorrection {
     originalError,
     fixStrategy,
     fixApplied,
-    status = 'pending',
-    priority = 'normal',
+    status = "pending",
+    priority = "normal",
     complexity = 0,
     estimatedTime = 0,
     actualTime = 0,
@@ -19,7 +19,7 @@ class TestCorrection {
     updatedAt = new Date(),
     completedAt = null,
     metadata = {},
-    tags = []
+    tags = [],
   }) {
     this.id = id;
     this.testFile = testFile;
@@ -45,47 +45,47 @@ class TestCorrection {
 
   validate() {
     if (!this.testFile) {
-      throw new Error('Test file is required');
+      throw new Error("Test file is required");
     }
     if (!this.testName) {
-      throw new Error('Test name is required');
+      throw new Error("Test name is required");
     }
     if (!this.originalError) {
-      throw new Error('Original error is required');
+      throw new Error("Original error is required");
     }
     if (!this.fixStrategy) {
-      throw new Error('Fix strategy is required');
+      throw new Error("Fix strategy is required");
     }
   }
 
   // Status management
   isPending() {
-    return this.status === 'pending';
+    return this.status === "pending";
   }
 
   isInProgress() {
-    return this.status === 'in_progress';
+    return this.status === "in_progress";
   }
 
   isCompleted() {
-    return this.status === 'completed';
+    return this.status === "completed";
   }
 
   isFailed() {
-    return this.status === 'failed';
+    return this.status === "failed";
   }
 
   isSkipped() {
-    return this.status === 'skipped';
+    return this.status === "skipped";
   }
 
   // Priority management
   isHighPriority() {
-    return this.priority === 'high';
+    return this.priority === "high";
   }
 
   isCriticalPriority() {
-    return this.priority === 'critical';
+    return this.priority === "critical";
   }
 
   // Attempt management
@@ -101,30 +101,34 @@ class TestCorrection {
   // Status transitions
   start() {
     if (!this.isPending()) {
-      throw new Error(`Cannot start test correction with status: ${this.status}`);
+      throw new Error(
+        `Cannot start test correction with status: ${this.status}`,
+      );
     }
-    this.status = 'in_progress';
+    this.status = "in_progress";
     this.updatedAt = new Date();
   }
 
   complete(fixApplied) {
     if (!this.isInProgress()) {
-      throw new Error(`Cannot complete test correction with status: ${this.status}`);
+      throw new Error(
+        `Cannot complete test correction with status: ${this.status}`,
+      );
     }
-    this.status = 'completed';
+    this.status = "completed";
     this.fixApplied = fixApplied;
     this.completedAt = new Date();
     this.updatedAt = new Date();
   }
 
   fail(error) {
-    this.status = 'failed';
+    this.status = "failed";
     this.metadata.lastError = error;
     this.updatedAt = new Date();
   }
 
   skip(reason) {
-    this.status = 'skipped';
+    this.status = "skipped";
     this.metadata.skipReason = reason;
     this.updatedAt = new Date();
   }
@@ -168,7 +172,7 @@ class TestCorrection {
   }
 
   removeTag(tag) {
-    this.tags = this.tags.filter(t => t !== tag);
+    this.tags = this.tags.filter((t) => t !== tag);
     this.updatedAt = new Date();
   }
 
@@ -196,7 +200,7 @@ class TestCorrection {
       updatedAt: this.updatedAt,
       completedAt: this.completedAt,
       metadata: this.metadata,
-      tags: this.tags
+      tags: this.tags,
     };
   }
 
@@ -211,9 +215,9 @@ class TestCorrection {
       testName,
       originalError: error,
       fixStrategy,
-      priority: 'high',
+      priority: "high",
       complexity: TestCorrection.assessComplexity(error, fixStrategy),
-      estimatedTime: TestCorrection.estimateTime(fixStrategy)
+      estimatedTime: TestCorrection.estimateTime(fixStrategy),
     });
   }
 
@@ -221,12 +225,12 @@ class TestCorrection {
     return new TestCorrection({
       testFile,
       testName,
-      originalError: 'Legacy test pattern detected',
-      fixStrategy: 'migrate',
-      priority: 'medium',
+      originalError: "Legacy test pattern detected",
+      fixStrategy: "migrate",
+      priority: "medium",
       complexity: 50,
       estimatedTime: 300000, // 5 minutes
-      tags: ['legacy']
+      tags: ["legacy"],
     });
   }
 
@@ -234,63 +238,63 @@ class TestCorrection {
     return new TestCorrection({
       testFile,
       testName,
-      originalError: 'High complexity test detected',
-      fixStrategy: 'refactor',
-      priority: 'normal',
+      originalError: "High complexity test detected",
+      fixStrategy: "refactor",
+      priority: "normal",
       complexity,
-      estimatedTime: TestCorrection.estimateTime('refactor'),
-      tags: ['complex']
+      estimatedTime: TestCorrection.estimateTime("refactor"),
+      tags: ["complex"],
     });
   }
 
   // Utility methods
   static assessComplexity(error, fixStrategy) {
     let complexity = 0;
-    
+
     // Error complexity
-    if (error.includes('TypeError') || error.includes('ReferenceError')) {
+    if (error.includes("TypeError") || error.includes("ReferenceError")) {
       complexity += 20;
     }
-    if (error.includes('Cannot read properties')) {
+    if (error.includes("Cannot read properties")) {
       complexity += 30;
     }
-    if (error.includes('expect(received)')) {
+    if (error.includes("expect(received)")) {
       complexity += 15;
     }
-    
+
     // Strategy complexity
     switch (fixStrategy) {
-      case 'simple_fix':
+      case "simple_fix":
         complexity += 10;
         break;
-      case 'mock_fix':
+      case "mock_fix":
         complexity += 25;
         break;
-      case 'refactor':
+      case "refactor":
         complexity += 50;
         break;
-      case 'migrate':
+      case "migrate":
         complexity += 40;
         break;
-      case 'rewrite':
+      case "rewrite":
         complexity += 70;
         break;
     }
-    
+
     return Math.min(100, complexity);
   }
 
   static estimateTime(fixStrategy) {
     const timeEstimates = {
-      simple_fix: 60000,      // 1 minute
-      mock_fix: 120000,       // 2 minutes
-      refactor: 300000,       // 5 minutes
-      migrate: 600000,        // 10 minutes
-      rewrite: 900000         // 15 minutes
+      simple_fix: 60000, // 1 minute
+      mock_fix: 120000, // 2 minutes
+      refactor: 300000, // 5 minutes
+      migrate: 600000, // 10 minutes
+      rewrite: 900000, // 15 minutes
     };
-    
+
     return timeEstimates[fixStrategy] || 120000;
   }
 }
 
-module.exports = TestCorrection; 
+module.exports = TestCorrection;

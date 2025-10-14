@@ -3,29 +3,29 @@
  * Optimize caching strategies
  */
 
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 const config = {
-  name: 'cache_optimization',
-  version: '1.0.0',
-  description: 'Optimize caching strategies',
-  category: 'caching',
-  framework: 'Performance Management Framework',
-  dependencies: ['analysis', 'ide'],
+  name: "cache_optimization",
+  version: "1.0.0",
+  description: "Optimize caching strategies",
+  category: "caching",
+  framework: "Performance Management Framework",
+  dependencies: ["analysis", "ide"],
   settings: {
-    optimizationLevel: 'medium',
+    optimizationLevel: "medium",
     enableRedis: true,
-    outputFormat: 'json'
-  }
+    outputFormat: "json",
+  },
 };
 
 class CacheOptimizationStep {
   constructor() {
-    this.name = 'cache_optimization';
-    this.description = 'Optimize caching strategies';
-    this.category = 'caching';
-    this.dependencies = ['analysis', 'ide'];
-    this.logger = new ServiceLogger('CacheOptimizationStep');
+    this.name = "cache_optimization";
+    this.description = "Optimize caching strategies";
+    this.category = "caching";
+    this.dependencies = ["analysis", "ide"];
+    this.logger = new ServiceLogger("CacheOptimizationStep");
   }
 
   static getConfig() {
@@ -34,11 +34,12 @@ class CacheOptimizationStep {
 
   async execute(context = {}, options = {}) {
     try {
-      this.logger.info('💾 Starting cache optimization...');
-      
-      const optimizationLevel = options.optimizationLevel || config.settings.optimizationLevel;
+      this.logger.info("💾 Starting cache optimization...");
+
+      const optimizationLevel =
+        options.optimizationLevel || config.settings.optimizationLevel;
       const enableRedis = options.enableRedis || config.settings.enableRedis;
-      
+
       const result = {
         optimizationLevel,
         enableRedis,
@@ -46,36 +47,42 @@ class CacheOptimizationStep {
         optimization: {
           cacheHitRate: 0,
           optimizations: [],
-          recommendations: []
-        }
+          recommendations: [],
+        },
       };
 
       // Analyze current cache performance
       result.optimization.cacheHitRate = await this.analyzeCachePerformance();
-      
+
       // Apply optimizations
-      result.optimization.optimizations = await this.applyOptimizations(optimizationLevel, enableRedis);
-      
+      result.optimization.optimizations = await this.applyOptimizations(
+        optimizationLevel,
+        enableRedis,
+      );
+
       // Generate recommendations
-      result.optimization.recommendations = await this.generateRecommendations(result.optimization);
-      
-      this.logger.info(`✅ Cache optimization completed. Hit rate: ${result.optimization.cacheHitRate}%`);
-      
+      result.optimization.recommendations = await this.generateRecommendations(
+        result.optimization,
+      );
+
+      this.logger.info(
+        `✅ Cache optimization completed. Hit rate: ${result.optimization.cacheHitRate}%`,
+      );
+
       return {
-        success: true,
         data: result,
         metadata: {
           executionTime: Date.now() - context.startTime || 0,
           optimizationsApplied: result.optimization.optimizations.length,
-          recommendationsGenerated: result.optimization.recommendations.length
-        }
+          recommendationsGenerated: result.optimization.recommendations.length,
+        },
       };
     } catch (error) {
-      this.logger.error('❌ Cache optimization failed:', error.message);
+      this.logger.error("❌ Cache optimization failed:", error.message);
       return {
-        success: false,
+       
         error: error.message,
-        data: null
+        data: null,
       };
     }
   }
@@ -87,85 +94,87 @@ class CacheOptimizationStep {
 
   async applyOptimizations(level, enableRedis) {
     const optimizations = [];
-    
+
     if (enableRedis) {
       optimizations.push({
-        type: 'redis_cache',
-        description: 'Enable Redis caching',
-        impact: 'high'
+        type: "redis_cache",
+        description: "Enable Redis caching",
+        impact: "high",
       });
     }
-    
+
     switch (level) {
-      case 'low':
+      case "low":
         optimizations.push({
-          type: 'memory_cache',
-          description: 'Enable in-memory caching',
-          impact: 'medium'
+          type: "memory_cache",
+          description: "Enable in-memory caching",
+          impact: "medium",
         });
         break;
-      case 'medium':
+      case "medium":
         optimizations.push(
           {
-            type: 'memory_cache',
-            description: 'Enable in-memory caching',
-            impact: 'medium'
+            type: "memory_cache",
+            description: "Enable in-memory caching",
+            impact: "medium",
           },
           {
-            type: 'http_cache',
-            description: 'Enable HTTP caching',
-            impact: 'high'
-          }
+            type: "http_cache",
+            description: "Enable HTTP caching",
+            impact: "high",
+          },
         );
         break;
-      case 'high':
+      case "high":
         optimizations.push(
           {
-            type: 'memory_cache',
-            description: 'Enable in-memory caching',
-            impact: 'medium'
+            type: "memory_cache",
+            description: "Enable in-memory caching",
+            impact: "medium",
           },
           {
-            type: 'http_cache',
-            description: 'Enable HTTP caching',
-            impact: 'high'
+            type: "http_cache",
+            description: "Enable HTTP caching",
+            impact: "high",
           },
           {
-            type: 'query_cache',
-            description: 'Enable query caching',
-            impact: 'high'
-          }
+            type: "query_cache",
+            description: "Enable query caching",
+            impact: "high",
+          },
         );
         break;
     }
-    
+
     return optimizations;
   }
 
   async generateRecommendations(optimization) {
     const recommendations = [];
-    
+
     if (optimization.cacheHitRate < 80) {
       recommendations.push({
-        type: 'performance',
-        priority: 'high',
-        message: 'Low cache hit rate',
-        suggestion: 'Review cache strategy and increase cache size'
+        type: "performance",
+        priority: "high",
+        message: "Low cache hit rate",
+        suggestion: "Review cache strategy and increase cache size",
       });
     }
-    
+
     recommendations.push({
-      type: 'monitoring',
-      priority: 'medium',
-      message: 'Monitor cache performance',
-      suggestion: 'Set up cache hit rate monitoring'
+      type: "monitoring",
+      priority: "medium",
+      message: "Monitor cache performance",
+      suggestion: "Set up cache hit rate monitoring",
     });
-    
+
     return recommendations;
   }
 }
 
-module.exports = { 
-  config, 
-  execute: CacheOptimizationStep.prototype.execute.bind(new CacheOptimizationStep()) 
+module.exports = {
+  config,
+  execute: CacheOptimizationStep.prototype.execute.bind(
+    new CacheOptimizationStep(),
+  ),
 };

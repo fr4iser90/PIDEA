@@ -139,7 +139,6 @@ class GitWorkflowManager {
 
       // Record branch creation metrics
       await this.metrics.recordBranchCreation(task, {
-        success: true,
         branchName,
         strategy: 'unified',
         timestamp: new Date()
@@ -189,7 +188,6 @@ class GitWorkflowManager {
       }
 
       return {
-        success: true,
         validation,
         versionResult,
         changelogResult,
@@ -230,7 +228,6 @@ class VersionController {
       const versions = await this.versionManagement.getVersionHistory(limit, offset);
       
       res.json({
-        success: true,
         data: versions,
         pagination: {
           limit,
@@ -243,7 +240,7 @@ class VersionController {
         error: error.message
       });
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -260,7 +257,7 @@ class VersionController {
       
       if (!taskId) {
         return res.status(400).json({
-          success: false,
+         
           error: 'Task ID is required'
         });
       }
@@ -268,7 +265,6 @@ class VersionController {
       const result = await this.versionManagement.bumpVersion({ id: taskId }, bumpType);
       
       res.json({
-        success: true,
         data: result
       });
     } catch (error) {
@@ -276,7 +272,7 @@ class VersionController {
         error: error.message
       });
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -292,7 +288,6 @@ class VersionController {
       const currentVersion = await this.versionManagement.getCurrentVersion();
       
       res.json({
-        success: true,
         data: {
           version: currentVersion
         }
@@ -302,7 +297,7 @@ class VersionController {
         error: error.message
       });
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }

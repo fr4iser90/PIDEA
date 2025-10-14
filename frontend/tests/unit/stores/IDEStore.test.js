@@ -44,7 +44,6 @@ describe('IDEStore Extension', () => {
     it('should load project data for a workspace', async () => {
       const workspacePath = '/home/user/projects/PIDEA';
       const mockGitData = {
-        success: true,
         data: {
           status: {
             currentBranch: 'main',
@@ -55,7 +54,6 @@ describe('IDEStore Extension', () => {
         }
       };
       const mockAnalysisData = {
-        success: true,
         data: {
           status: {
             isRunning: false,
@@ -287,19 +285,15 @@ describe('IDEStore Extension', () => {
       const workspace2 = '/home/user/projects/OtherProject';
 
       const mockGitData1 = {
-        success: true,
         data: { status: { currentBranch: 'main' } }
       };
       const mockAnalysisData1 = {
-        success: true,
         data: { status: { isRunning: false } }
       };
       const mockGitData2 = {
-        success: true,
         data: { status: { currentBranch: 'develop' } }
       };
       const mockAnalysisData2 = {
-        success: true,
         data: { status: { isRunning: true } }
       };
 

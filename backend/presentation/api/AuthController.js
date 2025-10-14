@@ -1,12 +1,14 @@
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('AuthController');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("AuthController");
 
 class AuthController {
   constructor(dependencies = {}) {
     this.authApplicationService = dependencies.authApplicationService;
     if (!this.authApplicationService) {
-      throw new Error('AuthController requires authApplicationService dependency');
+      throw new Error(
+        "AuthController requires authApplicationService dependency",
+      );
     }
   }
 
@@ -15,17 +17,17 @@ class AuthController {
     try {
       const { email, password, username } = req.body;
       if (!email || !password) {
-        return res.badRequest('Email and password are required');
+        return res.badRequest("Email and password are required");
       }
 
       const userData = { email, password, username };
       const result = await this.authApplicationService.register(userData);
-      
-      res.created({ 
-        user: result.data 
+
+      res.created({
+        user: result.data,
       });
     } catch (error) {
-      logger.error('Registration error:', error);
+      logger.error("Registration error:", error);
       res.error(error.message, 500);
     }
   }
@@ -35,17 +37,17 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
-      logger.info('🔍 [AuthController] Login request received:', {
+      logger.info("🔍 [AuthController] Login request received:", {
         email: email,
         passwordLength: password ? password.length : 0,
         hasEmail: !!email,
-        hasPassword: !!password
+        hasPassword: !!password,
       });
 
       // Validate input
       if (!email || !password) {
-        logger.info('❌ [AuthController] Missing email or password');
-        return res.badRequest('Email and password are required');
+        logger.info("❌ [AuthController] Missing email or password");
+        return res.badRequest("Email and password are required");
       }
 
       // Authenticate user and create session
@@ -57,42 +59,48 @@ class AuthController {
           user: result.data.user,
           accessToken: result.data.session.accessToken,
           refreshToken: result.data.session.refreshToken,
-          expiresAt: result.data.session.expiresAt
-        }
+          expiresAt: result.data.session.expiresAt,
+        },
       };
 
-      logger.info('✅ [AuthController] Login successful, sending response:', {
+      logger.info("✅ [AuthController] Login successful, sending response:", {
         userId: responseData.data.user.id,
         userEmail: responseData.data.user.email,
         accessTokenLength: responseData.data.accessToken.length,
-        refreshTokenLength: responseData.data.refreshToken.length
+        refreshTokenLength: responseData.data.refreshToken.length,
       });
 
       // Set httpOnly cookies for security with cross-port support
       const cookieOptions = {
         httpOnly: false, // Set to false in development to allow JavaScript access for debugging
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         // Remove domain restriction to allow cross-port access in development
       };
 
-      logger.info('🔍 [AuthController] Setting cookies with options:', cookieOptions);
+      logger.info(
+        "🔍 [AuthController] Setting cookies with options:",
+        cookieOptions,
+      );
 
-      res.cookie('accessToken', result.data.session.accessToken, {
+      res.cookie("accessToken", result.data.session.accessToken, {
         ...cookieOptions,
-        maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
-      });
-      
-      res.cookie('refreshToken', result.data.session.refreshToken, {
-        ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge:
+          process.env.NODE_ENV === "development"
+            ? 2 * 60 * 60 * 1000
+            : 15 * 60 * 1000, // 2h dev, 15m prod
       });
 
-      logger.info('✅ [AuthController] Cookies set successfully');
+      res.cookie("refreshToken", result.data.session.refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      logger.info("✅ [AuthController] Cookies set successfully");
       res.success(responseData.data);
     } catch (error) {
-      logger.error('Login error:', error);
-      res.unauthorized('Invalid credentials');
+      logger.error("Login error:", error);
+      res.unauthorized("Invalid credentials");
     }
   }
 
@@ -101,44 +109,47 @@ class AuthController {
     try {
       // Get refresh token from cookies
       const refreshToken = req.cookies?.refreshToken;
-      
+
       if (!refreshToken) {
-        logger.info('❌ [AuthController] No refresh token found in cookies');
-        return res.badRequest('Refresh token is required');
+        logger.info("❌ [AuthController] No refresh token found in cookies");
+        return res.badRequest("Refresh token is required");
       }
 
       // Refresh authentication using application service with refresh token
       const result = await this.authApplicationService.refresh(refreshToken);
-      
+
       // Set new cookies with proper security settings and cross-port support
       const cookieOptions = {
         httpOnly: false, // Set to false in development to allow JavaScript access for debugging
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         // Remove domain restriction to allow cross-port access in development
       };
 
-      res.cookie('accessToken', result.data.session.accessToken, {
+      res.cookie("accessToken", result.data.session.accessToken, {
         ...cookieOptions,
-        maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
-      });
-      
-      res.cookie('refreshToken', result.data.session.refreshToken, {
-        ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge:
+          process.env.NODE_ENV === "development"
+            ? 2 * 60 * 60 * 1000
+            : 15 * 60 * 1000, // 2h dev, 15m prod
       });
 
-      logger.info('✅ [AuthController] Authentication refreshed successfully', {
+      res.cookie("refreshToken", result.data.session.refreshToken, {
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      logger.info("✅ [AuthController] Authentication refreshed successfully", {
         userId: result.data.user.id,
-        userEmail: result.data.user.email
+        userEmail: result.data.user.email,
       });
 
       res.success({
-          user: result.data.user
-        });
+        user: result.data.user,
+      });
     } catch (error) {
-      logger.error('❌ [AuthController] Refresh error:', error);
-      res.unauthorized('Authentication refresh failed');
+      logger.error("❌ [AuthController] Refresh error:", error);
+      res.unauthorized("Authentication refresh failed");
     }
   }
 
@@ -148,46 +159,51 @@ class AuthController {
       // Try to logout using application service (if user is authenticated)
       try {
         await this.authApplicationService.logout();
-        logger.info('✅ [AuthController] User logout successful');
+        logger.info("✅ [AuthController] User logout successful");
       } catch (authError) {
         // If authentication fails, that's OK - we still want to clear cookies
-        logger.info('🔍 [AuthController] User not authenticated, clearing cookies only');
+        logger.info(
+          "🔍 [AuthController] User not authenticated, clearing cookies only",
+        );
       }
 
       // ALWAYS clear cookies, regardless of authentication status
       const cookieOptions = {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         // Remove domain restriction to allow cross-port access in development
       };
 
-      res.clearCookie('accessToken', cookieOptions);
-      res.clearCookie('refreshToken', cookieOptions);
-      
-      logger.info('✅ [AuthController] Cookies cleared successfully');
-      
-      res.success({message: 'Logged out successfully'});
+      res.clearCookie("accessToken", cookieOptions);
+      res.clearCookie("refreshToken", cookieOptions);
+
+      logger.info("✅ [AuthController] Cookies cleared successfully");
+
+      res.success({ message: "Logged out successfully" });
     } catch (error) {
-      logger.error('❌ [AuthController] Logout error:', error);
-      
+      logger.error("❌ [AuthController] Logout error:", error);
+
       // Even if there's an error, try to clear cookies
       try {
         const cookieOptions = {
           httpOnly: false,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           // Remove domain restriction to allow cross-port access in development
         };
 
-        res.clearCookie('accessToken', cookieOptions);
-        res.clearCookie('refreshToken', cookieOptions);
-        logger.info('✅ [AuthController] Cookies cleared despite error');
+        res.clearCookie("accessToken", cookieOptions);
+        res.clearCookie("refreshToken", cookieOptions);
+        logger.info("✅ [AuthController] Cookies cleared despite error");
       } catch (cookieError) {
-        logger.error('❌ [AuthController] Failed to clear cookies:', cookieError);
+        logger.error(
+          "❌ [AuthController] Failed to clear cookies:",
+          cookieError,
+        );
       }
-      
-      res.error('Logout failed', 500);
+
+      res.error("Logout failed", 500);
     }
   }
 
@@ -195,98 +211,122 @@ class AuthController {
   async getProfile(req, res) {
     try {
       if (!req.user) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
-      const result = await this.authApplicationService.getUserProfile(req.user.id);
-      
+      const result = await this.authApplicationService.getUserProfile(
+        req.user.id,
+      );
+
       res.success({
-          user: result.data.user
-        });
+        user: result.data.user,
+      });
     } catch (error) {
-      logger.error('Get profile error:', error);
-      res.error('Failed to get profile', 500);
+      logger.error("Get profile error:", error);
+      res.error("Failed to get profile", 500);
     }
   }
 
   // GET /api/auth/validate
   async validateToken(req, res) {
     try {
-      logger.info('🔍 [AuthController] Token validation request received');
-      logger.info('🔍 [AuthController] Cookies received:', req.cookies);
-      
+      logger.info("🔍 [AuthController] Token validation request received");
+      logger.info("🔍 [AuthController] Cookies received:", req.cookies);
+
       // Check for cookies directly since this is a public route
       const accessToken = req.cookies?.accessToken;
       const refreshToken = req.cookies?.refreshToken;
-      
-      logger.info('🔍 [AuthController] Extracted tokens:', {
+
+      logger.info("🔍 [AuthController] Extracted tokens:", {
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
-        accessTokenLength: accessToken ? accessToken.length : 0
+        accessTokenLength: accessToken ? accessToken.length : 0,
       });
-      
+
       if (!accessToken && !refreshToken) {
-        logger.info('❌ [AuthController] No authentication tokens found in cookies');
-        return res.unauthorized('No valid session found', {code: 'SESSION_EXPIRED'
+        logger.info(
+          "❌ [AuthController] No authentication tokens found in cookies",
+        );
+        return res.unauthorized("No valid session found", {
+          code: "SESSION_EXPIRED",
         });
       }
 
       // Try to validate access token first
       if (accessToken) {
         try {
-          const result = await this.authApplicationService.validateAccessToken(accessToken);
+          const result =
+            await this.authApplicationService.validateAccessToken(accessToken);
           if (result.success) {
-            logger.info('✅ [AuthController] Access token validation successful');
+            logger.info(
+              "✅ [AuthController] Access token validation successful",
+            );
             return res.success({
-                user: result.data.user
-              });
+              user: result.data.user,
+            });
           }
         } catch (error) {
-          logger.debug('❌ [AuthController] Access token validation failed, trying refresh token');
+          logger.debug(
+            "❌ [AuthController] Access token validation failed, trying refresh token",
+          );
         }
       }
 
       // Try to refresh token if access token validation failed
       if (refreshToken) {
         try {
-          logger.info('🔄 [AuthController] Attempting to refresh token...');
-          const result = await this.authApplicationService.refresh(refreshToken);
+          logger.info("🔄 [AuthController] Attempting to refresh token...");
+          const result =
+            await this.authApplicationService.refresh(refreshToken);
           if (result.success) {
             // Set new cookies
             const cookieOptions = {
               httpOnly: false,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+              secure: process.env.NODE_ENV === "production",
+              sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
               // Remove domain restriction to allow cross-port access in development
             };
 
-            res.cookie('accessToken', result.data.session.accessToken, {
+            res.cookie("accessToken", result.data.session.accessToken, {
               ...cookieOptions,
-              maxAge: process.env.NODE_ENV === 'development' ? 2 * 60 * 60 * 1000 : 15 * 60 * 1000 // 2h dev, 15m prod
-            });
-            
-            res.cookie('refreshToken', result.data.session.refreshToken, {
-              ...cookieOptions,
-              maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+              maxAge:
+                process.env.NODE_ENV === "development"
+                  ? 2 * 60 * 60 * 1000
+                  : 15 * 60 * 1000, // 2h dev, 15m prod
             });
 
-            logger.info('✅ [AuthController] Token refreshed and validated successfully');
+            res.cookie("refreshToken", result.data.session.refreshToken, {
+              ...cookieOptions,
+              maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
+
+            logger.info(
+              "✅ [AuthController] Token refreshed and validated successfully",
+            );
             return res.success({
-                user: result.data.user
-              });
+              user: result.data.user,
+            });
           }
         } catch (error) {
-          logger.debug('❌ [AuthController] Refresh token validation failed:', error.message);
+          logger.debug(
+            "❌ [AuthController] Refresh token validation failed:",
+            error.message,
+          );
         }
       }
 
       // All validation attempts failed
-      logger.info('❌ [AuthController] All authentication attempts failed');
-      return res.unauthorized('No valid session found', {code: 'SESSION_EXPIRED'
+      logger.info("❌ [AuthController] All authentication attempts failed");
+      return res.unauthorized("No valid session found", {
+        code: "SESSION_EXPIRED",
       });
     } catch (error) {
-      logger.error('❌ [AuthController] Authentication validation error:', error);
-      res.unauthorized('Authentication validation failed', {code: 'VALIDATION_ERROR'
+      logger.error(
+        "❌ [AuthController] Authentication validation error:",
+        error,
+      );
+      res.unauthorized("Authentication validation failed", {
+        code: "VALIDATION_ERROR",
       });
     }
   }
@@ -295,35 +335,40 @@ class AuthController {
   async updateProfile(req, res) {
     try {
       if (!req.user) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
       const { email, currentPassword, newPassword } = req.body;
 
       // Validate required fields for password change
       if (newPassword && !currentPassword) {
-        return res.badRequest('Current password is required to change password');
+        return res.badRequest(
+          "Current password is required to change password",
+        );
       }
 
       const profileData = { email, currentPassword, newPassword };
-      const result = await this.authApplicationService.updateUserProfile(req.user.id, profileData);
+      const result = await this.authApplicationService.updateUserProfile(
+        req.user.id,
+        profileData,
+      );
 
       res.success({
-          user: result.data.user
-        });
+        user: result.data.user,
+      });
     } catch (error) {
-      logger.error('Update profile error:', error);
-      
+      logger.error("Update profile error:", error);
+
       // Handle specific error types
-      if (error.message === 'Email already in use') {
-        return res.conflict('Email already in use');
+      if (error.message === "Email already in use") {
+        return res.conflict("Email already in use");
       }
-      
-      if (error.message === 'Current password is incorrect') {
-        return res.badRequest('Current password is incorrect');
+
+      if (error.message === "Current password is incorrect") {
+        return res.badRequest("Current password is incorrect");
       }
-      
-      res.error('Failed to update profile', 500);
+
+      res.error("Failed to update profile", 500);
     }
   }
 
@@ -331,19 +376,21 @@ class AuthController {
   async getSessions(req, res) {
     try {
       if (!req.user) {
-        return res.unauthorized('Authentication required');
+        return res.unauthorized("Authentication required");
       }
 
-      const result = await this.authApplicationService.getUserSessions(req.user.id);
+      const result = await this.authApplicationService.getUserSessions(
+        req.user.id,
+      );
 
       res.success({
-          sessions: result.data.sessions
-        });
+        sessions: result.data.sessions,
+      });
     } catch (error) {
-      logger.error('Get sessions error:', error);
-      res.error('Failed to get sessions', 500);
+      logger.error("Get sessions error:", error);
+      res.error("Failed to get sessions", 500);
     }
   }
 }
 
-module.exports = AuthController; 
+module.exports = AuthController;

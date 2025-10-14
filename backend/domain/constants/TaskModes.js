@@ -5,25 +5,25 @@
 
 const taskModes = {
   // Core task modes
-  REFACTORING: 'refactoring',
-  TESTING: 'testing', 
-  ANALYSIS: 'analysis',
-  FEATURE: 'feature',
-  BUGFIX: 'bugfix',
-  DOCUMENTATION: 'documentation',
-  MANUAL: 'manual',
-  OPTIMIZATION: 'optimization',
-  SECURITY: 'security',
-  GENERIC: 'generic',
+  REFACTORING: "refactoring",
+  TESTING: "testing",
+  ANALYSIS: "analysis",
+  FEATURE: "feature",
+  BUGFIX: "bugfix",
+  DOCUMENTATION: "documentation",
+  MANUAL: "manual",
+  OPTIMIZATION: "optimization",
+  SECURITY: "security",
+  GENERIC: "generic",
 
   // Special task modes
-  TASK: 'task',
-  TASK_REVIEW: 'task-review',
-  TASK_CHECK_STATE: 'task-check-state',
-  WORKFLOW_EXECUTION: 'workflow-execution',
-  BRANCH_CREATION: 'branch-creation',
-  WORKFLOW_COMPLETION: 'workflow-completion',
-  PULL_REQUEST_CREATION: 'pull-request-creation',
+  TASK: "task",
+  TASK_REVIEW: "task-review",
+  TASK_CHECK_STATE: "task-check-state",
+  WORKFLOW_EXECUTION: "workflow-execution",
+  BRANCH_CREATION: "branch-creation",
+  WORKFLOW_COMPLETION: "workflow-completion",
+  PULL_REQUEST_CREATION: "pull-request-creation",
 
   // Get all known types as array
   getAllTypes() {
@@ -39,7 +39,7 @@ const taskModes = {
       this.SECURITY,
       this.GENERIC,
       this.TASK_REVIEW,
-      this.TASK_CHECK_STATE
+      this.TASK_CHECK_STATE,
     ];
   },
 
@@ -56,33 +56,36 @@ const taskModes = {
   // Get task mode from workflow name
   getModeFromName(workflowName) {
     if (!workflowName) return this.GENERIC;
-    
+
     const name = workflowName.toLowerCase();
-    
-    if (name.includes('task-review') || name.includes('task_review')) {
+
+    if (name.includes("task-review") || name.includes("task_review")) {
       return this.TASK_REVIEW;
-    } else if (name.includes('task-check-state') || name.includes('check-state')) {
+    } else if (
+      name.includes("task-check-state") ||
+      name.includes("check-state")
+    ) {
       return this.TASK_CHECK_STATE;
-    } else if (name.includes('comprehensive') || name.includes('analysis')) {
+    } else if (name.includes("comprehensive") || name.includes("analysis")) {
       return this.ANALYSIS;
-    } else if (name.includes('refactor')) {
+    } else if (name.includes("refactor")) {
       return this.REFACTORING;
-    } else if (name.includes('test')) {
+    } else if (name.includes("test")) {
       return this.TESTING;
-    } else if (name.includes('feature')) {
+    } else if (name.includes("feature")) {
       return this.FEATURE;
-    } else if (name.includes('bug')) {
+    } else if (name.includes("bug")) {
       return this.BUGFIX;
-    } else if (name.includes('security')) {
+    } else if (name.includes("security")) {
       return this.SECURITY;
-    } else if (name.includes('performance') || name.includes('optimization')) {
+    } else if (name.includes("performance") || name.includes("optimization")) {
       return this.OPTIMIZATION;
-    } else if (name.includes('documentation') || name.includes('docs')) {
+    } else if (name.includes("documentation") || name.includes("docs")) {
       return this.DOCUMENTATION;
     }
-    
+
     return this.GENERIC;
-  }
+  },
 };
 
 module.exports = taskModes;

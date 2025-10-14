@@ -1,6 +1,6 @@
 /**
  * HandlerResult - Result of handler execution
- * 
+ *
  * This class represents the result of handler execution, including
  * success status, result data, error information, and metadata.
  * It follows the same patterns as the existing workflow result classes.
@@ -109,7 +109,9 @@ class HandlerResult {
    * @returns {*} Metadata value or default
    */
   getMetadataValue(key, defaultValue = null) {
-    return this.metadata.hasOwnProperty(key) ? this.metadata[key] : defaultValue;
+    return this.metadata.hasOwnProperty(key)
+      ? this.metadata[key]
+      : defaultValue;
   }
 
   /**
@@ -150,7 +152,7 @@ class HandlerResult {
       duration: this.duration,
       formattedDuration: this.getFormattedDuration(),
       timestamp: this.timestamp,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -174,7 +176,7 @@ class HandlerResult {
       duration: this.getFormattedDuration(),
       hasError: this.hasError(),
       errorMessage: this.getErrorMessage(),
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -190,8 +192,7 @@ class HandlerResult {
    */
   static success(data = {}) {
     return new HandlerResult({
-      success: true,
-      ...data
+      ...data,
     });
   }
 
@@ -207,9 +208,9 @@ class HandlerResult {
    */
   static error(error, data = {}) {
     return new HandlerResult({
-      success: false,
+     
       error,
-      ...data
+      ...data,
     });
   }
 
@@ -224,9 +225,9 @@ class HandlerResult {
    */
   static timeout(data = {}) {
     return new HandlerResult({
-      success: false,
-      error: 'Handler execution timed out',
-      ...data
+     
+      error: "Handler execution timed out",
+      ...data,
     });
   }
 
@@ -241,11 +242,11 @@ class HandlerResult {
    */
   static cancelled(data = {}) {
     return new HandlerResult({
-      success: false,
-      error: 'Handler execution was cancelled',
-      ...data
+     
+      error: "Handler execution was cancelled",
+      ...data,
     });
   }
 }
 
-module.exports = HandlerResult; 
+module.exports = HandlerResult;

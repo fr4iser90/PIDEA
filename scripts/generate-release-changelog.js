@@ -35,7 +35,7 @@ class CompactReleaseGenerator {
 
       if (commits.length === 0) {
         console.log(colors.yellow('⚠️  No commits found between these versions.'));
-        return { success: true, features: [] };
+        return { features: [] };
       }
 
       // Analyze for compact features
@@ -65,7 +65,6 @@ class CompactReleaseGenerator {
       console.log(colors.gray(`*Generated from ${commits.length} commits*`));
 
       return {
-        success: true,
         features,
         totalCommits: commits.length
       };

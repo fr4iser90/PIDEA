@@ -2,7 +2,7 @@
  * WorkflowMetadata - Flexible metadata management for workflows
  * Provides tags, labels, schema validation, and custom validators
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class WorkflowMetadata {
   constructor(
@@ -13,7 +13,7 @@ class WorkflowMetadata {
     schema = null,
     validators = [],
     createdAt = new Date(),
-    updatedAt = new Date()
+    updatedAt = new Date(),
   ) {
     this._id = id;
     this._data = { ...data };
@@ -29,15 +29,33 @@ class WorkflowMetadata {
   }
 
   // Getters
-  get id() { return this._id; }
-  get data() { return { ...this._data }; }
-  get tags() { return [...this._tags]; }
-  get labels() { return { ...this._labels }; }
-  get schema() { return this._schema; }
-  get validators() { return [...this._validators]; }
-  get createdAt() { return new Date(this._createdAt); }
-  get updatedAt() { return new Date(this._updatedAt); }
-  get version() { return this._version; }
+  get id() {
+    return this._id;
+  }
+  get data() {
+    return { ...this._data };
+  }
+  get tags() {
+    return [...this._tags];
+  }
+  get labels() {
+    return { ...this._labels };
+  }
+  get schema() {
+    return this._schema;
+  }
+  get validators() {
+    return [...this._validators];
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
+  get updatedAt() {
+    return new Date(this._updatedAt);
+  }
+  get version() {
+    return this._version;
+  }
 
   // Data operations
   setData(key, value) {
@@ -50,7 +68,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -64,7 +82,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -79,7 +97,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -107,14 +125,14 @@ class WorkflowMetadata {
         this._schema,
         this._validators,
         this._createdAt,
-        new Date()
+        new Date(),
       );
     }
     return this;
   }
 
   removeTag(tag) {
-    const newTags = this._tags.filter(t => t !== tag);
+    const newTags = this._tags.filter((t) => t !== tag);
     return new WorkflowMetadata(
       this._id,
       this._data,
@@ -123,7 +141,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -132,7 +150,7 @@ class WorkflowMetadata {
   }
 
   getTagsByPrefix(prefix) {
-    return this._tags.filter(tag => tag.startsWith(prefix));
+    return this._tags.filter((tag) => tag.startsWith(prefix));
   }
 
   // Label operations
@@ -146,7 +164,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -160,7 +178,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -175,7 +193,7 @@ class WorkflowMetadata {
       this._schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -207,7 +225,7 @@ class WorkflowMetadata {
       schema,
       this._validators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -219,24 +237,24 @@ class WorkflowMetadata {
     const errors = [];
     try {
       // Basic schema validation - can be extended with JSON Schema or similar
-      if (typeof this._schema === 'object') {
+      if (typeof this._schema === "object") {
         for (const [key, rules] of Object.entries(this._schema)) {
           if (rules.required && !this.hasData(key)) {
             errors.push({
               field: key,
               message: `Required field '${key}' is missing`,
-              code: 'REQUIRED_FIELD_MISSING'
+              code: "REQUIRED_FIELD_MISSING",
             });
           }
 
           if (this.hasData(key)) {
             const value = this.getData(key);
-            
+
             if (rules.type && typeof value !== rules.type) {
               errors.push({
                 field: key,
                 message: `Field '${key}' must be of type '${rules.type}'`,
-                code: 'INVALID_TYPE'
+                code: "INVALID_TYPE",
               });
             }
 
@@ -244,7 +262,7 @@ class WorkflowMetadata {
               errors.push({
                 field: key,
                 message: `Field '${key}' must be at least ${rules.minLength} characters`,
-                code: 'MIN_LENGTH_VIOLATION'
+                code: "MIN_LENGTH_VIOLATION",
               });
             }
 
@@ -252,7 +270,7 @@ class WorkflowMetadata {
               errors.push({
                 field: key,
                 message: `Field '${key}' must be at most ${rules.maxLength} characters`,
-                code: 'MAX_LENGTH_VIOLATION'
+                code: "MAX_LENGTH_VIOLATION",
               });
             }
 
@@ -260,7 +278,7 @@ class WorkflowMetadata {
               errors.push({
                 field: key,
                 message: `Field '${key}' does not match required pattern`,
-                code: 'PATTERN_MISMATCH'
+                code: "PATTERN_MISMATCH",
               });
             }
           }
@@ -268,15 +286,15 @@ class WorkflowMetadata {
       }
     } catch (error) {
       errors.push({
-        field: 'schema',
+        field: "schema",
         message: `Schema validation error: ${error.message}`,
-        code: 'SCHEMA_VALIDATION_ERROR'
+        code: "SCHEMA_VALIDATION_ERROR",
       });
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -291,12 +309,12 @@ class WorkflowMetadata {
       this._schema,
       newValidators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
   removeValidator(validatorId) {
-    const newValidators = this._validators.filter(v => v.id !== validatorId);
+    const newValidators = this._validators.filter((v) => v.id !== validatorId);
     return new WorkflowMetadata(
       this._id,
       this._data,
@@ -305,7 +323,7 @@ class WorkflowMetadata {
       this._schema,
       newValidators,
       this._createdAt,
-      new Date()
+      new Date(),
     );
   }
 
@@ -313,7 +331,7 @@ class WorkflowMetadata {
     const results = {
       isValid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     // Schema validation
@@ -326,7 +344,7 @@ class WorkflowMetadata {
     // Custom validators
     for (const validator of this._validators) {
       try {
-        if (typeof validator.validate === 'function') {
+        if (typeof validator.validate === "function") {
           const validationResult = await validator.validate(this);
           if (!validationResult.isValid) {
             results.isValid = false;
@@ -339,10 +357,10 @@ class WorkflowMetadata {
       } catch (error) {
         results.isValid = false;
         results.errors.push({
-          field: 'validator',
+          field: "validator",
           message: `Validator error: ${error.message}`,
-          code: 'VALIDATOR_ERROR',
-          validatorId: validator.id
+          code: "VALIDATOR_ERROR",
+          validatorId: validator.id,
         });
       }
     }
@@ -357,13 +375,15 @@ class WorkflowMetadata {
 
     // Search in data
     for (const [key, value] of Object.entries(this._data)) {
-      if (key.toLowerCase().includes(searchTerm) || 
-          String(value).toLowerCase().includes(searchTerm)) {
+      if (
+        key.toLowerCase().includes(searchTerm) ||
+        String(value).toLowerCase().includes(searchTerm)
+      ) {
         results.push({
-          type: 'data',
+          type: "data",
           key,
           value,
-          match: key.toLowerCase().includes(searchTerm) ? 'key' : 'value'
+          match: key.toLowerCase().includes(searchTerm) ? "key" : "value",
         });
       }
     }
@@ -372,22 +392,24 @@ class WorkflowMetadata {
     for (const tag of this._tags) {
       if (tag.toLowerCase().includes(searchTerm)) {
         results.push({
-          type: 'tag',
+          type: "tag",
           value: tag,
-          match: 'tag'
+          match: "tag",
         });
       }
     }
 
     // Search in labels
     for (const [key, value] of Object.entries(this._labels)) {
-      if (key.toLowerCase().includes(searchTerm) || 
-          String(value).toLowerCase().includes(searchTerm)) {
+      if (
+        key.toLowerCase().includes(searchTerm) ||
+        String(value).toLowerCase().includes(searchTerm)
+      ) {
         results.push({
-          type: 'label',
+          type: "label",
           key,
           value,
-          match: key.toLowerCase().includes(searchTerm) ? 'key' : 'value'
+          match: key.toLowerCase().includes(searchTerm) ? "key" : "value",
         });
       }
     }
@@ -396,12 +418,12 @@ class WorkflowMetadata {
   }
 
   filterByTags(tags) {
-    return tags.every(tag => this.hasTag(tag));
+    return tags.every((tag) => this.hasTag(tag));
   }
 
   filterByLabels(labels) {
-    return Object.entries(labels).every(([key, value]) => 
-      this.getLabel(key) === value
+    return Object.entries(labels).every(
+      ([key, value]) => this.getLabel(key) === value,
     );
   }
 
@@ -416,34 +438,38 @@ class WorkflowMetadata {
       validatorCount: this._validators.length,
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
-      version: this._version
+      version: this._version,
     };
   }
 
   isEmpty() {
-    return Object.keys(this._data).length === 0 && this._tags.length === 0 && Object.keys(this._labels).length === 0;
+    return (
+      Object.keys(this._data).length === 0 &&
+      this._tags.length === 0 &&
+      Object.keys(this._labels).length === 0
+    );
   }
   size() {
     return {
       data: Object.keys(this._data).length,
       tags: this._tags.length,
-      labels: Object.keys(this._labels).length
+      labels: Object.keys(this._labels).length,
     };
   }
 
   // Validation
   _validate() {
-    if (this._schema && typeof this._schema !== 'object') {
-      throw new Error('Schema must be an object');
+    if (this._schema && typeof this._schema !== "object") {
+      throw new Error("Schema must be an object");
     }
 
     if (!Array.isArray(this._validators)) {
-      throw new Error('Validators must be an array');
+      throw new Error("Validators must be an array");
     }
 
     for (const validator of this._validators) {
-      if (typeof validator.validate !== 'function') {
-        throw new Error('Each validator must have a validate function');
+      if (typeof validator.validate !== "function") {
+        throw new Error("Each validator must have a validate function");
       }
     }
   }
@@ -459,7 +485,7 @@ class WorkflowMetadata {
       validators: this._validators,
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
-      version: this._version
+      version: this._version,
     };
   }
 
@@ -472,7 +498,7 @@ class WorkflowMetadata {
       data.schema,
       data.validators,
       new Date(data.createdAt),
-      new Date(data.updatedAt)
+      new Date(data.updatedAt),
     );
   }
 
@@ -485,9 +511,14 @@ class WorkflowMetadata {
     return new WorkflowMetadata(uuidv4(), data, tags, labels, schema);
   }
 
-  static createWithValidators(data = {}, validators = [], tags = [], labels = {}) {
+  static createWithValidators(
+    data = {},
+    validators = [],
+    tags = [],
+    labels = {},
+  ) {
     return new WorkflowMetadata(uuidv4(), data, tags, labels, null, validators);
   }
 }
 
-module.exports = WorkflowMetadata; 
+module.exports = WorkflowMetadata;

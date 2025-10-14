@@ -1,13 +1,12 @@
-
 /**
  * Frameworks Module - Domain Layer
  * Exports framework system components
  */
 
-const FrameworkRegistry = require('./FrameworkRegistry');
-const FrameworkBuilder = require('./FrameworkBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const FrameworkRegistry = require("./FrameworkRegistry");
+const FrameworkBuilder = require("./FrameworkBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 // Create singleton instances
 const frameworkRegistry = new FrameworkRegistry();
@@ -21,13 +20,13 @@ async function initializeFrameworks(configs = []) {
   try {
     // Load framework configurations from infrastructure layer
     await frameworkRegistry.loadFrameworkConfigs(configs);
-    
+
     return {
       registry: frameworkRegistry,
-      builder: frameworkBuilder
+      builder: frameworkBuilder,
     };
   } catch (error) {
-    logger.error('❌ Failed to initialize framework system:', error.message);
+    logger.error("❌ Failed to initialize framework system:", error.message);
     throw error;
   }
 }
@@ -52,7 +51,7 @@ function getFrameworkBuilder() {
  * @param {Object} config - Framework configuration
  * @param {string} category - Framework category
  */
-async function registerFramework(name, config, category = 'general') {
+async function registerFramework(name, config, category = "general") {
   return await frameworkRegistry.registerFramework(name, config, category);
 }
 
@@ -86,7 +85,7 @@ function getFrameworksByCategory(category) {
 function getFrameworkStats() {
   return {
     registry: frameworkRegistry.getStats(),
-    cache: frameworkBuilder.getCacheStats()
+    cache: frameworkBuilder.getCacheStats(),
   };
 }
 
@@ -94,24 +93,24 @@ module.exports = {
   // Core components
   FrameworkRegistry,
   FrameworkBuilder,
-  
+
   // Singleton instances
   frameworkRegistry,
   frameworkBuilder,
-  
+
   // Initialization
   initializeFrameworks,
-  
+
   // Registry functions
   getFrameworkRegistry,
   registerFramework,
   getAllFrameworks,
   getFrameworksByCategory,
-  
+
   // Builder functions
   getFrameworkBuilder,
   buildFramework,
-  
+
   // Statistics
-  getFrameworkStats
-}; 
+  getFrameworkStats,
+};

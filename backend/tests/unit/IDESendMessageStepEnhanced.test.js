@@ -3,43 +3,43 @@
  * Tests for the enhanced IDE Send Message Step with feature control
  */
 
-const ideSendMessageEnhancedModule = require('@domain/steps/categories/ide/ide_send_message_enhanced');
+const ideSendMessageEnhancedModule = require("@domain/steps/categories/ide/ide_send_message_enhanced");
 
 // Mock dependencies
 const mockIDEService = {
-  sendMessage: jest.fn()
+  sendMessage: jest.fn(),
 };
 
 const mockChatService = {
   detectIntent: jest.fn(),
   calculateConfidence: jest.fn(),
   improveResponse: jest.fn(),
-  generateSuggestions: jest.fn()
+  generateSuggestions: jest.fn(),
 };
 
 const mockEventBus = {
-  publish: jest.fn()
+  publish: jest.fn(),
 };
 
 const mockAnalysisService = {
   analyzeContext: jest.fn(),
-  optimizePerformance: jest.fn()
+  optimizePerformance: jest.fn(),
 };
 
 const mockValidationService = {
-  validateCode: jest.fn()
+  validateCode: jest.fn(),
 };
 
 const mockChatSessionService = {
-  getSession: jest.fn()
+  getSession: jest.fn(),
 };
 
 // Mock context with services
 const createMockContext = (overrides = {}) => ({
-  projectId: 'test-project-123',
-  message: 'Help me with this code',
-  workspacePath: '/path/to/workspace',
-  ideType: 'cursor',
+  projectId: "test-project-123",
+  message: "Help me with this code",
+  workspacePath: "/path/to/workspace",
+  ideType: "cursor",
   features: {
     confidenceCheck: true,
     improvedResponse: true,
@@ -47,87 +47,101 @@ const createMockContext = (overrides = {}) => ({
     codeValidation: true,
     intentDetection: true,
     suggestionGeneration: true,
-    performanceOptimization: true
+    performanceOptimization: true,
   },
   confidenceThreshold: 0.6,
   getService: jest.fn((serviceName) => {
     switch (serviceName) {
-      case 'IDEService':
+      case "IDEService":
         return mockIDEService;
-      case 'ChatService':
+      case "ChatService":
         return mockChatService;
-      case 'EventBus':
+      case "EventBus":
         return mockEventBus;
-      case 'AnalysisService':
+      case "AnalysisService":
         return mockAnalysisService;
-      case 'ValidationService':
+      case "ValidationService":
         return mockValidationService;
-      case 'ChatSessionService':
+      case "ChatSessionService":
         return mockChatSessionService;
       default:
         return null;
     }
   }),
-  ...overrides
+  ...overrides,
 });
 
 // Mock data
 const mockContextData = {
-  projectType: 'javascript',
+  projectType: "javascript",
   fileCount: 15,
-  dependencies: ['react', 'express'],
-  recentFiles: ['src/App.js', 'src/components/Header.js']
+  dependencies: ["react", "express"],
+  recentFiles: ["src/App.js", "src/components/Header.js"],
 };
 
 const mockIntentData = {
-  intent: 'code_help',
+  intent: "code_help",
   confidence: 0.85,
-  entities: ['javascript', 'react']
+  entities: ["javascript", "react"],
 };
 
 const mockValidationResult = {
   isValid: true,
   issues: [],
-  suggestions: ['Consider using TypeScript']
+  suggestions: ["Consider using TypeScript"],
 };
 
 const mockSuggestions = [
-  'Try using React hooks',
-  'Consider adding error boundaries',
-  'Use PropTypes for type checking'
+  "Try using React hooks",
+  "Consider adding error boundaries",
+  "Use PropTypes for type checking",
 ];
 
-describe('IDESendMessageStepEnhanced', () => {
+describe("IDESendMessageStepEnhanced", () => {
   let stepInstance;
 
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Create step instance using the exported class
-    const IDESendMessageStepEnhanced = ideSendMessageEnhancedModule.IDESendMessageStepEnhanced;
+    const IDESendMessageStepEnhanced =
+      ideSendMessageEnhancedModule.IDESendMessageStepEnhanced;
     stepInstance = new IDESendMessageStepEnhanced();
   });
 
-  describe('Configuration', () => {
-    test('should have correct configuration', () => {
+  describe("Configuration", () => {
+    test("should have correct configuration", () => {
       const config = ideSendMessageEnhancedModule.config;
-      
-      expect(config.name).toBe('IDESendMessageStepEnhanced');
-      expect(config.type).toBe('ide');
-      expect(config.category).toBe('ide');
-      expect(config.description).toBe('Send message to any IDE with intelligent features and confidence checks');
-      expect(config.version).toBe('2.0.0');
-      expect(config.dependencies).toEqual(['cursorIDEService', 'vscodeIDEService', 'windsurfIDEService', 'chatSessionService', 'eventBus']);
-      expect(config.validation.required).toEqual(['projectId', 'message']);
-      expect(config.validation.optional).toEqual(['workspacePath', 'ideType', 'features', 'confidenceThreshold']);
+
+      expect(config.name).toBe("IDESendMessageStepEnhanced");
+      expect(config.type).toBe("ide");
+      expect(config.category).toBe("ide");
+      expect(config.description).toBe(
+        "Send message to any IDE with intelligent features and confidence checks",
+      );
+      expect(config.version).toBe("2.0.0");
+      expect(config.dependencies).toEqual([
+        "cursorIDEService",
+        "vscodeIDEService",
+        "windsurfIDEService",
+        "chatSessionService",
+        "eventBus",
+      ]);
+      expect(config.validation.required).toEqual(["projectId", "message"]);
+      expect(config.validation.optional).toEqual([
+        "workspacePath",
+        "ideType",
+        "features",
+        "confidenceThreshold",
+      ]);
       expect(config.features).toBeDefined();
       expect(config.confidenceThresholds).toBeDefined();
     });
 
-    test('should have all feature flags defined', () => {
+    test("should have all feature flags defined", () => {
       const config = ideSendMessageEnhancedModule.config;
-      
+
       expect(config.features.confidenceCheck).toBeDefined();
       expect(config.features.improvedResponse).toBeDefined();
       expect(config.features.contextAnalysis).toBeDefined();
@@ -138,94 +152,96 @@ describe('IDESendMessageStepEnhanced', () => {
     });
   });
 
-  describe('Service Dependencies', () => {
-    test('should throw error for missing IDEService', () => {
+  describe("Service Dependencies", () => {
+    test("should throw error for missing IDEService", () => {
       const context = createMockContext();
       context.getService.mockReturnValue(null);
-      
+
       return expect(stepInstance.execute(context)).resolves.toEqual(
         expect.objectContaining({
-          success: false,
-          error: 'IDEService not available in context'
-        })
+         
+          error: "IDEService not available in context",
+        }),
       );
     });
 
-    test('should throw error for missing ChatService', () => {
+    test("should throw error for missing ChatService", () => {
       const context = createMockContext();
       context.getService.mockImplementation((serviceName) => {
-        if (serviceName === 'ChatService') return null;
-        if (serviceName === 'IDEService') return mockIDEService;
-        if (serviceName === 'EventBus') return mockEventBus;
+        if (serviceName === "ChatService") return null;
+        if (serviceName === "IDEService") return mockIDEService;
+        if (serviceName === "EventBus") return mockEventBus;
         return null;
       });
       mockEventBus.publish.mockResolvedValue();
-      
+
       return expect(stepInstance.execute(context)).resolves.toEqual(
         expect.objectContaining({
-          success: false,
-          error: 'ChatService not available in context'
-        })
+         
+          error: "ChatService not available in context",
+        }),
       );
     });
   });
 
-  describe('Parameter Validation', () => {
-    test('should throw error for missing projectId', () => {
+  describe("Parameter Validation", () => {
+    test("should throw error for missing projectId", () => {
       const context = createMockContext({ projectId: null });
       mockEventBus.publish.mockResolvedValue();
-      
+
       return expect(stepInstance.execute(context)).resolves.toEqual(
         expect.objectContaining({
-          success: false,
-          error: 'Project ID is required'
-        })
+         
+          error: "Project ID is required",
+        }),
       );
     });
 
-    test('should throw error for missing message', () => {
+    test("should throw error for missing message", () => {
       const context = createMockContext({ message: null });
       mockEventBus.publish.mockResolvedValue();
-      
+
       return expect(stepInstance.execute(context)).resolves.toEqual(
         expect.objectContaining({
-          success: false,
-          error: 'Message is required'
-        })
+         
+          error: "Message is required",
+        }),
       );
     });
 
-    test('should throw error for invalid confidence threshold', () => {
+    test("should throw error for invalid confidence threshold", () => {
       const context = createMockContext({ confidenceThreshold: 1.5 });
-      
+
       const validation = stepInstance.validate(context);
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Confidence threshold must be a number between 0 and 1');
+      expect(validation.errors).toContain(
+        "Confidence threshold must be a number between 0 and 1",
+      );
     });
   });
 
-  describe('Feature Configuration', () => {
-    test('should merge default features with context features', () => {
+  describe("Feature Configuration", () => {
+    test("should merge default features with context features", () => {
       const context = createMockContext({
         features: {
           confidenceCheck: false,
-          improvedResponse: true
-        }
+          improvedResponse: true,
+        },
       });
 
       const features = stepInstance.getFeatureConfiguration(context);
-      
+
       expect(features.confidenceCheck).toBe(false); // Overridden
       expect(features.improvedResponse).toBe(true); // Overridden
       expect(features.contextAnalysis).toBe(true); // Default
       expect(features.codeValidation).toBe(true); // Default
     });
 
-    test('should use default features when none provided', () => {
+    test("should use default features when none provided", () => {
       const context = createMockContext({ features: undefined });
 
       const features = stepInstance.getFeatureConfiguration(context);
-      
+
       expect(features.confidenceCheck).toBe(true);
       expect(features.improvedResponse).toBe(true);
       expect(features.contextAnalysis).toBe(true);
@@ -233,17 +249,24 @@ describe('IDESendMessageStepEnhanced', () => {
     });
   });
 
-  describe('Successful Execution with All Features', () => {
-    test('should execute all features when enabled', async () => {
+  describe("Successful Execution with All Features", () => {
+    test("should execute all features when enabled", async () => {
       const context = createMockContext();
-      
+
       // Mock service responses
       mockAnalysisService.analyzeContext.mockResolvedValue(mockContextData);
       mockChatService.detectIntent.mockResolvedValue(mockIntentData);
-      mockValidationService.validateCode.mockResolvedValue(mockValidationResult);
+      mockValidationService.validateCode.mockResolvedValue(
+        mockValidationResult,
+      );
       mockChatService.calculateConfidence.mockResolvedValue(0.85);
-      mockChatService.improveResponse.mockResolvedValue('Enhanced: Help me with this code');
-      mockIDEService.sendMessage.mockResolvedValue({ success: true, response: 'Code help provided' });
+      mockChatService.improveResponse.mockResolvedValue(
+        "Enhanced: Help me with this code",
+      );
+      mockIDEService.sendMessage.mockResolvedValue({
+       
+        response: "Code help provided",
+      });
       mockChatService.generateSuggestions.mockResolvedValue(mockSuggestions);
       mockEventBus.publish.mockResolvedValue();
 
@@ -260,35 +283,35 @@ describe('IDESendMessageStepEnhanced', () => {
       expect(result.timestamp).toBeInstanceOf(Date);
     });
 
-    test('should publish events correctly', async () => {
+    test("should publish events correctly", async () => {
       const context = createMockContext();
       mockIDEService.sendMessage.mockResolvedValue({ success: true });
       mockEventBus.publish.mockResolvedValue();
 
       await stepInstance.execute(context);
 
-      expect(mockEventBus.publish).toHaveBeenCalledWith('ide.message.sending', {
+      expect(mockEventBus.publish).toHaveBeenCalledWith("ide.message.sending", {
         stepId: expect.any(String),
-        projectId: 'test-project-123',
+        projectId: "test-project-123",
         message: expect.any(String),
-        ideType: 'cursor',
+        ideType: "cursor",
         features: expect.any(Object),
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       });
 
-      expect(mockEventBus.publish).toHaveBeenCalledWith('ide.message.sent', {
+      expect(mockEventBus.publish).toHaveBeenCalledWith("ide.message.sent", {
         stepId: expect.any(String),
-        projectId: 'test-project-123',
-        ideType: 'cursor',
+        projectId: "test-project-123",
+        ideType: "cursor",
         confidence: undefined,
         features: expect.any(Array),
-        timestamp: expect.any(Date)
+        timestamp: expect.any(Date),
       });
     });
   });
 
-  describe('Feature-Specific Execution', () => {
-    test('should skip context analysis when disabled', async () => {
+  describe("Feature-Specific Execution", () => {
+    test("should skip context analysis when disabled", async () => {
       const context = createMockContext({
         features: {
           contextAnalysis: false,
@@ -297,8 +320,8 @@ describe('IDESendMessageStepEnhanced', () => {
           codeValidation: true,
           intentDetection: true,
           suggestionGeneration: true,
-          performanceOptimization: true
-        }
+          performanceOptimization: true,
+        },
       });
 
       mockIDEService.sendMessage.mockResolvedValue({ success: true });
@@ -309,7 +332,7 @@ describe('IDESendMessageStepEnhanced', () => {
       expect(mockAnalysisService.analyzeContext).not.toHaveBeenCalled();
     });
 
-    test('should skip confidence check when disabled', async () => {
+    test("should skip confidence check when disabled", async () => {
       const context = createMockContext({
         features: {
           confidenceCheck: false,
@@ -318,8 +341,8 @@ describe('IDESendMessageStepEnhanced', () => {
           codeValidation: true,
           intentDetection: true,
           suggestionGeneration: true,
-          performanceOptimization: true
-        }
+          performanceOptimization: true,
+        },
       });
 
       mockIDEService.sendMessage.mockResolvedValue({ success: true });
@@ -331,7 +354,7 @@ describe('IDESendMessageStepEnhanced', () => {
       expect(result.data.confidenceScore).toBeNull();
     });
 
-    test('should skip improved response when disabled', async () => {
+    test("should skip improved response when disabled", async () => {
       const context = createMockContext({
         features: {
           improvedResponse: false,
@@ -340,8 +363,8 @@ describe('IDESendMessageStepEnhanced', () => {
           codeValidation: true,
           intentDetection: true,
           suggestionGeneration: true,
-          performanceOptimization: true
-        }
+          performanceOptimization: true,
+        },
       });
 
       mockIDEService.sendMessage.mockResolvedValue({ success: true });
@@ -352,9 +375,9 @@ describe('IDESendMessageStepEnhanced', () => {
       expect(mockChatService.improveResponse).not.toHaveBeenCalled();
     });
 
-    test('should handle low confidence warning', async () => {
+    test("should handle low confidence warning", async () => {
       const context = createMockContext({
-        confidenceThreshold: 0.9
+        confidenceThreshold: 0.9,
       });
 
       mockChatService.calculateConfidence.mockResolvedValue(0.3); // Low confidence
@@ -368,13 +391,17 @@ describe('IDESendMessageStepEnhanced', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    test('should handle service failures gracefully', async () => {
+  describe("Error Handling", () => {
+    test("should handle service failures gracefully", async () => {
       const context = createMockContext();
-      
+
       // Mock service failures
-      mockAnalysisService.analyzeContext.mockRejectedValue(new Error('Analysis failed'));
-      mockChatService.detectIntent.mockRejectedValue(new Error('Intent detection failed'));
+      mockAnalysisService.analyzeContext.mockRejectedValue(
+        new Error("Analysis failed"),
+      );
+      mockChatService.detectIntent.mockRejectedValue(
+        new Error("Intent detection failed"),
+      );
       mockIDEService.sendMessage.mockResolvedValue({ success: true });
       mockEventBus.publish.mockResolvedValue();
 
@@ -385,21 +412,23 @@ describe('IDESendMessageStepEnhanced', () => {
       expect(result.data.intentDetection).toBeNull();
     });
 
-    test('should handle IDE service failure', async () => {
+    test("should handle IDE service failure", async () => {
       const context = createMockContext();
-      mockIDEService.sendMessage.mockRejectedValue(new Error('IDE connection failed'));
+      mockIDEService.sendMessage.mockRejectedValue(
+        new Error("IDE connection failed"),
+      );
       mockEventBus.publish.mockResolvedValue();
 
       const result = await stepInstance.execute(context);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('IDE connection failed');
+      expect(result.error).toBe("IDE connection failed");
     });
 
-    test('should handle event bus failure gracefully', async () => {
+    test("should handle event bus failure gracefully", async () => {
       const context = createMockContext();
       mockIDEService.sendMessage.mockResolvedValue({ success: true });
-      mockEventBus.publish.mockRejectedValue(new Error('Event bus error'));
+      mockEventBus.publish.mockRejectedValue(new Error("Event bus error"));
 
       const result = await stepInstance.execute(context);
 
@@ -408,8 +437,8 @@ describe('IDESendMessageStepEnhanced', () => {
     });
   });
 
-  describe('Validation Method', () => {
-    test('should validate correct parameters', () => {
+  describe("Validation Method", () => {
+    test("should validate correct parameters", () => {
       const context = createMockContext();
       const validation = stepInstance.validate(context);
 
@@ -418,49 +447,55 @@ describe('IDESendMessageStepEnhanced', () => {
       expect(validation.warnings).toEqual([]);
     });
 
-    test('should detect missing projectId', () => {
+    test("should detect missing projectId", () => {
       const context = createMockContext({ projectId: null });
       const validation = stepInstance.validate(context);
 
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Project ID is required');
+      expect(validation.errors).toContain("Project ID is required");
     });
 
-    test('should detect missing message', () => {
+    test("should detect missing message", () => {
       const context = createMockContext({ message: null });
       const validation = stepInstance.validate(context);
 
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Message is required');
+      expect(validation.errors).toContain("Message is required");
     });
 
-    test('should warn about unknown features', () => {
+    test("should warn about unknown features", () => {
       const context = createMockContext({
         features: {
           unknownFeature: true,
-          confidenceCheck: true
-        }
+          confidenceCheck: true,
+        },
       });
       const validation = stepInstance.validate(context);
 
       expect(validation.isValid).toBe(true);
-      expect(validation.warnings).toContain('Unknown feature: unknownFeature');
+      expect(validation.warnings).toContain("Unknown feature: unknownFeature");
     });
   });
 
-  describe('Step Registry Integration', () => {
-    test('should export execute function', () => {
-      expect(typeof ideSendMessageEnhancedModule.execute).toBe('function');
+  describe("Step Registry Integration", () => {
+    test("should export execute function", () => {
+      expect(typeof ideSendMessageEnhancedModule.execute).toBe("function");
     });
 
-    test('should export config', () => {
+    test("should export config", () => {
       expect(ideSendMessageEnhancedModule.config).toBeDefined();
-      expect(ideSendMessageEnhancedModule.config.name).toBe('IDESendMessageStepEnhanced');
+      expect(ideSendMessageEnhancedModule.config.name).toBe(
+        "IDESendMessageStepEnhanced",
+      );
     });
 
-    test('should export IDESendMessageStepEnhanced class', () => {
-      expect(ideSendMessageEnhancedModule.IDESendMessageStepEnhanced).toBeDefined();
-      expect(typeof ideSendMessageEnhancedModule.IDESendMessageStepEnhanced).toBe('function');
+    test("should export IDESendMessageStepEnhanced class", () => {
+      expect(
+        ideSendMessageEnhancedModule.IDESendMessageStepEnhanced,
+      ).toBeDefined();
+      expect(
+        typeof ideSendMessageEnhancedModule.IDESendMessageStepEnhanced,
+      ).toBe("function");
     });
   });
-}); 
+});

@@ -3,12 +3,14 @@
  * Specialized service for component coupling analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { CouplingAnalysisStep } = require('@domain/steps/categories/analysis/architecture');
+const Logger = require("@logging/Logger");
+const {
+  CouplingAnalysisStep,
+} = require("@domain/steps/categories/analysis/architecture");
 
 class CouplingAnalysisService {
   constructor() {
-    this.logger = new Logger('CouplingAnalysisService');
+    this.logger = new Logger("CouplingAnalysisService");
     this.couplingStep = new CouplingAnalysisStep();
   }
 
@@ -22,22 +24,23 @@ class CouplingAnalysisService {
    */
   async executeCouplingAnalysis(params) {
     try {
-      this.logger.info('Starting component coupling analysis', { projectId: params.projectId });
+      this.logger.info("Starting component coupling analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.couplingStep.execute(params);
 
-      this.logger.info('Coupling analysis completed', { 
+      this.logger.info("Coupling analysis completed", {
         projectId: params.projectId,
         couplingScore: result.couplingScore || 0,
-        issuesFound: result.issues?.length || 0
+        issuesFound: result.issues?.length || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Coupling analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Coupling analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,18 @@ class CouplingAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Component Coupling Analyzer',
-      version: '1.0.0',
-      description: 'Component coupling and dependencies analysis',
-      metrics: ['afferent-coupling', 'efferent-coupling', 'instability', 'abstractness'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Component Coupling Analyzer",
+      version: "1.0.0",
+      description: "Component coupling and dependencies analysis",
+      metrics: [
+        "afferent-coupling",
+        "efferent-coupling",
+        "instability",
+        "abstractness",
+      ],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = CouplingAnalysisService; 
+module.exports = CouplingAnalysisService;

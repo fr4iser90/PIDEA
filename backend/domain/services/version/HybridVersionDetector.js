@@ -3,12 +3,12 @@
  * Provides intelligent version bump recommendations using multiple detection methods
  */
 
-const Logger = require('@logging/Logger');
-const AIVersionAnalysisService = require('./AIVersionAnalysisService');
-const VersionManagementService = require('./VersionManagementService');
-const CodeChangeAnalyzer = require('./CodeChangeAnalyzer');
-const CommitMessageAnalyzer = require('./CommitMessageAnalyzer');
-const DependencyChangeAnalyzer = require('./DependencyChangeAnalyzer');
+const Logger = require("@logging/Logger");
+const AIVersionAnalysisService = require("./AIVersionAnalysisService");
+const VersionManagementService = require("./VersionManagementService");
+const CodeChangeAnalyzer = require("./CodeChangeAnalyzer");
+const CommitMessageAnalyzer = require("./CommitMessageAnalyzer");
+const DependencyChangeAnalyzer = require("./DependencyChangeAnalyzer");
 
 class HybridVersionDetector {
   constructor(dependencies = {}) {
@@ -18,8 +18,8 @@ class HybridVersionDetector {
     this.codeChangeAnalyzer = dependencies.codeChangeAnalyzer;
     this.commitMessageAnalyzer = dependencies.commitMessageAnalyzer;
     this.dependencyChangeAnalyzer = dependencies.dependencyChangeAnalyzer;
-    this.logger = new Logger('HybridVersionDetector');
-    
+    this.logger = new Logger("HybridVersionDetector");
+
     // Configuration
     this.config = {
       aiWeight: 0.4, // Weight for AI analysis
@@ -31,9 +31,9 @@ class HybridVersionDetector {
       fallbackToRules: true, // Fallback to rules if AI fails
       maxAnalysisTime: 15000, // 15 seconds max for analysis
       enableEnhancedAnalysis: true, // Enable enhanced detection methods
-      ...dependencies.config
+      ...dependencies.config,
     };
-    
+
     // Analysis cache
     this.analysisCache = new Map();
     this.cacheTimeout = 300000; // 5 minutes
@@ -48,47 +48,69 @@ class HybridVersionDetector {
    */
   async determineBumpType(changelog, projectPath, context = {}) {
     try {
-      this.logger.info('Starting hybrid version analysis', {
-        changelog: changelog.substring(0, 100) + '...',
+      this.logger.info("Starting hybrid version analysis", {
+        changelog: changelog.substring(0, 100) + "...",
         projectPath,
-        contextKeys: Object.keys(context)
+        contextKeys: Object.keys(context),
       });
 
       // Check cache first
       const cacheKey = this.generateCacheKey(changelog, projectPath, context);
       const cachedResult = this.getCachedResult(cacheKey);
       if (cachedResult) {
-        this.logger.info('Using cached hybrid analysis result');
+        this.logger.info("Using cached hybrid analysis result");
         return cachedResult;
       }
 
       // Run all analyses in parallel with timeout
-      const analysisPromise = this.runParallelAnalysis(changelog, projectPath, context);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Analysis timeout')), this.config.maxAnalysisTime)
+      const analysisPromise = this.runParallelAnalysis(
+        changelog,
+        projectPath,
+        context,
+      );
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Analysis timeout")),
+          this.config.maxAnalysisTime,
+        ),
       );
 
-      const analysisResults = await Promise.race([analysisPromise, timeoutPromise]);
-      const { aiResult, ruleResult, codeResult, commitResult, dependencyResult } = analysisResults;
+      const analysisResults = await Promise.race([
+        analysisPromise,
+        timeoutPromise,
+      ]);
+      const {
+        aiResult,
+        ruleResult,
+        codeResult,
+        commitResult,
+        dependencyResult,
+      } = analysisResults;
 
       // Combine results
-      const hybridResult = this.combineResults(aiResult, ruleResult, codeResult, commitResult, dependencyResult, changelog);
+      const hybridResult = this.combineResults(
+        aiResult,
+        ruleResult,
+        codeResult,
+        commitResult,
+        dependencyResult,
+        changelog,
+      );
 
       // Cache the result
       this.cacheResult(cacheKey, hybridResult);
 
-      this.logger.info('Hybrid version analysis completed', {
+      this.logger.info("Hybrid version analysis completed", {
         recommendedType: hybridResult.recommendedType,
         confidence: hybridResult.confidence,
-        sources: hybridResult.sources
+        sources: hybridResult.sources,
       });
 
       return hybridResult;
-
     } catch (error) {
-      this.logger.error('Hybrid version analysis failed', {
+      this.logger.error("Hybrid version analysis failed", {
         error: error.message,
-        changelog: changelog.substring(0, 100) + '...'
+        changelog: changelog.substring(0, 100) + "...",
       });
 
       // Return fallback result
@@ -106,37 +128,43 @@ class HybridVersionDetector {
   async performDirectAIAnalysis(changelog, projectPath, context) {
     try {
       // Use simple rule-based analysis to avoid recursion
-      if (changelog && changelog.includes('fix') || changelog.includes('bug')) {
+      if (
+        (changelog && changelog.includes("fix")) ||
+        changelog.includes("bug")
+      ) {
         return {
-          recommendedType: 'patch',
+          recommendedType: "patch",
           confidence: 0.8,
-          reasoning: 'Bug fix detected in task description',
-          autoDetected: true
+          reasoning: "Bug fix detected in task description",
+          autoDetected: true,
         };
-      } else if (changelog && changelog.includes('feat') || changelog.includes('add')) {
+      } else if (
+        (changelog && changelog.includes("feat")) ||
+        changelog.includes("add")
+      ) {
         return {
-          recommendedType: 'minor',
+          recommendedType: "minor",
           confidence: 0.8,
-          reasoning: 'New feature detected in task description',
-          autoDetected: true
+          reasoning: "New feature detected in task description",
+          autoDetected: true,
         };
-      } else if (changelog && changelog.includes('refactor')) {
+      } else if (changelog && changelog.includes("refactor")) {
         return {
-          recommendedType: 'patch',
+          recommendedType: "patch",
           confidence: 0.7,
-          reasoning: 'Refactoring detected in task description',
-          autoDetected: true
+          reasoning: "Refactoring detected in task description",
+          autoDetected: true,
         };
       } else {
         return {
-          recommendedType: 'patch',
+          recommendedType: "patch",
           confidence: 0.6,
-          reasoning: 'Default patch recommendation for auto-detected changes',
-          autoDetected: true
+          reasoning: "Default patch recommendation for auto-detected changes",
+          autoDetected: true,
         };
       }
     } catch (error) {
-      this.logger.warn('Direct AI analysis failed', { error: error.message });
+      this.logger.warn("Direct AI analysis failed", { error: error.message });
       return this.getAIFallbackResult(changelog, error);
     }
   }
@@ -152,48 +180,68 @@ class HybridVersionDetector {
     const promises = {};
 
     // AI analysis - use direct AI integration to avoid recursion
-    promises.aiAnalysis = this.performDirectAIAnalysis(changelog, projectPath, context)
-      .catch(error => {
-        this.logger.warn('AI analysis failed, using fallback', { error: error.message });
-        return this.getAIFallbackResult(changelog, error);
+    promises.aiAnalysis = this.performDirectAIAnalysis(
+      changelog,
+      projectPath,
+      context,
+    ).catch((error) => {
+      this.logger.warn("AI analysis failed, using fallback", {
+        error: error.message,
       });
+      return this.getAIFallbackResult(changelog, error);
+    });
 
     // Rule-based analysis
-    promises.ruleAnalysis = this.runRuleBasedAnalysis(changelog, projectPath, context)
-      .catch(error => {
-        this.logger.warn('Rule-based analysis failed, using fallback', { error: error.message });
-        return this.getRuleFallbackResult(changelog, error);
+    promises.ruleAnalysis = this.runRuleBasedAnalysis(
+      changelog,
+      projectPath,
+      context,
+    ).catch((error) => {
+      this.logger.warn("Rule-based analysis failed, using fallback", {
+        error: error.message,
       });
+      return this.getRuleFallbackResult(changelog, error);
+    });
 
     // Enhanced analysis methods if enabled
     if (this.config.enableEnhancedAnalysis) {
       // Code change analysis
-      promises.codeAnalysis = this.codeChangeAnalyzer.analyzeCodeChanges(projectPath, context)
-        .catch(error => {
-          this.logger.warn('Code change analysis failed, using fallback', { error: error.message });
+      promises.codeAnalysis = this.codeChangeAnalyzer
+        .analyzeCodeChanges(projectPath, context)
+        .catch((error) => {
+          this.logger.warn("Code change analysis failed, using fallback", {
+            error: error.message,
+          });
           return this.getCodeFallbackResult(error);
         });
 
       // Commit message analysis
-      promises.commitAnalysis = this.commitMessageAnalyzer.analyzeCommitMessages(
-        context.commitMessages || [], 
-        context
-      ).catch(error => {
-        this.logger.warn('Commit message analysis failed, using fallback', { error: error.message });
-        return this.getCommitFallbackResult(error);
-      });
+      promises.commitAnalysis = this.commitMessageAnalyzer
+        .analyzeCommitMessages(context.commitMessages || [], context)
+        .catch((error) => {
+          this.logger.warn("Commit message analysis failed, using fallback", {
+            error: error.message,
+          });
+          return this.getCommitFallbackResult(error);
+        });
 
       // Dependency change analysis
-      promises.dependencyAnalysis = this.dependencyChangeAnalyzer.analyzeDependencyChanges(projectPath, context)
-        .catch(error => {
-          this.logger.warn('Dependency change analysis failed, using fallback', { error: error.message });
+      promises.dependencyAnalysis = this.dependencyChangeAnalyzer
+        .analyzeDependencyChanges(projectPath, context)
+        .catch((error) => {
+          this.logger.warn(
+            "Dependency change analysis failed, using fallback",
+            { error: error.message },
+          );
           return this.getDependencyFallbackResult(error);
         });
     } else {
       // Provide fallback results for disabled analyses
       promises.codeAnalysis = Promise.resolve(this.getCodeFallbackResult());
       promises.commitAnalysis = Promise.resolve(this.getCommitFallbackResult());
-      promises.dependencyAnalysis = Promise.resolve(this.getDependencyFallbackResult());
+      promises.dependencyAnalysis = Promise.resolve(
+        this.getDependencyFallbackResult(),
+      );
     }
 
     const results = await Promise.all([
@@ -201,7 +249,7 @@ class HybridVersionDetector {
       promises.ruleAnalysis,
       promises.codeAnalysis,
       promises.commitAnalysis,
-      promises.dependencyAnalysis
+      promises.dependencyAnalysis,
     ]);
 
     return {
@@ -209,7 +257,7 @@ class HybridVersionDetector {
       ruleResult: results[1],
       codeResult: results[2],
       commitResult: results[3],
-      dependencyResult: results[4]
+      dependencyResult: results[4],
     };
   }
 
@@ -224,26 +272,30 @@ class HybridVersionDetector {
     try {
       // Create a mock task object for the existing service
       const mockTask = {
-        id: 'hybrid-analysis',
+        id: "hybrid-analysis",
         description: changelog,
         title: changelog,
-        type: { value: 'analysis' }
+        type: { value: "analysis" },
       };
 
       // Use existing determineBumpType method
-      const bumpType = await this.versionManagementService.determineBumpType(mockTask, projectPath, context);
+      const bumpType = await this.versionManagementService.determineBumpType(
+        mockTask,
+        projectPath,
+        context,
+      );
 
       return {
         recommendedType: bumpType,
         confidence: 0.8, // High confidence for rule-based
-        reasoning: 'Rule-based analysis using keyword matching and semantic patterns',
-        factors: ['keyword-analysis', 'semantic-patterns', 'rule-based-logic'],
-        source: 'rule-based',
-        timestamp: new Date()
+        reasoning:
+          "Rule-based analysis using keyword matching and semantic patterns",
+        factors: ["keyword-analysis", "semantic-patterns", "rule-based-logic"],
+        source: "rule-based",
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Rule-based analysis failed', { error: error.message });
+      this.logger.error("Rule-based analysis failed", { error: error.message });
       throw error;
     }
   }
@@ -258,61 +310,90 @@ class HybridVersionDetector {
    * @param {string} changelog - Task description
    * @returns {Object} Combined hybrid result
    */
-  combineResults(aiResult, ruleResult, codeResult, commitResult, dependencyResult, changelog) {
+  combineResults(
+    aiResult,
+    ruleResult,
+    codeResult,
+    commitResult,
+    dependencyResult,
+    changelog,
+  ) {
     // Calculate weighted scores for each analysis
     const scores = {
-      ai: this.getBumpTypeScore(aiResult.recommendedType) * this.config.aiWeight * aiResult.confidence,
-      rule: this.getBumpTypeScore(ruleResult.recommendedType) * this.config.ruleWeight * ruleResult.confidence,
-      code: this.getBumpTypeScore(this.getRecommendedTypeFromCode(codeResult)) * this.config.codeWeight * (codeResult.confidence || 0.5),
-      commit: this.getBumpTypeScore(commitResult.recommendedType) * this.config.commitWeight * (commitResult.confidence || 0.5),
-      dependency: this.getBumpTypeScore(this.getRecommendedTypeFromDependency(dependencyResult)) * this.config.dependencyWeight * (dependencyResult.confidence || 0.5)
+      ai:
+        this.getBumpTypeScore(aiResult.recommendedType) *
+        this.config.aiWeight *
+        aiResult.confidence,
+      rule:
+        this.getBumpTypeScore(ruleResult.recommendedType) *
+        this.config.ruleWeight *
+        ruleResult.confidence,
+      code:
+        this.getBumpTypeScore(this.getRecommendedTypeFromCode(codeResult)) *
+        this.config.codeWeight *
+        (codeResult.confidence || 0.5),
+      commit:
+        this.getBumpTypeScore(commitResult.recommendedType) *
+        this.config.commitWeight *
+        (commitResult.confidence || 0.5),
+      dependency:
+        this.getBumpTypeScore(
+          this.getRecommendedTypeFromDependency(dependencyResult),
+        ) *
+        this.config.dependencyWeight *
+        (dependencyResult.confidence || 0.5),
     };
 
     // Find the highest scoring recommendation
     const maxScore = Math.max(...Object.values(scores));
-    const winningAnalysis = Object.keys(scores).find(key => scores[key] === maxScore);
+    const winningAnalysis = Object.keys(scores).find(
+      (key) => scores[key] === maxScore,
+    );
 
     let recommendedType;
     let confidence;
     let reasoning;
-    let sources = ['hybrid'];
+    let sources = ["hybrid"];
 
     switch (winningAnalysis) {
-      case 'ai':
+      case "ai":
         recommendedType = aiResult.recommendedType;
         confidence = aiResult.confidence * this.config.aiWeight;
         reasoning = `AI analysis suggests ${recommendedType} bump. ${aiResult.reasoning}`;
-        sources.push('ai');
+        sources.push("ai");
         break;
-      case 'rule':
+      case "rule":
         recommendedType = ruleResult.recommendedType;
         confidence = ruleResult.confidence * this.config.ruleWeight;
         reasoning = `Rule-based analysis suggests ${recommendedType} bump. ${ruleResult.reasoning}`;
-        sources.push('rule-based');
+        sources.push("rule-based");
         break;
-      case 'code':
+      case "code":
         recommendedType = this.getRecommendedTypeFromCode(codeResult);
         confidence = (codeResult.confidence || 0.5) * this.config.codeWeight;
         reasoning = `Code change analysis suggests ${recommendedType} bump. Found ${codeResult.modifiedFiles?.length || 0} modified files.`;
-        sources.push('code-analysis');
+        sources.push("code-analysis");
         break;
-      case 'commit':
+      case "commit":
         recommendedType = commitResult.recommendedType;
-        confidence = (commitResult.confidence || 0.5) * this.config.commitWeight;
+        confidence =
+          (commitResult.confidence || 0.5) * this.config.commitWeight;
         reasoning = `Commit message analysis suggests ${recommendedType} bump. ${commitResult.commitAnalysis?.length || 0} commits analyzed.`;
-        sources.push('commit-analysis');
+        sources.push("commit-analysis");
         break;
-      case 'dependency':
-        recommendedType = this.getRecommendedTypeFromDependency(dependencyResult);
-        confidence = (dependencyResult.confidence || 0.5) * this.config.dependencyWeight;
+      case "dependency":
+        recommendedType =
+          this.getRecommendedTypeFromDependency(dependencyResult);
+        confidence =
+          (dependencyResult.confidence || 0.5) * this.config.dependencyWeight;
         reasoning = `Dependency analysis suggests ${recommendedType} bump. ${dependencyResult.dependencyChanges?.length || 0} dependency changes found.`;
-        sources.push('dependency-analysis');
+        sources.push("dependency-analysis");
         break;
       default:
-        recommendedType = 'patch';
+        recommendedType = "patch";
         confidence = 0.3;
-        reasoning = 'Fallback to patch version';
-        sources.push('fallback');
+        reasoning = "Fallback to patch version";
+        sources.push("fallback");
     }
 
     // Combine factors
@@ -322,7 +403,7 @@ class HybridVersionDetector {
       ...(codeResult.factors || []),
       ...(commitResult.factors || []),
       ...(dependencyResult.factors || []),
-      'hybrid-analysis'
+      "hybrid-analysis",
     ];
 
     return {
@@ -338,7 +419,7 @@ class HybridVersionDetector {
       dependencyResult,
       scores,
       winningAnalysis,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -349,9 +430,9 @@ class HybridVersionDetector {
    */
   getBumpTypeScore(bumpType) {
     const scores = {
-      'patch': 1,
-      'minor': 2,
-      'major': 3
+      patch: 1,
+      minor: 2,
+      major: 3,
     };
     return scores[bumpType] || 1;
   }
@@ -364,13 +445,13 @@ class HybridVersionDetector {
    */
   getAIFallbackResult(changelog, error) {
     return {
-      recommendedType: 'patch',
+      recommendedType: "patch",
       confidence: 0.3,
-      reasoning: 'AI analysis failed, using conservative patch recommendation',
-      factors: ['ai-fallback', 'conservative-approach'],
-      source: 'ai-fallback',
+      reasoning: "AI analysis failed, using conservative patch recommendation",
+      factors: ["ai-fallback", "conservative-approach"],
+      source: "ai-fallback",
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -382,13 +463,14 @@ class HybridVersionDetector {
    */
   getRuleFallbackResult(changelog, error) {
     return {
-      recommendedType: 'patch',
+      recommendedType: "patch",
       confidence: 0.4,
-      reasoning: 'Rule-based analysis failed, using conservative patch recommendation',
-      factors: ['rule-fallback', 'conservative-approach'],
-      source: 'rule-fallback',
+      reasoning:
+        "Rule-based analysis failed, using conservative patch recommendation",
+      factors: ["rule-fallback", "conservative-approach"],
+      source: "rule-fallback",
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -401,29 +483,37 @@ class HybridVersionDetector {
   getFallbackResult(changelog, error) {
     // Simple rule-based fallback
     const lowerTask = changelog.toLowerCase();
-    
-    let recommendedType = 'patch';
+
+    let recommendedType = "patch";
     let confidence = 0.2;
-    let reasoning = 'Hybrid analysis failed, using simple rule-based fallback';
-    
-    if (lowerTask.includes('breaking') || lowerTask.includes('major') || lowerTask.includes('api change')) {
-      recommendedType = 'major';
+    let reasoning = "Hybrid analysis failed, using simple rule-based fallback";
+
+    if (
+      lowerTask.includes("breaking") ||
+      lowerTask.includes("major") ||
+      lowerTask.includes("api change")
+    ) {
+      recommendedType = "major";
       confidence = 0.3;
-      reasoning = 'Fallback: Detected potential breaking changes';
-    } else if (lowerTask.includes('feature') || lowerTask.includes('new') || lowerTask.includes('add')) {
-      recommendedType = 'minor';
+      reasoning = "Fallback: Detected potential breaking changes";
+    } else if (
+      lowerTask.includes("feature") ||
+      lowerTask.includes("new") ||
+      lowerTask.includes("add")
+    ) {
+      recommendedType = "minor";
       confidence = 0.3;
-      reasoning = 'Fallback: Detected potential new features';
+      reasoning = "Fallback: Detected potential new features";
     }
-    
+
     return {
       recommendedType,
       confidence,
       reasoning,
-      factors: ['hybrid-fallback', 'simple-rules'],
-      source: 'hybrid-fallback',
+      factors: ["hybrid-fallback", "simple-rules"],
+      source: "hybrid-fallback",
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -441,11 +531,11 @@ class HybridVersionDetector {
       contextHash: this.hashContext(context),
       config: {
         aiWeight: this.config.aiWeight,
-        ruleWeight: this.config.ruleWeight
-      }
+        ruleWeight: this.config.ruleWeight,
+      },
     };
-    
-    return Buffer.from(JSON.stringify(keyData)).toString('base64');
+
+    return Buffer.from(JSON.stringify(keyData)).toString("base64");
   }
 
   /**
@@ -455,9 +545,11 @@ class HybridVersionDetector {
    */
   hashContext(context) {
     try {
-      return Buffer.from(JSON.stringify(context)).toString('base64').substring(0, 16);
+      return Buffer.from(JSON.stringify(context))
+        .toString("base64")
+        .substring(0, 16);
     } catch (error) {
-      return 'default';
+      return "default";
     }
   }
 
@@ -468,15 +560,15 @@ class HybridVersionDetector {
    */
   getCachedResult(cacheKey) {
     const cached = this.analysisCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.result;
     }
-    
+
     // Remove expired cache entry
     if (cached) {
       this.analysisCache.delete(cacheKey);
     }
-    
+
     return null;
   }
 
@@ -488,9 +580,9 @@ class HybridVersionDetector {
   cacheResult(cacheKey, result) {
     this.analysisCache.set(cacheKey, {
       result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-    
+
     // Clean up old cache entries periodically
     if (this.analysisCache.size > 50) {
       this.cleanupCache();
@@ -503,7 +595,7 @@ class HybridVersionDetector {
   cleanupCache() {
     const now = Date.now();
     for (const [key, value] of this.analysisCache.entries()) {
-      if ((now - value.timestamp) > this.cacheTimeout) {
+      if (now - value.timestamp > this.cacheTimeout) {
         this.analysisCache.delete(key);
       }
     }
@@ -515,10 +607,10 @@ class HybridVersionDetector {
    * @returns {string} Recommended bump type
    */
   getRecommendedTypeFromCode(codeResult) {
-    if (codeResult.hasBreakingChanges) return 'major';
-    if (codeResult.hasNewFeatures) return 'minor';
-    if (codeResult.hasBugFixes) return 'patch';
-    return 'patch';
+    if (codeResult.hasBreakingChanges) return "major";
+    if (codeResult.hasNewFeatures) return "minor";
+    if (codeResult.hasBugFixes) return "patch";
+    return "patch";
   }
 
   /**
@@ -527,11 +619,11 @@ class HybridVersionDetector {
    * @returns {string} Recommended bump type
    */
   getRecommendedTypeFromDependency(dependencyResult) {
-    if (dependencyResult.hasBreakingChanges) return 'major';
-    if (dependencyResult.hasMajorUpdates) return 'major';
-    if (dependencyResult.hasMinorUpdates) return 'minor';
-    if (dependencyResult.hasPatchUpdates) return 'patch';
-    return 'patch';
+    if (dependencyResult.hasBreakingChanges) return "major";
+    if (dependencyResult.hasMajorUpdates) return "major";
+    if (dependencyResult.hasMinorUpdates) return "minor";
+    if (dependencyResult.hasPatchUpdates) return "patch";
+    return "patch";
   }
 
   /**
@@ -549,9 +641,9 @@ class HybridVersionDetector {
       apiChanges: [],
       breakingChanges: [],
       confidence: 0.1,
-      factors: ['code-analysis-fallback'],
+      factors: ["code-analysis-fallback"],
       error: error?.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -565,12 +657,12 @@ class HybridVersionDetector {
       hasBreakingChanges: false,
       hasNewFeatures: false,
       hasBugFixes: false,
-      recommendedType: 'patch',
+      recommendedType: "patch",
       confidence: 0.1,
       commitAnalysis: [],
-      factors: ['commit-analysis-fallback'],
+      factors: ["commit-analysis-fallback"],
       error: error?.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -590,9 +682,9 @@ class HybridVersionDetector {
       dependencyChanges: [],
       packageFiles: [],
       confidence: 0.1,
-      factors: ['dependency-analysis-fallback'],
+      factors: ["dependency-analysis-fallback"],
       error: error?.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -602,7 +694,7 @@ class HybridVersionDetector {
    */
   getHealthStatus() {
     return {
-      status: 'healthy',
+      status: "healthy",
       cacheSize: this.analysisCache.size,
       config: {
         aiWeight: this.config.aiWeight,
@@ -613,13 +705,13 @@ class HybridVersionDetector {
         confidenceThreshold: this.config.confidenceThreshold,
         fallbackToRules: this.config.fallbackToRules,
         maxAnalysisTime: this.config.maxAnalysisTime,
-        enableEnhancedAnalysis: this.config.enableEnhancedAnalysis
+        enableEnhancedAnalysis: this.config.enableEnhancedAnalysis,
       },
       aiService: this.aiAnalysisService.getHealthStatus(),
       codeAnalyzer: this.codeChangeAnalyzer.getHealthStatus(),
       commitAnalyzer: this.commitMessageAnalyzer.getHealthStatus(),
       dependencyAnalyzer: this.dependencyChangeAnalyzer.getHealthStatus(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -629,7 +721,7 @@ class HybridVersionDetector {
    */
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
-    this.logger.info('Configuration updated', { config: this.config });
+    this.logger.info("Configuration updated", { config: this.config });
   }
 }
 

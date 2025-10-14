@@ -85,7 +85,6 @@ describe('PIDEA Agent Branch Integration Tests', () => {
   describe('API Integration Workflows', () => {
     it('performs complete pull workflow', async () => {
       mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully pulled changes',
         changes: ['file1.js', 'file2.js'],
         status: 'up-to-date'
@@ -104,7 +103,6 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
     it('performs complete merge workflow', async () => {
       mockAPIRepository.mergePideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully merged changes',
         mergedFiles: ['file1.js', 'file2.js'],
         status: 'up-to-date'
@@ -123,7 +121,6 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
     it('performs complete compare workflow', async () => {
       mockAPIRepository.comparePideaAgentBranch.mockResolvedValue({
-        success: true,
         differences: [
           { file: 'file1.js', status: 'modified', changes: 5 },
           { file: 'file2.js', status: 'added', changes: 10 }
@@ -142,18 +139,15 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
     it('handles sequential operations correctly', async () => {
       mockAPIRepository.getPideaAgentStatus.mockResolvedValue({
-        success: true,
         status: 'behind'
       });
 
       mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully pulled changes',
         status: 'up-to-date'
       });
 
       mockAPIRepository.mergePideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully merged changes',
         status: 'up-to-date'
       });
@@ -199,7 +193,6 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
     it('handles partial failures in workflows', async () => {
       mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully pulled changes'
       });
 
@@ -229,7 +222,6 @@ describe('PIDEA Agent Branch Integration Tests', () => {
   describe('State Management Integration', () => {
     it('maintains consistent state across operations', async () => {
       mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Success',
         status: 'up-to-date'
       });
@@ -273,7 +265,6 @@ describe('PIDEA Agent Branch Integration Tests', () => {
   describe('User Experience Integration', () => {
     it('provides clear feedback for all operations', async () => {
       mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully pulled changes',
         changes: ['file1.js', 'file2.js']
       });

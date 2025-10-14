@@ -167,7 +167,6 @@ class EnhancedConfirmationStep {
       }
       
       return {
-        success: true,
         stepId,
         projectId,
         message: 'Enhanced confirmation completed',
@@ -187,7 +186,7 @@ class EnhancedConfirmationStep {
       });
 
       return {
-        success: false,
+       
         error: error.message,
         stepId,
         projectId: context.projectId,

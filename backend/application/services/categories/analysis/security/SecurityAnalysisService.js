@@ -3,19 +3,19 @@
  * Orchestrates all security analysis steps and coordinates results
  */
 
-const Logger = require('@logging/Logger');
-const { 
-  TrivySecurityStep, 
-  SnykSecurityStep, 
-  SemgrepSecurityStep, 
-  ZapSecurityStep, 
-  SecretScanningStep, 
-  ComplianceSecurityStep 
-} = require('@domain/steps/categories/analysis/security');
+const Logger = require("@logging/Logger");
+const {
+  TrivySecurityStep,
+  SnykSecurityStep,
+  SemgrepSecurityStep,
+  ZapSecurityStep,
+  SecretScanningStep,
+  ComplianceSecurityStep,
+} = require("@domain/steps/categories/analysis/security");
 
 class SecurityAnalysisService {
   constructor() {
-    this.logger = new Logger('SecurityAnalysisService');
+    this.logger = new Logger("SecurityAnalysisService");
     this.trivyStep = new TrivySecurityStep();
     this.snykStep = new SnykSecurityStep();
     this.semgrepStep = new SemgrepSecurityStep();
@@ -34,7 +34,9 @@ class SecurityAnalysisService {
    */
   async executeSecurityAnalysis(params) {
     try {
-      this.logger.info('Starting comprehensive security analysis', { projectId: params.projectId });
+      this.logger.info("Starting comprehensive security analysis", {
+        projectId: params.projectId,
+      });
 
       // Execute all security analysis steps in parallel
       const [
@@ -43,24 +45,24 @@ class SecurityAnalysisService {
         semgrepResults,
         zapResults,
         secretResults,
-        complianceResults
+        complianceResults,
       ] = await Promise.allSettled([
         this.trivyStep.execute(params),
         this.snykStep.execute(params),
         this.semgrepStep.execute(params),
         this.zapStep.execute(params),
         this.secretStep.execute(params),
-        this.complianceStep.execute(params)
+        this.complianceStep.execute(params),
       ]);
 
       // Process results and handle failures
       const results = {
-        trivy: this.processResult(trivyResults, 'Trivy'),
-        snyk: this.processResult(snykResults, 'Snyk'),
-        semgrep: this.processResult(semgrepResults, 'Semgrep'),
-        zap: this.processResult(zapResults, 'ZAP'),
-        secrets: this.processResult(secretResults, 'Secret Scanning'),
-        compliance: this.processResult(complianceResults, 'Compliance')
+        trivy: this.processResult(trivyResults, "Trivy"),
+        snyk: this.processResult(snykResults, "Snyk"),
+        semgrep: this.processResult(semgrepResults, "Semgrep"),
+        zap: this.processResult(zapResults, "ZAP"),
+        secrets: this.processResult(secretResults, "Secret Scanning"),
+        compliance: this.processResult(complianceResults, "Compliance"),
       };
 
       // Calculate overall security score
@@ -75,20 +77,19 @@ class SecurityAnalysisService {
         securityScore,
         results,
         recommendations,
-        summary: this.generateSecuritySummary(results)
+        summary: this.generateSecuritySummary(results),
       };
 
-      this.logger.info('Security analysis completed', { 
-        projectId: params.projectId, 
-        securityScore 
+      this.logger.info("Security analysis completed", {
+        projectId: params.projectId,
+        securityScore,
       });
 
       return analysisResult;
-
     } catch (error) {
-      this.logger.error('Security analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Security analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -101,18 +102,19 @@ class SecurityAnalysisService {
    * @returns {Object} Processed result
    */
   processResult(result, stepName) {
-    if (result.status === 'fulfilled') {
+    if (result.status === "fulfilled") {
       return {
-        success: true,
         data: result.value,
-        error: null
+        error: null,
       };
     } else {
-      this.logger.warn(`${stepName} analysis failed`, { error: result.reason.message });
+      this.logger.warn(`${stepName} analysis failed`, {
+        error: result.reason.message,
+      });
       return {
-        success: false,
+       
         data: null,
-        error: result.reason.message
+        error: result.reason.message,
       };
     }
   }
@@ -125,11 +127,11 @@ class SecurityAnalysisService {
   calculateSecurityScore(results) {
     const weights = {
       trivy: 0.25,
-      snyk: 0.20,
-      semgrep: 0.20,
+      snyk: 0.2,
+      semgrep: 0.2,
       zap: 0.15,
       secrets: 0.15,
-      compliance: 0.05
+      compliance: 0.05,
     };
 
     let totalScore = 0;
@@ -155,39 +157,45 @@ class SecurityAnalysisService {
 
     // Trivy recommendations
     if (results.trivy.success && results.trivy.data.vulnerabilities) {
-      const criticalVulns = results.trivy.data.vulnerabilities.filter(v => v.severity === 'CRITICAL');
+      const criticalVulns = results.trivy.data.vulnerabilities.filter(
+        (v) => v.severity === "CRITICAL",
+      );
       if (criticalVulns.length > 0) {
         recommendations.push({
-          priority: 'CRITICAL',
-          category: 'Vulnerabilities',
+          priority: "CRITICAL",
+          category: "Vulnerabilities",
           message: `Found ${criticalVulns.length} critical vulnerabilities. Update affected dependencies immediately.`,
-          details: criticalVulns.map(v => v.packageName)
+          details: criticalVulns.map((v) => v.packageName),
         });
       }
     }
 
     // Snyk recommendations
     if (results.snyk.success && results.snyk.data.dependencies) {
-      const outdatedDeps = results.snyk.data.dependencies.filter(d => d.outdated);
+      const outdatedDeps = results.snyk.data.dependencies.filter(
+        (d) => d.outdated,
+      );
       if (outdatedDeps.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Dependencies',
+          priority: "HIGH",
+          category: "Dependencies",
           message: `Found ${outdatedDeps.length} outdated dependencies with security vulnerabilities.`,
-          details: outdatedDeps.map(d => d.name)
+          details: outdatedDeps.map((d) => d.name),
         });
       }
     }
 
     // Semgrep recommendations
     if (results.semgrep.success && results.semgrep.data.issues) {
-      const highIssues = results.semgrep.data.issues.filter(i => i.severity === 'HIGH');
+      const highIssues = results.semgrep.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (highIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Code Security',
+          priority: "HIGH",
+          category: "Code Security",
           message: `Found ${highIssues.length} high-severity code security issues.`,
-          details: highIssues.map(i => i.rule)
+          details: highIssues.map((i) => i.rule),
         });
       }
     }
@@ -196,23 +204,25 @@ class SecurityAnalysisService {
     if (results.secrets.success && results.secrets.data.secrets) {
       if (results.secrets.data.secrets.length > 0) {
         recommendations.push({
-          priority: 'CRITICAL',
-          category: 'Secrets',
+          priority: "CRITICAL",
+          category: "Secrets",
           message: `Found ${results.secrets.data.secrets.length} hardcoded secrets. Remove immediately and rotate affected credentials.`,
-          details: results.secrets.data.secrets.map(s => s.type)
+          details: results.secrets.data.secrets.map((s) => s.type),
         });
       }
     }
 
     // Compliance recommendations
     if (results.compliance.success && results.compliance.data.violations) {
-      const criticalViolations = results.compliance.data.violations.filter(v => v.severity === 'CRITICAL');
+      const criticalViolations = results.compliance.data.violations.filter(
+        (v) => v.severity === "CRITICAL",
+      );
       if (criticalViolations.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Compliance',
+          priority: "HIGH",
+          category: "Compliance",
           message: `Found ${criticalViolations.length} critical compliance violations.`,
-          details: criticalViolations.map(v => v.rule)
+          details: criticalViolations.map((v) => v.rule),
         });
       }
     }
@@ -233,15 +243,15 @@ class SecurityAnalysisService {
       mediumIssues: 0,
       lowIssues: 0,
       secretsFound: 0,
-      complianceViolations: 0
+      complianceViolations: 0,
     };
 
     // Aggregate vulnerability counts
-    Object.values(results).forEach(result => {
+    Object.values(results).forEach((result) => {
       if (result.success && result.data) {
         if (result.data.vulnerabilities) {
           summary.totalVulnerabilities += result.data.vulnerabilities.length;
-          result.data.vulnerabilities.forEach(v => {
+          result.data.vulnerabilities.forEach((v) => {
             summary[`${v.severity.toLowerCase()}Issues`]++;
           });
         }
@@ -270,7 +280,7 @@ class SecurityAnalysisService {
       semgrep: this.semgrepStep,
       zap: this.zapStep,
       secrets: this.secretStep,
-      compliance: this.complianceStep
+      compliance: this.complianceStep,
     };
 
     const step = stepMap[stepType];
@@ -282,4 +292,4 @@ class SecurityAnalysisService {
   }
 }
 
-module.exports = SecurityAnalysisService; 
+module.exports = SecurityAnalysisService;

@@ -2,8 +2,8 @@
  * WorkflowValidator - Implementation of IWorkflowValidator
  * Provides rule-based validation with detailed results
  */
-const IWorkflowValidator = require('../../../application/handlers/workflow/interfaces/IWorkflowValidator');
-const ValidationResult = require('./ValidationResult');
+const IWorkflowValidator = require("../../../application/handlers/workflow/interfaces/IWorkflowValidator");
+const ValidationResult = require("./ValidationResult");
 
 class WorkflowValidator extends IWorkflowValidator {
   constructor() {
@@ -37,7 +37,7 @@ class WorkflowValidator extends IWorkflowValidator {
       code,
       data,
       timestamp: new Date(),
-      type: 'error'
+      type: "error",
     });
   }
 
@@ -49,7 +49,7 @@ class WorkflowValidator extends IWorkflowValidator {
       code,
       data,
       timestamp: new Date(),
-      type: 'warning'
+      type: "warning",
     });
   }
 
@@ -74,23 +74,23 @@ class WorkflowValidator extends IWorkflowValidator {
   }
 
   getErrorsByField(field) {
-    return this._errors.filter(error => error.field === field);
+    return this._errors.filter((error) => error.field === field);
   }
 
   getWarningsByField(field) {
-    return this._warnings.filter(warning => warning.field === field);
+    return this._warnings.filter((warning) => warning.field === field);
   }
 
   getMessagesByField(field) {
-    return this.getMessages().filter(message => message.field === field);
+    return this.getMessages().filter((message) => message.field === field);
   }
 
   getErrorsByCode(code) {
-    return this._errors.filter(error => error.code === code);
+    return this._errors.filter((error) => error.code === code);
   }
 
   getWarningsByCode(code) {
-    return this._warnings.filter(warning => warning.code === code);
+    return this._warnings.filter((warning) => warning.code === code);
   }
 
   clear() {
@@ -108,7 +108,7 @@ class WorkflowValidator extends IWorkflowValidator {
 
   merge(validator) {
     if (!(validator instanceof WorkflowValidator)) {
-      throw new Error('Can only merge with another WorkflowValidator instance');
+      throw new Error("Can only merge with another WorkflowValidator instance");
     }
 
     this._errors.push(...validator.getErrors());
@@ -121,10 +121,12 @@ class WorkflowValidator extends IWorkflowValidator {
       errorCount: this.getErrorCount(),
       warningCount: this.getWarningCount(),
       totalCount: this.getMessageCount(),
-      fieldsWithErrors: [...new Set(this._errors.map(e => e.field))],
-      fieldsWithWarnings: [...new Set(this._warnings.map(w => w.field))],
-      errorCodes: [...new Set(this._errors.map(e => e.code).filter(Boolean))],
-      warningCodes: [...new Set(this._warnings.map(w => w.code).filter(Boolean))]
+      fieldsWithErrors: [...new Set(this._errors.map((e) => e.field))],
+      fieldsWithWarnings: [...new Set(this._warnings.map((w) => w.field))],
+      errorCodes: [...new Set(this._errors.map((e) => e.code).filter(Boolean))],
+      warningCodes: [
+        ...new Set(this._warnings.map((w) => w.code).filter(Boolean)),
+      ],
     };
   }
 
@@ -133,7 +135,7 @@ class WorkflowValidator extends IWorkflowValidator {
       isValid: this.isValid(),
       errors: this._errors,
       warnings: this._warnings,
-      summary: this.getSummary()
+      summary: this.getSummary(),
     };
   }
 
@@ -146,15 +148,15 @@ class WorkflowValidator extends IWorkflowValidator {
 
   // Additional convenience methods
   addFieldRequiredError(field) {
-    this.addError(field, `Field '${field}' is required`, 'FIELD_REQUIRED');
+    this.addError(field, `Field '${field}' is required`, "FIELD_REQUIRED");
   }
 
   addFieldTypeError(field, expectedType, actualType) {
     this.addError(
-      field, 
-      `Field '${field}' must be of type '${expectedType}', got '${actualType}'`, 
-      'INVALID_TYPE',
-      { expectedType, actualType }
+      field,
+      `Field '${field}' must be of type '${expectedType}', got '${actualType}'`,
+      "INVALID_TYPE",
+      { expectedType, actualType },
     );
   }
 
@@ -163,22 +165,22 @@ class WorkflowValidator extends IWorkflowValidator {
       this.addError(
         field,
         `Field '${field}' must be between ${minLength} and ${maxLength} characters, got ${actualLength}`,
-        'LENGTH_VIOLATION',
-        { minLength, maxLength, actualLength }
+        "LENGTH_VIOLATION",
+        { minLength, maxLength, actualLength },
       );
     } else if (minLength) {
       this.addError(
         field,
         `Field '${field}' must be at least ${minLength} characters, got ${actualLength}`,
-        'MIN_LENGTH_VIOLATION',
-        { minLength, actualLength }
+        "MIN_LENGTH_VIOLATION",
+        { minLength, actualLength },
       );
     } else if (maxLength) {
       this.addError(
         field,
         `Field '${field}' must be at most ${maxLength} characters, got ${actualLength}`,
-        'MAX_LENGTH_VIOLATION',
-        { maxLength, actualLength }
+        "MAX_LENGTH_VIOLATION",
+        { maxLength, actualLength },
       );
     }
   }
@@ -187,8 +189,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addError(
       field,
       `Field '${field}' does not match required pattern`,
-      'PATTERN_MISMATCH',
-      { pattern: pattern.toString() }
+      "PATTERN_MISMATCH",
+      { pattern: pattern.toString() },
     );
   }
 
@@ -197,22 +199,22 @@ class WorkflowValidator extends IWorkflowValidator {
       this.addError(
         field,
         `Field '${field}' must be between ${min} and ${max}, got ${actual}`,
-        'RANGE_VIOLATION',
-        { min, max, actual }
+        "RANGE_VIOLATION",
+        { min, max, actual },
       );
     } else if (min !== undefined) {
       this.addError(
         field,
         `Field '${field}' must be at least ${min}, got ${actual}`,
-        'MIN_RANGE_VIOLATION',
-        { min, actual }
+        "MIN_RANGE_VIOLATION",
+        { min, actual },
       );
     } else if (max !== undefined) {
       this.addError(
         field,
         `Field '${field}' must be at most ${max}, got ${actual}`,
-        'MAX_RANGE_VIOLATION',
-        { max, actual }
+        "MAX_RANGE_VIOLATION",
+        { max, actual },
       );
     }
   }
@@ -220,9 +222,9 @@ class WorkflowValidator extends IWorkflowValidator {
   addFieldEnumError(field, allowedValues, actualValue) {
     this.addError(
       field,
-      `Field '${field}' must be one of: ${allowedValues.join(', ')}, got '${actualValue}'`,
-      'ENUM_VIOLATION',
-      { allowedValues, actualValue }
+      `Field '${field}' must be one of: ${allowedValues.join(", ")}, got '${actualValue}'`,
+      "ENUM_VIOLATION",
+      { allowedValues, actualValue },
     );
   }
 
@@ -230,8 +232,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addError(
       field,
       `Field '${field}' must be in format '${format}', got '${actualValue}'`,
-      'FORMAT_VIOLATION',
-      { format, actualValue }
+      "FORMAT_VIOLATION",
+      { format, actualValue },
     );
   }
 
@@ -239,8 +241,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addError(
       field,
       `Field '${field}' must be unique, duplicate value: '${duplicateValue}'`,
-      'UNIQUE_VIOLATION',
-      { duplicateValue }
+      "UNIQUE_VIOLATION",
+      { duplicateValue },
     );
   }
 
@@ -248,8 +250,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addError(
       field,
       `Field '${field}' references non-existent '${referencedField}': '${referencedValue}'`,
-      'REFERENCE_VIOLATION',
-      { referencedField, referencedValue }
+      "REFERENCE_VIOLATION",
+      { referencedField, referencedValue },
     );
   }
 
@@ -257,8 +259,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addError(
       field,
       `Field '${field}' requires field '${dependencyField}' to be present`,
-      'DEPENDENCY_VIOLATION',
-      { dependencyField }
+      "DEPENDENCY_VIOLATION",
+      { dependencyField },
     );
   }
 
@@ -266,8 +268,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addError(
       field,
       `Field '${field}' violates constraint '${constraint}', got '${actualValue}'`,
-      'CONSTRAINT_VIOLATION',
-      { constraint, actualValue }
+      "CONSTRAINT_VIOLATION",
+      { constraint, actualValue },
     );
   }
 
@@ -279,16 +281,16 @@ class WorkflowValidator extends IWorkflowValidator {
       code,
       data,
       timestamp: new Date(),
-      type: 'warning'
+      type: "warning",
     });
   }
 
   addFieldDeprecatedWarning(field, alternative = null) {
     this.addWarning(
       field,
-      `Field '${field}' is deprecated${alternative ? `, use '${alternative}' instead` : ''}`,
-      'FIELD_DEPRECATED',
-      { alternative }
+      `Field '${field}' is deprecated${alternative ? `, use '${alternative}' instead` : ""}`,
+      "FIELD_DEPRECATED",
+      { alternative },
     );
   }
 
@@ -296,8 +298,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addWarning(
       field,
       `Field '${field}' should be in format '${format}', got '${actualValue}'`,
-      'FORMAT_WARNING',
-      { format, actualValue }
+      "FORMAT_WARNING",
+      { format, actualValue },
     );
   }
 
@@ -305,8 +307,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addWarning(
       field,
       `Field '${field}' is ${actualLength} characters, recommended: ${recommendedLength}`,
-      'LENGTH_WARNING',
-      { recommendedLength, actualLength }
+      "LENGTH_WARNING",
+      { recommendedLength, actualLength },
     );
   }
 
@@ -314,8 +316,8 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addWarning(
       field,
       `Field '${field}' may cause performance issues: ${issue}`,
-      'PERFORMANCE_WARNING',
-      { issue }
+      "PERFORMANCE_WARNING",
+      { issue },
     );
   }
 
@@ -323,14 +325,14 @@ class WorkflowValidator extends IWorkflowValidator {
     this.addWarning(
       field,
       `Field '${field}' may have security implications: ${issue}`,
-      'SECURITY_WARNING',
-      { issue }
+      "SECURITY_WARNING",
+      { issue },
     );
   }
 
   // Validation helpers
   validateRequired(value, field) {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === "") {
       this.addFieldRequiredError(field);
       return false;
     }
@@ -347,14 +349,16 @@ class WorkflowValidator extends IWorkflowValidator {
   }
 
   validateLength(value, field, minLength = null, maxLength = null) {
-    if (typeof value !== 'string') {
-      this.addFieldTypeError(field, 'string', typeof value);
+    if (typeof value !== "string") {
+      this.addFieldTypeError(field, "string", typeof value);
       return false;
     }
 
     const length = value.length;
-    if ((minLength !== null && length < minLength) || 
-        (maxLength !== null && length > maxLength)) {
+    if (
+      (minLength !== null && length < minLength) ||
+      (maxLength !== null && length > maxLength)
+    ) {
       this.addFieldLengthError(field, minLength, maxLength, length);
       return false;
     }
@@ -362,8 +366,8 @@ class WorkflowValidator extends IWorkflowValidator {
   }
 
   validatePattern(value, field, pattern) {
-    if (typeof value !== 'string') {
-      this.addFieldTypeError(field, 'string', typeof value);
+    if (typeof value !== "string") {
+      this.addFieldTypeError(field, "string", typeof value);
       return false;
     }
 
@@ -375,8 +379,8 @@ class WorkflowValidator extends IWorkflowValidator {
   }
 
   validateRange(value, field, min = null, max = null) {
-    if (typeof value !== 'number') {
-      this.addFieldTypeError(field, 'number', typeof value);
+    if (typeof value !== "number") {
+      this.addFieldTypeError(field, "number", typeof value);
       return false;
     }
 
@@ -412,8 +416,11 @@ class WorkflowValidator extends IWorkflowValidator {
   }
 
   validateDependency(value, field, dependencyValue, dependencyField) {
-    if (value !== null && value !== undefined && 
-        (dependencyValue === null || dependencyValue === undefined)) {
+    if (
+      value !== null &&
+      value !== undefined &&
+      (dependencyValue === null || dependencyValue === undefined)
+    ) {
       this.addFieldDependencyError(field, dependencyField);
       return false;
     }
@@ -432,9 +439,9 @@ class WorkflowValidator extends IWorkflowValidator {
 
   static createWithErrors(errors) {
     const validator = new WorkflowValidator();
-    errors.forEach(error => {
-      if (typeof error === 'string') {
-        validator.addError('', error);
+    errors.forEach((error) => {
+      if (typeof error === "string") {
+        validator.addError("", error);
       } else {
         validator.addError(error.field, error.message, error.code, error.data);
       }
@@ -444,11 +451,16 @@ class WorkflowValidator extends IWorkflowValidator {
 
   static createWithWarnings(warnings) {
     const validator = new WorkflowValidator();
-    warnings.forEach(warning => {
-      if (typeof warning === 'string') {
-        validator.addWarning('', warning);
+    warnings.forEach((warning) => {
+      if (typeof warning === "string") {
+        validator.addWarning("", warning);
       } else {
-        validator.addWarning(warning.field, warning.message, warning.code, warning.data);
+        validator.addWarning(
+          warning.field,
+          warning.message,
+          warning.code,
+          warning.data,
+        );
       }
     });
     return validator;
@@ -463,4 +475,4 @@ class WorkflowValidator extends IWorkflowValidator {
   }
 }
 
-module.exports = WorkflowValidator; 
+module.exports = WorkflowValidator;

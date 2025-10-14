@@ -3,37 +3,38 @@
  * Generates changelog entries based on commits and changes
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('GitChangelogGenerationStep');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("GitChangelogGenerationStep");
 
 // Step configuration
 const config = {
-  name: 'GitChangelogGenerationStep',
-  type: 'git',
-  description: 'Generates changelog entries based on commits and changes',
-  category: 'git',
-  version: '1.0.0',
-  dependencies: ['gitService', 'fileSystemService'],
+  name: "GitChangelogGenerationStep",
+  type: "git",
+  description: "Generates changelog entries based on commits and changes",
+  category: "git",
+  version: "1.0.0",
+  dependencies: ["gitService", "fileSystemService"],
   settings: {
     timeout: 30000,
     conventionalCommits: true,
     groupByType: true,
     includeUnreleased: true,
-    formats: ['markdown', 'json']
+    formats: ["markdown", "json"],
   },
   validation: {
-    required: ['projectPath'],
-    optional: ['sinceVersion', 'toVersion', 'outputPath', 'format', 'task']
-  }
+    required: ["projectPath"],
+    optional: ["sinceVersion", "toVersion", "outputPath", "format", "task"],
+  },
 };
 
 class GitChangelogGenerationStep {
   constructor() {
-    this.name = 'GitChangelogGenerationStep';
-    this.description = 'Generates changelog entries based on commits and changes';
-    this.category = 'git';
-    this.dependencies = ['gitService', 'fileSystemService'];
+    this.name = "GitChangelogGenerationStep";
+    this.description =
+      "Generates changelog entries based on commits and changes";
+    this.category = "git";
+    this.dependencies = ["gitService", "fileSystemService"];
   }
 
   static getConfig() {
@@ -43,23 +44,31 @@ class GitChangelogGenerationStep {
   async execute(context = {}) {
     const config = GitChangelogGenerationStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
-      const { projectPath, sinceVersion, toVersion, outputPath, format, task, ...otherParams } = context;
-      
-      logger.info('Executing Git Changelog Generation step', {
+
+      const {
         projectPath,
-        sinceVersion: sinceVersion || 'latest',
-        toVersion: toVersion || 'HEAD',
+        sinceVersion,
+        toVersion,
         outputPath,
-        format: format || 'markdown',
-        taskId: task?.id,
+        format,
+        task,
         ...otherParams
+      } = context;
+
+      logger.info("Executing Git Changelog Generation step", {
+        projectPath,
+        sinceVersion: sinceVersion || "latest",
+        toVersion: toVersion || "HEAD",
+        outputPath,
+        format: format || "markdown",
+        taskId: task?.id,
+        ...otherParams,
       });
 
       // Generate changelog
@@ -69,64 +78,79 @@ class GitChangelogGenerationStep {
         toVersion,
         format,
         task,
-        context
+        context,
       );
 
       // Write changelog to file if output path is provided
       if (outputPath && changelogResult.content) {
-        await this.writeChangelog(outputPath, changelogResult.content, format, context);
+        await this.writeChangelog(
+          outputPath,
+          changelogResult.content,
+          format,
+          context,
+        );
       }
 
-      logger.info('Git Changelog Generation step completed successfully', {
+      logger.info("Git Changelog Generation step completed successfully", {
         entriesGenerated: changelogResult.entries?.length || 0,
         format,
-        outputPath: outputPath || 'not specified'
+        outputPath: outputPath || "not specified",
       });
 
       return {
-        success: true,
         result: {
           changelog: changelogResult.content,
           entries: changelogResult.entries,
           metadata: changelogResult.metadata,
           format,
-          outputPath: outputPath || null
+          outputPath: outputPath || null,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       logger.error(`${this.name} failed`, {
         error: error.message,
         context: {
           projectPath: context.projectPath,
           sinceVersion: context.sinceVersion,
-          toVersion: context.toVersion
-        }
+          toVersion: context.toVersion,
+        },
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
 
-  async generateChangelog(projectPath, sinceVersion, toVersion, format, task, context) {
+  async generateChangelog(
+    projectPath,
+    sinceVersion,
+    toVersion,
+    format,
+    task,
+    context,
+  ) {
     try {
       // Get commits for the specified range
-      const commits = await this.getCommitsInRange(projectPath, sinceVersion, toVersion, context);
-      
+      const commits = await this.getCommitsInRange(
+        projectPath,
+        sinceVersion,
+        toVersion,
+        context,
+      );
+
       // Parse commits into changelog entries
       const entries = await this.parseCommitsToEntries(commits, context);
-      
+
       // Generate changelog content based on format
       const content = await this.formatChangelog(entries, format, {
         sinceVersion,
         toVersion,
         task,
-        ...context
+        ...context,
       });
 
       // Generate metadata
@@ -135,15 +159,14 @@ class GitChangelogGenerationStep {
       return {
         content,
         entries,
-        metadata
+        metadata,
       };
-
     } catch (error) {
-      logger.error('Error generating changelog', { error: error.message });
+      logger.error("Error generating changelog", { error: error.message });
       return {
-        content: '',
+        content: "",
         entries: [],
-        metadata: {}
+        metadata: {},
       };
     }
   }
@@ -151,22 +174,26 @@ class GitChangelogGenerationStep {
   async getCommitsInRange(projectPath, sinceVersion, toVersion, context) {
     try {
       if (!context.gitService) {
-        logger.warn('No git service available, returning empty commits');
+        logger.warn("No git service available, returning empty commits");
         return [];
       }
 
       const options = {
-        since: sinceVersion === 'latest' ? 'HEAD~10' : sinceVersion,
-        limit: 100
+        since: sinceVersion === "latest" ? "HEAD~10" : sinceVersion,
+        limit: 100,
       };
 
-      const commits = await context.gitService.getCommitHistory(projectPath, options);
-      
-      logger.info(`Retrieved ${commits.length} commits for changelog generation`);
-      return commits;
+      const commits = await context.gitService.getCommitHistory(
+        projectPath,
+        options,
+      );
 
+      logger.info(
+        `Retrieved ${commits.length} commits for changelog generation`,
+      );
+      return commits;
     } catch (error) {
-      logger.warn('Error getting commits', { error: error.message });
+      logger.warn("Error getting commits", { error: error.message });
       return [];
     }
   }
@@ -181,9 +208,9 @@ class GitChangelogGenerationStep {
           entries.push(entry);
         }
       } catch (error) {
-        logger.warn('Error parsing commit', { 
-          commitHash: commit.hash, 
-          error: error.message 
+        logger.warn("Error parsing commit", {
+          commitHash: commit.hash,
+          error: error.message,
         });
       }
     }
@@ -192,17 +219,17 @@ class GitChangelogGenerationStep {
   }
 
   parseCommitToEntry(commit, context) {
-    const message = commit.message || '';
-    const hash = commit.hash || '';
-    const author = commit.author || 'Unknown';
+    const message = commit.message || "";
+    const hash = commit.hash || "";
+    const author = commit.author || "Unknown";
     const date = commit.date || new Date().toISOString();
 
     // Parse conventional commit format
     const conventionalMatch = message.match(/^(\w+)(?:\(([^)]+)\))?: (.+)$/);
-    
+
     if (conventionalMatch) {
       const [, type, scope, description] = conventionalMatch;
-      
+
       return {
         type: this.normalizeCommitType(type),
         scope: scope || null,
@@ -210,54 +237,54 @@ class GitChangelogGenerationStep {
         hash: hash.substring(0, 8),
         author,
         date,
-        breaking: message.includes('BREAKING CHANGE') || message.includes('!'),
-        originalMessage: message
+        breaking: message.includes("BREAKING CHANGE") || message.includes("!"),
+        originalMessage: message,
       };
     }
 
     // Fallback for non-conventional commits
     return {
-      type: 'other',
+      type: "other",
       scope: null,
       description: message,
       hash: hash.substring(0, 8),
       author,
       date,
       breaking: false,
-      originalMessage: message
+      originalMessage: message,
     };
   }
 
   normalizeCommitType(type) {
     const typeMap = {
-      'feat': 'feature',
-      'feature': 'feature',
-      'fix': 'fix',
-      'bug': 'fix',
-      'hotfix': 'fix',
-      'docs': 'documentation',
-      'doc': 'documentation',
-      'style': 'style',
-      'refactor': 'refactor',
-      'perf': 'performance',
-      'performance': 'performance',
-      'test': 'test',
-      'tests': 'test',
-      'chore': 'chore',
-      'ci': 'ci',
-      'build': 'build'
+      feat: "feature",
+      feature: "feature",
+      fix: "fix",
+      bug: "fix",
+      hotfix: "fix",
+      docs: "documentation",
+      doc: "documentation",
+      style: "style",
+      refactor: "refactor",
+      perf: "performance",
+      performance: "performance",
+      test: "test",
+      tests: "test",
+      chore: "chore",
+      ci: "ci",
+      build: "build",
     };
 
-    return typeMap[type.toLowerCase()] || 'other';
+    return typeMap[type.toLowerCase()] || "other";
   }
 
   async formatChangelog(entries, format, options) {
     switch (format.toLowerCase()) {
-      case 'markdown':
+      case "markdown":
         return this.formatMarkdownChangelog(entries, options);
-      case 'json':
+      case "json":
         return this.formatJsonChangelog(entries, options);
-      case 'html':
+      case "html":
         return this.formatHtmlChangelog(entries, options);
       default:
         return this.formatMarkdownChangelog(entries, options);
@@ -266,36 +293,38 @@ class GitChangelogGenerationStep {
 
   formatMarkdownChangelog(entries, options) {
     const { sinceVersion, toVersion, task } = options;
-    const version = toVersion === 'HEAD' ? 'Unreleased' : toVersion;
-    
+    const version = toVersion === "HEAD" ? "Unreleased" : toVersion;
+
     let changelog = `# Changelog\n\n`;
-    
+
     if (sinceVersion && toVersion) {
-      changelog += `## [${version}] - ${new Date().toISOString().split('T')[0]}\n\n`;
+      changelog += `## [${version}] - ${new Date().toISOString().split("T")[0]}\n\n`;
     }
 
     // Group entries by type if enabled
     if (options.groupByType !== false) {
       const groupedEntries = this.groupEntriesByType(entries);
-      
+
       for (const [type, typeEntries] of Object.entries(groupedEntries)) {
         if (typeEntries.length > 0) {
           changelog += `### ${this.capitalizeFirst(type)}\n\n`;
-          
+
           for (const entry of typeEntries) {
-            const breakingIndicator = entry.breaking ? ' **BREAKING CHANGE**' : '';
-            const scopeIndicator = entry.scope ? ` **${entry.scope}**:` : '';
+            const breakingIndicator = entry.breaking
+              ? " **BREAKING CHANGE**"
+              : "";
+            const scopeIndicator = entry.scope ? ` **${entry.scope}**:` : "";
             changelog += `-${scopeIndicator} ${entry.description}${breakingIndicator} (${entry.hash})\n`;
           }
-          
-          changelog += '\n';
+
+          changelog += "\n";
         }
       }
     } else {
       // List all entries chronologically
       for (const entry of entries) {
-        const breakingIndicator = entry.breaking ? ' **BREAKING CHANGE**' : '';
-        const scopeIndicator = entry.scope ? ` **${entry.scope}**:` : '';
+        const breakingIndicator = entry.breaking ? " **BREAKING CHANGE**" : "";
+        const scopeIndicator = entry.scope ? ` **${entry.scope}**:` : "";
         changelog += `-${scopeIndicator} ${entry.description}${breakingIndicator} (${entry.hash})\n`;
       }
     }
@@ -305,8 +334,8 @@ class GitChangelogGenerationStep {
       changelog += `\n---\n\n`;
       changelog += `**Task Information:**\n`;
       changelog += `- Task ID: ${task.id}\n`;
-      changelog += `- Type: ${task.type?.value || task.type || 'Unknown'}\n`;
-      changelog += `- Priority: ${task.priority?.value || task.priority || 'Unknown'}\n`;
+      changelog += `- Type: ${task.type?.value || task.type || "Unknown"}\n`;
+      changelog += `- Priority: ${task.priority?.value || task.priority || "Unknown"}\n`;
       if (task.description) {
         changelog += `- Description: ${task.description}\n`;
       }
@@ -317,30 +346,32 @@ class GitChangelogGenerationStep {
 
   formatJsonChangelog(entries, options) {
     const { sinceVersion, toVersion, task } = options;
-    const version = toVersion === 'HEAD' ? 'unreleased' : toVersion;
-    
+    const version = toVersion === "HEAD" ? "unreleased" : toVersion;
+
     const changelog = {
       version,
-      date: new Date().toISOString().split('T')[0],
-      entries: entries.map(entry => ({
+      date: new Date().toISOString().split("T")[0],
+      entries: entries.map((entry) => ({
         type: entry.type,
         scope: entry.scope,
         description: entry.description,
         hash: entry.hash,
         author: entry.author,
         date: entry.date,
-        breaking: entry.breaking
+        breaking: entry.breaking,
       })),
       metadata: {
         totalEntries: entries.length,
-        breakingChanges: entries.filter(e => e.breaking).length,
-        task: task ? {
-          id: task.id,
-          type: task.type?.value || task.type,
-          priority: task.priority?.value || task.priority,
-          description: task.description
-        } : null
-      }
+        breakingChanges: entries.filter((e) => e.breaking).length,
+        task: task
+          ? {
+              id: task.id,
+              type: task.type?.value || task.type,
+              priority: task.priority?.value || task.priority,
+              description: task.description,
+            }
+          : null,
+      },
     };
 
     return JSON.stringify(changelog, null, 2);
@@ -348,8 +379,8 @@ class GitChangelogGenerationStep {
 
   formatHtmlChangelog(entries, options) {
     const { sinceVersion, toVersion, task } = options;
-    const version = toVersion === 'HEAD' ? 'Unreleased' : toVersion;
-    
+    const version = toVersion === "HEAD" ? "Unreleased" : toVersion;
+
     let html = `<!DOCTYPE html>
 <html>
 <head>
@@ -367,22 +398,24 @@ class GitChangelogGenerationStep {
 <body>
     <div class="changelog">
         <h1 class="version">Changelog - ${version}</h1>
-        <p>Generated on ${new Date().toISOString().split('T')[0]}</p>
+        <p>Generated on ${new Date().toISOString().split("T")[0]}</p>
 `;
 
     // Group entries by type
     const groupedEntries = this.groupEntriesByType(entries);
-    
+
     for (const [type, typeEntries] of Object.entries(groupedEntries)) {
       if (typeEntries.length > 0) {
         html += `        <h2 class="type">${this.capitalizeFirst(type)}</h2>\n`;
-        
+
         for (const entry of typeEntries) {
-          const breakingClass = entry.breaking ? 'breaking' : '';
-          const scopeText = entry.scope ? ` <strong>${entry.scope}:</strong>` : '';
+          const breakingClass = entry.breaking ? "breaking" : "";
+          const scopeText = entry.scope
+            ? ` <strong>${entry.scope}:</strong>`
+            : "";
           html += `        <div class="entry">
             ${scopeText} ${entry.description}
-            ${entry.breaking ? '<span class="breaking">BREAKING CHANGE</span>' : ''}
+            ${entry.breaking ? '<span class="breaking">BREAKING CHANGE</span>' : ""}
             <span class="hash">(${entry.hash})</span>
         </div>\n`;
         }
@@ -398,14 +431,14 @@ class GitChangelogGenerationStep {
 
   groupEntriesByType(entries) {
     const grouped = {};
-    
+
     for (const entry of entries) {
       if (!grouped[entry.type]) {
         grouped[entry.type] = [];
       }
       grouped[entry.type].push(entry);
     }
-    
+
     return grouped;
   }
 
@@ -414,44 +447,46 @@ class GitChangelogGenerationStep {
   }
 
   generateMetadata(entries, sinceVersion, toVersion) {
-    const breakingChanges = entries.filter(e => e.breaking).length;
-    const types = [...new Set(entries.map(e => e.type))];
-    
+    const breakingChanges = entries.filter((e) => e.breaking).length;
+    const types = [...new Set(entries.map((e) => e.type))];
+
     return {
       totalEntries: entries.length,
       breakingChanges,
       types,
       sinceVersion,
       toVersion,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   }
 
   async writeChangelog(outputPath, content, format, context) {
     try {
       if (!context.fileSystemService) {
-        logger.warn('No file system service available, skipping file write');
+        logger.warn("No file system service available, skipping file write");
         return;
       }
 
-      const extension = format === 'json' ? '.json' : format === 'html' ? '.html' : '.md';
-      const fullPath = outputPath.endsWith(extension) ? outputPath : `${outputPath}${extension}`;
-      
-      await context.fileSystemService.writeFile(fullPath, content);
-      
-      logger.info(`Changelog written to ${fullPath}`);
+      const extension =
+        format === "json" ? ".json" : format === "html" ? ".html" : ".md";
+      const fullPath = outputPath.endsWith(extension)
+        ? outputPath
+        : `${outputPath}${extension}`;
 
+      await context.fileSystemService.writeFile(fullPath, content);
+
+      logger.info(`Changelog written to ${fullPath}`);
     } catch (error) {
-      logger.error('Error writing changelog file', { 
-        outputPath, 
-        error: error.message 
+      logger.error("Error writing changelog file", {
+        outputPath,
+        error: error.message,
       });
     }
   }
 
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
   }
 }
@@ -462,5 +497,5 @@ const stepInstance = new GitChangelogGenerationStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

@@ -97,7 +97,6 @@ class ErrorDetectionStep extends IWorkflowStep {
     const prioritizedErrors = await this.prioritizeErrors(categorizedErrors);
     
     return {
-      success: true,
       data: {
         errors: prioritizedErrors,
         totalCount: errors.length,
@@ -124,7 +123,6 @@ class ErrorAnalysisStep extends IWorkflowStep {
     const report = await this.generateAnalysisReport(patterns, rootCauses);
     
     return {
-      success: true,
       data: {
         patterns,
         rootCauses,
@@ -151,7 +149,6 @@ class FixSuggestionStep extends IWorkflowStep {
     const prioritizedSuggestions = await this.prioritizeSuggestions(scoredSuggestions);
     
     return {
-      success: true,
       data: {
         suggestions: prioritizedSuggestions,
         totalSuggestions: suggestions.length,
@@ -221,14 +218,13 @@ class DebugController {
       const result = await this.debugWorkflowService.executeDebugWorkflow(taskId, session);
       
       res.json({
-        success: true,
         sessionId: session.id,
         result
       });
     } catch (error) {
       this.logger.error('Debug session start failed:', error);
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }
@@ -240,13 +236,12 @@ class DebugController {
       const session = await this.debugSessionManager.getSession(sessionId);
       
       res.json({
-        success: true,
         session
       });
     } catch (error) {
       this.logger.error('Get debug session failed:', error);
       res.status(500).json({
-        success: false,
+       
         error: error.message
       });
     }

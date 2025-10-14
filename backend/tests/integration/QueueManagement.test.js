@@ -1,58 +1,58 @@
 #!/usr/bin/env node
 
-require('module-alias/register');
-const path = require('path');
-const fs = require('fs').promises;
-const { v4: uuidv4 } = require('uuid');
+require("module-alias/register");
+const path = require("path");
+const fs = require("fs").promises;
+const { v4: uuidv4 } = require("uuid");
 
 // Mock services for queue management testing
 const mockCodeQualityService = {
   analyzeCodeQuality: jest.fn(),
   getQualityScore: jest.fn(),
-  getQualityLevel: jest.fn()
+  getQualityLevel: jest.fn(),
 };
 
 const mockSecurityService = {
   analyzeSecurity: jest.fn(),
   getSecurityScore: jest.fn(),
   getOverallRiskLevel: jest.fn(),
-  hasCriticalVulnerabilities: jest.fn()
+  hasCriticalVulnerabilities: jest.fn(),
 };
 
 const mockPerformanceService = {
   analyzePerformance: jest.fn(),
   getPerformanceScore: jest.fn(),
   getPerformanceLevel: jest.fn(),
-  getCriticalIssues: jest.fn()
+  getCriticalIssues: jest.fn(),
 };
 
 const mockArchitectureService = {
   analyzeArchitecture: jest.fn(),
   getArchitectureScore: jest.fn(),
   getArchitectureLevel: jest.fn(),
-  getCriticalIssues: jest.fn()
+  getCriticalIssues: jest.fn(),
 };
 
 const mockAnalysisRepository = {
   findLatestByProjectPath: jest.fn(),
-  saveAnalysis: jest.fn()
+  saveAnalysis: jest.fn(),
 };
 
 const mockAnalysisOutputService = {
-  generateMarkdownReport: jest.fn()
+  generateMarkdownReport: jest.fn(),
 };
 
 const mockLogger = {
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
-  debug: jest.fn()
+  debug: jest.fn(),
 };
 
 // Import the controller to test
-const AnalysisController = require('@presentation/api/AnalysisController');
+const AnalysisController = require("@presentation/api/AnalysisController");
 
-describe('Queue Management Integration Tests', () => {
+describe("Queue Management Integration Tests", () => {
   let analysisController;
   let mockReq;
   let mockRes;
@@ -60,7 +60,7 @@ describe('Queue Management Integration Tests', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Create controller instance
     analysisController = new AnalysisController(
       mockCodeQualityService,
@@ -69,108 +69,110 @@ describe('Queue Management Integration Tests', () => {
       mockArchitectureService,
       mockLogger,
       mockAnalysisOutputService,
-      mockAnalysisRepository
+      mockAnalysisRepository,
     );
 
     // Setup mock request and response
     mockReq = {
-      params: { projectPath: '/test/project' },
+      params: { projectPath: "/test/project" },
       query: {},
-      body: {}
+      body: {},
     };
 
     mockRes = {
       json: jest.fn(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
   });
 
-  describe('Project Isolation', () => {
-    test('should isolate projects in separate queues', async () => {
+  describe("Project Isolation", () => {
+    test("should isolate projects in separate queues", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn()
+        processAnalysisRequest: jest
+          .fn()
           .mockResolvedValueOnce({
-            status: 'running',
+            status: "running",
             jobId: uuidv4(),
-            analysisTypes: ['code-quality'],
+            analysisTypes: ["code-quality"],
             estimatedTime: 60000,
-            message: 'Analysis started for project-1'
+            message: "Analysis started for project-1",
           })
           .mockResolvedValueOnce({
-            status: 'running',
+            status: "running",
             jobId: uuidv4(),
-            analysisTypes: ['security'],
+            analysisTypes: ["security"],
             estimatedTime: 45000,
-            message: 'Analysis started for project-2'
-          })
+            message: "Analysis started for project-2",
+          }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
 
       // First project analysis
-      mockReq.params.projectPath = '/test/project-1';
+      mockReq.params.projectPath = "/test/project-1";
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Reset mock response
       mockRes.json.mockClear();
 
       // Second project analysis (should be independent)
-      mockReq.params.projectPath = '/test/project-2';
+      mockReq.params.projectPath = "/test/project-2";
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Verify both projects were processed independently
       expect(mockQueueService.processAnalysisRequest).toHaveBeenCalledTimes(2);
     });
 
-    test('should handle queue conflicts between projects', async () => {
+    test("should handle queue conflicts between projects", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn()
+        processAnalysisRequest: jest
+          .fn()
           .mockResolvedValueOnce({
-            status: 'running',
+            status: "running",
             jobId: uuidv4(),
-            analysisTypes: ['code-quality', 'security'],
+            analysisTypes: ["code-quality", "security"],
             estimatedTime: 120000,
-            message: 'Analysis started for project-1'
+            message: "Analysis started for project-1",
           })
           .mockResolvedValueOnce({
-            status: 'queued',
+            status: "queued",
             jobId: uuidv4(),
-            analysisTypes: ['performance', 'architecture'],
+            analysisTypes: ["performance", "architecture"],
             position: 1,
             estimatedWaitTime: 120000,
-            message: 'Analysis queued for project-1'
+            message: "Analysis queued for project-1",
           })
           .mockResolvedValueOnce({
-            status: 'running',
+            status: "running",
             jobId: uuidv4(),
-            analysisTypes: ['code-quality'],
+            analysisTypes: ["code-quality"],
             estimatedTime: 60000,
-            message: 'Analysis started for project-2'
-          })
+            message: "Analysis started for project-2",
+          }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
 
       // Project 1 - first analysis (runs immediately)
-      mockReq.params.projectPath = '/test/project-1';
+      mockReq.params.projectPath = "/test/project-1";
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Reset mock response
@@ -181,36 +183,36 @@ describe('Queue Management Integration Tests', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'queued',
-          position: 1
-        })
+          status: "queued",
+          position: 1,
+        }),
       );
 
       // Reset mock response
       mockRes.json.mockClear();
 
       // Project 2 - should run independently
-      mockReq.params.projectPath = '/test/project-2';
+      mockReq.params.projectPath = "/test/project-2";
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
     });
   });
 
-  describe('Resource Limits', () => {
-    test('should enforce memory limits per project', async () => {
+  describe("Resource Limits", () => {
+    test("should enforce memory limits per project", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'running',
+          status: "running",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality'],
+          analysisTypes: ["code-quality"],
           estimatedTime: 60000,
-          message: 'Analysis started with memory monitoring'
-        })
+          message: "Analysis started with memory monitoring",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -219,9 +221,8 @@ describe('Queue Management Integration Tests', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: true,
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Verify memory monitoring was enabled
@@ -230,16 +231,18 @@ describe('Queue Management Integration Tests', () => {
         expect.any(Array),
         expect.objectContaining({
           priority: expect.any(String),
-          timeout: expect.any(Number)
-        })
+          timeout: expect.any(Number),
+        }),
       );
     });
 
-    test('should handle resource allocation failures', async () => {
+    test("should handle resource allocation failures", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn().mockRejectedValue(
-          new Error('Insufficient memory resources for project')
-        )
+        processAnalysisRequest: jest
+          .fn()
+          .mockRejectedValue(
+            new Error("Insufficient memory resources for project"),
+          ),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -249,25 +252,26 @@ describe('Queue Management Integration Tests', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: false,
-          error: 'Insufficient memory resources for project'
-        })
+         
+          error: "Insufficient memory resources for project",
+        }),
       );
     });
 
-    test('should handle concurrent resource limits', async () => {
+    test("should handle concurrent resource limits", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn()
+        processAnalysisRequest: jest
+          .fn()
           .mockResolvedValueOnce({
-            status: 'running',
+            status: "running",
             jobId: uuidv4(),
-            analysisTypes: ['code-quality'],
+            analysisTypes: ["code-quality"],
             estimatedTime: 60000,
-            message: 'Analysis started'
+            message: "Analysis started",
           })
           .mockRejectedValueOnce(
-            new Error('Maximum concurrent analyses reached')
-          )
+            new Error("Maximum concurrent analyses reached"),
+          ),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -277,8 +281,8 @@ describe('Queue Management Integration Tests', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Reset mock response
@@ -290,27 +294,26 @@ describe('Queue Management Integration Tests', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: false,
-          error: 'Maximum concurrent analyses reached'
-        })
+         
+          error: "Maximum concurrent analyses reached",
+        }),
       );
     });
   });
 
-  describe('Job Management', () => {
-    test('should handle job cancellation', async () => {
+  describe("Job Management", () => {
+    test("should handle job cancellation", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'running',
+          status: "running",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality'],
+          analysisTypes: ["code-quality"],
           estimatedTime: 60000,
-          message: 'Analysis started'
+          message: "Analysis started",
         }),
         cancelAnalysis: jest.fn().mockResolvedValue({
-          success: true,
-          message: 'Analysis cancelled successfully'
-        })
+          message: "Analysis cancelled successfully",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -320,12 +323,12 @@ describe('Queue Management Integration Tests', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Cancel analysis
-      const cancelReq = { params: { projectPath: '/test/project' } };
+      const cancelReq = { params: { projectPath: "/test/project" } };
       const cancelRes = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
       await analysisController.cancelAnalysis(cancelReq, cancelRes);
@@ -333,35 +336,34 @@ describe('Queue Management Integration Tests', () => {
       expect(mockQueueService.cancelAnalysis).toHaveBeenCalled();
       expect(cancelRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: true,
-          message: 'Analysis cancelled successfully'
-        })
+          message: "Analysis cancelled successfully",
+        }),
       );
     });
 
-    test('should handle job priority management', async () => {
+    test("should handle job priority management", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'queued',
+          status: "queued",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality'],
+          analysisTypes: ["code-quality"],
           position: 1,
           estimatedWaitTime: 30000,
-          message: 'High priority analysis queued'
-        })
+          message: "High priority analysis queued",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
 
       // Request high priority analysis
-      mockReq.query = { priority: 'high' };
+      mockReq.query = { priority: "high" };
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'queued',
-          position: 1
-        })
+          status: "queued",
+          position: 1,
+        }),
       );
 
       // Verify priority was passed to queue service
@@ -369,32 +371,32 @@ describe('Queue Management Integration Tests', () => {
         expect.any(String),
         expect.any(Array),
         expect.objectContaining({
-          priority: 'high'
-        })
+          priority: "high",
+        }),
       );
     });
 
-    test('should handle job timeout management', async () => {
+    test("should handle job timeout management", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'running',
+          status: "running",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality'],
+          analysisTypes: ["code-quality"],
           estimatedTime: 300000,
-          message: 'Analysis started with extended timeout'
-        })
+          message: "Analysis started with extended timeout",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
 
       // Request analysis with custom timeout
-      mockReq.query = { timeout: '600' }; // 10 minutes
+      mockReq.query = { timeout: "600" }; // 10 minutes
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running'
-        })
+          status: "running",
+        }),
       );
 
       // Verify timeout was passed to queue service
@@ -402,23 +404,23 @@ describe('Queue Management Integration Tests', () => {
         expect.any(String),
         expect.any(Array),
         expect.objectContaining({
-          timeout: 600000 // 600 seconds in milliseconds
-        })
+          timeout: 600000, // 600 seconds in milliseconds
+        }),
       );
     });
   });
 
-  describe('Queue Status Tracking', () => {
-    test('should track queue position and wait times', async () => {
+  describe("Queue Status Tracking", () => {
+    test("should track queue position and wait times", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'queued',
+          status: "queued",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality', 'security'],
+          analysisTypes: ["code-quality", "security"],
           position: 3,
           estimatedWaitTime: 90000,
-          message: 'Analysis queued - 2 jobs ahead'
-        })
+          message: "Analysis queued - 2 jobs ahead",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -427,24 +429,24 @@ describe('Queue Management Integration Tests', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'queued',
+          status: "queued",
           jobId: expect.any(String),
-          analysisTypes: ['code-quality', 'security'],
+          analysisTypes: ["code-quality", "security"],
           position: 3,
           estimatedWaitTime: 90000,
-          message: 'Analysis queued - 2 jobs ahead'
-        })
+          message: "Analysis queued - 2 jobs ahead",
+        }),
       );
     });
 
-    test('should provide queue statistics', async () => {
+    test("should provide queue statistics", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'running',
+          status: "running",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality'],
+          analysisTypes: ["code-quality"],
           estimatedTime: 60000,
-          message: 'Analysis started'
+          message: "Analysis started",
         }),
         getStatistics: jest.fn().mockReturnValue({
           totalAnalyses: 25,
@@ -452,8 +454,8 @@ describe('Queue Management Integration Tests', () => {
           completedAnalyses: 20,
           failedAnalyses: 2,
           averageWaitTime: 45000,
-          averageAnalysisTime: 120000
-        })
+          averageAnalysisTime: 120000,
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -467,29 +469,28 @@ describe('Queue Management Integration Tests', () => {
       expect(mockQueueService.getStatistics).toHaveBeenCalled();
       expect(statsRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: true,
           data: expect.objectContaining({
             totalAnalyses: 25,
             queuedAnalyses: 3,
             completedAnalyses: 20,
             failedAnalyses: 2,
             averageWaitTime: 45000,
-            averageAnalysisTime: 120000
-          })
-        })
+            averageAnalysisTime: 120000,
+          }),
+        }),
       );
     });
 
-    test('should track analysis progress', async () => {
+    test("should track analysis progress", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'running',
+          status: "running",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality', 'security'],
+          analysisTypes: ["code-quality", "security"],
           estimatedTime: 120000,
           progress: 25,
-          message: 'Analysis in progress - 25% complete'
-        })
+          message: "Analysis in progress - 25% complete",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -498,23 +499,23 @@ describe('Queue Management Integration Tests', () => {
 
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'running',
+          status: "running",
           jobId: expect.any(String),
-          analysisTypes: ['code-quality', 'security'],
+          analysisTypes: ["code-quality", "security"],
           estimatedTime: 120000,
           progress: 25,
-          message: 'Analysis in progress - 25% complete'
-        })
+          message: "Analysis in progress - 25% complete",
+        }),
       );
     });
   });
 
-  describe('Error Handling', () => {
-    test('should handle queue service errors gracefully', async () => {
+  describe("Error Handling", () => {
+    test("should handle queue service errors gracefully", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn().mockRejectedValue(
-          new Error('Queue service unavailable')
-        )
+        processAnalysisRequest: jest
+          .fn()
+          .mockRejectedValue(new Error("Queue service unavailable")),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -524,39 +525,41 @@ describe('Queue Management Integration Tests', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: false,
-          error: 'Queue service unavailable'
-        })
+         
+          error: "Queue service unavailable",
+        }),
       );
     });
 
-    test('should handle invalid job parameters', async () => {
+    test("should handle invalid job parameters", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn().mockRejectedValue(
-          new Error('Invalid analysis types specified')
-        )
+        processAnalysisRequest: jest
+          .fn()
+          .mockRejectedValue(new Error("Invalid analysis types specified")),
       };
 
       analysisController.analysisQueueService = mockQueueService;
 
       // Request with invalid analysis types
-      mockReq.query = { types: 'invalid-type' };
+      mockReq.query = { types: "invalid-type" };
       await analysisController.analyzeComprehensive(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: false,
-          error: 'Invalid analysis types specified'
-        })
+         
+          error: "Invalid analysis types specified",
+        }),
       );
     });
 
-    test('should handle queue overflow scenarios', async () => {
+    test("should handle queue overflow scenarios", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn().mockRejectedValue(
-          new Error('Queue is full - maximum capacity reached')
-        )
+        processAnalysisRequest: jest
+          .fn()
+          .mockRejectedValue(
+            new Error("Queue is full - maximum capacity reached"),
+          ),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -566,40 +569,41 @@ describe('Queue Management Integration Tests', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          success: false,
-          error: 'Queue is full - maximum capacity reached'
-        })
+         
+          error: "Queue is full - maximum capacity reached",
+        }),
       );
     });
   });
 
-  describe('Concurrent Processing', () => {
-    test('should handle multiple concurrent queue operations', async () => {
+  describe("Concurrent Processing", () => {
+    test("should handle multiple concurrent queue operations", async () => {
       const mockQueueService = {
-        processAnalysisRequest: jest.fn()
+        processAnalysisRequest: jest
+          .fn()
           .mockResolvedValueOnce({
-            status: 'running',
+            status: "running",
             jobId: uuidv4(),
-            analysisTypes: ['code-quality'],
+            analysisTypes: ["code-quality"],
             estimatedTime: 60000,
-            message: 'Analysis started'
+            message: "Analysis started",
           })
           .mockResolvedValueOnce({
-            status: 'queued',
+            status: "queued",
             jobId: uuidv4(),
-            analysisTypes: ['security'],
+            analysisTypes: ["security"],
             position: 1,
             estimatedWaitTime: 60000,
-            message: 'Analysis queued'
+            message: "Analysis queued",
           })
           .mockResolvedValueOnce({
-            status: 'queued',
+            status: "queued",
             jobId: uuidv4(),
-            analysisTypes: ['performance'],
+            analysisTypes: ["performance"],
             position: 2,
             estimatedWaitTime: 120000,
-            message: 'Analysis queued'
-          })
+            message: "Analysis queued",
+          }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -608,7 +612,11 @@ describe('Queue Management Integration Tests', () => {
       const promises = [];
       for (let i = 0; i < 3; i++) {
         const req = { ...mockReq };
-        const res = { ...mockRes, json: jest.fn(), status: jest.fn().mockReturnThis() };
+        const res = {
+          ...mockRes,
+          json: jest.fn(),
+          status: jest.fn().mockReturnThis(),
+        };
         promises.push(analysisController.analyzeComprehensive(req, res));
       }
 
@@ -618,15 +626,15 @@ describe('Queue Management Integration Tests', () => {
       expect(mockQueueService.processAnalysisRequest).toHaveBeenCalledTimes(3);
     });
 
-    test('should maintain queue integrity under concurrent load', async () => {
+    test("should maintain queue integrity under concurrent load", async () => {
       const mockQueueService = {
         processAnalysisRequest: jest.fn().mockResolvedValue({
-          status: 'running',
+          status: "running",
           jobId: uuidv4(),
-          analysisTypes: ['code-quality'],
+          analysisTypes: ["code-quality"],
           estimatedTime: 60000,
-          message: 'Analysis started'
-        })
+          message: "Analysis started",
+        }),
       };
 
       analysisController.analysisQueueService = mockQueueService;
@@ -637,7 +645,11 @@ describe('Queue Management Integration Tests', () => {
       const promises = [];
       for (let i = 0; i < 10; i++) {
         const req = { ...mockReq };
-        const res = { ...mockRes, json: jest.fn(), status: jest.fn().mockReturnThis() };
+        const res = {
+          ...mockRes,
+          json: jest.fn(),
+          status: jest.fn().mockReturnThis(),
+        };
         promises.push(analysisController.analyzeComprehensive(req, res));
       }
 
@@ -650,4 +662,4 @@ describe('Queue Management Integration Tests', () => {
       expect(mockQueueService.processAnalysisRequest).toHaveBeenCalledTimes(10);
     });
   });
-}); 
+});

@@ -1,11 +1,11 @@
 /**
  * InterfaceController - API controller for interface management
- * 
+ *
  * This controller provides REST API endpoints for interface management,
  * including creation, retrieval, lifecycle management, and project integration.
  */
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class InterfaceController {
   /**
@@ -17,7 +17,8 @@ class InterfaceController {
     this.interfaceManager = dependencies.interfaceManager;
     this.interfaceFactory = dependencies.interfaceFactory;
     this.interfaceRegistry = dependencies.interfaceRegistry;
-    this.logger = dependencies.logger || new ServiceLogger('InterfaceController');
+    this.logger =
+      dependencies.logger || new ServiceLogger("InterfaceController");
   }
 
   /**
@@ -28,30 +29,29 @@ class InterfaceController {
    */
   async getAllInterfaces(req, res) {
     try {
-      this.logger.info('Getting all interfaces');
-      
+      this.logger.info("Getting all interfaces");
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const interfaces = this.interfaceManager.getAllInterfaces();
-      const interfaceData = interfaces.map(interfaceInstance => ({
+      const interfaceData = interfaces.map((interfaceInstance) => ({
         id: interfaceInstance.id,
         type: interfaceInstance.type,
         status: interfaceInstance.status,
         config: interfaceInstance.config,
-        metadata: interfaceInstance.getMetadata()
+        metadata: interfaceInstance.getMetadata(),
       }));
-      
+
       res.success(interfaceData, 200, {
         meta: {
           total: interfaceData.length,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
-      
     } catch (error) {
-      this.logger.error('Failed to get all interfaces:', error);
+      this.logger.error("Failed to get all interfaces:", error);
       res.error(error.message, 500);
     }
   }
@@ -66,26 +66,25 @@ class InterfaceController {
     try {
       const { interfaceId } = req.params;
       this.logger.info(`Getting interface: ${interfaceId}`);
-      
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const interfaceInstance = this.interfaceManager.getInterface(interfaceId);
       if (!interfaceInstance) {
-        return res.notFound('Interface not found: ${interfaceId}');
+        return res.notFound("Interface not found: ${interfaceId}");
       }
-      
+
       res.success({
-          id: interfaceInstance.id,
-          type: interfaceInstance.type,
-          status: interfaceInstance.status,
-          config: interfaceInstance.config,
-          metadata: interfaceInstance.getMetadata()
-        });
-      
+        id: interfaceInstance.id,
+        type: interfaceInstance.type,
+        status: interfaceInstance.status,
+        config: interfaceInstance.config,
+        metadata: interfaceInstance.getMetadata(),
+      });
     } catch (error) {
-      this.logger.error('Failed to get interface:', error);
+      this.logger.error("Failed to get interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -100,40 +99,39 @@ class InterfaceController {
     try {
       const { interfaceType, config = {}, interfaceId } = req.body;
       this.logger.info(`Creating interface: ${interfaceType}`);
-      
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       if (!interfaceType) {
-        return res.badRequest('interfaceType is required');
+        return res.badRequest("interfaceType is required");
       }
-      
+
       let interfaceInstance;
       if (this.interfaceFactory) {
         interfaceInstance = await this.interfaceFactory.createInterfaceByType(
           interfaceType,
           config,
-          interfaceId
+          interfaceId,
         );
       } else {
         interfaceInstance = await this.interfaceManager.createInterface(
           interfaceType,
           config,
-          interfaceId
+          interfaceId,
         );
       }
-      
+
       res.created({
         id: interfaceInstance.id,
         type: interfaceInstance.type,
         status: interfaceInstance.status,
         config: interfaceInstance.config,
-        metadata: interfaceInstance.getMetadata()
+        metadata: interfaceInstance.getMetadata(),
       });
-      
     } catch (error) {
-      this.logger.error('Failed to create interface:', error);
+      this.logger.error("Failed to create interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -148,20 +146,19 @@ class InterfaceController {
     try {
       const { interfaceId } = req.params;
       this.logger.info(`Removing interface: ${interfaceId}`);
-      
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const removed = await this.interfaceManager.removeInterface(interfaceId);
       if (!removed) {
-        return res.notFound('Interface not found: ${interfaceId}');
+        return res.notFound("Interface not found: ${interfaceId}");
       }
-      
+
       res.success({ removed: true });
-      
     } catch (error) {
-      this.logger.error('Failed to remove interface:', error);
+      this.logger.error("Failed to remove interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -176,17 +173,16 @@ class InterfaceController {
     try {
       const { interfaceId } = req.params;
       this.logger.info(`Starting interface: ${interfaceId}`);
-      
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const started = await this.interfaceManager.startInterface(interfaceId);
-      
+
       res.success({ started });
-      
     } catch (error) {
-      this.logger.error('Failed to start interface:', error);
+      this.logger.error("Failed to start interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -201,17 +197,16 @@ class InterfaceController {
     try {
       const { interfaceId } = req.params;
       this.logger.info(`Stopping interface: ${interfaceId}`);
-      
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const stopped = await this.interfaceManager.stopInterface(interfaceId);
-      
+
       res.success({ stopped });
-      
     } catch (error) {
-      this.logger.error('Failed to stop interface:', error);
+      this.logger.error("Failed to stop interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -226,17 +221,17 @@ class InterfaceController {
     try {
       const { interfaceId } = req.params;
       this.logger.info(`Restarting interface: ${interfaceId}`);
-      
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
-      const restarted = await this.interfaceManager.restartInterface(interfaceId);
-      
+
+      const restarted =
+        await this.interfaceManager.restartInterface(interfaceId);
+
       res.success({ restarted });
-      
     } catch (error) {
-      this.logger.error('Failed to restart interface:', error);
+      this.logger.error("Failed to restart interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -249,21 +244,22 @@ class InterfaceController {
    */
   async getAvailableTypes(req, res) {
     try {
-      this.logger.info('Getting available interface types');
-      
+      this.logger.info("Getting available interface types");
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const types = this.interfaceManager.getAvailableTypes();
-      
-      res.success(types, 200, { meta: {
+
+      res.success(types, 200, {
+        meta: {
           total: types.length,
-          timestamp: new Date().toISOString()
-        } });
-      
+          timestamp: new Date().toISOString(),
+        },
+      });
     } catch (error) {
-      this.logger.error('Failed to get available types:', error);
+      this.logger.error("Failed to get available types:", error);
       res.error(error.message, 500);
     }
   }
@@ -276,22 +272,21 @@ class InterfaceController {
    */
   async getStats(req, res) {
     try {
-      this.logger.info('Getting interface statistics');
-      
+      this.logger.info("Getting interface statistics");
+
       if (!this.interfaceManager) {
-        return res.error('Interface manager not available', 503);
+        return res.error("Interface manager not available", 503);
       }
-      
+
       const stats = this.interfaceManager.getStats();
       const statusSummary = this.interfaceManager.getStatusSummary();
-      
+
       res.success({
-          stats,
-          statusSummary
-        });
-      
+        stats,
+        statusSummary,
+      });
     } catch (error) {
-      this.logger.error('Failed to get interface statistics:', error);
+      this.logger.error("Failed to get interface statistics:", error);
       res.error(error.message, 500);
     }
   }
@@ -306,21 +301,23 @@ class InterfaceController {
     try {
       const { projectId } = req.params;
       this.logger.info(`Getting interfaces for project: ${projectId}`);
-      
+
       if (!this.projectApplicationService) {
-        return res.error('Project application service not available', 503);
+        return res.error("Project application service not available", 503);
       }
-      
-      const interfaces = await this.projectApplicationService.getProjectInterfaces(projectId);
-      
-      res.success(interfaces, 200, { meta: {
+
+      const interfaces =
+        await this.projectApplicationService.getProjectInterfaces(projectId);
+
+      res.success(interfaces, 200, {
+        meta: {
           projectId,
           total: interfaces.length,
-          timestamp: new Date().toISOString()
-        } });
-      
+          timestamp: new Date().toISOString(),
+        },
+      });
     } catch (error) {
-      this.logger.error('Failed to get project interfaces:', error);
+      this.logger.error("Failed to get project interfaces:", error);
       res.error(error.message, 500);
     }
   }
@@ -335,27 +332,28 @@ class InterfaceController {
     try {
       const { projectId } = req.params;
       const { interfaceType, config = {} } = req.body;
-      this.logger.info(`Creating interface for project: ${projectId}, type: ${interfaceType}`);
-      
+      this.logger.info(
+        `Creating interface for project: ${projectId}, type: ${interfaceType}`,
+      );
+
       if (!this.projectApplicationService) {
-        return res.error('Project application service not available', 503);
+        return res.error("Project application service not available", 503);
       }
-      
+
       if (!interfaceType) {
-        return res.badRequest('interfaceType is required');
+        return res.badRequest("interfaceType is required");
       }
-      
-      const interfaceData = await this.projectApplicationService.createProjectInterface(
-        projectId,
-        interfaceType,
-        config
-      );
-      
-      res.created(interfaceData
-      );
-      
+
+      const interfaceData =
+        await this.projectApplicationService.createProjectInterface(
+          projectId,
+          interfaceType,
+          config,
+        );
+
+      res.created(interfaceData);
     } catch (error) {
-      this.logger.error('Failed to create project interface:', error);
+      this.logger.error("Failed to create project interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -369,21 +367,23 @@ class InterfaceController {
   async removeProjectInterface(req, res) {
     try {
       const { projectId, interfaceId } = req.params;
-      this.logger.info(`Removing interface ${interfaceId} from project: ${projectId}`);
-      
-      if (!this.projectApplicationService) {
-        return res.error('Project application service not available', 503);
-      }
-      
-      const removed = await this.projectApplicationService.removeProjectInterface(
-        projectId,
-        interfaceId
+      this.logger.info(
+        `Removing interface ${interfaceId} from project: ${projectId}`,
       );
-      
+
+      if (!this.projectApplicationService) {
+        return res.error("Project application service not available", 503);
+      }
+
+      const removed =
+        await this.projectApplicationService.removeProjectInterface(
+          projectId,
+          interfaceId,
+        );
+
       res.success({ removed });
-      
     } catch (error) {
-      this.logger.error('Failed to remove project interface:', error);
+      this.logger.error("Failed to remove project interface:", error);
       res.error(error.message, 500);
     }
   }
@@ -397,22 +397,28 @@ class InterfaceController {
   async getAvailableTypesForProject(req, res) {
     try {
       const { projectId } = req.params;
-      this.logger.info(`Getting available interface types for project: ${projectId}`);
-      
+      this.logger.info(
+        `Getting available interface types for project: ${projectId}`,
+      );
+
       if (!this.projectApplicationService) {
-        return res.error('Project application service not available', 503);
+        return res.error("Project application service not available", 503);
       }
-      
-      const types = await this.projectApplicationService.getAvailableInterfaceTypes(projectId);
-      
-      res.success(types, 200, { meta: {
+
+      const types =
+        await this.projectApplicationService.getAvailableInterfaceTypes(
+          projectId,
+        );
+
+      res.success(types, 200, {
+        meta: {
           projectId,
           total: types.length,
-          timestamp: new Date().toISOString()
-        } });
-      
+          timestamp: new Date().toISOString(),
+        },
+      });
     } catch (error) {
-      this.logger.error('Failed to get available types for project:', error);
+      this.logger.error("Failed to get available types for project:", error);
       res.error(error.message, 500);
     }
   }

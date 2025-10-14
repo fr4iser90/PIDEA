@@ -1,6 +1,6 @@
 /**
  * IWorkflowContext - Interface for workflow context
- * 
+ *
  * This interface defines the contract for workflow execution context
  * that provides state, metadata, and data management.
  */
@@ -10,7 +10,7 @@ class IWorkflowContext {
    * @returns {string} Workflow ID
    */
   getWorkflowId() {
-    throw new Error('getWorkflowId method must be implemented');
+    throw new Error("getWorkflowId method must be implemented");
   }
 
   /**
@@ -18,7 +18,7 @@ class IWorkflowContext {
    * @returns {Object} Current workflow state
    */
   getState() {
-    throw new Error('getState method must be implemented');
+    throw new Error("getState method must be implemented");
   }
 
   /**
@@ -26,7 +26,7 @@ class IWorkflowContext {
    * @param {Object} state - New workflow state
    */
   setState(state) {
-    throw new Error('setState method must be implemented');
+    throw new Error("setState method must be implemented");
   }
 
   /**
@@ -35,7 +35,7 @@ class IWorkflowContext {
    * @returns {*} Data value
    */
   getData(key) {
-    throw new Error('getData method must be implemented');
+    throw new Error("getData method must be implemented");
   }
 
   /**
@@ -44,7 +44,7 @@ class IWorkflowContext {
    * @param {*} value - Data value
    */
   setData(key, value) {
-    throw new Error('setData method must be implemented');
+    throw new Error("setData method must be implemented");
   }
 
   /**
@@ -53,7 +53,7 @@ class IWorkflowContext {
    * @returns {boolean} True if data exists
    */
   hasData(key) {
-    throw new Error('hasData method must be implemented');
+    throw new Error("hasData method must be implemented");
   }
 
   /**
@@ -61,7 +61,7 @@ class IWorkflowContext {
    * @param {string} key - Data key
    */
   removeData(key) {
-    throw new Error('removeData method must be implemented');
+    throw new Error("removeData method must be implemented");
   }
 
   /**
@@ -69,7 +69,7 @@ class IWorkflowContext {
    * @returns {Object} All workflow data
    */
   getAllData() {
-    throw new Error('getAllData method must be implemented');
+    throw new Error("getAllData method must be implemented");
   }
 
   /**
@@ -77,7 +77,7 @@ class IWorkflowContext {
    * @returns {Object} Workflow metadata
    */
   getMetadata() {
-    throw new Error('getMetadata method must be implemented');
+    throw new Error("getMetadata method must be implemented");
   }
 
   /**
@@ -85,7 +85,7 @@ class IWorkflowContext {
    * @param {Object} metadata - Workflow metadata
    */
   setMetadata(metadata) {
-    throw new Error('setMetadata method must be implemented');
+    throw new Error("setMetadata method must be implemented");
   }
 
   /**
@@ -93,7 +93,7 @@ class IWorkflowContext {
    * @returns {string} Workflow type
    */
   gettaskMode() {
-    throw new Error('gettaskMode method must be implemented');
+    throw new Error("gettaskMode method must be implemented");
   }
 
   /**
@@ -101,7 +101,7 @@ class IWorkflowContext {
    * @returns {string} Workflow version
    */
   getWorkflowVersion() {
-    throw new Error('getWorkflowVersion method must be implemented');
+    throw new Error("getWorkflowVersion method must be implemented");
   }
 
   /**
@@ -109,7 +109,7 @@ class IWorkflowContext {
    * @returns {Array<string>} Workflow dependencies
    */
   getDependencies() {
-    throw new Error('getDependencies method must be implemented');
+    throw new Error("getDependencies method must be implemented");
   }
 
   /**
@@ -117,8 +117,8 @@ class IWorkflowContext {
    * @returns {Promise<Object>} Validation result
    */
   async validate() {
-    throw new Error('validate method must be implemented');
+    throw new Error("validate method must be implemented");
   }
 }
 
-module.exports = IWorkflowContext; 
+module.exports = IWorkflowContext;

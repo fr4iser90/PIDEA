@@ -3,8 +3,8 @@
  * Handler for Checkout a Git branch
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitCheckoutHandler {
@@ -20,15 +20,24 @@ class GitCheckoutHandler {
 
       const commandData = command.getCommandData();
 
-      this.logger.info('GitCheckoutHandler: Executing gitcheckoutcommand', commandData);
+      this.logger.info(
+        "GitCheckoutHandler: Executing gitcheckoutcommand",
+        commandData,
+      );
 
-      
       // Check if branch exists
-      const branchExistsResult = await execAsync(`git branch --list ${commandData.branchName}`, { cwd: commandData.projectPath });
-      const branchExists = branchExistsResult.stdout.trim().includes(commandData.branchName);
+      const branchExistsResult = await execAsync(
+        `git branch --list ${commandData.branchName}`,
+        { cwd: commandData.projectPath },
+      );
+      const branchExists = branchExistsResult.stdout
+        .trim()
+        .includes(commandData.branchName);
 
       if (!branchExists && !commandData.createIfNotExists) {
-        throw new Error(`Branch ${commandData.branchName} does not exist and createIfNotExists is false`);
+        throw new Error(
+          `Branch ${commandData.branchName} does not exist and createIfNotExists is false`,
+        );
       }
 
       // Build checkout command
@@ -38,28 +47,31 @@ class GitCheckoutHandler {
       }
 
       // Execute git checkout command
-      const result = await execAsync(checkoutCommand, { cwd: commandData.projectPath });
-
-      this.logger.info('GitCheckoutHandler: GitCheckoutCommand completed successfully', {
-        result: result.stdout
+      const result = await execAsync(checkoutCommand, {
+        cwd: commandData.projectPath,
       });
 
+      this.logger.info(
+        "GitCheckoutHandler: GitCheckoutCommand completed successfully",
+        {
+          result: result.stdout,
+        },
+      );
+
       return {
-        success: true,
         result: result.stdout,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('GitCheckoutHandler: GitCheckoutCommand failed', {
+      this.logger.error("GitCheckoutHandler: GitCheckoutCommand failed", {
         error: error.message,
-        command: command.getCommandData()
+        command: command.getCommandData(),
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }

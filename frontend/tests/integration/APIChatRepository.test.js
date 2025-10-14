@@ -28,7 +28,7 @@ describe('ChatRepository - Phase Operations', () => {
       const mockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ success: true, data: {} })
+        json: jest.fn().mockResolvedValue({ data: {} })
       };
       
       return Promise.resolve(mockResponse);
@@ -41,7 +41,6 @@ describe('ChatRepository - Phase Operations', () => {
   describe('getTasksByPhases', () => {
     it('should fetch tasks grouped by phases successfully', async () => {
       const mockResponse = {
-        success: true,
         data: {
           phases: {
             setup: {
@@ -86,7 +85,6 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should use current project ID when no projectId is provided', async () => {
       const mockResponse = {
-        success: true,
         data: { phases: {} }
       };
 
@@ -106,7 +104,7 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should handle API errors gracefully', async () => {
       const mockResponse = {
-        success: false,
+       
         error: 'Database connection failed'
       };
 
@@ -129,7 +127,6 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should handle missing response data', async () => {
       const mockResponse = {
-        success: true,
         data: null
       };
 
@@ -147,7 +144,6 @@ describe('ChatRepository - Phase Operations', () => {
   describe('executePhase', () => {
     it('should execute phase successfully', async () => {
       const mockResponse = {
-        success: true,
         data: {
           phaseName: 'setup',
           totalTasks: 2,
@@ -183,7 +179,6 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should use current project ID when no projectId is provided', async () => {
       const mockResponse = {
-        success: true,
         data: { phaseName: 'setup', totalTasks: 1, executedTasks: 1, failedTasks: 0 }
       };
 
@@ -203,7 +198,7 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should handle execution errors', async () => {
       const mockResponse = {
-        success: false,
+       
         error: 'Phase execution failed'
       };
 
@@ -241,7 +236,6 @@ describe('ChatRepository - Phase Operations', () => {
   describe('executePhases', () => {
     it('should execute multiple phases successfully', async () => {
       const mockResponse = {
-        success: true,
         data: {
           projectId: 'project1',
           totalPhases: 2,
@@ -288,7 +282,6 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should use current project ID when no projectId is provided', async () => {
       const mockResponse = {
-        success: true,
         data: { projectId: 'test-project', totalPhases: 1, executedPhases: 1, failedPhases: 0 }
       };
 
@@ -310,7 +303,7 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should handle execution errors for multiple phases', async () => {
       const mockResponse = {
-        success: false,
+       
         error: 'Failed to execute phases'
       };
 
@@ -326,7 +319,6 @@ describe('ChatRepository - Phase Operations', () => {
 
     it('should handle empty phase names array', async () => {
       const mockResponse = {
-        success: true,
         data: { projectId: 'project1', totalPhases: 0, executedPhases: 0, failedPhases: 0 }
       };
 
@@ -464,7 +456,6 @@ describe('ChatRepository - Phase Operations', () => {
     it('should handle complete phase workflow', async () => {
       // Mock getTasksByPhases
       const phasesResponse = {
-        success: true,
         data: {
           phases: {
             setup: { name: 'setup', tasks: [{ id: '1', title: 'Setup', status: 'pending' }] },
@@ -475,13 +466,11 @@ describe('ChatRepository - Phase Operations', () => {
 
       // Mock executePhase for setup
       const setupResponse = {
-        success: true,
         data: { phaseName: 'setup', totalTasks: 1, executedTasks: 1, failedTasks: 0 }
       };
 
       // Mock executePhase for implementation
       const implementationResponse = {
-        success: true,
         data: { phaseName: 'implementation', totalTasks: 1, executedTasks: 1, failedTasks: 0 }
       };
 
@@ -516,13 +505,12 @@ describe('ChatRepository - Phase Operations', () => {
     it('should handle partial phase execution failure', async () => {
       // Mock successful phase execution
       const successResponse = {
-        success: true,
         data: { phaseName: 'setup', totalTasks: 1, executedTasks: 1, failedTasks: 0 }
       };
 
       // Mock failed phase execution
       const failureResponse = {
-        success: false,
+       
         error: 'Phase execution failed'
       };
 

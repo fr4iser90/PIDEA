@@ -1,6 +1,6 @@
 /**
  * StreamingSession Entity
- * 
+ *
  * Manages streaming sessions for IDE mirror functionality with performance tracking
  * and session lifecycle management.
  */
@@ -8,7 +8,7 @@ class StreamingSession {
   constructor(id, port, options = {}) {
     this.id = id;
     this.port = port;
-    this.status = 'created'; // created, starting, active, paused, stopped, error
+    this.status = "created"; // created, starting, active, paused, stopped, error
     this.createdAt = new Date();
     this.startedAt = null;
     this.stoppedAt = null;
@@ -16,52 +16,59 @@ class StreamingSession {
     this.frameCount = 0;
     this.errorCount = 0;
     this.lastError = null;
-    
+
     // Configuration
     this.fps = options.fps || 10;
     this.quality = options.quality || 0.8;
-    this.format = options.format || 'webp';
+    this.format = options.format || "webp";
     this.maxFrameSize = options.maxFrameSize || 50 * 1024; // 50KB
     this.enableRegionDetection = options.enableRegionDetection || false;
-    
+
     // Performance metrics
     this.averageFrameSize = 0;
     this.averageLatency = 0;
     this.bandwidthUsage = 0;
     this.memoryUsage = 0;
-    
+
     // Validation
     this.validate();
   }
 
   validate() {
-    if (!this.id || typeof this.id !== 'string') {
-      throw new Error('StreamingSession requires a valid string ID');
+    if (!this.id || typeof this.id !== "string") {
+      throw new Error("StreamingSession requires a valid string ID");
     }
-    
-    if (!this.port || typeof this.port !== 'number' || this.port < 1 || this.port > 65535) {
-      throw new Error('StreamingSession requires a valid port number (1-65535)');
+
+    if (
+      !this.port ||
+      typeof this.port !== "number" ||
+      this.port < 1 ||
+      this.port > 65535
+    ) {
+      throw new Error(
+        "StreamingSession requires a valid port number (1-65535)",
+      );
     }
-    
+
     if (this.fps < 1 || this.fps > 60) {
-      throw new Error('FPS must be between 1 and 60');
+      throw new Error("FPS must be between 1 and 60");
     }
-    
+
     if (this.quality < 0.1 || this.quality > 1.0) {
-      throw new Error('Quality must be between 0.1 and 1.0');
+      throw new Error("Quality must be between 0.1 and 1.0");
     }
-    
-    if (!['webp', 'jpeg'].includes(this.format)) {
+
+    if (!["webp", "jpeg"].includes(this.format)) {
       throw new Error('Format must be either "webp" or "jpeg"');
     }
   }
 
   start() {
-    if (this.status === 'active') {
-      throw new Error('Session is already active');
+    if (this.status === "active") {
+      throw new Error("Session is already active");
     }
-    
-    this.status = 'starting';
+
+    this.status = "starting";
     this.startedAt = new Date();
     this.frameCount = 0;
     this.errorCount = 0;
@@ -69,53 +76,53 @@ class StreamingSession {
   }
 
   activate() {
-    if (this.status !== 'starting') {
-      throw new Error('Session must be in starting state to activate');
+    if (this.status !== "starting") {
+      throw new Error("Session must be in starting state to activate");
     }
-    
-    this.status = 'active';
+
+    this.status = "active";
   }
 
   pause() {
-    if (this.status !== 'active') {
-      throw new Error('Session must be active to pause');
+    if (this.status !== "active") {
+      throw new Error("Session must be active to pause");
     }
-    
-    this.status = 'paused';
+
+    this.status = "paused";
   }
 
   resume() {
-    if (this.status !== 'paused') {
-      throw new Error('Session must be paused to resume');
+    if (this.status !== "paused") {
+      throw new Error("Session must be paused to resume");
     }
-    
-    this.status = 'active';
+
+    this.status = "active";
   }
 
   stop() {
-    if (['stopped', 'error'].includes(this.status)) {
+    if (["stopped", "error"].includes(this.status)) {
       return; // Already stopped
     }
-    
-    this.status = 'stopped';
+
+    this.status = "stopped";
     this.stoppedAt = new Date();
   }
 
   error(error) {
-    this.status = 'error';
+    this.status = "error";
     this.lastError = error;
     this.errorCount++;
     this.stoppedAt = new Date();
   }
 
   updateFrame(frameSize, latency) {
-    if (this.status !== 'active') {
+    if (this.status !== "active") {
       return;
     }
-    
+
     this.frameCount++;
     this.lastFrameAt = new Date();
-    
+
     // Update average metrics
     this.updateAverageMetrics(frameSize, latency);
   }
@@ -128,10 +135,11 @@ class StreamingSession {
   updateAverageMetrics(frameSize, latency) {
     // Simple moving average calculation
     const alpha = 0.1; // Smoothing factor
-    
-    this.averageFrameSize = this.averageFrameSize * (1 - alpha) + frameSize * alpha;
+
+    this.averageFrameSize =
+      this.averageFrameSize * (1 - alpha) + frameSize * alpha;
     this.averageLatency = this.averageLatency * (1 - alpha) + latency * alpha;
-    
+
     // Calculate bandwidth usage (bytes per second)
     this.bandwidthUsage = this.averageFrameSize * this.fps;
   }
@@ -141,18 +149,18 @@ class StreamingSession {
   }
 
   isActive() {
-    return this.status === 'active';
+    return this.status === "active";
   }
 
   isStopped() {
-    return ['stopped', 'error'].includes(this.status);
+    return ["stopped", "error"].includes(this.status);
   }
 
   getDuration() {
     if (!this.startedAt) {
       return 0;
     }
-    
+
     const endTime = this.stoppedAt || new Date();
     return endTime.getTime() - this.startedAt.getTime();
   }
@@ -161,7 +169,7 @@ class StreamingSession {
     if (!this.startedAt || this.isStopped()) {
       return 0;
     }
-    
+
     return Date.now() - this.startedAt.getTime();
   }
 
@@ -169,7 +177,7 @@ class StreamingSession {
     if (!this.startedAt || this.frameCount === 0) {
       return 0;
     }
-    
+
     const duration = this.getDuration() / 1000; // Convert to seconds
     return duration > 0 ? this.frameCount / duration : 0;
   }
@@ -178,7 +186,7 @@ class StreamingSession {
     if (this.frameCount === 0) {
       return 0;
     }
-    
+
     return this.errorCount / this.frameCount;
   }
 
@@ -204,7 +212,7 @@ class StreamingSession {
       duration: this.getDuration(),
       uptime: this.getUptime(),
       frameRate: Math.round(this.getFrameRate() * 100) / 100,
-      errorRate: Math.round(this.getErrorRate() * 1000) / 1000
+      errorRate: Math.round(this.getErrorRate() * 1000) / 1000,
     };
   }
 
@@ -218,9 +226,9 @@ class StreamingSession {
       quality: data.quality,
       format: data.format,
       maxFrameSize: data.maxFrameSize,
-      enableRegionDetection: data.enableRegionDetection
+      enableRegionDetection: data.enableRegionDetection,
     });
-    
+
     session.status = data.status;
     session.createdAt = new Date(data.createdAt);
     session.startedAt = data.startedAt ? new Date(data.startedAt) : null;
@@ -233,9 +241,9 @@ class StreamingSession {
     session.averageLatency = data.averageLatency || 0;
     session.bandwidthUsage = data.bandwidthUsage || 0;
     session.memoryUsage = data.memoryUsage || 0;
-    
+
     return session;
   }
 }
 
-module.exports = StreamingSession; 
+module.exports = StreamingSession;

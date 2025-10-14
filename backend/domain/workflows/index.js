@@ -1,18 +1,18 @@
 /**
  * Workflow Foundation - Builder Pattern Components
- * 
+ *
  * This module provides the builder pattern implementation for workflow management.
  * It includes workflow builders, step builders, composers, and template registries.
  */
 
 // Core Builder Components
-const WorkflowBuilder = require('./WorkflowBuilder');
-const WorkflowStepBuilder = require('./WorkflowStepBuilder');
-const ComposedWorkflow = require('./ComposedWorkflow');
+const WorkflowBuilder = require("./WorkflowBuilder");
+const WorkflowStepBuilder = require("./WorkflowStepBuilder");
+const ComposedWorkflow = require("./ComposedWorkflow");
 
 // Composition and Templates
-const WorkflowComposer = require('./WorkflowComposer');
-const WorkflowTemplateRegistry = require('./builder/WorkflowTemplateRegistry');
+const WorkflowComposer = require("./WorkflowComposer");
+const WorkflowTemplateRegistry = require("./builder/WorkflowTemplateRegistry");
 
 // Module exports
 module.exports = {
@@ -29,15 +29,15 @@ module.exports = {
   builder: {
     WorkflowBuilder,
     WorkflowStepBuilder,
-    ComposedWorkflow
+    ComposedWorkflow,
   },
 
   composer: {
     WorkflowComposer,
-    WorkflowTemplateRegistry
+    WorkflowTemplateRegistry,
   },
 
   // Global instances
   templateRegistry: WorkflowTemplateRegistry,
-  composer: new WorkflowComposer()
-}; 
+  composer: new WorkflowComposer(),
+};

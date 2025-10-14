@@ -3,36 +3,36 @@
  * Creates git tags for releases with proper metadata
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('GitReleaseTagStep');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("GitReleaseTagStep");
 
 // Step configuration
 const config = {
-  name: 'GitReleaseTagStep',
-  type: 'git',
-  description: 'Creates git tags for releases with proper metadata',
-  category: 'git',
-  version: '1.0.0',
-  dependencies: ['gitService'],
+  name: "GitReleaseTagStep",
+  type: "git",
+  description: "Creates git tags for releases with proper metadata",
+  category: "git",
+  version: "1.0.0",
+  dependencies: ["gitService"],
   settings: {
     timeout: 30000,
     annotated: true,
     pushTags: true,
-    includeMetadata: true
+    includeMetadata: true,
   },
   validation: {
-    required: ['projectPath', 'version'],
-    optional: ['message', 'task', 'pushToRemote']
-  }
+    required: ["projectPath", "version"],
+    optional: ["message", "task", "pushToRemote"],
+  },
 };
 
 class GitReleaseTagStep {
   constructor() {
-    this.name = 'GitReleaseTagStep';
-    this.description = 'Creates git tags for releases with proper metadata';
-    this.category = 'git';
-    this.dependencies = ['gitService'];
+    this.name = "GitReleaseTagStep";
+    this.description = "Creates git tags for releases with proper metadata";
+    this.category = "git";
+    this.dependencies = ["gitService"];
   }
 
   static getConfig() {
@@ -42,78 +42,89 @@ class GitReleaseTagStep {
   async execute(context = {}) {
     const config = GitReleaseTagStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
-      const { projectPath, version, message, task, pushToRemote, ...otherParams } = context;
-      
-      logger.info('Executing Git Release Tag step', {
+
+      const {
         projectPath,
         version,
-        message: message ? 'custom' : 'auto-generated',
+        message,
+        task,
+        pushToRemote,
+        ...otherParams
+      } = context;
+
+      logger.info("Executing Git Release Tag step", {
+        projectPath,
+        version,
+        message: message ? "custom" : "auto-generated",
         taskId: task?.id,
         pushToRemote: pushToRemote !== false,
-        ...otherParams
+        ...otherParams,
       });
 
       // Generate tag name
       const tagName = this.generateTagName(version);
-      
+
       // Generate tag message
-      const tagMessage = message || this.generateTagMessage(version, task, context);
-      
+      const tagMessage =
+        message || this.generateTagMessage(version, task, context);
+
       // Create the tag
-      const tagResult = await this.createTag(projectPath, tagName, tagMessage, context);
-      
+      const tagResult = await this.createTag(
+        projectPath,
+        tagName,
+        tagMessage,
+        context,
+      );
+
       // Push tag to remote if enabled
       let pushResult = null;
       if (pushToRemote !== false && context.gitService) {
         pushResult = await this.pushTag(projectPath, tagName, context);
       }
 
-      logger.info('Git Release Tag step completed successfully', {
+      logger.info("Git Release Tag step completed successfully", {
         tagName,
         version,
-        pushed: pushResult ? pushResult.success : false
+        pushed: pushResult ? pushResult.success : false,
       });
 
       return {
-        success: true,
         result: {
           tagName,
           version,
           message: tagMessage,
           tagResult,
           pushResult,
-          metadata: this.generateTagMetadata(version, task, context)
+          metadata: this.generateTagMetadata(version, task, context),
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       logger.error(`${this.name} failed`, {
         error: error.message,
         context: {
           projectPath: context.projectPath,
-          version: context.version
-        }
+          version: context.version,
+        },
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
 
   generateTagName(version) {
     // Ensure version starts with 'v' if it doesn't already
-    if (version.startsWith('v')) {
+    if (version.startsWith("v")) {
       return version;
     }
     return `v${version}`;
@@ -121,50 +132,52 @@ class GitReleaseTagStep {
 
   generateTagMessage(version, task, context) {
     const lines = [];
-    
+
     // Main release message
     lines.push(`Release ${version}`);
-    lines.push('');
-    
+    lines.push("");
+
     // Add task information if available
     if (task) {
       lines.push(`Task ID: ${task.id}`);
-      lines.push(`Type: ${task.type?.value || task.type || 'Unknown'}`);
-      lines.push(`Priority: ${task.priority?.value || task.priority || 'Unknown'}`);
-      
+      lines.push(`Type: ${task.type?.value || task.type || "Unknown"}`);
+      lines.push(
+        `Priority: ${task.priority?.value || task.priority || "Unknown"}`,
+      );
+
       if (task.category) {
         lines.push(`Category: ${task.category}`);
       }
-      
-      lines.push('');
-      
+
+      lines.push("");
+
       if (task.description) {
-        lines.push('Description:');
+        lines.push("Description:");
         lines.push(task.description);
-        lines.push('');
+        lines.push("");
       }
     }
-    
+
     // Add metadata
-    lines.push('Generated by PIDEA Version Management System');
+    lines.push("Generated by PIDEA Version Management System");
     lines.push(`Created: ${new Date().toISOString()}`);
-    
+
     // Add context information
     if (context.userId) {
       lines.push(`User: ${context.userId}`);
     }
-    
+
     if (context.environment) {
       lines.push(`Environment: ${context.environment}`);
     }
-    
-    return lines.join('\n');
+
+    return lines.join("\n");
   }
 
   async createTag(projectPath, tagName, message, context) {
     try {
       if (!context.gitService) {
-        throw new Error('Git service is required for tag creation');
+        throw new Error("Git service is required for tag creation");
       }
 
       // Check if tag already exists
@@ -172,9 +185,9 @@ class GitReleaseTagStep {
       if (existingTags.includes(tagName)) {
         logger.warn(`Tag ${tagName} already exists, skipping creation`);
         return {
-          success: false,
-          error: 'Tag already exists',
-          tagName
+         
+          error: "Tag already exists",
+          tagName,
         };
       }
 
@@ -182,32 +195,31 @@ class GitReleaseTagStep {
       const tagResult = await context.gitService.createTag(projectPath, {
         name: tagName,
         message: message,
-        annotated: context.annotated !== false
+        annotated: context.annotated !== false,
       });
 
       logger.info(`Created git tag: ${tagName}`, {
         tagHash: tagResult.hash,
-        message: message.substring(0, 100) + (message.length > 100 ? '...' : '')
+        message:
+          message.substring(0, 100) + (message.length > 100 ? "..." : ""),
       });
 
       return {
-        success: true,
         tagName,
         hash: tagResult.hash,
         message,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Error creating git tag', {
+      logger.error("Error creating git tag", {
         tagName,
-        error: error.message
+        error: error.message,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        tagName
+        tagName,
       };
     }
   }
@@ -215,28 +227,27 @@ class GitReleaseTagStep {
   async pushTag(projectPath, tagName, context) {
     try {
       if (!context.gitService) {
-        logger.warn('No git service available, skipping tag push');
-        return { success: false, error: 'No git service available' };
+        logger.warn("No git service available, skipping tag push");
+        return { error: "No git service available" };
       }
 
       const pushResult = await context.gitService.pushTag(projectPath, tagName);
-      
+
       logger.info(`Pushed tag ${tagName} to remote`, {
-        success: pushResult.success
+        success: pushResult.success,
       });
 
       return pushResult;
-
     } catch (error) {
-      logger.error('Error pushing tag to remote', {
+      logger.error("Error pushing tag to remote", {
         tagName,
-        error: error.message
+        error: error.message,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        tagName
+        tagName,
       };
     }
   }
@@ -246,18 +257,20 @@ class GitReleaseTagStep {
       version,
       tagName: this.generateTagName(version),
       createdAt: new Date().toISOString(),
-      task: task ? {
-        id: task.id,
-        type: task.type?.value || task.type,
-        priority: task.priority?.value || task.priority,
-        category: task.category,
-        description: task.description
-      } : null,
+      task: task
+        ? {
+            id: task.id,
+            type: task.type?.value || task.type,
+            priority: task.priority?.value || task.priority,
+            category: task.category,
+            description: task.description,
+          }
+        : null,
       context: {
         userId: context.userId,
         environment: context.environment,
-        projectPath: context.projectPath
-      }
+        projectPath: context.projectPath,
+      },
     };
   }
 
@@ -269,15 +282,16 @@ class GitReleaseTagStep {
 
       const existingTags = await context.gitService.getTags(projectPath);
       const exists = existingTags.includes(tagName);
-      
+
       return {
         isValid: !exists,
         exists,
-        message: exists ? `Tag ${tagName} already exists` : `Tag ${tagName} is available`
+        message: exists
+          ? `Tag ${tagName} already exists`
+          : `Tag ${tagName} is available`,
       };
-
     } catch (error) {
-      logger.warn('Error validating tag name', { error: error.message });
+      logger.warn("Error validating tag name", { error: error.message });
       return { isValid: true, exists: false };
     }
   }
@@ -291,31 +305,30 @@ class GitReleaseTagStep {
       const tags = await context.gitService.getTags(projectPath);
       return tags.sort((a, b) => {
         // Sort tags by version number
-        const aVersion = a.replace(/^v/, '');
-        const bVersion = b.replace(/^v/, '');
+        const aVersion = a.replace(/^v/, "");
+        const bVersion = b.replace(/^v/, "");
         return this.compareVersions(aVersion, bVersion);
       });
-
     } catch (error) {
-      logger.warn('Error getting existing tags', { error: error.message });
+      logger.warn("Error getting existing tags", { error: error.message });
       return [];
     }
   }
 
   compareVersions(version1, version2) {
     // Simple version comparison for sorting
-    const v1Parts = version1.split('.').map(Number);
-    const v2Parts = version2.split('.').map(Number);
-    
+    const v1Parts = version1.split(".").map(Number);
+    const v2Parts = version2.split(".").map(Number);
+
     for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
       const v1Part = v1Parts[i] || 0;
       const v2Part = v2Parts[i] || 0;
-      
+
       if (v1Part !== v2Part) {
         return v1Part - v2Part;
       }
     }
-    
+
     return 0;
   }
 
@@ -327,22 +340,21 @@ class GitReleaseTagStep {
 
       const tagInfo = await context.gitService.getTagInfo(projectPath, tagName);
       return tagInfo;
-
     } catch (error) {
-      logger.warn('Error getting tag info', { tagName, error: error.message });
+      logger.warn("Error getting tag info", { tagName, error: error.message });
       return null;
     }
   }
 
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
     if (!context.version) {
-      throw new Error('Version is required');
+      throw new Error("Version is required");
     }
-    if (typeof context.version !== 'string') {
-      throw new Error('Version must be a string');
+    if (typeof context.version !== "string") {
+      throw new Error("Version must be a string");
     }
   }
 }
@@ -353,5 +365,5 @@ const stepInstance = new GitReleaseTagStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 /**
  * AutoReviewService - Automated code review service
  * Provides AI-powered code review with different review depths and quality checks
@@ -12,51 +12,52 @@ class AutoReviewService {
     this.performanceService = dependencies.performanceService;
     this.logger = dependencies.logger || console;
     this.eventBus = dependencies.eventBus;
-    
+
     // Review configurations
     this.reviewConfigs = {
       none: {
-        name: 'none',
-        description: 'No automated review',
+        name: "none",
+        description: "No automated review",
         codeQuality: false,
         security: false,
         testCoverage: false,
-        performance: false
+        performance: false,
       },
       basic: {
-        name: 'basic',
-        description: 'Basic code quality review',
+        name: "basic",
+        description: "Basic code quality review",
         codeQuality: true,
         security: false,
         testCoverage: false,
-        performance: false
+        performance: false,
       },
       standard: {
-        name: 'standard',
-        description: 'Standard review with code quality and test coverage',
+        name: "standard",
+        description: "Standard review with code quality and test coverage",
         codeQuality: true,
         security: false,
         testCoverage: true,
-        performance: false
+        performance: false,
       },
       comprehensive: {
-        name: 'comprehensive',
-        description: 'Comprehensive review with all checks',
+        name: "comprehensive",
+        description: "Comprehensive review with all checks",
         codeQuality: true,
         security: true,
         testCoverage: true,
-        performance: true
-      }
+        performance: true,
+      },
     };
-    
+
     // Configuration
     this.config = {
-      defaultReviewDepth: dependencies.defaultReviewDepth || 'standard',
+      defaultReviewDepth: dependencies.defaultReviewDepth || "standard",
       enableSecurityScan: dependencies.enableSecurityScan !== false,
-      enablePerformanceAnalysis: dependencies.enablePerformanceAnalysis !== false,
+      enablePerformanceAnalysis:
+        dependencies.enablePerformanceAnalysis !== false,
       minScoreThreshold: dependencies.minScoreThreshold || 70,
       maxReviewTime: dependencies.maxReviewTime || 300000, // 5 minutes
-      ...dependencies
+      ...dependencies,
     };
   }
 
@@ -70,13 +71,13 @@ class AutoReviewService {
   async reviewPullRequest(projectPath, prId, options = {}) {
     const startTime = Date.now();
     const reviewDepth = options.reviewDepth || this.config.defaultReviewDepth;
-    
+
     try {
-      this.logger.info('AutoReviewService: Starting pull request review', {
+      this.logger.info("AutoReviewService: Starting pull request review", {
         projectPath,
         prId,
         reviewDepth,
-        options
+        options,
       });
 
       const reviewConfig = this.reviewConfigs[reviewDepth];
@@ -89,25 +90,41 @@ class AutoReviewService {
 
       // Perform code quality analysis
       if (reviewConfig.codeQuality) {
-        const qualityResult = await this.performCodeQualityReview(projectPath, prId, options);
+        const qualityResult = await this.performCodeQualityReview(
+          projectPath,
+          prId,
+          options,
+        );
         results.push(qualityResult);
       }
 
       // Perform security analysis
       if (reviewConfig.security && this.config.enableSecurityScan) {
-        const securityResult = await this.performSecurityReview(projectPath, prId, options);
+        const securityResult = await this.performSecurityReview(
+          projectPath,
+          prId,
+          options,
+        );
         results.push(securityResult);
       }
 
       // Perform test coverage analysis
       if (reviewConfig.testCoverage) {
-        const testResult = await this.performTestReview(projectPath, prId, options);
+        const testResult = await this.performTestReview(
+          projectPath,
+          prId,
+          options,
+        );
         results.push(testResult);
       }
 
       // Perform performance analysis
       if (reviewConfig.performance && this.config.enablePerformanceAnalysis) {
-        const performanceResult = await this.performPerformanceReview(projectPath, prId, options);
+        const performanceResult = await this.performPerformanceReview(
+          projectPath,
+          prId,
+          options,
+        );
         results.push(performanceResult);
       }
 
@@ -117,7 +134,6 @@ class AutoReviewService {
       const status = this.determineReviewStatus(overallScore, results);
 
       const reviewResult = {
-        success: true,
         reviewId,
         prId,
         status,
@@ -130,51 +146,50 @@ class AutoReviewService {
         metadata: {
           taskType: options.taskType,
           automationLevel: options.automationLevel,
-          reviewConfig
-        }
+          reviewConfig,
+        },
       };
 
       // Emit review completed event
       if (this.eventBus) {
-        this.eventBus.publish('code_review.completed', {
+        this.eventBus.publish("code_review.completed", {
           projectPath,
           prId,
           reviewId,
           reviewResult,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
-      this.logger.info('AutoReviewService: Pull request review completed', {
+      this.logger.info("AutoReviewService: Pull request review completed", {
         projectPath,
         prId,
         reviewId,
         score: overallScore,
         status,
-        duration
+        duration,
       });
 
       return reviewResult;
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
-      this.logger.error('AutoReviewService: Pull request review failed', {
+
+      this.logger.error("AutoReviewService: Pull request review failed", {
         projectPath,
         prId,
         error: error.message,
-        duration
+        duration,
       });
 
       return {
-        success: false,
+       
         reviewId: this.generateReviewId(),
         prId,
-        status: 'failed',
+        status: "failed",
         score: 0,
         error: error.message,
         duration,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -189,32 +204,34 @@ class AutoReviewService {
   async performCodeQualityReview(projectPath, prId, options = {}) {
     try {
       if (!this.analysisService) {
-        return this.createMockQualityResult('no_analysis_service');
+        return this.createMockQualityResult("no_analysis_service");
       }
 
-      const analysis = await this.analysisService.analyzeCodeQuality(projectPath, {
-        prId,
-        taskType: options.taskType,
-        automationLevel: options.automationLevel
-      });
+      const analysis = await this.analysisService.analyzeCodeQuality(
+        projectPath,
+        {
+          prId,
+          taskType: options.taskType,
+          automationLevel: options.automationLevel,
+        },
+      );
 
       return {
-        type: 'code_quality',
+        type: "code_quality",
         score: analysis.score || 0,
         issues: analysis.issues || [],
         recommendations: analysis.recommendations || [],
         metrics: analysis.metrics || {},
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.warn('AutoReviewService: Code quality review failed', {
+      this.logger.warn("AutoReviewService: Code quality review failed", {
         projectPath,
         prId,
-        error: error.message
+        error: error.message,
       });
 
-      return this.createMockQualityResult('analysis_failed', error.message);
+      return this.createMockQualityResult("analysis_failed", error.message);
     }
   }
 
@@ -228,32 +245,34 @@ class AutoReviewService {
   async performSecurityReview(projectPath, prId, options = {}) {
     try {
       if (!this.securityService) {
-        return this.createMockSecurityResult('no_security_service');
+        return this.createMockSecurityResult("no_security_service");
       }
 
       const analysis = await this.securityService.analyzeSecurity(projectPath, {
         prId,
         taskType: options.taskType,
-        automationLevel: options.automationLevel
+        automationLevel: options.automationLevel,
       });
 
       return {
-        type: 'security',
+        type: "security",
         score: analysis.score || 0,
         vulnerabilities: analysis.vulnerabilities || [],
         recommendations: analysis.recommendations || [],
-        riskLevel: analysis.riskLevel || 'low',
-        timestamp: new Date()
+        riskLevel: analysis.riskLevel || "low",
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.warn('AutoReviewService: Security review failed', {
+      this.logger.warn("AutoReviewService: Security review failed", {
         projectPath,
         prId,
-        error: error.message
+        error: error.message,
       });
 
-      return this.createMockSecurityResult('security_analysis_failed', error.message);
+      return this.createMockSecurityResult(
+        "security_analysis_failed",
+        error.message,
+      );
     }
   }
 
@@ -267,32 +286,31 @@ class AutoReviewService {
   async performTestReview(projectPath, prId, options = {}) {
     try {
       if (!this.testService) {
-        return this.createMockTestResult('no_test_service');
+        return this.createMockTestResult("no_test_service");
       }
 
       const analysis = await this.testService.analyzeTestCoverage(projectPath, {
         prId,
         taskType: options.taskType,
-        automationLevel: options.automationLevel
+        automationLevel: options.automationLevel,
       });
 
       return {
-        type: 'test_coverage',
+        type: "test_coverage",
         score: analysis.coverage || 0,
         uncoveredLines: analysis.uncoveredLines || [],
         recommendations: analysis.recommendations || [],
         testCount: analysis.testCount || 0,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.warn('AutoReviewService: Test review failed', {
+      this.logger.warn("AutoReviewService: Test review failed", {
         projectPath,
         prId,
-        error: error.message
+        error: error.message,
       });
 
-      return this.createMockTestResult('test_analysis_failed', error.message);
+      return this.createMockTestResult("test_analysis_failed", error.message);
     }
   }
 
@@ -306,32 +324,37 @@ class AutoReviewService {
   async performPerformanceReview(projectPath, prId, options = {}) {
     try {
       if (!this.performanceService) {
-        return this.createMockPerformanceResult('no_performance_service');
+        return this.createMockPerformanceResult("no_performance_service");
       }
 
-      const analysis = await this.performanceService.analyzePerformance(projectPath, {
-        prId,
-        taskType: options.taskType,
-        automationLevel: options.automationLevel
-      });
+      const analysis = await this.performanceService.analyzePerformance(
+        projectPath,
+        {
+          prId,
+          taskType: options.taskType,
+          automationLevel: options.automationLevel,
+        },
+      );
 
       return {
-        type: 'performance',
+        type: "performance",
         score: analysis.score || 0,
         bottlenecks: analysis.bottlenecks || [],
         recommendations: analysis.recommendations || [],
         metrics: analysis.metrics || {},
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.warn('AutoReviewService: Performance review failed', {
+      this.logger.warn("AutoReviewService: Performance review failed", {
         projectPath,
         prId,
-        error: error.message
+        error: error.message,
       });
 
-      return this.createMockPerformanceResult('performance_analysis_failed', error.message);
+      return this.createMockPerformanceResult(
+        "performance_analysis_failed",
+        error.message,
+      );
     }
   }
 
@@ -345,7 +368,10 @@ class AutoReviewService {
       return 0;
     }
 
-    const totalScore = results.reduce((sum, result) => sum + (result.score || 0), 0);
+    const totalScore = results.reduce(
+      (sum, result) => sum + (result.score || 0),
+      0,
+    );
     return Math.round(totalScore / results.length);
   }
 
@@ -356,13 +382,13 @@ class AutoReviewService {
    */
   generateRecommendations(results) {
     const recommendations = [];
-    
+
     for (const result of results) {
       if (result.recommendations && Array.isArray(result.recommendations)) {
         recommendations.push(...result.recommendations);
       }
     }
-    
+
     // Remove duplicates and limit to top recommendations
     const uniqueRecommendations = [...new Set(recommendations)];
     return uniqueRecommendations.slice(0, 10);
@@ -377,21 +403,23 @@ class AutoReviewService {
   determineReviewStatus(score, results) {
     // Check for critical issues
     for (const result of results) {
-      if (result.type === 'security' && result.vulnerabilities) {
-        const criticalVulns = result.vulnerabilities.filter(v => v.severity === 'critical');
+      if (result.type === "security" && result.vulnerabilities) {
+        const criticalVulns = result.vulnerabilities.filter(
+          (v) => v.severity === "critical",
+        );
         if (criticalVulns.length > 0) {
-          return 'blocked';
+          return "blocked";
         }
       }
     }
 
     // Check score threshold
     if (score >= this.config.minScoreThreshold) {
-      return 'approved';
+      return "approved";
     } else if (score >= this.config.minScoreThreshold * 0.8) {
-      return 'needs_improvement';
+      return "needs_improvement";
     } else {
-      return 'rejected';
+      return "rejected";
     }
   }
 
@@ -411,18 +439,18 @@ class AutoReviewService {
    */
   createMockQualityResult(reason, error = null) {
     return {
-      type: 'code_quality',
+      type: "code_quality",
       score: 75,
       issues: [],
       recommendations: [
-        'Code quality analysis service not available',
-        'Consider implementing static code analysis'
+        "Code quality analysis service not available",
+        "Consider implementing static code analysis",
       ],
       metrics: {},
       timestamp: new Date(),
       mock: true,
       reason,
-      error
+      error,
     };
   }
 
@@ -434,18 +462,18 @@ class AutoReviewService {
    */
   createMockSecurityResult(reason, error = null) {
     return {
-      type: 'security',
+      type: "security",
       score: 80,
       vulnerabilities: [],
       recommendations: [
-        'Security analysis service not available',
-        'Consider implementing security scanning'
+        "Security analysis service not available",
+        "Consider implementing security scanning",
       ],
-      riskLevel: 'low',
+      riskLevel: "low",
       timestamp: new Date(),
       mock: true,
       reason,
-      error
+      error,
     };
   }
 
@@ -457,18 +485,18 @@ class AutoReviewService {
    */
   createMockTestResult(reason, error = null) {
     return {
-      type: 'test_coverage',
+      type: "test_coverage",
       score: 70,
       uncoveredLines: [],
       recommendations: [
-        'Test coverage analysis service not available',
-        'Consider implementing test coverage reporting'
+        "Test coverage analysis service not available",
+        "Consider implementing test coverage reporting",
       ],
       testCount: 0,
       timestamp: new Date(),
       mock: true,
       reason,
-      error
+      error,
     };
   }
 
@@ -480,18 +508,18 @@ class AutoReviewService {
    */
   createMockPerformanceResult(reason, error = null) {
     return {
-      type: 'performance',
+      type: "performance",
       score: 85,
       bottlenecks: [],
       recommendations: [
-        'Performance analysis service not available',
-        'Consider implementing performance monitoring'
+        "Performance analysis service not available",
+        "Consider implementing performance monitoring",
       ],
       metrics: {},
       timestamp: new Date(),
       mock: true,
       reason,
-      error
+      error,
     };
   }
 
@@ -510,7 +538,7 @@ class AutoReviewService {
       hasAnalysisService: !!this.analysisService,
       hasSecurityService: !!this.securityService,
       hasTestService: !!this.testService,
-      hasPerformanceService: !!this.performanceService
+      hasPerformanceService: !!this.performanceService,
     };
   }
 
@@ -526,9 +554,9 @@ class AutoReviewService {
       codeQuality: config.codeQuality,
       security: config.security,
       testCoverage: config.testCoverage,
-      performance: config.performance
+      performance: config.performance,
     }));
   }
 }
 
-module.exports = AutoReviewService; 
+module.exports = AutoReviewService;

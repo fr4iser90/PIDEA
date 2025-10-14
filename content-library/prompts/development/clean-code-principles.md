@@ -196,14 +196,13 @@ function processPayment(order: Order): PaymentResult {
     ];
     
     return {
-      success: true,
       order: updatedOrder,
       events
     };
   }
   
   return {
-    success: false,
+   
     error: paymentResult.error
   };
 }

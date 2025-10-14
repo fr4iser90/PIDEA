@@ -1,11 +1,11 @@
-const ProjectRepository = require('@repositories/ProjectRepository');
-const path = require('path');
+const ProjectRepository = require("@repositories/ProjectRepository");
+const path = require("path");
 
 class PostgreSQLProjectRepository extends ProjectRepository {
   constructor(databaseConnection) {
     super();
     this.databaseConnection = databaseConnection;
-    this.tableName = 'projects';
+    this.tableName = "projects";
   }
 
   /**
@@ -31,51 +31,51 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       projectData.name,
       projectData.description || null,
       projectData.workspacePath,
-      projectData.type || 'development',
-      
+      projectData.type || "development",
+
       // Development Server Configuration
       projectData.backendPort || null,
       projectData.frontendPort || null,
       projectData.databasePort || null,
-      
+
       // Startup Configuration
       projectData.startCommand || null,
       projectData.buildCommand || null,
       projectData.devCommand || null,
       projectData.testCommand || null,
-      
+
       // Project Metadata
       projectData.framework || null,
       projectData.language || null,
       projectData.packageManager || null,
-      
+
       // Status and Management
-      projectData.status || 'active',
+      projectData.status || "active",
       projectData.priority || 0,
       projectData.lastAccessed || null,
       projectData.accessCount || 0,
-      
+
       // Extended Metadata
       JSON.stringify(projectData.metadata || {}),
       JSON.stringify(projectData.config || {}),
-      
+
       // Timestamps
       now,
       now,
-      projectData.createdBy || 'me'
+      projectData.createdBy || "me",
     ];
 
     await this.databaseConnection.execute(sql, params);
-    
+
     // Return the created project with generated ID
     const createdProject = {
       ...projectData,
       id: params[0], // The generated or provided ID
       createdAt: now,
       updatedAt: now,
-      createdBy: params[23] // The createdBy value
+      createdBy: params[23], // The createdBy value
     };
-    
+
     return createdProject;
   }
 
@@ -116,37 +116,37 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       projectData.name,
       projectData.description || null,
       projectData.workspacePath,
-      projectData.type || 'development',
-      
+      projectData.type || "development",
+
       // Development Server Configuration
       projectData.backendPort || null,
       projectData.frontendPort || null,
       projectData.databasePort || null,
-      
+
       // Startup Configuration
       projectData.startCommand || null,
       projectData.buildCommand || null,
       projectData.devCommand || null,
       projectData.testCommand || null,
-      
+
       // Project Metadata
       projectData.framework || null,
       projectData.language || null,
       projectData.packageManager || null,
-      
+
       // Status and Management
-      projectData.status || 'active',
+      projectData.status || "active",
       projectData.priority || 0,
       projectData.lastAccessed || null,
       projectData.accessCount || 0,
-      
+
       // Extended Metadata
       JSON.stringify(projectData.metadata || {}),
       JSON.stringify(projectData.config || {}),
-      
+
       // Timestamps
       now,
-      projectData.id
+      projectData.id,
     ];
 
     await this.databaseConnection.execute(sql, params);
@@ -177,8 +177,6 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     return rows.length > 0 ? this._rowToProject(rows[0]) : null;
   }
 
-
-
   /**
    * Find projects by framework
    * @param {string} framework - Framework name
@@ -188,7 +186,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     const sql = `SELECT * FROM ${this.tableName} WHERE framework = $1 ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql, [framework]);
     const rows = Array.isArray(results) ? results : results.rows || [];
-    return rows.map(row => this._rowToProject(row));
+    return rows.map((row) => this._rowToProject(row));
   }
 
   /**
@@ -200,7 +198,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     const sql = `SELECT * FROM ${this.tableName} WHERE language = $1 ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql, [language]);
     const rows = Array.isArray(results) ? results : results.rows || [];
-    return rows.map(row => this._rowToProject(row));
+    return rows.map((row) => this._rowToProject(row));
   }
 
   /**
@@ -211,7 +209,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     const sql = `SELECT * FROM ${this.tableName} WHERE status = 'active' ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql);
     const rows = Array.isArray(results) ? results : results.rows || [];
-    return rows.map(row => this._rowToProject(row));
+    return rows.map((row) => this._rowToProject(row));
   }
 
   /**
@@ -222,28 +220,26 @@ class PostgreSQLProjectRepository extends ProjectRepository {
    */
   async findOrCreateByWorkspacePath(workspacePath, options = {}) {
     let project = await this.findByWorkspacePath(workspacePath);
-    
+
     if (!project) {
       const projectName = path.basename(workspacePath);
       const projectId = this.generateProjectId(workspacePath);
-      
+
       project = await this.create({
         id: projectId,
         name: projectName,
         workspacePath: workspacePath,
-        type: options.type || 'development',
-        ideType: options.ideType || 'cursor',
+        type: options.type || "development",
+        ideType: options.ideType || "cursor",
         framework: options.framework || null,
         language: options.language || null,
         packageManager: options.packageManager || null,
-        ...options
+        ...options,
       });
     }
-    
+
     return project;
   }
-
-
 
   /**
    * Update access information for a project
@@ -256,10 +252,10 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       SET last_accessed = $1, access_count = access_count + 1, updated_at = $2
       WHERE id = $3
     `;
-    
+
     const now = new Date().toISOString();
     await this.databaseConnection.execute(sql, [now, now, projectId]);
-    
+
     return this.findById(projectId);
   }
 
@@ -275,10 +271,14 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       SET config = $1, updated_at = $2
       WHERE id = $3
     `;
-    
+
     const now = new Date().toISOString();
-    await this.databaseConnection.execute(sql, [JSON.stringify(config), now, projectId]);
-    
+    await this.databaseConnection.execute(sql, [
+      JSON.stringify(config),
+      now,
+      projectId,
+    ]);
+
     return this.findById(projectId);
   }
 
@@ -290,7 +290,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     const sql = `SELECT * FROM ${this.tableName} ORDER BY last_accessed DESC`;
     const results = await this.databaseConnection.query(sql);
     const rows = Array.isArray(results) ? results : results.rows || [];
-    return rows.map(row => this._rowToProject(row));
+    return rows.map((row) => this._rowToProject(row));
   }
 
   /**
@@ -305,10 +305,14 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       SET metadata = $1, updated_at = $2
       WHERE id = $3
     `;
-    
+
     const now = new Date().toISOString();
-    await this.databaseConnection.execute(sql, [JSON.stringify(metadata), now, projectId]);
-    
+    await this.databaseConnection.execute(sql, [
+      JSON.stringify(metadata),
+      now,
+      projectId,
+    ]);
+
     return this.findById(projectId);
   }
 
@@ -330,7 +334,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
    */
   generateProjectId(workspacePath) {
     const basename = path.basename(workspacePath);
-    return basename.replace(/[^a-zA-Z0-9]/g, '-');
+    return basename.replace(/[^a-zA-Z0-9]/g, "-");
   }
 
   /**
@@ -371,7 +375,7 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       config: row.config ? JSON.parse(row.config) : {},
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      createdBy: row.created_by
+      createdBy: row.created_by,
     };
   }
 
@@ -386,57 +390,65 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async findAll(options = {}) {
     try {
       const { limit = 10, offset = 0, search } = options;
-      
-      console.log('🔍 [PostgreSQLProjectRepository] findAll called with:', { limit, offset, search });
-      
+
+      console.log("🔍 [PostgreSQLProjectRepository] findAll called with:", {
+        limit,
+        offset,
+        search,
+      });
+
       let query = `
         SELECT * FROM ${this.tableName}
       `;
-      
+
       const params = [];
-      
+
       if (search) {
         query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
         params.push(`%${search}%`);
       }
-      
+
       query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
       params.push(limit, offset);
-      
-      console.log('🔍 [PostgreSQLProjectRepository] Executing query:', query);
-      console.log('🔍 [PostgreSQLProjectRepository] With params:', params);
-      
-      console.log('🔍 [PostgreSQLProjectRepository] About to execute query...');
+
+      console.log("🔍 [PostgreSQLProjectRepository] Executing query:", query);
+      console.log("🔍 [PostgreSQLProjectRepository] With params:", params);
+
+      console.log("🔍 [PostgreSQLProjectRepository] About to execute query...");
       const result = await this.databaseConnection.query(query, params);
-      console.log('🔍 [PostgreSQLProjectRepository] Query executed successfully');
-    
-    console.log('🔍 [PostgreSQLProjectRepository] Raw result:', { 
-      resultType: typeof result,
-      isArray: Array.isArray(result),
-      hasRows: !!(result && result.rows),
-      resultLength: Array.isArray(result) ? result.length : (result?.rows?.length || 0),
-      resultKeys: result ? Object.keys(result) : 'null',
-      resultValue: result
-    });
-    
-    // PostgreSQL result object
-    const rows = result.rows;
-    
-    console.log('🔍 [PostgreSQLProjectRepository] Processed rows:', { 
-      rowsCount: rows.length,
-      firstRow: rows[0] || 'none'
-    });
-    
-    const projects = rows.map(row => this._rowToProject(row));
-    
-    console.log('🔍 [PostgreSQLProjectRepository] Final result:', { 
-      count: projects.length,
-      firstProject: projects[0] || 'none'
-    });
-    
-    return projects;
+      console.log(
+        "🔍 [PostgreSQLProjectRepository] Query executed successfully",
+      );
+
+      console.log("🔍 [PostgreSQLProjectRepository] Raw result:", {
+        resultType: typeof result,
+        isArray: Array.isArray(result),
+        hasRows: !!(result && result.rows),
+        resultLength: Array.isArray(result)
+          ? result.length
+          : result?.rows?.length || 0,
+        resultKeys: result ? Object.keys(result) : "null",
+        resultValue: result,
+      });
+
+      // PostgreSQL result object
+      const rows = result.rows;
+
+      console.log("🔍 [PostgreSQLProjectRepository] Processed rows:", {
+        rowsCount: rows.length,
+        firstRow: rows[0] || "none",
+      });
+
+      const projects = rows.map((row) => this._rowToProject(row));
+
+      console.log("🔍 [PostgreSQLProjectRepository] Final result:", {
+        count: projects.length,
+        firstProject: projects[0] || "none",
+      });
+
+      return projects;
     } catch (error) {
-      console.error('❌ [PostgreSQLProjectRepository] findAll error:', error);
+      console.error("❌ [PostgreSQLProjectRepository] findAll error:", error);
       throw error;
     }
   }
@@ -450,22 +462,22 @@ class PostgreSQLProjectRepository extends ProjectRepository {
   async count(options = {}) {
     try {
       const { search } = options;
-      
+
       let query = `SELECT COUNT(*) as count FROM ${this.tableName}`;
       const params = [];
-      
+
       if (search) {
         query += ` WHERE name ILIKE $1 OR description ILIKE $1`;
         params.push(`%${search}%`);
       }
-      
+
       const result = await this.databaseConnection.getOne(query, params);
       return parseInt(result.count || 0);
     } catch (error) {
-      console.error('❌ [PostgreSQLProjectRepository] count error:', error);
+      console.error("❌ [PostgreSQLProjectRepository] count error:", error);
       throw error;
     }
   }
 }
 
-module.exports = PostgreSQLProjectRepository; 
+module.exports = PostgreSQLProjectRepository;

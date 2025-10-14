@@ -1,15 +1,24 @@
-const { v4: uuidv4 } = require('uuid');
-const ChatMessage = require('./ChatMessage');
+const { v4: uuidv4 } = require("uuid");
+const ChatMessage = require("./ChatMessage");
 
 class ChatSession {
-  constructor(id, userId, title, createdAt, updatedAt, metadata = {}, idePort = null, messages = []) {
+  constructor(
+    id,
+    userId,
+    title,
+    createdAt,
+    updatedAt,
+    metadata = {},
+    idePort = null,
+    messages = [],
+  ) {
     this._id = id || uuidv4();
     this._userId = userId;
     this._title = title;
     this._metadata = metadata;
     this._idePort = idePort;
-    this._messages = messages.map(msg =>
-      msg instanceof ChatMessage ? msg : ChatMessage.fromJSON(msg)
+    this._messages = messages.map((msg) =>
+      msg instanceof ChatMessage ? msg : ChatMessage.fromJSON(msg),
     );
     this._createdAt = createdAt || new Date();
     this._updatedAt = updatedAt || new Date();
@@ -17,15 +26,33 @@ class ChatSession {
   }
 
   // Getters
-  get id() { return this._id; }
-  get userId() { return this._userId; }
-  get title() { return this._title; }
-  get metadata() { return { ...this._metadata }; }
-  get idePort() { return this._idePort; }
-  get messages() { return this._messages.slice(); }
-  get createdAt() { return this._createdAt; }
-  get updatedAt() { return this._updatedAt; }
-  get messageCount() { return this._messages.length; }
+  get id() {
+    return this._id;
+  }
+  get userId() {
+    return this._userId;
+  }
+  get title() {
+    return this._title;
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get idePort() {
+    return this._idePort;
+  }
+  get messages() {
+    return this._messages.slice();
+  }
+  get createdAt() {
+    return this._createdAt;
+  }
+  get updatedAt() {
+    return this._updatedAt;
+  }
+  get messageCount() {
+    return this._messages.length;
+  }
 
   // Domain methods
   addMessage(message) {
@@ -34,28 +61,31 @@ class ChatSession {
     }
     this._messages.push(message);
     this._updatedAt = new Date();
-    
+
     // Auto-generate name from first user message if not set
     if (!this._title && message.isUserMessage()) {
       const content = message.getCleanContent();
-      this._title = content.length > 50 ? content.substring(0, 50) + '...' : content;
+      this._title =
+        content.length > 50 ? content.substring(0, 50) + "..." : content;
     }
   }
 
   getLastMessage() {
-    return this._messages.length > 0 ? this._messages[this._messages.length - 1] : null;
+    return this._messages.length > 0
+      ? this._messages[this._messages.length - 1]
+      : null;
   }
 
   getUserMessages() {
-    return this._messages.filter(msg => msg.isUserMessage());
+    return this._messages.filter((msg) => msg.isUserMessage());
   }
 
   getAIMessages() {
-    return this._messages.filter(msg => msg.isAIMessage());
+    return this._messages.filter((msg) => msg.isAIMessage());
   }
 
   getMessagesByType(type) {
-    return this._messages.filter(msg => msg.type === type);
+    return this._messages.filter((msg) => msg.type === type);
   }
 
   hasMessages() {
@@ -87,13 +117,13 @@ class ChatSession {
   // Validation
   _validate() {
     if (!this._userId) {
-      throw new Error('ChatSession userId cannot be empty');
+      throw new Error("ChatSession userId cannot be empty");
     }
     if (!(this._createdAt instanceof Date)) {
-      throw new Error('ChatSession createdAt must be a Date object');
+      throw new Error("ChatSession createdAt must be a Date object");
     }
     if (!(this._updatedAt instanceof Date)) {
-      throw new Error('ChatSession updatedAt must be a Date object');
+      throw new Error("ChatSession updatedAt must be a Date object");
     }
   }
 
@@ -105,10 +135,10 @@ class ChatSession {
       title: this._title,
       metadata: this._metadata,
       idePort: this._idePort,
-      messages: this._messages.map(m => m.toJSON()),
+      messages: this._messages.map((m) => m.toJSON()),
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
-      messageCount: this.messageCount
+      messageCount: this.messageCount,
     };
   }
 
@@ -121,7 +151,7 @@ class ChatSession {
       new Date(data.updatedAt),
       data.metadata,
       data.idePort,
-      (data.messages || []).map(m => ChatMessage.fromJSON(m))
+      (data.messages || []).map((m) => ChatMessage.fromJSON(m)),
     );
   }
 
@@ -133,9 +163,9 @@ class ChatSession {
       title,
       new Date(),
       new Date(),
-      metadata
+      metadata,
     );
   }
 }
 
-module.exports = ChatSession; 
+module.exports = ChatSession;

@@ -1,9 +1,9 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * HandlerMetrics - Metrics collection and analysis for handlers
- * 
+ *
  * This class provides comprehensive metrics collection, analysis,
  * and reporting for handler performance, including execution times,
  * success rates, error rates, and resource usage.
@@ -24,7 +24,7 @@ class HandlerMetrics {
       peakConcurrency: 0,
       currentConcurrency: 0,
       startTime: new Date(),
-      lastExecution: null
+      lastExecution: null,
     };
     this.options = {
       enableMetrics: options.enableMetrics !== false,
@@ -33,9 +33,9 @@ class HandlerMetrics {
       retentionPeriod: options.retentionPeriod || 24 * 60 * 60 * 1000, // 24 hours
       aggregationInterval: options.aggregationInterval || 5 * 60 * 1000, // 5 minutes
       maxMetricsPerHandler: options.maxMetricsPerHandler || 1000,
-      ...options
+      ...options,
     };
-    
+
     // Initialize aggregation timer if enabled
     if (this.options.enableAggregation) {
       this.startAggregationTimer();
@@ -57,9 +57,9 @@ class HandlerMetrics {
       const timestamp = new Date();
       const executionData = {
         handlerId,
-        handlerType: data.handler?.getType() || 'unknown',
-        handlerName: data.handler?.getMetadata()?.name || 'unknown',
-        requestType: data.request?.type || 'unknown',
+        handlerType: data.handler?.getType() || "unknown",
+        handlerName: data.handler?.getMetadata()?.name || "unknown",
+        requestType: data.request?.type || "unknown",
         success: data.result?.isSuccess() || false,
         duration: data.duration || 0,
         timestamp,
@@ -67,8 +67,8 @@ class HandlerMetrics {
           requestSize: JSON.stringify(data.request || {}).length,
           responseSize: JSON.stringify(data.result || {}).length,
           error: data.result?.getError() || null,
-          ...data.metadata
-        }
+          ...data.metadata,
+        },
       };
 
       // Update global metrics
@@ -79,11 +79,10 @@ class HandlerMetrics {
 
       // Store detailed execution record
       this.storeExecutionRecord(handlerId, executionData);
-
     } catch (error) {
-      logger.error('HandlerMetrics: Failed to record handler execution', {
+      logger.error("HandlerMetrics: Failed to record handler execution", {
         handlerId,
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -103,19 +102,19 @@ class HandlerMetrics {
       const timestamp = new Date();
       const failureData = {
         handlerId,
-        handlerType: data.handler?.getType() || 'unknown',
-        handlerName: data.handler?.getMetadata()?.name || 'unknown',
-        requestType: data.request?.type || 'unknown',
-        success: false,
+        handlerType: data.handler?.getType() || "unknown",
+        handlerName: data.handler?.getMetadata()?.name || "unknown",
+        requestType: data.request?.type || "unknown",
+       
         duration: data.duration || 0,
         timestamp,
-        error: data.error?.message || 'Unknown error',
-        errorType: data.error?.constructor?.name || 'Error',
+        error: data.error?.message || "Unknown error",
+        errorType: data.error?.constructor?.name || "Error",
         metadata: {
           requestSize: JSON.stringify(data.request || {}).length,
           stack: data.error?.stack || null,
-          ...data.metadata
-        }
+          ...data.metadata,
+        },
       };
 
       // Update global metrics
@@ -126,11 +125,10 @@ class HandlerMetrics {
 
       // Store detailed failure record
       this.storeExecutionRecord(handlerId, failureData);
-
     } catch (error) {
-      logger.error('HandlerMetrics: Failed to record handler failure', {
+      logger.error("HandlerMetrics: Failed to record handler failure", {
         handlerId,
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -142,7 +140,8 @@ class HandlerMetrics {
   updateGlobalMetrics(executionData) {
     this.globalMetrics.totalExecutions++;
     this.globalMetrics.totalDuration += executionData.duration;
-    this.globalMetrics.averageDuration = this.globalMetrics.totalDuration / this.globalMetrics.totalExecutions;
+    this.globalMetrics.averageDuration =
+      this.globalMetrics.totalDuration / this.globalMetrics.totalExecutions;
     this.globalMetrics.lastExecution = executionData.timestamp;
 
     if (executionData.success) {
@@ -153,13 +152,19 @@ class HandlerMetrics {
 
     // Update concurrency tracking
     this.globalMetrics.currentConcurrency++;
-    if (this.globalMetrics.currentConcurrency > this.globalMetrics.peakConcurrency) {
-      this.globalMetrics.peakConcurrency = this.globalMetrics.currentConcurrency;
+    if (
+      this.globalMetrics.currentConcurrency > this.globalMetrics.peakConcurrency
+    ) {
+      this.globalMetrics.peakConcurrency =
+        this.globalMetrics.currentConcurrency;
     }
 
     // Decrease concurrency after a delay (simulating execution completion)
     setTimeout(() => {
-      this.globalMetrics.currentConcurrency = Math.max(0, this.globalMetrics.currentConcurrency - 1);
+      this.globalMetrics.currentConcurrency = Math.max(
+        0,
+        this.globalMetrics.currentConcurrency - 1,
+      );
     }, executionData.duration);
   }
 
@@ -182,14 +187,15 @@ class HandlerMetrics {
         lastExecution: null,
         firstExecution: null,
         errorTypes: new Map(),
-        requestTypes: new Map()
+        requestTypes: new Map(),
       });
     }
 
     const handlerMetrics = this.metrics.get(handlerId);
     handlerMetrics.executions++;
     handlerMetrics.totalDuration += executionData.duration;
-    handlerMetrics.averageDuration = handlerMetrics.totalDuration / handlerMetrics.executions;
+    handlerMetrics.averageDuration =
+      handlerMetrics.totalDuration / handlerMetrics.executions;
     handlerMetrics.lastExecution = executionData.timestamp;
 
     if (!handlerMetrics.firstExecution) {
@@ -211,13 +217,19 @@ class HandlerMetrics {
       handlerMetrics.errorCount++;
 
       // Track error types
-      const errorType = executionData.errorType || 'Unknown';
-      handlerMetrics.errorTypes.set(errorType, (handlerMetrics.errorTypes.get(errorType) || 0) + 1);
+      const errorType = executionData.errorType || "Unknown";
+      handlerMetrics.errorTypes.set(
+        errorType,
+        (handlerMetrics.errorTypes.get(errorType) || 0) + 1,
+      );
     }
 
     // Track request types
     const requestType = executionData.requestType;
-    handlerMetrics.requestTypes.set(requestType, (handlerMetrics.requestTypes.get(requestType) || 0) + 1);
+    handlerMetrics.requestTypes.set(
+      requestType,
+      (handlerMetrics.requestTypes.get(requestType) || 0) + 1,
+    );
   }
 
   /**
@@ -240,13 +252,15 @@ class HandlerMetrics {
 
     // Clean up old records based on retention period
     const cutoffTime = new Date(Date.now() - this.options.retentionPeriod);
-    handlerMetrics.records = handlerMetrics.records.filter(record => 
-      record.timestamp > cutoffTime
+    handlerMetrics.records = handlerMetrics.records.filter(
+      (record) => record.timestamp > cutoffTime,
     );
 
     // Limit number of records per handler
     if (handlerMetrics.records.length > this.options.maxMetricsPerHandler) {
-      handlerMetrics.records = handlerMetrics.records.slice(-this.options.maxMetricsPerHandler);
+      handlerMetrics.records = handlerMetrics.records.slice(
+        -this.options.maxMetricsPerHandler,
+      );
     }
   }
 
@@ -263,12 +277,19 @@ class HandlerMetrics {
 
     return {
       ...metrics,
-      successRate: metrics.executions > 0 ? (metrics.successes / metrics.executions) * 100 : 0,
-      failureRate: metrics.executions > 0 ? (metrics.failures / metrics.executions) * 100 : 0,
+      successRate:
+        metrics.executions > 0
+          ? (metrics.successes / metrics.executions) * 100
+          : 0,
+      failureRate:
+        metrics.executions > 0
+          ? (metrics.failures / metrics.executions) * 100
+          : 0,
       errorTypes: Object.fromEntries(metrics.errorTypes),
       requestTypes: Object.fromEntries(metrics.requestTypes),
-      uptime: metrics.firstExecution ? 
-        (new Date() - metrics.firstExecution) / (1000 * 60 * 60) : 0 // hours
+      uptime: metrics.firstExecution
+        ? (new Date() - metrics.firstExecution) / (1000 * 60 * 60)
+        : 0, // hours
     };
   }
 
@@ -279,12 +300,20 @@ class HandlerMetrics {
   getGlobalMetrics() {
     return {
       ...this.globalMetrics,
-      successRate: this.globalMetrics.totalExecutions > 0 ? 
-        (this.globalMetrics.totalSuccesses / this.globalMetrics.totalExecutions) * 100 : 0,
-      failureRate: this.globalMetrics.totalExecutions > 0 ? 
-        (this.globalMetrics.totalFailures / this.globalMetrics.totalExecutions) * 100 : 0,
+      successRate:
+        this.globalMetrics.totalExecutions > 0
+          ? (this.globalMetrics.totalSuccesses /
+              this.globalMetrics.totalExecutions) *
+            100
+          : 0,
+      failureRate:
+        this.globalMetrics.totalExecutions > 0
+          ? (this.globalMetrics.totalFailures /
+              this.globalMetrics.totalExecutions) *
+            100
+          : 0,
       uptime: (new Date() - this.globalMetrics.startTime) / (1000 * 60 * 60), // hours
-      activeHandlers: this.metrics.size
+      activeHandlers: this.metrics.size,
     };
   }
 
@@ -294,11 +323,11 @@ class HandlerMetrics {
    */
   getAllHandlerMetrics() {
     const allMetrics = {};
-    
+
     for (const [handlerId, metrics] of this.metrics) {
       allMetrics[handlerId] = this.getHandlerMetrics(handlerId);
     }
-    
+
     return allMetrics;
   }
 
@@ -309,21 +338,26 @@ class HandlerMetrics {
   getMetricsSummary() {
     const globalMetrics = this.getGlobalMetrics();
     const handlerCount = this.metrics.size;
-    
+
     // Calculate top performers
-    const handlerMetrics = Array.from(this.metrics.entries()).map(([id, metrics]) => ({
-      id,
-      successRate: metrics.executions > 0 ? (metrics.successes / metrics.executions) * 100 : 0,
-      averageDuration: metrics.averageDuration,
-      executions: metrics.executions
-    }));
+    const handlerMetrics = Array.from(this.metrics.entries()).map(
+      ([id, metrics]) => ({
+        id,
+        successRate:
+          metrics.executions > 0
+            ? (metrics.successes / metrics.executions) * 100
+            : 0,
+        averageDuration: metrics.averageDuration,
+        executions: metrics.executions,
+      }),
+    );
 
     const topPerformers = handlerMetrics
       .sort((a, b) => b.successRate - a.successRate)
       .slice(0, 5);
 
     const fastestHandlers = handlerMetrics
-      .filter(h => h.executions > 0)
+      .filter((h) => h.executions > 0)
       .sort((a, b) => a.averageDuration - b.averageDuration)
       .slice(0, 5);
 
@@ -332,15 +366,15 @@ class HandlerMetrics {
       handlers: {
         total: handlerCount,
         topPerformers,
-        fastestHandlers
+        fastestHandlers,
       },
       collection: {
         enabled: this.options.enableMetrics,
         realTime: this.options.enableRealTime,
         aggregation: this.options.enableAggregation,
         retentionPeriod: this.options.retentionPeriod,
-        maxRecordsPerHandler: this.options.maxMetricsPerHandler
-      }
+        maxRecordsPerHandler: this.options.maxMetricsPerHandler,
+      },
     };
   }
 
@@ -355,49 +389,52 @@ class HandlerMetrics {
     // Check global success rate
     if (globalMetrics.successRate < 90) {
       alerts.push({
-        type: 'LOW_SUCCESS_RATE',
-        severity: 'HIGH',
+        type: "LOW_SUCCESS_RATE",
+        severity: "HIGH",
         message: `Global success rate is ${globalMetrics.successRate.toFixed(2)}%`,
         value: globalMetrics.successRate,
-        threshold: 90
+        threshold: 90,
       });
     }
 
     // Check average duration
-    if (globalMetrics.averageDuration > 5000) { // 5 seconds
+    if (globalMetrics.averageDuration > 5000) {
+      // 5 seconds
       alerts.push({
-        type: 'HIGH_AVERAGE_DURATION',
-        severity: 'MEDIUM',
+        type: "HIGH_AVERAGE_DURATION",
+        severity: "MEDIUM",
         message: `Average execution duration is ${globalMetrics.averageDuration.toFixed(2)}ms`,
         value: globalMetrics.averageDuration,
-        threshold: 5000
+        threshold: 5000,
       });
     }
 
     // Check individual handlers
     for (const [handlerId, metrics] of this.metrics) {
-      if (metrics.executions > 10) { // Only check handlers with sufficient data
+      if (metrics.executions > 10) {
+        // Only check handlers with sufficient data
         const successRate = (metrics.successes / metrics.executions) * 100;
-        
+
         if (successRate < 80) {
           alerts.push({
-            type: 'HANDLER_LOW_SUCCESS_RATE',
-            severity: 'HIGH',
+            type: "HANDLER_LOW_SUCCESS_RATE",
+            severity: "HIGH",
             handlerId,
             message: `Handler ${handlerId} success rate is ${successRate.toFixed(2)}%`,
             value: successRate,
-            threshold: 80
+            threshold: 80,
           });
         }
 
-        if (metrics.averageDuration > 10000) { // 10 seconds
+        if (metrics.averageDuration > 10000) {
+          // 10 seconds
           alerts.push({
-            type: 'HANDLER_HIGH_DURATION',
-            severity: 'MEDIUM',
+            type: "HANDLER_HIGH_DURATION",
+            severity: "MEDIUM",
             handlerId,
             message: `Handler ${handlerId} average duration is ${metrics.averageDuration.toFixed(2)}ms`,
             value: metrics.averageDuration,
-            threshold: 10000
+            threshold: 10000,
           });
         }
       }
@@ -426,7 +463,7 @@ class HandlerMetrics {
     try {
       const timestamp = new Date();
       const globalMetrics = this.getGlobalMetrics();
-      
+
       // Store aggregated metrics
       if (!this.aggregatedMetrics) {
         this.aggregatedMetrics = [];
@@ -435,17 +472,16 @@ class HandlerMetrics {
       this.aggregatedMetrics.push({
         timestamp,
         global: globalMetrics,
-        handlerCount: this.metrics.size
+        handlerCount: this.metrics.size,
       });
 
       // Clean up old aggregated metrics
       const cutoffTime = new Date(Date.now() - this.options.retentionPeriod);
-      this.aggregatedMetrics = this.aggregatedMetrics.filter(record => 
-        record.timestamp > cutoffTime
+      this.aggregatedMetrics = this.aggregatedMetrics.filter(
+        (record) => record.timestamp > cutoffTime,
       );
-
     } catch (error) {
-      logger.error('HandlerMetrics: Aggregation failed', error.message);
+      logger.error("HandlerMetrics: Aggregation failed", error.message);
     }
   }
 
@@ -459,8 +495,10 @@ class HandlerMetrics {
       return [];
     }
 
-    const cutoffTime = new Date(Date.now() - (hours * 60 * 60 * 1000));
-    return this.aggregatedMetrics.filter(record => record.timestamp > cutoffTime);
+    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    return this.aggregatedMetrics.filter(
+      (record) => record.timestamp > cutoffTime,
+    );
   }
 
   /**
@@ -481,7 +519,7 @@ class HandlerMetrics {
         peakConcurrency: 0,
         currentConcurrency: 0,
         startTime: new Date(),
-        lastExecution: null
+        lastExecution: null,
       };
     }
   }
@@ -498,7 +536,7 @@ class HandlerMetrics {
       alerts: this.getPerformanceAlerts(),
       aggregated: this.getAggregatedMetrics(),
       exportTime: new Date(),
-      version: '1.0.0'
+      version: "1.0.0",
     };
   }
 
@@ -521,9 +559,8 @@ class HandlerMetrics {
       if (data.aggregated) {
         this.aggregatedMetrics = data.aggregated;
       }
-
     } catch (error) {
-      logger.error('HandlerMetrics: Import failed', error.message);
+      logger.error("HandlerMetrics: Import failed", error.message);
     }
   }
 
@@ -538,4 +575,4 @@ class HandlerMetrics {
   }
 }
 
-module.exports = HandlerMetrics; 
+module.exports = HandlerMetrics;

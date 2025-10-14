@@ -85,7 +85,7 @@ class PerformanceAnalyzer {
                 results.resolutionTimes.push({
                     service: serviceName,
                     time: resolutionTime,
-                    success: false,
+                   
                     error: error.message
                 });
             }

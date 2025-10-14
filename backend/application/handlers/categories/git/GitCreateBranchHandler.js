@@ -3,8 +3,8 @@
  * Handler for Create a new Git branch
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitCreateBranchHandler {
@@ -20,25 +20,33 @@ class GitCreateBranchHandler {
 
       const commandData = command.getCommandData();
 
-      this.logger.info('GitCreateBranchHandler: Executing gitcreatebranchcommand', commandData);
+      this.logger.info(
+        "GitCreateBranchHandler: Executing gitcreatebranchcommand",
+        commandData,
+      );
 
-      
       // Check if branch already exists
-      const branchExistsResult = await execAsync(`git branch --list ${commandData.branchName}`, { cwd: commandData.projectPath });
+      const branchExistsResult = await execAsync(
+        `git branch --list ${commandData.branchName}`,
+        { cwd: commandData.projectPath },
+      );
       if (branchExistsResult.stdout.trim()) {
         if (commandData.checkout) {
-          await execAsync(`git checkout ${commandData.branchName}`, { cwd: commandData.projectPath });
+          await execAsync(`git checkout ${commandData.branchName}`, {
+            cwd: commandData.projectPath,
+          });
         }
         return {
-          success: true,
-          result: 'Branch already exists',
-          timestamp: new Date()
+          result: "Branch already exists",
+          timestamp: new Date(),
         };
       }
 
       // Switch to base branch if specified
       if (commandData.fromBranch) {
-        await execAsync(`git checkout ${commandData.fromBranch}`, { cwd: commandData.projectPath });
+        await execAsync(`git checkout ${commandData.fromBranch}`, {
+          cwd: commandData.projectPath,
+        });
       }
 
       // Create new branch
@@ -47,28 +55,34 @@ class GitCreateBranchHandler {
         createCommand = `git checkout -b ${commandData.branchName}`;
       }
 
-      const result = await execAsync(createCommand, { cwd: commandData.projectPath });
-
-      this.logger.info('GitCreateBranchHandler: GitCreateBranchCommand completed successfully', {
-        result: result.stdout
+      const result = await execAsync(createCommand, {
+        cwd: commandData.projectPath,
       });
 
+      this.logger.info(
+        "GitCreateBranchHandler: GitCreateBranchCommand completed successfully",
+        {
+          result: result.stdout,
+        },
+      );
+
       return {
-        success: true,
         result: result.stdout,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('GitCreateBranchHandler: GitCreateBranchCommand failed', {
-        error: error.message,
-        command: command.getCommandData()
-      });
+      this.logger.error(
+        "GitCreateBranchHandler: GitCreateBranchCommand failed",
+        {
+          error: error.message,
+          command: command.getCommandData(),
+        },
+      );
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }

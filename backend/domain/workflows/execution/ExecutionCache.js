@@ -2,22 +2,22 @@
  * ExecutionCache - Execution result caching for workflow execution
  * Provides caching for workflow results to improve performance
  */
-const crypto = require('crypto');
-const ServiceLogger = require('@logging/ServiceLogger');
+const crypto = require("crypto");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * Execution cache for workflow results
  */
 class ExecutionCache {
   constructor(options = {}) {
-    this.logger = options.logger || new ServiceLogger('ExecutionCache');
-    
+    this.logger = options.logger || new ServiceLogger("ExecutionCache");
+
     this.maxSize = options.maxSize || 1000;
     this.ttl = options.ttl || 3600000; // 1 hour
     this.enableCaching = options.enableCaching !== false;
     this.enableCompression = options.enableCompression !== false;
     this.cacheHitThreshold = options.cacheHitThreshold || 0.1; // 10% improvement threshold
-    
+
     // Cache storage
     this.cache = new Map();
     this.accessTimes = new Map();
@@ -26,13 +26,13 @@ class ExecutionCache {
       misses: 0,
       sets: 0,
       evictions: 0,
-      totalSize: 0
+      totalSize: 0,
     };
-    
+
     // Cache cleanup interval
     this.cleanupInterval = null;
     this.cleanupIntervalMs = options.cleanupIntervalMs || 300000; // 5 minutes
-    
+
     // Start cleanup if enabled
     if (this.enableCaching) {
       this.startCleanupInterval();
@@ -51,14 +51,14 @@ class ExecutionCache {
     }
 
     const cacheKey = this.generateCacheKey(workflow, context);
-    
+
     if (!this.cache.has(cacheKey)) {
       this.cacheStats.misses++;
       return null;
     }
 
     const cachedItem = this.cache.get(cacheKey);
-    
+
     // Check TTL
     if (Date.now() - cachedItem.timestamp > this.ttl) {
       this.cache.delete(cacheKey);
@@ -70,11 +70,11 @@ class ExecutionCache {
     // Update access time and stats
     this.accessTimes.set(cacheKey, Date.now());
     this.cacheStats.hits++;
-    
-    this.logger.info('Cache hit', {
-      cacheKey: cacheKey.substring(0, 20) + '...',
+
+    this.logger.info("Cache hit", {
+      cacheKey: cacheKey.substring(0, 20) + "...",
       age: Date.now() - cachedItem.timestamp,
-      hitRate: this.getHitRate()
+      hitRate: this.getHitRate(),
     });
 
     return cachedItem.result;
@@ -94,16 +94,16 @@ class ExecutionCache {
 
     const cacheKey = this.generateCacheKey(workflow, context);
     const ttl = options.ttl || this.ttl;
-    
+
     // Check if result is worth caching
     if (!this.isResultWorthCaching(result, options)) {
-      this.logger.debug('Result not worth caching', {
-        cacheKey: cacheKey.substring(0, 20) + '...',
-        reason: 'Below threshold'
+      this.logger.debug("Result not worth caching", {
+        cacheKey: cacheKey.substring(0, 20) + "...",
+        reason: "Below threshold",
       });
       return;
     }
-    
+
     // Check cache size and evict if necessary
     if (this.cache.size >= this.maxSize) {
       this.evictOldest();
@@ -111,7 +111,7 @@ class ExecutionCache {
 
     // Prepare result for caching
     const cachedResult = this.prepareResultForCaching(result, options);
-    
+
     // Cache the result
     this.cache.set(cacheKey, {
       result: cachedResult,
@@ -122,18 +122,18 @@ class ExecutionCache {
         workflowName: workflow.getMetadata().name,
         workflowVersion: workflow.getMetadata().version,
         contextHash: this.hashContext(context),
-        cachedAt: new Date()
-      }
+        cachedAt: new Date(),
+      },
     });
-    
+
     this.accessTimes.set(cacheKey, Date.now());
     this.cacheStats.sets++;
     this.cacheStats.totalSize += this.calculateResultSize(cachedResult);
 
-    this.logger.info('Result cached', {
-      cacheKey: cacheKey.substring(0, 20) + '...',
+    this.logger.info("Result cached", {
+      cacheKey: cacheKey.substring(0, 20) + "...",
       cacheSize: this.cache.size,
-      resultSize: this.calculateResultSize(cachedResult)
+      resultSize: this.calculateResultSize(cachedResult),
     });
   }
 
@@ -148,21 +148,21 @@ class ExecutionCache {
     if (result && result.success === false) {
       return false;
     }
-    
+
     // Check if result has minimum size
     const resultSize = this.calculateResultSize(result);
     const minSize = options.minSize || 100; // bytes
     if (resultSize < minSize) {
       return false;
     }
-    
+
     // Check if result has minimum complexity
     const complexity = this.calculateResultComplexity(result);
     const minComplexity = options.minComplexity || 1;
     if (complexity < minComplexity) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -174,17 +174,17 @@ class ExecutionCache {
    */
   prepareResultForCaching(result, options = {}) {
     let preparedResult = { ...result };
-    
+
     // Remove sensitive data
     if (options.excludeSensitive) {
       preparedResult = this.removeSensitiveData(preparedResult);
     }
-    
+
     // Compress if enabled
     if (this.enableCompression && options.compress !== false) {
       preparedResult = this.compressResult(preparedResult);
     }
-    
+
     return preparedResult;
   }
 
@@ -194,19 +194,21 @@ class ExecutionCache {
    * @returns {Object} Cleaned result
    */
   removeSensitiveData(result) {
-    const sensitiveFields = ['password', 'token', 'secret', 'key', 'auth'];
+    const sensitiveFields = ["password", "token", "secret", "key", "auth"];
     const cleaned = { ...result };
-    
+
     const cleanObject = (obj) => {
       for (const [key, value] of Object.entries(obj)) {
-        if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
-          obj[key] = '[REDACTED]';
-        } else if (typeof value === 'object' && value !== null) {
+        if (
+          sensitiveFields.some((field) => key.toLowerCase().includes(field))
+        ) {
+          obj[key] = "[REDACTED]";
+        } else if (typeof value === "object" && value !== null) {
           cleanObject(value);
         }
       }
     };
-    
+
     cleanObject(cleaned);
     return cleaned;
   }
@@ -219,20 +221,24 @@ class ExecutionCache {
   compressResult(result) {
     // Simple compression by removing redundant data
     const compressed = { ...result };
-    
+
     // Remove empty arrays and objects
     const cleanObject = (obj) => {
       for (const [key, value] of Object.entries(obj)) {
         if (Array.isArray(value) && value.length === 0) {
           delete obj[key];
-        } else if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+        } else if (
+          typeof value === "object" &&
+          value !== null &&
+          Object.keys(value).length === 0
+        ) {
           delete obj[key];
-        } else if (typeof value === 'object' && value !== null) {
+        } else if (typeof value === "object" && value !== null) {
           cleanObject(value);
         }
       }
     };
-    
+
     cleanObject(compressed);
     return compressed;
   }
@@ -261,12 +267,12 @@ class ExecutionCache {
       const contextData = context.getAll();
       const relevantData = this.extractRelevantContextData(contextData);
       const contextStr = JSON.stringify(relevantData);
-      return crypto.createHash('md5').update(contextStr).digest('hex');
+      return crypto.createHash("md5").update(contextStr).digest("hex");
     } catch (error) {
-      this.logger.warn('Failed to hash context', {
-        error: error.message
+      this.logger.warn("Failed to hash context", {
+        error: error.message,
       });
-      return 'default';
+      return "default";
     }
   }
 
@@ -281,21 +287,21 @@ class ExecutionCache {
       const workflowStr = JSON.stringify({
         name: metadata.name,
         version: metadata.version,
-        steps: metadata.steps?.map(step => {
+        steps: metadata.steps?.map((step) => {
           const stepMetadata = step.getMetadata ? step.getMetadata() : step;
           return {
             type: stepMetadata.type,
             name: stepMetadata.name,
-            parameters: stepMetadata.parameters
+            parameters: stepMetadata.parameters,
           };
-        })
+        }),
       });
-      return crypto.createHash('md5').update(workflowStr).digest('hex');
+      return crypto.createHash("md5").update(workflowStr).digest("hex");
     } catch (error) {
-      this.logger.warn('Failed to hash workflow', {
-        error: error.message
+      this.logger.warn("Failed to hash workflow", {
+        error: error.message,
       });
-      return 'default';
+      return "default";
     }
   }
 
@@ -306,17 +312,23 @@ class ExecutionCache {
    */
   extractRelevantContextData(contextData) {
     const relevantKeys = [
-      'projectId', 'userId', 'environment', 'mode', 'version',
-      'config', 'settings', 'parameters'
+      "projectId",
+      "userId",
+      "environment",
+      "mode",
+      "version",
+      "config",
+      "settings",
+      "parameters",
     ];
-    
+
     const relevant = {};
     for (const key of relevantKeys) {
       if (contextData[key] !== undefined) {
         relevant[key] = contextData[key];
       }
     }
-    
+
     return relevant;
   }
 
@@ -341,13 +353,13 @@ class ExecutionCache {
       if (cachedItem) {
         this.cacheStats.totalSize -= cachedItem.size;
       }
-      
+
       this.cache.delete(oldestKey);
       this.accessTimes.delete(oldestKey);
       this.cacheStats.evictions++;
-      
-      this.logger.info('Evicted oldest entry', {
-        cacheKey: oldestKey.substring(0, 20) + '...'
+
+      this.logger.info("Evicted oldest entry", {
+        cacheKey: oldestKey.substring(0, 20) + "...",
       });
     }
   }
@@ -364,8 +376,8 @@ class ExecutionCache {
       this.cleanupExpiredEntries();
     }, this.cleanupIntervalMs);
 
-    this.logger.info('Cleanup interval started', {
-      interval: this.cleanupIntervalMs
+    this.logger.info("Cleanup interval started", {
+      interval: this.cleanupIntervalMs,
     });
   }
 
@@ -376,7 +388,7 @@ class ExecutionCache {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
-      this.logger.info('Cleanup interval stopped');
+      this.logger.info("Cleanup interval stopped");
     }
   }
 
@@ -397,9 +409,9 @@ class ExecutionCache {
     }
 
     if (cleanedCount > 0) {
-      this.logger.info('Cleaned expired entries', {
+      this.logger.info("Cleaned expired entries", {
         cleanedCount,
-        remainingEntries: this.cache.size
+        remainingEntries: this.cache.size,
       });
     }
   }
@@ -411,8 +423,8 @@ class ExecutionCache {
     this.cache.clear();
     this.accessTimes.clear();
     this.cacheStats.totalSize = 0;
-    
-    this.logger.info('Cache cleared');
+
+    this.logger.info("Cache cleared");
   }
 
   /**
@@ -435,21 +447,21 @@ class ExecutionCache {
    */
   calculateResultComplexity(result) {
     if (!result) return 0;
-    
+
     let complexity = 1;
-    
+
     // Count object properties
-    if (typeof result === 'object') {
+    if (typeof result === "object") {
       complexity += Object.keys(result).length;
-      
+
       // Recursively count nested properties
       for (const value of Object.values(result)) {
-        if (typeof value === 'object' && value !== null) {
+        if (typeof value === "object" && value !== null) {
           complexity += this.calculateResultComplexity(value);
         }
       }
     }
-    
+
     return complexity;
   }
 
@@ -459,8 +471,9 @@ class ExecutionCache {
    */
   getStatistics() {
     const totalRequests = this.cacheStats.hits + this.cacheStats.misses;
-    const hitRate = totalRequests > 0 ? this.cacheStats.hits / totalRequests : 0;
-    
+    const hitRate =
+      totalRequests > 0 ? this.cacheStats.hits / totalRequests : 0;
+
     return {
       size: this.cache.size,
       maxSize: this.maxSize,
@@ -472,9 +485,10 @@ class ExecutionCache {
       sets: this.cacheStats.sets,
       evictions: this.cacheStats.evictions,
       totalSize: this.cacheStats.totalSize,
-      averageSize: this.cache.size > 0 ? this.cacheStats.totalSize / this.cache.size : 0,
+      averageSize:
+        this.cache.size > 0 ? this.cacheStats.totalSize / this.cache.size : 0,
       enabled: this.enableCaching,
-      compression: this.enableCompression
+      compression: this.enableCompression,
     };
   }
 
@@ -494,21 +508,21 @@ class ExecutionCache {
    */
   getCacheEntries(limit = 10) {
     const entries = [];
-    
+
     for (const [key, cachedItem] of this.cache.entries()) {
       entries.push({
-        key: key.substring(0, 20) + '...',
+        key: key.substring(0, 20) + "...",
         timestamp: cachedItem.timestamp,
         age: Date.now() - cachedItem.timestamp,
         size: cachedItem.size,
-        metadata: cachedItem.metadata
+        metadata: cachedItem.metadata,
       });
-      
+
       if (entries.length >= limit) {
         break;
       }
     }
-    
+
     return entries.sort((a, b) => b.timestamp - a.timestamp);
   }
 
@@ -518,7 +532,7 @@ class ExecutionCache {
    */
   invalidateEntries(predicate) {
     let invalidatedCount = 0;
-    
+
     for (const [key, cachedItem] of this.cache.entries()) {
       if (predicate(cachedItem)) {
         this.cache.delete(key);
@@ -527,13 +541,13 @@ class ExecutionCache {
         invalidatedCount++;
       }
     }
-    
+
     if (invalidatedCount > 0) {
-      this.logger.info('Invalidated entries', {
-        invalidatedCount
+      this.logger.info("Invalidated entries", {
+        invalidatedCount,
       });
     }
-    
+
     return invalidatedCount;
   }
 
@@ -543,9 +557,10 @@ class ExecutionCache {
    * @param {string} workflowVersion - Workflow version
    */
   invalidateByWorkflow(workflowName, workflowVersion) {
-    return this.invalidateEntries(cachedItem => 
-      cachedItem.metadata.workflowName === workflowName &&
-      cachedItem.metadata.workflowVersion === workflowVersion
+    return this.invalidateEntries(
+      (cachedItem) =>
+        cachedItem.metadata.workflowName === workflowName &&
+        cachedItem.metadata.workflowVersion === workflowVersion,
     );
   }
 
@@ -555,8 +570,8 @@ class ExecutionCache {
    */
   invalidateByAge(maxAge) {
     const cutoff = Date.now() - maxAge;
-    return this.invalidateEntries(cachedItem => 
-      cachedItem.timestamp < cutoff
+    return this.invalidateEntries(
+      (cachedItem) => cachedItem.timestamp < cutoff,
     );
   }
 
@@ -564,16 +579,16 @@ class ExecutionCache {
    * Shutdown cache
    */
   shutdown() {
-    this.logger.info('Shutting down');
-    
+    this.logger.info("Shutting down");
+
     // Stop cleanup interval
     this.stopCleanupInterval();
-    
+
     // Clear cache
     this.clear();
-    
-    this.logger.info('Shutdown complete');
+
+    this.logger.info("Shutdown complete");
   }
 }
 
-module.exports = ExecutionCache; 
+module.exports = ExecutionCache;

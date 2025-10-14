@@ -1,13 +1,12 @@
-
 /**
  * Steps Module - Domain Layer
  * Exports step system components
  */
 
-const StepRegistry = require('./StepRegistry');
-const StepBuilder = require('./StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const StepRegistry = require("./StepRegistry");
+const StepBuilder = require("./StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 // Create singleton instances
 const stepRegistry = new StepRegistry();
@@ -18,24 +17,24 @@ const stepBuilder = new StepBuilder(stepRegistry);
  */
 async function initializeSteps(serviceRegistry = null) {
   try {
-    logger.info('🚀 Initializing step system...');
-    
+    logger.info("🚀 Initializing step system...");
+
     // Update the global stepRegistry instance with serviceRegistry
     if (serviceRegistry) {
       stepRegistry.serviceRegistry = serviceRegistry;
-      logger.info('✅ StepRegistry updated with DI container');
+      logger.info("✅ StepRegistry updated with DI container");
     }
-    
+
     // Load steps from categories
     await stepRegistry.loadStepsFromCategories();
-    
-    logger.info('✅ Step system initialized successfully');
+
+    logger.info("✅ Step system initialized successfully");
     return {
       registry: stepRegistry,
-      builder: stepBuilder
+      builder: stepBuilder,
     };
   } catch (error) {
-    logger.error('❌ Failed to initialize step system:', error.message);
+    logger.error("❌ Failed to initialize step system:", error.message);
     throw error;
   }
 }
@@ -61,7 +60,12 @@ function getStepBuilder() {
  * @param {string} category - Step category
  * @param {Function} executor - Step execution function
  */
-async function registerStep(name, config, category = 'general', executor = null) {
+async function registerStep(
+  name,
+  config,
+  category = "general",
+  executor = null,
+) {
   return await stepRegistry.registerStep(name, config, category, executor);
 }
 
@@ -141,7 +145,7 @@ function getStepStats(name) {
 function getStepSystemStats() {
   return {
     registry: stepRegistry.getStats(),
-    cache: stepBuilder.getCacheStats()
+    cache: stepBuilder.getCacheStats(),
   };
 }
 
@@ -149,14 +153,14 @@ module.exports = {
   // Core components
   StepRegistry,
   StepBuilder,
-  
+
   // Singleton instances
   stepRegistry,
   stepBuilder,
-  
+
   // Initialization
   initializeSteps,
-  
+
   // Registry functions
   getStepRegistry,
   registerStep,
@@ -165,13 +169,13 @@ module.exports = {
   executeStep,
   executeSteps,
   getStepStats,
-  
+
   // Builder functions
   getStepBuilder,
   buildStep,
   buildStepsByCategory,
   createStepChain,
-  
+
   // Statistics
-  getStepSystemStats
-}; 
+  getStepSystemStats,
+};

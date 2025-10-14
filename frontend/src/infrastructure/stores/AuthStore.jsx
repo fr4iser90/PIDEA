@@ -169,7 +169,7 @@ const useAuthStore = create(
             isLoading: false,
             error: error.message,
           });
-          return { success: false, error: error.message };
+          return { error: error.message };
         }
       },
 
@@ -219,7 +219,7 @@ const useAuthStore = create(
             isLoading: false,
             error: error.message,
           });
-          return { success: false, error: error.message };
+          return { error: error.message };
         }
       },
 

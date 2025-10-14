@@ -110,7 +110,7 @@ bruteForce: {
   failCallback: (req, res, next, nextValidRequestDate) => {
     logger.warn(`Brute force attempt detected from ${req.ip}`);
     res.status(429).json({
-      success: false,
+     
       error: 'Too many failed attempts',
       retryAfter: nextValidRequestDate
     });

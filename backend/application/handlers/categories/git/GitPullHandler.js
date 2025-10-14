@@ -3,8 +3,8 @@
  * Handler for Pull changes from remote repository
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitPullHandler {
@@ -20,13 +20,12 @@ class GitPullHandler {
 
       const commandData = command.getCommandData();
 
-      this.logger.info('GitPullHandler: Executing gitpullcommand', commandData);
+      this.logger.info("GitPullHandler: Executing gitpullcommand", commandData);
 
-      
       // Build pull command
-      let pullCommand = 'git pull';
+      let pullCommand = "git pull";
       if (commandData.rebase) {
-        pullCommand += ' --rebase';
+        pullCommand += " --rebase";
       }
       pullCommand += ` ${commandData.remote}`;
       if (commandData.branch) {
@@ -34,28 +33,31 @@ class GitPullHandler {
       }
 
       // Execute git pull command
-      const result = await execAsync(pullCommand, { cwd: commandData.projectPath });
-
-      this.logger.info('GitPullHandler: GitPullCommand completed successfully', {
-        result: result.stdout
+      const result = await execAsync(pullCommand, {
+        cwd: commandData.projectPath,
       });
 
+      this.logger.info(
+        "GitPullHandler: GitPullCommand completed successfully",
+        {
+          result: result.stdout,
+        },
+      );
+
       return {
-        success: true,
         result: result.stdout,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('GitPullHandler: GitPullCommand failed', {
+      this.logger.error("GitPullHandler: GitPullCommand failed", {
         error: error.message,
-        command: command.getCommandData()
+        command: command.getCommandData(),
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }

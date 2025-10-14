@@ -3,12 +3,14 @@
  * Specialized service for network performance analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { NetworkAnalysisStep } = require('@domain/steps/categories/analysis/performance');
+const Logger = require("@logging/Logger");
+const {
+  NetworkAnalysisStep,
+} = require("@domain/steps/categories/analysis/performance");
 
 class NetworkAnalysisService {
   constructor() {
-    this.logger = new Logger('NetworkAnalysisService');
+    this.logger = new Logger("NetworkAnalysisService");
     this.networkStep = new NetworkAnalysisStep();
   }
 
@@ -22,22 +24,23 @@ class NetworkAnalysisService {
    */
   async executeNetworkAnalysis(params) {
     try {
-      this.logger.info('Starting network performance analysis', { projectId: params.projectId });
+      this.logger.info("Starting network performance analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.networkStep.execute(params);
 
-      this.logger.info('Network analysis completed', { 
+      this.logger.info("Network analysis completed", {
         projectId: params.projectId,
         issuesFound: result.issues?.length || 0,
-        networkLatency: result.metrics?.networkLatency || 0
+        networkLatency: result.metrics?.networkLatency || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Network analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Network analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,13 @@ class NetworkAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Network Performance Analyzer',
-      version: '1.0.0',
-      description: 'Network performance and build configuration analysis',
-      metrics: ['latency', 'bandwidth', 'requests', 'response-time'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Network Performance Analyzer",
+      version: "1.0.0",
+      description: "Network performance and build configuration analysis",
+      metrics: ["latency", "bandwidth", "requests", "response-time"],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = NetworkAnalysisService; 
+module.exports = NetworkAnalysisService;

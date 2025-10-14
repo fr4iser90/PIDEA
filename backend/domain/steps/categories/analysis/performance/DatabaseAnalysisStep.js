@@ -1,45 +1,46 @@
 /**
  * Database Analysis Step - Performance Analysis Step
  * Analyzes database performance patterns and optimizations
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Specialized database performance analysis for database queries and connection patterns
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('database_analysis_step');
+const logger = new Logger("database_analysis_step");
 
 // Step configuration
 const config = {
-  name: 'DatabaseAnalysisStep',
-  type: 'analysis',
-  description: 'Analyzes database performance patterns and optimizations',
-  category: 'analysis',
-  subcategory: 'performance',
-  version: '1.0.0',
+  name: "DatabaseAnalysisStep",
+  type: "analysis",
+  description: "Analyzes database performance patterns and optimizations",
+  category: "analysis",
+  subcategory: "performance",
+  version: "1.0.0",
   dependencies: [],
   settings: {
     timeout: 30000,
     includeQueries: true,
     includeConnections: true,
-    includeOptimizations: true
+    includeOptimizations: true,
   },
   validation: {
-    requiredFiles: ['package.json'],
-    supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
-  }
+    requiredFiles: ["package.json"],
+    supportedProjects: ["nodejs", "react", "vue", "angular", "express", "nest"],
+  },
 };
 
 class DatabaseAnalysisStep {
   constructor() {
-    this.name = 'DatabaseAnalysisStep';
-    this.description = 'Analyzes database performance patterns and optimizations';
-    this.category = 'analysis';
-    this.subcategory = 'performance';
+    this.name = "DatabaseAnalysisStep";
+    this.description =
+      "Analyzes database performance patterns and optimizations";
+    this.category = "analysis";
+    this.subcategory = "performance";
     this.dependencies = [];
   }
 
@@ -50,23 +51,28 @@ class DatabaseAnalysisStep {
   async execute(context = {}) {
     const config = DatabaseAnalysisStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`⚡ Executing DatabaseAnalysisStep...`);
-      
+
       // Validate context
       this.validateContext(context);
 
       const projectPath = context.projectPath;
-      
-      logger.info(`🗄️ Starting database performance analysis for: ${projectPath}`);
+
+      logger.info(
+        `🗄️ Starting database performance analysis for: ${projectPath}`,
+      );
 
       // Execute database performance analysis
-      const databaseAnalysis = await this.analyzeDatabasePerformance(projectPath, {
-        includeQueries: context.includeQueries !== false,
-        includeConnections: context.includeConnections !== false,
-        includeOptimizations: context.includeOptimizations !== false
-      });
+      const databaseAnalysis = await this.analyzeDatabasePerformance(
+        projectPath,
+        {
+          includeQueries: context.includeQueries !== false,
+          includeConnections: context.includeConnections !== false,
+          includeOptimizations: context.includeOptimizations !== false,
+        },
+      );
 
       // Clean and format result
       const cleanResult = this.cleanResult(databaseAnalysis);
@@ -88,32 +94,34 @@ class DatabaseAnalysisStep {
 
       // Generate documentation if requested
       if (context.includeDocumentation !== false) {
-        cleanResult.documentation = await this.createDocumentation(cleanResult, projectPath, context);
+        cleanResult.documentation = await this.createDocumentation(
+          cleanResult,
+          projectPath,
+          context,
+        );
       }
 
       logger.info(`✅ Database performance analysis completed successfully`);
 
       return {
-        success: true,
         result: cleanResult,
         metadata: {
           stepName: "DatabaseAnalysisStep",
           projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
-
     } catch (error) {
       logger.error(`❌ Database performance analysis failed: ${error.message}`);
-      
+
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
           stepName: "DatabaseAnalysisStep",
           projectPath: context.projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
     }
   }
@@ -140,7 +148,8 @@ class DatabaseAnalysisStep {
 
       // Analyze database connections
       if (options.includeConnections) {
-        const connectionAnalysis = await this.analyzeDatabaseConnections(projectPath);
+        const connectionAnalysis =
+          await this.analyzeDatabaseConnections(projectPath);
         optimizations.push(...connectionAnalysis.optimizations);
         bottlenecks.push(...connectionAnalysis.bottlenecks);
         Object.assign(metrics, connectionAnalysis.metrics);
@@ -150,7 +159,7 @@ class DatabaseAnalysisStep {
       const databaseScore = this.calculateDatabaseScore({
         metrics,
         bottlenecks: bottlenecks.length,
-        optimizations: optimizations.length
+        optimizations: optimizations.length,
       });
 
       return {
@@ -158,16 +167,16 @@ class DatabaseAnalysisStep {
         optimizations,
         bottlenecks,
         score: databaseScore,
-        level: this.getDatabaseLevel(databaseScore)
+        level: this.getDatabaseLevel(databaseScore),
       };
     } catch (error) {
       logger.error(`Database performance analysis failed: ${error.message}`);
-      return { 
-        metrics: {}, 
-        optimizations: [], 
+      return {
+        metrics: {},
+        optimizations: [],
         bottlenecks: [],
         score: 0,
-        level: 'unknown'
+        level: "unknown",
       };
     }
   }
@@ -188,20 +197,21 @@ class DatabaseAnalysisStep {
       let filesWithQueries = 0;
       let filesWithIssues = 0;
 
-      for (const file of jsFiles) { // ANALYZE ALL FILES - NO LIMITS!
+      for (const file of jsFiles) {
+        // ANALYZE ALL FILES - NO LIMITS!
         try {
-          const content = await fs.readFile(file, 'utf8');
+          const content = await fs.readFile(file, "utf8");
           const fileAnalysis = this.analyzeFileDatabaseQueries(content, file);
-          
+
           if (fileAnalysis.queries.length > 0) {
             filesWithQueries++;
           }
-          
+
           if (fileAnalysis.bottlenecks.length > 0) {
             filesWithIssues++;
             bottlenecks.push(...fileAnalysis.bottlenecks);
           }
-          
+
           if (fileAnalysis.optimizations.length > 0) {
             optimizations.push(...fileAnalysis.optimizations);
           }
@@ -233,19 +243,19 @@ class DatabaseAnalysisStep {
 
       // Check for database configuration files
       const configFiles = [
-        'database.config.js',
-        'db.config.js',
-        'knexfile.js',
-        'sequelize.config.js',
-        'prisma/schema.prisma',
-        '.env',
-        '.env.example'
+        "database.config.js",
+        "db.config.js",
+        "knexfile.js",
+        "sequelize.config.js",
+        "prisma/schema.prisma",
+        ".env",
+        ".env.example",
       ];
 
       for (const configFile of configFiles) {
         const configPath = path.join(projectPath, configFile);
         try {
-          const content = await fs.readFile(configPath, 'utf8');
+          const content = await fs.readFile(configPath, "utf8");
           const analysis = this.analyzeDatabaseConfig(configFile, content);
           optimizations.push(...analysis.optimizations);
           bottlenecks.push(...analysis.bottlenecks);
@@ -255,19 +265,21 @@ class DatabaseAnalysisStep {
       }
 
       // Check for connection pooling
-      const hasConnectionPooling = await this.checkConnectionPooling(projectPath);
+      const hasConnectionPooling =
+        await this.checkConnectionPooling(projectPath);
       if (hasConnectionPooling) {
         optimizations.push({
-          type: 'database',
-          message: 'Connection pooling detected',
-          suggestion: 'Good for managing database connections efficiently'
+          type: "database",
+          message: "Connection pooling detected",
+          suggestion: "Good for managing database connections efficiently",
         });
       } else {
         bottlenecks.push({
-          type: 'database',
-          severity: 'medium',
-          message: 'No connection pooling detected',
-          suggestion: 'Implement connection pooling for better database performance'
+          type: "database",
+          severity: "medium",
+          message: "No connection pooling detected",
+          suggestion:
+            "Implement connection pooling for better database performance",
         });
       }
 
@@ -293,86 +305,86 @@ class DatabaseAnalysisStep {
 
     // Check for database query patterns
     const queryPatterns = [
-      { 
-        pattern: /SELECT\s+\*\s+FROM/i, 
-        message: 'SELECT * query detected',
-        suggestion: 'Specify only needed columns to reduce data transfer',
-        severity: 'medium'
+      {
+        pattern: /SELECT\s+\*\s+FROM/i,
+        message: "SELECT * query detected",
+        suggestion: "Specify only needed columns to reduce data transfer",
+        severity: "medium",
       },
-      { 
-        pattern: /WHERE\s+.*\s+LIKE\s+['"]%[^%]*%['"]/i, 
-        message: 'Leading wildcard LIKE query detected',
-        suggestion: 'Avoid leading wildcards as they prevent index usage',
-        severity: 'high'
+      {
+        pattern: /WHERE\s+.*\s+LIKE\s+['"]%[^%]*%['"]/i,
+        message: "Leading wildcard LIKE query detected",
+        suggestion: "Avoid leading wildcards as they prevent index usage",
+        severity: "high",
       },
-      { 
-        pattern: /ORDER BY\s+.*\s+DESC/i, 
-        message: 'DESC ordering detected',
-        suggestion: 'Consider if DESC ordering is necessary for performance',
-        severity: 'low'
+      {
+        pattern: /ORDER BY\s+.*\s+DESC/i,
+        message: "DESC ordering detected",
+        suggestion: "Consider if DESC ordering is necessary for performance",
+        severity: "low",
       },
-      { 
-        pattern: /GROUP BY\s+.*\s+HAVING/i, 
-        message: 'GROUP BY with HAVING detected',
-        suggestion: 'Consider filtering with WHERE before GROUP BY',
-        severity: 'medium'
+      {
+        pattern: /GROUP BY\s+.*\s+HAVING/i,
+        message: "GROUP BY with HAVING detected",
+        suggestion: "Consider filtering with WHERE before GROUP BY",
+        severity: "medium",
       },
-      { 
-        pattern: /JOIN\s+.*\s+ON\s+.*\s+OR/i, 
-        message: 'OR condition in JOIN detected',
-        suggestion: 'OR conditions in JOINs can cause performance issues',
-        severity: 'high'
-      }
+      {
+        pattern: /JOIN\s+.*\s+ON\s+.*\s+OR/i,
+        message: "OR condition in JOIN detected",
+        suggestion: "OR conditions in JOINs can cause performance issues",
+        severity: "high",
+      },
     ];
 
     queryPatterns.forEach(({ pattern, message, suggestion, severity }) => {
       if (pattern.test(content)) {
         bottlenecks.push({
-          type: 'database',
+          type: "database",
           severity,
           file: path.relative(process.cwd(), filePath),
           message,
-          suggestion
+          suggestion,
         });
       }
     });
 
     // Check for database optimization patterns
     const optimizationPatterns = [
-      { 
-        pattern: /LIMIT\s+\d+/i, 
-        message: 'LIMIT clause detected',
-        suggestion: 'Good for limiting result set size'
+      {
+        pattern: /LIMIT\s+\d+/i,
+        message: "LIMIT clause detected",
+        suggestion: "Good for limiting result set size",
       },
-      { 
-        pattern: /INDEX\s+ON/i, 
-        message: 'Index creation detected',
-        suggestion: 'Good for improving query performance'
+      {
+        pattern: /INDEX\s+ON/i,
+        message: "Index creation detected",
+        suggestion: "Good for improving query performance",
       },
-      { 
-        pattern: /EXPLAIN\s+/i, 
-        message: 'EXPLAIN query detected',
-        suggestion: 'Good for query performance analysis'
+      {
+        pattern: /EXPLAIN\s+/i,
+        message: "EXPLAIN query detected",
+        suggestion: "Good for query performance analysis",
       },
-      { 
-        pattern: /transaction/i, 
-        message: 'Transaction usage detected',
-        suggestion: 'Good for data consistency and performance'
+      {
+        pattern: /transaction/i,
+        message: "Transaction usage detected",
+        suggestion: "Good for data consistency and performance",
       },
-      { 
-        pattern: /prepared\s+statement/i, 
-        message: 'Prepared statement detected',
-        suggestion: 'Good for query optimization and security'
-      }
+      {
+        pattern: /prepared\s+statement/i,
+        message: "Prepared statement detected",
+        suggestion: "Good for query optimization and security",
+      },
     ];
 
     optimizationPatterns.forEach(({ pattern, message, suggestion }) => {
       if (pattern.test(content)) {
         optimizations.push({
-          type: 'database',
+          type: "database",
           file: path.relative(process.cwd(), filePath),
           message,
-          suggestion
+          suggestion,
         });
       }
     });
@@ -383,14 +395,14 @@ class DatabaseAnalysisStep {
       /mongoose/i,
       /prisma/i,
       /typeorm/i,
-      /knex/i
+      /knex/i,
     ];
 
-    ormPatterns.forEach(pattern => {
+    ormPatterns.forEach((pattern) => {
       if (pattern.test(content)) {
         queries.push({
-          type: 'orm',
-          file: path.relative(process.cwd(), filePath)
+          type: "orm",
+          file: path.relative(process.cwd(), filePath),
         });
       }
     });
@@ -409,49 +421,55 @@ class DatabaseAnalysisStep {
     const bottlenecks = [];
 
     switch (filename) {
-      case 'prisma/schema.prisma':
-        if (content.includes('@@index')) {
+      case "prisma/schema.prisma":
+        if (content.includes("@@index")) {
           optimizations.push({
-            type: 'database',
-            message: 'Prisma indexes configured',
-            suggestion: 'Good for query performance optimization'
+            type: "database",
+            message: "Prisma indexes configured",
+            suggestion: "Good for query performance optimization",
           });
         }
-        
-        if (content.includes('@@unique')) {
+
+        if (content.includes("@@unique")) {
           optimizations.push({
-            type: 'database',
-            message: 'Prisma unique constraints configured',
-            suggestion: 'Good for data integrity and performance'
+            type: "database",
+            message: "Prisma unique constraints configured",
+            suggestion: "Good for data integrity and performance",
           });
         }
         break;
 
-      case 'knexfile.js':
-        if (content.includes('pool')) {
+      case "knexfile.js":
+        if (content.includes("pool")) {
           optimizations.push({
-            type: 'database',
-            message: 'Knex connection pooling configured',
-            suggestion: 'Good for managing database connections'
+            type: "database",
+            message: "Knex connection pooling configured",
+            suggestion: "Good for managing database connections",
           });
         }
         break;
 
-      case '.env':
-      case '.env.example':
-        if (content.includes('DB_POOL_SIZE') || content.includes('DATABASE_POOL_SIZE')) {
+      case ".env":
+      case ".env.example":
+        if (
+          content.includes("DB_POOL_SIZE") ||
+          content.includes("DATABASE_POOL_SIZE")
+        ) {
           optimizations.push({
-            type: 'database',
-            message: 'Database pool size configured',
-            suggestion: 'Good for connection management'
+            type: "database",
+            message: "Database pool size configured",
+            suggestion: "Good for connection management",
           });
         }
-        
-        if (content.includes('DB_TIMEOUT') || content.includes('DATABASE_TIMEOUT')) {
+
+        if (
+          content.includes("DB_TIMEOUT") ||
+          content.includes("DATABASE_TIMEOUT")
+        ) {
           optimizations.push({
-            type: 'database',
-            message: 'Database timeout configured',
-            suggestion: 'Good for preventing hanging connections'
+            type: "database",
+            message: "Database timeout configured",
+            suggestion: "Good for preventing hanging connections",
           });
         }
         break;
@@ -468,17 +486,17 @@ class DatabaseAnalysisStep {
   async checkConnectionPooling(projectPath) {
     try {
       const configFiles = [
-        'knexfile.js',
-        'database.config.js',
-        'db.config.js',
-        'sequelize.config.js'
+        "knexfile.js",
+        "database.config.js",
+        "db.config.js",
+        "sequelize.config.js",
       ];
 
       for (const configFile of configFiles) {
         const configPath = path.join(projectPath, configFile);
         try {
-          const content = await fs.readFile(configPath, 'utf8');
-          if (content.includes('pool') || content.includes('connectionLimit')) {
+          const content = await fs.readFile(configPath, "utf8");
+          if (content.includes("pool") || content.includes("connectionLimit")) {
             return true;
           }
         } catch (error) {
@@ -499,10 +517,11 @@ class DatabaseAnalysisStep {
    */
   async getJavaScriptFiles(projectPath) {
     const allFiles = await this.getAllFiles(projectPath);
-    return allFiles.filter(file => 
-      /\.(js|jsx|ts|tsx)$/i.test(file) && 
-      !file.includes('node_modules') &&
-      !file.includes('.git')
+    return allFiles.filter(
+      (file) =>
+        /\.(js|jsx|ts|tsx)$/i.test(file) &&
+        !file.includes("node_modules") &&
+        !file.includes(".git"),
     );
   }
 
@@ -513,17 +532,21 @@ class DatabaseAnalysisStep {
    */
   async getAllFiles(dir) {
     const files = [];
-    
+
     try {
       const items = await fs.readdir(dir);
-      
+
       for (const item of items) {
         const fullPath = path.join(dir, item);
         const stat = await fs.stat(fullPath);
-        
+
         if (stat.isDirectory()) {
-          if (!item.startsWith('.') && item !== 'node_modules' && item !== '.git') {
-            files.push(...await this.getAllFiles(fullPath));
+          if (
+            !item.startsWith(".") &&
+            item !== "node_modules" &&
+            item !== ".git"
+          ) {
+            files.push(...(await this.getAllFiles(fullPath)));
           }
         } else {
           files.push(fullPath);
@@ -532,7 +555,7 @@ class DatabaseAnalysisStep {
     } catch (error) {
       // Directory doesn't exist or can't be read
     }
-    
+
     return files;
   }
 
@@ -543,7 +566,7 @@ class DatabaseAnalysisStep {
    */
   calculateDatabaseScore(data) {
     const { metrics, bottlenecks, optimizations } = data;
-    
+
     // Base score starts at 100
     let score = 100;
 
@@ -574,11 +597,11 @@ class DatabaseAnalysisStep {
    * @returns {string} Performance level
    */
   getDatabaseLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -591,8 +614,8 @@ class DatabaseAnalysisStep {
       ...result,
       timestamp: new Date().toISOString(),
       step: DatabaseAnalysisStep,
-      category: 'performance',
-      subcategory: 'database'
+      category: "performance",
+      subcategory: "database",
     };
   }
 
@@ -602,7 +625,9 @@ class DatabaseAnalysisStep {
    */
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required for database performance analysis');
+      throw new Error(
+        "Project path is required for database performance analysis",
+      );
     }
   }
 
@@ -624,16 +649,16 @@ class DatabaseAnalysisStep {
    */
   calculateConfidence(result) {
     const { metrics, bottlenecks, optimizations } = result;
-    
+
     if (!metrics || !bottlenecks || !optimizations) return 0;
-    
+
     // Higher confidence with more data points
     const dataPoints = bottlenecks.length + optimizations.length;
     const baseConfidence = Math.min(dataPoints * 5, 80);
-    
+
     // Additional confidence for comprehensive analysis
     const coverageBonus = metrics.filesWithQueries > 0 ? 20 : 0;
-    
+
     return Math.min(baseConfidence + coverageBonus, 100);
   }
 
@@ -644,49 +669,55 @@ class DatabaseAnalysisStep {
    */
   generateIssues(result) {
     const issues = [];
-    
+
     // Check for low analysis score
     if (result.score < 70) {
       issues.push({
-        type: 'low-analysis-score',
-        title: 'Low Analysis Score',
+        type: "low-analysis-score",
+        title: "Low Analysis Score",
         description: `Analysis score of ${result.score}% indicates areas for improvement`,
-        severity: 'medium',
-        priority: 'medium',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        location: 'analysis-results',
-        suggestion: 'Improve analysis results by addressing identified issues'
+        severity: "medium",
+        priority: "medium",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        location: "analysis-results",
+        suggestion: "Improve analysis results by addressing identified issues",
       });
     }
 
     // Check for critical issues
-    if (result.vulnerabilities && result.vulnerabilities.some(v => v.severity === 'critical')) {
+    if (
+      result.vulnerabilities &&
+      result.vulnerabilities.some((v) => v.severity === "critical")
+    ) {
       issues.push({
-        type: 'critical-issues',
-        title: 'Critical Issues Detected',
-        description: 'Critical issues found in the analysis',
-        severity: 'critical',
-        priority: 'critical',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        location: 'analysis-results',
-        suggestion: 'Immediately address critical issues'
+        type: "critical-issues",
+        title: "Critical Issues Detected",
+        description: "Critical issues found in the analysis",
+        severity: "critical",
+        priority: "critical",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        location: "analysis-results",
+        suggestion: "Immediately address critical issues",
       });
     }
 
     // Check for high severity issues
-    if (result.vulnerabilities && result.vulnerabilities.some(v => v.severity === 'high')) {
+    if (
+      result.vulnerabilities &&
+      result.vulnerabilities.some((v) => v.severity === "high")
+    ) {
       issues.push({
-        type: 'high-issues',
-        title: 'High Severity Issues Detected',
-        description: 'High severity issues found in the analysis',
-        severity: 'high',
-        priority: 'high',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        location: 'analysis-results',
-        suggestion: 'Address high severity issues promptly'
+        type: "high-issues",
+        title: "High Severity Issues Detected",
+        description: "High severity issues found in the analysis",
+        severity: "high",
+        priority: "high",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        location: "analysis-results",
+        suggestion: "Address high severity issues promptly",
       });
     }
 
@@ -700,60 +731,60 @@ class DatabaseAnalysisStep {
    */
   generateRecommendations(result) {
     const recommendations = [];
-    
+
     // Check for low analysis score
     if (result.score < 80) {
       recommendations.push({
-        type: 'improve-score',
-        title: 'Improve Analysis Score',
+        type: "improve-score",
+        title: "Improve Analysis Score",
         description: `Current score of ${result.score}% can be improved`,
-        priority: 'medium',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        action: 'Implement best practices to improve analysis score',
-        impact: 'Better code quality and maintainability'
+        priority: "medium",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        action: "Implement best practices to improve analysis score",
+        impact: "Better code quality and maintainability",
       });
     }
 
     // Check for missing patterns
     if (result.patterns && result.patterns.length < 3) {
       recommendations.push({
-        type: 'add-patterns',
-        title: 'Add More Design Patterns',
-        description: 'Consider implementing additional design patterns',
-        priority: 'medium',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        action: 'Research and implement appropriate design patterns',
-        impact: 'Improved code organization and maintainability'
+        type: "add-patterns",
+        title: "Add More Design Patterns",
+        description: "Consider implementing additional design patterns",
+        priority: "medium",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        action: "Research and implement appropriate design patterns",
+        impact: "Improved code organization and maintainability",
       });
     }
 
     // Check for security improvements
     if (result.vulnerabilities && result.vulnerabilities.length > 0) {
       recommendations.push({
-        type: 'security-improvements',
-        title: 'Address Security Vulnerabilities',
+        type: "security-improvements",
+        title: "Address Security Vulnerabilities",
         description: `${result.vulnerabilities.length} vulnerabilities found`,
-        priority: 'high',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        action: 'Review and fix identified security vulnerabilities',
-        impact: 'Enhanced security posture'
+        priority: "high",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        action: "Review and fix identified security vulnerabilities",
+        impact: "Enhanced security posture",
       });
     }
 
     // Check for performance improvements
     if (result.metrics && result.metrics.performanceScore < 80) {
       recommendations.push({
-        type: 'performance-improvements',
-        title: 'Improve Performance',
-        description: 'Performance analysis indicates room for improvement',
-        priority: 'medium',
-        category: 'performance',
-        source: 'DatabaseAnalysisStep',
-        action: 'Optimize code for better performance',
-        impact: 'Faster execution and better user experience'
+        type: "performance-improvements",
+        title: "Improve Performance",
+        description: "Performance analysis indicates room for improvement",
+        priority: "medium",
+        category: "performance",
+        source: "DatabaseAnalysisStep",
+        action: "Optimize code for better performance",
+        impact: "Faster execution and better user experience",
       });
     }
 
@@ -767,77 +798,87 @@ class DatabaseAnalysisStep {
    */
   async generateTasks(result, context) {
     const tasks = [];
-    const projectId = context.projectId || 'default-project';
-    
+    const projectId = context.projectId || "default-project";
+
     // Create main improvement task
     const mainTask = {
       id: `database-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${DatabaseAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${DatabaseAnalysisStep} analysis`,
-      type: 'improvement',
-      category: 'performance',
-      priority: 'medium',
-      status: 'pending',
+      type: "improvement",
+      category: "performance",
+      priority: "medium",
+      status: "pending",
       projectId: projectId,
       metadata: {
-        source: 'DatabaseAnalysisStep',
+        source: "DatabaseAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations ? result.recommendations.length : 0
+        recommendations: result.recommendations
+          ? result.recommendations.length
+          : 0,
       },
       estimatedHours: 4,
-      phase: 'improvement',
-      stage: 'planning'
+      phase: "improvement",
+      stage: "planning",
     };
-    
+
     tasks.push(mainTask);
-    
+
     // Create subtasks for critical issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "critical")
+    ) {
       const criticalTask = {
         id: `database-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${DatabaseAnalysisStep}`,
-        description: 'Address critical issues identified in analysis',
-        type: 'fix',
-        category: 'performance',
-        priority: 'critical',
-        status: 'pending',
+        description: "Address critical issues identified in analysis",
+        type: "fix",
+        category: "performance",
+        priority: "critical",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'DatabaseAnalysisStep',
-          issues: result.issues.filter(issue => issue.severity === 'critical')
+          source: "DatabaseAnalysisStep",
+          issues: result.issues.filter(
+            (issue) => issue.severity === "critical",
+          ),
         },
         estimatedHours: 4,
-        phase: 'critical-fixes',
-        stage: 'implementation'
+        phase: "critical-fixes",
+        stage: "implementation",
       };
       tasks.push(criticalTask);
     }
-    
+
     // Create subtasks for high priority issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "high")
+    ) {
       const highTask = {
         id: `database-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${DatabaseAnalysisStep}`,
-        description: 'Address high priority issues identified in analysis',
-        type: 'fix',
-        category: 'performance',
-        priority: 'high',
-        status: 'pending',
+        description: "Address high priority issues identified in analysis",
+        type: "fix",
+        category: "performance",
+        priority: "high",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'DatabaseAnalysisStep',
-          issues: result.issues.filter(issue => issue.severity === 'high')
+          source: "DatabaseAnalysisStep",
+          issues: result.issues.filter((issue) => issue.severity === "high"),
         },
         estimatedHours: 3,
-        phase: 'high-fixes',
-        stage: 'implementation'
+        phase: "high-fixes",
+        stage: "implementation",
       };
       tasks.push(highTask);
     }
-    
+
     return tasks;
   }
 
@@ -848,30 +889,30 @@ class DatabaseAnalysisStep {
    */
   calculateEstimatedHours(result) {
     let totalHours = 2; // Base hours for improvement
-    
+
     if (result.issues) {
-      result.issues.forEach(issue => {
+      result.issues.forEach((issue) => {
         switch (issue.severity) {
-          case 'critical':
+          case "critical":
             totalHours += 2;
             break;
-          case 'high':
+          case "high":
             totalHours += 1.5;
             break;
-          case 'medium':
+          case "medium":
             totalHours += 1;
             break;
-          case 'low':
+          case "low":
             totalHours += 0.5;
             break;
         }
       });
     }
-    
+
     if (result.recommendations) {
       totalHours += result.recommendations.length * 0.5;
     }
-    
+
     return Math.round(totalHours * 10) / 10; // Round to 1 decimal place
   }
 
@@ -884,23 +925,32 @@ class DatabaseAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, 'docs', 'analysis', 'performance', 'database-analysis-step');
-    
+    const docsDir = path.join(
+      projectPath,
+      "docs",
+      "analysis",
+      "performance",
+      "database-analysis-step",
+    );
+
     // Ensure directory exists
     try {
       await fs.mkdir(docsDir, { recursive: true });
     } catch (error) {
       // Directory might already exist, continue
     }
-    
+
     // Create implementation file
-    const implementationDoc = await this.createImplementationDoc(result, docsDir);
+    const implementationDoc = await this.createImplementationDoc(
+      result,
+      docsDir,
+    );
     docs.push(implementationDoc);
-    
+
     // Create analysis report
     const analysisReport = await this.createAnalysisReport(result, docsDir);
     docs.push(analysisReport);
-    
+
     return docs;
   }
 
@@ -911,8 +961,8 @@ class DatabaseAnalysisStep {
    * @returns {Object} Implementation document
    */
   async createImplementationDoc(result, docsDir) {
-    const docPath = path.join(docsDir, 'database-analysis-implementation.md');
-    
+    const docPath = path.join(docsDir, "database-analysis-implementation.md");
+
     const content = `# Database Performance Analysis Implementation
 
 ## 📋 Analysis Overview
@@ -920,7 +970,7 @@ class DatabaseAnalysisStep {
 - **Category**: performance
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
-- **Level**: ${result.level || 'unknown'}
+- **Level**: ${result.level || "unknown"}
 
 ## 📊 Analysis Results
 - **Database Queries**: ${result.metrics?.filesWithQueries || 0}
@@ -928,23 +978,23 @@ class DatabaseAnalysisStep {
 - **Files Analyzed**: ${result.metrics?.totalFiles || 0}
 
 ## 🎯 Key Findings
-${result.bottlenecks ? result.bottlenecks.map(bottleneck => `- **${bottleneck.type}**: ${bottleneck.description}`).join('\n') : '- No bottlenecks detected'}
+${result.bottlenecks ? result.bottlenecks.map((bottleneck) => `- **${bottleneck.type}**: ${bottleneck.description}`).join("\n") : "- No bottlenecks detected"}
 
 ## 📝 Recommendations
-${result.recommendations ? result.recommendations.map(rec => `- **${rec.title}**: ${rec.description}`).join('\n') : '- No recommendations'}
+${result.recommendations ? result.recommendations.map((rec) => `- **${rec.title}**: ${rec.description}`).join("\n") : "- No recommendations"}
 
 ## 🔧 Implementation Tasks
-${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join('\n') : '- No tasks generated'}
+${result.tasks ? result.tasks.map((task) => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join("\n") : "- No tasks generated"}
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'implementation',
-      title: 'Database Performance Analysis Implementation',
+      type: "implementation",
+      title: "Database Performance Analysis Implementation",
       path: docPath,
-      category: 'performance',
-      source: DatabaseAnalysisStep
+      category: "performance",
+      source: DatabaseAnalysisStep,
     };
   }
 
@@ -955,21 +1005,29 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
    * @returns {Object} Analysis report
    */
   async createAnalysisReport(result, docsDir) {
-    const docPath = path.join(docsDir, 'database-analysis-report.md');
-    
+    const docPath = path.join(docsDir, "database-analysis-report.md");
+
     const content = `# Database Performance Analysis Report
 
 ## 📊 Executive Summary
-Database performance analysis completed with a score of ${result.score || 0}% (${result.level || 'unknown'} level).
+Database performance analysis completed with a score of ${result.score || 0}% (${result.level || "unknown"} level).
 
 ## 🔍 Detailed Analysis
-${result.bottlenecks ? result.bottlenecks.map(bottleneck => `
+${
+  result.bottlenecks
+    ? result.bottlenecks
+        .map(
+          (bottleneck) => `
 ### ${bottleneck.type} Bottleneck
-- **File**: ${bottleneck.file || 'N/A'}
+- **File**: ${bottleneck.file || "N/A"}
 - **Description**: ${bottleneck.description}
 - **Severity**: ${bottleneck.severity}
 - **Suggestion**: ${bottleneck.suggestion}
-`).join('\n') : 'No bottlenecks found'}
+`,
+        )
+        .join("\n")
+    : "No bottlenecks found"
+}
 
 ## 📈 Metrics
 - **Queries**: ${result.metrics?.filesWithQueries || 0} files with queries
@@ -980,17 +1038,17 @@ ${result.bottlenecks ? result.bottlenecks.map(bottleneck => `
 Based on the analysis, consider optimizing database queries and connection pooling to improve performance.
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'report',
-      title: 'Database Performance Analysis Report',
+      type: "report",
+      title: "Database Performance Analysis Report",
       path: docPath,
-      category: 'performance',
-      source: DatabaseAnalysisStep
+      category: "performance",
+      source: DatabaseAnalysisStep,
     };
   }
-} 
+}
 
 // Create instance for execution
 const stepInstance = new DatabaseAnalysisStep();
@@ -998,5 +1056,5 @@ const stepInstance = new DatabaseAnalysisStep();
 // Export in StepRegistry format
 module.exports = {
   config: DatabaseAnalysisStep.getConfig(),
-  execute: async (context) => await stepInstance.execute(context)
-}; 
+  execute: async (context) => await stepInstance.execute(context),
+};

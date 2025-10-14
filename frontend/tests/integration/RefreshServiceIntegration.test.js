@@ -263,7 +263,6 @@ describe('RefreshService Integration Tests', () => {
       // Simulate data update through RefreshService
       const registeredComponent = mockRefreshService.registerComponent.mock.calls[0][1];
       const mockAnalysisData = {
-        success: true,
         data: {
           security: { issues: [] },
           performance: { metrics: {} }

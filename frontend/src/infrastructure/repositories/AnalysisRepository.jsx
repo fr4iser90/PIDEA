@@ -403,7 +403,7 @@ class AnalysisRepository {
       return this.getAnalysisChartsDirect(currentProjectId, options.chartType || 'trends');
     } else {
       const methodName = `getAnalysis${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}Direct`;
-      return this[methodName]?.(currentProjectId) || Promise.resolve({ success: false, data: null });
+      return this[methodName]?.(currentProjectId) || Promise.resolve({ data: null });
     }
   }
 

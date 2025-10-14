@@ -76,7 +76,7 @@ async executeTask(taskId, userId, options = {}) {
   );
   
   return {
-    success: true,
+   
     queueItemId: queueItem.id,
     status: 'queued',
     message: 'Task added to queue for execution'
@@ -111,7 +111,7 @@ async executeTask(req, res) {
   const execution = await this.taskApplicationService.executeTask(id, projectId, userId, options);
   
   res.json({
-    success: true,
+   
     data: {
       taskId: execution.taskId,
       queueItemId: execution.queueItemId,
@@ -211,7 +211,6 @@ async executeTask(taskId, userId, options = {}) {
     });
     
     return {
-      success: true,
       taskId: task.id,
       queueItemId: queueItem.id,
       status: 'queued',

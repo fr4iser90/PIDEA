@@ -3,17 +3,18 @@
  * Handles version management commands using CQRS pattern
  */
 
-const Logger = require('@logging/Logger');
-const VersionManagementService = require('@domain/services/version/VersionManagementService');
-const SemanticVersioningService = require('@domain/services/version/SemanticVersioningService');
-const logger = new Logger('VersionManagementHandler');
+const Logger = require("@logging/Logger");
+const VersionManagementService = require("@domain/services/version/VersionManagementService");
+const SemanticVersioningService = require("@domain/services/version/SemanticVersioningService");
+const logger = new Logger("VersionManagementHandler");
 
 class VersionManagementHandler {
   constructor(dependencies = {}) {
     // VersionManagementService MUST come from DI container - no direct instantiation!
     this.versionManagementService = dependencies.versionManagementService;
-    
-    this.semanticVersioning = dependencies.semanticVersioning || new SemanticVersioningService();
+
+    this.semanticVersioning =
+      dependencies.semanticVersioning || new SemanticVersioningService();
     this.logger = dependencies.logger || logger;
   }
 
@@ -24,42 +25,43 @@ class VersionManagementHandler {
    */
   async handleBumpVersion(command) {
     try {
-      this.logger.info('Handling bump version command', {
+      this.logger.info("Handling bump version command", {
         taskId: command.taskId,
         projectPath: command.projectPath,
-        bumpType: command.bumpType
+        bumpType: command.bumpType,
       });
 
       const result = await this.versionManagementService.bumpVersion(
         command.task,
         command.projectPath,
         command.bumpType,
-        command.context
+        command.context,
       );
 
       return {
         success: result.success,
-        data: result.success ? {
-          currentVersion: result.currentVersion,
-          newVersion: result.newVersion,
-          bumpType: result.bumpType,
-          updatedFiles: result.updatedFiles,
-          versionRecord: result.versionRecord
-        } : null,
+        data: result.success
+          ? {
+              currentVersion: result.currentVersion,
+              newVersion: result.newVersion,
+              bumpType: result.bumpType,
+              updatedFiles: result.updatedFiles,
+              versionRecord: result.versionRecord,
+            }
+          : null,
         error: result.error,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling bump version command', {
+      this.logger.error("Error handling bump version command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -71,14 +73,15 @@ class VersionManagementHandler {
    */
   async handleGetCurrentVersion(command) {
     try {
-      this.logger.info('Handling get current version command', {
-        projectPath: command.projectPath
+      this.logger.info("Handling get current version command", {
+        projectPath: command.projectPath,
       });
 
-      const versionData = await this.versionManagementService.getCurrentVersion(command.projectPath);
+      const versionData = await this.versionManagementService.getCurrentVersion(
+        command.projectPath,
+      );
 
       return {
-        success: true,
         data: {
           version: versionData.version,
           packageFile: versionData.packageFile,
@@ -88,21 +91,20 @@ class VersionManagementHandler {
           isStable: versionData.isStable,
           isPrerelease: versionData.isPrerelease,
           lastUpdated: versionData.lastUpdated,
-          gitTag: versionData.gitTag
+          gitTag: versionData.gitTag,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling get current version command', {
+      this.logger.error("Error handling get current version command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -114,32 +116,32 @@ class VersionManagementHandler {
    */
   async handleGetVersionHistory(command) {
     try {
-      this.logger.info('Handling get version history command', {
-        filters: command.filters
+      this.logger.info("Handling get version history command", {
+        filters: command.filters,
       });
 
-      const history = await this.versionManagementService.getVersionHistory(command.filters);
+      const history = await this.versionManagementService.getVersionHistory(
+        command.filters,
+      );
 
       return {
-        success: true,
         data: {
           history,
           totalCount: history.length,
-          latestVersion: history.length > 0 ? history[0].version : null
+          latestVersion: history.length > 0 ? history[0].version : null,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling get version history command', {
+      this.logger.error("Error handling get version history command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -151,36 +153,42 @@ class VersionManagementHandler {
    */
   async handleValidateVersion(command) {
     try {
-      this.logger.info('Handling validate version command', {
-        version: command.version
+      this.logger.info("Handling validate version command", {
+        version: command.version,
       });
 
       const isValid = this.semanticVersioning.isValidVersion(command.version);
-      const parsed = isValid ? this.semanticVersioning.parseVersion(command.version) : null;
+      const parsed = isValid
+        ? this.semanticVersioning.parseVersion(command.version)
+        : null;
 
       return {
-        success: true,
         data: {
           version: command.version,
           isValid,
           parsed,
-          isStable: isValid ? this.semanticVersioning.isStable(command.version) : false,
-          isPrerelease: isValid ? this.semanticVersioning.isPrerelease(command.version) : false,
-          coreVersion: isValid ? this.semanticVersioning.getCoreVersion(command.version) : null
+          isStable: isValid
+            ? this.semanticVersioning.isStable(command.version)
+            : false,
+          isPrerelease: isValid
+            ? this.semanticVersioning.isPrerelease(command.version)
+            : false,
+          coreVersion: isValid
+            ? this.semanticVersioning.getCoreVersion(command.version)
+            : null,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling validate version command', {
+      this.logger.error("Error handling validate version command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -192,45 +200,46 @@ class VersionManagementHandler {
    */
   async handleCompareVersions(command) {
     try {
-      this.logger.info('Handling compare versions command', {
+      this.logger.info("Handling compare versions command", {
         version1: command.version1,
-        version2: command.version2
+        version2: command.version2,
       });
 
-      const comparison = this.semanticVersioning.compareVersions(command.version1, command.version2);
-      
+      const comparison = this.semanticVersioning.compareVersions(
+        command.version1,
+        command.version2,
+      );
+
       let relationship;
       if (comparison < 0) {
-        relationship = 'less than';
+        relationship = "less than";
       } else if (comparison > 0) {
-        relationship = 'greater than';
+        relationship = "greater than";
       } else {
-        relationship = 'equal to';
+        relationship = "equal to";
       }
 
       return {
-        success: true,
         data: {
           version1: command.version1,
           version2: command.version2,
           comparison,
           relationship,
           isValid1: this.semanticVersioning.isValidVersion(command.version1),
-          isValid2: this.semanticVersioning.isValidVersion(command.version2)
+          isValid2: this.semanticVersioning.isValidVersion(command.version2),
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling compare versions command', {
+      this.logger.error("Error handling compare versions command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -242,39 +251,37 @@ class VersionManagementHandler {
    */
   async handleDetermineBumpType(command) {
     try {
-      this.logger.info('Handling determine bump type command', {
+      this.logger.info("Handling determine bump type command", {
         taskId: command.taskId,
-        projectPath: command.projectPath
+        projectPath: command.projectPath,
       });
 
       const bumpType = await this.versionManagementService.determineBumpType(
         command.task,
         command.projectPath,
-        command.context
+        command.context,
       );
 
       return {
-        success: true,
         data: {
           bumpType,
           taskId: command.taskId,
           taskType: command.task?.type?.value || command.task?.type,
           priority: command.task?.priority?.value || command.task?.priority,
-          category: command.task?.category
+          category: command.task?.category,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling determine bump type command', {
+      this.logger.error("Error handling determine bump type command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -286,31 +293,30 @@ class VersionManagementHandler {
    */
   async handleGetLatestVersion(command) {
     try {
-      this.logger.info('Handling get latest version command');
+      this.logger.info("Handling get latest version command");
 
-      const latestVersion = await this.versionManagementService.getLatestVersion();
+      const latestVersion =
+        await this.versionManagementService.getLatestVersion();
 
       return {
-        success: true,
         data: {
           latestVersion,
           isValid: this.semanticVersioning.isValidVersion(latestVersion),
           isStable: this.semanticVersioning.isStable(latestVersion),
-          isPrerelease: this.semanticVersioning.isPrerelease(latestVersion)
+          isPrerelease: this.semanticVersioning.isPrerelease(latestVersion),
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling get latest version command', {
+      this.logger.error("Error handling get latest version command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -322,31 +328,29 @@ class VersionManagementHandler {
    */
   async handleUpdateConfiguration(command) {
     try {
-      this.logger.info('Handling update configuration command', {
-        configKeys: Object.keys(command.config)
+      this.logger.info("Handling update configuration command", {
+        configKeys: Object.keys(command.config),
       });
 
       this.versionManagementService.updateConfiguration(command.config);
 
       return {
-        success: true,
         data: {
           updatedConfig: this.versionManagementService.getConfiguration(),
-          updatedKeys: Object.keys(command.config)
+          updatedKeys: Object.keys(command.config),
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling update configuration command', {
+      this.logger.error("Error handling update configuration command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -359,57 +363,67 @@ class VersionManagementHandler {
   async handleGetAIAnalysis(command) {
     const maxRetries = 3;
     const retryDelay = 2000; // 2 seconds
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        this.logger.info(`Handling get AI analysis command (attempt ${attempt}/${maxRetries})`, {
-          task: command.task?.substring(0, 100) + '...',
-          projectPath: command.projectPath
-        });
+        this.logger.info(
+          `Handling get AI analysis command (attempt ${attempt}/${maxRetries})`,
+          {
+            task: command.task?.substring(0, 100) + "...",
+            projectPath: command.projectPath,
+          },
+        );
 
         const result = await this.versionManagementService.getAIAnalysis(
           command.task,
           command.projectPath,
-          command.context
+          command.context,
         );
 
         // Validate the result
         if (this.isValidAIResult(result)) {
-          this.logger.info(`✅ AI analysis completed successfully on attempt ${attempt}`);
+          this.logger.info(
+            `✅ AI analysis completed successfully on attempt ${attempt}`,
+          );
           return result;
         } else {
-          this.logger.warn(`⚠️ Invalid AI result on attempt ${attempt}, retrying...`, {
-            hasRecommendedType: !!result?.recommendedType,
-            hasConfidence: typeof result?.confidence === 'number',
-            hasFactors: Array.isArray(result?.factors)
-          });
-          
+          this.logger.warn(
+            `⚠️ Invalid AI result on attempt ${attempt}, retrying...`,
+            {
+              hasRecommendedType: !!result?.recommendedType,
+              hasConfidence: typeof result?.confidence === "number",
+              hasFactors: Array.isArray(result?.factors),
+            },
+          );
+
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
             continue;
           }
         }
-
       } catch (error) {
-        this.logger.error(`Error handling get AI analysis command (attempt ${attempt}/${maxRetries})`, {
-          error: error.message,
-          command
-        });
+        this.logger.error(
+          `Error handling get AI analysis command (attempt ${attempt}/${maxRetries})`,
+          {
+            error: error.message,
+            command,
+          },
+        );
 
         if (attempt < maxRetries) {
           this.logger.info(`Retrying in ${retryDelay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
           continue;
         }
       }
     }
 
     // All retries failed
-    this.logger.error('All AI analysis attempts failed');
+    this.logger.error("All AI analysis attempts failed");
     return {
-      success: false,
-      error: 'AI analysis failed after all retry attempts',
-      timestamp: new Date()
+     
+      error: "AI analysis failed after all retry attempts",
+      timestamp: new Date(),
     };
   }
 
@@ -420,67 +434,74 @@ class VersionManagementHandler {
    */
   isValidAIResult(result) {
     if (!result) {
-      this.logger.warn('❌ No result provided for validation');
+      this.logger.warn("❌ No result provided for validation");
       return false;
     }
 
     // Check if result has success field
     if (result.success === false) {
-      this.logger.warn('❌ Result marked as unsuccessful');
+      this.logger.warn("❌ Result marked as unsuccessful");
       return false;
     }
 
     // The analysis data is in result.data (VersionManagementService structure)
     if (!result.data || !result.data.recommendedType) {
-      this.logger.warn('❌ No analysis data found in result.data', {
+      this.logger.warn("❌ No analysis data found in result.data", {
         resultKeys: Object.keys(result),
         hasData: !!result.data,
-        dataKeys: result.data ? Object.keys(result.data) : null
+        dataKeys: result.data ? Object.keys(result.data) : null,
       });
       return false;
     }
-    
+
     const analysis = result.data;
-    this.logger.info('🔍 Using result.data for validation', {
+    this.logger.info("🔍 Using result.data for validation", {
       analysisKeys: Object.keys(analysis),
       recommendedType: analysis.recommendedType,
       confidence: analysis.confidence,
       factors: analysis.factors,
       factorsType: typeof analysis.factors,
-      factorsIsArray: Array.isArray(analysis.factors)
+      factorsIsArray: Array.isArray(analysis.factors),
     });
-    
+
     // Check for required fields
-    if (!analysis.recommendedType || !['major', 'minor', 'patch'].includes(analysis.recommendedType)) {
-      this.logger.warn('❌ Invalid or missing recommendedType', {
+    if (
+      !analysis.recommendedType ||
+      !["major", "minor", "patch"].includes(analysis.recommendedType)
+    ) {
+      this.logger.warn("❌ Invalid or missing recommendedType", {
         recommendedType: analysis.recommendedType,
-        validTypes: ['major', 'minor', 'patch']
+        validTypes: ["major", "minor", "patch"],
       });
       return false;
     }
 
-    if (typeof analysis.confidence !== 'number' || analysis.confidence < 0 || analysis.confidence > 1) {
-      this.logger.warn('❌ Invalid or missing confidence', {
+    if (
+      typeof analysis.confidence !== "number" ||
+      analysis.confidence < 0 ||
+      analysis.confidence > 1
+    ) {
+      this.logger.warn("❌ Invalid or missing confidence", {
         confidence: analysis.confidence,
-        type: typeof analysis.confidence
+        type: typeof analysis.confidence,
       });
       return false;
     }
 
     // Check for required factors field
     if (!Array.isArray(analysis.factors) || analysis.factors.length === 0) {
-      this.logger.warn('❌ Invalid or missing factors', {
+      this.logger.warn("❌ Invalid or missing factors", {
         factors: analysis.factors,
         isArray: Array.isArray(analysis.factors),
-        length: analysis.factors?.length
+        length: analysis.factors?.length,
       });
       return false;
     }
 
-    this.logger.info('✅ AI result validation passed', {
+    this.logger.info("✅ AI result validation passed", {
       recommendedType: analysis.recommendedType,
       confidence: analysis.confidence,
-      factorsCount: analysis.factors.length
+      factorsCount: analysis.factors.length,
     });
 
     return true;
@@ -493,28 +514,26 @@ class VersionManagementHandler {
    */
   async handleGetConfiguration(command) {
     try {
-      this.logger.info('Handling get configuration command');
+      this.logger.info("Handling get configuration command");
 
       const config = this.versionManagementService.getConfiguration();
 
       return {
-        success: true,
         data: {
-          configuration: config
+          configuration: config,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling get configuration command', {
+      this.logger.error("Error handling get configuration command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -526,43 +545,44 @@ class VersionManagementHandler {
    */
   async handlePerformDryRun(command) {
     try {
-      this.logger.info('Handling perform dry run command', {
+      this.logger.info("Handling perform dry run command", {
         taskId: command.taskId,
         projectPath: command.projectPath,
-        bumpType: command.bumpType
+        bumpType: command.bumpType,
       });
 
       const result = await this.versionManagementService.performDryRun(
         command.task,
         command.projectPath,
         command.bumpType,
-        command.context
+        command.context,
       );
 
       return {
         success: result.success,
-        data: result.success ? {
-          currentVersion: result.currentVersion,
-          newVersion: result.newVersion,
-          bumpType: result.bumpType,
-          wouldUpdateFiles: result.wouldUpdateFiles,
-          versionRecordPreview: result.versionRecordPreview,
-          dryRun: true
-        } : null,
+        data: result.success
+          ? {
+              currentVersion: result.currentVersion,
+              newVersion: result.newVersion,
+              bumpType: result.bumpType,
+              wouldUpdateFiles: result.wouldUpdateFiles,
+              versionRecordPreview: result.versionRecordPreview,
+              dryRun: true,
+            }
+          : null,
         error: result.error,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Error handling perform dry run command', {
+      this.logger.error("Error handling perform dry run command", {
         error: error.message,
-        command
+        command,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -575,44 +595,43 @@ class VersionManagementHandler {
   async handle(command) {
     try {
       const commandType = command.type || command.commandType;
-      
+
       switch (commandType) {
-        case 'bumpVersion':
+        case "bumpVersion":
           return await this.handleBumpVersion(command);
-        case 'getCurrentVersion':
+        case "getCurrentVersion":
           return await this.handleGetCurrentVersion(command);
-        case 'getVersionHistory':
+        case "getVersionHistory":
           return await this.handleGetVersionHistory(command);
-        case 'validateVersion':
+        case "validateVersion":
           return await this.handleValidateVersion(command);
-        case 'compareVersions':
+        case "compareVersions":
           return await this.handleCompareVersions(command);
-        case 'determineBumpType':
+        case "determineBumpType":
           return await this.handleDetermineBumpType(command);
-        case 'getLatestVersion':
+        case "getLatestVersion":
           return await this.handleGetLatestVersion(command);
-        case 'updateConfiguration':
+        case "updateConfiguration":
           return await this.handleUpdateConfiguration(command);
-        case 'getConfiguration':
+        case "getConfiguration":
           return await this.handleGetConfiguration(command);
-        case 'getAIAnalysis':
+        case "getAIAnalysis":
           return await this.handleGetAIAnalysis(command);
-        case 'performDryRun':
+        case "performDryRun":
           return await this.handlePerformDryRun(command);
         default:
           throw new Error(`Unknown command type: ${commandType}`);
       }
-
     } catch (error) {
-      this.logger.error('Error handling command', {
+      this.logger.error("Error handling command", {
         error: error.message,
-        commandType: command.type || command.commandType
+        commandType: command.type || command.commandType,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }

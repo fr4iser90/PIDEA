@@ -259,7 +259,6 @@ test.describe('Queue History Performance Tests', () => {
     // Mock large dataset (1000 items)
     await page.route('/api/queue/history**', async route => {
       const mockData = {
-        success: true,
         data: {
           items: Array.from({ length: 1000 }, (_, i) => ({
             id: `item-${i}`,

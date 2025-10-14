@@ -551,7 +551,6 @@ Please execute the task according to the review analysis and provide real-time p
       });
       
       return {
-        success: true,
         validTasks,
         completedTasks,
         totalTasks: tasks.length,
@@ -614,7 +613,6 @@ Please execute the task according to the review analysis and provide real-time p
       }
       
       return {
-        success: true,
         data: response.data,
         message: `Review completed for ${response.data.summary?.completedTasks || selectedTasks.length}/${response.data.summary?.totalTasks || selectedTasks.length} tasks`
       };

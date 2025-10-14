@@ -1,16 +1,16 @@
 /**
  * DatabaseMigrationService Integration Tests
- * 
+ *
  * Tests for database migration service including migration execution,
  * rollback, version management, and data integrity across different database types.
  */
 
-const DatabaseMigrationService = require('../../infrastructure/database/DatabaseMigrationService');
-const DatabaseConnection = require('../../infrastructure/database/DatabaseConnection');
-const SchemaVersionManager = require('../../infrastructure/database/SchemaVersionManager');
-const Logger = require('../../infrastructure/logging/Logger');
+const DatabaseMigrationService = require("../../infrastructure/database/DatabaseMigrationService");
+const DatabaseConnection = require("../../infrastructure/database/DatabaseConnection");
+const SchemaVersionManager = require("../../infrastructure/database/SchemaVersionManager");
+const Logger = require("../../infrastructure/logging/Logger");
 
-describe('DatabaseMigrationService Integration Tests', () => {
+describe("DatabaseMigrationService Integration Tests", () => {
   let migrationService;
   let databaseConnection;
   let schemaVersionManager;
@@ -22,15 +22,15 @@ describe('DatabaseMigrationService Integration Tests', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
-    jest.spyOn(Logger, 'Logger').mockImplementation(() => mockLogger);
+
+    jest.spyOn(Logger, "Logger").mockImplementation(() => mockLogger);
 
     // Create in-memory database connection for testing
     const config = {
-      type: 'sqlite',
-      database: ':memory:'
+      type: "sqlite",
+      database: ":memory:",
     };
 
     databaseConnection = new DatabaseConnection(config);
@@ -52,70 +52,74 @@ describe('DatabaseMigrationService Integration Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('Migration Initialization', () => {
-    test('should initialize migration service successfully', async () => {
+  describe("Migration Initialization", () => {
+    test("should initialize migration service successfully", async () => {
       expect(migrationService.databaseConnection).toBe(databaseConnection);
       expect(migrationService.schemaVersionManager).toBeDefined();
       expect(migrationService.migrationsPath).toBeDefined();
     });
 
-    test('should create migrations table if not exists', async () => {
+    test("should create migrations table if not exists", async () => {
       const result = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='migrations'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='migrations'",
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('migrations');
+      expect(result[0].name).toBe("migrations");
     });
 
-    test('should handle initialization errors gracefully', async () => {
+    test("should handle initialization errors gracefully", async () => {
       const invalidConnection = {
-        query: jest.fn().mockRejectedValue(new Error('Connection failed')),
-        execute: jest.fn().mockRejectedValue(new Error('Connection failed'))
+        query: jest.fn().mockRejectedValue(new Error("Connection failed")),
+        execute: jest.fn().mockRejectedValue(new Error("Connection failed")),
       };
 
-      const invalidMigrationService = new DatabaseMigrationService(invalidConnection);
+      const invalidMigrationService = new DatabaseMigrationService(
+        invalidConnection,
+      );
 
-      await expect(invalidMigrationService.initialize()).rejects.toThrow('Connection failed');
+      await expect(invalidMigrationService.initialize()).rejects.toThrow(
+        "Connection failed",
+      );
     });
   });
 
-  describe('Migration Execution', () => {
-    test('should execute migration successfully', async () => {
+  describe("Migration Execution", () => {
+    test("should execute migration successfully", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)",
+        down: "DROP TABLE users",
       };
 
       await migrationService.executeMigration(migration);
 
       // Verify table was created
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'",
       );
       expect(tables).toHaveLength(1);
 
       // Verify migration was recorded
       const currentVersion = await schemaVersionManager.getCurrentVersion();
-      expect(currentVersion.version).toBe('1.0.0');
+      expect(currentVersion.version).toBe("1.0.0");
     });
 
-    test('should execute multiple migrations in order', async () => {
+    test("should execute multiple migrations in order", async () => {
       const migrations = [
         {
-          version: '1.0.0',
-          description: 'Create users table',
-          up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-          down: 'DROP TABLE users'
+          version: "1.0.0",
+          description: "Create users table",
+          up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+          down: "DROP TABLE users",
         },
         {
-          version: '1.1.0',
-          description: 'Add email column to users',
-          up: 'ALTER TABLE users ADD COLUMN email TEXT',
-          down: 'ALTER TABLE users DROP COLUMN email'
-        }
+          version: "1.1.0",
+          description: "Add email column to users",
+          up: "ALTER TABLE users ADD COLUMN email TEXT",
+          down: "ALTER TABLE users DROP COLUMN email",
+        },
       ];
 
       for (const migration of migrations) {
@@ -125,65 +129,69 @@ describe('DatabaseMigrationService Integration Tests', () => {
       // Verify both migrations were applied
       const versionHistory = await schemaVersionManager.getVersionHistory();
       expect(versionHistory).toHaveLength(2);
-      expect(versionHistory[0].version).toBe('1.1.0');
-      expect(versionHistory[1].version).toBe('1.0.0');
+      expect(versionHistory[0].version).toBe("1.1.0");
+      expect(versionHistory[1].version).toBe("1.0.0");
 
       // Verify table structure
-      const columns = await databaseConnection.query("PRAGMA table_info(users)");
+      const columns = await databaseConnection.query(
+        "PRAGMA table_info(users)",
+      );
       expect(columns).toHaveLength(3); // id, name, email
     });
 
-    test('should handle migration errors gracefully', async () => {
+    test("should handle migration errors gracefully", async () => {
       const invalidMigration = {
-        version: '1.0.0',
-        description: 'Invalid migration',
-        up: 'INVALID SQL STATEMENT',
-        down: 'DROP TABLE non_existent'
+        version: "1.0.0",
+        description: "Invalid migration",
+        up: "INVALID SQL STATEMENT",
+        down: "DROP TABLE non_existent",
       };
 
-      await expect(migrationService.executeMigration(invalidMigration))
-        .rejects.toThrow();
+      await expect(
+        migrationService.executeMigration(invalidMigration),
+      ).rejects.toThrow();
 
       // Verify no migration was recorded
       const currentVersion = await schemaVersionManager.getCurrentVersion();
       expect(currentVersion).toBeNull();
     });
 
-    test('should prevent duplicate migration execution', async () => {
+    test("should prevent duplicate migration execution", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       // Execute migration first time
       await migrationService.executeMigration(migration);
 
       // Try to execute same migration again
-      await expect(migrationService.executeMigration(migration))
-        .rejects.toThrow('Migration 1.0.0 already applied');
+      await expect(
+        migrationService.executeMigration(migration),
+      ).rejects.toThrow("Migration 1.0.0 already applied");
     });
   });
 
-  describe('Migration Rollback', () => {
+  describe("Migration Rollback", () => {
     beforeEach(async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       await migrationService.executeMigration(migration);
     });
 
-    test('should rollback migration successfully', async () => {
-      await migrationService.rollbackMigration('1.0.0');
+    test("should rollback migration successfully", async () => {
+      await migrationService.rollbackMigration("1.0.0");
 
       // Verify table was dropped
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'",
       );
       expect(tables).toHaveLength(0);
 
@@ -192,63 +200,65 @@ describe('DatabaseMigrationService Integration Tests', () => {
       expect(currentVersion).toBeNull();
     });
 
-    test('should handle rollback errors gracefully', async () => {
+    test("should handle rollback errors gracefully", async () => {
       // Mock rollback to fail
       const invalidMigration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'INVALID ROLLBACK SQL'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "INVALID ROLLBACK SQL",
       };
 
-      await expect(migrationService.rollbackMigration('1.0.0', invalidMigration))
-        .rejects.toThrow();
+      await expect(
+        migrationService.rollbackMigration("1.0.0", invalidMigration),
+      ).rejects.toThrow();
     });
 
-    test('should prevent rollback of non-existent migration', async () => {
-      await expect(migrationService.rollbackMigration('999.999.999'))
-        .rejects.toThrow('Migration 999.999.999 not found');
+    test("should prevent rollback of non-existent migration", async () => {
+      await expect(
+        migrationService.rollbackMigration("999.999.999"),
+      ).rejects.toThrow("Migration 999.999.999 not found");
     });
   });
 
-  describe('Migration Status', () => {
-    test('should get migration status correctly', async () => {
+  describe("Migration Status", () => {
+    test("should get migration status correctly", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       // Before migration
-      let status = await migrationService.getMigrationStatus('1.0.0');
-      expect(status).toBe('pending');
+      let status = await migrationService.getMigrationStatus("1.0.0");
+      expect(status).toBe("pending");
 
       // After migration
       await migrationService.executeMigration(migration);
-      status = await migrationService.getMigrationStatus('1.0.0');
-      expect(status).toBe('applied');
+      status = await migrationService.getMigrationStatus("1.0.0");
+      expect(status).toBe("applied");
 
       // After rollback
-      await migrationService.rollbackMigration('1.0.0');
-      status = await migrationService.getMigrationStatus('1.0.0');
-      expect(status).toBe('pending');
+      await migrationService.rollbackMigration("1.0.0");
+      status = await migrationService.getMigrationStatus("1.0.0");
+      expect(status).toBe("pending");
     });
 
-    test('should list all migrations with status', async () => {
+    test("should list all migrations with status", async () => {
       const migrations = [
         {
-          version: '1.0.0',
-          description: 'Create users table',
-          up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-          down: 'DROP TABLE users'
+          version: "1.0.0",
+          description: "Create users table",
+          up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+          down: "DROP TABLE users",
         },
         {
-          version: '1.1.0',
-          description: 'Add email column',
-          up: 'ALTER TABLE users ADD COLUMN email TEXT',
-          down: 'ALTER TABLE users DROP COLUMN email'
-        }
+          version: "1.1.0",
+          description: "Add email column",
+          up: "ALTER TABLE users ADD COLUMN email TEXT",
+          down: "ALTER TABLE users DROP COLUMN email",
+        },
       ];
 
       // Execute first migration
@@ -257,62 +267,62 @@ describe('DatabaseMigrationService Integration Tests', () => {
       const migrationList = await migrationService.listMigrations();
 
       expect(migrationList).toHaveLength(2);
-      expect(migrationList[0].version).toBe('1.0.0');
-      expect(migrationList[0].status).toBe('applied');
-      expect(migrationList[1].version).toBe('1.1.0');
-      expect(migrationList[1].status).toBe('pending');
+      expect(migrationList[0].version).toBe("1.0.0");
+      expect(migrationList[0].status).toBe("applied");
+      expect(migrationList[1].version).toBe("1.1.0");
+      expect(migrationList[1].status).toBe("pending");
     });
   });
 
-  describe('Data Integrity', () => {
-    test('should maintain data integrity during migrations', async () => {
+  describe("Data Integrity", () => {
+    test("should maintain data integrity during migrations", async () => {
       // Create initial table with data
       const initialMigration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       await migrationService.executeMigration(initialMigration);
 
       // Insert test data
-      await databaseConnection.execute(
-        'INSERT INTO users (name) VALUES (?)',
-        ['John Doe']
-      );
+      await databaseConnection.execute("INSERT INTO users (name) VALUES (?)", [
+        "John Doe",
+      ]);
 
       // Add column migration
       const addColumnMigration = {
-        version: '1.1.0',
-        description: 'Add email column',
-        up: 'ALTER TABLE users ADD COLUMN email TEXT',
-        down: 'ALTER TABLE users DROP COLUMN email'
+        version: "1.1.0",
+        description: "Add email column",
+        up: "ALTER TABLE users ADD COLUMN email TEXT",
+        down: "ALTER TABLE users DROP COLUMN email",
       };
 
       await migrationService.executeMigration(addColumnMigration);
 
       // Verify data integrity
-      const users = await databaseConnection.query('SELECT * FROM users');
+      const users = await databaseConnection.query("SELECT * FROM users");
       expect(users).toHaveLength(1);
-      expect(users[0].name).toBe('John Doe');
+      expect(users[0].name).toBe("John Doe");
       expect(users[0].email).toBeNull();
     });
 
-    test('should handle transaction rollback on migration failure', async () => {
+    test("should handle transaction rollback on migration failure", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT); INSERT INTO users (name) VALUES (\'Test\'); INVALID SQL;',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT); INSERT INTO users (name) VALUES ('Test'); INVALID SQL;",
+        down: "DROP TABLE users",
       };
 
-      await expect(migrationService.executeMigration(migration))
-        .rejects.toThrow();
+      await expect(
+        migrationService.executeMigration(migration),
+      ).rejects.toThrow();
 
       // Verify no partial changes were made
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'",
       );
       expect(tables).toHaveLength(0);
 
@@ -321,42 +331,44 @@ describe('DatabaseMigrationService Integration Tests', () => {
     });
   });
 
-  describe('Cross-Database Compatibility', () => {
-    test('should work with SQLite database', async () => {
+  describe("Cross-Database Compatibility", () => {
+    test("should work with SQLite database", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       await migrationService.executeMigration(migration);
 
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'",
       );
       expect(tables).toHaveLength(1);
     });
 
-    test('should handle PostgreSQL-specific syntax', async () => {
+    test("should handle PostgreSQL-specific syntax", async () => {
       // Mock PostgreSQL connection
       const postgresConfig = {
-        type: 'postgresql',
-        host: 'localhost',
+        type: "postgresql",
+        host: "localhost",
         port: 5432,
-        database: 'test_db',
-        username: 'test_user',
-        password: 'test_password'
+        database: "test_db",
+        username: "test_user",
+        password: "test_password",
       };
 
       const postgresConnection = new DatabaseConnection(postgresConfig);
-      const postgresMigrationService = new DatabaseMigrationService(postgresConnection);
+      const postgresMigrationService = new DatabaseMigrationService(
+        postgresConnection,
+      );
 
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table with SERIAL',
-        up: 'CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255))',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table with SERIAL",
+        up: "CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(255))",
+        down: "DROP TABLE users",
       };
 
       // Should handle PostgreSQL-specific syntax
@@ -366,11 +378,11 @@ describe('DatabaseMigrationService Integration Tests', () => {
     });
   });
 
-  describe('Performance', () => {
-    test('should handle large migrations efficiently', async () => {
+  describe("Performance", () => {
+    test("should handle large migrations efficiently", async () => {
       const largeMigration = {
-        version: '1.0.0',
-        description: 'Create large table with many columns',
+        version: "1.0.0",
+        description: "Create large table with many columns",
         up: `
           CREATE TABLE large_table (
             id INTEGER PRIMARY KEY,
@@ -380,7 +392,7 @@ describe('DatabaseMigrationService Integration Tests', () => {
             col16 TEXT, col17 TEXT, col18 TEXT, col19 TEXT, col20 TEXT
           )
         `,
-        down: 'DROP TABLE large_table'
+        down: "DROP TABLE large_table",
       };
 
       const startTime = Date.now();
@@ -391,22 +403,24 @@ describe('DatabaseMigrationService Integration Tests', () => {
 
       // Verify table was created
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='large_table'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='large_table'",
       );
       expect(tables).toHaveLength(1);
     });
 
-    test('should handle multiple concurrent migrations', async () => {
-      const migrations = Array(10).fill().map((_, i) => ({
-        version: `1.${i}.0`,
-        description: `Migration ${i}`,
-        up: `CREATE TABLE table_${i} (id INTEGER PRIMARY KEY, data TEXT)`,
-        down: `DROP TABLE table_${i}`
-      }));
+    test("should handle multiple concurrent migrations", async () => {
+      const migrations = Array(10)
+        .fill()
+        .map((_, i) => ({
+          version: `1.${i}.0`,
+          description: `Migration ${i}`,
+          up: `CREATE TABLE table_${i} (id INTEGER PRIMARY KEY, data TEXT)`,
+          down: `DROP TABLE table_${i}`,
+        }));
 
       const startTime = Date.now();
-      const promises = migrations.map(migration => 
-        migrationService.executeMigration(migration)
+      const promises = migrations.map((migration) =>
+        migrationService.executeMigration(migration),
       );
       await Promise.all(promises);
       const endTime = Date.now();
@@ -415,41 +429,44 @@ describe('DatabaseMigrationService Integration Tests', () => {
 
       // Verify all tables were created
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table'"
+        "SELECT name FROM sqlite_master WHERE type='table'",
       );
       expect(tables.length).toBeGreaterThanOrEqual(10);
     });
   });
 
-  describe('Error Recovery', () => {
-    test('should recover from partial migration failure', async () => {
+  describe("Error Recovery", () => {
+    test("should recover from partial migration failure", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       // Mock database to fail after table creation but before version recording
       const originalExecute = databaseConnection.execute;
       let callCount = 0;
-      databaseConnection.execute = jest.fn().mockImplementation((sql, params) => {
-        callCount++;
-        if (callCount === 1) {
-          // First call (table creation) succeeds
-          return originalExecute.call(databaseConnection, sql, params);
-        } else {
-          // Second call (version recording) fails
-          throw new Error('Version recording failed');
-        }
-      });
+      databaseConnection.execute = jest
+        .fn()
+        .mockImplementation((sql, params) => {
+          callCount++;
+          if (callCount === 1) {
+            // First call (table creation) succeeds
+            return originalExecute.call(databaseConnection, sql, params);
+          } else {
+            // Second call (version recording) fails
+            throw new Error("Version recording failed");
+          }
+        });
 
-      await expect(migrationService.executeMigration(migration))
-        .rejects.toThrow('Version recording failed');
+      await expect(
+        migrationService.executeMigration(migration),
+      ).rejects.toThrow("Version recording failed");
 
       // Verify table was created but migration not recorded
       const tables = await databaseConnection.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users'",
       );
       expect(tables).toHaveLength(1);
 
@@ -457,31 +474,32 @@ describe('DatabaseMigrationService Integration Tests', () => {
       expect(currentVersion).toBeNull();
     });
 
-    test('should handle database connection loss during migration', async () => {
+    test("should handle database connection loss during migration", async () => {
       const migration = {
-        version: '1.0.0',
-        description: 'Create users table',
-        up: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)',
-        down: 'DROP TABLE users'
+        version: "1.0.0",
+        description: "Create users table",
+        up: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+        down: "DROP TABLE users",
       };
 
       // Mock database connection to fail
-      databaseConnection.execute = jest.fn().mockRejectedValue(
-        new Error('Database connection lost')
-      );
+      databaseConnection.execute = jest
+        .fn()
+        .mockRejectedValue(new Error("Database connection lost"));
 
-      await expect(migrationService.executeMigration(migration))
-        .rejects.toThrow('Database connection lost');
+      await expect(
+        migrationService.executeMigration(migration),
+      ).rejects.toThrow("Database connection lost");
     });
   });
 
-  describe('Migration Validation', () => {
-    test('should validate migration structure', () => {
+  describe("Migration Validation", () => {
+    test("should validate migration structure", () => {
       const validMigration = {
-        version: '1.0.0',
-        description: 'Valid migration',
-        up: 'CREATE TABLE test (id INTEGER PRIMARY KEY)',
-        down: 'DROP TABLE test'
+        version: "1.0.0",
+        description: "Valid migration",
+        up: "CREATE TABLE test (id INTEGER PRIMARY KEY)",
+        down: "DROP TABLE test",
       };
 
       expect(() => {
@@ -489,10 +507,10 @@ describe('DatabaseMigrationService Integration Tests', () => {
       }).not.toThrow();
     });
 
-    test('should reject invalid migration structure', () => {
+    test("should reject invalid migration structure", () => {
       const invalidMigration = {
-        version: '1.0.0',
-        description: 'Invalid migration'
+        version: "1.0.0",
+        description: "Invalid migration",
         // Missing up and down
       };
 
@@ -501,12 +519,12 @@ describe('DatabaseMigrationService Integration Tests', () => {
       }).toThrow();
     });
 
-    test('should validate migration version format', () => {
+    test("should validate migration version format", () => {
       const invalidVersionMigration = {
-        version: 'invalid-version',
-        description: 'Invalid version migration',
-        up: 'CREATE TABLE test (id INTEGER PRIMARY KEY)',
-        down: 'DROP TABLE test'
+        version: "invalid-version",
+        description: "Invalid version migration",
+        up: "CREATE TABLE test (id INTEGER PRIMARY KEY)",
+        down: "DROP TABLE test",
       };
 
       expect(() => {

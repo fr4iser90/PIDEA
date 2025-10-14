@@ -3,19 +3,24 @@
  * Manages AI-generated suggestions with validation and business logic
  */
 class AISuggestion {
-  static TYPE_TASK = 'task';
-  static TYPE_REFACTORING = 'refactoring';
-  static TYPE_OPTIMIZATION = 'optimization';
-  static TYPE_SECURITY = 'security';
-  static TYPE_DOCUMENTATION = 'documentation';
-  static TYPE_TEST = 'test';
-  static TYPE_SCRIPT = 'script';
+  static TYPE_TASK = "task";
+  static TYPE_REFACTORING = "refactoring";
+  static TYPE_OPTIMIZATION = "optimization";
+  static TYPE_SECURITY = "security";
+  static TYPE_DOCUMENTATION = "documentation";
+  static TYPE_TEST = "test";
+  static TYPE_SCRIPT = "script";
 
-  static CONFIDENCE_LOW = 'low';
-  static CONFIDENCE_MEDIUM = 'medium';
-  static CONFIDENCE_HIGH = 'high';
+  static CONFIDENCE_LOW = "low";
+  static CONFIDENCE_MEDIUM = "medium";
+  static CONFIDENCE_HIGH = "high";
 
-  constructor(type, content, confidence = AISuggestion.CONFIDENCE_MEDIUM, metadata = {}) {
+  constructor(
+    type,
+    content,
+    confidence = AISuggestion.CONFIDENCE_MEDIUM,
+    metadata = {},
+  ) {
     this._validate(type, confidence);
     this._type = type;
     this._content = content;
@@ -88,7 +93,7 @@ class AISuggestion {
     const confidenceMap = {
       [AISuggestion.CONFIDENCE_LOW]: 0.3,
       [AISuggestion.CONFIDENCE_MEDIUM]: 0.6,
-      [AISuggestion.CONFIDENCE_HIGH]: 0.9
+      [AISuggestion.CONFIDENCE_HIGH]: 0.9,
     };
     return confidenceMap[this._confidence] || 0.5;
   }
@@ -103,41 +108,41 @@ class AISuggestion {
 
   getPriority() {
     if (this.isSecuritySuggestion()) {
-      return 'critical';
+      return "critical";
     }
     if (this.isHighConfidence()) {
-      return 'high';
+      return "high";
     }
     if (this.isMediumConfidence()) {
-      return 'medium';
+      return "medium";
     }
-    return 'low';
+    return "low";
   }
 
   getEstimatedImpact() {
     const impactMap = {
-      [AISuggestion.TYPE_SECURITY]: 'high',
-      [AISuggestion.TYPE_OPTIMIZATION]: 'medium',
-      [AISuggestion.TYPE_REFACTORING]: 'medium',
-      [AISuggestion.TYPE_TASK]: 'low',
-      [AISuggestion.TYPE_DOCUMENTATION]: 'low',
-      [AISuggestion.TYPE_TEST]: 'low',
-      [AISuggestion.TYPE_SCRIPT]: 'medium'
+      [AISuggestion.TYPE_SECURITY]: "high",
+      [AISuggestion.TYPE_OPTIMIZATION]: "medium",
+      [AISuggestion.TYPE_REFACTORING]: "medium",
+      [AISuggestion.TYPE_TASK]: "low",
+      [AISuggestion.TYPE_DOCUMENTATION]: "low",
+      [AISuggestion.TYPE_TEST]: "low",
+      [AISuggestion.TYPE_SCRIPT]: "medium",
     };
-    return impactMap[this._type] || 'low';
+    return impactMap[this._type] || "low";
   }
 
   getEstimatedEffort() {
     const effortMap = {
-      [AISuggestion.TYPE_SECURITY]: 'high',
-      [AISuggestion.TYPE_REFACTORING]: 'high',
-      [AISuggestion.TYPE_OPTIMIZATION]: 'medium',
-      [AISuggestion.TYPE_SCRIPT]: 'medium',
-      [AISuggestion.TYPE_TASK]: 'low',
-      [AISuggestion.TYPE_DOCUMENTATION]: 'low',
-      [AISuggestion.TYPE_TEST]: 'low'
+      [AISuggestion.TYPE_SECURITY]: "high",
+      [AISuggestion.TYPE_REFACTORING]: "high",
+      [AISuggestion.TYPE_OPTIMIZATION]: "medium",
+      [AISuggestion.TYPE_SCRIPT]: "medium",
+      [AISuggestion.TYPE_TASK]: "low",
+      [AISuggestion.TYPE_DOCUMENTATION]: "low",
+      [AISuggestion.TYPE_TEST]: "low",
     };
-    return effortMap[this._type] || 'low';
+    return effortMap[this._type] || "low";
   }
 
   toTaskData() {
@@ -152,8 +157,8 @@ class AISuggestion {
         ...this._metadata,
         aiSuggestion: true,
         confidence: this._confidence,
-        confidenceScore: this.getConfidenceScore()
-      }
+        confidenceScore: this.getConfidenceScore(),
+      },
     };
   }
 
@@ -165,7 +170,7 @@ class AISuggestion {
       [AISuggestion.TYPE_SCRIPT]: 900, // 15 minutes
       [AISuggestion.TYPE_TASK]: 600, // 10 minutes
       [AISuggestion.TYPE_DOCUMENTATION]: 900, // 15 minutes
-      [AISuggestion.TYPE_TEST]: 1200 // 20 minutes
+      [AISuggestion.TYPE_TEST]: 1200, // 20 minutes
     };
     return durationMap[this._type] || 900;
   }
@@ -178,13 +183,13 @@ class AISuggestion {
       AISuggestion.TYPE_SECURITY,
       AISuggestion.TYPE_DOCUMENTATION,
       AISuggestion.TYPE_TEST,
-      AISuggestion.TYPE_SCRIPT
+      AISuggestion.TYPE_SCRIPT,
     ];
 
     const validConfidences = [
       AISuggestion.CONFIDENCE_LOW,
       AISuggestion.CONFIDENCE_MEDIUM,
-      AISuggestion.CONFIDENCE_HIGH
+      AISuggestion.CONFIDENCE_HIGH,
     ];
 
     if (!validTypes.includes(type)) {
@@ -195,8 +200,14 @@ class AISuggestion {
       throw new Error(`Invalid AI suggestion confidence: ${confidence}`);
     }
 
-    if (!this._content || typeof this._content !== 'string' || this._content.trim().length === 0) {
-      throw new Error('AI suggestion content is required and must be a non-empty string');
+    if (
+      !this._content ||
+      typeof this._content !== "string" ||
+      this._content.trim().length === 0
+    ) {
+      throw new Error(
+        "AI suggestion content is required and must be a non-empty string",
+      );
     }
   }
 
@@ -205,13 +216,20 @@ class AISuggestion {
   }
 
   equals(other) {
-    return other instanceof AISuggestion &&
-           this._type === other._type &&
-           this._content === other._content &&
-           this._confidence === other._confidence;
+    return (
+      other instanceof AISuggestion &&
+      this._type === other._type &&
+      this._content === other._content &&
+      this._confidence === other._confidence
+    );
   }
 
-  static fromString(type, content, confidence = AISuggestion.CONFIDENCE_MEDIUM, metadata = {}) {
+  static fromString(
+    type,
+    content,
+    confidence = AISuggestion.CONFIDENCE_MEDIUM,
+    metadata = {},
+  ) {
     return new AISuggestion(type, content, confidence, metadata);
   }
 
@@ -223,7 +241,7 @@ class AISuggestion {
       AISuggestion.TYPE_SECURITY,
       AISuggestion.TYPE_DOCUMENTATION,
       AISuggestion.TYPE_TEST,
-      AISuggestion.TYPE_SCRIPT
+      AISuggestion.TYPE_SCRIPT,
     ];
   }
 
@@ -231,7 +249,7 @@ class AISuggestion {
     return [
       AISuggestion.CONFIDENCE_LOW,
       AISuggestion.CONFIDENCE_MEDIUM,
-      AISuggestion.CONFIDENCE_HIGH
+      AISuggestion.CONFIDENCE_HIGH,
     ];
   }
 
@@ -240,4 +258,4 @@ class AISuggestion {
   }
 }
 
-module.exports = AISuggestion; 
+module.exports = AISuggestion;

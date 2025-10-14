@@ -2,7 +2,7 @@
  * CommandBuilder - Application Layer: Command builder
  * Builds commands with validation and configuration
  */
-const CommandRegistry = require('./CommandRegistry');
+const CommandRegistry = require("./CommandRegistry");
 
 class CommandBuilder {
   constructor(registry) {
@@ -27,16 +27,20 @@ class CommandBuilder {
    * @returns {Object} Validation result
    */
   static validateParams(commandName, params) {
-    const CommandClass = CommandRegistry.buildFromCategory('management', commandName, params);
-    
+    const CommandClass = CommandRegistry.buildFromCategory(
+      "management",
+      commandName,
+      params,
+    );
+
     if (!CommandClass) {
       return { isValid: false, errors: [`Command not found: ${commandName}`] };
     }
 
     try {
       const command = new CommandClass(params);
-      
-      if (typeof command.validateParams === 'function') {
+
+      if (typeof command.validateParams === "function") {
         command.validateParams(params);
       }
 

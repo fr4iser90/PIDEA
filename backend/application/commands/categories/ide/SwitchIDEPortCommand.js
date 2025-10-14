@@ -3,25 +3,25 @@
  * Command for switching between different IDE ports
  */
 
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class SwitchIDEPortCommand {
   constructor(params = {}) {
     this.validateParams(params);
-    
+
     this.commandId = params.commandId || uuidv4();
-    this.type = 'SwitchIDEPortCommand';
+    this.type = "SwitchIDEPortCommand";
     this.timestamp = new Date();
-    
+
     // Command parameters
     this.port = params.port;
     this.ideType = params.ideType; // 'cursor', 'vscode', 'windsurf'
     this.userId = params.userId;
     this.options = params.options || {};
     this.metadata = params.metadata || {};
-    
+
     this.logger = params.logger || logger;
   }
 
@@ -33,21 +33,30 @@ class SwitchIDEPortCommand {
     const errors = [];
 
     if (!params.port) {
-      errors.push('Port is required');
-    } else if (typeof params.port !== 'number' || params.port < 1 || params.port > 65535) {
-      errors.push('Port must be a valid number between 1 and 65535');
+      errors.push("Port is required");
+    } else if (
+      typeof params.port !== "number" ||
+      params.port < 1 ||
+      params.port > 65535
+    ) {
+      errors.push("Port must be a valid number between 1 and 65535");
     }
 
-    if (params.ideType && !['cursor', 'vscode', 'windsurf'].includes(params.ideType)) {
-      errors.push('IDE type must be one of: cursor, vscode, windsurf');
+    if (
+      params.ideType &&
+      !["cursor", "vscode", "windsurf"].includes(params.ideType)
+    ) {
+      errors.push("IDE type must be one of: cursor, vscode, windsurf");
     }
 
     if (!params.userId) {
-      errors.push('User ID is required');
+      errors.push("User ID is required");
     }
 
     if (errors.length > 0) {
-      throw new Error(`SwitchIDEPortCommand validation failed: ${errors.join(', ')}`);
+      throw new Error(
+        `SwitchIDEPortCommand validation failed: ${errors.join(", ")}`,
+      );
     }
   }
 
@@ -61,19 +70,19 @@ class SwitchIDEPortCommand {
       if (this.port < 9222 || this.port > 9251) {
         return {
           isValid: false,
-          errors: ['Port must be in IDE range (9222-9251)']
+          errors: ["Port must be in IDE range (9222-9251)"],
         };
       }
 
       return {
         isValid: true,
-        errors: []
+        errors: [],
       };
     } catch (error) {
-      this.logger.error('Validation error:', error);
+      this.logger.error("Validation error:", error);
       return {
         isValid: false,
-        errors: [error.message]
+        errors: [error.message],
       };
     }
   }
@@ -85,33 +94,34 @@ class SwitchIDEPortCommand {
    */
   async execute(context = {}) {
     try {
-      this.logger.info('Executing command', {
+      this.logger.info("Executing command", {
         commandId: this.commandId,
         port: this.port,
         ideType: this.ideType,
-        userId: this.userId
+        userId: this.userId,
       });
 
       // Validate command
       const validationResult = await this.validate();
       if (!validationResult.isValid) {
-        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Command validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
       // Publish event
       if (context.eventBus) {
-        await context.eventBus.publish('ide.port.switching', {
+        await context.eventBus.publish("ide.port.switching", {
           commandId: this.commandId,
           userId: this.userId,
           port: this.port,
           ideType: this.ideType,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
       // Execute port switching logic
       const result = {
-        success: true,
         commandId: this.commandId,
         port: this.port,
         ideType: this.ideType,
@@ -119,41 +129,40 @@ class SwitchIDEPortCommand {
         metadata: {
           ...this.metadata,
           executionTime: new Date(),
-          context: context
-        }
+          context: context,
+        },
       };
 
       // Publish success event
       if (context.eventBus) {
-        await context.eventBus.publish('ide.port.switched', {
+        await context.eventBus.publish("ide.port.switched", {
           commandId: this.commandId,
           userId: this.userId,
           port: this.port,
           ideType: this.ideType,
           result: result,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
-      this.logger.info('Command executed successfully', {
+      this.logger.info("Command executed successfully", {
         commandId: this.commandId,
-        result: result
+        result: result,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Command execution failed:', error);
+      this.logger.error("Command execution failed:", error);
 
       // Publish failure event
       if (context.eventBus) {
-        await context.eventBus.publish('ide.port.switch.failed', {
+        await context.eventBus.publish("ide.port.switch.failed", {
           commandId: this.commandId,
           userId: this.userId,
           port: this.port,
           ideType: this.ideType,
           error: error.message,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
@@ -174,7 +183,7 @@ class SwitchIDEPortCommand {
       ideType: this.ideType,
       userId: this.userId,
       options: this.options,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -188,4 +197,4 @@ class SwitchIDEPortCommand {
   }
 }
 
-module.exports = SwitchIDEPortCommand; 
+module.exports = SwitchIDEPortCommand;

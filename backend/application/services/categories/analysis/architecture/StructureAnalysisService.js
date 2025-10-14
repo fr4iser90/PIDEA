@@ -3,12 +3,14 @@
  * Specialized service for project structure analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { StructureAnalysisStep } = require('@domain/steps/categories/analysis/architecture');
+const Logger = require("@logging/Logger");
+const {
+  StructureAnalysisStep,
+} = require("@domain/steps/categories/analysis/architecture");
 
 class StructureAnalysisService {
   constructor() {
-    this.logger = new Logger('StructureAnalysisService');
+    this.logger = new Logger("StructureAnalysisService");
     this.structureStep = new StructureAnalysisStep();
   }
 
@@ -22,22 +24,23 @@ class StructureAnalysisService {
    */
   async executeStructureAnalysis(params) {
     try {
-      this.logger.info('Starting project structure analysis', { projectId: params.projectId });
+      this.logger.info("Starting project structure analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.structureStep.execute(params);
 
-      this.logger.info('Structure analysis completed', { 
+      this.logger.info("Structure analysis completed", {
         projectId: params.projectId,
         issuesFound: result.issues?.length || 0,
-        directoriesAnalyzed: result.directoriesAnalyzed || 0
+        directoriesAnalyzed: result.directoriesAnalyzed || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Structure analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Structure analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,18 @@ class StructureAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Project Structure Analyzer',
-      version: '1.0.0',
-      description: 'Project structure and architectural patterns analysis',
-      metrics: ['directory-structure', 'file-organization', 'naming-conventions', 'separation-of-concerns'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Project Structure Analyzer",
+      version: "1.0.0",
+      description: "Project structure and architectural patterns analysis",
+      metrics: [
+        "directory-structure",
+        "file-organization",
+        "naming-conventions",
+        "separation-of-concerns",
+      ],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = StructureAnalysisService; 
+module.exports = StructureAnalysisService;

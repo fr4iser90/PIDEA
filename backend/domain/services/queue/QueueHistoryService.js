@@ -3,53 +3,53 @@
  * Provides comprehensive history tracking with strict error handling (no fallbacks)
  */
 
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 // Custom error classes for strict error handling
 class InvalidWorkflowDataError extends Error {
   constructor(message) {
     super(message);
-    this.name = 'InvalidWorkflowDataError';
-    this.code = 'InvalidWorkflowDataError';
+    this.name = "InvalidWorkflowDataError";
+    this.code = "InvalidWorkflowDataError";
   }
 }
 
 class InvalidFilterError extends Error {
   constructor(message) {
     super(message);
-    this.name = 'InvalidFilterError';
-    this.code = 'InvalidFilterError';
+    this.name = "InvalidFilterError";
+    this.code = "InvalidFilterError";
   }
 }
 
 class InvalidRetentionError extends Error {
   constructor(message) {
     super(message);
-    this.name = 'InvalidRetentionError';
-    this.code = 'InvalidRetentionError';
+    this.name = "InvalidRetentionError";
+    this.code = "InvalidRetentionError";
   }
 }
 
 class HistoryItemNotFoundError extends Error {
   constructor(message) {
     super(message);
-    this.name = 'HistoryItemNotFoundError';
-    this.code = 'HistoryItemNotFoundError';
+    this.name = "HistoryItemNotFoundError";
+    this.code = "HistoryItemNotFoundError";
   }
 }
 
 class QueueHistoryService {
   constructor(dependencies = {}) {
-    this.logger = new ServiceLogger('QueueHistoryService');
+    this.logger = new ServiceLogger("QueueHistoryService");
     this.repository = dependencies.queueHistoryRepository;
     this.cache = dependencies.cacheService;
     this.eventBus = dependencies.eventBus;
-    
+
     if (!this.repository) {
-      throw new Error('QueueHistoryRepository is required');
+      throw new Error("QueueHistoryRepository is required");
     }
-    
-    this.logger.info('QueueHistoryService initialized');
+
+    this.logger.info("QueueHistoryService initialized");
   }
 
   /**
@@ -59,22 +59,24 @@ class QueueHistoryService {
    */
   async persistWorkflowHistory(workflowData) {
     try {
-      this.logger.debug('Persisting workflow history', { 
+      this.logger.debug("Persisting workflow history", {
         workflowId: workflowData?.id,
-        type: workflowData?.type 
+        type: workflowData?.type,
       });
 
       // Validate workflow data - throw error if invalid
       if (!workflowData || !workflowData.id) {
-        throw new InvalidWorkflowDataError('Workflow data is required and must have an ID');
+        throw new InvalidWorkflowDataError(
+          "Workflow data is required and must have an ID",
+        );
       }
 
       if (!workflowData.type) {
-        throw new InvalidWorkflowDataError('Workflow type is required');
+        throw new InvalidWorkflowDataError("Workflow type is required");
       }
 
       if (!workflowData.status) {
-        throw new InvalidWorkflowDataError('Workflow status is required');
+        throw new InvalidWorkflowDataError("Workflow status is required");
       }
 
       // Prepare history data
@@ -88,7 +90,7 @@ class QueueHistoryService {
         errorMessage: workflowData.errorMessage || null,
         metadata: workflowData.metadata || {},
         stepsData: workflowData.stepsData || [],
-        createdBy: workflowData.userId || 'me'
+        createdBy: workflowData.userId || "me",
       };
 
       // Store in database
@@ -96,23 +98,22 @@ class QueueHistoryService {
 
       // Emit event for real-time updates
       if (this.eventBus) {
-        this.eventBus.emit('queue:history:created', {
+        this.eventBus.emit("queue:history:created", {
           workflowId: workflowData.id,
-          history
+          history,
         });
       }
 
-      this.logger.info('Workflow history persisted', { 
+      this.logger.info("Workflow history persisted", {
         workflowId: workflowData.id,
-        historyId: history.id 
+        historyId: history.id,
       });
 
       return history;
-
     } catch (error) {
-      this.logger.error('Failed to persist workflow history', { 
+      this.logger.error("Failed to persist workflow history", {
         workflowId: workflowData?.id,
-        error: error.message 
+        error: error.message,
       });
       throw error;
     }
@@ -126,37 +127,36 @@ class QueueHistoryService {
    */
   async getWorkflowHistory(filters = {}, pagination = { page: 1, limit: 20 }) {
     try {
-      this.logger.debug('Getting workflow history', { filters, pagination });
+      this.logger.debug("Getting workflow history", { filters, pagination });
 
       // Validate filters - throw error if invalid
       if (filters && !this.validateFilters(filters)) {
-        throw new InvalidFilterError('Invalid filter parameters provided');
+        throw new InvalidFilterError("Invalid filter parameters provided");
       }
 
       // Validate pagination - throw error if invalid
       if (pagination.page < 1) {
-        throw new InvalidFilterError('Page number must be at least 1');
+        throw new InvalidFilterError("Page number must be at least 1");
       }
 
       if (pagination.limit < 1 || pagination.limit > 100) {
-        throw new InvalidFilterError('Limit must be between 1 and 100');
+        throw new InvalidFilterError("Limit must be between 1 and 100");
       }
 
       // Get history from repository
       const result = await this.repository.find(filters, pagination);
 
-      this.logger.debug('Workflow history retrieved', { 
+      this.logger.debug("Workflow history retrieved", {
         itemCount: result.items?.length || 0,
-        totalItems: result.pagination?.totalItems || 0
+        totalItems: result.pagination?.totalItems || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Failed to get workflow history', { 
-        filters, 
-        pagination, 
-        error: error.message 
+      this.logger.error("Failed to get workflow history", {
+        filters,
+        pagination,
+        error: error.message,
       });
       throw error;
     }
@@ -169,31 +169,28 @@ class QueueHistoryService {
    */
   async getHistoryItem(historyId) {
     try {
-      this.logger.debug('Getting history item', { historyId });
+      this.logger.debug("Getting history item", { historyId });
 
       if (!historyId) {
-        throw new InvalidWorkflowDataError('History item ID is required');
+        throw new InvalidWorkflowDataError("History item ID is required");
       }
-
-
 
       // Get from database
       const history = await this.repository.findById(historyId);
-      
+
       if (!history) {
-        throw new HistoryItemNotFoundError(`History item ${historyId} not found`);
+        throw new HistoryItemNotFoundError(
+          `History item ${historyId} not found`,
+        );
       }
 
-
-
-      this.logger.debug('History item retrieved', { historyId });
+      this.logger.debug("History item retrieved", { historyId });
 
       return history;
-
     } catch (error) {
-      this.logger.error('Failed to get history item', { 
-        historyId, 
-        error: error.message 
+      this.logger.error("Failed to get history item", {
+        historyId,
+        error: error.message,
       });
       throw error;
     }
@@ -207,42 +204,43 @@ class QueueHistoryService {
    */
   async updateHistoryItem(historyId, updates) {
     try {
-      this.logger.debug('Updating history item', { historyId, updates });
+      this.logger.debug("Updating history item", { historyId, updates });
 
       if (!historyId) {
-        throw new InvalidWorkflowDataError('History item ID is required');
+        throw new InvalidWorkflowDataError("History item ID is required");
       }
 
       if (!updates || Object.keys(updates).length === 0) {
-        throw new InvalidWorkflowDataError('Updates object is required and cannot be empty');
+        throw new InvalidWorkflowDataError(
+          "Updates object is required and cannot be empty",
+        );
       }
 
       // Update in database
       const updatedHistory = await this.repository.update(historyId, updates);
 
       if (!updatedHistory) {
-        throw new HistoryItemNotFoundError(`History item ${historyId} not found`);
+        throw new HistoryItemNotFoundError(
+          `History item ${historyId} not found`,
+        );
       }
-
-
 
       // Emit event for real-time updates
       if (this.eventBus) {
-        this.eventBus.emit('queue:history:updated', {
+        this.eventBus.emit("queue:history:updated", {
           historyId,
-          history: updatedHistory
+          history: updatedHistory,
         });
       }
 
-      this.logger.info('History item updated', { historyId });
+      this.logger.info("History item updated", { historyId });
 
       return updatedHistory;
-
     } catch (error) {
-      this.logger.error('Failed to update history item', { 
-        historyId, 
-        updates, 
-        error: error.message 
+      this.logger.error("Failed to update history item", {
+        historyId,
+        updates,
+        error: error.message,
       });
       throw error;
     }
@@ -255,43 +253,42 @@ class QueueHistoryService {
    */
   async cleanupOldHistory(retentionDays) {
     try {
-      this.logger.info('Starting history cleanup', { retentionDays });
+      this.logger.info("Starting history cleanup", { retentionDays });
 
       // Validate retention period - throw error if invalid
       if (!retentionDays || retentionDays < 1) {
-        throw new InvalidRetentionError('Retention days must be at least 1');
+        throw new InvalidRetentionError("Retention days must be at least 1");
       }
 
       if (retentionDays > 365) {
-        throw new InvalidRetentionError('Retention days cannot exceed 365');
+        throw new InvalidRetentionError("Retention days cannot exceed 365");
       }
 
-      const cutoffDate = new Date(Date.now() - (retentionDays * 24 * 60 * 60 * 1000));
-      
+      const cutoffDate = new Date(
+        Date.now() - retentionDays * 24 * 60 * 60 * 1000,
+      );
+
       // Delete old history items
       const result = await this.repository.deleteOlderThan(cutoffDate);
 
-
-
       // Emit cleanup event
       if (this.eventBus) {
-        this.eventBus.emit('queue:history:cleaned', {
+        this.eventBus.emit("queue:history:cleaned", {
           deletedCount: result.deletedCount,
-          retentionDays
+          retentionDays,
         });
       }
 
-      this.logger.info('History cleanup completed', { 
+      this.logger.info("History cleanup completed", {
         deletedCount: result.deletedCount,
-        retentionDays 
+        retentionDays,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Failed to cleanup old history', { 
-        retentionDays, 
-        error: error.message 
+      this.logger.error("Failed to cleanup old history", {
+        retentionDays,
+        error: error.message,
       });
       throw error;
     }
@@ -304,23 +301,22 @@ class QueueHistoryService {
    */
   async getHistoryStatistics(filters = {}) {
     try {
-      this.logger.debug('Getting history statistics', { filters });
+      this.logger.debug("Getting history statistics", { filters });
 
       // Validate filters
       if (filters && !this.validateFilters(filters)) {
-        throw new InvalidFilterError('Invalid filter parameters provided');
+        throw new InvalidFilterError("Invalid filter parameters provided");
       }
 
       const statistics = await this.repository.getStatistics(filters);
 
-      this.logger.debug('History statistics retrieved', { statistics });
+      this.logger.debug("History statistics retrieved", { statistics });
 
       return statistics;
-
     } catch (error) {
-      this.logger.error('Failed to get history statistics', { 
-        filters, 
-        error: error.message 
+      this.logger.error("Failed to get history statistics", {
+        filters,
+        error: error.message,
       });
       throw error;
     }
@@ -332,11 +328,11 @@ class QueueHistoryService {
    * @returns {boolean} True if valid
    */
   validateFilters(filters) {
-    const validFilters = ['type', 'status', 'startDate', 'endDate', 'search'];
+    const validFilters = ["type", "status", "startDate", "endDate", "search"];
     // Use central taskModes constants
-    const taskModes = require('@domain/constants/taskModes');
+    const taskModes = require("@domain/constants/taskModes");
     const validTypes = taskModes.getAllTypes();
-    const validStatuses = ['completed', 'failed', 'cancelled'];
+    const validStatuses = ["completed", "failed", "cancelled"];
 
     // Check for invalid filter keys
     for (const key of Object.keys(filters)) {
@@ -383,44 +379,49 @@ class QueueHistoryService {
    */
   async exportHistoryToCSV(filters = {}) {
     try {
-      this.logger.info('Exporting history to CSV', { filters });
+      this.logger.info("Exporting history to CSV", { filters });
 
       // Validate filters
       if (filters && !this.validateFilters(filters)) {
-        throw new InvalidFilterError('Invalid filter parameters provided');
+        throw new InvalidFilterError("Invalid filter parameters provided");
       }
 
       // Get all history items (no pagination for export)
-      const result = await this.repository.find(filters, { page: 1, limit: 10000 });
+      const result = await this.repository.find(filters, {
+        page: 1,
+        limit: 10000,
+      });
 
       if (!result.items || result.items.length === 0) {
-        return 'ID,Type,Status,Created At,Completed At,Duration (ms),Error Message\n';
+        return "ID,Type,Status,Created At,Completed At,Duration (ms),Error Message\n";
       }
 
       // Generate CSV
-      const csvHeader = 'ID,Type,Status,Created At,Completed At,Duration (ms),Error Message\n';
-      const csvRows = result.items.map(item => {
-        const duration = item.executionTimeMs || '';
-        const errorMessage = item.errorMessage ? `"${item.errorMessage.replace(/"/g, '""')}"` : '';
-        return `${item.id},${item.taskMode},${item.status},${item.createdAt},${item.completedAt || ''},${duration},${errorMessage}`;
+      const csvHeader =
+        "ID,Type,Status,Created At,Completed At,Duration (ms),Error Message\n";
+      const csvRows = result.items.map((item) => {
+        const duration = item.executionTimeMs || "";
+        const errorMessage = item.errorMessage
+          ? `"${item.errorMessage.replace(/"/g, '""')}"`
+          : "";
+        return `${item.id},${item.taskMode},${item.status},${item.createdAt},${item.completedAt || ""},${duration},${errorMessage}`;
       });
 
-      const csv = csvHeader + csvRows.join('\n');
+      const csv = csvHeader + csvRows.join("\n");
 
-      this.logger.info('History exported to CSV', { 
-        itemCount: result.items.length 
+      this.logger.info("History exported to CSV", {
+        itemCount: result.items.length,
       });
 
       return csv;
-
     } catch (error) {
-      this.logger.error('Failed to export history to CSV', { 
-        filters, 
-        error: error.message 
+      this.logger.error("Failed to export history to CSV", {
+        filters,
+        error: error.message,
       });
       throw error;
     }
   }
 }
 
-module.exports = QueueHistoryService; 
+module.exports = QueueHistoryService;

@@ -26,15 +26,18 @@ class CloseChatCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
     if (!this.sessionId) {
-      throw new Error('Session ID is required');
+      throw new Error("Session ID is required");
     }
 
-    if (typeof this.sessionId !== 'string' || this.sessionId.trim().length === 0) {
-      throw new Error('Session ID must be a non-empty string');
+    if (
+      typeof this.sessionId !== "string" ||
+      this.sessionId.trim().length === 0
+    ) {
+      throw new Error("Session ID must be a non-empty string");
     }
   }
 
@@ -46,17 +49,17 @@ class CloseChatCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'CloseChatCommand',
+      type: "CloseChatCommand",
       userId: this.userId,
       sessionId: this.sessionId,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = CloseChatCommand; 
+module.exports = CloseChatCommand;

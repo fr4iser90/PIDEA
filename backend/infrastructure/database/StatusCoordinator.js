@@ -8,40 +8,48 @@ class StatusCoordinator {
     this.databaseConnection = databaseConnection;
     this.eventBus = eventBus;
     this.logger = null;
-    
+
     this.initialize();
   }
 
   initialize() {
     // Initialize logger
-    const ServiceLogger = require('@logging/ServiceLogger');
-    this.logger = new ServiceLogger('StatusCoordinator');
+    const ServiceLogger = require("@logging/ServiceLogger");
+    this.logger = new ServiceLogger("StatusCoordinator");
   }
 
-  async coordinateStatus(taskId, layerId, status, coordinationType = 'sync') {
+  async coordinateStatus(taskId, layerId, status, coordinationType = "sync") {
     try {
-      this.logger.info('Coordinating status', { taskId, layerId, status, coordinationType });
+      this.logger.info("Coordinating status", {
+        taskId,
+        layerId,
+        status,
+        coordinationType,
+      });
 
       // Get task layer assignments
       const assignments = await this.getTaskLayerAssignments(taskId);
       if (assignments.length === 0) {
-        throw new Error('No layer assignments found for task');
+        throw new Error("No layer assignments found for task");
       }
 
       // Find the source layer
-      const sourceLayer = assignments.find(a => a.layer_id === layerId);
+      const sourceLayer = assignments.find((a) => a.layer_id === layerId);
       if (!sourceLayer) {
-        throw new Error('Source layer not found in task assignments');
+        throw new Error("Source layer not found in task assignments");
       }
 
       // Determine target layers (all other layers)
       const targetLayers = assignments
-        .filter(a => a.layer_id !== layerId)
-        .map(a => a.layer_id);
+        .filter((a) => a.layer_id !== layerId)
+        .map((a) => a.layer_id);
 
       if (targetLayers.length === 0) {
-        this.logger.info('No target layers for coordination', { taskId, layerId });
-        return { success: true, coordinated: 0 };
+        this.logger.info("No target layers for coordination", {
+          taskId,
+          layerId,
+        });
+        return { coordinated: 0 };
       }
 
       // Create coordination record
@@ -51,34 +59,34 @@ class StatusCoordinator {
         status,
         coordinationType,
         sourceLayer.layer_id,
-        targetLayers
+        targetLayers,
       );
 
       // Execute coordination based on type
       let coordinationResult;
       switch (coordinationType) {
-        case 'sync':
+        case "sync":
           coordinationResult = await this.executeSyncCoordination(
             taskId,
             layerId,
             status,
-            targetLayers
+            targetLayers,
           );
           break;
-        case 'async':
+        case "async":
           coordinationResult = await this.executeAsyncCoordination(
             taskId,
             layerId,
             status,
-            targetLayers
+            targetLayers,
           );
           break;
-        case 'manual':
+        case "manual":
           coordinationResult = await this.executeManualCoordination(
             taskId,
             layerId,
             status,
-            targetLayers
+            targetLayers,
           );
           break;
         default:
@@ -88,30 +96,30 @@ class StatusCoordinator {
       // Update coordination record
       await this.updateCoordinationRecord(coordinationId, coordinationResult);
 
-      this.logger.info('Status coordination completed', { 
-        taskId, 
-        layerId, 
-        status, 
-        coordinated: coordinationResult.coordinated 
+      this.logger.info("Status coordination completed", {
+        taskId,
+        layerId,
+        status,
+        coordinated: coordinationResult.coordinated,
       });
 
       // Emit event
       if (this.eventBus) {
-        this.eventBus.emit('status.coordinated', {
+        this.eventBus.emit("status.coordinated", {
           taskId,
           sourceLayerId: layerId,
           status,
           coordinationType,
-          coordinationResult
+          coordinationResult,
         });
       }
 
       return coordinationResult;
     } catch (error) {
-      this.logger.error('Failed to coordinate status', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to coordinate status", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -127,27 +135,38 @@ class StatusCoordinator {
         try {
           // Update layer task status
           await this.updateLayerTaskStatus(taskId, targetLayerId, status);
-          results.push({ layerId: targetLayerId, status: 'success' });
+          results.push({ layerId: targetLayerId, status: "success" });
           successCount++;
         } catch (error) {
-          this.logger.error('Failed to update layer task status', { 
-            taskId, 
-            targetLayerId, 
-            error: error.message 
+          this.logger.error("Failed to update layer task status", {
+            taskId,
+            targetLayerId,
+            error: error.message,
           });
-          results.push({ layerId: targetLayerId, status: 'failed', error: error.message });
+          results.push({
+            layerId: targetLayerId,
+            status: "failed",
+            error: error.message,
+          });
           failureCount++;
         }
       }
 
       return {
-        coordinationStatus: failureCount === 0 ? 'success' : (successCount > 0 ? 'partial' : 'failed'),
+        coordinationStatus:
+          failureCount === 0
+            ? "success"
+            : successCount > 0
+              ? "partial"
+              : "failed",
         coordinated: successCount,
         failed: failureCount,
-        results
+        results,
       };
     } catch (error) {
-      this.logger.error('Failed to execute sync coordination', { error: error.message });
+      this.logger.error("Failed to execute sync coordination", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -156,30 +175,36 @@ class StatusCoordinator {
     try {
       // For async coordination, we just queue the updates
       const results = [];
-      
+
       for (const targetLayerId of targetLayers) {
         try {
           // Queue the status update
           await this.queueLayerTaskStatusUpdate(taskId, targetLayerId, status);
-          results.push({ layerId: targetLayerId, status: 'queued' });
+          results.push({ layerId: targetLayerId, status: "queued" });
         } catch (error) {
-          this.logger.error('Failed to queue layer task status update', { 
-            taskId, 
-            targetLayerId, 
-            error: error.message 
+          this.logger.error("Failed to queue layer task status update", {
+            taskId,
+            targetLayerId,
+            error: error.message,
           });
-          results.push({ layerId: targetLayerId, status: 'failed', error: error.message });
+          results.push({
+            layerId: targetLayerId,
+            status: "failed",
+            error: error.message,
+          });
         }
       }
 
       return {
-        coordinationStatus: 'pending',
-        coordinated: results.filter(r => r.status === 'queued').length,
-        failed: results.filter(r => r.status === 'failed').length,
-        results
+        coordinationStatus: "pending",
+        coordinated: results.filter((r) => r.status === "queued").length,
+        failed: results.filter((r) => r.status === "failed").length,
+        results,
       };
     } catch (error) {
-      this.logger.error('Failed to execute async coordination', { error: error.message });
+      this.logger.error("Failed to execute async coordination", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -188,24 +213,33 @@ class StatusCoordinator {
     try {
       // For manual coordination, we just record the need for coordination
       const results = [];
-      
+
       for (const targetLayerId of targetLayers) {
-        results.push({ layerId: targetLayerId, status: 'pending_manual' });
+        results.push({ layerId: targetLayerId, status: "pending_manual" });
       }
 
       return {
-        coordinationStatus: 'pending',
+        coordinationStatus: "pending",
         coordinated: 0,
         failed: 0,
-        results
+        results,
       };
     } catch (error) {
-      this.logger.error('Failed to execute manual coordination', { error: error.message });
+      this.logger.error("Failed to execute manual coordination", {
+        error: error.message,
+      });
       throw error;
     }
   }
 
-  async createCoordinationRecord(layerId, taskId, status, coordinationType, sourceLayerId, targetLayers) {
+  async createCoordinationRecord(
+    layerId,
+    taskId,
+    status,
+    coordinationType,
+    sourceLayerId,
+    targetLayers,
+  ) {
     try {
       const sql = `
         INSERT INTO layer_status_coordination (
@@ -223,14 +257,16 @@ class StatusCoordinator {
         coordinationType,
         sourceLayerId,
         JSON.stringify(targetLayers),
-        'pending',
-        JSON.stringify({ createdAt: new Date().toISOString() })
+        "pending",
+        JSON.stringify({ createdAt: new Date().toISOString() }),
       ];
 
       const result = await this.databaseConnection.execute(sql, values);
       return result.rows[0].id;
     } catch (error) {
-      this.logger.error('Failed to create coordination record', { error: error.message });
+      this.logger.error("Failed to create coordination record", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -245,16 +281,18 @@ class StatusCoordinator {
 
       const metadata = {
         coordinationResult,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       await this.databaseConnection.execute(sql, [
         coordinationResult.coordinationStatus,
         JSON.stringify(metadata),
-        coordinationId
+        coordinationId,
       ]);
     } catch (error) {
-      this.logger.error('Failed to update coordination record', { error: error.message });
+      this.logger.error("Failed to update coordination record", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -268,18 +306,22 @@ class StatusCoordinator {
         RETURNING *
       `;
 
-      const result = await this.databaseConnection.execute(sql, [status, taskId, layerId]);
-      
+      const result = await this.databaseConnection.execute(sql, [
+        status,
+        taskId,
+        layerId,
+      ]);
+
       if (result.rows.length === 0) {
-        throw new Error('Layer task assignment not found');
+        throw new Error("Layer task assignment not found");
       }
 
       return result.rows[0];
     } catch (error) {
-      this.logger.error('Failed to update layer task status', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to update layer task status", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -291,10 +333,10 @@ class StatusCoordinator {
       // In a real implementation, this would queue the update for background processing
       return await this.updateLayerTaskStatus(taskId, layerId, status);
     } catch (error) {
-      this.logger.error('Failed to queue layer task status update', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to queue layer task status update", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -313,7 +355,10 @@ class StatusCoordinator {
       const result = await this.databaseConnection.execute(sql, [taskId]);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get task layer assignments', { taskId, error: error.message });
+      this.logger.error("Failed to get task layer assignments", {
+        taskId,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -329,10 +374,16 @@ class StatusCoordinator {
         LIMIT $2
       `;
 
-      const result = await this.databaseConnection.execute(sql, [taskId, limit]);
+      const result = await this.databaseConnection.execute(sql, [
+        taskId,
+        limit,
+      ]);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get coordination history', { taskId, error: error.message });
+      this.logger.error("Failed to get coordination history", {
+        taskId,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -350,7 +401,9 @@ class StatusCoordinator {
       const result = await this.databaseConnection.execute(sql);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get pending coordinations', { error: error.message });
+      this.logger.error("Failed to get pending coordinations", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -362,10 +415,12 @@ class StatusCoordinator {
         WHERE id = $1 AND coordination_status = 'pending'
       `;
 
-      const result = await this.databaseConnection.execute(sql, [coordinationId]);
-      
+      const result = await this.databaseConnection.execute(sql, [
+        coordinationId,
+      ]);
+
       if (result.rows.length === 0) {
-        throw new Error('Pending coordination not found');
+        throw new Error("Pending coordination not found");
       }
 
       const coordination = result.rows[0];
@@ -376,19 +431,19 @@ class StatusCoordinator {
         coordination.task_id,
         coordination.layer_id,
         coordination.status,
-        targetLayers
+        targetLayers,
       );
 
       // Update the coordination record
       await this.updateCoordinationRecord(coordinationId, coordinationResult);
 
-      this.logger.info('Pending coordination resolved', { coordinationId });
+      this.logger.info("Pending coordination resolved", { coordinationId });
 
       return coordinationResult;
     } catch (error) {
-      this.logger.error('Failed to resolve pending coordination', { 
-        coordinationId, 
-        error: error.message 
+      this.logger.error("Failed to resolve pending coordination", {
+        coordinationId,
+        error: error.message,
       });
       throw error;
     }
@@ -407,7 +462,10 @@ class StatusCoordinator {
       const result = await this.databaseConnection.execute(sql, [layerId]);
       return result.rows;
     } catch (error) {
-      this.logger.error('Failed to get layer dependencies', { layerId, error: error.message });
+      this.logger.error("Failed to get layer dependencies", {
+        layerId,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -416,35 +474,37 @@ class StatusCoordinator {
     try {
       // Get current status
       const assignments = await this.getTaskLayerAssignments(taskId);
-      const currentAssignment = assignments.find(a => a.layer_id === layerId);
-      
+      const currentAssignment = assignments.find((a) => a.layer_id === layerId);
+
       if (!currentAssignment) {
-        throw new Error('Layer assignment not found');
+        throw new Error("Layer assignment not found");
       }
 
       const currentStatus = currentAssignment.status;
 
       // Define valid status transitions
       const validTransitions = {
-        'pending': ['in_progress', 'cancelled'],
-        'in_progress': ['completed', 'failed', 'cancelled'],
-        'completed': ['in_progress'], // Allow reopening
-        'failed': ['in_progress', 'cancelled'],
-        'cancelled': [] // No transitions from cancelled
+        pending: ["in_progress", "cancelled"],
+        in_progress: ["completed", "failed", "cancelled"],
+        completed: ["in_progress"], // Allow reopening
+        failed: ["in_progress", "cancelled"],
+        cancelled: [], // No transitions from cancelled
       };
 
       const allowedStatuses = validTransitions[currentStatus] || [];
-      
+
       if (!allowedStatuses.includes(newStatus)) {
-        throw new Error(`Invalid status transition from '${currentStatus}' to '${newStatus}'`);
+        throw new Error(
+          `Invalid status transition from '${currentStatus}' to '${newStatus}'`,
+        );
       }
 
       return true;
     } catch (error) {
-      this.logger.error('Failed to validate status transition', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to validate status transition", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }

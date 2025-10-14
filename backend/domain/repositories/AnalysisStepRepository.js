@@ -1,5 +1,5 @@
-const AnalysisStep = require('../entities/AnalysisStep');
-const ServiceLogger = require('@logging/ServiceLogger');
+const AnalysisStep = require("../entities/AnalysisStep");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * AnalysisStepRepository - Database operations for analysis steps
@@ -9,7 +9,7 @@ class AnalysisStepRepository {
   constructor(databaseConnection, eventBus = null) {
     this.databaseConnection = databaseConnection;
     this.eventBus = eventBus;
-    this.logger = new ServiceLogger('AnalysisStepRepository');
+    this.logger = new ServiceLogger("AnalysisStepRepository");
   }
 
   /**
@@ -22,7 +22,7 @@ class AnalysisStepRepository {
   async createStep(projectId, analysisType, config = {}) {
     try {
       const step = AnalysisStep.create(projectId, analysisType, config);
-      
+
       // Save to database
       const query = `
         INSERT INTO analysis_steps (
@@ -30,7 +30,7 @@ class AnalysisStepRepository {
           timeout, max_retries, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      
+
       const params = [
         step.id,
         step.projectId,
@@ -41,16 +41,18 @@ class AnalysisStepRepository {
         step.timeout,
         step.maxRetries,
         step.createdAt,
-        step.updatedAt
+        step.updatedAt,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
-      this.logger.info(`Created analysis step: ${step.id} for project: ${projectId}, type: ${analysisType}`);
-      
+
+      this.logger.info(
+        `Created analysis step: ${step.id} for project: ${projectId}, type: ${analysisType}`,
+      );
+
       // Emit WebSocket event
-      this.emitStepEvent('step:created', step);
-      
+      this.emitStepEvent("step:created", step);
+
       return step;
     } catch (error) {
       this.logger.error(`Failed to create analysis step:`, error);
@@ -71,30 +73,30 @@ class AnalysisStepRepository {
       if (!step) {
         throw new Error(`Analysis step not found: ${stepId}`);
       }
-      
+
       step.updateProgress(progress, metadata);
-      
+
       // Update database
       const query = `
         UPDATE analysis_steps 
         SET progress = ?, metadata = ?, updated_at = ?
         WHERE id = ?
       `;
-      
+
       const params = [
         step.progress,
         JSON.stringify(step.metadata),
         step.updatedAt,
-        step.id
+        step.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.info(`Updated progress for step: ${stepId} to ${progress}%`);
-      
+
       // Emit WebSocket event
-      this.emitStepEvent('step:progress', step);
-      
+      this.emitStepEvent("step:progress", step);
+
       return step;
     } catch (error) {
       this.logger.error(`Failed to update step progress:`, error);
@@ -113,31 +115,31 @@ class AnalysisStepRepository {
       if (!step) {
         throw new Error(`Analysis step not found: ${stepId}`);
       }
-      
+
       step.start();
-      
+
       // Update database
       const query = `
         UPDATE analysis_steps 
         SET status = ?, progress = ?, started_at = ?, updated_at = ?
         WHERE id = ?
       `;
-      
+
       const params = [
         step.status,
         step.progress,
         step.startedAt,
         step.updatedAt,
-        step.id
+        step.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.info(`Started analysis step: ${stepId}`);
-      
+
       // Emit WebSocket event
-      this.emitStepEvent('step:started', step);
-      
+      this.emitStepEvent("step:started", step);
+
       return step;
     } catch (error) {
       this.logger.error(`Failed to start step:`, error);
@@ -158,9 +160,9 @@ class AnalysisStepRepository {
       if (!step) {
         throw new Error(`Analysis step not found: ${stepId}`);
       }
-      
+
       step.complete(result, metadata);
-      
+
       // Update database
       const query = `
         UPDATE analysis_steps 
@@ -168,7 +170,7 @@ class AnalysisStepRepository {
             metadata = ?, execution_time = ?, updated_at = ?
         WHERE id = ?
       `;
-      
+
       const params = [
         step.status,
         step.progress,
@@ -177,16 +179,16 @@ class AnalysisStepRepository {
         JSON.stringify(this._sanitizeForJSON(step.metadata)),
         step.executionTime,
         step.updatedAt,
-        step.id
+        step.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.info(`Completed analysis step: ${stepId}`);
-      
+
       // Emit WebSocket event
-      this.emitStepEvent('step:completed', step);
-      
+      this.emitStepEvent("step:completed", step);
+
       return step;
     } catch (error) {
       this.logger.error(`Failed to complete step:`, error);
@@ -207,9 +209,9 @@ class AnalysisStepRepository {
       if (!step) {
         throw new Error(`Analysis step not found: ${stepId}`);
       }
-      
+
       step.fail(error, metadata);
-      
+
       // Update database
       const query = `
         UPDATE analysis_steps 
@@ -217,7 +219,7 @@ class AnalysisStepRepository {
             execution_time = ?, updated_at = ?
         WHERE id = ?
       `;
-      
+
       const params = [
         step.status,
         step.completedAt,
@@ -225,16 +227,16 @@ class AnalysisStepRepository {
         JSON.stringify(step.metadata),
         step.executionTime,
         step.updatedAt,
-        step.id
+        step.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.error(`Failed analysis step: ${stepId}`, error);
-      
+
       // Emit WebSocket event
-      this.emitStepEvent('step:failed', step);
-      
+      this.emitStepEvent("step:failed", step);
+
       return step;
     } catch (error) {
       this.logger.error(`Failed to mark step as failed:`, error);
@@ -248,37 +250,37 @@ class AnalysisStepRepository {
    * @param {string} reason - Cancellation reason
    * @returns {Promise<AnalysisStep>} Updated analysis step
    */
-  async cancelStep(stepId, reason = 'User cancelled') {
+  async cancelStep(stepId, reason = "User cancelled") {
     try {
       const step = await this.findById(stepId);
       if (!step) {
         throw new Error(`Analysis step not found: ${stepId}`);
       }
-      
+
       step.cancel(reason);
-      
+
       // Update database
       const query = `
         UPDATE analysis_steps 
         SET status = ?, completed_at = ?, error = ?, updated_at = ?
         WHERE id = ?
       `;
-      
+
       const params = [
         step.status,
         step.completedAt,
         JSON.stringify(step.error),
         step.updatedAt,
-        step.id
+        step.id,
       ];
-      
+
       await this.databaseConnection.execute(query, params);
-      
+
       this.logger.info(`Cancelled analysis step: ${stepId}`);
-      
+
       // Emit WebSocket event
-      this.emitStepEvent('step:cancelled', step);
-      
+      this.emitStepEvent("step:cancelled", step);
+
       return step;
     } catch (error) {
       this.logger.error(`Failed to cancel step:`, error);
@@ -297,13 +299,13 @@ class AnalysisStepRepository {
         SELECT * FROM analysis_steps 
         WHERE id = ?
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [stepId]);
-      
+
       if (rows.length === 0) {
         return null;
       }
-      
+
       return this.mapRowToStep(rows[0]);
     } catch (error) {
       this.logger.error(`Failed to find step by ID:`, error);
@@ -319,31 +321,36 @@ class AnalysisStepRepository {
    */
   async findByProjectId(projectId, options = {}) {
     try {
-      const { limit = 100, offset = 0, status = null, analysisType = null } = options;
-      
+      const {
+        limit = 100,
+        offset = 0,
+        status = null,
+        analysisType = null,
+      } = options;
+
       let query = `
         SELECT * FROM analysis_steps 
         WHERE project_id = ?
       `;
-      
+
       const params = [projectId];
-      
+
       if (status) {
         query += ` AND status = ?`;
         params.push(status);
       }
-      
+
       if (analysisType) {
         query += ` AND analysis_type = ?`;
         params.push(analysisType);
       }
-      
+
       query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
       params.push(limit, offset);
-      
+
       const rows = await this.databaseConnection.query(query, params);
-      
-      return rows.map(row => this.mapRowToStep(row));
+
+      return rows.map((row) => this.mapRowToStep(row));
     } catch (error) {
       this.logger.error(`Failed to find steps by project ID:`, error);
       throw error;
@@ -362,10 +369,10 @@ class AnalysisStepRepository {
         WHERE project_id = ? AND status IN ('pending', 'running')
         ORDER BY created_at ASC
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [projectId]);
-      
-      return rows.map(row => this.mapRowToStep(row));
+
+      return rows.map((row) => this.mapRowToStep(row));
     } catch (error) {
       this.logger.error(`Failed to find active steps:`, error);
       throw error;
@@ -386,13 +393,16 @@ class AnalysisStepRepository {
         ORDER BY completed_at DESC
         LIMIT 1
       `;
-      
-      const rows = await this.databaseConnection.query(query, [projectId, analysisType]);
-      
+
+      const rows = await this.databaseConnection.query(query, [
+        projectId,
+        analysisType,
+      ]);
+
       if (rows.length === 0) {
         return null;
       }
-      
+
       return this.mapRowToStep(rows[0]);
     } catch (error) {
       this.logger.error(`Failed to find latest completed step:`, error);
@@ -418,9 +428,9 @@ class AnalysisStepRepository {
         WHERE project_id = ?
         GROUP BY analysis_type, status
       `;
-      
+
       const rows = await this.databaseConnection.query(query, [projectId]);
-      
+
       const stats = {
         total: 0,
         byType: {},
@@ -429,35 +439,36 @@ class AnalysisStepRepository {
           running: 0,
           completed: 0,
           failed: 0,
-          cancelled: 0
-        }
+          cancelled: 0,
+        },
       };
-      
-      rows.forEach(row => {
+
+      rows.forEach((row) => {
         stats.total += row.count;
         stats.byStatus[row.status] += row.count;
-        
+
         if (!stats.byType[row.analysis_type]) {
           stats.byType[row.analysis_type] = {
             total: 0,
             completed: 0,
             failed: 0,
-            avg_execution_time: 0
+            avg_execution_time: 0,
           };
         }
-        
+
         stats.byType[row.analysis_type].total += row.count;
-        if (row.status === 'completed') {
+        if (row.status === "completed") {
           stats.byType[row.analysis_type].completed += row.count;
-        } else if (row.status === 'failed') {
+        } else if (row.status === "failed") {
           stats.byType[row.analysis_type].failed += row.count;
         }
-        
+
         if (row.avg_execution_time) {
-          stats.byType[row.analysis_type].avg_execution_time = row.avg_execution_time;
+          stats.byType[row.analysis_type].avg_execution_time =
+            row.avg_execution_time;
         }
       });
-      
+
       return stats;
     } catch (error) {
       this.logger.error(`Failed to get step stats:`, error);
@@ -474,16 +485,16 @@ class AnalysisStepRepository {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-      
+
       const query = `
         DELETE FROM analysis_steps 
         WHERE status = 'completed' AND completed_at < ?
       `;
-      
+
       const result = await this.databaseConnection.execute(query, [cutoffDate]);
-      
+
       this.logger.info(`Cleaned up ${result.affectedRows} old completed steps`);
-      
+
       return result.affectedRows;
     } catch (error) {
       this.logger.error(`Failed to cleanup old steps:`, error);
@@ -517,7 +528,7 @@ class AnalysisStepRepository {
       fileCount: row.file_count,
       lineCount: row.line_count,
       createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
+      updatedAt: new Date(row.updated_at),
     });
   }
 
@@ -534,7 +545,7 @@ class AnalysisStepRepository {
         analysisType: step.analysisType,
         status: step.status,
         progress: step.progress,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -548,79 +559,92 @@ class AnalysisStepRepository {
     if (obj === null || obj === undefined) {
       return obj;
     }
-    
-    if (typeof obj !== 'object') {
+
+    if (typeof obj !== "object") {
       return obj;
     }
-    
+
     // Handle arrays
     if (Array.isArray(obj)) {
-      return obj.map(item => this._sanitizeForJSON(item));
+      return obj.map((item) => this._sanitizeForJSON(item));
     }
-    
+
     // Handle objects
     const sanitized = {};
     const seen = new WeakSet();
-    
+
     const sanitize = (obj) => {
-      if (obj === null || typeof obj !== 'object') {
+      if (obj === null || typeof obj !== "object") {
         return obj;
       }
-      
+
       // Check for circular references
       if (seen.has(obj)) {
         // For analysis results, try to extract serializable data
         if (obj.issues && Array.isArray(obj.issues)) {
-          return { issues: obj.issues, recommendations: obj.recommendations || [], summary: obj.summary || null };
+          return {
+            issues: obj.issues,
+            recommendations: obj.recommendations || [],
+            summary: obj.summary || null,
+          };
         }
         if (obj.recommendations && Array.isArray(obj.recommendations)) {
-          return { issues: obj.issues || [], recommendations: obj.recommendations, summary: obj.summary || null };
+          return {
+            issues: obj.issues || [],
+            recommendations: obj.recommendations,
+            summary: obj.summary || null,
+          };
         }
         if (obj.summary) {
-          return { issues: obj.issues || [], recommendations: obj.recommendations || [], summary: obj.summary };
+          return {
+            issues: obj.issues || [],
+            recommendations: obj.recommendations || [],
+            summary: obj.summary,
+          };
         }
         // For other objects with circular references, try to extract common properties
-        if (obj.result && typeof obj.result === 'object') {
+        if (obj.result && typeof obj.result === "object") {
           return { result: obj.result };
         }
         if (obj.success !== undefined) {
           return { success: obj.success };
         }
         // Only return '[Circular Reference]' as last resort
-        return '[Circular Reference]';
+        return "[Circular Reference]";
       }
-      
+
       // Skip Node.js internal objects that cause circular references
-      if (obj.constructor && (
-        obj.constructor.name === 'Timeout' ||
-        obj.constructor.name === 'TimersList' ||
-        obj.constructor.name === 'EventEmitter' ||
-        obj.constructor.name === 'Stream' ||
-        obj.constructor.name === 'Buffer'
-      )) {
+      if (
+        obj.constructor &&
+        (obj.constructor.name === "Timeout" ||
+          obj.constructor.name === "TimersList" ||
+          obj.constructor.name === "EventEmitter" ||
+          obj.constructor.name === "Stream" ||
+          obj.constructor.name === "Buffer")
+      ) {
         return `[${obj.constructor.name}]`;
       }
-      
+
       seen.add(obj);
-      
+
       if (Array.isArray(obj)) {
-        return obj.map(item => sanitize(item));
+        return obj.map((item) => sanitize(item));
       }
-      
+
       const result = {};
       for (const [key, value] of Object.entries(obj)) {
         try {
           result[key] = sanitize(value);
         } catch (error) {
-          result[key] = '[Error serializing]';
+          result[key] = "[Error serializing]";
         }
       }
-      
+
       return result;
     };
-    
+
     return sanitize(obj);
   }
 }
 
-module.exports = AnalysisStepRepository; 
+module.exports = AnalysisStepRepository;

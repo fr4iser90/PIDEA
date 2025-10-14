@@ -1,21 +1,20 @@
-
 // Dynamic path resolution functions
 function getTaskDocumentationPath(task) {
   const { status, priority, category, completedAt } = task;
-  
-  if (status === 'completed') {
+
+  if (status === "completed") {
     const quarter = getCompletionQuarter(completedAt);
     return `docs/09_roadmap/completed/${quarter}/${category}/`;
-  } else if (status === 'in_progress') {
+  } else if (status === "in_progress") {
     return `docs/09_roadmap/in-progress/${category}/`;
-  } else if (status === 'pending') {
+  } else if (status === "pending") {
     return `docs/09_roadmap/pending/${priority}/${category}/`;
-  } else if (status === 'blocked') {
+  } else if (status === "blocked") {
     return `docs/09_roadmap/blocked/${category}/`;
-  } else if (status === 'cancelled') {
+  } else if (status === "cancelled") {
     return `docs/09_roadmap/cancelled/${category}/`;
   }
-  
+
   return `docs/09_roadmap/pending/${priority}/${category}/`;
 }
 
@@ -24,17 +23,17 @@ function getCompletionQuarter(completedAt) {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
-    
+
     if (month <= 3) return `${year}-q1`;
     if (month <= 6) return `${year}-q2`;
     if (month <= 9) return `${year}-q3`;
     return `${year}-q4`;
   }
-  
+
   const date = new Date(completedAt);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
-  
+
   if (month <= 3) return `${year}-q1`;
   if (month <= 6) return `${year}-q2`;
   if (month <= 9) return `${year}-q3`;
@@ -43,43 +42,52 @@ function getCompletionQuarter(completedAt) {
 
 function getPromptPath(promptType) {
   const promptPaths = {
-    'task-create': 'content-library/prompts/task-management/task-create.md',
-    'task-execute': 'content-library/prompts/task-management/task-execute.md',
-    'task-analyze': 'content-library/prompts/task-management/task-analyze.md',
-    'task-review': 'content-library/prompts/task-management/task-review.md'
+    "task-create": "content-library/prompts/task-management/task-create.md",
+    "task-execute": "content-library/prompts/task-management/task-execute.md",
+    "task-analyze": "content-library/prompts/task-management/task-analyze.md",
+    "task-review": "content-library/prompts/task-management/task-review.md",
   };
-  
-  return promptPaths[promptType] || promptPaths['task-create'];
+
+  return promptPaths[promptType] || promptPaths["task-create"];
 }
 
 function getWorkflowPath(taskMode) {
   return `backend/framework/workflows/${taskMode}-workflows.json`;
 }
 
-const Task = require('@entities/Task');
-const TaskStatus = require('@value-objects/TaskStatus');
-const TaskPriority = require('@value-objects/TaskPriority');
-const TaskType = require('@value-objects/TaskType');
-const GitWorkflowManager = require('../../workflows/categories/git/GitWorkflowManager');
-const GitWorkflowContext = require('../../workflows/categories/git/GitWorkflowContext');
+const Task = require("@entities/Task");
+const TaskStatus = require("@value-objects/TaskStatus");
+const TaskPriority = require("@value-objects/TaskPriority");
+const TaskType = require("@value-objects/TaskType");
+const GitWorkflowManager = require("../../workflows/categories/git/GitWorkflowManager");
+const GitWorkflowContext = require("../../workflows/categories/git/GitWorkflowContext");
 // SequentialExecutionEngine removed - no longer needed
-const StepRegistry = require('../../steps/StepRegistry');
-const FrameworkRegistry = require('../../frameworks/FrameworkRegistry');
-const TaskStatusTransitionService = require('./TaskStatusTransitionService');
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new Logger('TaskService');
-const fs = require('fs');
-const path = require('path');
-
-
+const StepRegistry = require("../../steps/StepRegistry");
+const FrameworkRegistry = require("../../frameworks/FrameworkRegistry");
+const TaskStatusTransitionService = require("./TaskStatusTransitionService");
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new Logger("TaskService");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * TaskService - Business logic for project-based task management
  * Enhanced with GitWorkflowManager integration
  */
 class TaskService {
-  constructor(taskRepository, aiService, projectAnalyzer, interfaceManager = null, autoFinishSystem, workflowGitService = null, queueTaskExecutionService = null, fileSystemService = null, eventBus = null, serviceRegistry = null) {
+  constructor(
+    taskRepository,
+    aiService,
+    projectAnalyzer,
+    interfaceManager = null,
+    autoFinishSystem,
+    workflowGitService = null,
+    queueTaskExecutionService = null,
+    fileSystemService = null,
+    eventBus = null,
+    serviceRegistry = null,
+  ) {
     this.taskRepository = taskRepository;
     this.aiService = aiService;
     this.projectAnalyzer = projectAnalyzer;
@@ -91,37 +99,36 @@ class TaskService {
     this.eventBus = eventBus;
     this.serviceRegistry = serviceRegistry;
     this.logger = logger;
-    
+
     // Initialize TaskFileOrganizationStep for standardized directory structure
-    
+
     // Initialize enhanced git workflow manager if workflowGitService is available
     if (this.workflowGitService) {
       this.gitWorkflowManager = new GitWorkflowManager({
         gitService: this.workflowGitService.gitService,
-        logger: new ServiceLogger('TaskService'),
-        eventBus: null
+        logger: new ServiceLogger("TaskService"),
+        eventBus: null,
       });
     }
-    
+
     // Execution engine removed - using WorkflowOrchestrationService instead
 
-        // Initialize Categories-based registries with service registry for DI access
-        // Use global StepRegistry instance instead of creating new one
-        const { getStepRegistry } = require('@steps');
-        this.stepRegistry = getStepRegistry();
-        // Update the global StepRegistry with serviceRegistry for DI access
-        if (serviceRegistry) {
-          this.stepRegistry.serviceRegistry = serviceRegistry;
-        }
-        this.frameworkRegistry = new FrameworkRegistry();
+    // Initialize Categories-based registries with service registry for DI access
+    // Use global StepRegistry instance instead of creating new one
+    const { getStepRegistry } = require("@steps");
+    this.stepRegistry = getStepRegistry();
+    // Update the global StepRegistry with serviceRegistry for DI access
+    if (serviceRegistry) {
+      this.stepRegistry.serviceRegistry = serviceRegistry;
+    }
+    this.frameworkRegistry = new FrameworkRegistry();
 
     // Initialize TaskStatusTransitionService for automatic status transitions
     this.statusTransitionService = new TaskStatusTransitionService(
       this.taskRepository,
       this.fileSystemService,
-      this.eventBus
+      this.eventBus,
     );
-    
   }
 
   /**
@@ -133,19 +140,22 @@ class TaskService {
     const status = task.status;
     const priority = task.priority;
     const category = task.category;
-    
+
     // Extract task name from title or metadata
-    let taskName = task.metadata?.name || task.title?.toLowerCase().replace(/\s+/g, '-') || 'unknown-task';
-    
+    let taskName =
+      task.metadata?.name ||
+      task.title?.toLowerCase().replace(/\s+/g, "-") ||
+      "unknown-task";
+
     // Use TaskFileOrganizationStep to determine standardized path
     const taskMetadata = {
       status,
       priority,
       category,
       id: taskName,
-      completedAt: task.completedAt
+      completedAt: task.completedAt,
     };
-    
+
     return this.taskFileOrganizationStep.determineTargetPath(taskMetadata);
   }
 
@@ -159,17 +169,17 @@ class TaskService {
       const currentDate = new Date();
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      
+
       if (month <= 3) return `${year}-q1`;
       if (month <= 6) return `${year}-q2`;
       if (month <= 9) return `${year}-q3`;
       return `${year}-q4`;
     }
-    
+
     const date = new Date(completedAt);
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
-    
+
     if (month <= 3) return `${year}-q1`;
     if (month <= 6) return `${year}-q2`;
     if (month <= 9) return `${year}-q3`;
@@ -183,14 +193,19 @@ class TaskService {
    */
   getPromptPath(promptType) {
     const promptPaths = {
-      'task-create': '../content-library/prompts/task-management/task-create.md',
-      'task-execute': '../content-library/prompts/task-management/task-execute.md',
-      'task-analyze': '../content-library/prompts/task-management/task-analyze.md',
-      'task-review': '../content-library/prompts/task-management/task-review.md',
-      'task-check-state': '../content-library/prompts/task-management/task-check-state.md'
+      "task-create":
+        "../content-library/prompts/task-management/task-create.md",
+      "task-execute":
+        "../content-library/prompts/task-management/task-execute.md",
+      "task-analyze":
+        "../content-library/prompts/task-management/task-analyze.md",
+      "task-review":
+        "../content-library/prompts/task-management/task-review.md",
+      "task-check-state":
+        "../content-library/prompts/task-management/task-check-state.md",
     };
-    
-    return promptPaths[promptType] || promptPaths['task-create'];
+
+    return promptPaths[promptType] || promptPaths["task-create"];
   }
 
   /**
@@ -203,10 +218,13 @@ class TaskService {
   }
 
   buildRefactoringPrompt(task) {
-    const file = task.metadata?.filePath || task.metadata?.originalFile || 'UNKNOWN FILE';
-    const title = task.title || 'Refactor File';
-    const description = task.description || '';
-    const steps = Array.isArray(task.metadata?.refactoringSteps) ? task.metadata.refactoringSteps : [];
+    const file =
+      task.metadata?.filePath || task.metadata?.originalFile || "UNKNOWN FILE";
+    const title = task.title || "Refactor File";
+    const description = task.description || "";
+    const steps = Array.isArray(task.metadata?.refactoringSteps)
+      ? task.metadata.refactoringSteps
+      : [];
     let prompt = `Refactor the following file for better maintainability and structure.\n\n`;
     prompt += `File: ${file}\n`;
     prompt += `Task: ${title}\n`;
@@ -223,48 +241,53 @@ class TaskService {
   }
 
   async buildTaskExecutionPrompt(task) {
-    logger.info('🔍 [TaskService] buildTaskExecutionPrompt called for task:', {
+    logger.info("🔍 [TaskService] buildTaskExecutionPrompt called for task:", {
       id: task.id,
-      projectId: task.projectId
+      projectId: task.projectId,
     });
-    
+
     // Load task-execute.md prompt using dynamic path resolution
-    let taskExecutePrompt = '';
+    let taskExecutePrompt = "";
     try {
-      logger.info('🔍 [TaskService] Loading task-execute.md using dynamic path resolution...');
-      const taskExecutePath = this.getPromptPath('task-execute');
+      logger.info(
+        "🔍 [TaskService] Loading task-execute.md using dynamic path resolution...",
+      );
+      const taskExecutePath = this.getPromptPath("task-execute");
       const fullPath = path.join(process.cwd(), taskExecutePath);
-      taskExecutePrompt = fs.readFileSync(fullPath, 'utf8');
-      logger.info('✅ [TaskService] Successfully loaded task-execute.md');
+      taskExecutePrompt = fs.readFileSync(fullPath, "utf8");
+      logger.info("✅ [TaskService] Successfully loaded task-execute.md");
     } catch (error) {
-      logger.error('❌ [TaskService] Error reading task-execute.md from file:', error);
-      taskExecutePrompt = 'Execute the following task:\n\n';
+      logger.error(
+        "❌ [TaskService] Error reading task-execute.md from file:",
+        error,
+      );
+      taskExecutePrompt = "Execute the following task:\n\n";
     }
 
     // Für Doc Tasks: Verwende den Markdown-Inhalt der Datei als Prompt
     if (task.metadata?.taskFilePath) {
       try {
         const taskFilePath = path.resolve(task.metadata.taskFilePath);
-        const markdownContent = fs.readFileSync(taskFilePath, 'utf8');
-        
+        const markdownContent = fs.readFileSync(taskFilePath, "utf8");
+
         // Kombiniere: task-execute.md + Task-Inhalt
         const finalPrompt = `${taskExecutePrompt}\n\n${markdownContent}`;
-      logger.info('✅ [TaskService] Final prompt for doc task generated');
+        logger.info("✅ [TaskService] Final prompt for doc task generated");
         return finalPrompt;
       } catch (error) {
-        logger.error('❌ [TaskService] Error reading task file:', error);
-        const fallbackPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-        logger.info('⚠️ [TaskService] Using fallback prompt for doc task');
+        logger.error("❌ [TaskService] Error reading task file:", error);
+        const fallbackPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ""}`;
+        logger.info("⚠️ [TaskService] Using fallback prompt for doc task");
         return fallbackPrompt;
       }
     }
-    
+
     // Für normale Tasks: Verwende task-execute.md + Task-Details
-    const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ''}`;
-    logger.info('✅ [TaskService] Final prompt for normal task generated', {
+    const finalPrompt = `${taskExecutePrompt}\n\n${task.title}\n\n${task.description || ""}`;
+    logger.info("✅ [TaskService] Final prompt for normal task generated", {
       taskId: task.id,
       projectId: task.projectId,
-      promptLength: finalPrompt.length
+      promptLength: finalPrompt.length,
     });
     return finalPrompt;
   }
@@ -280,19 +303,29 @@ class TaskService {
    * @param {Object} metadata - Additional metadata
    * @returns {Promise<Task>} Created task
    */
-      async createTask(projectId, title, description, priority = TaskPriority.MEDIUM, type = TaskType.FEATURE, category, metadata = {}) {
+  async createTask(
+    projectId,
+    title,
+    description,
+    priority = TaskPriority.MEDIUM,
+    type = TaskType.FEATURE,
+    category,
+    metadata = {},
+  ) {
     if (!projectId) {
-      throw new Error('Project ID is required');
+      throw new Error("Project ID is required");
     }
 
     if (!title || title.trim().length === 0) {
-      throw new Error('Task title is required');
+      throw new Error("Task title is required");
     }
 
-    const task = Task.create(projectId, title, description, priority, type, { ...metadata, category });
+    const task = Task.create(projectId, title, description, priority, type, {
+      ...metadata,
+      category,
+    });
     const createdTask = await this.taskRepository.create(task);
-    
-    
+
     return createdTask;
   }
 
@@ -305,7 +338,7 @@ class TaskService {
   async updateTask(taskId, updates) {
     const task = await this.taskRepository.findById(taskId);
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     if (updates.title) {
@@ -329,10 +362,10 @@ class TaskService {
 
   /**
    * Queue task for execution using TaskQueueService
-   * 
+   *
    * 📋 EXECUTION FLOW:
    * Frontend → TaskController → TaskApplicationService → TaskQueueService → QueueTaskExecutionService → TaskQueueStore
-   * 
+   *
    * 🔄 QUEUE-BASED ARCHITECTURE:
    * 1. Frontend sends task execution request
    * 2. TaskController validates and routes to TaskApplicationService
@@ -341,26 +374,27 @@ class TaskService {
    * 5. QueueTaskExecutionService manages queue and workflow selection
    * 6. TaskQueueStore tracks execution status
    * 7. TaskProcessor handles bulk operations, pausing, priorities
-   * 
+   *
    * @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @param {Object} options - Execution options
    * @returns {Promise<Object>} Queue result (task is queued, not executed immediately)
    */
   async queueTaskForExecution(taskId, userId, options = {}) {
-    this.logger.info('🔍 [TaskService] queueTaskForExecution called - delegating to TaskQueueService:', { taskId, options });
-    
+    this.logger.info(
+      "🔍 [TaskService] queueTaskForExecution called - delegating to TaskQueueService:",
+      { taskId, options },
+    );
+
     // Delegate to TaskQueueService for proper separation of concerns
-    const TaskQueueService = require('@domain/services/queue/TaskQueueService');
+    const TaskQueueService = require("@domain/services/queue/TaskQueueService");
     const taskQueueService = new TaskQueueService({
       taskRepository: this.taskRepository,
-      queueTaskExecutionService: this.queueTaskExecutionService
+      queueTaskExecutionService: this.queueTaskExecutionService,
     });
-    
+
     return await taskQueueService.enqueue(taskId, userId, options);
   }
-
-
 
   /**
    * Determine workflow type based on task type
@@ -368,88 +402,109 @@ class TaskService {
    * @returns {string} Workflow type
    */
   determinetaskMode(task) {
-    const taskType = task.type?.value?.toLowerCase() || '';
-    
-    if (taskType.includes('refactor') || taskType.includes('refactoring')) {
-      return 'refactoring';
-    } else if (taskType.includes('test') || taskType.includes('testing')) {
-      return 'testing';
-    } else if (taskType.includes('generate') || taskType.includes('documentation')) {
-      return 'documentation';
-    } else if (taskType.includes('analyze') || taskType.includes('analysis')) {
-      return 'analysis';
-    } else if (taskType.includes('deploy') || taskType.includes('deployment')) {
-      return 'deployment';
-    } else if (taskType.includes('security')) {
-      return 'security';
-    } else if (taskType.includes('optimize') || taskType.includes('optimization')) {
-      return 'optimization';
+    const taskType = task.type?.value?.toLowerCase() || "";
+
+    if (taskType.includes("refactor") || taskType.includes("refactoring")) {
+      return "refactoring";
+    } else if (taskType.includes("test") || taskType.includes("testing")) {
+      return "testing";
+    } else if (
+      taskType.includes("generate") ||
+      taskType.includes("documentation")
+    ) {
+      return "documentation";
+    } else if (taskType.includes("analyze") || taskType.includes("analysis")) {
+      return "analysis";
+    } else if (taskType.includes("deploy") || taskType.includes("deployment")) {
+      return "deployment";
+    } else if (taskType.includes("security")) {
+      return "security";
+    } else if (
+      taskType.includes("optimize") ||
+      taskType.includes("optimization")
+    ) {
+      return "optimization";
     } else {
-      return 'analysis'; // Default fallback
+      return "analysis"; // Default fallback
     }
   }
 
   /**
    * Execute a task using core execution engine
-   * 
+   *
    * @deprecated This method bypasses the queue system. Use TaskQueueService.enqueue() instead.
    * @deprecated This method will be removed in a future version.
    * @deprecated Use TaskController.enqueueTask() → TaskQueueService.enqueue() → TaskProcessor for proper queue-based execution.
-   * 
+   *
    * @param {string} taskId - Task ID
    * @param {string} userId - User ID
    * @param {Object} options - Execution options
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskWithEngine(taskId, userId, options = {}) {
-          logger.warn('🚨 [TaskService] executeTaskWithEngine is DEPRECATED! Use TaskQueueService.enqueue() instead');
-          logger.info('🔍 [TaskService] executeTaskWithEngine called with:', { taskId, options });
-    
+    logger.warn(
+      "🚨 [TaskService] executeTaskWithEngine is DEPRECATED! Use TaskQueueService.enqueue() instead",
+    );
+    logger.info("🔍 [TaskService] executeTaskWithEngine called with:", {
+      taskId,
+      options,
+    });
+
     try {
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
-        throw new Error('Task not found');
+        throw new Error("Task not found");
       }
 
-      logger.info('🔍 [TaskService] Found task for engine execution:', {
+      logger.info("🔍 [TaskService] Found task for engine execution:", {
         id: task.id,
-        projectId: task.projectId
+        projectId: task.projectId,
       });
 
       if (task.isCompleted()) {
-        throw new Error('Task is already completed');
+        throw new Error("Task is already completed");
       }
 
       // 🔄 AUTOMATIC STATUS TRANSITION: Move task to in-progress
-      if (task.status.value === 'pending') {
-        logger.info('🔄 [TaskService] Moving task to in-progress before execution', { taskId });
+      if (task.status.value === "pending") {
+        logger.info(
+          "🔄 [TaskService] Moving task to in-progress before execution",
+          { taskId },
+        );
         await this.statusTransitionService.moveTaskToInProgress(taskId);
       }
 
       // Create workflow from task
       const workflow = await this.createWorkflowFromTask(task, options);
-      
+
       // Create workflow context
       const context = this.createWorkflowContext(task, options);
-      
+
       // Execute workflow using core execution engine
-      const result = await this.executionEngine.executeWorkflow(workflow, context, {
-        strategy: options.strategy || 'basic',
-        priority: options.priority || 'normal',
-        timeout: options.timeout || 300000,
-        userId,
-        ...options
-      });
-      
-      logger.info('✅ [TaskService] Core engine task execution completed', {
+      const result = await this.executionEngine.executeWorkflow(
+        workflow,
+        context,
+        {
+          strategy: options.strategy || "basic",
+          priority: options.priority || "normal",
+          timeout: options.timeout || 300000,
+          userId,
+          ...options,
+        },
+      );
+
+      logger.info("✅ [TaskService] Core engine task execution completed", {
         taskId: task.id,
         success: result.isSuccess(),
-        duration: result.getFormattedDuration()
+        duration: result.getFormattedDuration(),
       });
 
       // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed if successful
       if (result.isSuccess()) {
-        logger.info('🔄 [TaskService] Moving task to completed after successful execution', { taskId });
+        logger.info(
+          "🔄 [TaskService] Moving task to completed after successful execution",
+          { taskId },
+        );
         await this.statusTransitionService.moveTaskToCompleted(taskId);
       }
 
@@ -458,21 +513,23 @@ class TaskService {
         taskId: task.id,
         taskType: task.type?.value,
         result: result.toJSON(),
-        message: result.isSuccess() ? 
-          `Task completed successfully: ${task.title}` :
-          `Task failed: ${task.title}`,
+        message: result.isSuccess()
+          ? `Task completed successfully: ${task.title}`
+          : `Task failed: ${task.title}`,
         metadata: {
           executionTime: result.getDuration(),
           formattedDuration: result.getFormattedDuration(),
           strategy: result.getStrategy(),
           stepCount: result.getStepCount(),
           successRate: result.getSuccessRate(),
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
-
     } catch (error) {
-      logger.error('❌ [TaskService] Core engine task execution failed:', error.message);
+      logger.error(
+        "❌ [TaskService] Core engine task execution failed:",
+        error.message,
+      );
       throw error;
     }
   }
@@ -520,7 +577,10 @@ class TaskService {
    * @returns {Promise<Object>} Transition result
    */
   async moveTaskToCancelled(taskId, reason) {
-    return await this.statusTransitionService.moveTaskToCancelled(taskId, reason);
+    return await this.statusTransitionService.moveTaskToCancelled(
+      taskId,
+      reason,
+    );
   }
 
   /**
@@ -535,12 +595,12 @@ class TaskService {
       getMetadata: () => ({
         id: task.id,
         name: task.title,
-        type: task.type?.value || 'generic',
-        steps: []
+        type: task.type?.value || "generic",
+        steps: [],
       }),
-      getType: () => task.type?.value || 'generic',
+      getType: () => task.type?.value || "generic",
       getVersion: () => {
-        const VersionService = require('../version/VersionService');
+        const VersionService = require("../version/VersionService");
         return new VersionService().getVersion();
       },
       getDependencies: () => [],
@@ -548,16 +608,18 @@ class TaskService {
       execute: async (context) => {
         // Execute task using modern methods
         const taskPrompt = await this.buildTaskExecutionPrompt(task);
-        
+
         // Use IDE Steps instead of ChatMessageHandler
-        logger.info('🔍 [TaskService] Using IDE Steps for task execution');
-        throw new Error('TaskService - ChatMessageHandler removed, use IDE Steps instead');
+        logger.info("🔍 [TaskService] Using IDE Steps for task execution");
+        throw new Error(
+          "TaskService - ChatMessageHandler removed, use IDE Steps instead",
+        );
       },
       validate: async (context) => ({ isValid: true }),
       canExecute: async (context) => true,
-      rollback: async (context, stepId) => ({ success: true })
+      rollback: async (context, stepId) => ({ success: true }),
     };
-    
+
     return workflow;
   }
 
@@ -568,27 +630,31 @@ class TaskService {
    * @returns {WorkflowContext} Workflow context
    */
   createWorkflowContext(task, options = {}) {
-    const { WorkflowContext, WorkflowState, WorkflowMetadata } = require('../../workflows');
-    
+    const {
+      WorkflowContext,
+      WorkflowState,
+      WorkflowMetadata,
+    } = require("../../workflows");
+
     return new WorkflowContext(
       task.id,
-      task.type?.value || 'generic',
+      task.type?.value || "generic",
       (() => {
-        const VersionService = require('../version/VersionService');
+        const VersionService = require("../version/VersionService");
         return new VersionService().getVersion();
       })(), // Dynamic version from central version file
-      new WorkflowState('initialized'),
+      new WorkflowState("initialized"),
       new WorkflowMetadata({
         taskId: task.id,
         taskType: task.type?.value,
-        projectPath: task.metadata?.projectPath
+        projectPath: task.metadata?.projectPath,
       }),
       {
         task,
         options,
         projectPath: task.metadata?.projectPath,
-        userId: options.userId
-      }
+        userId: options.userId,
+      },
     );
   }
 
@@ -599,7 +665,9 @@ class TaskService {
    * @returns {Promise<Object>} Execution result
    */
   async executeTaskLegacy(taskId, userId, options = {}) {
-    logger.warn('⚠️ [TaskService] executeTaskLegacy is deprecated - use executeTask instead');
+    logger.warn(
+      "⚠️ [TaskService] executeTaskLegacy is deprecated - use executeTask instead",
+    );
     return this.executeTask(taskId, userId, options);
   }
 
@@ -613,33 +681,37 @@ class TaskService {
     // Use WorkflowGitService if available for better branch strategies
     if (this.workflowGitService) {
       const tempTask = {
-        id: 'temp-task',
-        title: 'Temporary task',
-        type: { value: 'refactoring' },
-        metadata: { projectPath }
+        id: "temp-task",
+        title: "Temporary task",
+        type: { value: "refactoring" },
+        metadata: { projectPath },
       };
-      
-      return await this.workflowGitService.createWorkflowBranch(projectPath, tempTask, {
-        customBranchName: branchName
-      });
+
+      return await this.workflowGitService.createWorkflowBranch(
+        projectPath,
+        tempTask,
+        {
+          customBranchName: branchName,
+        },
+      );
     }
 
     // Fallback to direct Git operations
-    const { exec } = require('child_process');
-    const util = require('util');
+    const { exec } = require("child_process");
+    const util = require("util");
     const execAsync = util.promisify(exec);
 
     try {
       // Check if we're in a git repository
-      await execAsync('git status', { cwd: projectPath });
-      
+      await execAsync("git status", { cwd: projectPath });
+
       // Create and checkout new branch
       await execAsync(`git checkout -b ${branchName}`, { cwd: projectPath });
-      
+
       return {
         branchName,
-        status: 'created',
-        message: `Successfully created and checked out branch: ${branchName}`
+        status: "created",
+        message: `Successfully created and checked out branch: ${branchName}`,
       };
     } catch (error) {
       throw new Error(`Failed to create git branch: ${error.message}`);
@@ -655,55 +727,65 @@ class TaskService {
     try {
       // Build AI prompt for task execution
       const aiPrompt = await this.buildTaskExecutionPrompt(task);
-      
+
       // Use Auto-Finish System if available
       if (this.autoFinishSystem && this.interfaceManager) {
-        logger.info('🤖 [TaskService] Using Auto-Finish System for AI refactoring...');
-        
+        logger.info(
+          "🤖 [TaskService] Using Auto-Finish System for AI refactoring...",
+        );
+
         // Create temporary task for Auto-Finish processing
         const tempTask = {
           id: task.id,
           description: task.title || task.description,
-          type: task.type?.value || 'refactoring',
-          metadata: task.metadata || {}
-        };
-        
-        // Process with Auto-Finish confirmation loops and fallback detection
-        const autoFinishResult = await this.autoFinishSystem.processTask(tempTask, `task-${task.id}`, {
-          stopOnError: false,
-          maxConfirmationAttempts: 3,
-          confirmationTimeout: 10000,
-          fallbackDetectionEnabled: true
-        });
-        
-        logger.info('✅ [TaskService] Auto-Finish processing completed:', {
-          success: autoFinishResult.success,
-          status: autoFinishResult.status,
-          duration: autoFinishResult.duration
-        });
-        
-        // Handle different Auto-Finish results
-        if (autoFinishResult.status === 'paused') {
-          throw new Error(`Task requires user input: ${autoFinishResult.reason}`);
-        }
-        
-        if (!autoFinishResult.success) {
-          throw new Error(`Auto-Finish processing failed: ${autoFinishResult.error || 'Unknown error'}`);
-        }
-        
-        return {
-          success: true,
-          prompt: aiPrompt,
-          aiResponse: autoFinishResult.aiResponse,
-          message: 'AI refactoring completed with Auto-Finish confirmation',
-          duration: autoFinishResult.duration,
-          timestamp: new Date(),
-          autoFinishResult: autoFinishResult
+          type: task.type?.value || "refactoring",
+          metadata: task.metadata || {},
         };
 
+        // Process with Auto-Finish confirmation loops and fallback detection
+        const autoFinishResult = await this.autoFinishSystem.processTask(
+          tempTask,
+          `task-${task.id}`,
+          {
+            stopOnError: false,
+            maxConfirmationAttempts: 3,
+            confirmationTimeout: 10000,
+            fallbackDetectionEnabled: true,
+          },
+        );
+
+        logger.info("✅ [TaskService] Auto-Finish processing completed:", {
+          success: autoFinishResult.success,
+          status: autoFinishResult.status,
+          duration: autoFinishResult.duration,
+        });
+
+        // Handle different Auto-Finish results
+        if (autoFinishResult.status === "paused") {
+          throw new Error(
+            `Task requires user input: ${autoFinishResult.reason}`,
+          );
+        }
+
+        if (!autoFinishResult.success) {
+          throw new Error(
+            `Auto-Finish processing failed: ${autoFinishResult.error || "Unknown error"}`,
+          );
+        }
+
+        return {
+          prompt: aiPrompt,
+          aiResponse: autoFinishResult.aiResponse,
+          message: "AI refactoring completed with Auto-Finish confirmation",
+          duration: autoFinishResult.duration,
+          timestamp: new Date(),
+          autoFinishResult: autoFinishResult,
+        };
       }
     } catch (error) {
-      throw new Error(`AI refactoring with Auto-Finish failed: ${error.message}`);
+      throw new Error(
+        `AI refactoring with Auto-Finish failed: ${error.message}`,
+      );
     }
   }
 
@@ -716,10 +798,12 @@ class TaskService {
     try {
       // Build AI prompt for task execution (uses markdown content for doc tasks)
       const aiPrompt = await this.buildTaskExecutionPrompt(task);
-      
+
       // Use IDE Steps instead of ChatMessageHandler
-      logger.info('🤖 [TaskService] Using IDE Steps for AI refactoring');
-      throw new Error('TaskService - ChatMessageHandler removed, use IDE Steps instead');
+      logger.info("🤖 [TaskService] Using IDE Steps for AI refactoring");
+      throw new Error(
+        "TaskService - ChatMessageHandler removed, use IDE Steps instead",
+      );
     } catch (error) {
       throw new Error(`AI refactoring failed: ${error.message}`);
     }
@@ -737,8 +821,8 @@ class TaskService {
     return {
       originalFile: task.metadata.filePath,
       refactoredCode: aiResponse,
-      changes: ['Code refactored for better maintainability'],
-      timestamp: new Date()
+      changes: ["Code refactored for better maintainability"],
+      timestamp: new Date(),
     };
   }
 
@@ -751,28 +835,35 @@ class TaskService {
   async integrateWithCursorIDE(task, refactoringResult) {
     try {
       // WE ARE CURSOR IDE! So we'll apply the changes directly to the file
-      logger.info('🎭 [TaskService] Applying refactoring changes directly to file...');
-      
-      const fs = require('fs');
-      const path = require('path');
-      
+      logger.info(
+        "🎭 [TaskService] Applying refactoring changes directly to file...",
+      );
+
+      const fs = require("fs");
+      const path = require("path");
+
       // Create backup of original file
       const backupPath = `${task.metadata.filePath}.backup.${Date.now()}`;
       fs.copyFileSync(task.metadata.filePath, backupPath);
-      logger.info('📦 [TaskService] Created backup:', backupPath);
-      
+      logger.info("📦 [TaskService] Created backup:", backupPath);
+
       // Apply the refactored code to the file
       if (!refactoringResult.refactoredCode) {
-        throw new Error('Refactored code is undefined - cannot write to file');
+        throw new Error("Refactored code is undefined - cannot write to file");
       }
-      fs.writeFileSync(task.metadata.filePath, refactoringResult.refactoredCode);
-      logger.info('✅ [TaskService] Applied refactored code to:', task.metadata.filePath);
-      
+      fs.writeFileSync(
+        task.metadata.filePath,
+        refactoringResult.refactoredCode,
+      );
+      logger.info(
+        "✅ [TaskService] Applied refactored code to:",
+        task.metadata.filePath,
+      );
+
       return {
-        success: true,
         backupPath,
-        message: 'Refactored code applied directly to file',
-        appliedAt: new Date()
+        message: "Refactored code applied directly to file",
+        appliedAt: new Date(),
       };
     } catch (error) {
       throw new Error(`File integration failed: ${error.message}`);
@@ -786,41 +877,42 @@ class TaskService {
    */
   async validateBuild(projectPath) {
     try {
-      const { exec } = require('child_process');
-      const util = require('util');
+      const { exec } = require("child_process");
+      const util = require("util");
       const execAsync = util.promisify(exec);
 
-      logger.info('🔍 [TaskService] Running build validation...');
+      logger.info("🔍 [TaskService] Running build validation...");
 
       // Try common build commands
       const buildCommands = [
-        'npm run build',
-        'yarn build', 
-        'npm run test',
-        'yarn test',
-        'npm run lint',
-        'yarn lint'
+        "npm run build",
+        "yarn build",
+        "npm run test",
+        "yarn test",
+        "npm run lint",
+        "yarn lint",
       ];
 
-      let buildResult = { success: false, error: 'No build commands found' };
+      let buildResult = { error: "No build commands found" };
 
       for (const command of buildCommands) {
         try {
           logger.info(`🔍 [TaskService] Trying: ${command}`);
-          const { stdout, stderr } = await execAsync(command, { 
-            cwd: projectPath, 
-            timeout: 60000 // 1 minute timeout
+          const { stdout, stderr } = await execAsync(command, {
+            cwd: projectPath,
+            timeout: 60000, // 1 minute timeout
           });
-          
-          buildResult = { 
-            success: true, 
+
+          buildResult = {
             command,
             output: stdout,
             stderr: stderr,
             message: `Build validation passed with ${command}`,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
-          logger.info(`✅ [TaskService] Build validation successful with ${command}`);
+          logger.info(
+            `✅ [TaskService] Build validation successful with ${command}`,
+          );
           break;
         } catch (error) {
           logger.info(`❌ [TaskService] ${command} failed:`, error.message);
@@ -829,13 +921,12 @@ class TaskService {
       }
 
       return buildResult;
-
     } catch (error) {
-      logger.error('❌ [TaskService] Build validation error:', error);
+      logger.error("❌ [TaskService] Build validation error:", error);
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -870,26 +961,26 @@ Please fix the issues and let me know when you're done.`;
    * @returns {Promise<Object>} Commit result
    */
   async commitAndPushChanges(projectPath, branchName, task) {
-    const { exec } = require('child_process');
-    const util = require('util');
+    const { exec } = require("child_process");
+    const util = require("util");
     const execAsync = util.promisify(exec);
 
     try {
       // Add all changes
-      await execAsync('git add .', { cwd: projectPath });
-      
+      await execAsync("git add .", { cwd: projectPath });
+
       // Commit changes
       const commitMessage = `refactor: ${task.title}\n\n- ${task.description}\n- Task ID: ${task.id}\n- Automated refactoring`;
       await execAsync(`git commit -m "${commitMessage}"`, { cwd: projectPath });
-      
+
       // Push branch
       await execAsync(`git push origin ${branchName}`, { cwd: projectPath });
-      
+
       return {
         branchName,
         commitMessage,
-        status: 'pushed',
-        message: `Changes committed and pushed to branch: ${branchName}`
+        status: "pushed",
+        message: `Changes committed and pushed to branch: ${branchName}`,
       };
     } catch (error) {
       throw new Error(`Failed to commit and push changes: ${error.message}`);
@@ -903,31 +994,31 @@ Please fix the issues and let me know when you're done.`;
    * @returns {Promise<Object>} Rollback result
    */
   async rollbackChanges(projectPath, branchName) {
-    const { exec } = require('child_process');
-    const util = require('util');
-    const Logger = require('@logging/Logger');
-    const logger = new Logger('Logger');
+    const { exec } = require("child_process");
+    const util = require("util");
+    const Logger = require("@logging/Logger");
+    const logger = new Logger("Logger");
     const execAsync = util.promisify(exec);
 
     try {
       // Reset to previous commit
-      await execAsync('git reset --hard HEAD~1', { cwd: projectPath });
-      
+      await execAsync("git reset --hard HEAD~1", { cwd: projectPath });
+
       // Switch back to main branch
-      await execAsync('git checkout main', { cwd: projectPath });
-      
+      await execAsync("git checkout main", { cwd: projectPath });
+
       // Delete the refactoring branch
       await execAsync(`git branch -D ${branchName}`, { cwd: projectPath });
-      
+
       return {
-        status: 'rolled_back',
-        message: `Successfully rolled back changes and deleted branch: ${branchName}`
+        status: "rolled_back",
+        message: `Successfully rolled back changes and deleted branch: ${branchName}`,
       };
     } catch (error) {
-      logger.error('Failed to rollback changes:', error);
+      logger.error("Failed to rollback changes:", error);
       return {
-        status: 'rollback_failed',
-        error: error.message
+        status: "rollback_failed",
+        error: error.message,
       };
     }
   }
@@ -942,13 +1033,20 @@ Please fix the issues and let me know when you're done.`;
   async createMergeRequest(projectPath, branchName, task) {
     try {
       // Check if we have GitLab/GitHub integration
-      if (this.workflowGitService && this.workflowGitService.createMergeRequest) {
-        return await this.workflowGitService.createMergeRequest(projectPath, branchName, {
-          title: `Refactor: ${task.title}`,
-          description: this.buildMergeRequestDescription(task),
-          sourceBranch: branchName,
-          targetBranch: 'main'
-        });
+      if (
+        this.workflowGitService &&
+        this.workflowGitService.createMergeRequest
+      ) {
+        return await this.workflowGitService.createMergeRequest(
+          projectPath,
+          branchName,
+          {
+            title: `Refactor: ${task.title}`,
+            description: this.buildMergeRequestDescription(task),
+            sourceBranch: branchName,
+            targetBranch: "main",
+          },
+        );
       }
 
       // Fallback: Just log the merge request info
@@ -956,13 +1054,13 @@ Please fix the issues and let me know when you're done.`;
         title: `Refactor: ${task.title}`,
         description: this.buildMergeRequestDescription(task),
         sourceBranch: branchName,
-        targetBranch: 'main',
-        status: 'manual_creation_required',
-        message: 'Please create merge request manually in your Git platform'
+        targetBranch: "main",
+        status: "manual_creation_required",
+        message: "Please create merge request manually in your Git platform",
       };
 
-      logger.info('📋 [TaskService] Merge request info:', mergeRequestInfo);
-      
+      logger.info("📋 [TaskService] Merge request info:", mergeRequestInfo);
+
       return mergeRequestInfo;
     } catch (error) {
       throw new Error(`Failed to create merge request: ${error.message}`);
@@ -1014,7 +1112,7 @@ ${task.description}
   async getTaskExecution(taskId) {
     const task = await this.taskRepository.findById(taskId);
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     return {
@@ -1022,7 +1120,7 @@ ${task.description}
       status: task.status,
       progress: task.isCompleted() ? 100 : 50,
       startedAt: task.createdAt,
-      completedAt: task.completedAt
+      completedAt: task.completedAt,
     };
   }
 
@@ -1035,11 +1133,11 @@ ${task.description}
   async cancelTask(taskId, userId) {
     const task = await this.taskRepository.findById(taskId);
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     if (task.isCompleted()) {
-      throw new Error('Cannot cancel completed task');
+      throw new Error("Cannot cancel completed task");
     }
 
     task.updateStatus(TaskStatus.CANCELLED);
@@ -1057,11 +1155,15 @@ ${task.description}
    */
   async analyzeProjectAndGenerateTasks(projectId, projectPath, options = {}) {
     // Analyze project structure
-    const projectAnalysis = await this.projectAnalyzer.analyzeProject(projectPath);
-    
+    const projectAnalysis =
+      await this.projectAnalyzer.analyzeProject(projectPath);
+
     // Generate AI-powered suggestions
-    const aiSuggestions = await this.aiService.generateTaskSuggestions(projectAnalysis, options);
-    
+    const aiSuggestions = await this.aiService.generateTaskSuggestions(
+      projectAnalysis,
+      options,
+    );
+
     // Convert suggestions to tasks
     const tasks = [];
     for (const suggestion of aiSuggestions.suggestions) {
@@ -1072,10 +1174,10 @@ ${task.description}
         suggestion.priority || TaskPriority.MEDIUM,
         suggestion.type || TaskType.FEATURE,
         {
-          source: 'ai_analysis',
+          source: "ai_analysis",
           projectPath,
-          analysisId: projectAnalysis.id
-        }
+          analysisId: projectAnalysis.id,
+        },
       );
       tasks.push(task);
     }
@@ -1086,7 +1188,7 @@ ${task.description}
       analysis: projectAnalysis,
       tasks,
       aiSuggestions,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -1099,10 +1201,10 @@ ${task.description}
     // Mock implementation - in real implementation this would fetch from database
     return {
       id: analysisId,
-      projectType: 'nodejs',
-      complexity: 'medium',
+      projectType: "nodejs",
+      complexity: "medium",
       issues: [],
-      suggestions: []
+      suggestions: [],
     };
   }
 
@@ -1124,10 +1226,10 @@ ${task.description}
     return {
       projectId,
       projectPath,
-      status: 'running',
+      status: "running",
       tasksGenerated: 5,
       tasksCompleted: 0,
-      startedAt: new Date()
+      startedAt: new Date(),
     };
   }
 
@@ -1140,9 +1242,9 @@ ${task.description}
     // Mock implementation
     return {
       projectId,
-      status: 'idle',
+      status: "idle",
       lastRun: null,
-      totalRuns: 0
+      totalRuns: 0,
     };
   }
 
@@ -1167,7 +1269,7 @@ ${task.description}
   async generateScript(projectId, taskId, context, options = {}) {
     const task = await this.taskRepository.findById(taskId);
     if (!task || !task.belongsToProject(projectId)) {
-      throw new Error('Task not found or does not belong to project');
+      throw new Error("Task not found or does not belong to project");
     }
 
     return await this.aiService.generateScript(task, context, options);
@@ -1196,8 +1298,8 @@ ${task.description}
       scriptId,
       projectId,
       userId,
-      status: 'completed',
-      result: 'Script executed successfully'
+      status: "completed",
+      result: "Script executed successfully",
     };
   }
 
@@ -1209,7 +1311,7 @@ ${task.description}
     return {
       health: this.executionEngine.getHealthStatus(),
       metrics: this.executionEngine.getSystemMetrics(),
-      configuration: this.executionEngine.getConfiguration()
+      configuration: this.executionEngine.getConfiguration(),
     };
   }
 
@@ -1221,7 +1323,7 @@ ${task.description}
     return {
       queue: this.executionEngine.getQueueStatistics(),
       scheduler: this.executionEngine.getSchedulerStatistics(),
-      resourcePool: this.executionEngine.getResourcePoolStatus()
+      resourcePool: this.executionEngine.getResourcePoolStatus(),
     };
   }
 
@@ -1244,12 +1346,12 @@ ${task.description}
 
   /**
    * Review a task - analyze its current implementation status
-   * 
+   *
    * ⚠️  DEPRECATED: This method is deprecated in favor of queue-based execution.
-   * 
+   *
    * 📋 NEW FLOW (RECOMMENDED):
    * Use queueTaskForExecution() with taskMode: 'task-review' instead:
-   * 
+   *
    * ```javascript
    * await taskService.queueTaskForExecution(taskId, userId, {
    *   taskMode: 'task-review',
@@ -1257,10 +1359,10 @@ ${task.description}
    *   projectId: options.projectId
    * });
    * ```
-   * 
+   *
    * 🔄 QUEUE-BASED ARCHITECTURE:
    * Frontend → WorkflowController → TaskService.queueTaskForExecution() → QueueTaskExecutionService → Queue Management
-   * 
+   *
    * @param {string} taskId - Task ID to review
    * @param {string} userId - User ID
    * @param {Object} options - Review options
@@ -1268,99 +1370,122 @@ ${task.description}
    * @deprecated Use queueTaskForExecution() with taskMode: 'task-review' instead
    */
   async reviewTask(taskId, userId, options = {}) {
-    logger.info('🔍 [TaskService] reviewTask called with:', { taskId, userId, options });
-    
+    logger.info("🔍 [TaskService] reviewTask called with:", {
+      taskId,
+      userId,
+      options,
+    });
+
     try {
       // Get task from repository
       const task = await this.taskRepository.findById(taskId);
       if (!task) {
-        throw new Error('Task not found');
+        throw new Error("Task not found");
       }
 
-      logger.info('🔍 [TaskService] Found task for review:', {
+      logger.info("🔍 [TaskService] Found task for review:", {
         id: task.id,
-        projectId: task.projectId
+        projectId: task.projectId,
       });
 
       // Build task review prompt
       const reviewPrompt = await this.buildTaskReviewPrompt(task, options);
-      
-      logger.info('🔍 [TaskService] Built review prompt:', {
+
+      logger.info("🔍 [TaskService] Built review prompt:", {
         taskId: task.id,
         projectId: task.projectId,
-        promptLength: reviewPrompt.length
+        promptLength: reviewPrompt.length,
       });
 
       // Send message to IDE using IDESendMessageStep (with proper waitForResponse support)
       let stepResult;
       if (this.interfaceManager) {
-        logger.info('📤 [TaskService] Sending review message via IDESendMessageStep');
-        
+        logger.info(
+          "📤 [TaskService] Sending review message via IDESendMessageStep",
+        );
+
         // Get project path from options
         const projectPath = options?.projectPath;
         let targetPort = null;
-        
+
         // Step 1: Find correct IDE port for this project and switch BrowserManager
         if (this.interfaceManager) {
-          logger.info('🔍 [TaskService] Looking for IDE port for project:', projectPath);
-          
+          logger.info(
+            "🔍 [TaskService] Looking for IDE port for project:",
+            projectPath,
+          );
+
           // Find IDE port that matches this project path
-          const availableIDEs = await this.interfaceManager.getAvailableIDEs?.();
-          
+          const availableIDEs =
+            await this.interfaceManager.getAvailableIDEs?.();
+
           if (availableIDEs && projectPath) {
             // Look for IDE with matching workspace path
             for (const ide of availableIDEs) {
               if (ide.workspacePath === projectPath) {
                 targetPort = ide.port;
-                logger.info('✅ [TaskService] Found matching IDE port for project:', targetPort);
+                logger.info(
+                  "✅ [TaskService] Found matching IDE port for project:",
+                  targetPort,
+                );
                 break;
               }
             }
           }
-          
+
           if (!targetPort) {
-            throw new Error(`No IDE instance found for project path: ${projectPath}. Please start Cursor IDE for this project first.`);
+            throw new Error(
+              `No IDE instance found for project path: ${projectPath}. Please start Cursor IDE for this project first.`,
+            );
           }
-          
+
           if (targetPort) {
-            logger.info('🔄 [TaskService] Switching BrowserManager to port:', targetPort);
+            logger.info(
+              "🔄 [TaskService] Switching BrowserManager to port:",
+              targetPort,
+            );
             await this.interfaceManager.switchToPort?.(targetPort);
           }
-          
+
           // Step 2: Click New Chat for each task (CRITICAL!)
-          logger.info('🆕 [TaskService] Clicking New Chat before task review');
+          logger.info("🆕 [TaskService] Clicking New Chat before task review");
           await this.interfaceManager.clickNewChat?.();
         }
-        
+
         // Step 3: Use IDESendMessageStep with waitForResponse via StepRegistry
         if (!this.stepRegistry) {
-          throw new Error('StepRegistry not available for task review');
+          throw new Error("StepRegistry not available for task review");
         }
-        
+
         // Get active IDE information for context
         const activeIDE = await this.interfaceManager?.getActiveIDE?.();
         const port = targetPort || activeIDE?.port;
-        
+
         const stepData = {
           message: reviewPrompt,
           sessionId: `task-review-${taskId}`,
           requestedBy: userId,
           userId: userId,
-          projectId: options?.projectId || 'PIDEA',
+          projectId: options?.projectId || "PIDEA",
           workspacePath: options?.projectPath,
           port: port,
           activeIDE: activeIDE,
           waitForResponse: true,
-          timeout: 300000 // 5 minutes for AI analysis
+          timeout: 300000, // 5 minutes for AI analysis
         };
-        
-        logger.info('📤 [TaskService] Executing IDESendMessageStep via StepRegistry');
-        stepResult = await this.stepRegistry.executeStep('ide_send_message_step', stepData);
-        
+
+        logger.info(
+          "📤 [TaskService] Executing IDESendMessageStep via StepRegistry",
+        );
+        stepResult = await this.stepRegistry.executeStep(
+          "ide_send_message_step",
+          stepData,
+        );
+
         if (!stepResult.success) {
           throw new Error(`IDESendMessageStep failed: ${stepResult.error}`);
         }
-        
+
         // Step 4: Use ConfirmationStep for completion check (instead of duplicate IDESendMessageStep)
         // TEMPORARILY DISABLED - ConfirmationStep skipped for testing
         /*
@@ -1389,41 +1514,41 @@ ${task.description}
             logger.warn('⚠️ [TaskService] ConfirmationStep failed, using fallback:', confirmationError.message);
             // Fallback to simple completion check
             stepResult.completionCheck = {
-              success: true,
-              result: { success: true, completionPercentage: 100 }
+             
+              result: { completionPercentage: 100 }
             };
           }
         }
         */
-        
+
         // TEMPORARY: Skip ConfirmationStep and use fallback completion
         if (stepResult.success && stepResult.result?.success) {
-          logger.info('✅ [TaskService] AI review completed, skipping ConfirmationStep (temporarily disabled)');
+          logger.info(
+            "✅ [TaskService] AI review completed, skipping ConfirmationStep (temporarily disabled)",
+          );
           stepResult.completionCheck = {
-            success: true,
-            result: { success: true, completionPercentage: 100 }
+            result: { completionPercentage: 100 },
           };
         }
       } else {
-        throw new Error('CursorIDEService not available for task review');
+        throw new Error("CursorIDEService not available for task review");
       }
 
-      logger.info('✅ [TaskService] Task review completed', {
+      logger.info("✅ [TaskService] Task review completed", {
         taskId: task.id,
-        success: stepResult.success
+        success: stepResult.success,
       });
 
       return {
         success: stepResult.success,
         taskId: task.id,
         result: stepResult,
-        reviewPrompt: reviewPrompt
+        reviewPrompt: reviewPrompt,
       };
-
     } catch (error) {
-      logger.error('❌ [TaskService] Task review failed:', {
+      logger.error("❌ [TaskService] Task review failed:", {
         taskId,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -1437,45 +1562,66 @@ ${task.description}
    */
   async buildTaskPromptForStep(task, options = {}) {
     const { stepName, taskMode } = options;
-    
-    logger.info('🔍 [TaskService] buildTaskPromptForStep called', {
+
+    logger.info("🔍 [TaskService] buildTaskPromptForStep called", {
       taskId: task.id,
       stepName,
-      taskMode
+      taskMode,
     });
-    
+
     // ALWAYS load the SPECIFIC task from database by its ID - context.task might be outdated!
     let currentTask = task;
     if (this.taskRepository && task.id) {
       try {
         currentTask = await this.taskRepository.findById(task.id);
         if (currentTask) {
-          logger.info('✅ [TaskService] Loaded SPECIFIC task from database', {
+          logger.info("✅ [TaskService] Loaded SPECIFIC task from database", {
             taskId: currentTask.id,
             hasContent: !!currentTask.description,
-            contentLength: currentTask.description ? currentTask.description.length : 0,
-            syncedAt: currentTask.syncedAt || currentTask.lastSyncedAt
+            contentLength: currentTask.description
+              ? currentTask.description.length
+              : 0,
+            syncedAt: currentTask.syncedAt || currentTask.lastSyncedAt,
           });
         } else {
-          logger.warn('⚠️ [TaskService] SPECIFIC task not found in database, using context task', {
-            taskId: task.id
-          });
+          logger.warn(
+            "⚠️ [TaskService] SPECIFIC task not found in database, using context task",
+            {
+              taskId: task.id,
+            },
+          );
           currentTask = task;
         }
       } catch (error) {
-        logger.error('❌ [TaskService] Error loading SPECIFIC task from database, using context task:', error);
+        logger.error(
+          "❌ [TaskService] Error loading SPECIFIC task from database, using context task:",
+          error,
+        );
         currentTask = task;
       }
     }
-    
+
     // Determine prompt type based on step name and workflow type
-    if (taskMode === 'task-review' || stepName?.includes('review')) {
+    if (taskMode === "task-review" || stepName?.includes("review")) {
       return await this.buildTaskReviewPrompt(currentTask, options);
-    } else if (taskMode === 'task-check-state' || stepName?.includes('check-state') || stepName?.includes('checkstate')) {
+    } else if (
+      taskMode === "task-check-state" ||
+      stepName?.includes("check-state") ||
+      stepName?.includes("checkstate")
+    ) {
       return await this.buildTaskCheckStatePrompt(currentTask, options);
-    } else if (taskMode === 'task-create-workflow' || taskMode === 'advanced-task-create-workflow' || stepName?.includes('create') || stepName?.includes('task-create')) {
+    } else if (
+      taskMode === "task-create-workflow" ||
+      taskMode === "advanced-task-create-workflow" ||
+      stepName?.includes("create") ||
+      stepName?.includes("task-create")
+    ) {
       return await this.buildTaskCreatePrompt(currentTask, options);
-    } else if (taskMode === 'task-execute' || stepName?.includes('execute') || stepName?.includes('task-execute')) {
+    } else if (
+      taskMode === "task-execute" ||
+      stepName?.includes("execute") ||
+      stepName?.includes("task-execute")
+    ) {
       return await this.buildTaskExecutionPrompt(currentTask);
     } else {
       // Default to execution prompt
@@ -1490,40 +1636,48 @@ ${task.description}
    * @returns {Promise<string>} Creation prompt
    */
   async buildTaskCreatePrompt(task, options = {}) {
-    logger.info('🔍 [TaskService] buildTaskCreatePrompt called for task:', {
+    logger.info("🔍 [TaskService] buildTaskCreatePrompt called for task:", {
       id: task.id,
-      projectId: task.projectId
+      projectId: task.projectId,
     });
-    
+
     try {
       // Load task-create.md prompt using dynamic path resolution
-      let taskCreatePrompt = '';
+      let taskCreatePrompt = "";
       try {
-        logger.info('🔍 [TaskService] Loading task-create.md using dynamic path resolution...');
-        const taskCreatePath = this.getPromptPath('task-create');
+        logger.info(
+          "🔍 [TaskService] Loading task-create.md using dynamic path resolution...",
+        );
+        const taskCreatePath = this.getPromptPath("task-create");
         const fullPath = path.join(process.cwd(), taskCreatePath);
-        taskCreatePrompt = fs.readFileSync(fullPath, 'utf8');
-        logger.info('✅ [TaskService] Successfully loaded task-create.md');
+        taskCreatePrompt = fs.readFileSync(fullPath, "utf8");
+        logger.info("✅ [TaskService] Successfully loaded task-create.md");
       } catch (error) {
-        logger.error('❌ [TaskService] Error reading task-create.md from file:', error);
-        taskCreatePrompt = 'Create a comprehensive development task plan:\n\n';
+        logger.error(
+          "❌ [TaskService] Error reading task-create.md from file:",
+          error,
+        );
+        taskCreatePrompt = "Create a comprehensive development task plan:\n\n";
       }
 
       // For task creation, use taskData from options if available, otherwise use task
       const taskData = options.taskData || task;
-      
+
       // Combine task-create.md with task details
-      const finalPrompt = `${taskCreatePrompt}\n\n## Task Details:\n- **Title**: ${taskData.title || ''}\n- **Description**: ${taskData.description || ''}\n- **Type**: ${taskData.type?.value || taskData.type || 'feature'}\n- **Priority**: ${taskData.priority?.value || taskData.priority || 'medium'}\n- **Category**: ${taskData.category || 'general'}\n- **Project**: ${taskData.projectId || task.projectId || 'Current Project'}`;
-      
-      logger.info('✅ [TaskService] Final task create prompt generated', {
+      const finalPrompt = `${taskCreatePrompt}\n\n## Task Details:\n- **Title**: ${taskData.title || ""}\n- **Description**: ${taskData.description || ""}\n- **Type**: ${taskData.type?.value || taskData.type || "feature"}\n- **Priority**: ${taskData.priority?.value || taskData.priority || "medium"}\n- **Category**: ${taskData.category || "general"}\n- **Project**: ${taskData.projectId || task.projectId || "Current Project"}`;
+
+      logger.info("✅ [TaskService] Final task create prompt generated", {
         taskId: task.id,
         projectId: task.projectId,
-        promptLength: finalPrompt.length
+        promptLength: finalPrompt.length,
       });
-      
+
       return finalPrompt;
     } catch (error) {
-      logger.error('❌ [TaskService] Error building task create prompt:', error);
+      logger.error(
+        "❌ [TaskService] Error building task create prompt:",
+        error,
+      );
       throw error;
     }
   }
@@ -1537,46 +1691,56 @@ ${task.description}
   async buildTaskCheckStatePrompt(task, options = {}) {
     try {
       // Load task-check-state.md prompt using dynamic path resolution
-      let taskCheckStatePrompt = '';
+      let taskCheckStatePrompt = "";
       try {
-        logger.info('🔍 [TaskService] Loading task-check-state.md using dynamic path resolution...');
-        const taskCheckStatePath = this.getPromptPath('task-check-state');
+        logger.info(
+          "🔍 [TaskService] Loading task-check-state.md using dynamic path resolution...",
+        );
+        const taskCheckStatePath = this.getPromptPath("task-check-state");
         const fullPath = path.join(process.cwd(), taskCheckStatePath);
-        taskCheckStatePrompt = fs.readFileSync(fullPath, 'utf8');
-        logger.info('✅ [TaskService] Successfully loaded task-check-state.md');
+        taskCheckStatePrompt = fs.readFileSync(fullPath, "utf8");
+        logger.info("✅ [TaskService] Successfully loaded task-check-state.md");
       } catch (error) {
-        logger.error('❌ [TaskService] Error reading task-check-state.md from file:', error);
-        taskCheckStatePrompt = 'Check the current state of this task:\n\n';
+        logger.error(
+          "❌ [TaskService] Error reading task-check-state.md from file:",
+          error,
+        );
+        taskCheckStatePrompt = "Check the current state of this task:\n\n";
       }
 
       // Use synchronized content from database
-      let taskIndexContent = '';
+      let taskIndexContent = "";
       if (task.description) {
         taskIndexContent = task.description;
-        logger.info('✅ [TaskService] Using synchronized task content from database', {
-          taskId: task.id,
-          contentLength: taskIndexContent.length,
-          syncedAt: task.syncedAt || task.lastSyncedAt
-        });
+        logger.info(
+          "✅ [TaskService] Using synchronized task content from database",
+          {
+            taskId: task.id,
+            contentLength: taskIndexContent.length,
+            syncedAt: task.syncedAt || task.lastSyncedAt,
+          },
+        );
       } else {
-        logger.warn('⚠️ [TaskService] No synchronized content in database', {
-          taskId: task.id
+        logger.warn("⚠️ [TaskService] No synchronized content in database", {
+          taskId: task.id,
         });
       }
 
       // Combine task-check-state.md with task content
       const finalPrompt = `${taskCheckStatePrompt}\n\n${taskIndexContent}`;
-      
-      logger.info('✅ [TaskService] Final task check state prompt generated', {
+
+      logger.info("✅ [TaskService] Final task check state prompt generated", {
         taskId: task.id,
         projectId: task.projectId,
-        promptLength: finalPrompt.length
+        promptLength: finalPrompt.length,
       });
-      
+
       return finalPrompt;
-      
     } catch (error) {
-      logger.error('❌ [TaskService] Error building task check state prompt:', error);
+      logger.error(
+        "❌ [TaskService] Error building task check state prompt:",
+        error,
+      );
       throw error;
     }
   }
@@ -1590,46 +1754,56 @@ ${task.description}
   async buildTaskReviewPrompt(task, options = {}) {
     try {
       // Load task-review.md prompt using dynamic path resolution
-      let taskReviewPrompt = '';
+      let taskReviewPrompt = "";
       try {
-        logger.info('🔍 [TaskService] Loading task-review.md using dynamic path resolution...');
-        const taskReviewPath = this.getPromptPath('task-review');
+        logger.info(
+          "🔍 [TaskService] Loading task-review.md using dynamic path resolution...",
+        );
+        const taskReviewPath = this.getPromptPath("task-review");
         const fullPath = path.join(process.cwd(), taskReviewPath);
-        taskReviewPrompt = fs.readFileSync(fullPath, 'utf8');
-        logger.info('✅ [TaskService] Successfully loaded task-review.md');
+        taskReviewPrompt = fs.readFileSync(fullPath, "utf8");
+        logger.info("✅ [TaskService] Successfully loaded task-review.md");
       } catch (error) {
-        logger.error('❌ [TaskService] Error reading task-review.md from file:', error);
-        taskReviewPrompt = 'Review this task:\n\n';
+        logger.error(
+          "❌ [TaskService] Error reading task-review.md from file:",
+          error,
+        );
+        taskReviewPrompt = "Review this task:\n\n";
       }
 
       // Use synchronized content from database
-      let taskIndexContent = '';
+      let taskIndexContent = "";
       if (task.description) {
         taskIndexContent = task.description;
-        logger.info('✅ [TaskService] Using synchronized task content from database', {
-          taskId: task.id,
-          contentLength: taskIndexContent.length,
-          syncedAt: task.syncedAt || task.lastSyncedAt
-        });
+        logger.info(
+          "✅ [TaskService] Using synchronized task content from database",
+          {
+            taskId: task.id,
+            contentLength: taskIndexContent.length,
+            syncedAt: task.syncedAt || task.lastSyncedAt,
+          },
+        );
       } else {
-        logger.warn('⚠️ [TaskService] No synchronized content in database', {
-          taskId: task.id
+        logger.warn("⚠️ [TaskService] No synchronized content in database", {
+          taskId: task.id,
         });
       }
 
       // Combine task-review.md with task content
       const finalPrompt = `${taskReviewPrompt}\n\n${taskIndexContent}`;
-      
-      logger.info('✅ [TaskService] Final task review prompt generated', {
+
+      logger.info("✅ [TaskService] Final task review prompt generated", {
         taskId: task.id,
         projectId: task.projectId,
-        promptLength: finalPrompt.length
+        promptLength: finalPrompt.length,
       });
-      
+
       return finalPrompt;
-      
     } catch (error) {
-      logger.error('❌ [TaskService] Error building task review prompt:', error);
+      logger.error(
+        "❌ [TaskService] Error building task review prompt:",
+        error,
+      );
       throw error;
     }
   }
@@ -1660,4 +1834,4 @@ ${task.description}
   }
 }
 
-module.exports = TaskService; 
+module.exports = TaskService;

@@ -1,7 +1,7 @@
 /**
  * VersionController - API controller for version management operations
  * Handles HTTP requests for version management endpoints
- * 
+ *
  * TODO: Update routes to use project-specific endpoints:
  * - /api/projects/:projectId/versions/bump
  * - /api/projects/:projectId/versions/current
@@ -12,19 +12,21 @@
  * - /api/projects/:projectId/versions/ai-analysis
  */
 
-const Logger = require('@logging/Logger');
-const VersionManagementHandler = require('@application/handlers/categories/version/VersionManagementHandler');
-const VersionManagementCommand = require('@application/commands/categories/version/VersionManagementCommand');
-const logger = new Logger('VersionController');
+const Logger = require("@logging/Logger");
+const VersionManagementHandler = require("@application/handlers/categories/version/VersionManagementHandler");
+const VersionManagementCommand = require("@application/commands/categories/version/VersionManagementCommand");
+const logger = new Logger("VersionController");
 
 class VersionController {
   constructor(dependencies = {}) {
     // VersionManagementHandler MUST come from DI container - no direct instantiation!
     this.handler = dependencies.handler;
     this.logger = dependencies.logger || logger;
-    
+
     if (!this.handler) {
-      throw new Error('VersionController requires handler dependency from DI container');
+      throw new Error(
+        "VersionController requires handler dependency from DI container",
+      );
     }
   }
 
@@ -34,33 +36,34 @@ class VersionController {
    */
   async bumpVersion(req, res) {
     try {
-      const { task = '', projectPath, bumpType, context = {} } = req.body;
+      const { task = "", projectPath, bumpType, context = {} } = req.body;
 
       // Validate required fields (task is now optional)
       if (!projectPath) {
-        return res.badRequest('Project path is required', {timestamp: new Date()
+        return res.badRequest("Project path is required", {
+          timestamp: new Date(),
         });
       }
 
       // Check if this is a dry run
       const isDryRun = context.dryRun === true;
-      
+
       if (isDryRun) {
         // Create dry run command
         const command = VersionManagementCommand.performDryRun({
-          task: task || 'Auto-detected changes',
+          task: task || "Auto-detected changes",
           projectPath,
           bumpType,
-          context: { 
-            ...context, 
+          context: {
+            ...context,
             userId: req.user?.id,
-            autoDetectChanges: !task || !task.trim() // Auto-detect if no task provided
-          }
+            autoDetectChanges: !task || !task.trim(), // Auto-detect if no task provided
+          },
         });
-        
+
         // Execute dry run command
         const result = await this.handler.handle(command);
-        
+
         if (result.success) {
           res.status(200).json(result);
         } else {
@@ -69,34 +72,32 @@ class VersionController {
       } else {
         // Create normal bump version command
         const command = VersionManagementCommand.bumpVersion({
-          task: task || 'Auto-detected changes',
+          task: task || "Auto-detected changes",
           projectPath,
           bumpType,
-          context: { 
-            ...context, 
+          context: {
+            ...context,
             userId: req.user?.id,
-            autoDetectChanges: !task || !task.trim() // Auto-detect if no task provided
-          }
+            autoDetectChanges: !task || !task.trim(), // Auto-detect if no task provided
+          },
         });
 
         // Execute command
         const result = await this.handler.handle(command);
-        
+
         if (result.success) {
           res.status(200).json(result);
         } else {
           res.status(400).json(result);
         }
       }
-
     } catch (error) {
-      this.logger.error('Error in bumpVersion endpoint', {
+      this.logger.error("Error in bumpVersion endpoint", {
         error: error.message,
-        body: req.body
+        body: req.body,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -109,12 +110,15 @@ class VersionController {
       const { projectPath } = req.query;
 
       if (!projectPath) {
-        return res.badRequest('Project path is required', {timestamp: new Date()
+        return res.badRequest("Project path is required", {
+          timestamp: new Date(),
         });
       }
 
       // Create command
-      const command = VersionManagementCommand.getCurrentVersion({ projectPath });
+      const command = VersionManagementCommand.getCurrentVersion({
+        projectPath,
+      });
 
       // Execute command
       const result = await this.handler.handle(command);
@@ -124,15 +128,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in getCurrentVersion endpoint', {
+      this.logger.error("Error in getCurrentVersion endpoint", {
         error: error.message,
-        query: req.query
+        query: req.query,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -155,15 +157,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in getVersionHistory endpoint', {
+      this.logger.error("Error in getVersionHistory endpoint", {
         error: error.message,
-        query: req.query
+        query: req.query,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -176,8 +176,7 @@ class VersionController {
       const { version } = req.body;
 
       if (!version) {
-        return res.badRequest('Version is required', {timestamp: new Date()
-        });
+        return res.badRequest("Version is required", { timestamp: new Date() });
       }
 
       // Create command
@@ -191,15 +190,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in validateVersion endpoint', {
+      this.logger.error("Error in validateVersion endpoint", {
         error: error.message,
-        body: req.body
+        body: req.body,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -212,12 +209,16 @@ class VersionController {
       const { version1, version2 } = req.body;
 
       if (!version1 || !version2) {
-        return res.badRequest('Both version1 and version2 are required', {timestamp: new Date()
+        return res.badRequest("Both version1 and version2 are required", {
+          timestamp: new Date(),
         });
       }
 
       // Create command
-      const command = VersionManagementCommand.compareVersions({ version1, version2 });
+      const command = VersionManagementCommand.compareVersions({
+        version1,
+        version2,
+      });
 
       // Execute command
       const result = await this.handler.handle(command);
@@ -227,15 +228,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in compareVersions endpoint', {
+      this.logger.error("Error in compareVersions endpoint", {
         error: error.message,
-        body: req.body
+        body: req.body,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -248,7 +247,8 @@ class VersionController {
       const { task, projectPath, context } = req.body;
 
       if (!task || !projectPath) {
-        return res.badRequest('Task and projectPath are required', {timestamp: new Date()
+        return res.badRequest("Task and projectPath are required", {
+          timestamp: new Date(),
         });
       }
 
@@ -256,7 +256,7 @@ class VersionController {
       const command = VersionManagementCommand.determineBumpType({
         task,
         projectPath,
-        context: { ...context, userId: req.user?.id }
+        context: { ...context, userId: req.user?.id },
       });
 
       // Execute command
@@ -267,15 +267,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in determineBumpType endpoint', {
+      this.logger.error("Error in determineBumpType endpoint", {
         error: error.message,
-        body: req.body
+        body: req.body,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -296,14 +294,12 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in getLatestVersion endpoint', {
-        error: error.message
+      this.logger.error("Error in getLatestVersion endpoint", {
+        error: error.message,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -315,8 +311,9 @@ class VersionController {
     try {
       const { config } = req.body;
 
-      if (!config || typeof config !== 'object') {
-        return res.badRequest('Config object is required', {timestamp: new Date()
+      if (!config || typeof config !== "object") {
+        return res.badRequest("Config object is required", {
+          timestamp: new Date(),
         });
       }
 
@@ -331,15 +328,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in updateConfiguration endpoint', {
+      this.logger.error("Error in updateConfiguration endpoint", {
         error: error.message,
-        body: req.body
+        body: req.body,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -360,14 +355,12 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in getConfiguration endpoint', {
-        error: error.message
+      this.logger.error("Error in getConfiguration endpoint", {
+        error: error.message,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -377,36 +370,44 @@ class VersionController {
    */
   async getAIAnalysis(req, res) {
     try {
-      const { task = '', projectPath, context = {}, bumpType = '', customVersion = '' } = req.body;
+      const {
+        task = "",
+        projectPath,
+        context = {},
+        bumpType = "",
+        customVersion = "",
+      } = req.body;
 
       if (!projectPath) {
-        return res.badRequest('Project path is required', {timestamp: new Date()
+        return res.badRequest("Project path is required", {
+          timestamp: new Date(),
         });
       }
 
       // Check if everything is already provided - no AI needed
-      if (task && task.trim() && bumpType && bumpType !== 'auto') {
+      if (task && task.trim() && bumpType && bumpType !== "auto") {
         return res.success({
           data: {
             recommendedType: bumpType,
             confidence: 1.0,
-            reasoning: 'All information provided by user - no AI analysis needed',
+            reasoning:
+              "All information provided by user - no AI analysis needed",
             autoDetected: false,
-            sources: ['user-input']
+            sources: ["user-input"],
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
       // Only use AI if something is missing
-      const command = VersionManagementCommand.getAIAnalysis({ 
-        task: task || '', // Allow empty task for auto-detection
-        projectPath, 
+      const command = VersionManagementCommand.getAIAnalysis({
+        task: task || "", // Allow empty task for auto-detection
+        projectPath,
         context: {
           ...context,
           autoDetectChanges: !task || !task.trim(), // Auto-detect if no task provided
-          fillMissingOnly: !!(task && task.trim()) // Only fill missing info if task provided
-        }
+          fillMissingOnly: !!(task && task.trim()), // Only fill missing info if task provided
+        },
       });
 
       // Execute command
@@ -417,15 +418,13 @@ class VersionController {
       } else {
         res.status(400).json(result);
       }
-
     } catch (error) {
-      this.logger.error('Error in getAIAnalysis endpoint', {
+      this.logger.error("Error in getAIAnalysis endpoint", {
         error: error.message,
-        body: req.body
+        body: req.body,
       });
 
-      res.error('Internal server error', 500, {timestamp: new Date()
-      });
+      res.error("Internal server error", 500, { timestamp: new Date() });
     }
   }
 
@@ -435,15 +434,16 @@ class VersionController {
    */
   async healthCheck(req, res) {
     try {
-      res.success({status: 'healthy',
-        service: 'version-management',
+      res.success({
+        status: "healthy",
+        service: "version-management",
         timestamp: new Date(),
-        version: '1.0.0'
+        version: "1.0.0",
       });
     } catch (error) {
       res.error(error.message, 500, {
-        status: 'unhealthy',
-        timestamp: new Date()
+        status: "unhealthy",
+        timestamp: new Date(),
       });
     }
   }

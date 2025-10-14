@@ -120,7 +120,6 @@ class VersionManagementMigration {
       this.logger.info('Migration completed successfully');
       
       return {
-        success: true,
         timestamp: new Date(),
         steps: [
           'backup_created',

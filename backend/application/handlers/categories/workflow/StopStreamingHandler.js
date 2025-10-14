@@ -1,12 +1,11 @@
-
 /**
  * StopStreamingHandler
- * 
+ *
  * Handles StopStreamingCommand execution by stopping IDE screenshot streaming.
  */
-const StopStreamingCommand = require('@application/commands/categories/management/StopStreamingCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const StopStreamingCommand = require("@application/commands/categories/management/StopStreamingCommand");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class StopStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {
@@ -22,61 +21,68 @@ class StopStreamingHandler {
   async handle(command) {
     try {
       logger.info(`Processing command: ${command.commandId}`);
-      
+
       // Validate command
       command.validate();
-      
+
       // Check if session exists
-      const existingSession = this.screenshotStreamingService.getSession(command.sessionId);
+      const existingSession = this.screenshotStreamingService.getSession(
+        command.sessionId,
+      );
       if (!existingSession) {
         throw new Error(`Streaming session ${command.sessionId} not found`);
       }
-      
+
       // Stop streaming
-      const result = await this.screenshotStreamingService.stopStreamingSession(command.sessionId);
-      
+      const result = await this.screenshotStreamingService.stopStreamingSession(
+        command.sessionId,
+      );
+
       if (!result.success) {
-        throw new Error(result.error || 'Failed to stop streaming');
+        throw new Error(result.error || "Failed to stop streaming");
       }
-      
+
       // Emit event if event bus is available
       if (this.eventBus) {
-        this.eventBus.publish('streaming.stopped', {
+        this.eventBus.publish("streaming.stopped", {
           sessionId: command.sessionId,
           result: result,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
-      logger.info(`Successfully stopped streaming for session ${command.sessionId}`);
-      
+
+      logger.info(
+        `Successfully stopped streaming for session ${command.sessionId}`,
+      );
+
       return {
-        success: true,
         commandId: command.commandId,
         sessionId: command.sessionId,
         result: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      logger.error(`Error handling command ${command.commandId}:`, error.message);
-      
+      logger.error(
+        `Error handling command ${command.commandId}:`,
+        error.message,
+      );
+
       // Emit error event if event bus is available
       if (this.eventBus) {
-        this.eventBus.publish('streaming.error', {
+        this.eventBus.publish("streaming.error", {
           sessionId: command.sessionId,
           error: error.message,
           commandId: command.commandId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
+
       return {
-        success: false,
+       
         commandId: command.commandId,
         sessionId: command.sessionId,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -87,7 +93,10 @@ class StopStreamingHandler {
    * @returns {boolean} Whether handler can handle the command
    */
   canHandle(command) {
-    return command instanceof StopStreamingCommand || command.type === 'StopStreamingCommand';
+    return (
+      command instanceof StopStreamingCommand ||
+      command.type === "StopStreamingCommand"
+    );
   }
 
   /**
@@ -96,11 +105,11 @@ class StopStreamingHandler {
    */
   getMetadata() {
     return {
-      type: 'StopStreamingHandler',
-      supportedCommands: ['StopStreamingCommand'],
-      description: 'Handles IDE screenshot streaming stop commands'
+      type: "StopStreamingHandler",
+      supportedCommands: ["StopStreamingCommand"],
+      description: "Handles IDE screenshot streaming stop commands",
     };
   }
 }
 
-module.exports = StopStreamingHandler; 
+module.exports = StopStreamingHandler;

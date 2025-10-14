@@ -1,6 +1,6 @@
 /**
  * Project Entity - Domain Model
- * 
+ *
  * Represents a project in the PIDEA system with all its properties
  * and business rules for project management.
  */
@@ -8,13 +8,13 @@
 class Project {
   constructor(data = {}) {
     this.id = data.id || null;
-    this.name = data.name || '';
-    this.description = data.description || '';
-    this.workspacePath = data.workspacePath || '';
-    this.type = data.type || 'web';
-    this.framework = data.framework || '';
-    this.language = data.language || '';
-    this.packageManager = data.packageManager || '';
+    this.name = data.name || "";
+    this.description = data.description || "";
+    this.workspacePath = data.workspacePath || "";
+    this.type = data.type || "web";
+    this.framework = data.framework || "";
+    this.language = data.language || "";
+    this.packageManager = data.packageManager || "";
     this.frontendPort = data.frontendPort || null;
     this.backendPort = data.backendPort || null;
     this.databasePort = data.databasePort || null;
@@ -31,28 +31,37 @@ class Project {
     const errors = [];
 
     if (!this.name || this.name.trim().length === 0) {
-      errors.push('Project name is required');
+      errors.push("Project name is required");
     }
 
     if (!this.workspacePath || this.workspacePath.trim().length === 0) {
-      errors.push('Workspace path is required');
+      errors.push("Workspace path is required");
     }
 
-    if (this.frontendPort && (this.frontendPort < 1000 || this.frontendPort > 65535)) {
-      errors.push('Frontend port must be between 1000 and 65535');
+    if (
+      this.frontendPort &&
+      (this.frontendPort < 1000 || this.frontendPort > 65535)
+    ) {
+      errors.push("Frontend port must be between 1000 and 65535");
     }
 
-    if (this.backendPort && (this.backendPort < 1000 || this.backendPort > 65535)) {
-      errors.push('Backend port must be between 1000 and 65535');
+    if (
+      this.backendPort &&
+      (this.backendPort < 1000 || this.backendPort > 65535)
+    ) {
+      errors.push("Backend port must be between 1000 and 65535");
     }
 
-    if (this.databasePort && (this.databasePort < 1000 || this.databasePort > 65535)) {
-      errors.push('Database port must be between 1000 and 65535');
+    if (
+      this.databasePort &&
+      (this.databasePort < 1000 || this.databasePort > 65535)
+    ) {
+      errors.push("Database port must be between 1000 and 65535");
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -62,12 +71,20 @@ class Project {
    */
   update(data) {
     const allowedFields = [
-      'name', 'description', 'workspacePath', 'type', 'framework', 
-      'language', 'packageManager', 'frontendPort', 'backendPort', 
-      'databasePort', 'isActive'
+      "name",
+      "description",
+      "workspacePath",
+      "type",
+      "framework",
+      "language",
+      "packageManager",
+      "frontendPort",
+      "backendPort",
+      "databasePort",
+      "isActive",
     ];
 
-    allowedFields.forEach(field => {
+    allowedFields.forEach((field) => {
       if (data[field] !== undefined) {
         this[field] = data[field];
       }
@@ -95,7 +112,7 @@ class Project {
       databasePort: this.databasePort,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
-      isActive: this.isActive
+      isActive: this.isActive,
     };
   }
 

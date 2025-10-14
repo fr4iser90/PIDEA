@@ -462,7 +462,7 @@ describe('ProjectInterfaceController', () => {
 
   describe('startInterface', () => {
     it('should start interface successfully', async () => {
-      const result = { success: true, interface: { id: '1', status: 'running' } };
+      const result = { interface: { id: '1', status: 'running' } };
       mockInterfaceManager.startInterface.mockResolvedValue(result);
       
       const req = { params: { projectId: 'project1', interfaceId: '1' } };
@@ -478,7 +478,7 @@ describe('ProjectInterfaceController', () => {
     });
 
     it('should return error if start fails', async () => {
-      const result = { success: false, error: 'Interface already running' };
+      const result = { error: 'Interface already running' };
       mockInterfaceManager.startInterface.mockResolvedValue(result);
       
       const req = { params: { projectId: 'project1', interfaceId: '1' } };

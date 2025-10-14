@@ -8,7 +8,7 @@ class IDEInterface {
    * @returns {Promise<boolean>} True if IDE is running
    */
   async detect() {
-    throw new Error('detect() method must be implemented');
+    throw new Error("detect() method must be implemented");
   }
 
   /**
@@ -18,7 +18,7 @@ class IDEInterface {
    * @returns {Promise<Object>} IDE startup result
    */
   async start(workspacePath = null, options = {}) {
-    throw new Error('start() method must be implemented');
+    throw new Error("start() method must be implemented");
   }
 
   /**
@@ -26,7 +26,7 @@ class IDEInterface {
    * @returns {Promise<Object>} IDE stop result
    */
   async stop() {
-    throw new Error('stop() method must be implemented');
+    throw new Error("stop() method must be implemented");
   }
 
   /**
@@ -34,7 +34,7 @@ class IDEInterface {
    * @returns {Promise<Object>} IDE status information
    */
   async getStatus() {
-    throw new Error('getStatus() method must be implemented');
+    throw new Error("getStatus() method must be implemented");
   }
 
   /**
@@ -42,7 +42,7 @@ class IDEInterface {
    * @returns {Promise<string>} IDE version
    */
   async getVersion() {
-    throw new Error('getVersion() method must be implemented');
+    throw new Error("getVersion() method must be implemented");
   }
 
   /**
@@ -50,7 +50,7 @@ class IDEInterface {
    * @returns {Promise<Array>} List of available features
    */
   async getFeatures() {
-    throw new Error('getFeatures() method must be implemented');
+    throw new Error("getFeatures() method must be implemented");
   }
 
   /**
@@ -60,7 +60,7 @@ class IDEInterface {
    * @returns {Promise<Object>} Command execution result
    */
   async executeCommand(command, options = {}) {
-    throw new Error('executeCommand() method must be implemented');
+    throw new Error("executeCommand() method must be implemented");
   }
 
   /**
@@ -68,7 +68,7 @@ class IDEInterface {
    * @returns {Promise<Object>} DOM structure
    */
   async getDOM() {
-    throw new Error('getDOM() method must be implemented');
+    throw new Error("getDOM() method must be implemented");
   }
 
   /**
@@ -79,7 +79,7 @@ class IDEInterface {
    * @returns {Promise<Object>} Interaction result
    */
   async interact(selector, action, options = {}) {
-    throw new Error('interact() method must be implemented');
+    throw new Error("interact() method must be implemented");
   }
 
   /**
@@ -89,7 +89,7 @@ class IDEInterface {
    * @returns {Promise<Object>} Message result
    */
   async sendMessage(message, options = {}) {
-    throw new Error('sendMessage() method must be implemented');
+    throw new Error("sendMessage() method must be implemented");
   }
 
   /**
@@ -97,7 +97,7 @@ class IDEInterface {
    * @returns {Promise<string>} Workspace path
    */
   async getWorkspacePath() {
-    throw new Error('getWorkspacePath() method must be implemented');
+    throw new Error("getWorkspacePath() method must be implemented");
   }
 
   /**
@@ -106,7 +106,7 @@ class IDEInterface {
    * @returns {Promise<Object>} Switch result
    */
   async switchToPort(port) {
-    throw new Error('switchToPort() method must be implemented');
+    throw new Error("switchToPort() method must be implemented");
   }
 
   /**
@@ -114,7 +114,7 @@ class IDEInterface {
    * @returns {number|null} Active port number
    */
   getActivePort() {
-    throw new Error('getActivePort() method must be implemented');
+    throw new Error("getActivePort() method must be implemented");
   }
 
   /**
@@ -122,7 +122,7 @@ class IDEInterface {
    * @returns {Promise<string|null>} Terminal output URL
    */
   async monitorTerminalOutput() {
-    throw new Error('monitorTerminalOutput() method must be implemented');
+    throw new Error("monitorTerminalOutput() method must be implemented");
   }
 
   /**
@@ -131,7 +131,7 @@ class IDEInterface {
    * @returns {Promise<string|null>} User app URL
    */
   async getUserAppUrlForPort(port = null) {
-    throw new Error('getUserAppUrlForPort() method must be implemented');
+    throw new Error("getUserAppUrlForPort() method must be implemented");
   }
 
   /**
@@ -140,7 +140,9 @@ class IDEInterface {
    * @returns {Promise<string|null>} Dev server URL
    */
   async detectDevServerFromPackageJson(workspacePath = null) {
-    throw new Error('detectDevServerFromPackageJson() method must be implemented');
+    throw new Error(
+      "detectDevServerFromPackageJson() method must be implemented",
+    );
   }
 
   /**
@@ -150,7 +152,7 @@ class IDEInterface {
    * @returns {Promise<Object>} Refactoring result
    */
   async applyRefactoring(filePath, refactoredCode) {
-    throw new Error('applyRefactoring() method must be implemented');
+    throw new Error("applyRefactoring() method must be implemented");
   }
 
   /**
@@ -160,7 +162,7 @@ class IDEInterface {
    * @returns {Promise<Object>} Task result
    */
   async sendTask(task, workspacePath = null) {
-    throw new Error('sendTask() method must be implemented');
+    throw new Error("sendTask() method must be implemented");
   }
 
   /**
@@ -171,8 +173,8 @@ class IDEInterface {
    * @returns {Promise<Object>} Auto mode result
    */
   async sendAutoModeTasks(tasks, projectAnalysis, workspacePath = null) {
-    throw new Error('sendAutoModeTasks() method must be implemented');
+    throw new Error("sendAutoModeTasks() method must be implemented");
   }
 }
 
-module.exports = IDEInterface; 
+module.exports = IDEInterface;

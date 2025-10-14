@@ -28,24 +28,24 @@ class AnalyzeAgainCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.workspacePath && typeof this.workspacePath !== 'string') {
-      throw new Error('Workspace path must be a string');
+    if (this.workspacePath && typeof this.workspacePath !== "string") {
+      throw new Error("Workspace path must be a string");
     }
 
-    if (typeof this.clearCache !== 'boolean') {
-      throw new Error('clearCache must be a boolean');
+    if (typeof this.clearCache !== "boolean") {
+      throw new Error("clearCache must be a boolean");
     }
 
-    if (typeof this.forceRefresh !== 'boolean') {
-      throw new Error('forceRefresh must be a boolean');
+    if (typeof this.forceRefresh !== "boolean") {
+      throw new Error("forceRefresh must be a boolean");
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -57,19 +57,19 @@ class AnalyzeAgainCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'AnalyzeAgainCommand',
+      type: "AnalyzeAgainCommand",
       userId: this.userId,
       workspacePath: this.workspacePath,
       clearCache: this.clearCache,
       forceRefresh: this.forceRefresh,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = AnalyzeAgainCommand; 
+module.exports = AnalyzeAgainCommand;

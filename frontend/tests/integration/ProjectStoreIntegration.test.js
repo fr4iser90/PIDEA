@@ -83,7 +83,6 @@ describe('ProjectStore Integration', () => {
 
       // Mock API response for project creation
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockProject
       });
 
@@ -223,7 +222,6 @@ describe('ProjectStore Integration', () => {
 
       // Mock backend response
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockProjects
       });
 
@@ -243,7 +241,7 @@ describe('ProjectStore Integration', () => {
     it('should handle backend errors gracefully', async () => {
       // Mock backend error
       mockApiCall.mockResolvedValue({
-        success: false,
+       
         error: 'Backend connection failed'
       });
 
@@ -266,12 +264,11 @@ describe('ProjectStore Integration', () => {
         callCount++;
         if (callCount < 3) {
           return Promise.resolve({
-            success: false,
+           
             error: 'Temporary failure'
           });
         }
         return Promise.resolve({
-          success: true,
           data: [{ id: 'project-1', name: 'Test Project' }]
         });
       });

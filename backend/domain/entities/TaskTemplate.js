@@ -2,9 +2,9 @@
  * TaskTemplate Entity
  * Manages reusable task templates with validation and business logic
  */
-const { v4: uuidv4 } = require('uuid');
-const TaskType = require('@value-objects/TaskType');
-const TaskPriority = require('@value-objects/TaskPriority');
+const { v4: uuidv4 } = require("uuid");
+const TaskType = require("@value-objects/TaskType");
+const TaskPriority = require("@value-objects/TaskPriority");
 
 class TaskTemplate {
   constructor(
@@ -18,7 +18,7 @@ class TaskTemplate {
     metadata = {},
     isActive = true,
     createdAt = new Date(),
-    updatedAt = new Date()
+    updatedAt = new Date(),
   ) {
     this._id = id;
     this._name = name;
@@ -35,28 +35,60 @@ class TaskTemplate {
     this._lastUsedAt = null;
     this._tags = [];
     this._category = null;
-    this._version = '1.0.0';
+    this._version = "1.0.0";
 
     this._validate();
   }
 
   // Getters
-  get id() { return this._id; }
-  get name() { return this._name; }
-  get description() { return this._description; }
-  get type() { return this._type; }
-  get priority() { return this._priority; }
-  get template() { return { ...this._template }; }
-  get variables() { return [...this._variables]; }
-  get metadata() { return { ...this._metadata }; }
-  get isActive() { return this._isActive; }
-  get createdAt() { return new Date(this._createdAt); }
-  get updatedAt() { return new Date(this._updatedAt); }
-  get usageCount() { return this._usageCount; }
-  get lastUsedAt() { return this._lastUsedAt ? new Date(this._lastUsedAt) : null; }
-  get tags() { return [...this._tags]; }
-  get category() { return this._category; }
-  get version() { return this._version; }
+  get id() {
+    return this._id;
+  }
+  get name() {
+    return this._name;
+  }
+  get description() {
+    return this._description;
+  }
+  get type() {
+    return this._type;
+  }
+  get priority() {
+    return this._priority;
+  }
+  get template() {
+    return { ...this._template };
+  }
+  get variables() {
+    return [...this._variables];
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get isActive() {
+    return this._isActive;
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
+  get updatedAt() {
+    return new Date(this._updatedAt);
+  }
+  get usageCount() {
+    return this._usageCount;
+  }
+  get lastUsedAt() {
+    return this._lastUsedAt ? new Date(this._lastUsedAt) : null;
+  }
+  get tags() {
+    return [...this._tags];
+  }
+  get category() {
+    return this._category;
+  }
+  get version() {
+    return this._version;
+  }
 
   // Domain methods
   isActive() {
@@ -84,29 +116,29 @@ class TaskTemplate {
   }
 
   hasRequiredVariables() {
-    return this._variables.some(variable => variable.required);
+    return this._variables.some((variable) => variable.required);
   }
 
   getRequiredVariables() {
-    return this._variables.filter(variable => variable.required);
+    return this._variables.filter((variable) => variable.required);
   }
 
   getOptionalVariables() {
-    return this._variables.filter(variable => !variable.required);
+    return this._variables.filter((variable) => !variable.required);
   }
 
   getVariableByName(name) {
-    return this._variables.find(variable => variable.name === name);
+    return this._variables.find((variable) => variable.name === name);
   }
 
   // Template instantiation
   instantiate(variableValues = {}) {
     this._validateVariableValues(variableValues);
-    
+
     const instantiatedTemplate = JSON.parse(JSON.stringify(this._template));
-    
+
     // Replace variables in template
-    this._variables.forEach(variable => {
+    this._variables.forEach((variable) => {
       const value = variableValues[variable.name] || variable.defaultValue;
       this._replaceVariableInObject(instantiatedTemplate, variable.name, value);
     });
@@ -116,29 +148,31 @@ class TaskTemplate {
       description: instantiatedTemplate.description,
       type: this._type.value,
       priority: this._priority.value,
-      estimatedDuration: instantiatedTemplate.estimatedDuration || this._type.getEstimatedDuration(),
+      estimatedDuration:
+        instantiatedTemplate.estimatedDuration ||
+        this._type.getEstimatedDuration(),
       metadata: {
         ...instantiatedTemplate.metadata,
         templateId: this._id,
         templateName: this._name,
         templateVersion: this._version,
-        variableValues
-      }
+        variableValues,
+      },
     };
   }
 
   _replaceVariableInObject(obj, variableName, value) {
     const placeholder = `{{${variableName}}}`;
-    
-    if (typeof obj === 'string') {
-      return obj.replace(new RegExp(placeholder, 'g'), value);
+
+    if (typeof obj === "string") {
+      return obj.replace(new RegExp(placeholder, "g"), value);
     }
-    
-    if (typeof obj === 'object' && obj !== null) {
+
+    if (typeof obj === "object" && obj !== null) {
       for (const key in obj) {
-        if (typeof obj[key] === 'string') {
-          obj[key] = obj[key].replace(new RegExp(placeholder, 'g'), value);
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        if (typeof obj[key] === "string") {
+          obj[key] = obj[key].replace(new RegExp(placeholder, "g"), value);
+        } else if (typeof obj[key] === "object" && obj[key] !== null) {
           this._replaceVariableInObject(obj[key], variableName, value);
         }
       }
@@ -176,7 +210,7 @@ class TaskTemplate {
   }
 
   incrementVersion() {
-    const [major, minor, patch] = this._version.split('.').map(Number);
+    const [major, minor, patch] = this._version.split(".").map(Number);
     this._version = `${major}.${minor}.${patch + 1}`;
     this._updatedAt = new Date();
   }
@@ -221,19 +255,21 @@ class TaskTemplate {
   // Variables management
   addVariable(variable) {
     this._validateVariable(variable);
-    
-    const existingIndex = this._variables.findIndex(v => v.name === variable.name);
+
+    const existingIndex = this._variables.findIndex(
+      (v) => v.name === variable.name,
+    );
     if (existingIndex >= 0) {
       this._variables[existingIndex] = variable;
     } else {
       this._variables.push(variable);
     }
-    
+
     this._updatedAt = new Date();
   }
 
   removeVariable(variableName) {
-    const index = this._variables.findIndex(v => v.name === variableName);
+    const index = this._variables.findIndex((v) => v.name === variableName);
     if (index > -1) {
       this._variables.splice(index, 1);
       this._updatedAt = new Date();
@@ -257,42 +293,59 @@ class TaskTemplate {
 
   // Validation
   _validate() {
-    if (!this._name || typeof this._name !== 'string' || this._name.trim().length === 0) {
-      throw new Error('Template name is required and must be a non-empty string');
+    if (
+      !this._name ||
+      typeof this._name !== "string" ||
+      this._name.trim().length === 0
+    ) {
+      throw new Error(
+        "Template name is required and must be a non-empty string",
+      );
     }
 
-    if (!this._description || typeof this._description !== 'string' || this._description.trim().length === 0) {
-      throw new Error('Template description is required and must be a non-empty string');
+    if (
+      !this._description ||
+      typeof this._description !== "string" ||
+      this._description.trim().length === 0
+    ) {
+      throw new Error(
+        "Template description is required and must be a non-empty string",
+      );
     }
 
-    if (!this._template || typeof this._template !== 'object') {
-      throw new Error('Template content is required and must be an object');
+    if (!this._template || typeof this._template !== "object") {
+      throw new Error("Template content is required and must be an object");
     }
 
     if (!this._template.title || !this._template.description) {
-      throw new Error('Template must contain title and description');
+      throw new Error("Template must contain title and description");
     }
 
-    this._variables.forEach(variable => this._validateVariable(variable));
+    this._variables.forEach((variable) => this._validateVariable(variable));
   }
 
   _validateVariable(variable) {
-    if (!variable.name || typeof variable.name !== 'string') {
-      throw new Error('Variable name is required and must be a string');
+    if (!variable.name || typeof variable.name !== "string") {
+      throw new Error("Variable name is required and must be a string");
     }
 
-    if (variable.type && !['string', 'number', 'boolean', 'array', 'object'].includes(variable.type)) {
-      throw new Error('Invalid variable type');
+    if (
+      variable.type &&
+      !["string", "number", "boolean", "array", "object"].includes(
+        variable.type,
+      )
+    ) {
+      throw new Error("Invalid variable type");
     }
 
     if (variable.required && variable.defaultValue !== undefined) {
-      throw new Error('Required variables cannot have default values');
+      throw new Error("Required variables cannot have default values");
     }
   }
 
   _validateVariableValues(variableValues) {
     const requiredVariables = this.getRequiredVariables();
-    
+
     for (const variable of requiredVariables) {
       if (!(variable.name in variableValues)) {
         throw new Error(`Required variable '${variable.name}' is missing`);
@@ -328,7 +381,7 @@ class TaskTemplate {
       version: this._version,
       requiresAI: this.requiresAI(),
       requiresExecution: this.requiresExecution(),
-      requiresHumanReview: this.requiresHumanReview()
+      requiresHumanReview: this.requiresHumanReview(),
     };
   }
 
@@ -344,7 +397,7 @@ class TaskTemplate {
       data.metadata,
       data.isActive,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
     );
   }
 
@@ -355,7 +408,7 @@ class TaskTemplate {
     template,
     variables = [],
     priority = TaskPriority.getDefault(),
-    metadata = {}
+    metadata = {},
   ) {
     return new TaskTemplate(
       null,
@@ -365,19 +418,25 @@ class TaskTemplate {
       priority,
       template,
       variables,
-      metadata
+      metadata,
     );
   }
 
-  static createVariable(name, type = 'string', required = false, defaultValue = undefined, description = '') {
+  static createVariable(
+    name,
+    type = "string",
+    required = false,
+    defaultValue = undefined,
+    description = "",
+  ) {
     return {
       name,
       type,
       required,
       defaultValue,
-      description
+      description,
     };
   }
 }
 
-module.exports = TaskTemplate; 
+module.exports = TaskTemplate;

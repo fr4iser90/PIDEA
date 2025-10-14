@@ -279,7 +279,6 @@ class InterfaceController {
     }));
 
     res.json({
-      success: true,
       data: interfaceData,
       meta: { total: interfaceData.length }
     });
@@ -294,7 +293,6 @@ class InterfaceController {
     );
 
     res.status(201).json({
-      success: true,
       data: {
         id: interfaceInstance.id,
         type: interfaceInstance.type,

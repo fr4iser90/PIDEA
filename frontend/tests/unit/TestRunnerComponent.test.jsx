@@ -89,7 +89,6 @@ describe('TestRunnerComponent', () => {
     fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        success: true,
         data: {
           config: {
             baseURL: 'http://localhost:3000',
@@ -236,8 +235,8 @@ describe('TestRunnerComponent', () => {
 
   test('displays test results', () => {
     const mockResults = [
-      { testId: 'test-1', success: true, duration: 1000 },
-      { testId: 'test-2', success: false, error: 'Test failed' }
+      { testId: 'test-1', duration: 1000 },
+      { testId: 'test-2', error: 'Test failed' }
     ];
     
     useTestRunner.mockReturnValue({

@@ -2,13 +2,13 @@
  * TestReportParser - Parse test output files into structured data for task generation
  * Parses test-report.md, coverage.md, and test-analysis-full.json
  */
-const fs = require('fs');
-const path = require('path');
-const ServiceLogger = require('@logging/ServiceLogger');
+const fs = require("fs");
+const path = require("path");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class TestReportParser {
   constructor() {
-    this.logger = new ServiceLogger('TestReportParser');
+    this.logger = new ServiceLogger("TestReportParser");
   }
 
   /**
@@ -18,85 +18,111 @@ class TestReportParser {
    */
   async parseAllTestOutputs(projectPath = process.cwd()) {
     try {
-      this.logger.info('Parsing all test output files...');
-      
+      this.logger.info("Parsing all test output files...");
+
       const results = {
         failingTests: [],
         coverageIssues: [],
         legacyTests: [],
         complexTests: [],
         summary: {},
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Parse test-report.md
-      const testReportPath = path.join(projectPath, 'test-report.md');
+      const testReportPath = path.join(projectPath, "test-report.md");
       if (fs.existsSync(testReportPath)) {
-        this.logger.info('Found test-report.md, parsing...');
+        this.logger.info("Found test-report.md, parsing...");
         const testReportData = await this.parseTestReport(testReportPath);
         results.failingTests = testReportData.failingTests;
         results.legacyTests = testReportData.legacyTests;
         results.complexTests = testReportData.complexTests;
         results.summary.testReport = testReportData.summary;
       } else {
-        this.logger.warn('test-report.md not found, skipping...');
+        this.logger.warn("test-report.md not found, skipping...");
       }
 
       // Parse test-report-full.md
-      const testReportFullPath = path.join(projectPath, 'test-report-full.md');
+      const testReportFullPath = path.join(projectPath, "test-report-full.md");
       if (fs.existsSync(testReportFullPath)) {
-        this.logger.info('Found test-report-full.md, parsing...');
-        const testReportFullData = await this.parseTestReport(testReportFullPath);
+        this.logger.info("Found test-report-full.md, parsing...");
+        const testReportFullData =
+          await this.parseTestReport(testReportFullPath);
         // Merge with existing data
-        results.failingTests = this.mergeTestData(results.failingTests, testReportFullData.failingTests);
-        results.legacyTests = this.mergeTestData(results.legacyTests, testReportFullData.legacyTests);
-        results.complexTests = this.mergeTestData(results.complexTests, testReportFullData.complexTests);
+        results.failingTests = this.mergeTestData(
+          results.failingTests,
+          testReportFullData.failingTests,
+        );
+        results.legacyTests = this.mergeTestData(
+          results.legacyTests,
+          testReportFullData.legacyTests,
+        );
+        results.complexTests = this.mergeTestData(
+          results.complexTests,
+          testReportFullData.complexTests,
+        );
       } else {
-        this.logger.warn('test-report-full.md not found, skipping...');
+        this.logger.warn("test-report-full.md not found, skipping...");
       }
 
       // Parse coverage.md
-      const coveragePath = path.join(projectPath, 'coverage.md');
+      const coveragePath = path.join(projectPath, "coverage.md");
       if (fs.existsSync(coveragePath)) {
-        this.logger.info('Found coverage.md, parsing...');
+        this.logger.info("Found coverage.md, parsing...");
         const coverageData = await this.parseCoverageReport(coveragePath);
         results.coverageIssues = coverageData.coverageIssues;
         results.summary.coverage = coverageData.summary;
       } else {
-        this.logger.warn('coverage.md not found, skipping...');
+        this.logger.warn("coverage.md not found, skipping...");
       }
 
       // Parse test-analysis-full.json
-      const analysisPath = path.join(projectPath, 'test-analysis-full.json');
+      const analysisPath = path.join(projectPath, "test-analysis-full.json");
       if (fs.existsSync(analysisPath)) {
-        this.logger.info('Found test-analysis-full.json, parsing...');
+        this.logger.info("Found test-analysis-full.json, parsing...");
         const analysisData = await this.parseAnalysisJson(analysisPath);
         results.summary.analysis = analysisData.summary;
         // Merge with existing data
-        results.failingTests = this.mergeTestData(results.failingTests, analysisData.failingTests);
-        results.legacyTests = this.mergeTestData(results.legacyTests, analysisData.legacyTests);
+        results.failingTests = this.mergeTestData(
+          results.failingTests,
+          analysisData.failingTests,
+        );
+        results.legacyTests = this.mergeTestData(
+          results.legacyTests,
+          analysisData.legacyTests,
+        );
       } else {
-        this.logger.warn('test-analysis-full.json not found, skipping...');
+        this.logger.warn("test-analysis-full.json not found, skipping...");
       }
 
       // Parse test-data.json (from test:export)
-      const testDataPath = path.join(projectPath, 'test-data.json');
+      const testDataPath = path.join(projectPath, "test-data.json");
       if (fs.existsSync(testDataPath)) {
-        this.logger.info('Found test-data.json, parsing...');
+        this.logger.info("Found test-data.json, parsing...");
         const testData = await this.parseTestDataJson(testDataPath);
         // Merge with existing data
-        results.failingTests = this.mergeTestData(results.failingTests, testData.failingTests);
-        results.legacyTests = this.mergeTestData(results.legacyTests, testData.legacyTests);
-        results.complexTests = this.mergeTestData(results.complexTests, testData.complexTests);
+        results.failingTests = this.mergeTestData(
+          results.failingTests,
+          testData.failingTests,
+        );
+        results.legacyTests = this.mergeTestData(
+          results.legacyTests,
+          testData.legacyTests,
+        );
+        results.complexTests = this.mergeTestData(
+          results.complexTests,
+          testData.complexTests,
+        );
       } else {
-        this.logger.warn('test-data.json not found, skipping...');
+        this.logger.warn("test-data.json not found, skipping...");
       }
 
-      this.logger.info(`Parsed ${results.failingTests.length} failing tests, ${results.coverageIssues.length} coverage issues, ${results.legacyTests.length} legacy tests, ${results.complexTests.length} complex tests`);
+      this.logger.info(
+        `Parsed ${results.failingTests.length} failing tests, ${results.coverageIssues.length} coverage issues, ${results.legacyTests.length} legacy tests, ${results.complexTests.length} complex tests`,
+      );
       return results;
-
     } catch (error) {
-      this.logger.error('Error parsing test outputs:', error.message);
+      this.logger.error("Error parsing test outputs:", error.message);
       throw error;
     }
   }
@@ -107,59 +133,59 @@ class TestReportParser {
    * @returns {Promise<Object>} Parsed test report data
    */
   async parseTestReport(filePath) {
-    const content = fs.readFileSync(filePath, 'utf8');
-    const lines = content.split('\n');
-    
+    const content = fs.readFileSync(filePath, "utf8");
+    const lines = content.split("\n");
+
     const result = {
       failingTests: [],
       legacyTests: [],
       complexTests: [],
-      summary: {}
+      summary: {},
     };
 
-    let currentSection = '';
-    
+    let currentSection = "";
+
     for (const line of lines) {
       // Parse summary section
-      if (line.includes('| Total Tests |')) {
+      if (line.includes("| Total Tests |")) {
         const match = line.match(/\| Total Tests \| (\d+) \|/);
         if (match) result.summary.totalTests = parseInt(match[1]);
       }
-      if (line.includes('| Failing |')) {
+      if (line.includes("| Failing |")) {
         const match = line.match(/\| Failing \| (\d+) \|/);
         if (match) result.summary.failingTests = parseInt(match[1]);
       }
-      if (line.includes('| Legacy |')) {
+      if (line.includes("| Legacy |")) {
         const match = line.match(/\| Legacy \| (\d+) \|/);
         if (match) result.summary.legacyTests = parseInt(match[1]);
       }
 
       // Parse failing tests section
-      if (line.includes('❌ Failing Tests')) {
-        currentSection = 'failing';
+      if (line.includes("❌ Failing Tests")) {
+        currentSection = "failing";
         continue;
       }
-      if (line.includes('🗑️ Legacy Tests')) {
-        currentSection = 'legacy';
+      if (line.includes("🗑️ Legacy Tests")) {
+        currentSection = "legacy";
         continue;
       }
-      if (line.includes('🧩 Complex Tests')) {
-        currentSection = 'complex';
+      if (line.includes("🧩 Complex Tests")) {
+        currentSection = "complex";
         continue;
       }
 
       // Parse table rows
-      if (line.includes('| `') && currentSection) {
+      if (line.includes("| `") && currentSection) {
         const testData = this.parseTestTableRow(line);
         if (testData) {
           switch (currentSection) {
-            case 'failing':
+            case "failing":
               result.failingTests.push(testData);
               break;
-            case 'legacy':
+            case "legacy":
               result.legacyTests.push(testData);
               break;
-            case 'complex':
+            case "complex":
               result.complexTests.push(testData);
               break;
           }
@@ -176,38 +202,42 @@ class TestReportParser {
    * @returns {Promise<Object>} Parsed coverage data
    */
   async parseCoverageReport(filePath) {
-    const content = fs.readFileSync(filePath, 'utf8');
-    const lines = content.split('\n');
-    
+    const content = fs.readFileSync(filePath, "utf8");
+    const lines = content.split("\n");
+
     const result = {
       coverageIssues: [],
-      summary: {}
+      summary: {},
     };
 
     let inFileDetails = false;
-    
+
     for (const line of lines) {
       // Parse summary
-      if (line.includes('Overall Coverage:')) {
+      if (line.includes("Overall Coverage:")) {
         const match = line.match(/Overall Coverage:\s*(\d+)%/);
         if (match) result.summary.overallCoverage = parseInt(match[1]);
       }
-      if (line.includes('Files Analyzed:')) {
+      if (line.includes("Files Analyzed:")) {
         const match = line.match(/Files Analyzed:\s*(\d+)/);
         if (match) result.summary.filesAnalyzed = parseInt(match[1]);
       }
 
       // Parse file details table
-      if (line.includes('| File | Functions | Lines | Branches | Average | Status |')) {
+      if (
+        line.includes(
+          "| File | Functions | Lines | Branches | Average | Status |",
+        )
+      ) {
         inFileDetails = true;
         continue;
       }
-      if (line.includes('## 🎯 Coverage Improvement Tasks')) {
+      if (line.includes("## 🎯 Coverage Improvement Tasks")) {
         inFileDetails = false;
         continue;
       }
 
-      if (inFileDetails && line.includes('| `') && line.includes('❌')) {
+      if (inFileDetails && line.includes("| `") && line.includes("❌")) {
         const coverageData = this.parseCoverageTableRow(line);
         if (coverageData) {
           result.coverageIssues.push(coverageData);
@@ -224,15 +254,15 @@ class TestReportParser {
    * @returns {Promise<Object>} Parsed analysis data
    */
   async parseAnalysisJson(filePath) {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const data = JSON.parse(content);
-    
+
     return {
       summary: data.summary,
       failingTests: data.failingTests || [],
       legacyTests: data.legacyTests || [],
       maintenanceTests: data.maintenanceTests || [],
-      complexTests: data.complexTests || []
+      complexTests: data.complexTests || [],
     };
   }
 
@@ -242,13 +272,13 @@ class TestReportParser {
    * @returns {Promise<Object>} Parsed test data
    */
   async parseTestDataJson(filePath) {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const data = JSON.parse(content);
-    
+
     const result = {
       failingTests: [],
       legacyTests: [],
-      complexTests: []
+      complexTests: [],
     };
 
     // Convert TestMetadata objects to test data format
@@ -257,11 +287,11 @@ class TestReportParser {
         const testData = {
           fileName: test.fileName,
           testName: test.testName,
-          error: test.getMetadata('lastError') || 'Unknown error',
+          error: test.getMetadata("lastError") || "Unknown error",
           healthScore: test.getHealthScore(),
           legacyScore: test.legacyScore,
           complexityScore: test.complexityScore,
-          source: 'test-data-export'
+          source: "test-data-export",
         };
 
         if (test.isFailing()) {
@@ -284,14 +314,16 @@ class TestReportParser {
    */
   parseTestTableRow(line) {
     // Match pattern: | `fileName` | `testName` | `error` | score% |
-    const match = line.match(/\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \| (\d+)% \|/);
+    const match = line.match(
+      /\| `([^`]+)` \| `([^`]+)` \| `([^`]+)` \| (\d+)% \|/,
+    );
     if (match) {
       return {
         fileName: match[1],
         testName: match[2],
         error: match[3],
         healthScore: parseInt(match[4]),
-        source: 'test-report'
+        source: "test-report",
       };
     }
     return null;
@@ -304,7 +336,9 @@ class TestReportParser {
    */
   parseCoverageTableRow(line) {
     // Match pattern: | `file` | func% | line% | branch% | avg% | ❌ |
-    const match = line.match(/\| `([^`]+)` \| (\d+)% \| (\d+)% \| (\d+)% \| (\d+)% \| ❌ \|/);
+    const match = line.match(
+      /\| `([^`]+)` \| (\d+)% \| (\d+)% \| (\d+)% \| (\d+)% \| ❌ \|/,
+    );
     if (match) {
       return {
         file: match[1],
@@ -312,7 +346,7 @@ class TestReportParser {
         lines: parseInt(match[3]),
         branches: parseInt(match[4]),
         average: parseInt(match[5]),
-        source: 'coverage-report'
+        source: "coverage-report",
       };
     }
     return null;
@@ -326,12 +360,14 @@ class TestReportParser {
    */
   mergeTestData(existing, newData) {
     const merged = [...existing];
-    
+
     for (const newTest of newData) {
-      const existingIndex = merged.findIndex(test => 
-        test.fileName === newTest.fileName && test.testName === newTest.testName
+      const existingIndex = merged.findIndex(
+        (test) =>
+          test.fileName === newTest.fileName &&
+          test.testName === newTest.testName,
       );
-      
+
       if (existingIndex >= 0) {
         // Merge metadata
         merged[existingIndex] = { ...merged[existingIndex], ...newTest };
@@ -339,9 +375,9 @@ class TestReportParser {
         merged.push(newTest);
       }
     }
-    
+
     return merged;
   }
 }
 
-module.exports = TestReportParser; 
+module.exports = TestReportParser;

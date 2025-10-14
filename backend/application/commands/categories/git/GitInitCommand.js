@@ -8,18 +8,18 @@ class GitInitCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitinitcommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
+
     this.bare = params.bare || false;
-    this.initialBranch = params.initialBranch || 'main';
+    this.initialBranch = params.initialBranch || "main";
   }
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     return true;
   }
 
@@ -28,7 +28,7 @@ class GitInitCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       bare: this.bare,
       initialBranch: this.initialBranch,
     };

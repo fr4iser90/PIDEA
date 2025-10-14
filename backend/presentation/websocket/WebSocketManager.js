@@ -1,8 +1,7 @@
-const WebSocket = require('ws');
-const AuthMiddleware = require('@auth/AuthMiddleware');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('WebSocketManager');
-
+const WebSocket = require("ws");
+const AuthMiddleware = require("@auth/AuthMiddleware");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("WebSocketManager");
 
 class WebSocketManager {
   constructor(server, eventBus, authMiddleware) {
@@ -21,27 +20,27 @@ class WebSocketManager {
   }
 
   initialize() {
-    logger.info('Initializing WebSocket server...');
+    logger.info("Initializing WebSocket server...");
 
-    this.wss = new WebSocket.Server({ 
+    this.wss = new WebSocket.Server({
       server: this.server,
-      path: '/ws'
+      path: "/ws",
     });
 
-    this.wss.on('connection', (ws, req) => {
+    this.wss.on("connection", (ws, req) => {
       this.handleConnection(ws, req);
     });
 
-    this.wss.on('error', (error) => {
-      logger.error('WebSocket server error:', error);
+    this.wss.on("error", (error) => {
+      logger.error("WebSocket server error:", error);
     });
 
-    logger.success('WebSocket server initialized');
+    logger.success("WebSocket server initialized");
   }
 
   async handleConnection(ws, req) {
     try {
-      logger.debug('New WebSocket connection attempt');
+      logger.debug("New WebSocket connection attempt");
 
       // Try to authenticate the connection, but don't require it initially
       const authResult = await this.authenticateConnection(ws, req);
@@ -56,7 +55,7 @@ class WebSocketManager {
 
         // Check connection limits for authenticated users
         if (!this.canUserConnect(userId)) {
-          ws.close(1008, 'Connection limit exceeded');
+          ws.close(1008, "Connection limit exceeded");
           return;
         }
 
@@ -64,32 +63,36 @@ class WebSocketManager {
         this.registerConnection(ws, userId, session.id);
 
         // Send welcome message
-        this.sendToClient(ws, 'connection-established', {
+        this.sendToClient(ws, "connection-established", {
           userId: userId,
           sessionId: session.id,
           timestamp: new Date().toISOString(),
           permissions: {
-            canSendMessages: user.hasPermission('chat:own'),
-            canAccessIDE: user.hasPermission('ide:own'),
-            canAccessFiles: user.hasPermission('read:own')
-          }
+            canSendMessages: user.hasPermission("chat:own"),
+            canAccessIDE: user.hasPermission("ide:own"),
+            canAccessFiles: user.hasPermission("read:own"),
+          },
         });
 
-        logger.info(`User connected (${this.getUserConnectionCount(userId)} connections)`);
+        logger.info(
+          `User connected (${this.getUserConnectionCount(userId)} connections)`,
+        );
       } else {
         // SECURITY: No anonymous connections allowed
-        logger.error('❌ WebSocketManager: Authentication failed - rejecting connection');
-        ws.close(1008, 'Authentication required');
+        logger.error(
+          "❌ WebSocketManager: Authentication failed - rejecting connection",
+        );
+        ws.close(1008, "Authentication required");
         return;
       }
 
       // Setup message handling
-      ws.on('message', (data) => {
+      ws.on("message", (data) => {
         this.handleMessage(ws, data, user);
       });
 
       // Setup disconnect handling
-      ws.on('close', (code, reason) => {
+      ws.on("close", (code, reason) => {
         if (userId) {
           this.handleDisconnect(ws, userId, code, reason);
         } else {
@@ -98,24 +101,23 @@ class WebSocketManager {
       });
 
       // Setup error handling
-      ws.on('error', (error) => {
+      ws.on("error", (error) => {
         logger.error(`WebSocket error:`, error);
         if (userId) {
-          this.handleDisconnect(ws, userId, 1011, 'Internal error');
+          this.handleDisconnect(ws, userId, 1011, "Internal error");
         } else {
-          this.handleAnonymousDisconnect(ws, 1011, 'Internal error');
+          this.handleAnonymousDisconnect(ws, 1011, "Internal error");
         }
       });
 
       // Setup ping/pong for connection health
       ws.isAlive = true;
-      ws.on('pong', () => {
+      ws.on("pong", () => {
         ws.isAlive = true;
       });
-
     } catch (error) {
-      logger.error('Connection setup error:', error);
-      ws.close(1011, 'Connection setup failed');
+      logger.error("Connection setup error:", error);
+      ws.close(1011, "Connection setup failed");
     }
   }
 
@@ -123,41 +125,44 @@ class WebSocketManager {
     try {
       // Extract token from query parameters or headers
       const token = this.extractTokenFromRequest(req);
-      
+
       if (!token) {
-        return { authenticated: false, error: 'No authentication token provided' };
+        return {
+          authenticated: false,
+          error: "No authentication token provided",
+        };
       }
 
       // Validate token using auth middleware
-      const { user, session } = await this.authMiddleware.authService.validateAccessToken(token);
-      
+      const { user, session } =
+        await this.authMiddleware.authService.validateAccessToken(token);
+
       if (!user || !session) {
-        return { authenticated: false, error: 'Invalid authentication token' };
+        return { authenticated: false, error: "Invalid authentication token" };
       }
 
       // Check if session is still active
       if (!session.isActive()) {
-        return { authenticated: false, error: 'Session expired' };
+        return { authenticated: false, error: "Session expired" };
       }
 
       return { authenticated: true, user, session };
-
     } catch (error) {
-      logger.error('Authentication error:', error);
-      return { authenticated: false, error: 'Authentication failed' };
+      logger.error("Authentication error:", error);
+      return { authenticated: false, error: "Authentication failed" };
     }
   }
 
   extractTokenFromRequest(req) {
     // From query parameters (primary method for WebSocket authentication)
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.searchParams.get('token')) {
-      return url.searchParams.get('token');
+    if (url.searchParams.get("token")) {
+      return url.searchParams.get("token");
     }
 
     // From headers (fallback)
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       return authHeader.substring(7);
     }
 
@@ -190,7 +195,7 @@ class WebSocketManager {
   // SECURITY: Anonymous connections removed - authentication required for all connections
 
   handleDisconnect(ws, userId, code, reason) {
-          logger.info(`User disconnected (code: ${code}, reason: ${reason})`);
+    logger.info(`User disconnected (code: ${code}, reason: ${reason})`);
 
     // Remove from user's connection set
     const userConnections = this.clients.get(userId);
@@ -213,41 +218,40 @@ class WebSocketManager {
       const userId = user ? user.id : null;
 
       // Rate limiting (use IP or connection ID for anonymous users)
-      const rateLimitKey = userId || ws._socket?.remoteAddress || 'anonymous';
+      const rateLimitKey = userId || ws._socket?.remoteAddress || "anonymous";
       if (!this.checkRateLimit(rateLimitKey)) {
-        this.sendToClient(ws, 'error', {
-          type: 'rate_limit_exceeded',
-          message: 'Too many messages sent'
+        this.sendToClient(ws, "error", {
+          type: "rate_limit_exceeded",
+          message: "Too many messages sent",
         });
         return;
       }
 
       // Validate message structure
       if (!this.validateMessage(message)) {
-        this.sendToClient(ws, 'error', {
-          type: 'invalid_message',
-          message: 'Invalid message format'
+        this.sendToClient(ws, "error", {
+          type: "invalid_message",
+          message: "Invalid message format",
         });
         return;
       }
 
       // Check permissions for authenticated users
       if (user && !this.checkMessagePermissions(message, user)) {
-        this.sendToClient(ws, 'error', {
-          type: 'permission_denied',
-          message: 'Insufficient permissions for this action'
+        this.sendToClient(ws, "error", {
+          type: "permission_denied",
+          message: "Insufficient permissions for this action",
         });
         return;
       }
 
       // Handle different message types
       await this.routeMessage(ws, message, user);
-
     } catch (error) {
-      logger.error('Message handling error:', error);
-      this.sendToClient(ws, 'error', {
-        type: 'internal_error',
-        message: 'Failed to process message'
+      logger.error("Message handling error:", error);
+      this.sendToClient(ws, "error", {
+        type: "internal_error",
+        message: "Failed to process message",
       });
     }
   }
@@ -259,7 +263,7 @@ class WebSocketManager {
     if (!userRateLimit || now > userRateLimit.resetTime) {
       this.userMessageCounts.set(userId, {
         count: 1,
-        resetTime: now + this.rateLimitWindow
+        resetTime: now + this.rateLimitWindow,
       });
       return true;
     }
@@ -273,10 +277,12 @@ class WebSocketManager {
   }
 
   validateMessage(message) {
-    return message && 
-           typeof message.type === 'string' && 
-           message.type.length > 0 &&
-           typeof message.data === 'object';
+    return (
+      message &&
+      typeof message.type === "string" &&
+      message.type.length > 0 &&
+      typeof message.data === "object"
+    );
   }
 
   checkMessagePermissions(message, user) {
@@ -284,11 +290,11 @@ class WebSocketManager {
 
     // Define permission requirements for different message types
     const permissionMap = {
-      'chat-message': 'chat:own',
-      'ide-command': 'ide:own',
-      'file-access': 'read:own',
-      'file-modify': 'write:own',
-      'admin-command': 'admin'
+      "chat-message": "chat:own",
+      "ide-command": "ide:own",
+      "file-access": "read:own",
+      "file-modify": "write:own",
+      "admin-command": "admin",
     };
 
     const requiredPermission = permissionMap[messageType];
@@ -296,7 +302,7 @@ class WebSocketManager {
       return true; // No specific permission required
     }
 
-    if (requiredPermission === 'admin') {
+    if (requiredPermission === "admin") {
       return user.isAdmin();
     }
 
@@ -307,51 +313,51 @@ class WebSocketManager {
     const { type, data } = message;
 
     switch (type) {
-      case 'authenticate':
+      case "authenticate":
         await this.handleAuthentication(ws, data, user);
         break;
 
-      case 'chat-message':
+      case "chat-message":
         if (!user) {
-          this.sendToClient(ws, 'error', {
-            type: 'authentication_required',
-            message: 'Authentication required for chat messages'
+          this.sendToClient(ws, "error", {
+            type: "authentication_required",
+            message: "Authentication required for chat messages",
           });
           return;
         }
         await this.handleChatMessage(ws, data, user);
         break;
 
-      case 'ide-command':
+      case "ide-command":
         if (!user) {
-          this.sendToClient(ws, 'error', {
-            type: 'authentication_required',
-            message: 'Authentication required for IDE commands'
+          this.sendToClient(ws, "error", {
+            type: "authentication_required",
+            message: "Authentication required for IDE commands",
           });
           return;
         }
         await this.handleIDECommand(ws, data, user);
         break;
 
-      case 'file-access':
+      case "file-access":
         if (!user) {
-          this.sendToClient(ws, 'error', {
-            type: 'authentication_required',
-            message: 'Authentication required for file access'
+          this.sendToClient(ws, "error", {
+            type: "authentication_required",
+            message: "Authentication required for file access",
           });
           return;
         }
         await this.handleFileAccess(ws, data, user);
         break;
 
-      case 'ping':
-        this.sendToClient(ws, 'pong', { timestamp: new Date().toISOString() });
+      case "ping":
+        this.sendToClient(ws, "pong", { timestamp: new Date().toISOString() });
         break;
 
       default:
-        this.sendToClient(ws, 'error', {
-          type: 'unknown_message_type',
-          message: `Unknown message type: ${type}`
+        this.sendToClient(ws, "error", {
+          type: "unknown_message_type",
+          message: `Unknown message type: ${type}`,
         });
     }
   }
@@ -359,22 +365,23 @@ class WebSocketManager {
   async handleAuthentication(ws, data, user) {
     try {
       const { token } = data;
-      
+
       if (!token) {
-        this.sendToClient(ws, 'error', {
-          type: 'authentication_failed',
-          message: 'No token provided'
+        this.sendToClient(ws, "error", {
+          type: "authentication_failed",
+          message: "No token provided",
         });
         return;
       }
 
       // Validate token
-      const authResult = await this.authMiddleware.authService.validateAccessToken(token);
-      
+      const authResult =
+        await this.authMiddleware.authService.validateAccessToken(token);
+
       if (!authResult.user || !authResult.session) {
-        this.sendToClient(ws, 'error', {
-          type: 'authentication_failed',
-          message: 'Invalid token'
+        this.sendToClient(ws, "error", {
+          type: "authentication_failed",
+          message: "Invalid token",
         });
         return;
       }
@@ -393,35 +400,34 @@ class WebSocketManager {
       }
       this.clients.get(userId).add(ws);
 
-      this.sendToClient(ws, 'authentication-success', {
+      this.sendToClient(ws, "authentication-success", {
         userId: authResult.user.id,
         sessionId: authResult.session.id,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-
     } catch (error) {
-      logger.error('Authentication error:', error);
-      this.sendToClient(ws, 'error', {
-        type: 'authentication_failed',
-        message: 'Authentication failed'
+      logger.error("Authentication error:", error);
+      this.sendToClient(ws, "error", {
+        type: "authentication_failed",
+        message: "Authentication failed",
       });
     }
   }
 
   async handleChatMessage(ws, data, user) {
     // Broadcast chat message to user's other connections
-    this.broadcastToUser(user.id, 'chat-message', {
+    this.broadcastToUser(user.id, "chat-message", {
       ...data,
       userId: user.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Emit event for other services
     if (this.eventBus) {
-      this.eventBus.emit('chat-message', {
+      this.eventBus.emit("chat-message", {
         ...data,
         userId: user.id,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -430,16 +436,15 @@ class WebSocketManager {
     // Handle IDE-specific commands
     if (this.ideMirrorController) {
       const result = await this.ideMirrorController.handleCommand(data, user);
-      this.sendToClient(ws, 'ide-response', result);
+      this.sendToClient(ws, "ide-response", result);
     }
   }
 
   async handleFileAccess(ws, data, user) {
     // Handle file access requests
     // This would typically involve checking file permissions
-    this.sendToClient(ws, 'file-response', {
-      success: true,
-      data: 'File access granted'
+    this.sendToClient(ws, "file-response", {
+      data: "File access granted",
     });
   }
 
@@ -457,10 +462,10 @@ class WebSocketManager {
     const message = JSON.stringify({
       event,
       data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
-    userConnections.forEach(ws => {
+    userConnections.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(message);
       }
@@ -473,12 +478,15 @@ class WebSocketManager {
     const message = JSON.stringify({
       event,
       data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
-    logger.debug(`Broadcasting ${event} to ${this.wss.clients.size} clients:`, data);
+    logger.debug(
+      `Broadcasting ${event} to ${this.wss.clients.size} clients:`,
+      data,
+    );
 
-    this.wss.clients.forEach(client => {
+    this.wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
       }
@@ -490,7 +498,7 @@ class WebSocketManager {
       const message = JSON.stringify({
         event,
         data,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       ws.send(message);
     }
@@ -502,7 +510,7 @@ class WebSocketManager {
       type: eventType,
       data,
       timestamp: Date.now(),
-      source: 'backend'
+      source: "backend",
     };
 
     if (userId) {
@@ -519,24 +527,32 @@ class WebSocketManager {
     this.broadcastRefreshEvent(eventType, data, userId);
   }
 
-  broadcastCacheInvalidation(componentType = null, reason = 'manual', userId = null) {
+  broadcastCacheInvalidation(
+    componentType = null,
+    reason = "manual",
+    userId = null,
+  ) {
     const invalidationData = {
       componentType,
       reason,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    this.broadcastRefreshEvent('cache:invalidate', invalidationData, userId);
+    this.broadcastRefreshEvent("cache:invalidate", invalidationData, userId);
   }
 
-  broadcastForceRefresh(componentType = null, reason = 'manual', userId = null) {
+  broadcastForceRefresh(
+    componentType = null,
+    reason = "manual",
+    userId = null,
+  ) {
     const refreshData = {
       componentType,
       reason,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
-    this.broadcastRefreshEvent('cache:refresh', refreshData, userId);
+    this.broadcastRefreshEvent("cache:refresh", refreshData, userId);
   }
 
   broadcastSystemEvent(eventType, data, userId = null) {
@@ -556,11 +572,16 @@ class WebSocketManager {
   // Health monitoring
   startHeartbeat() {
     setInterval(() => {
-      this.wss.clients.forEach(ws => {
+      this.wss.clients.forEach((ws) => {
         if (ws.isAlive === false) {
           const userInfo = this.userConnections.get(ws);
           if (userInfo) {
-            this.handleDisconnect(ws, userInfo.userId, 1000, 'Connection timeout');
+            this.handleDisconnect(
+              ws,
+              userInfo.userId,
+              1000,
+              "Connection timeout",
+            );
           }
           return ws.terminate();
         }
@@ -577,31 +598,33 @@ class WebSocketManager {
       totalConnections: this.connectionCount,
       activeUsers: this.clients.size,
       totalClients: this.wss.clients.size,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     };
   }
 
   getUserStats(userId) {
     const connectionCount = this.getUserConnectionCount(userId);
     const rateLimit = this.userMessageCounts.get(userId);
-    
+
     return {
       userId,
       connectionCount,
-      rateLimit: rateLimit ? {
-        count: rateLimit.count,
-        resetTime: rateLimit.resetTime,
-        remaining: Math.max(0, this.rateLimitMax - rateLimit.count)
-      } : null
+      rateLimit: rateLimit
+        ? {
+            count: rateLimit.count,
+            resetTime: rateLimit.resetTime,
+            remaining: Math.max(0, this.rateLimitMax - rateLimit.count),
+          }
+        : null,
     };
   }
 
   // Cleanup
   cleanup() {
-    logger.info('Cleaning up...');
-    
-    this.wss.clients.forEach(client => {
-      client.close(1000, 'Server shutdown');
+    logger.info("Cleaning up...");
+
+    this.wss.clients.forEach((client) => {
+      client.close(1000, "Server shutdown");
     });
 
     this.clients.clear();
@@ -627,25 +650,24 @@ class WebSocketManager {
   broadcastToTopic(topic, message) {
     try {
       const topicMessage = {
-        type: 'topic',
+        type: "topic",
         topic: topic,
         data: message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Send to all connected clients
-      this.wss.clients.forEach(client => {
+      this.wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           try {
             client.send(JSON.stringify(topicMessage));
           } catch (error) {
-            logger.error('Error sending topic message:', error.message);
+            logger.error("Error sending topic message:", error.message);
           }
         }
       });
-
     } catch (error) {
-      logger.error('Error broadcasting to topic:', error.message);
+      logger.error("Error broadcasting to topic:", error.message);
     }
   }
 
@@ -657,33 +679,35 @@ class WebSocketManager {
   async sendFrameData(sessionId, frameData) {
     try {
       const message = {
-        type: 'frame',
+        type: "frame",
         sessionId: sessionId,
         timestamp: frameData.timestamp,
         frameNumber: frameData.frameNumber,
         format: frameData.format,
         size: frameData.size,
         quality: frameData.quality,
-        data: frameData.data.toString('base64'), // Convert binary to base64
-        metadata: frameData.metadata
+        data: frameData.data.toString("base64"), // Convert binary to base64
+        metadata: frameData.metadata,
       };
 
       // Broadcast to all clients
-      this.broadcastToTopic(`mirror-${frameData.metadata.port}-frames`, message);
-
+      this.broadcastToTopic(
+        `mirror-${frameData.metadata.port}-frames`,
+        message,
+      );
     } catch (error) {
-      logger.error('Error sending frame data:', error.message);
+      logger.error("Error sending frame data:", error.message);
     }
   }
 
   getHealthStatus() {
     return {
-      status: 'healthy',
+      status: "healthy",
       connections: this.connectionCount,
       uptime: process.uptime(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
 
-module.exports = WebSocketManager; 
+module.exports = WebSocketManager;

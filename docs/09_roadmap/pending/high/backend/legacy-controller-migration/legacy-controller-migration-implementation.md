@@ -276,7 +276,7 @@ Migrate remaining legacy controllers to modern response patterns - no backward c
 #### Success Response Migration:
 ```javascript
 // FROM (Legacy):
-res.json({ success: true, data: result })
+res.json({ data: result })
 
 // TO (Modern):
 res.success(result)
@@ -285,7 +285,7 @@ res.success(result)
 #### Error Response Migration:
 ```javascript
 // FROM (Legacy):
-res.status(500).json({ success: false, error: 'Error message' })
+res.status(500).json({ error: 'Error message' })
 
 // TO (Modern):
 res.internalError('Error message')
@@ -294,7 +294,7 @@ res.internalError('Error message')
 #### Validation Error Migration:
 ```javascript
 // FROM (Legacy):
-res.status(400).json({ success: false, error: 'Validation failed' })
+res.status(400).json({ error: 'Validation failed' })
 
 // TO (Modern):
 res.validationError('Validation failed')
@@ -303,7 +303,7 @@ res.validationError('Validation failed')
 #### Created Response Migration:
 ```javascript
 // FROM (Legacy):
-res.status(201).json({ success: true, data: result })
+res.status(201).json({ data: result })
 
 // TO (Modern):
 res.created(result)
@@ -312,7 +312,7 @@ res.created(result)
 #### Unauthorized Response Migration:
 ```javascript
 // FROM (Legacy):
-res.status(401).json({ success: false, error: 'Authentication required' })
+res.status(401).json({ error: 'Authentication required' })
 
 // TO (Modern):
 res.unauthorized('Authentication required')
@@ -323,34 +323,34 @@ res.unauthorized('Authentication required')
 #### All Legacy Patterns to Replace:
 
 1. **Success with data wrapper:**
-   - `res.json({ success: true, data: X })` → `res.success(X)`
+   - `res.json({ data: X })` → `res.success(X)`
 
 2. **Success with data and timestamp:**
-   - `res.json({ success: true, data: X, timestamp: new Date().toISOString() })` → `res.success(X)`
+   - `res.json({ data: X, timestamp: new Date().toISOString() })` → `res.success(X)`
 
 3. **Success with message:**
-   - `res.json({ success: true, data: X, message: 'Y' })` → `res.success(X, 200, { message: 'Y' })`
+   - `res.json({ data: X, message: 'Y' })` → `res.success(X, 200, { message: 'Y' })`
 
 4. **Error 400 (Validation):**
-   - `res.status(400).json({ success: false, error: 'X' })` → `res.validationError('X')`
+   - `res.status(400).json({ error: 'X' })` → `res.validationError('X')`
 
 5. **Error 401 (Unauthorized):**
-   - `res.status(401).json({ success: false, error: 'X' })` → `res.unauthorized('X')`
+   - `res.status(401).json({ error: 'X' })` → `res.unauthorized('X')`
 
 6. **Error 404 (Not Found):**
-   - `res.status(404).json({ success: false, error: 'X' })` → `res.notFound('X')`
+   - `res.status(404).json({ error: 'X' })` → `res.notFound('X')`
 
 7. **Error 500 (Internal):**
-   - `res.status(500).json({ success: false, error: 'X' })` → `res.internalError('X')`
+   - `res.status(500).json({ error: 'X' })` → `res.internalError('X')`
 
 8. **Error with message field:**
-   - `res.status(500).json({ success: false, error: 'X', message: error.message })` → `res.internalError('X')`
+   - `res.status(500).json({ error: 'X', message: error.message })` → `res.internalError('X')`
 
 9. **Success with null error:**
-   - `res.json({ success: true, data: X, error: null })` → `res.success(X)`
+   - `res.json({ data: X, error: null })` → `res.success(X)`
 
 10. **Error with null data:**
-    - `res.status(500).json({ success: false, data: null, error: 'X' })` → `res.internalError('X')`
+    - `res.status(500).json({ data: null, error: 'X' })` → `res.internalError('X')`
 
 ## 17. References & Resources
 - **Technical Documentation**: API Response Modernization implementation

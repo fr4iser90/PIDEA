@@ -2,10 +2,10 @@
  * Task Entity - Project-based task management
  * Tasks are always associated with a specific project
  */
-const { v4: uuidv4 } = require('uuid');
-const TaskStatus = require('@value-objects/TaskStatus');
-const TaskPriority = require('@value-objects/TaskPriority');
-const TaskType = require('@value-objects/TaskType');
+const { v4: uuidv4 } = require("uuid");
+const TaskStatus = require("@value-objects/TaskStatus");
+const TaskPriority = require("@value-objects/TaskPriority");
+const TaskType = require("@value-objects/TaskType");
 
 class Task {
   constructor(
@@ -19,7 +19,7 @@ class Task {
     category,
     metadata = {},
     createdAt = new Date(),
-    updatedAt = new Date()
+    updatedAt = new Date(),
   ) {
     this.id = id;
     this._projectId = projectId;
@@ -48,27 +48,69 @@ class Task {
   }
 
   // Getters
-  get title() { return this._title; }
-  get description() { return this._description; }
-  get status() { return this._status; }
-  get priority() { return this._priority; }
-  get type() { return this._type; }
-  get category() { return this._category; }
-  get projectId() { return this._projectId; }
-  get metadata() { return { ...this._metadata }; }
-  get createdAt() { return new Date(this._createdAt); }
-  get updatedAt() { return new Date(this._updatedAt); }
-  get dependencies() { return [...this._dependencies]; }
-  get tags() { return [...this._tags]; }
-  get assignee() { return this._assignee; }
-  get dueDate() { return this._dueDate ? new Date(this._dueDate) : null; }
-  get startedAt() { return this._startedAt ? new Date(this._startedAt) : null; }
-  get completedAt() { return this._completedAt ? new Date(this._completedAt) : null; }
-  get progress() { return this._progress; }
-  get executionHistory() { return [...this._executionHistory]; }
-  get workflowContext() { return this._workflowContext; }
-  get layerAssignments() { return [...this._layerAssignments]; }
-  get layerStatus() { return { ...this._layerStatus }; }
+  get title() {
+    return this._title;
+  }
+  get description() {
+    return this._description;
+  }
+  get status() {
+    return this._status;
+  }
+  get priority() {
+    return this._priority;
+  }
+  get type() {
+    return this._type;
+  }
+  get category() {
+    return this._category;
+  }
+  get projectId() {
+    return this._projectId;
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
+  get updatedAt() {
+    return new Date(this._updatedAt);
+  }
+  get dependencies() {
+    return [...this._dependencies];
+  }
+  get tags() {
+    return [...this._tags];
+  }
+  get assignee() {
+    return this._assignee;
+  }
+  get dueDate() {
+    return this._dueDate ? new Date(this._dueDate) : null;
+  }
+  get startedAt() {
+    return this._startedAt ? new Date(this._startedAt) : null;
+  }
+  get completedAt() {
+    return this._completedAt ? new Date(this._completedAt) : null;
+  }
+  get progress() {
+    return this._progress;
+  }
+  get executionHistory() {
+    return [...this._executionHistory];
+  }
+  get workflowContext() {
+    return this._workflowContext;
+  }
+  get layerAssignments() {
+    return [...this._layerAssignments];
+  }
+  get layerStatus() {
+    return { ...this._layerStatus };
+  }
 
   // Domain methods
   isPending() {
@@ -100,7 +142,12 @@ class Task {
   }
 
   isOverdue() {
-    return this._dueDate && new Date() > this._dueDate && !this.isCompleted() && !this.isCancelled();
+    return (
+      this._dueDate &&
+      new Date() > this._dueDate &&
+      !this.isCompleted() &&
+      !this.isCancelled()
+    );
   }
 
   isHighPriority() {
@@ -152,7 +199,7 @@ class Task {
     this._status = this._status.transitionTo(TaskStatus.IN_PROGRESS);
     this._startedAt = new Date();
     this._updatedAt = new Date();
-    this._addExecutionHistory('started');
+    this._addExecutionHistory("started");
   }
 
   pause() {
@@ -162,7 +209,7 @@ class Task {
 
     this._status = this._status.transitionTo(TaskStatus.PAUSED);
     this._updatedAt = new Date();
-    this._addExecutionHistory('paused');
+    this._addExecutionHistory("paused");
   }
 
   resume() {
@@ -172,7 +219,7 @@ class Task {
 
     this._status = this._status.transitionTo(TaskStatus.IN_PROGRESS);
     this._updatedAt = new Date();
-    this._addExecutionHistory('resumed');
+    this._addExecutionHistory("resumed");
   }
 
   complete(result = null) {
@@ -183,24 +230,24 @@ class Task {
     this._status = this._status.transitionTo(TaskStatus.COMPLETED);
     this._completedAt = new Date();
     this._updatedAt = new Date();
-    
+
     if (result) {
       this._metadata.result = result;
     }
-    
-    this._addExecutionHistory('completed', result);
+
+    this._addExecutionHistory("completed", result);
   }
 
   fail(error = null) {
     this._status = this._status.transitionTo(TaskStatus.FAILED);
     this._updatedAt = new Date();
     this._completedAt = new Date();
-    
+
     if (error) {
       this._metadata.error = error;
     }
-    
-    this._addExecutionHistory('failed', error);
+
+    this._addExecutionHistory("failed", error);
   }
 
   cancel(reason = null) {
@@ -211,12 +258,12 @@ class Task {
     this._status = this._status.transitionTo(TaskStatus.CANCELLED);
     this._updatedAt = new Date();
     this._completedAt = new Date();
-    
+
     if (reason) {
       this._metadata.cancelReason = reason;
     }
-    
-    this._addExecutionHistory('cancelled', reason);
+
+    this._addExecutionHistory("cancelled", reason);
   }
 
   retry() {
@@ -226,33 +273,37 @@ class Task {
 
     this._status = this._status.transitionTo(TaskStatus.PENDING);
     this._updatedAt = new Date();
-    this._addExecutionHistory('retried');
+    this._addExecutionHistory("retried");
   }
 
   schedule(scheduledDate) {
     this._status = this._status.transitionTo(TaskStatus.SCHEDULED);
     this._metadata.scheduledDate = new Date(scheduledDate);
     this._updatedAt = new Date();
-    this._addExecutionHistory('scheduled', { scheduledDate });
+    this._addExecutionHistory("scheduled", { scheduledDate });
   }
 
   // Priority management
   upgradePriority() {
     this._priority = this._priority.upgrade();
     this._updatedAt = new Date();
-    this._addExecutionHistory('priority_upgraded', { newPriority: this._priority.value });
+    this._addExecutionHistory("priority_upgraded", {
+      newPriority: this._priority.value,
+    });
   }
 
   downgradePriority() {
     this._priority = this._priority.downgrade();
     this._updatedAt = new Date();
-    this._addExecutionHistory('priority_downgraded', { newPriority: this._priority.value });
+    this._addExecutionHistory("priority_downgraded", {
+      newPriority: this._priority.value,
+    });
   }
 
   setPriority(priority) {
     this._priority = new TaskPriority(priority);
     this._updatedAt = new Date();
-    this._addExecutionHistory('priority_changed', { newPriority: priority });
+    this._addExecutionHistory("priority_changed", { newPriority: priority });
   }
 
   // Dependencies management
@@ -299,26 +350,26 @@ class Task {
   assign(userId) {
     this._assignee = userId;
     this._updatedAt = new Date();
-    this._addExecutionHistory('assigned', { assignee: userId });
+    this._addExecutionHistory("assigned", { assignee: userId });
   }
 
   unassign() {
     this._assignee = null;
     this._updatedAt = new Date();
-    this._addExecutionHistory('unassigned');
+    this._addExecutionHistory("unassigned");
   }
 
   // Due date management
   setDueDate(dueDate) {
     this._dueDate = new Date(dueDate);
     this._updatedAt = new Date();
-    this._addExecutionHistory('due_date_set', { dueDate: this._dueDate });
+    this._addExecutionHistory("due_date_set", { dueDate: this._dueDate });
   }
 
   removeDueDate() {
     this._dueDate = null;
     this._updatedAt = new Date();
-    this._addExecutionHistory('due_date_removed');
+    this._addExecutionHistory("due_date_removed");
   }
 
   // Metadata management
@@ -349,7 +400,9 @@ class Task {
   setWorkflowContext(context) {
     this._workflowContext = context;
     this._updatedAt = new Date();
-    this._addExecutionHistory('workflow_context_set', { contextId: context?.id });
+    this._addExecutionHistory("workflow_context_set", {
+      contextId: context?.id,
+    });
   }
 
   getWorkflowContext() {
@@ -363,14 +416,16 @@ class Task {
   clearWorkflowContext() {
     this._workflowContext = null;
     this._updatedAt = new Date();
-    this._addExecutionHistory('workflow_context_cleared');
+    this._addExecutionHistory("workflow_context_cleared");
   }
 
   updateWorkflowContext(context) {
     if (this._workflowContext) {
       this._workflowContext = context;
       this._updatedAt = new Date();
-      this._addExecutionHistory('workflow_context_updated', { contextId: context?.id });
+      this._addExecutionHistory("workflow_context_updated", {
+        contextId: context?.id,
+      });
     }
   }
 
@@ -422,7 +477,7 @@ class Task {
 
     const actualDuration = this.getActualDuration();
     const estimatedDuration = this._type.getEstimatedDuration();
-    
+
     if (estimatedDuration === 0) {
       return 50; // Default progress for tasks without duration estimate
     }
@@ -432,22 +487,36 @@ class Task {
 
   // Business rules
   _validate() {
-    if (!this._title || typeof this._title !== 'string' || this._title.trim().length === 0) {
-      throw new Error('Task title is required and must be a non-empty string');
+    if (
+      !this._title ||
+      typeof this._title !== "string" ||
+      this._title.trim().length === 0
+    ) {
+      throw new Error("Task title is required and must be a non-empty string");
     }
 
-    if (!this._description || typeof this._description !== 'string' || this._description.trim().length === 0) {
-      throw new Error('Task description is required and must be a non-empty string');
+    if (
+      !this._description ||
+      typeof this._description !== "string" ||
+      this._description.trim().length === 0
+    ) {
+      throw new Error(
+        "Task description is required and must be a non-empty string",
+      );
     }
 
     if (this._dueDate && this._dueDate < this._createdAt) {
-      throw new Error('Task due date cannot be before creation date');
+      throw new Error("Task due date cannot be before creation date");
     }
     if (!TaskPriority.isValid(this._priority.value)) {
       throw new Error(`Invalid task priority: ${this._priority.value}`);
     }
-    if (!this._type || !this._type.value || typeof this._type.value !== 'string') {
-      throw new Error('Task type is required');
+    if (
+      !this._type ||
+      !this._type.value ||
+      typeof this._type.value !== "string"
+    ) {
+      throw new Error("Task type is required");
     }
     if (!TaskType.isValid(this._type.value)) {
       throw new Error(`Invalid task type: ${this._type.value}`);
@@ -458,7 +527,7 @@ class Task {
     this._executionHistory.push({
       action,
       timestamp: new Date(),
-      data
+      data,
     });
   }
 
@@ -489,7 +558,7 @@ class Task {
       requiresExecution: this.requiresExecution(),
       requiresHumanReview: this.requiresHumanReview(),
       userId: this._metadata.createdBy || this._metadata.userId || null,
-      estimatedDuration: this._metadata.estimatedDuration || null
+      estimatedDuration: this._metadata.estimatedDuration || null,
     };
 
     // Extract common metadata fields to top level for frontend compatibility
@@ -498,17 +567,17 @@ class Task {
       if (this._metadata.lines) {
         baseObject.lines = this._metadata.lines;
       }
-      
+
       // File path information
       if (this._metadata.filePath) {
         baseObject.filePath = this._metadata.filePath;
       }
-      
+
       // Refactoring steps
       if (this._metadata.refactoringSteps) {
         baseObject.refactoringSteps = this._metadata.refactoringSteps;
       }
-      
+
       // Estimated time
       if (this._metadata.estimatedTime) {
         baseObject.estimatedTime = this._metadata.estimatedTime;
@@ -530,24 +599,38 @@ class Task {
       data.category,
       data.metadata,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
     );
   }
 
-  static create(idOrProjectId, projectIdOrTitle, titleOrDescription, descriptionOrPriority, priorityOrType, typeOrMetadata, metadataMaybe) {
+  static create(
+    idOrProjectId,
+    projectIdOrTitle,
+    titleOrDescription,
+    descriptionOrPriority,
+    priorityOrType,
+    typeOrMetadata,
+    metadataMaybe,
+  ) {
     // Support: (id, projectId, title, description, priority, type, metadata)
     // Or: (projectId, title, description, priority, type, metadata)
     let id, projectId, title, description, priority, type, metadata;
     if (
-      typeof idOrProjectId === 'string' &&
-      typeof projectIdOrTitle === 'string' &&
-      typeof titleOrDescription === 'string' &&
-      typeof descriptionOrPriority === 'string' &&
-      (typeof priorityOrType === 'string' || typeof priorityOrType === 'undefined') &&
-      (typeof typeOrMetadata === 'string' || typeof typeOrMetadata === 'undefined')
+      typeof idOrProjectId === "string" &&
+      typeof projectIdOrTitle === "string" &&
+      typeof titleOrDescription === "string" &&
+      typeof descriptionOrPriority === "string" &&
+      (typeof priorityOrType === "string" ||
+        typeof priorityOrType === "undefined") &&
+      (typeof typeOrMetadata === "string" ||
+        typeof typeOrMetadata === "undefined")
     ) {
       // If idOrProjectId looks like a custom id, use it as id
-      if (idOrProjectId.startsWith('task_') || idOrProjectId.startsWith('custom-') || idOrProjectId.startsWith('custom_')) {
+      if (
+        idOrProjectId.startsWith("task_") ||
+        idOrProjectId.startsWith("custom-") ||
+        idOrProjectId.startsWith("custom_")
+      ) {
         id = idOrProjectId;
         projectId = projectIdOrTitle;
         title = titleOrDescription;
@@ -584,7 +667,7 @@ class Task {
       priority,
       type,
       metadata.category,
-      metadata
+      metadata,
     );
   }
 
@@ -596,7 +679,7 @@ class Task {
   updateStatus(newStatus) {
     this._status = new TaskStatus(newStatus);
     this._updatedAt = new Date();
-    
+
     if (newStatus === TaskStatus.COMPLETED) {
       this._completedAt = new Date();
       this._progress = 100; // Auto-set progress to 100% when completed
@@ -605,11 +688,11 @@ class Task {
 
   updateProgress(newProgress) {
     if (newProgress < 0 || newProgress > 100) {
-      throw new Error('Progress must be between 0 and 100');
+      throw new Error("Progress must be between 0 and 100");
     }
     this._progress = newProgress;
     this._updatedAt = new Date();
-    
+
     // Auto-update status based on progress
     if (newProgress === 100 && !this._status.isCompleted()) {
       this.updateStatus(TaskStatus.COMPLETED);
@@ -639,7 +722,7 @@ class Task {
   assignToLayer(layerId) {
     if (!this._layerAssignments.includes(layerId)) {
       this._layerAssignments.push(layerId);
-      this._layerStatus[layerId] = 'pending';
+      this._layerStatus[layerId] = "pending";
       this._updatedAt = new Date();
     }
   }
@@ -673,4 +756,4 @@ class Task {
   }
 }
 
-module.exports = Task; 
+module.exports = Task;

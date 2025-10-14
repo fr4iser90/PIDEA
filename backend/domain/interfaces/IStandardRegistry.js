@@ -10,7 +10,7 @@ class IStandardRegistry {
    * @returns {Array} Components in category
    */
   static getByCategory(category) {
-    throw new Error('getByCategory() must be implemented');
+    throw new Error("getByCategory() must be implemented");
   }
 
   /**
@@ -21,7 +21,7 @@ class IStandardRegistry {
    * @returns {Object|null} Component instance
    */
   static buildFromCategory(category, name, params) {
-    throw new Error('buildFromCategory() must be implemented');
+    throw new Error("buildFromCategory() must be implemented");
   }
 
   /**
@@ -33,7 +33,7 @@ class IStandardRegistry {
    * @returns {Promise<boolean>} Registration success
    */
   static async register(name, config, category, executor = null) {
-    throw new Error('register() must be implemented');
+    throw new Error("register() must be implemented");
   }
 
   /**
@@ -44,7 +44,7 @@ class IStandardRegistry {
    * @returns {Promise<Object>} Execution result
    */
   static async execute(name, context = {}, options = {}) {
-    throw new Error('execute() must be implemented');
+    throw new Error("execute() must be implemented");
   }
 
   /**
@@ -52,7 +52,7 @@ class IStandardRegistry {
    * @returns {Array} All available categories
    */
   static getCategories() {
-    throw new Error('getCategories() must be implemented');
+    throw new Error("getCategories() must be implemented");
   }
 
   /**
@@ -61,7 +61,7 @@ class IStandardRegistry {
    * @returns {Object} Component instance
    */
   static get(name) {
-    throw new Error('get() must be implemented');
+    throw new Error("get() must be implemented");
   }
 
   /**
@@ -70,7 +70,7 @@ class IStandardRegistry {
    * @returns {boolean} True if exists
    */
   static has(name) {
-    throw new Error('has() must be implemented');
+    throw new Error("has() must be implemented");
   }
 
   /**
@@ -79,7 +79,7 @@ class IStandardRegistry {
    * @returns {boolean} Removal success
    */
   static remove(name) {
-    throw new Error('remove() must be implemented');
+    throw new Error("remove() must be implemented");
   }
 
   /**
@@ -87,7 +87,7 @@ class IStandardRegistry {
    * @returns {Object} Registry statistics
    */
   static getStats() {
-    throw new Error('getStats() must be implemented');
+    throw new Error("getStats() must be implemented");
   }
 
   /**
@@ -96,7 +96,7 @@ class IStandardRegistry {
    * @returns {Object} Validation result
    */
   static validateConfig(config) {
-    throw new Error('validateConfig() must be implemented');
+    throw new Error("validateConfig() must be implemented");
   }
 
   /**
@@ -105,7 +105,7 @@ class IStandardRegistry {
    * @returns {Object} Component metadata
    */
   static getMetadata(name) {
-    throw new Error('getMetadata() must be implemented');
+    throw new Error("getMetadata() must be implemented");
   }
 
   /**
@@ -115,7 +115,7 @@ class IStandardRegistry {
    * @returns {boolean} Update success
    */
   static updateMetadata(name, metadata) {
-    throw new Error('updateMetadata() must be implemented');
+    throw new Error("updateMetadata() must be implemented");
   }
 
   /**
@@ -124,7 +124,7 @@ class IStandardRegistry {
    * @returns {Array} Execution history
    */
   static getExecutionHistory(name) {
-    throw new Error('getExecutionHistory() must be implemented');
+    throw new Error("getExecutionHistory() must be implemented");
   }
 
   /**
@@ -132,7 +132,7 @@ class IStandardRegistry {
    * @returns {boolean} Clear success
    */
   static clear() {
-    throw new Error('clear() must be implemented');
+    throw new Error("clear() must be implemented");
   }
 
   /**
@@ -140,7 +140,7 @@ class IStandardRegistry {
    * @returns {Object} Registry data
    */
   static export() {
-    throw new Error('export() must be implemented');
+    throw new Error("export() must be implemented");
   }
 
   /**
@@ -149,8 +149,8 @@ class IStandardRegistry {
    * @returns {boolean} Import success
    */
   static import(data) {
-    throw new Error('import() must be implemented');
+    throw new Error("import() must be implemented");
   }
 }
 
-module.exports = IStandardRegistry; 
+module.exports = IStandardRegistry;

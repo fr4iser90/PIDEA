@@ -226,7 +226,6 @@ describe('TaskCreationModal', () => {
     test('should submit form with valid data', async () => {
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'test-workflow-123',
-        success: true,
         status: 'started'
       });
 
@@ -313,7 +312,6 @@ describe('TaskCreationModal', () => {
     test('should show progress step after successful form submission', async () => {
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'test-workflow-123',
-        success: true,
         status: 'started'
       });
 
@@ -350,7 +348,6 @@ describe('TaskCreationModal', () => {
 
     test('should handle workflow cancellation', async () => {
       mockTaskCreationService.cancelWorkflow.mockResolvedValue({
-        success: true,
         message: 'Workflow cancelled'
       });
 

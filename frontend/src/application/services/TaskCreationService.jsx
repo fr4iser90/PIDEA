@@ -46,7 +46,6 @@ export default class TaskCreationService {
       logger.info('Task creation workflow started successfully');
       
       return {
-        success: true,
         workflowId: response.data.workflowId,
         queueItemId: response.data.queueItemId,
         status: response.data.status,
@@ -99,7 +98,6 @@ export default class TaskCreationService {
         logger.info('Advanced task creation workflow started successfully');
 
         return {
-          success: true,
           workflowId: response.data.workflowId,
           queueItemId: response.data.queueItemId,
           status: response.data.status,
@@ -205,7 +203,6 @@ ${this.formatProjectAnalysis(projectAnalysis)}
       logger.info('File creation monitoring completed');
       
       return {
-        success: true,
         workflowId,
         filesCreated: parseResult.filesCreated,
         databaseEntry: parseResult.databaseEntry
@@ -347,7 +344,6 @@ Format the response in Markdown with clear sections and actionable steps.`;
       logger.info('Chat message sent successfully');
       
       return {
-        success: true,
         messageId: result.id,
         timestamp: new Date(),
         projectId
@@ -393,7 +389,6 @@ Format the response in Markdown with clear sections and actionable steps.`;
       logger.info('Task creation workflow started successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'running',
         projectId
@@ -448,7 +443,6 @@ Format the response in Markdown with clear sections and actionable steps.`;
       if (this.activeWorkflows.has(workflowId)) {
         const workflow = this.activeWorkflows.get(workflowId);
         return {
-          success: true,
           workflowId,
           ...workflow
         };
@@ -490,7 +484,6 @@ Format the response in Markdown with clear sections and actionable steps.`;
       logger.info('Workflow cancelled successfully');
       
       return {
-        success: true,
         workflowId,
         status: 'cancelled'
       };

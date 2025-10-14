@@ -3,36 +3,36 @@
  * Starts the development server for the project
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('DevServerStartStep');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("DevServerStartStep");
 
 // Step configuration
 const config = {
-      name: 'DevServerStartStep',
-  type: 'ide',
-  category: 'ide',
-      description: 'Start development server for the project',
-  version: '1.0.0',
-  dependencies: ['projectRepository', 'terminalService'],
-      settings: {
-        includeStatusCheck: true,
-        includeErrorHandling: true,
-        includePortDetection: true,
-        timeout: 30000
+  name: "DevServerStartStep",
+  type: "ide",
+  category: "ide",
+  description: "Start development server for the project",
+  version: "1.0.0",
+  dependencies: ["projectRepository", "terminalService"],
+  settings: {
+    includeStatusCheck: true,
+    includeErrorHandling: true,
+    includePortDetection: true,
+    timeout: 30000,
   },
   validation: {
-    required: ['projectId'],
-    optional: ['workspacePath']
-  }
+    required: ["projectId"],
+    optional: ["workspacePath"],
+  },
 };
 
 class DevServerStartStep {
   constructor() {
-    this.name = 'DevServerStartStep';
-    this.description = 'Start development server for the project';
-    this.category = 'ide';
-    this.dependencies = ['projectRepository', 'terminalService'];
+    this.name = "DevServerStartStep";
+    this.description = "Start development server for the project";
+    this.category = "ide";
+    this.dependencies = ["projectRepository", "terminalService"];
   }
 
   static getConfig() {
@@ -42,110 +42,113 @@ class DevServerStartStep {
   async execute(context = {}) {
     const config = DevServerStartStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       const { projectId, workspacePath } = context;
-      
+
       logger.info(`🚀 Starting dev server for project ${projectId}`);
-      
+
       // Get project configuration from database
-      const projectRepo = context.projectRepository || context.getService?.('projectRepository') || global.application?.projectRepository;
+      const projectRepo =
+        context.projectRepository ||
+        context.getService?.("projectRepository") ||
+        global.application?.projectRepository;
       if (!projectRepo) {
-        logger.warn('ProjectRepository not available in context, using basic dev server start');
+        logger.warn(
+          "ProjectRepository not available in context, using basic dev server start",
+        );
         // Continue without project repository for basic dev server start
       }
-      
+
       let project = null;
       if (projectRepo) {
         project = await projectRepo.findById(projectId);
       }
-      
+
       if (!project) {
         throw new Error(`Project ${projectId} not found`);
       }
-      
+
       // Get dev command from project config
-      const devCommand = project.dev_command || 'npm run dev';
-      const packageManager = project.package_manager || 'npm';
-      
+      const devCommand = project.dev_command || "npm run dev";
+      const packageManager = project.package_manager || "npm";
+
       logger.info(`📦 Using package manager: ${packageManager}`);
       logger.info(`🔧 Dev command: ${devCommand}`);
-      
+
       // Check if dev server is already running
       if (config.settings.includeStatusCheck) {
         const isRunning = await this.checkDevServerStatus(project);
         if (isRunning) {
-          logger.info('✅ Dev server is already running');
+          logger.info("✅ Dev server is already running");
           return {
-            success: true,
-            message: 'Dev server already running',
+            message: "Dev server already running",
             data: {
-              status: 'running',
+              status: "running",
               port: project.frontend_port || project.backend_port,
-              command: devCommand
-            }
+              command: devCommand,
+            },
           };
         }
       }
-      
+
       // Start dev server
-      const terminalService = new (require('@domain/services/terminal/TerminalService'))();
+      const terminalService =
+        new (require("@domain/services/terminal/TerminalService"))();
       const result = await terminalService.executeCommand(devCommand, {
         cwd: workspacePath,
         timeout: config.settings.timeout,
         env: {
           ...process.env,
-          NODE_ENV: 'development'
-        }
+          NODE_ENV: "development",
+        },
       });
-      
+
       if (result.success) {
-        logger.info('✅ Dev server started successfully');
-        
+        logger.info("✅ Dev server started successfully");
+
         // Detect port if enabled
         let detectedPort = null;
         if (config.settings.includePortDetection) {
           detectedPort = await this.detectDevServerPort(project, workspacePath);
         }
-        
+
         return {
-          success: true,
-          message: 'Dev server started successfully',
+          message: "Dev server started successfully",
           data: {
-            status: 'started',
+            status: "started",
             port: detectedPort || project.frontend_port || project.backend_port,
             command: devCommand,
-            output: result.output
-          }
+            output: result.output,
+          },
         };
       } else {
         throw new Error(`Failed to start dev server: ${result.error}`);
       }
-      
     } catch (error) {
-      logger.error('❌ Failed to start dev server:', error);
-      
+      logger.error("❌ Failed to start dev server:", error);
+
       if (config.settings.includeErrorHandling) {
         return {
-          success: false,
-          message: 'Failed to start dev server',
+         
+          message: "Failed to start dev server",
           error: error.message,
           data: {
-            status: 'error',
-            command: context.devCommand || 'npm run dev'
-          }
+            status: "error",
+            command: context.devCommand || "npm run dev",
+          },
         };
       }
-      
+
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -154,15 +157,14 @@ class DevServerStartStep {
     try {
       const port = project.frontend_port || project.backend_port;
       if (!port) return false;
-      
-      const { exec } = require('child_process');
-      const util = require('util');
+
+      const { exec } = require("child_process");
+      const util = require("util");
       const execAsync = util.promisify(exec);
-      
+
       // Check if port is in use
       const { stdout } = await execAsync(`lsof -i :${port}`);
       return stdout.trim().length > 0;
-      
     } catch (error) {
       return false;
     }
@@ -172,27 +174,27 @@ class DevServerStartStep {
     try {
       // Try to detect port from common dev server outputs
       const commonPorts = [3000, 4000, 4001, 5000, 5001, 8080, 8081];
-      
+
       for (const port of commonPorts) {
         const isInUse = await this.checkPortInUse(port);
         if (isInUse) {
           return port;
         }
       }
-      
+
       return null;
     } catch (error) {
-      logger.warn('Could not detect dev server port:', error.message);
+      logger.warn("Could not detect dev server port:", error.message);
       return null;
     }
   }
 
   async checkPortInUse(port) {
     try {
-      const { exec } = require('child_process');
-      const util = require('util');
+      const { exec } = require("child_process");
+      const util = require("util");
       const execAsync = util.promisify(exec);
-      
+
       const { stdout } = await execAsync(`lsof -i :${port}`);
       return stdout.trim().length > 0;
     } catch (error) {
@@ -202,7 +204,7 @@ class DevServerStartStep {
 
   validateContext(context) {
     if (!context.projectId) {
-      throw new Error('Project ID is required');
+      throw new Error("Project ID is required");
     }
   }
 }
@@ -213,5 +215,5 @@ const stepInstance = new DevServerStartStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
-}; 
+  execute: async (context) => await stepInstance.execute(context),
+};

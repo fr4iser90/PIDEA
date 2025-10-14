@@ -2,315 +2,366 @@
  * TestManagementController - API controller for test management operations
  * CLEAN VERSION - Uses DI Container properly
  */
-const Logger = require('@logging/Logger');
-const centralizedConfig = require('@config/centralized-config');
-const BrowserEnvironmentService = require('@services/testing/BrowserEnvironmentService');
-const logger = new Logger('TestManagementController');
+const Logger = require("@logging/Logger");
+const centralizedConfig = require("@config/centralized-config");
+const BrowserEnvironmentService = require("@services/testing/BrowserEnvironmentService");
+const logger = new Logger("TestManagementController");
 const config = centralizedConfig;
 
 class TestManagementController {
-    constructor(dependencies = {}) {
-        // Use DI Container - clean and simple
-        this.playwrightTestHandler = dependencies.playwrightTestHandler;
-        this.application = dependencies.application;
-        this.logger = dependencies.logger || logger;
-        this.browserEnvironmentService = new BrowserEnvironmentService();
-        
-        if (!this.playwrightTestHandler) {
-            throw new Error('TestManagementController requires playwrightTestHandler dependency');
-        }
+  constructor(dependencies = {}) {
+    // Use DI Container - clean and simple
+    this.playwrightTestHandler = dependencies.playwrightTestHandler;
+    this.application = dependencies.application;
+    this.logger = dependencies.logger || logger;
+    this.browserEnvironmentService = new BrowserEnvironmentService();
+
+    if (!this.playwrightTestHandler) {
+      throw new Error(
+        "TestManagementController requires playwrightTestHandler dependency",
+      );
     }
+  }
 
-    /**
-     * Get Playwright test configuration
-     * GET /api/projects/:projectId/tests/playwright/config
-     */
-    async getPlaywrightTestConfig(req, res) {
-        try {
-            const { projectId } = req.params;
-            
-            this.logger.info(`TestManagementController: GET /api/projects/${projectId}/tests/playwright/config called`);
-            
-            if (!projectId) {
-                this.logger.warn('TestManagementController: No project ID provided');
-                return res.badRequest('Project ID is required', {timestamp: new Date()
-                });
-            }
+  /**
+   * Get Playwright test configuration
+   * GET /api/projects/:projectId/tests/playwright/config
+   */
+  async getPlaywrightTestConfig(req, res) {
+    try {
+      const { projectId } = req.params;
 
-            const command = {
-                action: 'get',
-                projectId
-            };
+      this.logger.info(
+        `TestManagementController: GET /api/projects/${projectId}/tests/playwright/config called`,
+      );
 
-            const result = await this.playwrightTestHandler.handleConfigurationCommand(command);
-            
-            this.logger.info(`TestManagementController: Configuration loaded successfully for project: ${projectId}`);
+      if (!projectId) {
+        this.logger.warn("TestManagementController: No project ID provided");
+        return res.badRequest("Project ID is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            res.success(result.result);
-        } catch (error) {
-            this.logger.error(`TestManagementController: Failed to get configuration for project: ${req.params.projectId}`, error);
-            res.error(error.message, 500);
-        }
+      const command = {
+        action: "get",
+        projectId,
+      };
+
+      const result =
+        await this.playwrightTestHandler.handleConfigurationCommand(command);
+
+      this.logger.info(
+        `TestManagementController: Configuration loaded successfully for project: ${projectId}`,
+      );
+
+      res.success(result.result);
+    } catch (error) {
+      this.logger.error(
+        `TestManagementController: Failed to get configuration for project: ${req.params.projectId}`,
+        error,
+      );
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Update Playwright test configuration
-     * PUT /api/projects/:projectId/tests/playwright/config
-     */
-    async updatePlaywrightTestConfig(req, res) {
-        try {
-            const { projectId } = req.params;
-            const { config } = req.body;
+  /**
+   * Update Playwright test configuration
+   * PUT /api/projects/:projectId/tests/playwright/config
+   */
+  async updatePlaywrightTestConfig(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { config } = req.body;
 
-            this.logger.info(`TestManagementController: PUT /api/projects/${projectId}/tests/playwright/config called`);
-            
-            // Debug: Log the received config structure
-            console.log('=== CONTROLLER DEBUG ===');
-            console.log('Received config:', config);
-            console.log('Config browsers:', config?.browsers);
-            console.log('Config browsers type:', typeof config?.browsers);
-            console.log('Config browsers isArray:', Array.isArray(config?.browsers));
-            console.log('=== CONTROLLER DEBUG END ===');
+      this.logger.info(
+        `TestManagementController: PUT /api/projects/${projectId}/tests/playwright/config called`,
+      );
 
-            if (!projectId) {
-                return res.badRequest('Project ID is required', {timestamp: new Date()
-                });
-            }
+      // Debug: Log the received config structure
+      console.log("=== CONTROLLER DEBUG ===");
+      console.log("Received config:", config);
+      console.log("Config browsers:", config?.browsers);
+      console.log("Config browsers type:", typeof config?.browsers);
+      console.log("Config browsers isArray:", Array.isArray(config?.browsers));
+      console.log("=== CONTROLLER DEBUG END ===");
 
-            if (!config) {
-                return res.badRequest('Configuration is required', {timestamp: new Date()
-                });
-            }
+      if (!projectId) {
+        return res.badRequest("Project ID is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            const command = {
-                action: 'update',
-                projectId,
-                config
-            };
+      if (!config) {
+        return res.badRequest("Configuration is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            const result = await this.playwrightTestHandler.handleConfigurationCommand(command);
-            
-            this.logger.info(`TestManagementController: Configuration updated successfully for project: ${projectId}`);
+      const command = {
+        action: "update",
+        projectId,
+        config,
+      };
 
-            res.success(result.result);
-        } catch (error) {
-            this.logger.error(`TestManagementController: Failed to update configuration for project: ${req.params.projectId}`, error);
-            res.error(error.message, 500);
-        }
+      const result =
+        await this.playwrightTestHandler.handleConfigurationCommand(command);
+
+      this.logger.info(
+        `TestManagementController: Configuration updated successfully for project: ${projectId}`,
+      );
+
+      res.success(result.result);
+    } catch (error) {
+      this.logger.error(
+        `TestManagementController: Failed to update configuration for project: ${req.params.projectId}`,
+        error,
+      );
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Execute Playwright tests for a project
-     * POST /api/projects/:projectId/tests/playwright/execute
-     */
-    async executePlaywrightTests(req, res) {
-        try {
-            const { projectId } = req.params;
-            const { testNames, options = {} } = req.body;
+  /**
+   * Execute Playwright tests for a project
+   * POST /api/projects/:projectId/tests/playwright/execute
+   */
+  async executePlaywrightTests(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { testNames, options = {} } = req.body;
 
-            if (!projectId) {
-                return res.badRequest('Project ID is required', {timestamp: new Date()
-                });
-            }
+      if (!projectId) {
+        return res.badRequest("Project ID is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            const command = {
-                projectId,
-                testNames,
-                options
-            };
+      const command = {
+        projectId,
+        testNames,
+        options,
+      };
 
-            const result = await this.playwrightTestHandler.handleExecuteTests(command);
+      const result =
+        await this.playwrightTestHandler.handleExecuteTests(command);
 
-            res.success(result.result);
-        } catch (error) {
-            res.error(error.message, 500);
-        }
+      res.success(result.result);
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Stop running Playwright tests
-     * POST /api/projects/:projectId/tests/playwright/stop
-     */
-    async stopPlaywrightTests(req, res) {
-        try {
-            const { testIds } = req.body;
+  /**
+   * Stop running Playwright tests
+   * POST /api/projects/:projectId/tests/playwright/stop
+   */
+  async stopPlaywrightTests(req, res) {
+    try {
+      const { testIds } = req.body;
 
-            const command = { testIds };
-            const result = await this.playwrightTestHandler.handleStopTests(command);
+      const command = { testIds };
+      const result = await this.playwrightTestHandler.handleStopTests(command);
 
-            res.success(result.result);
-        } catch (error) {
-            res.error(error.message, 500);
-        }
+      res.success(result.result);
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Get Playwright test projects
-     * GET /api/projects/:projectId/tests/playwright/projects
-     */
-    async getPlaywrightTestProjects(req, res) {
-        try {
-            const { projectId } = req.params;
+  /**
+   * Get Playwright test projects
+   * GET /api/projects/:projectId/tests/playwright/projects
+   */
+  async getPlaywrightTestProjects(req, res) {
+    try {
+      const { projectId } = req.params;
 
-            if (!projectId) {
-                return res.badRequest('Project ID is required', {timestamp: new Date()
-                });
-            }
+      if (!projectId) {
+        return res.badRequest("Project ID is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            const command = {
-                action: 'list',
-                projectId
-            };
+      const command = {
+        action: "list",
+        projectId,
+      };
 
-            const result = await this.playwrightTestHandler.handleProjectCommand(command);
+      const result =
+        await this.playwrightTestHandler.handleProjectCommand(command);
 
-            res.success(result.result);
-        } catch (error) {
-            res.error(error.message, 500);
-        }
+      res.success(result.result);
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Create Playwright test project
-     * POST /api/projects/:projectId/tests/playwright/projects
-     */
-    async createPlaywrightTestProject(req, res) {
-        try {
-            const { projectId } = req.params;
-            const { name, config } = req.body;
+  /**
+   * Create Playwright test project
+   * POST /api/projects/:projectId/tests/playwright/projects
+   */
+  async createPlaywrightTestProject(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { name, config } = req.body;
 
-            if (!projectId) {
-                return res.badRequest('Project ID is required', {timestamp: new Date()
-                });
-            }
+      if (!projectId) {
+        return res.badRequest("Project ID is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            if (!name) {
-                return res.badRequest('Project name is required', {timestamp: new Date()
-                });
-            }
+      if (!name) {
+        return res.badRequest("Project name is required", {
+          timestamp: new Date(),
+        });
+      }
 
-            const command = {
-                action: 'create',
-                projectId,
-                projectData: { name, config }
-            };
+      const command = {
+        action: "create",
+        projectId,
+        projectData: { name, config },
+      };
 
-            const result = await this.playwrightTestHandler.handleProjectCommand(command);
+      const result =
+        await this.playwrightTestHandler.handleProjectCommand(command);
 
-            res.success(result.result);
-        } catch (error) {
-            res.error(error.message, 500);
-        }
+      res.success(result.result);
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Get browser environment information
-     * GET /api/tests/browser-environment
-     */
-    async getBrowserEnvironment(req, res) {
-        try {
-            this.logger.info('TestManagementController: GET /api/tests/browser-environment called');
-            
-            const environmentSummary = await this.browserEnvironmentService.getEnvironmentSummary();
-            
-            this.logger.info('TestManagementController: Browser environment info retrieved successfully');
-            
-            res.success(environmentSummary);
-        } catch (error) {
-            this.logger.error('TestManagementController: Error getting browser environment', error);
-            res.error(error.message, 500);
-        }
+  /**
+   * Get browser environment information
+   * GET /api/tests/browser-environment
+   */
+  async getBrowserEnvironment(req, res) {
+    try {
+      this.logger.info(
+        "TestManagementController: GET /api/tests/browser-environment called",
+      );
+
+      const environmentSummary =
+        await this.browserEnvironmentService.getEnvironmentSummary();
+
+      this.logger.info(
+        "TestManagementController: Browser environment info retrieved successfully",
+      );
+
+      res.success(environmentSummary);
+    } catch (error) {
+      this.logger.error(
+        "TestManagementController: Error getting browser environment",
+        error,
+      );
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Get Playwright test results JSON
-     * GET /api/projects/:projectId/tests/playwright/results
-     */
-    async getPlaywrightTestResults(req, res) {
-        try {
-            const { projectId } = req.params;
-            const fs = require('fs');
-            const path = require('path');
+  /**
+   * Get Playwright test results JSON
+   * GET /api/projects/:projectId/tests/playwright/results
+   */
+  async getPlaywrightTestResults(req, res) {
+    try {
+      const { projectId } = req.params;
+      const fs = require("fs");
+      const path = require("path");
 
-            // Read the JSON results file directly using centralized config
-            const resultsPath = path.join(config.pathConfig.project.root, config.pathConfig.output.testResultsJson);
-            
-            if (fs.existsSync(resultsPath)) {
-                const resultsData = fs.readFileSync(resultsPath, 'utf8');
-                const jsonResults = JSON.parse(resultsData);
-                
-                res.success(jsonResults);
-            } else {
-                res.notFound('Test results file not found', {timestamp: new Date()
-                });
-            }
-        } catch (error) {
-            res.error(error.message, 500);
-        }
+      // Read the JSON results file directly using centralized config
+      const resultsPath = path.join(
+        config.pathConfig.project.root,
+        config.pathConfig.output.testResultsJson,
+      );
+
+      if (fs.existsSync(resultsPath)) {
+        const resultsData = fs.readFileSync(resultsPath, "utf8");
+        const jsonResults = JSON.parse(resultsData);
+
+        res.success(jsonResults);
+      } else {
+        res.notFound("Test results file not found", { timestamp: new Date() });
+      }
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Get specific Playwright test result by ID
-     * GET /api/projects/:projectId/tests/playwright/results/:testId
-     */
-    async getPlaywrightTestResultById(req, res) {
-        try {
-            const { projectId, testId } = req.params;
-            
-            // For now, return the same results as the general endpoint
-            // In the future, this could filter by testId
-            const result = await this.getPlaywrightTestResults(req, res);
-            
-        } catch (error) {
-            res.error(error.message, 500);
-        }
+  /**
+   * Get specific Playwright test result by ID
+   * GET /api/projects/:projectId/tests/playwright/results/:testId
+   */
+  async getPlaywrightTestResultById(req, res) {
+    try {
+      const { projectId, testId } = req.params;
+
+      // For now, return the same results as the general endpoint
+      // In the future, this could filter by testId
+      const result = await this.getPlaywrightTestResults(req, res);
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 
-    /**
-     * Get Playwright test history
-     * GET /api/projects/:projectId/tests/playwright/history
-     */
-    async getPlaywrightTestHistory(req, res) {
-        try {
-            const { projectId } = req.params;
-            const fs = require('fs');
-            const path = require('path');
+  /**
+   * Get Playwright test history
+   * GET /api/projects/:projectId/tests/playwright/history
+   */
+  async getPlaywrightTestHistory(req, res) {
+    try {
+      const { projectId } = req.params;
+      const fs = require("fs");
+      const path = require("path");
 
-            // Read all test result files from the reports directory
-            const reportsDir = path.join(process.cwd(), 'backend/tests/playwright/reports');
-            const history = [];
+      // Read all test result files from the reports directory
+      const reportsDir = path.join(
+        process.cwd(),
+        "backend/tests/playwright/reports",
+      );
+      const history = [];
 
-            if (fs.existsSync(reportsDir)) {
-                const files = fs.readdirSync(reportsDir);
-                const resultFiles = files.filter(file => file.endsWith('.json') && file.includes('test-results'));
-                
-                for (const file of resultFiles) {
-                    try {
-                        const filePath = path.join(reportsDir, file);
-                        const fileData = fs.readFileSync(filePath, 'utf8');
-                        const jsonData = JSON.parse(fileData);
-                        
-                        history.push({
-                            file: file,
-                            timestamp: fs.statSync(filePath).mtime,
-                            results: jsonData
-                        });
-                    } catch (fileError) {
-                        console.error(`Error reading file ${file}:`, fileError);
-                    }
-                }
-            }
+      if (fs.existsSync(reportsDir)) {
+        const files = fs.readdirSync(reportsDir);
+        const resultFiles = files.filter(
+          (file) => file.endsWith(".json") && file.includes("test-results"),
+        );
 
-            res.success({
-                    projectId,
-                    history: history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                }, 200, { meta: { message: 'Test history loaded successfully', timestamp: new Date()
-             } });
-            
-        } catch (error) {
-            res.error(error.message, 500);
+        for (const file of resultFiles) {
+          try {
+            const filePath = path.join(reportsDir, file);
+            const fileData = fs.readFileSync(filePath, "utf8");
+            const jsonData = JSON.parse(fileData);
+
+            history.push({
+              file: file,
+              timestamp: fs.statSync(filePath).mtime,
+              results: jsonData,
+            });
+          } catch (fileError) {
+            console.error(`Error reading file ${file}:`, fileError);
+          }
         }
+      }
+
+      res.success(
+        {
+          projectId,
+          history: history.sort(
+            (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
+          ),
+        },
+        200,
+        {
+          meta: {
+            message: "Test history loaded successfully",
+            timestamp: new Date(),
+          },
+        },
+      );
+    } catch (error) {
+      res.error(error.message, 500);
     }
+  }
 }
 
 module.exports = TestManagementController;

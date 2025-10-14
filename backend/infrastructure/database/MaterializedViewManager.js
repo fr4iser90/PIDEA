@@ -2,16 +2,16 @@
  * MaterializedViewManager - Database materialized view management
  * Provides materialized view creation, refresh, and optimization
  */
-const Logger = require('@logging/Logger');
+const Logger = require("@logging/Logger");
 
 class MaterializedViewManager {
   constructor(databaseConnection) {
     this.db = databaseConnection;
-    this.logger = new Logger('MaterializedViewManager');
+    this.logger = new Logger("MaterializedViewManager");
     this.viewCache = new Map();
     this.refreshSchedule = new Map();
     this.viewTemplates = new Map();
-    
+
     this.initializeViewTemplates();
   }
 
@@ -19,8 +19,8 @@ class MaterializedViewManager {
    * Initialize materialized view templates
    */
   initializeViewTemplates() {
-    this.viewTemplates.set('task_performance_summary', {
-      description: 'Task performance summary by date and status',
+    this.viewTemplates.set("task_performance_summary", {
+      description: "Task performance summary by date and status",
       query: `
         SELECT 
           DATE(created_at) as date,
@@ -37,11 +37,11 @@ class MaterializedViewManager {
         ORDER BY date DESC, status, priority
       `,
       refreshInterval: 3600000, // 1 hour
-      dependencies: ['tasks']
+      dependencies: ["tasks"],
     });
 
-    this.viewTemplates.set('user_activity_summary', {
-      description: 'User activity summary by date',
+    this.viewTemplates.set("user_activity_summary", {
+      description: "User activity summary by date",
       query: `
         SELECT 
           user_id,
@@ -57,11 +57,11 @@ class MaterializedViewManager {
         ORDER BY user_id, date DESC
       `,
       refreshInterval: 1800000, // 30 minutes
-      dependencies: ['tasks']
+      dependencies: ["tasks"],
     });
 
-    this.viewTemplates.set('project_performance_summary', {
-      description: 'Project performance summary by date',
+    this.viewTemplates.set("project_performance_summary", {
+      description: "Project performance summary by date",
       query: `
         SELECT 
           project_id,
@@ -77,11 +77,11 @@ class MaterializedViewManager {
         ORDER BY project_id, date DESC
       `,
       refreshInterval: 1800000, // 30 minutes
-      dependencies: ['tasks']
+      dependencies: ["tasks"],
     });
 
-    this.viewTemplates.set('workflow_performance_summary', {
-      description: 'Workflow performance summary by type and date',
+    this.viewTemplates.set("workflow_performance_summary", {
+      description: "Workflow performance summary by type and date",
       query: `
         SELECT 
           workflow_type,
@@ -97,7 +97,7 @@ class MaterializedViewManager {
         ORDER BY workflow_type, date DESC
       `,
       refreshInterval: 1800000, // 30 minutes
-      dependencies: ['queue_history']
+      dependencies: ["queue_history"],
     });
   }
 
@@ -110,44 +110,49 @@ class MaterializedViewManager {
    */
   async createMaterializedView(name, query, options = {}) {
     try {
-      this.logger.info('Creating materialized view', { name, query: this.sanitizeQuery(query), options });
-      
+      this.logger.info("Creating materialized view", {
+        name,
+        query: this.sanitizeQuery(query),
+        options,
+      });
+
       // Check if view already exists
       const existingView = await this.getMaterializedView(name);
       if (existingView) {
-        this.logger.warn('Materialized view already exists', { name });
+        this.logger.warn("Materialized view already exists", { name });
         return existingView;
       }
-      
+
       const viewSQL = this.generateViewSQL(name, query, options);
-      
+
       // Create the materialized view
       await this.db.execute(viewSQL);
-      
+
       const result = {
         name,
         query,
         options,
         createdAt: new Date().toISOString(),
-        status: 'active',
+        status: "active",
         lastRefreshed: null,
-        refreshCount: 0
+        refreshCount: 0,
       };
-      
+
       // Cache the view
       this.viewCache.set(name, result);
-      
+
       // Schedule automatic refresh if specified
       if (options.autoRefresh && options.refreshInterval) {
         this.scheduleRefresh(name, options.refreshInterval);
       }
-      
-      this.logger.info('Materialized view created successfully', { name });
-      
+
+      this.logger.info("Materialized view created successfully", { name });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Materialized view creation failed', { error: error.message });
+      this.logger.error("Materialized view creation failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -160,22 +165,30 @@ class MaterializedViewManager {
    */
   async createFromTemplate(templateName, options = {}) {
     try {
-      this.logger.info('Creating materialized view from template', { templateName, options });
-      
+      this.logger.info("Creating materialized view from template", {
+        templateName,
+        options,
+      });
+
       const template = this.viewTemplates.get(templateName);
       if (!template) {
         throw new Error(`Unknown materialized view template: ${templateName}`);
       }
-      
+
       const viewOptions = {
         ...template,
-        ...options
+        ...options,
       };
-      
-      return await this.createMaterializedView(templateName, template.query, viewOptions);
-      
+
+      return await this.createMaterializedView(
+        templateName,
+        template.query,
+        viewOptions,
+      );
     } catch (error) {
-      this.logger.error('Failed to create materialized view from template', { error: error.message });
+      this.logger.error("Failed to create materialized view from template", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -188,46 +201,47 @@ class MaterializedViewManager {
    */
   async refreshMaterializedView(name, options = {}) {
     try {
-      this.logger.info('Refreshing materialized view', { name, options });
-      
+      this.logger.info("Refreshing materialized view", { name, options });
+
       const view = await this.getMaterializedView(name);
       if (!view) {
         throw new Error(`Materialized view ${name} not found`);
       }
-      
-      const concurrent = options.concurrent ? 'CONCURRENTLY ' : '';
+
+      const concurrent = options.concurrent ? "CONCURRENTLY " : "";
       const refreshSQL = `REFRESH MATERIALIZED VIEW ${concurrent}${name}`;
-      
+
       const startTime = Date.now();
       await this.db.execute(refreshSQL);
       const refreshTime = Date.now() - startTime;
-      
+
       // Update view information
       view.lastRefreshed = new Date().toISOString();
       view.refreshCount = (view.refreshCount || 0) + 1;
       view.lastRefreshTime = refreshTime;
-      
+
       // Update cache
       this.viewCache.set(name, view);
-      
+
       const result = {
         name,
         refreshedAt: view.lastRefreshed,
         refreshTime,
         refreshCount: view.refreshCount,
-        status: 'refreshed'
+        status: "refreshed",
       };
-      
-      this.logger.info('Materialized view refreshed successfully', { 
-        name, 
+
+      this.logger.info("Materialized view refreshed successfully", {
+        name,
         refreshTime,
-        refreshCount: view.refreshCount
+        refreshCount: view.refreshCount,
       });
-      
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Materialized view refresh failed', { error: error.message });
+      this.logger.error("Materialized view refresh failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -239,46 +253,47 @@ class MaterializedViewManager {
    */
   async refreshAllMaterializedViews(options = {}) {
     try {
-      this.logger.info('Refreshing all materialized views', { options });
-      
+      this.logger.info("Refreshing all materialized views", { options });
+
       const views = await this.getAllMaterializedViews();
       const results = [];
-      
+
       for (const view of views) {
         try {
           const result = await this.refreshMaterializedView(view.name, options);
           results.push(result);
         } catch (error) {
-          this.logger.error('Failed to refresh materialized view', { 
-            name: view.name, 
-            error: error.message 
+          this.logger.error("Failed to refresh materialized view", {
+            name: view.name,
+            error: error.message,
           });
           results.push({
             name: view.name,
-            status: 'failed',
-            error: error.message
+            status: "failed",
+            error: error.message,
           });
         }
       }
-      
+
       const summary = {
         totalViews: views.length,
-        refreshedViews: results.filter(r => r.status === 'refreshed').length,
-        failedViews: results.filter(r => r.status === 'failed').length,
+        refreshedViews: results.filter((r) => r.status === "refreshed").length,
+        failedViews: results.filter((r) => r.status === "failed").length,
         results,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
-      this.logger.info('All materialized views refresh completed', { 
+
+      this.logger.info("All materialized views refresh completed", {
         totalViews: summary.totalViews,
         refreshedViews: summary.refreshedViews,
-        failedViews: summary.failedViews
+        failedViews: summary.failedViews,
       });
-      
+
       return summary;
-      
     } catch (error) {
-      this.logger.error('Failed to refresh all materialized views', { error: error.message });
+      this.logger.error("Failed to refresh all materialized views", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -294,7 +309,7 @@ class MaterializedViewManager {
       if (this.viewCache.has(name)) {
         return this.viewCache.get(name);
       }
-      
+
       // Query database for view information
       const query = `
         SELECT 
@@ -305,31 +320,32 @@ class MaterializedViewManager {
         FROM pg_matviews
         WHERE matviewname = $1
       `;
-      
+
       const result = await this.db.execute(query, [name]);
-      
+
       if (result.rows.length === 0) {
         return null;
       }
-      
+
       const viewInfo = result.rows[0];
       const view = {
         schema: viewInfo.schemaname,
         name: viewInfo.matviewname,
         definition: viewInfo.definition,
         hasIndexes: viewInfo.hasindexes,
-        status: 'active',
+        status: "active",
         lastRefreshed: null,
-        refreshCount: 0
+        refreshCount: 0,
       };
-      
+
       // Cache the view
       this.viewCache.set(name, view);
-      
+
       return view;
-      
     } catch (error) {
-      this.logger.error('Failed to get materialized view', { error: error.message });
+      this.logger.error("Failed to get materialized view", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -340,8 +356,8 @@ class MaterializedViewManager {
    */
   async getAllMaterializedViews() {
     try {
-      this.logger.debug('Getting all materialized views');
-      
+      this.logger.debug("Getting all materialized views");
+
       const query = `
         SELECT 
           schemaname,
@@ -351,25 +367,28 @@ class MaterializedViewManager {
         FROM pg_matviews
         ORDER BY matviewname
       `;
-      
+
       const result = await this.db.execute(query);
-      
-      const views = result.rows.map(row => ({
+
+      const views = result.rows.map((row) => ({
         schema: row.schemaname,
         name: row.matviewname,
         definition: row.definition,
         hasIndexes: row.hasindexes,
-        status: 'active',
+        status: "active",
         lastRefreshed: null,
-        refreshCount: 0
+        refreshCount: 0,
       }));
-      
-      this.logger.debug('Retrieved materialized views', { count: views.length });
-      
+
+      this.logger.debug("Retrieved materialized views", {
+        count: views.length,
+      });
+
       return views;
-      
     } catch (error) {
-      this.logger.error('Failed to get all materialized views', { error: error.message });
+      this.logger.error("Failed to get all materialized views", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -381,34 +400,35 @@ class MaterializedViewManager {
    */
   async dropMaterializedView(name) {
     try {
-      this.logger.info('Dropping materialized view', { name });
-      
+      this.logger.info("Dropping materialized view", { name });
+
       const view = await this.getMaterializedView(name);
       if (!view) {
         throw new Error(`Materialized view ${name} not found`);
       }
-      
+
       const dropSQL = `DROP MATERIALIZED VIEW IF EXISTS ${name}`;
       await this.db.execute(dropSQL);
-      
+
       // Remove from cache
       this.viewCache.delete(name);
-      
+
       // Cancel scheduled refresh
       this.cancelRefresh(name);
-      
+
       const result = {
         name,
         droppedAt: new Date().toISOString(),
-        status: 'dropped'
+        status: "dropped",
       };
-      
-      this.logger.info('Materialized view dropped successfully', { name });
-      
+
+      this.logger.info("Materialized view dropped successfully", { name });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Materialized view drop failed', { error: error.message });
+      this.logger.error("Materialized view drop failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -424,9 +444,9 @@ class MaterializedViewManager {
       interval,
       lastRefresh: null,
       nextRefresh: new Date(Date.now() + interval),
-      timer: null
+      timer: null,
     };
-    
+
     // Set up interval timer
     schedule.timer = setInterval(async () => {
       try {
@@ -434,13 +454,16 @@ class MaterializedViewManager {
         schedule.lastRefresh = new Date();
         schedule.nextRefresh = new Date(Date.now() + interval);
       } catch (error) {
-        this.logger.error('Scheduled refresh failed', { name, error: error.message });
+        this.logger.error("Scheduled refresh failed", {
+          name,
+          error: error.message,
+        });
       }
     }, interval);
-    
+
     this.refreshSchedule.set(name, schedule);
-    
-    this.logger.info('Materialized view refresh scheduled', { name, interval });
+
+    this.logger.info("Materialized view refresh scheduled", { name, interval });
   }
 
   /**
@@ -452,7 +475,7 @@ class MaterializedViewManager {
     if (schedule && schedule.timer) {
       clearInterval(schedule.timer);
       this.refreshSchedule.delete(name);
-      this.logger.info('Materialized view refresh cancelled', { name });
+      this.logger.info("Materialized view refresh cancelled", { name });
     }
   }
 
@@ -464,9 +487,9 @@ class MaterializedViewManager {
    * @returns {string} View SQL
    */
   generateViewSQL(name, query, options) {
-    const concurrent = options.concurrent ? 'CONCURRENTLY ' : '';
-    const withData = options.withData !== false ? 'WITH DATA' : 'WITH NO DATA';
-    
+    const concurrent = options.concurrent ? "CONCURRENTLY " : "";
+    const withData = options.withData !== false ? "WITH DATA" : "WITH NO DATA";
+
     return `CREATE MATERIALIZED VIEW ${concurrent}${name} AS ${query} ${withData}`;
   }
 
@@ -476,7 +499,7 @@ class MaterializedViewManager {
    * @returns {string} Sanitized query
    */
   sanitizeQuery(query) {
-    return query.replace(/\s+/g, ' ').trim();
+    return query.replace(/\s+/g, " ").trim();
   }
 
   /**
@@ -488,7 +511,7 @@ class MaterializedViewManager {
       totalViews: this.viewCache.size,
       scheduledRefreshes: this.refreshSchedule.size,
       viewTemplates: Array.from(this.viewTemplates.keys()),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -497,11 +520,11 @@ class MaterializedViewManager {
    * @returns {Array} Refresh schedule
    */
   getRefreshSchedule() {
-    return Array.from(this.refreshSchedule.values()).map(schedule => ({
+    return Array.from(this.refreshSchedule.values()).map((schedule) => ({
       name: schedule.name,
       interval: schedule.interval,
       lastRefresh: schedule.lastRefresh,
-      nextRefresh: schedule.nextRefresh
+      nextRefresh: schedule.nextRefresh,
     }));
   }
 
@@ -510,7 +533,7 @@ class MaterializedViewManager {
    */
   clearCache() {
     this.viewCache.clear();
-    this.logger.info('Materialized view cache cleared');
+    this.logger.info("Materialized view cache cleared");
   }
 
   /**
@@ -523,7 +546,7 @@ class MaterializedViewManager {
       }
     }
     this.refreshSchedule.clear();
-    this.logger.info('All scheduled refreshes stopped');
+    this.logger.info("All scheduled refreshes stopped");
   }
 }
 

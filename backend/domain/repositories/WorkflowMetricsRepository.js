@@ -2,7 +2,7 @@
  * WorkflowMetricsRepository
  * Repository interface and implementation for workflow metrics persistence
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Interface for workflow metrics repository
@@ -14,7 +14,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<Object>} Recorded metric
    */
   async recordMetric(metric) {
-    throw new Error('recordMetric method must be implemented');
+    throw new Error("recordMetric method must be implemented");
   }
 
   /**
@@ -24,7 +24,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<Array>} Metrics
    */
   async getMetricsForExecution(executionId, options = {}) {
-    throw new Error('getMetricsForExecution method must be implemented');
+    throw new Error("getMetricsForExecution method must be implemented");
   }
 
   /**
@@ -33,7 +33,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<Object>} Aggregated metrics
    */
   async getAggregatedMetrics(filters = {}) {
-    throw new Error('getAggregatedMetrics method must be implemented');
+    throw new Error("getAggregatedMetrics method must be implemented");
   }
 
   /**
@@ -43,7 +43,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<Array>} Metrics
    */
   async getMetricsByType(metricType, options = {}) {
-    throw new Error('getMetricsByType method must be implemented');
+    throw new Error("getMetricsByType method must be implemented");
   }
 
   /**
@@ -53,7 +53,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<Array>} Metrics
    */
   async getMetricsByName(metricName, options = {}) {
-    throw new Error('getMetricsByName method must be implemented');
+    throw new Error("getMetricsByName method must be implemented");
   }
 
   /**
@@ -62,7 +62,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<Object>} Statistics
    */
   async getMetricsStatistics(filters = {}) {
-    throw new Error('getMetricsStatistics method must be implemented');
+    throw new Error("getMetricsStatistics method must be implemented");
   }
 
   /**
@@ -71,7 +71,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<number>} Number of deleted metrics
    */
   async deleteMetricsForExecution(executionId) {
-    throw new Error('deleteMetricsForExecution method must be implemented');
+    throw new Error("deleteMetricsForExecution method must be implemented");
   }
 
   /**
@@ -80,7 +80,7 @@ class WorkflowMetricsRepository {
    * @returns {Promise<number>} Number of deleted metrics
    */
   async cleanupOldMetrics(daysOld = 30) {
-    throw new Error('cleanupOldMetrics method must be implemented');
+    throw new Error("cleanupOldMetrics method must be implemented");
   }
 }
 
@@ -91,7 +91,7 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
   constructor(databaseConnection) {
     super();
     this.db = databaseConnection;
-    this.tableName = 'workflow_metrics';
+    this.tableName = "workflow_metrics";
   }
 
   /**
@@ -113,9 +113,9 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
       metric.metricName,
       metric.metricValue,
       metric.metricUnit,
-      metric.metricType || 'performance',
+      metric.metricType || "performance",
       metric.metricCategory,
-      JSON.stringify(metric.metadata || {})
+      JSON.stringify(metric.metadata || {}),
     ];
 
     try {
@@ -171,9 +171,10 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
    * @returns {Promise<Array>} Aggregated metrics
    */
   async getAggregatedMetrics(filters = {}) {
-    const { metricName, metricType, metricCategory, timeRange, executionId } = filters;
+    const { metricName, metricType, metricCategory, timeRange, executionId } =
+      filters;
 
-    let whereClause = '';
+    let whereClause = "";
     const values = [];
     let paramIndex = 1;
 
@@ -184,25 +185,33 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
     }
 
     if (metricName) {
-      whereClause += whereClause ? ` AND metric_name = $${paramIndex}` : ` WHERE metric_name = $${paramIndex}`;
+      whereClause += whereClause
+        ? ` AND metric_name = $${paramIndex}`
+        : ` WHERE metric_name = $${paramIndex}`;
       values.push(metricName);
       paramIndex++;
     }
 
     if (metricType) {
-      whereClause += whereClause ? ` AND metric_type = $${paramIndex}` : ` WHERE metric_type = $${paramIndex}`;
+      whereClause += whereClause
+        ? ` AND metric_type = $${paramIndex}`
+        : ` WHERE metric_type = $${paramIndex}`;
       values.push(metricType);
       paramIndex++;
     }
 
     if (metricCategory) {
-      whereClause += whereClause ? ` AND metric_category = $${paramIndex}` : ` WHERE metric_category = $${paramIndex}`;
+      whereClause += whereClause
+        ? ` AND metric_category = $${paramIndex}`
+        : ` WHERE metric_category = $${paramIndex}`;
       values.push(metricCategory);
       paramIndex++;
     }
 
     if (timeRange) {
-      const timeCondition = whereClause ? ` AND recorded_at >= $${paramIndex}` : ` WHERE recorded_at >= $${paramIndex}`;
+      const timeCondition = whereClause
+        ? ` AND recorded_at >= $${paramIndex}`
+        : ` WHERE recorded_at >= $${paramIndex}`;
       whereClause += timeCondition;
       values.push(timeRange);
       paramIndex++;
@@ -306,7 +315,7 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
   async getMetricsStatistics(filters = {}) {
     const { executionId, metricType, timeRange } = filters;
 
-    let whereClause = '';
+    let whereClause = "";
     const values = [];
     let paramIndex = 1;
 
@@ -317,13 +326,17 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
     }
 
     if (metricType) {
-      whereClause += whereClause ? ` AND metric_type = $${paramIndex}` : ` WHERE metric_type = $${paramIndex}`;
+      whereClause += whereClause
+        ? ` AND metric_type = $${paramIndex}`
+        : ` WHERE metric_type = $${paramIndex}`;
       values.push(metricType);
       paramIndex++;
     }
 
     if (timeRange) {
-      const timeCondition = whereClause ? ` AND recorded_at >= $${paramIndex}` : ` WHERE recorded_at >= $${paramIndex}`;
+      const timeCondition = whereClause
+        ? ` AND recorded_at >= $${paramIndex}`
+        : ` WHERE recorded_at >= $${paramIndex}`;
       whereClause += timeCondition;
       values.push(timeRange);
       paramIndex++;
@@ -367,7 +380,9 @@ class PostgreSQLWorkflowMetricsRepository extends WorkflowMetricsRepository {
       const result = await this.db.query(query, [executionId]);
       return result.length;
     } catch (error) {
-      throw new Error(`Failed to delete metrics for execution: ${error.message}`);
+      throw new Error(
+        `Failed to delete metrics for execution: ${error.message}`,
+      );
     }
   }
 
@@ -408,10 +423,10 @@ class InMemoryWorkflowMetricsRepository extends WorkflowMetricsRepository {
       metricName: metric.metricName,
       metricValue: metric.metricValue,
       metricUnit: metric.metricUnit,
-      metricType: metric.metricType || 'performance',
+      metricType: metric.metricType || "performance",
       metricCategory: metric.metricCategory,
       metadata: metric.metadata || {},
-      recordedAt: new Date()
+      recordedAt: new Date(),
     };
 
     this.metrics.set(metricId, metricRecord);
@@ -420,66 +435,72 @@ class InMemoryWorkflowMetricsRepository extends WorkflowMetricsRepository {
 
   async getMetricsForExecution(executionId, options = {}) {
     const { metricType, metricCategory, limit = 100 } = options;
-    
-    let metrics = Array.from(this.metrics.values())
-      .filter(metric => metric.executionId === executionId);
+
+    let metrics = Array.from(this.metrics.values()).filter(
+      (metric) => metric.executionId === executionId,
+    );
 
     if (metricType) {
-      metrics = metrics.filter(metric => metric.metricType === metricType);
+      metrics = metrics.filter((metric) => metric.metricType === metricType);
     }
 
     if (metricCategory) {
-      metrics = metrics.filter(metric => metric.metricCategory === metricCategory);
+      metrics = metrics.filter(
+        (metric) => metric.metricCategory === metricCategory,
+      );
     }
 
     metrics.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
-    
+
     return metrics.slice(0, limit);
   }
 
   async getAggregatedMetrics(filters = {}) {
-    const { metricName, metricType, metricCategory, timeRange, executionId } = filters;
-    
+    const { metricName, metricType, metricCategory, timeRange, executionId } =
+      filters;
+
     let metrics = Array.from(this.metrics.values());
 
     if (executionId) {
-      metrics = metrics.filter(metric => metric.executionId === executionId);
+      metrics = metrics.filter((metric) => metric.executionId === executionId);
     }
 
     if (metricName) {
-      metrics = metrics.filter(metric => metric.metricName === metricName);
+      metrics = metrics.filter((metric) => metric.metricName === metricName);
     }
 
     if (metricType) {
-      metrics = metrics.filter(metric => metric.metricType === metricType);
+      metrics = metrics.filter((metric) => metric.metricType === metricType);
     }
 
     if (metricCategory) {
-      metrics = metrics.filter(metric => metric.metricCategory === metricCategory);
+      metrics = metrics.filter(
+        (metric) => metric.metricCategory === metricCategory,
+      );
     }
 
     if (timeRange) {
       const cutoffDate = new Date(timeRange);
-      metrics = metrics.filter(metric => metric.recordedAt >= cutoffDate);
+      metrics = metrics.filter((metric) => metric.recordedAt >= cutoffDate);
     }
 
     // Group by metric name, type, and category
     const grouped = {};
-    metrics.forEach(metric => {
+    metrics.forEach((metric) => {
       const key = `${metric.metricName}_${metric.metricType}_${metric.metricCategory}`;
       if (!grouped[key]) {
         grouped[key] = {
           metric_name: metric.metricName,
           metric_type: metric.metricType,
           metric_category: metric.metricCategory,
-          values: []
+          values: [],
         };
       }
       grouped[key].values.push(metric.metricValue);
     });
 
     // Calculate aggregates
-    return Object.values(grouped).map(group => {
+    return Object.values(grouped).map((group) => {
       const values = group.values;
       return {
         metric_name: group.metric_name,
@@ -489,75 +510,82 @@ class InMemoryWorkflowMetricsRepository extends WorkflowMetricsRepository {
         min_value: Math.min(...values),
         max_value: Math.max(...values),
         count: values.length,
-        standard_deviation: this.calculateStandardDeviation(values)
+        standard_deviation: this.calculateStandardDeviation(values),
       };
     });
   }
 
   async getMetricsByType(metricType, options = {}) {
     const { executionId, limit = 100, offset = 0 } = options;
-    
-    let metrics = Array.from(this.metrics.values())
-      .filter(metric => metric.metricType === metricType);
+
+    let metrics = Array.from(this.metrics.values()).filter(
+      (metric) => metric.metricType === metricType,
+    );
 
     if (executionId) {
-      metrics = metrics.filter(metric => metric.executionId === executionId);
+      metrics = metrics.filter((metric) => metric.executionId === executionId);
     }
 
     metrics.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
-    
+
     return metrics.slice(offset, offset + limit);
   }
 
   async getMetricsByName(metricName, options = {}) {
     const { executionId, limit = 100, offset = 0 } = options;
-    
-    let metrics = Array.from(this.metrics.values())
-      .filter(metric => metric.metricName === metricName);
+
+    let metrics = Array.from(this.metrics.values()).filter(
+      (metric) => metric.metricName === metricName,
+    );
 
     if (executionId) {
-      metrics = metrics.filter(metric => metric.executionId === executionId);
+      metrics = metrics.filter((metric) => metric.executionId === executionId);
     }
 
     metrics.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
-    
+
     return metrics.slice(offset, offset + limit);
   }
 
   async getMetricsStatistics(filters = {}) {
     const { executionId, metricType, timeRange } = filters;
-    
+
     let metrics = Array.from(this.metrics.values());
 
     if (executionId) {
-      metrics = metrics.filter(metric => metric.executionId === executionId);
+      metrics = metrics.filter((metric) => metric.executionId === executionId);
     }
 
     if (metricType) {
-      metrics = metrics.filter(metric => metric.metricType === metricType);
+      metrics = metrics.filter((metric) => metric.metricType === metricType);
     }
 
     if (timeRange) {
       const cutoffDate = new Date(timeRange);
-      metrics = metrics.filter(metric => metric.recordedAt >= cutoffDate);
+      metrics = metrics.filter((metric) => metric.recordedAt >= cutoffDate);
     }
 
-    const uniqueExecutions = new Set(metrics.map(m => m.executionId)).size;
-    const uniqueMetricNames = new Set(metrics.map(m => m.metricName)).size;
-    const uniqueMetricTypes = new Set(metrics.map(m => m.metricType)).size;
-    const values = metrics.map(m => m.metricValue);
-    const recordedAts = metrics.map(m => m.recordedAt);
+    const uniqueExecutions = new Set(metrics.map((m) => m.executionId)).size;
+    const uniqueMetricNames = new Set(metrics.map((m) => m.metricName)).size;
+    const uniqueMetricTypes = new Set(metrics.map((m) => m.metricType)).size;
+    const values = metrics.map((m) => m.metricValue);
+    const recordedAts = metrics.map((m) => m.recordedAt);
 
     return {
       total_metrics: metrics.length,
       unique_executions: uniqueExecutions,
       unique_metric_names: uniqueMetricNames,
       unique_metric_types: uniqueMetricTypes,
-      average_metric_value: values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null,
+      average_metric_value:
+        values.length > 0
+          ? values.reduce((a, b) => a + b, 0) / values.length
+          : null,
       min_metric_value: values.length > 0 ? Math.min(...values) : null,
       max_metric_value: values.length > 0 ? Math.max(...values) : null,
-      earliest_metric: recordedAts.length > 0 ? new Date(Math.min(...recordedAts)) : null,
-      latest_metric: recordedAts.length > 0 ? new Date(Math.max(...recordedAts)) : null
+      earliest_metric:
+        recordedAts.length > 0 ? new Date(Math.min(...recordedAts)) : null,
+      latest_metric:
+        recordedAts.length > 0 ? new Date(Math.max(...recordedAts)) : null,
     };
   }
 
@@ -594,11 +622,12 @@ class InMemoryWorkflowMetricsRepository extends WorkflowMetricsRepository {
    */
   calculateStandardDeviation(values) {
     if (values.length === 0) return 0;
-    
+
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const squaredDifferences = values.map(value => Math.pow(value - mean, 2));
-    const averageSquaredDifference = squaredDifferences.reduce((a, b) => a + b, 0) / values.length;
-    
+    const squaredDifferences = values.map((value) => Math.pow(value - mean, 2));
+    const averageSquaredDifference =
+      squaredDifferences.reduce((a, b) => a + b, 0) / values.length;
+
     return Math.sqrt(averageSquaredDifference);
   }
 }
@@ -606,5 +635,5 @@ class InMemoryWorkflowMetricsRepository extends WorkflowMetricsRepository {
 module.exports = {
   WorkflowMetricsRepository,
   PostgreSQLWorkflowMetricsRepository,
-  InMemoryWorkflowMetricsRepository
-}; 
+  InMemoryWorkflowMetricsRepository,
+};

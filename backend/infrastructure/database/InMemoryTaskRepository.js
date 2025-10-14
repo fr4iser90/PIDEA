@@ -1,7 +1,6 @@
-const TaskRepository = require('@repositories/TaskRepository');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-
+const TaskRepository = require("@repositories/TaskRepository");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * InMemoryTaskRepository - In-memory implementation for testing and development
@@ -19,11 +18,11 @@ class InMemoryTaskRepository extends TaskRepository {
 
   async findById(id) {
     const task = this.tasks.get(id) || null;
-    logger.info('🔍 [InMemoryTaskRepository] findById:', { 
-      requestedId: id, 
+    logger.info("🔍 [InMemoryTaskRepository] findById:", {
+      requestedId: id,
       found: !!task,
       totalTasks: this.tasks.size,
-      availableIds: Array.from(this.tasks.keys()).slice(0, 5) // Show first 5 IDs
+      availableIds: Array.from(this.tasks.keys()).slice(0, 5), // Show first 5 IDs
     });
     return task;
   }
@@ -33,25 +32,25 @@ class InMemoryTaskRepository extends TaskRepository {
 
     // Apply filters
     if (filters.projectId) {
-      tasks = tasks.filter(task => task.belongsToProject(filters.projectId));
+      tasks = tasks.filter((task) => task.belongsToProject(filters.projectId));
     }
     if (filters.status) {
-      tasks = tasks.filter(task => task.status === filters.status);
+      tasks = tasks.filter((task) => task.status === filters.status);
     }
     if (filters.priority) {
-      tasks = tasks.filter(task => task.priority === filters.priority);
+      tasks = tasks.filter((task) => task.priority === filters.priority);
     }
     if (filters.type) {
-      tasks = tasks.filter(task => task.type === filters.type);
+      tasks = tasks.filter((task) => task.type === filters.type);
     }
     if (filters.title) {
-      tasks = tasks.filter(task => task.title === filters.title);
+      tasks = tasks.filter((task) => task.title === filters.title);
     }
     if (filters.userId) {
-      tasks = tasks.filter(task => task.userId === filters.userId);
+      tasks = tasks.filter((task) => task.userId === filters.userId);
     }
     if (filters.assignee) {
-      tasks = tasks.filter(task => task.assignee === filters.assignee);
+      tasks = tasks.filter((task) => task.assignee === filters.assignee);
     }
 
     return tasks;
@@ -64,7 +63,7 @@ class InMemoryTaskRepository extends TaskRepository {
   async update(id, updatedTask) {
     const existingTask = this.tasks.get(id);
     if (!existingTask) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     // Replace the entire task object
@@ -80,31 +79,31 @@ class InMemoryTaskRepository extends TaskRepository {
 
   async findByStatus(projectId, status) {
     return Array.from(this.tasks.values()).filter(
-      task => task.belongsToProject(projectId) && task.status === status
+      (task) => task.belongsToProject(projectId) && task.status === status,
     );
   }
 
   async findByPriority(projectId, priority) {
     return Array.from(this.tasks.values()).filter(
-      task => task.belongsToProject(projectId) && task.priority === priority
+      (task) => task.belongsToProject(projectId) && task.priority === priority,
     );
   }
 
   async findByType(projectId, type) {
     return Array.from(this.tasks.values()).filter(
-      task => task.belongsToProject(projectId) && task.type === type
+      (task) => task.belongsToProject(projectId) && task.type === type,
     );
   }
 
   async findByTitle(title) {
     const tasks = Array.from(this.tasks.values());
-    const task = tasks.find(task => task.title === title);
+    const task = tasks.find((task) => task.title === title);
     return task || null;
   }
 
   async getProjectStats(projectId) {
-    const projectTasks = Array.from(this.tasks.values()).filter(
-      task => task.belongsToProject(projectId)
+    const projectTasks = Array.from(this.tasks.values()).filter((task) =>
+      task.belongsToProject(projectId),
     );
 
     const stats = {
@@ -118,7 +117,7 @@ class InMemoryTaskRepository extends TaskRepository {
         low: 0,
         medium: 0,
         high: 0,
-        critical: 0
+        critical: 0,
       },
       byType: {
         feature: 0,
@@ -127,11 +126,11 @@ class InMemoryTaskRepository extends TaskRepository {
         documentation: 0,
         test: 0,
         optimization: 0,
-        security: 0
-      }
+        security: 0,
+      },
     };
 
-    projectTasks.forEach(task => {
+    projectTasks.forEach((task) => {
       stats[task.status]++;
       stats.byPriority[task.priority]++;
       stats.byType[task.type]++;
@@ -146,4 +145,4 @@ class InMemoryTaskRepository extends TaskRepository {
   }
 }
 
-module.exports = InMemoryTaskRepository; 
+module.exports = InMemoryTaskRepository;

@@ -67,7 +67,7 @@ const CategoryAnalysisSection = ({
     
     if (dataKey === 'summary') {
       // For summary tab, return all data so CategoryOverview can access issues and recommendations
-      // Backend returns: { success: true, data: { issues: [...], recommendations: [...], summary: {...} } }
+      // Backend returns: { data: { issues: [...], recommendations: [...], summary: {...} } }
       return {
         summary: analysis.data.summary?.data?.summary || analysis.data.summary?.summary || analysis.data.summary || analysis.data,
         issues: analysis.data.issues?.data?.issues || analysis.data.issues?.issues || analysis.data.issues,
@@ -82,7 +82,7 @@ const CategoryAnalysisSection = ({
     // For other tabs, extract the data from the endpoint response structure
     const endpointData = analysis.data[dataKey];
     if (endpointData && typeof endpointData === 'object') {
-      // Backend returns: { success: true, data: { issues: [...] } }
+      // Backend returns: { data: { issues: [...] } }
       if (endpointData.data && endpointData.data[dataKey]) {
         return endpointData.data[dataKey];
       }

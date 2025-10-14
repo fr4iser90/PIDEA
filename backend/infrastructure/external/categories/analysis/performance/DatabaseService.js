@@ -1,17 +1,17 @@
 /**
  * DatabaseService - Infrastructure Layer
  * Database performance monitoring service
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Database performance monitoring and analysis
  */
 
-const Logger = require('@logging/Logger');
-const HttpClient = require('@infrastructure/http/HttpClient');
+const Logger = require("@logging/Logger");
+const HttpClient = require("@infrastructure/http/HttpClient");
 
 class DatabaseService {
   constructor() {
-    this.logger = new Logger('DatabaseService');
+    this.logger = new Logger("DatabaseService");
     this.httpClient = new HttpClient();
     this.baseUrl = process.env.DATABASE_API_URL;
     this.apiKey = process.env.DATABASE_API_KEY;
@@ -20,36 +20,40 @@ class DatabaseService {
 
   async analyze(params) {
     try {
-      this.logger.info('Starting database analysis', { projectId: params.projectId });
-      
+      this.logger.info("Starting database analysis", {
+        projectId: params.projectId,
+      });
+
       const { projectPath, config = {} } = params;
       const dbConfig = {
         ...config,
         duration: config.duration || 60,
         interval: config.interval || 5,
-        includeQueries: config.includeQueries !== false
+        includeQueries: config.includeQueries !== false,
       };
 
-      const result = await this.analyzeDatabasePerformance(projectPath, dbConfig);
-      
-      this.logger.info('Database analysis completed successfully', { 
+      const result = await this.analyzeDatabasePerformance(
+        projectPath,
+        dbConfig,
+      );
+
+      this.logger.info("Database analysis completed successfully", {
         projectId: params.projectId,
-        samples: result.samples?.length || 0 
+        samples: result.samples?.length || 0,
       });
 
       return {
-        success: true,
         data: result,
         metadata: {
-          scanner: 'database',
+          scanner: "database",
           timestamp: new Date().toISOString(),
-          config: dbConfig
-        }
+          config: dbConfig,
+        },
       };
     } catch (error) {
-      this.logger.error('Database analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Database analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -58,26 +62,28 @@ class DatabaseService {
   async analyzeDatabasePerformance(projectPath, config) {
     const samples = [];
     const startTime = Date.now();
-    const endTime = startTime + (config.duration * 1000);
+    const endTime = startTime + config.duration * 1000;
 
     while (Date.now() < endTime) {
       const sample = await this.collectDatabaseSample(projectPath, config);
       samples.push(sample);
-      
-      await new Promise(resolve => setTimeout(resolve, config.interval * 1000));
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, config.interval * 1000),
+      );
     }
 
     return {
       samples: samples,
       summary: this.calculateDatabaseSummary(samples),
-      recommendations: this.generateDatabaseRecommendations(samples)
+      recommendations: this.generateDatabaseRecommendations(samples),
     };
   }
 
   async collectDatabaseSample(projectPath, config) {
     const timestamp = new Date().toISOString();
     const dbInfo = await this.getDatabaseInfo();
-    
+
     let queries = null;
     if (config.includeQueries) {
       queries = await this.getSlowQueries();
@@ -87,7 +93,7 @@ class DatabaseService {
       timestamp: timestamp,
       database: dbInfo,
       queries: queries,
-      projectPath: projectPath
+      projectPath: projectPath,
     };
   }
 
@@ -100,10 +106,10 @@ class DatabaseService {
         activeQueries: Math.floor(Math.random() * 50) + 5,
         cacheHitRatio: Math.random() * 100,
         diskUsage: Math.random() * 100,
-        uptime: Math.floor(Math.random() * 86400) + 3600 // 1-24 hours in seconds
+        uptime: Math.floor(Math.random() * 86400) + 3600, // 1-24 hours in seconds
       };
     } catch (error) {
-      this.logger.warn('Failed to get database info', { error: error.message });
+      this.logger.warn("Failed to get database info", { error: error.message });
       return {};
     }
   }
@@ -114,18 +120,18 @@ class DatabaseService {
       // For now, return mock data
       return [
         {
-          query: 'SELECT * FROM users WHERE email = ?',
+          query: "SELECT * FROM users WHERE email = ?",
           duration: Math.random() * 1000 + 100,
-          calls: Math.floor(Math.random() * 100) + 1
+          calls: Math.floor(Math.random() * 100) + 1,
         },
         {
-          query: 'SELECT * FROM orders WHERE user_id = ?',
+          query: "SELECT * FROM orders WHERE user_id = ?",
           duration: Math.random() * 500 + 50,
-          calls: Math.floor(Math.random() * 50) + 1
-        }
+          calls: Math.floor(Math.random() * 50) + 1,
+        },
       ];
     } catch (error) {
-      this.logger.warn('Failed to get slow queries', { error: error.message });
+      this.logger.warn("Failed to get slow queries", { error: error.message });
       return [];
     }
   }
@@ -136,21 +142,27 @@ class DatabaseService {
         averageConnections: 0,
         averageQueries: 0,
         cacheHitRatio: 0,
-        status: 'unknown'
+        status: "unknown",
       };
     }
 
     const lastSample = samples[samples.length - 1];
-    const avgConnections = samples.reduce((sum, s) => sum + (s.database.connections || 0), 0) / samples.length;
-    const avgQueries = samples.reduce((sum, s) => sum + (s.database.activeQueries || 0), 0) / samples.length;
-    const avgCacheHit = samples.reduce((sum, s) => sum + (s.database.cacheHitRatio || 0), 0) / samples.length;
+    const avgConnections =
+      samples.reduce((sum, s) => sum + (s.database.connections || 0), 0) /
+      samples.length;
+    const avgQueries =
+      samples.reduce((sum, s) => sum + (s.database.activeQueries || 0), 0) /
+      samples.length;
+    const avgCacheHit =
+      samples.reduce((sum, s) => sum + (s.database.cacheHitRatio || 0), 0) /
+      samples.length;
 
     return {
       averageConnections: avgConnections,
       averageQueries: avgQueries,
       cacheHitRatio: avgCacheHit,
-      status: 'healthy',
-      samples: samples.length
+      status: "healthy",
+      samples: samples.length,
     };
   }
 
@@ -160,25 +172,28 @@ class DatabaseService {
 
     if (summary.averageConnections > 80) {
       recommendations.push({
-        type: 'warning',
-        message: 'High database connection count detected. Consider connection pooling optimization.',
-        severity: 'high'
+        type: "warning",
+        message:
+          "High database connection count detected. Consider connection pooling optimization.",
+        severity: "high",
       });
     }
 
     if (summary.cacheHitRatio < 80) {
       recommendations.push({
-        type: 'optimization',
-        message: 'Low cache hit ratio detected. Consider optimizing database queries and indexes.',
-        severity: 'medium'
+        type: "optimization",
+        message:
+          "Low cache hit ratio detected. Consider optimizing database queries and indexes.",
+        severity: "medium",
       });
     }
 
     if (summary.averageQueries > 30) {
       recommendations.push({
-        type: 'warning',
-        message: 'High number of active queries detected. Monitor for potential query bottlenecks.',
-        severity: 'medium'
+        type: "warning",
+        message:
+          "High number of active queries detected. Monitor for potential query bottlenecks.",
+        severity: "medium",
       });
     }
 
@@ -187,14 +202,18 @@ class DatabaseService {
 
   async getConfiguration() {
     return {
-      name: 'Database Monitoring Service',
-      version: '1.0.0',
-      capabilities: ['database-monitoring', 'query-analysis', 'performance-tracking'],
+      name: "Database Monitoring Service",
+      version: "1.0.0",
+      capabilities: [
+        "database-monitoring",
+        "query-analysis",
+        "performance-tracking",
+      ],
       configuration: {
         baseUrl: this.baseUrl,
         timeout: this.timeout,
-        hasApiKey: !!this.apiKey
-      }
+        hasApiKey: !!this.apiKey,
+      },
     };
   }
 
@@ -202,18 +221,18 @@ class DatabaseService {
     try {
       const dbInfo = await this.getDatabaseInfo();
       return {
-        status: 'healthy',
+        status: "healthy",
         databaseInfo: dbInfo,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
 }
 
-module.exports = DatabaseService; 
+module.exports = DatabaseService;

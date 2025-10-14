@@ -3,35 +3,37 @@
  * Creates a new Git branch using DDD pattern with Commands and Handlers
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('GitCreateBranchStep');
-const CommandRegistry = require('@application/commands/CommandRegistry');
-const HandlerRegistry = require('@application/handlers/HandlerRegistry');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("GitCreateBranchStep");
+const CommandRegistry = require("@application/commands/CommandRegistry");
+const HandlerRegistry = require("@application/handlers/HandlerRegistry");
 
 // Step configuration
 const config = {
-  name: 'git_create_branch',
-  type: 'git',
-  description: 'Creates a new Git branch using DDD pattern with Commands and Handlers',
-  category: 'git',
-  version: '1.0.0',
-  dependencies: ['terminalService'],
+  name: "git_create_branch",
+  type: "git",
+  description:
+    "Creates a new Git branch using DDD pattern with Commands and Handlers",
+  category: "git",
+  version: "1.0.0",
+  dependencies: ["terminalService"],
   settings: {
-    timeout: 30000
+    timeout: 30000,
   },
   validation: {
-    required: ['projectPath'],
-    optional: []
-  }
+    required: ["projectPath"],
+    optional: [],
+  },
 };
 
 class GitCreateBranchStep {
   constructor() {
-    this.name = 'GitCreateBranchStep';
-    this.description = 'Creates a new Git branch using DDD pattern with Commands and Handlers';
-    this.category = 'git';
-    this.dependencies = ['terminalService'];
+    this.name = "GitCreateBranchStep";
+    this.description =
+      "Creates a new Git branch using DDD pattern with Commands and Handlers";
+    this.category = "git";
+    this.dependencies = ["terminalService"];
   }
 
   static getConfig() {
@@ -41,93 +43,118 @@ class GitCreateBranchStep {
   async execute(context = {}) {
     const config = GitCreateBranchStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       const { projectPath, ...otherParams } = context;
-      
+
       logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        ...otherParams
+        ...otherParams,
       });
 
       // ✅ DDD PATTERN: Create Command and Handler
       // Resolve template variables in branchName
       const resolvedParams = { ...otherParams };
-      if (resolvedParams.branchName && typeof resolvedParams.branchName === 'string') {
+      if (
+        resolvedParams.branchName &&
+        typeof resolvedParams.branchName === "string"
+      ) {
         // Replace ${task.id} with actual task ID from taskData
-        if (resolvedParams.branchName.includes('${task.id}') && context.taskData?.id) {
-          resolvedParams.branchName = resolvedParams.branchName.replace(/\$\{task\.id\}/g, context.taskData.id);
+        if (
+          resolvedParams.branchName.includes("${task.id}") &&
+          context.taskData?.id
+        ) {
+          resolvedParams.branchName = resolvedParams.branchName.replace(
+            /\$\{task\.id\}/g,
+            context.taskData.id,
+          );
         }
-        
+
         // Replace {{task.title}} with actual task title (sanitized for git branch names)
-        if (resolvedParams.branchName.includes('{{task.title}}') && context.task?.title) {
+        if (
+          resolvedParams.branchName.includes("{{task.title}}") &&
+          context.task?.title
+        ) {
           // Sanitize task title for git branch names: replace spaces with hyphens, remove special chars
           const sanitizedTitle = context.task.title
             .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-            .replace(/\s+/g, '-') // Replace spaces with hyphens
-            .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-            .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-          
-          resolvedParams.branchName = resolvedParams.branchName.replace(/\{\{task\.title\}\}/g, sanitizedTitle);
+            .replace(/[^a-z0-9\s-]/g, "") // Remove special characters except spaces and hyphens
+            .replace(/\s+/g, "-") // Replace spaces with hyphens
+            .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+            .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+
+          resolvedParams.branchName = resolvedParams.branchName.replace(
+            /\{\{task\.title\}\}/g,
+            sanitizedTitle,
+          );
         }
-        
+
         // Replace {{timestamp}} with current timestamp
-        if (resolvedParams.branchName.includes('{{timestamp}}')) {
+        if (resolvedParams.branchName.includes("{{timestamp}}")) {
           const timestamp = Date.now();
-          resolvedParams.branchName = resolvedParams.branchName.replace(/\{\{timestamp\}\}/g, timestamp.toString());
+          resolvedParams.branchName = resolvedParams.branchName.replace(
+            /\{\{timestamp\}\}/g,
+            timestamp.toString(),
+          );
         }
       }
-      
-      const command = CommandRegistry.buildFromCategory('git', 'GitCreateBranchCommand', {
-        projectPath,
-        ...resolvedParams
-      });
 
-      const handler = HandlerRegistry.buildFromCategory('git', 'GitCreateBranchHandler', {
-        terminalService: context.terminalService,
-        logger: logger
-      });
+      const command = CommandRegistry.buildFromCategory(
+        "git",
+        "GitCreateBranchCommand",
+        {
+          projectPath,
+          ...resolvedParams,
+        },
+      );
+
+      const handler = HandlerRegistry.buildFromCategory(
+        "git",
+        "GitCreateBranchHandler",
+        {
+          terminalService: context.terminalService,
+          logger: logger,
+        },
+      );
 
       if (!command || !handler) {
-        throw new Error('Failed to create Git command or handler');
+        throw new Error("Failed to create Git command or handler");
       }
 
       // Execute command through handler
       const result = await handler.handle(command);
 
       logger.info(`${this.name} completed successfully using DDD pattern`, {
-        result: result.result
+        result: result.result,
       });
 
       return {
         success: result.success,
         result: result.result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       logger.error(`${this.name} failed`, {
         error: error.message,
-        context
+        context,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
 
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
   }
 }
@@ -138,5 +165,5 @@ const stepInstance = new GitCreateBranchStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

@@ -1,17 +1,17 @@
 /**
  * Soft Delete Manager - Soft Delete Pattern Implementation
- * 
+ *
  * Provides soft delete capabilities for database records
  * Allows recovery of deleted records and maintains audit trail
  */
 
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
 
 class SoftDeleteManager {
   constructor(databaseConnection) {
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('SoftDeleteManager');
+    this.logger = new Logger("SoftDeleteManager");
   }
 
   /**
@@ -24,7 +24,14 @@ class SoftDeleteManager {
    * @param {Date} expiresAt - Expiration date for recovery (optional)
    * @returns {Promise<string>} Recovery token
    */
-  async softDelete(tableName, recordId, userId = 'system', reason = null, metadata = {}, expiresAt = null) {
+  async softDelete(
+    tableName,
+    recordId,
+    userId = "system",
+    reason = null,
+    metadata = {},
+    expiresAt = null,
+  ) {
     try {
       // Validate table name
       if (!this.isValidTableName(tableName)) {
@@ -38,7 +45,9 @@ class SoftDeleteManager {
       }
 
       if (existingRecord.is_deleted) {
-        throw new Error(`Record already soft deleted: ${tableName}:${recordId}`);
+        throw new Error(
+          `Record already soft deleted: ${tableName}:${recordId}`,
+        );
       }
 
       // Generate recovery token
@@ -56,7 +65,7 @@ class SoftDeleteManager {
       await this.databaseConnection.execute(updateSql, [
         new Date().toISOString(),
         userId,
-        recordId
+        recordId,
       ]);
 
       // Create soft delete metadata
@@ -76,14 +85,13 @@ class SoftDeleteManager {
         reason,
         JSON.stringify(metadata),
         recoveryToken,
-        expiresAt ? expiresAt.toISOString() : null
+        expiresAt ? expiresAt.toISOString() : null,
       ]);
 
       this.logger.debug(`Soft deleted record: ${tableName}:${recordId}`);
       return recoveryToken;
-
     } catch (error) {
-      this.logger.error('Error soft deleting record:', error);
+      this.logger.error("Error soft deleting record:", error);
       throw new Error(`Failed to soft delete record: ${error.message}`);
     }
   }
@@ -96,7 +104,7 @@ class SoftDeleteManager {
    * @param {string} userId - User performing the recovery
    * @returns {Promise<boolean>} Success status
    */
-  async recover(tableName, recordId, recoveryToken, userId = 'system') {
+  async recover(tableName, recordId, recoveryToken, userId = "system") {
     try {
       // Validate table name
       if (!this.isValidTableName(tableName)) {
@@ -110,7 +118,9 @@ class SoftDeleteManager {
       `;
 
       const metadataRows = await this.databaseConnection.query(metadataSql, [
-        tableName, recordId, recoveryToken
+        tableName,
+        recordId,
+        recoveryToken,
       ]);
 
       if (metadataRows.length === 0) {
@@ -142,14 +152,15 @@ class SoftDeleteManager {
       `;
 
       await this.databaseConnection.execute(deleteMetadataSql, [
-        tableName, recordId, recoveryToken
+        tableName,
+        recordId,
+        recoveryToken,
       ]);
 
       this.logger.debug(`Recovered record: ${tableName}:${recordId}`);
       return true;
-
     } catch (error) {
-      this.logger.error('Error recovering record:', error);
+      this.logger.error("Error recovering record:", error);
       throw new Error(`Failed to recover record: ${error.message}`);
     }
   }
@@ -161,7 +172,7 @@ class SoftDeleteManager {
    * @param {string} userId - User performing the permanent deletion
    * @returns {Promise<boolean>} Success status
    */
-  async permanentDelete(tableName, recordId, userId = 'system') {
+  async permanentDelete(tableName, recordId, userId = "system") {
     try {
       // Validate table name
       if (!this.isValidTableName(tableName)) {
@@ -184,13 +195,15 @@ class SoftDeleteManager {
         WHERE table_name = ? AND record_id = ?
       `;
 
-      await this.databaseConnection.execute(deleteMetadataSql, [tableName, recordId]);
+      await this.databaseConnection.execute(deleteMetadataSql, [
+        tableName,
+        recordId,
+      ]);
 
       this.logger.debug(`Permanently deleted record: ${tableName}:${recordId}`);
       return true;
-
     } catch (error) {
-      this.logger.error('Error permanently deleting record:', error);
+      this.logger.error("Error permanently deleting record:", error);
       throw new Error(`Failed to permanently delete record: ${error.message}`);
     }
   }
@@ -219,11 +232,14 @@ class SoftDeleteManager {
         LIMIT ? OFFSET ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [tableName, limit, offset]);
+      const rows = await this.databaseConnection.query(sql, [
+        tableName,
+        limit,
+        offset,
+      ]);
       return rows;
-
     } catch (error) {
-      this.logger.error('Error getting soft deleted records:', error);
+      this.logger.error("Error getting soft deleted records:", error);
       throw new Error(`Failed to get soft deleted records: ${error.message}`);
     }
   }
@@ -241,8 +257,11 @@ class SoftDeleteManager {
         WHERE table_name = ? AND record_id = ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [tableName, recordId]);
-      
+      const rows = await this.databaseConnection.query(sql, [
+        tableName,
+        recordId,
+      ]);
+
       if (rows.length === 0) {
         return null;
       }
@@ -257,11 +276,10 @@ class SoftDeleteManager {
         reason: row.reason,
         metadata: JSON.parse(row.metadata),
         recoveryToken: row.recovery_token,
-        expiresAt: row.expires_at
+        expiresAt: row.expires_at,
       };
-
     } catch (error) {
-      this.logger.error('Error getting soft delete metadata:', error);
+      this.logger.error("Error getting soft delete metadata:", error);
       throw new Error(`Failed to get soft delete metadata: ${error.message}`);
     }
   }
@@ -280,10 +298,12 @@ class SoftDeleteManager {
         WHERE sdm.expires_at IS NOT NULL AND sdm.expires_at < ?
       `;
 
-      const params = [beforeDate ? beforeDate.toISOString() : new Date().toISOString()];
+      const params = [
+        beforeDate ? beforeDate.toISOString() : new Date().toISOString(),
+      ];
 
       if (tableName) {
-        sql += ' AND sdm.table_name = ?';
+        sql += " AND sdm.table_name = ?";
         params.push(tableName);
       }
 
@@ -292,18 +312,22 @@ class SoftDeleteManager {
 
       for (const row of rows) {
         try {
-          await this.permanentDelete(row.table_name, row.record_id, 'system');
+          await this.permanentDelete(row.table_name, row.record_id, "system");
           cleanedCount++;
         } catch (error) {
-          this.logger.warn(`Failed to clean up expired record: ${row.table_name}:${row.record_id}`, error);
+          this.logger.warn(
+            `Failed to clean up expired record: ${row.table_name}:${row.record_id}`,
+            error,
+          );
         }
       }
 
-      this.logger.debug(`Cleaned up ${cleanedCount} expired soft deleted records`);
+      this.logger.debug(
+        `Cleaned up ${cleanedCount} expired soft deleted records`,
+      );
       return cleanedCount;
-
     } catch (error) {
-      this.logger.error('Error cleaning up expired records:', error);
+      this.logger.error("Error cleaning up expired records:", error);
       throw new Error(`Failed to clean up expired records: ${error.message}`);
     }
   }
@@ -328,9 +352,8 @@ class SoftDeleteManager {
 
       const rows = await this.databaseConnection.query(sql);
       return rows;
-
     } catch (error) {
-      this.logger.error('Error getting soft delete statistics:', error);
+      this.logger.error("Error getting soft delete statistics:", error);
       throw new Error(`Failed to get soft delete statistics: ${error.message}`);
     }
   }
@@ -345,9 +368,8 @@ class SoftDeleteManager {
     try {
       const record = await this.getRecord(tableName, recordId);
       return record ? record.is_deleted : false;
-
     } catch (error) {
-      this.logger.error('Error checking soft delete status:', error);
+      this.logger.error("Error checking soft delete status:", error);
       throw new Error(`Failed to check soft delete status: ${error.message}`);
     }
   }
@@ -363,9 +385,8 @@ class SoftDeleteManager {
       const sql = `SELECT * FROM ${tableName} WHERE id = ?`;
       const rows = await this.databaseConnection.query(sql, [recordId]);
       return rows.length > 0 ? rows[0] : null;
-
     } catch (error) {
-      this.logger.error('Error getting record:', error);
+      this.logger.error("Error getting record:", error);
       throw new Error(`Failed to get record: ${error.message}`);
     }
   }
@@ -377,11 +398,18 @@ class SoftDeleteManager {
    */
   isValidTableName(tableName) {
     const allowedTables = [
-      'tasks', 'projects', 'users', 'analysis', 'user_sessions',
-      'queue_history', 'workflow_type_detection', 'ide_configurations',
-      'playwright_configs', 'project_interfaces'
+      "tasks",
+      "projects",
+      "users",
+      "analysis",
+      "user_sessions",
+      "queue_history",
+      "workflow_type_detection",
+      "ide_configurations",
+      "playwright_configs",
+      "project_interfaces",
     ];
-    
+
     return allowedTables.includes(tableName);
   }
 }

@@ -3,9 +3,9 @@
  * Tests PerformanceMonitor functionality in isolation
  */
 
-const PerformanceMonitor = require('../../infrastructure/database/PerformanceMonitor');
+const PerformanceMonitor = require("../../infrastructure/database/PerformanceMonitor");
 
-describe('PerformanceMonitor Unit Tests', () => {
+describe("PerformanceMonitor Unit Tests", () => {
   let performanceMonitor;
   let mockDatabaseConnection;
 
@@ -13,13 +13,13 @@ describe('PerformanceMonitor Unit Tests', () => {
     // Mock database connection
     mockDatabaseConnection = {
       query: jest.fn(),
-      execute: jest.fn()
+      execute: jest.fn(),
     };
 
     performanceMonitor = new PerformanceMonitor(mockDatabaseConnection, {
       enabled: true,
       slowQueryThreshold: 100,
-      maxMetricsHistory: 1000
+      maxMetricsHistory: 1000,
     });
   });
 
@@ -27,8 +27,8 @@ describe('PerformanceMonitor Unit Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('Initialization', () => {
-    test('should initialize with default configuration', () => {
+  describe("Initialization", () => {
+    test("should initialize with default configuration", () => {
       const monitor = new PerformanceMonitor(mockDatabaseConnection);
 
       expect(monitor.enabled).toBe(true);
@@ -36,11 +36,11 @@ describe('PerformanceMonitor Unit Tests', () => {
       expect(monitor.maxMetricsHistory).toBe(1000);
     });
 
-    test('should initialize with custom configuration', () => {
+    test("should initialize with custom configuration", () => {
       const monitor = new PerformanceMonitor(mockDatabaseConnection, {
         enabled: false,
         slowQueryThreshold: 200,
-        maxMetricsHistory: 500
+        maxMetricsHistory: 500,
       });
 
       expect(monitor.enabled).toBe(false);
@@ -49,61 +49,79 @@ describe('PerformanceMonitor Unit Tests', () => {
     });
   });
 
-  describe('Query Tracking', () => {
-    test('should track query execution', async () => {
-      const sql = 'SELECT * FROM users WHERE id = $1';
+  describe("Query Tracking", () => {
+    test("should track query execution", async () => {
+      const sql = "SELECT * FROM users WHERE id = $1";
       const params = [123];
       const executionTime = 50;
-      const result = { rows: [{ id: 123, name: 'Test' }] };
-      const databaseType = 'postgresql';
+      const result = { rows: [{ id: 123, name: "Test" }] };
+      const databaseType = "postgresql";
 
       mockDatabaseConnection.execute.mockResolvedValue({ rows: [] });
 
-      await performanceMonitor.trackQuery(sql, params, executionTime, result, databaseType);
+      await performanceMonitor.trackQuery(
+        sql,
+        params,
+        executionTime,
+        result,
+        databaseType,
+      );
 
       expect(mockDatabaseConnection.execute).toHaveBeenCalled();
     });
 
-    test('should not track queries when disabled', async () => {
+    test("should not track queries when disabled", async () => {
       const disabledMonitor = new PerformanceMonitor(mockDatabaseConnection, {
-        enabled: false
+        enabled: false,
       });
 
-      const sql = 'SELECT * FROM users';
+      const sql = "SELECT * FROM users";
       const params = [];
       const executionTime = 50;
       const result = { rows: [] };
-      const databaseType = 'postgresql';
+      const databaseType = "postgresql";
 
-      await disabledMonitor.trackQuery(sql, params, executionTime, result, databaseType);
+      await disabledMonitor.trackQuery(
+        sql,
+        params,
+        executionTime,
+        result,
+        databaseType,
+      );
 
       expect(mockDatabaseConnection.execute).not.toHaveBeenCalled();
     });
 
-    test('should detect slow queries', async () => {
-      const sql = 'SELECT * FROM large_table';
+    test("should detect slow queries", async () => {
+      const sql = "SELECT * FROM large_table";
       const params = [];
       const executionTime = 150; // Above threshold
       const result = { rows: [] };
-      const databaseType = 'postgresql';
+      const databaseType = "postgresql";
 
       mockDatabaseConnection.execute.mockResolvedValue({ rows: [] });
 
-      await performanceMonitor.trackQuery(sql, params, executionTime, result, databaseType);
+      await performanceMonitor.trackQuery(
+        sql,
+        params,
+        executionTime,
+        result,
+        databaseType,
+      );
 
       expect(mockDatabaseConnection.execute).toHaveBeenCalledTimes(2); // Once for tracking, once for slow query alert
     });
   });
 
-  describe('Performance Metrics', () => {
-    test('should record performance metrics', async () => {
-      const metricType = 'query';
-      const metricName = 'execution_time';
+  describe("Performance Metrics", () => {
+    test("should record performance metrics", async () => {
+      const metricType = "query";
+      const metricName = "execution_time";
       const metricValue = 75.5;
-      const metricUnit = 'ms';
+      const metricUnit = "ms";
       const thresholdValue = 100;
-      const thresholdType = 'warning';
-      const context = { query: 'SELECT * FROM users' };
+      const thresholdType = "warning";
+      const context = { query: "SELECT * FROM users" };
 
       mockDatabaseConnection.execute.mockResolvedValue({ rows: [] });
 
@@ -114,19 +132,19 @@ describe('PerformanceMonitor Unit Tests', () => {
         metricUnit,
         thresholdValue,
         thresholdType,
-        context
+        context,
       );
 
       expect(mockDatabaseConnection.execute).toHaveBeenCalled();
     });
 
-    test('should handle metric threshold violations', async () => {
-      const metricType = 'query';
-      const metricName = 'execution_time';
+    test("should handle metric threshold violations", async () => {
+      const metricType = "query";
+      const metricName = "execution_time";
       const metricValue = 150; // Above threshold
-      const metricUnit = 'ms';
+      const metricUnit = "ms";
       const thresholdValue = 100;
-      const thresholdType = 'warning';
+      const thresholdType = "warning";
 
       mockDatabaseConnection.execute.mockResolvedValue({ rows: [] });
 
@@ -136,18 +154,28 @@ describe('PerformanceMonitor Unit Tests', () => {
         metricValue,
         metricUnit,
         thresholdValue,
-        thresholdType
+        thresholdType,
       );
 
       expect(mockDatabaseConnection.execute).toHaveBeenCalled();
     });
   });
 
-  describe('Metrics Retrieval', () => {
-    test('should get recent metrics', async () => {
+  describe("Metrics Retrieval", () => {
+    test("should get recent metrics", async () => {
       const mockMetrics = [
-        { id: '1', metric_type: 'query', metric_name: 'execution_time', metric_value: 50 },
-        { id: '2', metric_type: 'query', metric_name: 'execution_time', metric_value: 75 }
+        {
+          id: "1",
+          metric_type: "query",
+          metric_name: "execution_time",
+          metric_value: 50,
+        },
+        {
+          id: "2",
+          metric_type: "query",
+          metric_name: "execution_time",
+          metric_value: 75,
+        },
       ];
 
       mockDatabaseConnection.query.mockResolvedValue({ rows: mockMetrics });
@@ -158,22 +186,32 @@ describe('PerformanceMonitor Unit Tests', () => {
       expect(mockDatabaseConnection.query).toHaveBeenCalled();
     });
 
-    test('should get metrics by type', async () => {
+    test("should get metrics by type", async () => {
       const mockMetrics = [
-        { id: '1', metric_type: 'query', metric_name: 'execution_time', metric_value: 50 }
+        {
+          id: "1",
+          metric_type: "query",
+          metric_name: "execution_time",
+          metric_value: 50,
+        },
       ];
 
       mockDatabaseConnection.query.mockResolvedValue({ rows: mockMetrics });
 
-      const result = await performanceMonitor.getMetricsByType('query', 10);
+      const result = await performanceMonitor.getMetricsByType("query", 10);
 
       expect(result).toEqual(mockMetrics);
       expect(mockDatabaseConnection.query).toHaveBeenCalled();
     });
 
-    test('should get slow query alerts', async () => {
+    test("should get slow query alerts", async () => {
       const mockAlerts = [
-        { id: '1', query_hash: 'abc123', execution_time_ms: 150, alert_level: 'warning' }
+        {
+          id: "1",
+          query_hash: "abc123",
+          execution_time_ms: 150,
+          alert_level: "warning",
+        },
       ];
 
       mockDatabaseConnection.query.mockResolvedValue({ rows: mockAlerts });
@@ -185,8 +223,8 @@ describe('PerformanceMonitor Unit Tests', () => {
     });
   });
 
-  describe('Performance Statistics', () => {
-    test('should calculate average execution time', async () => {
+  describe("Performance Statistics", () => {
+    test("should calculate average execution time", async () => {
       const mockStats = { avg_execution_time: 75.5 };
 
       mockDatabaseConnection.query.mockResolvedValue({ rows: [mockStats] });
@@ -197,7 +235,7 @@ describe('PerformanceMonitor Unit Tests', () => {
       expect(mockDatabaseConnection.query).toHaveBeenCalled();
     });
 
-    test('should get query count', async () => {
+    test("should get query count", async () => {
       const mockStats = { query_count: 150 };
 
       mockDatabaseConnection.query.mockResolvedValue({ rows: [mockStats] });
@@ -208,7 +246,7 @@ describe('PerformanceMonitor Unit Tests', () => {
       expect(mockDatabaseConnection.query).toHaveBeenCalled();
     });
 
-    test('should get slow query count', async () => {
+    test("should get slow query count", async () => {
       const mockStats = { slow_query_count: 5 };
 
       mockDatabaseConnection.query.mockResolvedValue({ rows: [mockStats] });
@@ -220,42 +258,52 @@ describe('PerformanceMonitor Unit Tests', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    test('should handle database errors gracefully', async () => {
-      mockDatabaseConnection.execute.mockRejectedValue(new Error('Database error'));
+  describe("Error Handling", () => {
+    test("should handle database errors gracefully", async () => {
+      mockDatabaseConnection.execute.mockRejectedValue(
+        new Error("Database error"),
+      );
 
-      const sql = 'SELECT * FROM users';
+      const sql = "SELECT * FROM users";
       const params = [];
       const executionTime = 50;
       const result = { rows: [] };
-      const databaseType = 'postgresql';
+      const databaseType = "postgresql";
 
       // Should not throw error
       await expect(
-        performanceMonitor.trackQuery(sql, params, executionTime, result, databaseType)
+        performanceMonitor.trackQuery(
+          sql,
+          params,
+          executionTime,
+          result,
+          databaseType,
+        ),
       ).resolves.not.toThrow();
     });
 
-    test('should handle query errors gracefully', async () => {
-      mockDatabaseConnection.query.mockRejectedValue(new Error('Query error'));
+    test("should handle query errors gracefully", async () => {
+      mockDatabaseConnection.query.mockRejectedValue(new Error("Query error"));
 
       // Should not throw error
-      await expect(performanceMonitor.getRecentMetrics(10)).resolves.not.toThrow();
+      await expect(
+        performanceMonitor.getRecentMetrics(10),
+      ).resolves.not.toThrow();
     });
   });
 
-  describe('Configuration Management', () => {
-    test('should update slow query threshold', () => {
+  describe("Configuration Management", () => {
+    test("should update slow query threshold", () => {
       performanceMonitor.setSlowQueryThreshold(200);
       expect(performanceMonitor.slowQueryThreshold).toBe(200);
     });
 
-    test('should update max metrics history', () => {
+    test("should update max metrics history", () => {
       performanceMonitor.setMaxMetricsHistory(500);
       expect(performanceMonitor.maxMetricsHistory).toBe(500);
     });
 
-    test('should enable/disable monitoring', () => {
+    test("should enable/disable monitoring", () => {
       performanceMonitor.setEnabled(false);
       expect(performanceMonitor.enabled).toBe(false);
 
@@ -264,8 +312,8 @@ describe('PerformanceMonitor Unit Tests', () => {
     });
   });
 
-  describe('Cleanup Operations', () => {
-    test('should clean up old metrics', async () => {
+  describe("Cleanup Operations", () => {
+    test("should clean up old metrics", async () => {
       mockDatabaseConnection.execute.mockResolvedValue({ rows: [] });
 
       await performanceMonitor.cleanupOldMetrics(7); // 7 days
@@ -273,7 +321,7 @@ describe('PerformanceMonitor Unit Tests', () => {
       expect(mockDatabaseConnection.execute).toHaveBeenCalled();
     });
 
-    test('should clean up old slow query alerts', async () => {
+    test("should clean up old slow query alerts", async () => {
       mockDatabaseConnection.execute.mockResolvedValue({ rows: [] });
 
       await performanceMonitor.cleanupOldSlowQueryAlerts(7); // 7 days
@@ -282,9 +330,11 @@ describe('PerformanceMonitor Unit Tests', () => {
     });
   });
 
-  describe('Health Checks', () => {
-    test('should check if monitoring is healthy', async () => {
-      mockDatabaseConnection.query.mockResolvedValue({ rows: [{ count: '1' }] });
+  describe("Health Checks", () => {
+    test("should check if monitoring is healthy", async () => {
+      mockDatabaseConnection.query.mockResolvedValue({
+        rows: [{ count: "1" }],
+      });
 
       const isHealthy = await performanceMonitor.isHealthy();
 
@@ -292,8 +342,10 @@ describe('PerformanceMonitor Unit Tests', () => {
       expect(mockDatabaseConnection.query).toHaveBeenCalled();
     });
 
-    test('should detect unhealthy state', async () => {
-      mockDatabaseConnection.query.mockRejectedValue(new Error('Database error'));
+    test("should detect unhealthy state", async () => {
+      mockDatabaseConnection.query.mockRejectedValue(
+        new Error("Database error"),
+      );
 
       const isHealthy = await performanceMonitor.isHealthy();
 

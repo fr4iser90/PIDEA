@@ -1,15 +1,15 @@
-const Logger = require('@logging/Logger');
-const PlaywrightTestRunner = require('@tests/playwright/utils/test-runner');
-const PlaywrightTestManager = require('@tests/playwright/utils/test-manager');
-const path = require('path');
-const fs = require('fs-extra');
-const centralizedConfig = require('@config/centralized-config');
+const Logger = require("@logging/Logger");
+const PlaywrightTestRunner = require("@tests/playwright/utils/test-runner");
+const PlaywrightTestManager = require("@tests/playwright/utils/test-manager");
+const path = require("path");
+const fs = require("fs-extra");
+const centralizedConfig = require("@config/centralized-config");
 
-const logger = new Logger('PlaywrightTestApplicationService');
+const logger = new Logger("PlaywrightTestApplicationService");
 
 /**
  * Playwright Test Application Service
- * 
+ *
  * Provides high-level test execution and management functionality following
  * the existing ApplicationService pattern with dependency injection and
  * workspace detection integration.
@@ -21,18 +21,18 @@ class PlaywrightTestApplicationService {
     this.testManager = dependencies.testManager || new PlaywrightTestManager();
     this.workspaceDetector = dependencies.workspaceDetector;
     this.projectMapper = dependencies.projectMapper;
-    this.application = dependencies.application;  // ✅ APPLICATION OBJEKT SPEICHERN!
-    
+    this.application = dependencies.application; // ✅ APPLICATION OBJEKT SPEICHERN!
+
     this.activeTests = new Map();
     this.testConfigurations = new Map();
-    
-    this.logger.info('PlaywrightTestApplicationService initialized', {
+
+    this.logger.info("PlaywrightTestApplicationService initialized", {
       hasWorkspaceDetector: !!this.workspaceDetector,
       hasProjectMapper: !!this.projectMapper,
-      hasApplication: !!this.application
+      hasApplication: !!this.application,
     });
   }
-  
+
   /**
    * Execute Playwright tests for a specific project
    * @param {string} projectId - Project identifier
@@ -41,91 +41,108 @@ class PlaywrightTestApplicationService {
    */
   async executeTests(projectId, options = {}) {
     const startTime = Date.now();
-    this.logger.info(`Starting test execution for project: ${projectId}`, options);
-    
+    this.logger.info(
+      `Starting test execution for project: ${projectId}`,
+      options,
+    );
+
     try {
       // Get workspace path from options
       const workspacePath = options.workspacePath;
       if (!workspacePath) {
         throw new Error(`Workspace path is required for project: ${projectId}`);
       }
-      
-      this.logger.debug(`Using workspace path: ${workspacePath}`, { projectId });
-      
+
+      this.logger.debug(`Using workspace path: ${workspacePath}`, {
+        projectId,
+      });
+
       // Load project-specific configuration
-      const config = await this.loadProjectConfiguration(workspacePath, { ...options, projectId });
-      this.logger.debug('Loaded project configuration', { projectId, config });
-      
+      const config = await this.loadProjectConfiguration(workspacePath, {
+        ...options,
+        projectId,
+      });
+      this.logger.debug("Loaded project configuration", { projectId, config });
+
       // Save configuration to database to ensure persistence
       try {
         await this.saveConfigurationToDatabase(projectId, config);
-        this.logger.debug('Configuration saved to database', { projectId });
+        this.logger.debug("Configuration saved to database", { projectId });
       } catch (saveError) {
-        this.logger.warn('Failed to save configuration to database, continuing with execution', saveError);
+        this.logger.warn(
+          "Failed to save configuration to database, continuing with execution",
+          saveError,
+        );
       }
-      
+
       // Discover available tests
-      const testFiles = await this.discoverProjectTests(workspacePath, config, options);
-      this.logger.info(`Discovered ${testFiles.length} test files`, { projectId });
-      
+      const testFiles = await this.discoverProjectTests(
+        workspacePath,
+        config,
+        options,
+      );
+      this.logger.info(`Discovered ${testFiles.length} test files`, {
+        projectId,
+      });
+
       if (testFiles.length === 0) {
         return {
-          success: true,
-          message: 'No tests found to execute',
+          message: "No tests found to execute",
           testFiles: [],
           duration: Date.now() - startTime,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
-      
+
       // Execute tests based on options
       const results = await this.executeTestFiles(testFiles, config, options);
-      
+
       // Format results for frontend - convert array to object with browser keys
       const formattedResults = {};
-      results.forEach(result => {
+      results.forEach((result) => {
         if (result.browser) {
           formattedResults[result.browser] = {
             success: result.success,
             duration: result.duration || 0,
             error: result.error || null,
-            output: result.output || '',
-            timestamp: result.timestamp || new Date().toISOString()
+            output: result.output || "",
+            timestamp: result.timestamp || new Date().toISOString(),
           };
         }
       });
-      
+
       const executionResult = {
-        success: true,
         projectId,
         workspacePath,
-        testFiles: testFiles.map(f => f.name),
+        testFiles: testFiles.map((f) => f.name),
         results: [formattedResults], // Wrap in array for frontend
         duration: Date.now() - startTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
+
       this.logger.info(`Test execution completed for project: ${projectId}`, {
         duration: executionResult.duration,
         testCount: testFiles.length,
-        successCount: results.filter(r => r.success).length
+        successCount: results.filter((r) => r.success).length,
       });
-      
+
       return executionResult;
-      
     } catch (error) {
-      this.logger.error(`Test execution failed for project: ${projectId}`, error);
-      
+      this.logger.error(
+        `Test execution failed for project: ${projectId}`,
+        error,
+      );
+
       return {
-        success: false,
+       
         projectId,
         error: error.message,
         duration: Date.now() - startTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
-  
+
   /**
    * Get test results for a specific test execution
    * @param {string} testId - Test execution ID
@@ -134,48 +151,44 @@ class PlaywrightTestApplicationService {
   async getTestResults(testId) {
     try {
       this.logger.debug(`Retrieving test results for: ${testId}`);
-      
+
       const result = this.testRunner.getTestResult(testId);
       if (!result) {
         throw new Error(`Test results not found for ID: ${testId}`);
       }
-      
+
       return {
-        success: true,
         testId,
         result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
       this.logger.error(`Failed to get test results for: ${testId}`, error);
       throw error;
     }
   }
-  
+
   /**
    * Get all test results
    * @returns {Promise<Object>} All test results
    */
   async getAllTestResults() {
     try {
-      this.logger.debug('Retrieving all test results');
-      
+      this.logger.debug("Retrieving all test results");
+
       const results = this.testRunner.getAllTestResults();
-      
+
       return {
-        success: true,
         results,
         count: results.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to get all test results', error);
+      this.logger.error("Failed to get all test results", error);
       throw error;
     }
   }
-  
+
   /**
    * Stop running tests
    * @param {string|Array} testIds - Optional test ID(s) to stop specific test(s)
@@ -183,8 +196,10 @@ class PlaywrightTestApplicationService {
    */
   async stopTests(testIds = null) {
     try {
-      this.logger.info(`Stopping tests${testIds ? ` for IDs: ${Array.isArray(testIds) ? testIds.join(', ') : testIds}` : ''}`);
-      
+      this.logger.info(
+        `Stopping tests${testIds ? ` for IDs: ${Array.isArray(testIds) ? testIds.join(", ") : testIds}` : ""}`,
+      );
+
       if (testIds && Array.isArray(testIds) && testIds.length > 0) {
         // Stop specific tests
         for (const testId of testIds) {
@@ -206,19 +221,19 @@ class PlaywrightTestApplicationService {
         await this.testRunner.stopAllTests();
         this.activeTests.clear();
       }
-      
+
       return {
-        success: true,
-        message: testIds ? `Tests ${Array.isArray(testIds) ? testIds.join(', ') : testIds} stopped` : 'All tests stopped',
-        timestamp: new Date().toISOString()
+        message: testIds
+          ? `Tests ${Array.isArray(testIds) ? testIds.join(", ") : testIds} stopped`
+          : "All tests stopped",
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to stop tests', error);
+      this.logger.error("Failed to stop tests", error);
       throw error;
     }
   }
-  
+
   /**
    * Get test runner status
    * @returns {Promise<Object>} Status information
@@ -228,24 +243,22 @@ class PlaywrightTestApplicationService {
       const isRunning = this.testRunner.isTestRunning();
       const activeTestCount = this.activeTests.size;
       const totalResults = this.testRunner.getAllTestResults().length;
-      
+
       return {
-        success: true,
         status: {
           isRunning,
           activeTestCount,
           totalResults,
-          lastActivity: new Date().toISOString()
+          lastActivity: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error('Failed to get test runner status', error);
+      this.logger.error("Failed to get test runner status", error);
       throw error;
     }
   }
-  
+
   /**
    * Load project-specific configuration
    * @param {string} workspacePath - Workspace path
@@ -254,78 +267,99 @@ class PlaywrightTestApplicationService {
    */
   async loadProjectConfiguration(workspacePath, options = {}) {
     try {
-      this.logger.debug(`Loading configuration for workspace: ${workspacePath}`);
-      
+      this.logger.debug(
+        `Loading configuration for workspace: ${workspacePath}`,
+      );
+
       // Extract projectId from workspacePath or options
-      const projectId = options.projectId || workspacePath.split('/').pop().replace(/[^a-zA-Z0-9]/g, '_');
-      
+      const projectId =
+        options.projectId ||
+        workspacePath
+          .split("/")
+          .pop()
+          .replace(/[^a-zA-Z0-9]/g, "_");
+
       // Try to load configuration from database first
       let config;
       try {
         config = await this.loadConfigurationFromDatabase(projectId);
-        this.logger.debug('Loaded configuration from database', { projectId, config });
-        
+        this.logger.debug("Loaded configuration from database", {
+          projectId,
+          config,
+        });
+
         // If no configuration found in database, throw error to use fallback
         if (config === null) {
-          throw new Error('No configuration found in database');
+          throw new Error("No configuration found in database");
         }
       } catch (dbError) {
-        this.logger.warn('Failed to load configuration from database, falling back to file', dbError.message);
+        this.logger.warn(
+          "Failed to load configuration from database, falling back to file",
+          dbError.message,
+        );
         // Fallback to file-based configuration
         config = await this.testManager.loadTestConfig(workspacePath);
       }
-      
+
       // Merge with provided options (this takes precedence)
       // Only merge properties that are actually provided in options.config
       const mergedConfig = { ...config };
-      
+
       if (options.config) {
         // Only override properties that are explicitly provided
-        Object.keys(options.config).forEach(key => {
+        Object.keys(options.config).forEach((key) => {
           if (options.config[key] !== undefined) {
             mergedConfig[key] = options.config[key];
           }
         });
       }
-      
-      this.logger.info(`Merged config before validation:`, { 
-        mergedConfig, 
-        browsers: mergedConfig.browsers, 
+
+      this.logger.info(`Merged config before validation:`, {
+        mergedConfig,
+        browsers: mergedConfig.browsers,
         browsersType: typeof mergedConfig.browsers,
-        browsersIsArray: Array.isArray(mergedConfig.browsers)
+        browsersIsArray: Array.isArray(mergedConfig.browsers),
       });
-      
+
       // Ensure browsers is always an array before validation
       if (!Array.isArray(mergedConfig.browsers)) {
-        this.logger.warn(`Browsers is not an array, fixing: ${mergedConfig.browsers}`);
-        mergedConfig.browsers = mergedConfig.browsers ? [mergedConfig.browsers] : ['chromium'];
+        this.logger.warn(
+          `Browsers is not an array, fixing: ${mergedConfig.browsers}`,
+        );
+        mergedConfig.browsers = mergedConfig.browsers
+          ? [mergedConfig.browsers]
+          : ["chromium"];
       }
-      
+
       // Validate configuration
       const validation = this.testManager.validateTestConfig(mergedConfig);
       if (!validation.valid) {
-        this.logger.error('Configuration validation failed', { 
-          errors: validation.errors, 
+        this.logger.error("Configuration validation failed", {
+          errors: validation.errors,
           config: mergedConfig,
           browsers: mergedConfig.browsers,
-          browsersType: typeof mergedConfig.browsers
+          browsersType: typeof mergedConfig.browsers,
         });
-        throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid configuration: ${validation.errors.join(", ")}`,
+        );
       }
-      
+
       if (validation.warnings.length > 0) {
-        this.logger.warn('Configuration warnings', validation.warnings);
+        this.logger.warn("Configuration warnings", validation.warnings);
       }
-      
-      this.logger.debug('Configuration loaded successfully', mergedConfig);
+
+      this.logger.debug("Configuration loaded successfully", mergedConfig);
       return mergedConfig;
-      
     } catch (error) {
-      this.logger.error(`Failed to load configuration for workspace: ${workspacePath}`, error);
+      this.logger.error(
+        `Failed to load configuration for workspace: ${workspacePath}`,
+        error,
+      );
       throw error;
     }
   }
-  
+
   /**
    * Discover test files in project
    * @param {string} workspacePath - Workspace path
@@ -336,30 +370,45 @@ class PlaywrightTestApplicationService {
   async discoverProjectTests(workspacePath, config, options = {}) {
     try {
       this.logger.debug(`Discovering tests in workspace: ${workspacePath}`);
-      
+
       // Use testManager with proper configuration - NO HARDCODED PATHS!
-      const allTestFiles = await this.testManager.discoverTests(config.tests?.pattern || '**/*.test.js');
-      
+      const allTestFiles = await this.testManager.discoverTests(
+        config.tests?.pattern || "**/*.test.js",
+      );
+
       // Filter tests if specific test names are provided
       let testFiles = allTestFiles;
-      if (options.testNames && Array.isArray(options.testNames) && options.testNames.length > 0) {
-        this.logger.info(`Filtering tests by names: ${options.testNames.join(', ')}`);
-        testFiles = allTestFiles.filter(testFile => {
-          const testName = testFile.name.replace(/\.test\.js$/, ''); // Remove .test.js extension
+      if (
+        options.testNames &&
+        Array.isArray(options.testNames) &&
+        options.testNames.length > 0
+      ) {
+        this.logger.info(
+          `Filtering tests by names: ${options.testNames.join(", ")}`,
+        );
+        testFiles = allTestFiles.filter((testFile) => {
+          const testName = testFile.name.replace(/\.test\.js$/, ""); // Remove .test.js extension
           return options.testNames.includes(testName);
         });
-        this.logger.info(`Filtered from ${allTestFiles.length} to ${testFiles.length} test files`);
+        this.logger.info(
+          `Filtered from ${allTestFiles.length} to ${testFiles.length} test files`,
+        );
       }
-      
-      this.logger.debug(`Discovered ${testFiles.length} test files`, { workspacePath, testFiles });
+
+      this.logger.debug(`Discovered ${testFiles.length} test files`, {
+        workspacePath,
+        testFiles,
+      });
       return testFiles;
-      
     } catch (error) {
-      this.logger.error(`Failed to discover tests in workspace: ${workspacePath}`, error);
+      this.logger.error(
+        `Failed to discover tests in workspace: ${workspacePath}`,
+        error,
+      );
       throw error;
     }
   }
-  
+
   /**
    * Execute test files
    * @param {Array} testFiles - Array of test files
@@ -369,55 +418,61 @@ class PlaywrightTestApplicationService {
    */
   async executeTestFiles(testFiles, config, options) {
     const results = [];
-    
+
     try {
       this.logger.info(`Executing ${testFiles.length} test files`);
-      
+
       // Initialize test runner with the loaded configuration
       this.testRunner = new PlaywrightTestRunner(config);
-      this.logger.debug('Test runner initialized with configuration', { config });
-      
+      this.logger.debug("Test runner initialized with configuration", {
+        config,
+      });
+
       // Execute tests sequentially to avoid resource conflicts
       for (const testFile of testFiles) {
         try {
           this.logger.debug(`Executing test file: ${testFile.name}`);
-          
+
           const testOptions = {
             ...config,
             ...options,
-            testFile: testFile.path
+            testFile: testFile.path,
           };
-          
-          const result = await this.testRunner.executeTest(testFile.path, testOptions);
+
+          const result = await this.testRunner.executeTest(
+            testFile.path,
+            testOptions,
+          );
           results.push(result);
-          
+
           // Track active test
           this.activeTests.set(result.testId, {
             testFile: testFile.name,
             startTime: result.timestamp,
-            status: 'running'
+            status: "running",
           });
-          
         } catch (error) {
-          this.logger.error(`Failed to execute test file: ${testFile.name}`, error);
+          this.logger.error(
+            `Failed to execute test file: ${testFile.name}`,
+            error,
+          );
           results.push({
             testFile: testFile.name,
-            success: false,
+           
             error: error.message,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
         }
       }
-      
+
       this.logger.info(`Completed execution of ${testFiles.length} test files`);
       return results;
-      
     } catch (error) {
-      this.logger.error('Failed to execute test files', error);
+      this.logger.error("Failed to execute test files", error);
       throw error;
     }
   }
-  
+
   /**
    * Validate login credentials for tests
    * @param {string} projectId - Project identifier
@@ -426,45 +481,52 @@ class PlaywrightTestApplicationService {
    */
   async validateLoginCredentials(projectId, credentials, workspacePath) {
     try {
-      this.logger.info(`Validating login credentials for project: ${projectId}`);
-      
+      this.logger.info(
+        `Validating login credentials for project: ${projectId}`,
+      );
+
       if (!workspacePath) {
         throw new Error(`Workspace path is required for project: ${projectId}`);
       }
-      
+
       // Load project configuration
-      const config = await this.loadProjectConfiguration(workspacePath, { projectId });
-      
+      const config = await this.loadProjectConfiguration(workspacePath, {
+        projectId,
+      });
+
       // Check if login is required
       if (!config.login?.required) {
         return {
-          success: true,
-          message: 'Login not required for this project',
-          timestamp: new Date().toISOString()
+          message: "Login not required for this project",
+          timestamp: new Date().toISOString(),
         };
       }
-      
+
       // Validate credentials format
       if (!credentials.username || !credentials.password) {
-        throw new Error('Username and password are required');
+        throw new Error("Username and password are required");
       }
-      
+
       // Test credentials by attempting login
       const testResult = await this.testLoginCredentials(credentials, config);
-      
+
       return {
         success: testResult.success,
-        message: testResult.success ? 'Credentials are valid' : 'Invalid credentials',
+        message: testResult.success
+          ? "Credentials are valid"
+          : "Invalid credentials",
         details: testResult.details,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      this.logger.error(`Failed to validate login credentials for project: ${projectId}`, error);
+      this.logger.error(
+        `Failed to validate login credentials for project: ${projectId}`,
+        error,
+      );
       throw error;
     }
   }
-  
+
   /**
    * Test login credentials
    * @param {Object} credentials - Login credentials
@@ -498,27 +560,26 @@ class PlaywrightTestApplicationService {
           }
         });
       `;
-      
+
       // Execute temporary test
       const result = await this.testRunner.executeTest(testContent, {
         baseURL: config.baseURL,
         timeout: 10000,
-        headless: config.headless !== undefined ? config.headless : false
+        headless: config.headless !== undefined ? config.headless : false,
       });
-      
+
       return {
         success: result.success,
-        details: result.error || 'Login successful'
+        details: result.error || "Login successful",
       };
-      
     } catch (error) {
       return {
-        success: false,
-        details: error.message
+       
+        details: error.message,
       };
     }
   }
-  
+
   /**
    * Save configuration to database
    * @param {string} projectId - Project ID
@@ -530,80 +591,96 @@ class PlaywrightTestApplicationService {
       // Get project repository from application
       const projectRepository = this.application?.projectRepository;
       if (!projectRepository) {
-        throw new Error('Project repository not available');
+        throw new Error("Project repository not available");
       }
-      
+
       // Get existing project
       const project = await projectRepository.findById(projectId);
       if (!project) {
         throw new Error(`Project not found: ${projectId}`);
       }
-      
+
       // Use the exact config provided - no modifications
       const validatedConfig = {
-        ...config
+        ...config,
       };
-      
-      this.logger.info(`Saving configuration exactly as provided: ${JSON.stringify(validatedConfig)}`);
-      
+
+      this.logger.info(
+        `Saving configuration exactly as provided: ${JSON.stringify(validatedConfig)}`,
+      );
+
       // Config is already parsed by the repository
       let existingConfig = {};
       if (project.config) {
         try {
           existingConfig = project.config;
         } catch (error) {
-          this.logger.warn(`Failed to access existing project config: ${error.message}`);
+          this.logger.warn(
+            `Failed to access existing project config: ${error.message}`,
+          );
         }
       }
-      
+
       // Update project config with Playwright configuration
       const updatedConfig = {
         ...existingConfig,
-        playwright: validatedConfig
+        playwright: validatedConfig,
       };
-      
+
       // Update the project with the merged config
       const updatedProject = {
         ...project,
         config: updatedConfig,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
-      
+
       await projectRepository.update(updatedProject);
-      
-      this.logger.info(`Saved Playwright configuration to database for project: ${projectId}`);
-      
+
+      this.logger.info(
+        `Saved Playwright configuration to database for project: ${projectId}`,
+      );
+
       // Emit event for successful configuration save
       if (this.application && this.application.eventBus) {
-        await this.application.eventBus.emit('playwright:config:saved', {
+        await this.application.eventBus.emit("playwright:config:saved", {
           projectId,
           config: validatedConfig,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        this.logger.info(`Emitted playwright:config:saved event for project: ${projectId}`);
+        this.logger.info(
+          `Emitted playwright:config:saved event for project: ${projectId}`,
+        );
       } else {
-        this.logger.warn('EventBus not available for playwright:config:saved event');
+        this.logger.warn(
+          "EventBus not available for playwright:config:saved event",
+        );
       }
-      
     } catch (error) {
-      this.logger.error(`Failed to save configuration to database for project: ${projectId}`, error);
-      
+      this.logger.error(
+        `Failed to save configuration to database for project: ${projectId}`,
+        error,
+      );
+
       // Emit event for failed configuration save
       if (this.application && this.application.eventBus) {
-        await this.application.eventBus.emit('playwright:config:failed', {
+        await this.application.eventBus.emit("playwright:config:failed", {
           projectId,
           error: error.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        this.logger.info(`Emitted playwright:config:failed event for project: ${projectId}`);
+        this.logger.info(
+          `Emitted playwright:config:failed event for project: ${projectId}`,
+        );
       } else {
-        this.logger.warn('EventBus not available for playwright:config:failed event');
+        this.logger.warn(
+          "EventBus not available for playwright:config:failed event",
+        );
       }
-      
+
       throw error;
     }
   }
-  
+
   /**
    * Load configuration from database
    * @param {string} projectId - Project ID
@@ -614,15 +691,15 @@ class PlaywrightTestApplicationService {
       // Get project repository from application
       const projectRepository = this.application?.projectRepository;
       if (!projectRepository) {
-        throw new Error('Project repository not available');
+        throw new Error("Project repository not available");
       }
-      
+
       // Get project from database
       const project = await projectRepository.findById(projectId);
       if (!project) {
         throw new Error(`Project not found: ${projectId}`);
       }
-      
+
       // Extract Playwright configuration from project config
       let config = {};
       if (project.config) {
@@ -630,71 +707,87 @@ class PlaywrightTestApplicationService {
           // Config is already parsed by the repository, no need to parse again
           const projectConfig = project.config;
           config = projectConfig.playwright || {};
-          this.logger.info(`Extracted config from database:`, { config, browsers: config.browsers, browsersType: typeof config.browsers });
+          this.logger.info(`Extracted config from database:`, {
+            config,
+            browsers: config.browsers,
+            browsersType: typeof config.browsers,
+          });
         } catch (error) {
-          this.logger.warn(`Failed to extract project config for ${projectId}:`, error.message);
+          this.logger.warn(
+            `Failed to extract project config for ${projectId}:`,
+            error.message,
+          );
         }
       }
-      
+
       // Only merge with default config if no configuration exists in database
       if (Object.keys(config).length === 0) {
-        this.logger.info(`No configuration found in database for project: ${projectId}, returning null`);
+        this.logger.info(
+          `No configuration found in database for project: ${projectId}, returning null`,
+        );
         return null;
       }
-      
 
-      
-      this.logger.debug(`Loaded and merged Playwright configuration for project: ${projectId}`, { config });
-      
-      this.logger.info(`Loaded Playwright configuration from database for project: ${projectId}`);
+      this.logger.debug(
+        `Loaded and merged Playwright configuration for project: ${projectId}`,
+        { config },
+      );
+
+      this.logger.info(
+        `Loaded Playwright configuration from database for project: ${projectId}`,
+      );
       return config;
-      
     } catch (error) {
-      this.logger.error(`Failed to load configuration from database for project: ${projectId}`, error);
+      this.logger.error(
+        `Failed to load configuration from database for project: ${projectId}`,
+        error,
+      );
       throw error;
     }
   }
-  
+
   /**
    * Get default Playwright configuration
    * @deprecated This method should not be used as it provides fake data
    * @returns {Object} Default configuration
    */
   getDefaultPlaywrightConfig() {
-    this.logger.warn('getDefaultPlaywrightConfig is deprecated and should not be used');
+    this.logger.warn(
+      "getDefaultPlaywrightConfig is deprecated and should not be used",
+    );
     return {
-      baseURL: 'http://localhost:4000',
+      baseURL: "http://localhost:4000",
       timeout: 30000,
       retries: 2,
-      browsers: ['chromium'],
+      browsers: ["chromium"],
       headless: true, // Default to headless for NixOS compatibility
       login: {
         required: false,
-        selector: '',
-        username: '',
-        password: '',
-        additionalFields: {}
+        selector: "",
+        username: "",
+        password: "",
+        additionalFields: {},
       },
       tests: {
         directory: centralizedConfig.pathConfig.tests.playwright,
-        pattern: '**/*.test.js',
-        exclude: ['**/node_modules/**']
+        pattern: "**/*.test.js",
+        exclude: ["**/node_modules/**"],
       },
       screenshots: {
         enabled: true,
         path: centralizedConfig.pathConfig.output.screenshots,
-        onFailure: true
+        onFailure: true,
       },
       videos: {
         enabled: false,
         path: centralizedConfig.pathConfig.output.videos,
-        onFailure: true
+        onFailure: true,
       },
       reports: {
         enabled: true,
         path: centralizedConfig.pathConfig.output.reports,
-        format: 'html'
-      }
+        format: "html",
+      },
     };
   }
 }

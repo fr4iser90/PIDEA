@@ -3,13 +3,13 @@
  * Handler for getting workspace information
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class GetWorkspaceInfoHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class GetWorkspaceInfoHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,8 +40,8 @@ class GetWorkspaceInfoHandler {
       this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
-      if (!command || command.type !== 'GetWorkspaceInfoCommand') {
-        throw new Error('Invalid command type for GetWorkspaceInfoHandler');
+      if (!command || command.type !== "GetWorkspaceInfoCommand") {
+        throw new Error("Invalid command type for GetWorkspaceInfoHandler");
       }
 
       // Get workspace info
@@ -49,35 +49,33 @@ class GetWorkspaceInfoHandler {
         ...command.options,
         includeDetails: command.includeDetails,
         includeProjects: command.includeProjects,
-        workspacePath: command.workspacePath
+        workspacePath: command.workspacePath,
       });
 
       // Publish success event
-      await this.eventBus.publish('workspace.info.retrieved', {
+      await this.eventBus.publish("workspace.info.retrieved", {
         commandId: command.commandId,
         userId: command.userId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info(`Workspace info retrieved successfully`);
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to get workspace info:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('workspace.info.retrieval.failed', {
+      await this.eventBus.publish("workspace.info.retrieval.failed", {
         commandId: command.commandId,
         userId: command.userId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -90,12 +88,12 @@ class GetWorkspaceInfoHandler {
    */
   getInfo() {
     return {
-      name: 'GetWorkspaceInfoHandler',
-      version: '1.0.0',
-      description: 'Handles IDE workspace information retrieval',
-      supportedCommands: ['GetWorkspaceInfoCommand']
+      name: "GetWorkspaceInfoHandler",
+      version: "1.0.0",
+      description: "Handles IDE workspace information retrieval",
+      supportedCommands: ["GetWorkspaceInfoCommand"],
     };
   }
 }
 
-module.exports = GetWorkspaceInfoHandler; 
+module.exports = GetWorkspaceInfoHandler;

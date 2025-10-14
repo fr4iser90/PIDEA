@@ -1,6 +1,6 @@
 /**
  * Project Data Generator
- * 
+ *
  * Generates test project data for database testing.
  * Provides utilities for creating realistic project records.
  */
@@ -15,9 +15,9 @@ function generateProjects(count = 1, options = {}) {
   const {
     startId = 1,
     ownerIds = [1, 2, 3],
-    statuses = ['active', 'inactive', 'archived'],
-    visibilities = ['private', 'public', 'internal'],
-    namePrefix = 'Test Project'
+    statuses = ["active", "inactive", "archived"],
+    visibilities = ["private", "public", "internal"],
+    namePrefix = "Test Project",
   } = options;
 
   const projects = [];
@@ -30,7 +30,8 @@ function generateProjects(count = 1, options = {}) {
     const createdAt = generateRandomDate();
     const updatedAt = generateRandomDate(createdAt);
     const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const visibility = visibilities[Math.floor(Math.random() * visibilities.length)];
+    const visibility =
+      visibilities[Math.floor(Math.random() * visibilities.length)];
 
     projects.push({
       id,
@@ -40,7 +41,7 @@ function generateProjects(count = 1, options = {}) {
       created_at: createdAt,
       updated_at: updatedAt,
       status,
-      visibility
+      visibility,
     });
   }
 
@@ -53,16 +54,16 @@ function generateProjects(count = 1, options = {}) {
  */
 function generateProjectDescription() {
   const descriptions = [
-    'A test project for database testing',
-    'Another test project for database testing',
-    'A third test project for database testing',
-    'Test project with comprehensive testing scenarios',
-    'Database testing project with multiple components',
-    'Test project for performance validation',
-    'Database testing project with audit trails',
-    'Test project for migration testing',
-    'Database testing project with error handling',
-    'Test project for cross-database compatibility'
+    "A test project for database testing",
+    "Another test project for database testing",
+    "A third test project for database testing",
+    "Test project with comprehensive testing scenarios",
+    "Database testing project with multiple components",
+    "Test project for performance validation",
+    "Database testing project with audit trails",
+    "Test project for migration testing",
+    "Database testing project with error handling",
+    "Test project for cross-database compatibility",
   ];
 
   return descriptions[Math.floor(Math.random() * descriptions.length)];
@@ -75,10 +76,13 @@ function generateProjectDescription() {
  */
 function generateRandomDate(minDate = null) {
   const now = new Date();
-  const start = minDate ? new Date(minDate) : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
+  const start = minDate
+    ? new Date(minDate)
+    : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
   const end = now;
 
-  const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
+  const randomTime =
+    start.getTime() + Math.random() * (end.getTime() - start.getTime());
   return new Date(randomTime).toISOString();
 }
 
@@ -98,8 +102,8 @@ function generateProject(properties = {}) {
  */
 function generateActiveProject() {
   return generateProject({
-    status: 'active',
-    visibility: 'private'
+    status: "active",
+    visibility: "private",
   });
 }
 
@@ -109,8 +113,8 @@ function generateActiveProject() {
  */
 function generatePublicProject() {
   return generateProject({
-    status: 'active',
-    visibility: 'public'
+    status: "active",
+    visibility: "public",
   });
 }
 
@@ -120,8 +124,8 @@ function generatePublicProject() {
  */
 function generateArchivedProject() {
   return generateProject({
-    status: 'archived',
-    visibility: 'private'
+    status: "archived",
+    visibility: "private",
   });
 }
 
@@ -133,7 +137,7 @@ function generateArchivedProject() {
 function generateProjectForOwner(ownerId) {
   return generateProject({
     owner_id: ownerId,
-    status: 'active'
+    status: "active",
   });
 }
 
@@ -145,7 +149,7 @@ function generateProjectForOwner(ownerId) {
 function generateProjectWithStatus(status) {
   return generateProject({
     status,
-    visibility: 'private'
+    visibility: "private",
   });
 }
 
@@ -156,8 +160,8 @@ function generateProjectWithStatus(status) {
  */
 function generateProjectWithVisibility(visibility) {
   return generateProject({
-    status: 'active',
-    visibility
+    status: "active",
+    visibility,
   });
 }
 
@@ -169,5 +173,5 @@ module.exports = {
   generateArchivedProject,
   generateProjectForOwner,
   generateProjectWithStatus,
-  generateProjectWithVisibility
+  generateProjectWithVisibility,
 };

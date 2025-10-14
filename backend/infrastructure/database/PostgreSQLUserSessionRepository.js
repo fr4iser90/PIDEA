@@ -1,9 +1,8 @@
-const UserSessionRepository = require('@repositories/UserSessionRepository');
-const UserSession = require('@entities/UserSession');
-const TokenHasher = require('@infrastructure/auth/TokenHasher');
-const Logger = require('@logging/Logger');
-const logger = new Logger('UserSessionRepository');
-
+const UserSessionRepository = require("@repositories/UserSessionRepository");
+const UserSession = require("@entities/UserSession");
+const TokenHasher = require("@infrastructure/auth/TokenHasher");
+const Logger = require("@logging/Logger");
+const logger = new Logger("UserSessionRepository");
 
 class PostgreSQLUserSessionRepository extends UserSessionRepository {
   constructor(databaseConnection) {
@@ -14,14 +13,14 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
 
   async save(session) {
     if (!(session instanceof UserSession)) {
-      throw new Error('Invalid session entity');
+      throw new Error("Invalid session entity");
     }
 
-    logger.info('🔍 Saving session:', {
+    logger.info("🔍 Saving session:", {
       id: session.id,
       userId: session.userId,
       accessTokenLength: session.accessToken.length,
-      refreshTokenLength: session.refreshToken.length
+      refreshTokenLength: session.refreshToken.length,
     });
 
     const sql = `
@@ -36,18 +35,18 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     `;
 
     const sessionData = session.toJSON();
-    logger.info('🔍 Session data to save:', {
+    logger.info("🔍 Session data to save:", {
       id: sessionData.id,
       userId: sessionData.userId,
-      accessTokenStart: sessionData.accessToken.substring(0, 20) + '...',
-      expiresAt: sessionData.expiresAt
+      accessTokenStart: sessionData.accessToken.substring(0, 20) + "...",
+      expiresAt: sessionData.expiresAt,
     });
 
     // Store only the first 20 characters of the access token and generate hash
     const accessTokenStart = sessionData.accessToken.substring(0, 20);
     const tokenHashResult = this.tokenHasher.hashToken(sessionData.accessToken);
     const accessTokenHash = tokenHashResult.hash;
-    
+
     await this.db.execute(sql, [
       sessionData.id,
       sessionData.userId,
@@ -56,23 +55,23 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       sessionData.refreshToken,
       sessionData.expiresAt, // PostgreSQL will convert ISO string to TIMESTAMP
       sessionData.createdAt, // PostgreSQL will convert ISO string to TIMESTAMP
-      JSON.stringify(sessionData.metadata)
+      JSON.stringify(sessionData.metadata),
     ]);
 
-    logger.info('✅ Session saved successfully');
+    logger.info("✅ Session saved successfully");
     return session;
   }
 
   async findById(id) {
     if (!id) {
-      throw new Error('Session id is required');
+      throw new Error("Session id is required");
     }
 
-    const sql = 'SELECT * FROM user_sessions WHERE id = $1';
+    const sql = "SELECT * FROM user_sessions WHERE id = $1";
     const row = await this.db.getOne(sql, [id]);
-    
+
     if (!row) return null;
-    
+
     return UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
@@ -81,61 +80,69 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
       createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
-      accessTokenHash: row.access_token_hash
+      accessTokenHash: row.access_token_hash,
     });
   }
 
   async findByUserId(userId) {
     if (!userId) {
-      throw new Error('User id is required');
+      throw new Error("User id is required");
     }
 
-    const sql = 'SELECT * FROM user_sessions WHERE user_id = $1 ORDER BY created_at DESC';
+    const sql =
+      "SELECT * FROM user_sessions WHERE user_id = $1 ORDER BY created_at DESC";
     const rows = await this.db.query(sql, [userId]);
-    
-    return rows.map(row => UserSession.fromJSON({
-      id: row.id,
-      userId: row.user_id,
-      accessToken: row.access_token_start,
-      refreshToken: row.refresh_token,
-      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
-      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
-      metadata: row.metadata ? JSON.parse(row.metadata) : {},
-      accessTokenHash: row.access_token_hash
-    }));
+
+    return rows.map((row) =>
+      UserSession.fromJSON({
+        id: row.id,
+        userId: row.user_id,
+        accessToken: row.access_token_start,
+        refreshToken: row.refresh_token,
+        expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+        createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
+        metadata: row.metadata ? JSON.parse(row.metadata) : {},
+        accessTokenHash: row.access_token_hash,
+      }),
+    );
   }
 
   async findByAccessToken(accessToken) {
     if (!accessToken) {
-      throw new Error('Access token is required');
+      throw new Error("Access token is required");
     }
 
-    logger.info('🔍 Finding session by access token');
+    logger.info("🔍 Finding session by access token");
 
     // Modern approach: Use token hash for precise matching
     const tokenHashResult = this.tokenHasher.hashToken(accessToken);
     const accessTokenHash = tokenHashResult.hash;
-    
+
     // First try: Find by exact hash match
-    let sql = 'SELECT * FROM user_sessions WHERE access_token_hash = $1';
+    let sql = "SELECT * FROM user_sessions WHERE access_token_hash = $1";
     let row = await this.db.getOne(sql, [accessTokenHash]);
-    
+
     // Fallback: If no exact hash match, try prefix match (for backward compatibility)
     if (!row) {
       const accessTokenStart = accessToken.substring(0, 20);
-      sql = 'SELECT * FROM user_sessions WHERE access_token_start = $1';
+      sql = "SELECT * FROM user_sessions WHERE access_token_start = $1";
       row = await this.db.getOne(sql, [accessTokenStart]);
     }
-    
-    logger.info('🔍 Database result:', row ? {
-      id: row.id,
-      user_id: row.user_id,
-      expires_at: row.expires_at,
-      hash_match: row.access_token_hash === accessTokenHash
-    } : 'null');
-    
+
+    logger.info(
+      "🔍 Database result:",
+      row
+        ? {
+            id: row.id,
+            user_id: row.user_id,
+            expires_at: row.expires_at,
+            hash_match: row.access_token_hash === accessTokenHash,
+          }
+        : "null",
+    );
+
     if (!row) return null;
-    
+
     // Create session with the original access token from the request
     const session = UserSession.fromJSON({
       id: row.id,
@@ -145,29 +152,29 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       expiresAt: row.expires_at,
       createdAt: row.created_at,
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
-      accessTokenHash: row.access_token_hash
+      accessTokenHash: row.access_token_hash,
     });
 
-    logger.info('✅ Session found and reconstructed:', {
+    logger.info("✅ Session found and reconstructed:", {
       id: session.id,
       userId: session.userId,
       isActive: session.isActive(),
-      hashMatch: row.access_token_hash === accessTokenHash
+      hashMatch: row.access_token_hash === accessTokenHash,
     });
-    
+
     return session;
   }
 
   async findByRefreshToken(refreshToken) {
     if (!refreshToken) {
-      throw new Error('Refresh token is required');
+      throw new Error("Refresh token is required");
     }
 
-    const sql = 'SELECT * FROM user_sessions WHERE refresh_token = $1';
+    const sql = "SELECT * FROM user_sessions WHERE refresh_token = $1";
     const row = await this.db.getOne(sql, [refreshToken]);
-    
+
     if (!row) return null;
-    
+
     return UserSession.fromJSON({
       id: row.id,
       userId: row.user_id,
@@ -175,79 +182,84 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
       refreshToken: row.refresh_token,
       expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
       createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
-      metadata: row.metadata ? JSON.parse(row.metadata) : {}
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
     });
   }
 
   async findActiveSessionsByUserId(userId) {
     if (!userId) {
-      throw new Error('User id is required');
+      throw new Error("User id is required");
     }
 
-    const isPostgreSQL = this.db.getType() === 'postgresql';
+    const isPostgreSQL = this.db.getType() === "postgresql";
     if (isPostgreSQL) {
       // Enterprise: Direct timestamp comparison for optimal performance
       const sql = `SELECT * FROM user_sessions WHERE user_id = $1 AND expires_at > NOW() ORDER BY created_at DESC`;
       const rows = await this.db.query(sql, [userId]);
-      
-      return rows.map(row => UserSession.fromJSON({
-        id: row.id,
-        userId: row.user_id,
-        accessToken: row.access_token_start,
-        refreshToken: row.refresh_token,
-        expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
-        createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
-        metadata: row.metadata ? JSON.parse(row.metadata) : {}
-      }));
+
+      return rows.map((row) =>
+        UserSession.fromJSON({
+          id: row.id,
+          userId: row.user_id,
+          accessToken: row.access_token_start,
+          refreshToken: row.refresh_token,
+          expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+          createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
+          metadata: row.metadata ? JSON.parse(row.metadata) : {},
+        }),
+      );
     } else {
       // For SQLite, use datetime comparison
       const sql = `SELECT * FROM user_sessions WHERE user_id = ? AND expires_at > datetime('now') ORDER BY created_at DESC`;
       const rows = await this.db.query(sql, [userId]);
-      
-      return rows.map(row => UserSession.fromJSON({
-        id: row.id,
-        userId: row.user_id,
-        accessToken: row.access_token_start,
-        refreshToken: row.refresh_token,
-        expiresAt: row.expires_at, // SQLite returns string, UserSession.fromJSON handles conversion
-        createdAt: row.created_at, // SQLite returns string, UserSession.fromJSON handles conversion
-        metadata: row.metadata ? JSON.parse(row.metadata) : {}
-      }));
+
+      return rows.map((row) =>
+        UserSession.fromJSON({
+          id: row.id,
+          userId: row.user_id,
+          accessToken: row.access_token_start,
+          refreshToken: row.refresh_token,
+          expiresAt: row.expires_at, // SQLite returns string, UserSession.fromJSON handles conversion
+          createdAt: row.created_at, // SQLite returns string, UserSession.fromJSON handles conversion
+          metadata: row.metadata ? JSON.parse(row.metadata) : {},
+        }),
+      );
     }
   }
 
   async delete(id) {
     if (!id) {
-      throw new Error('Session id is required');
+      throw new Error("Session id is required");
     }
 
-    const sql = 'DELETE FROM user_sessions WHERE id = $1';
+    const sql = "DELETE FROM user_sessions WHERE id = $1";
     const result = await this.db.execute(sql, [id]);
     return result.rowsAffected > 0;
   }
 
   async deleteByUserId(userId) {
     if (!userId) {
-      throw new Error('User id is required');
+      throw new Error("User id is required");
     }
 
-    const sql = 'DELETE FROM user_sessions WHERE user_id = $1';
+    const sql = "DELETE FROM user_sessions WHERE user_id = $1";
     const result = await this.db.execute(sql, [userId]);
     return result.rowsAffected;
   }
 
   async deleteExpiredByUserId(userId) {
     if (!userId) {
-      throw new Error('User id is required');
+      throw new Error("User id is required");
     }
 
-    const sql = 'DELETE FROM user_sessions WHERE user_id = $1 AND expires_at <= NOW()';
+    const sql =
+      "DELETE FROM user_sessions WHERE user_id = $1 AND expires_at <= NOW()";
     const result = await this.db.execute(sql, [userId]);
     return result.rowsAffected;
   }
 
   async deleteExpiredSessions() {
-    const isPostgreSQL = this.db.getType() === 'postgresql';
+    const isPostgreSQL = this.db.getType() === "postgresql";
     if (isPostgreSQL) {
       // Enterprise: Direct timestamp comparison for optimal performance
       const sql = `DELETE FROM user_sessions WHERE expires_at <= NOW()`;
@@ -262,24 +274,26 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
   }
 
   async findAll() {
-    const sql = 'SELECT * FROM user_sessions ORDER BY created_at DESC';
+    const sql = "SELECT * FROM user_sessions ORDER BY created_at DESC";
     const rows = await this.db.query(sql);
-    
-    return rows.map(row => UserSession.fromJSON({
-      id: row.id,
-      userId: row.user_id,
-      accessToken: row.access_token_start,
-      refreshToken: row.refresh_token,
-      expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
-      createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
-      metadata: row.metadata ? JSON.parse(row.metadata) : {},
-      accessTokenHash: row.access_token_hash
-    }));
+
+    return rows.map((row) =>
+      UserSession.fromJSON({
+        id: row.id,
+        userId: row.user_id,
+        accessToken: row.access_token_start,
+        refreshToken: row.refresh_token,
+        expiresAt: row.expires_at, // PostgreSQL returns Date object for TIMESTAMP
+        createdAt: row.created_at, // PostgreSQL returns Date object for TIMESTAMP
+        metadata: row.metadata ? JSON.parse(row.metadata) : {},
+        accessTokenHash: row.access_token_hash,
+      }),
+    );
   }
 
   async update(session) {
     if (!(session instanceof UserSession)) {
-      throw new Error('Invalid session entity');
+      throw new Error("Invalid session entity");
     }
 
     const sql = `
@@ -291,17 +305,17 @@ class PostgreSQLUserSessionRepository extends UserSessionRepository {
     const sessionData = session.toJSON();
     // Store only the first 20 characters of the access token
     const accessTokenStart = sessionData.accessToken.substring(0, 20);
-    
+
     const result = await this.db.execute(sql, [
       sessionData.id,
       accessTokenStart,
       sessionData.refreshToken,
       sessionData.expiresAt, // PostgreSQL will convert ISO string to TIMESTAMP
-      JSON.stringify(sessionData.metadata)
+      JSON.stringify(sessionData.metadata),
     ]);
 
     return result.rowsAffected > 0;
   }
 }
 
-module.exports = PostgreSQLUserSessionRepository; 
+module.exports = PostgreSQLUserSessionRepository;

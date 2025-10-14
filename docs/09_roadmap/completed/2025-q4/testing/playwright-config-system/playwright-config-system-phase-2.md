@@ -43,7 +43,6 @@ async executeTests(projectId, options = {}) {
     const result = await this.testRunner.runTests(projectId, options);
     
     return {
-      success: true,
       result: result
     };
   } catch (error) {

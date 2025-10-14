@@ -2,7 +2,7 @@
  * ExecutionScheduler - Schedules workflow execution
  * Provides execution scheduling with priority, dependencies, and resource management
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Execution scheduler for workflow execution
@@ -13,7 +13,7 @@ class ExecutionScheduler {
     this.executionQueue = new Map();
     this.resourcePool = new Map();
     this.dependencyGraph = new Map();
-    
+
     // Scheduler configuration
     this.config = {
       maxConcurrentExecutions: options.maxConcurrentExecutions || 10,
@@ -22,9 +22,9 @@ class ExecutionScheduler {
       enablePriorityScheduling: options.enablePriorityScheduling !== false,
       defaultTimeout: options.defaultTimeout || 300000, // 5 minutes
       retryAttempts: options.retryAttempts || 3,
-      retryDelay: options.retryDelay || 5000
+      retryDelay: options.retryDelay || 5000,
     };
-    
+
     // Scheduler statistics
     this.stats = {
       totalScheduled: 0,
@@ -33,9 +33,9 @@ class ExecutionScheduler {
       totalCancelled: 0,
       averageSchedulingTime: 0,
       averageExecutionTime: 0,
-      resourceUtilization: 0
+      resourceUtilization: 0,
     };
-    
+
     // Initialize resource pool
     this.initializeResourcePool();
   }
@@ -48,27 +48,27 @@ class ExecutionScheduler {
     if (!this.config.enableResourceManagement) {
       return;
     }
-    
+
     // Initialize default resources
-    this.resourcePool.set('cpu', {
+    this.resourcePool.set("cpu", {
       total: 100,
       available: 100,
       reserved: 0,
-      unit: 'percentage'
+      unit: "percentage",
     });
-    
-    this.resourcePool.set('memory', {
+
+    this.resourcePool.set("memory", {
       total: 8192, // 8GB
       available: 8192,
       reserved: 0,
-      unit: 'MB'
+      unit: "MB",
     });
-    
-    this.resourcePool.set('disk', {
+
+    this.resourcePool.set("disk", {
       total: 100000, // 100GB
       available: 100000,
       reserved: 0,
-      unit: 'MB'
+      unit: "MB",
     });
   }
 
@@ -79,30 +79,36 @@ class ExecutionScheduler {
    */
   async schedule(executionContext) {
     const startTime = Date.now();
-    
+
     try {
       // Validate execution context
       this.validateExecutionContext(executionContext);
-      
+
       // Calculate scheduling parameters
       const schedulingParams = this.calculateSchedulingParams(executionContext);
-      
+
       // Check resource availability
       if (this.config.enableResourceManagement) {
-        const resourceCheck = this.checkResourceAvailability(schedulingParams.resourceRequirements);
+        const resourceCheck = this.checkResourceAvailability(
+          schedulingParams.resourceRequirements,
+        );
         if (!resourceCheck.available) {
           throw new Error(`Insufficient resources: ${resourceCheck.reason}`);
         }
       }
-      
+
       // Check dependencies
       if (this.config.enableDependencyResolution) {
-        const dependencyCheck = this.checkDependencies(schedulingParams.dependencies);
+        const dependencyCheck = this.checkDependencies(
+          schedulingParams.dependencies,
+        );
         if (!dependencyCheck.satisfied) {
-          throw new Error(`Dependencies not satisfied: ${dependencyCheck.reason}`);
+          throw new Error(
+            `Dependencies not satisfied: ${dependencyCheck.reason}`,
+          );
         }
       }
-      
+
       // Create scheduled execution
       const scheduledExecution = {
         id: executionContext.getId(),
@@ -113,29 +119,31 @@ class ExecutionScheduler {
         resourceRequirements: schedulingParams.resourceRequirements,
         dependencies: schedulingParams.dependencies,
         constraints: schedulingParams.constraints,
-        status: 'scheduled',
-        retryCount: 0
+        status: "scheduled",
+        retryCount: 0,
       };
-      
+
       // Add to scheduled executions
       this.scheduledExecutions.set(scheduledExecution.id, scheduledExecution);
-      
+
       // Add to dependency graph
       if (this.config.enableDependencyResolution) {
         this.addToDependencyGraph(scheduledExecution);
       }
-      
+
       // Reserve resources
       if (this.config.enableResourceManagement) {
-        this.reserveResources(scheduledExecution.id, schedulingParams.resourceRequirements);
+        this.reserveResources(
+          scheduledExecution.id,
+          schedulingParams.resourceRequirements,
+        );
       }
-      
+
       const schedulingTime = Date.now() - startTime;
       this.updateAverageSchedulingTime(schedulingTime);
       this.stats.totalScheduled++;
-      
+
       return scheduledExecution;
-      
     } catch (error) {
       throw new Error(`Scheduling failed: ${error.message}`);
     }
@@ -148,15 +156,15 @@ class ExecutionScheduler {
    */
   validateExecutionContext(executionContext) {
     if (!executionContext) {
-      throw new Error('Execution context is required');
+      throw new Error("Execution context is required");
     }
-    
+
     if (!executionContext.getId()) {
-      throw new Error('Execution context must have an ID');
+      throw new Error("Execution context must have an ID");
     }
-    
+
     if (!executionContext.getWorkflow()) {
-      throw new Error('Execution context must have a workflow');
+      throw new Error("Execution context must have a workflow");
     }
   }
 
@@ -170,31 +178,32 @@ class ExecutionScheduler {
     const workflow = executionContext.getWorkflow();
     const metadata = workflow.getMetadata();
     const options = executionContext.getOptions();
-    
+
     // Calculate priority
     let priority = 1;
     if (this.config.enablePriorityScheduling) {
       priority = this.calculatePriority(executionContext);
     }
-    
+
     // Estimate duration
     const estimatedDuration = this.estimateDuration(executionContext);
-    
+
     // Calculate resource requirements
-    const resourceRequirements = this.calculateResourceRequirements(executionContext);
-    
+    const resourceRequirements =
+      this.calculateResourceRequirements(executionContext);
+
     // Identify dependencies
     const dependencies = this.identifyDependencies(executionContext);
-    
+
     // Get constraints
     const constraints = this.identifyConstraints(executionContext);
-    
+
     return {
       priority,
       estimatedDuration,
       resourceRequirements,
       dependencies,
-      constraints
+      constraints,
     };
   }
 
@@ -207,27 +216,27 @@ class ExecutionScheduler {
   calculatePriority(executionContext) {
     let priority = 1;
     const options = executionContext.getOptions();
-    
+
     // Increase priority for critical workflows
     if (options.critical) {
       priority += 10;
     }
-    
+
     // Increase priority for high priority tasks
-    if (options.priority === 'high') {
+    if (options.priority === "high") {
       priority += 5;
     }
-    
+
     // Increase priority for urgent tasks
     if (options.urgent) {
       priority += 3;
     }
-    
+
     // Decrease priority for low priority tasks
-    if (options.priority === 'low') {
+    if (options.priority === "low") {
       priority -= 2;
     }
-    
+
     return Math.max(1, priority);
   }
 
@@ -241,27 +250,27 @@ class ExecutionScheduler {
     const workflow = executionContext.getWorkflow();
     const metadata = workflow.getMetadata();
     const stepCount = metadata.steps?.length || 1;
-    
+
     // Base estimation: 30 seconds per step
     let estimatedDuration = stepCount * 30000;
-    
+
     // Adjust based on workflow type
     const taskMode = workflow.getType();
     switch (taskMode) {
-      case 'analysis':
+      case "analysis":
         estimatedDuration *= 1.5; // Analysis workflows take longer
         break;
-      case 'testing':
+      case "testing":
         estimatedDuration *= 2.0; // Testing workflows take much longer
         break;
-      case 'deployment':
+      case "deployment":
         estimatedDuration *= 1.2; // Deployment workflows take slightly longer
         break;
       default:
         // Default multiplier
         break;
     }
-    
+
     return estimatedDuration;
   }
 
@@ -275,32 +284,32 @@ class ExecutionScheduler {
     const workflow = executionContext.getWorkflow();
     const metadata = workflow.getMetadata();
     const stepCount = metadata.steps?.length || 1;
-    
+
     // Base resource requirements
     const requirements = {
       cpu: Math.min(stepCount * 5, 50), // 5% CPU per step, max 50%
       memory: Math.min(stepCount * 100, 2048), // 100MB per step, max 2GB
-      disk: Math.min(stepCount * 50, 1000) // 50MB per step, max 1GB
+      disk: Math.min(stepCount * 50, 1000), // 50MB per step, max 1GB
     };
-    
+
     // Adjust based on workflow type
     const taskMode = workflow.getType();
     switch (taskMode) {
-      case 'analysis':
+      case "analysis":
         requirements.memory *= 1.5; // Analysis needs more memory
         break;
-      case 'testing':
+      case "testing":
         requirements.cpu *= 1.3; // Testing needs more CPU
         requirements.memory *= 1.2;
         break;
-      case 'deployment':
+      case "deployment":
         requirements.disk *= 1.5; // Deployment needs more disk
         break;
       default:
         // Default requirements
         break;
     }
-    
+
     return requirements;
   }
 
@@ -312,22 +321,22 @@ class ExecutionScheduler {
    */
   identifyDependencies(executionContext) {
     const dependencies = [];
-    
+
     // Get dependencies from execution context
     const contextDependencies = executionContext.getDependencies();
     dependencies.push(...contextDependencies);
-    
+
     // Get dependencies from workflow
     const workflow = executionContext.getWorkflow();
     const workflowDependencies = workflow.getDependencies();
     dependencies.push(...workflowDependencies);
-    
+
     // Get dependencies from options
     const options = executionContext.getOptions();
     if (options.dependencies) {
       dependencies.push(...options.dependencies);
     }
-    
+
     return [...new Set(dependencies)]; // Remove duplicates
   }
 
@@ -339,17 +348,17 @@ class ExecutionScheduler {
    */
   identifyConstraints(executionContext) {
     const constraints = {};
-    
+
     // Get constraints from execution context
     const contextConstraints = executionContext.getConstraints();
     Object.assign(constraints, contextConstraints);
-    
+
     // Get constraints from options
     const options = executionContext.getOptions();
     if (options.constraints) {
       Object.assign(constraints, options.constraints);
     }
-    
+
     return constraints;
   }
 
@@ -360,23 +369,25 @@ class ExecutionScheduler {
    * @private
    */
   checkResourceAvailability(resourceRequirements) {
-    for (const [resource, requirement] of Object.entries(resourceRequirements)) {
+    for (const [resource, requirement] of Object.entries(
+      resourceRequirements,
+    )) {
       const pool = this.resourcePool.get(resource);
       if (!pool) {
         return {
           available: false,
-          reason: `Resource type '${resource}' not available`
+          reason: `Resource type '${resource}' not available`,
         };
       }
-      
+
       if (pool.available < requirement) {
         return {
           available: false,
-          reason: `Insufficient ${resource}: required ${requirement}, available ${pool.available}`
+          reason: `Insufficient ${resource}: required ${requirement}, available ${pool.available}`,
         };
       }
     }
-    
+
     return { available: true };
   }
 
@@ -392,18 +403,18 @@ class ExecutionScheduler {
       if (!dependencyExecution) {
         return {
           satisfied: false,
-          reason: `Dependency '${dependency}' not found`
+          reason: `Dependency '${dependency}' not found`,
         };
       }
-      
-      if (dependencyExecution.status !== 'completed') {
+
+      if (dependencyExecution.status !== "completed") {
         return {
           satisfied: false,
-          reason: `Dependency '${dependency}' not completed (status: ${dependencyExecution.status})`
+          reason: `Dependency '${dependency}' not completed (status: ${dependencyExecution.status})`,
         };
       }
     }
-    
+
     return { satisfied: true };
   }
 
@@ -414,18 +425,20 @@ class ExecutionScheduler {
    * @private
    */
   reserveResources(executionId, resourceRequirements) {
-    for (const [resource, requirement] of Object.entries(resourceRequirements)) {
+    for (const [resource, requirement] of Object.entries(
+      resourceRequirements,
+    )) {
       const pool = this.resourcePool.get(resource);
       if (pool) {
         pool.available -= requirement;
         pool.reserved += requirement;
       }
     }
-    
+
     // Track resource reservations
     this.executionQueue.set(executionId, {
       resourceRequirements,
-      reservedAt: new Date()
+      reservedAt: new Date(),
     });
   }
 
@@ -439,17 +452,19 @@ class ExecutionScheduler {
     if (!queueItem) {
       return;
     }
-    
+
     const { resourceRequirements } = queueItem;
-    
-    for (const [resource, requirement] of Object.entries(resourceRequirements)) {
+
+    for (const [resource, requirement] of Object.entries(
+      resourceRequirements,
+    )) {
       const pool = this.resourcePool.get(resource);
       if (pool) {
         pool.available += requirement;
         pool.reserved -= requirement;
       }
     }
-    
+
     this.executionQueue.delete(executionId);
   }
 
@@ -460,12 +475,12 @@ class ExecutionScheduler {
    */
   addToDependencyGraph(scheduledExecution) {
     const { id, dependencies } = scheduledExecution;
-    
+
     // Add node to graph
     if (!this.dependencyGraph.has(id)) {
       this.dependencyGraph.set(id, new Set());
     }
-    
+
     // Add edges for dependencies
     for (const dependency of dependencies) {
       if (!this.dependencyGraph.has(dependency)) {
@@ -494,17 +509,17 @@ class ExecutionScheduler {
     if (!scheduledExecution) {
       return false;
     }
-    
+
     // Release resources
     if (this.config.enableResourceManagement) {
       this.releaseResources(executionId);
     }
-    
+
     // Remove from dependency graph
     if (this.config.enableDependencyResolution) {
       this.removeFromDependencyGraph(executionId);
     }
-    
+
     this.scheduledExecutions.delete(executionId);
     return true;
   }
@@ -517,7 +532,7 @@ class ExecutionScheduler {
   removeFromDependencyGraph(executionId) {
     // Remove node from graph
     this.dependencyGraph.delete(executionId);
-    
+
     // Remove edges pointing to this node
     for (const [node, edges] of this.dependencyGraph.entries()) {
       edges.delete(executionId);
@@ -534,16 +549,16 @@ class ExecutionScheduler {
     if (!scheduledExecution) {
       return;
     }
-    
-    scheduledExecution.status = 'completed';
+
+    scheduledExecution.status = "completed";
     scheduledExecution.completedAt = new Date();
     scheduledExecution.result = result;
-    
+
     // Release resources
     if (this.config.enableResourceManagement) {
       this.releaseResources(executionId);
     }
-    
+
     this.stats.totalExecuted++;
   }
 
@@ -557,16 +572,16 @@ class ExecutionScheduler {
     if (!scheduledExecution) {
       return;
     }
-    
-    scheduledExecution.status = 'failed';
+
+    scheduledExecution.status = "failed";
     scheduledExecution.failedAt = new Date();
     scheduledExecution.error = error;
-    
+
     // Release resources
     if (this.config.enableResourceManagement) {
       this.releaseResources(executionId);
     }
-    
+
     this.stats.totalFailed++;
   }
 
@@ -580,15 +595,15 @@ class ExecutionScheduler {
     if (!scheduledExecution) {
       return false;
     }
-    
-    scheduledExecution.status = 'cancelled';
+
+    scheduledExecution.status = "cancelled";
     scheduledExecution.cancelledAt = new Date();
-    
+
     // Release resources
     if (this.config.enableResourceManagement) {
       this.releaseResources(executionId);
     }
-    
+
     this.stats.totalCancelled++;
     return true;
   }
@@ -602,7 +617,7 @@ class ExecutionScheduler {
       ...this.stats,
       scheduledExecutions: this.scheduledExecutions.size,
       resourcePool: this.getResourcePoolStatus(),
-      dependencyGraphSize: this.dependencyGraph.size
+      dependencyGraphSize: this.dependencyGraph.size,
     };
   }
 
@@ -612,17 +627,17 @@ class ExecutionScheduler {
    */
   getResourcePoolStatus() {
     const status = {};
-    
+
     for (const [resource, pool] of this.resourcePool.entries()) {
       status[resource] = {
         total: pool.total,
         available: pool.available,
         reserved: pool.reserved,
         utilization: ((pool.total - pool.available) / pool.total) * 100,
-        unit: pool.unit
+        unit: pool.unit,
       };
     }
-    
+
     return status;
   }
 
@@ -634,8 +649,9 @@ class ExecutionScheduler {
   updateAverageSchedulingTime(schedulingTime) {
     const totalScheduled = this.stats.totalScheduled;
     const currentAverage = this.stats.averageSchedulingTime;
-    
-    this.stats.averageSchedulingTime = (currentAverage * (totalScheduled - 1) + schedulingTime) / totalScheduled;
+
+    this.stats.averageSchedulingTime =
+      (currentAverage * (totalScheduled - 1) + schedulingTime) / totalScheduled;
   }
 
   /**
@@ -644,34 +660,38 @@ class ExecutionScheduler {
    */
   getReadyExecutions() {
     const readyExecutions = [];
-    
+
     for (const [id, scheduledExecution] of this.scheduledExecutions.entries()) {
-      if (scheduledExecution.status === 'scheduled') {
+      if (scheduledExecution.status === "scheduled") {
         // Check if dependencies are satisfied
         if (this.config.enableDependencyResolution) {
-          const dependencyCheck = this.checkDependencies(scheduledExecution.dependencies);
+          const dependencyCheck = this.checkDependencies(
+            scheduledExecution.dependencies,
+          );
           if (!dependencyCheck.satisfied) {
             continue;
           }
         }
-        
+
         // Check if resources are available
         if (this.config.enableResourceManagement) {
-          const resourceCheck = this.checkResourceAvailability(scheduledExecution.resourceRequirements);
+          const resourceCheck = this.checkResourceAvailability(
+            scheduledExecution.resourceRequirements,
+          );
           if (!resourceCheck.available) {
             continue;
           }
         }
-        
+
         readyExecutions.push(scheduledExecution);
       }
     }
-    
+
     // Sort by priority (highest first)
     if (this.config.enablePriorityScheduling) {
       readyExecutions.sort((a, b) => b.priority - a.priority);
     }
-    
+
     return readyExecutions;
   }
 
@@ -700,9 +720,9 @@ class ExecutionScheduler {
       scheduledExecutions: this.scheduledExecutions.size,
       config: this.config,
       stats: this.stats,
-      resourcePool: this.getResourcePoolStatus()
+      resourcePool: this.getResourcePoolStatus(),
     };
   }
 }
 
-module.exports = ExecutionScheduler; 
+module.exports = ExecutionScheduler;

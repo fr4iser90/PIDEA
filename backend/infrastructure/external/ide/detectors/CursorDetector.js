@@ -1,24 +1,23 @@
-
 /**
  * Cursor IDE Detector
  * Detects Cursor IDE instances and manages Cursor-specific detection logic
  */
 
-const http = require('http');
-const net = require('net');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('CursorDetector');
+const http = require("http");
+const net = require("net");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("CursorDetector");
 
 class CursorDetector {
   constructor() {
     this.portRange = { start: 9222, end: 9231 };
     this.scanTimeout = 1000; // 1 second timeout per port
     this.config = {
-      name: 'Cursor',
-      executable: 'cursor',
+      name: "Cursor",
+      executable: "cursor",
       portRange: this.portRange,
-      detectionMethod: 'http',
-      versionEndpoint: '/json/version'
+      detectionMethod: "http",
+      versionEndpoint: "/json/version",
     };
   }
 
@@ -28,7 +27,7 @@ class CursorDetector {
    */
   async scanForIDEs() {
     // logger.info('🔍 Scanning for Cursor IDEs on ports', this.portRange.start, 'to', this.portRange.end);
-    
+
     const availableIDEs = [];
     const promises = [];
 
@@ -37,19 +36,19 @@ class CursorDetector {
     }
 
     const results = await Promise.allSettled(promises);
-    
+
     results.forEach((result, index) => {
       const port = this.portRange.start + index;
-      if (result.status === 'fulfilled' && result.value) {
+      if (result.status === "fulfilled" && result.value) {
         // Always use localhost since we're using network_mode: "host"
-        const host = '127.0.0.1';
+        const host = "127.0.0.1";
         availableIDEs.push({
           port: port,
-          status: 'running',
+          status: "running",
           url: `http://${host}:${port}`,
-          ideType: 'cursor',
-          version: result.value.version || 'unknown',
-          webSocketUrl: result.value.webSocketUrl || null
+          ideType: "cursor",
+          version: result.value.version || "unknown",
+          webSocketUrl: result.value.webSocketUrl || null,
         });
       }
     });
@@ -66,41 +65,44 @@ class CursorDetector {
   async checkPort(port) {
     return new Promise((resolve) => {
       // Always use localhost since we're using network_mode: "host"
-      const host = '127.0.0.1';
-      const req = http.get({
-        hostname: host,
-        port: port,
-        path: this.config.versionEndpoint,
-        timeout: this.scanTimeout
-      }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data);
-            if (json.Browser && json.webSocketDebuggerUrl) {
-              // Check if it's Cursor by looking at User-Agent
-              const userAgent = json['User-Agent'] || '';
-              if (userAgent.includes('Cursor')) {
-                resolve({
-                  version: json.Browser,
-                  webSocketUrl: json.webSocketDebuggerUrl,
-                  userAgent: json['User-Agent'] || null
-                });
+      const host = "127.0.0.1";
+      const req = http.get(
+        {
+          hostname: host,
+          port: port,
+          path: this.config.versionEndpoint,
+          timeout: this.scanTimeout,
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            try {
+              const json = JSON.parse(data);
+              if (json.Browser && json.webSocketDebuggerUrl) {
+                // Check if it's Cursor by looking at User-Agent
+                const userAgent = json["User-Agent"] || "";
+                if (userAgent.includes("Cursor")) {
+                  resolve({
+                    version: json.Browser,
+                    webSocketUrl: json.webSocketDebuggerUrl,
+                    userAgent: json["User-Agent"] || null,
+                  });
+                } else {
+                  resolve(false);
+                }
               } else {
                 resolve(false);
               }
-            } else {
+            } catch {
               resolve(false);
             }
-          } catch {
-            resolve(false);
-          }
-        });
-      });
-      
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => {
+          });
+        },
+      );
+
+      req.on("error", () => resolve(false));
+      req.on("timeout", () => {
         req.destroy();
         resolve(false);
       });
@@ -113,15 +115,17 @@ class CursorDetector {
    */
   async findAvailablePort() {
     const runningIDEs = await this.scanForIDEs();
-    const usedPorts = runningIDEs.map(ide => ide.port);
-    
+    const usedPorts = runningIDEs.map((ide) => ide.port);
+
     for (let port = this.portRange.start; port <= this.portRange.end; port++) {
       if (!usedPorts.includes(port)) {
         return port;
       }
     }
-    
-    throw new Error(`No available ports in range ${this.portRange.start}-${this.portRange.end} for Cursor`);
+
+    throw new Error(
+      `No available ports in range ${this.portRange.start}-${this.portRange.end} for Cursor`,
+    );
   }
 
   /**
@@ -130,14 +134,14 @@ class CursorDetector {
    */
   async isInstalled() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('which', ['cursor'], { stdio: 'ignore' });
-      
-      process.on('close', (code) => {
+      const { spawn } = require("child_process");
+      const process = spawn("which", ["cursor"], { stdio: "ignore" });
+
+      process.on("close", (code) => {
         resolve(code === 0);
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(false);
       });
     });
@@ -149,23 +153,23 @@ class CursorDetector {
    */
   async getVersion() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('cursor', ['--version'], { stdio: 'pipe' });
-      
-      let output = '';
-      process.stdout.on('data', (data) => {
+      const { spawn } = require("child_process");
+      const process = spawn("cursor", ["--version"], { stdio: "pipe" });
+
+      let output = "";
+      process.stdout.on("data", (data) => {
         output += data.toString();
       });
-      
-      process.on('close', (code) => {
+
+      process.on("close", (code) => {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
           resolve(null);
         }
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(null);
       });
     });
@@ -178,12 +182,12 @@ class CursorDetector {
   async validateInstallation() {
     const isInstalled = await this.isInstalled();
     const version = isInstalled ? await this.getVersion() : null;
-    
+
     return {
       isInstalled,
       version,
       isValid: isInstalled && version !== null,
-      executable: this.config.executable
+      executable: this.config.executable,
     };
   }
 
@@ -205,24 +209,23 @@ class CursorDetector {
       const ideInfo = await this.checkPort(port);
       if (ideInfo) {
         return {
-          success: true,
           port: port,
           version: ideInfo.version,
           webSocketUrl: ideInfo.webSocketUrl,
-          responseTime: Date.now()
+          responseTime: Date.now(),
         };
       } else {
         return {
-          success: false,
+         
           port: port,
-          error: 'No Cursor IDE found on port'
+          error: "No Cursor IDE found on port",
         };
       }
     } catch (error) {
       return {
-        success: false,
+       
         port: port,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -238,9 +241,9 @@ class CursorDetector {
       supportsFileSystem: true,
       supportsExtensions: true,
       supportsAI: true,
-      defaultPortRange: this.portRange
+      defaultPortRange: this.portRange,
     };
   }
 }
 
-module.exports = CursorDetector; 
+module.exports = CursorDetector;

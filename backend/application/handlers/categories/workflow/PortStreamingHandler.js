@@ -1,13 +1,12 @@
-
 /**
  * PortStreamingHandler
- * 
+ *
  * Handles PortStreamingCommand execution by managing IDE screenshot streaming
  * for specific ports. Replaces session-based approach with port-based management.
  */
-const PortStreamingCommand = require('@commands/categories/management/PortStreamingCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const PortStreamingCommand = require("@commands/categories/management/PortStreamingCommand");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class PortStreamingHandler {
   constructor(screenshotStreamingService, eventBus = null) {
@@ -22,78 +21,83 @@ class PortStreamingHandler {
    */
   async handle(command) {
     try {
-      logger.info(`Processing command: ${command.commandId} for port ${command.port}`);
-      
+      logger.info(
+        `Processing command: ${command.commandId} for port ${command.port}`,
+      );
+
       // Validate command
       command.validate();
-      
+
       let result;
-      
+
       // Execute command based on action
       switch (command.action) {
-        case 'start':
+        case "start":
           result = await this.handleStartCommand(command);
           break;
-        case 'stop':
+        case "stop":
           result = await this.handleStopCommand(command);
           break;
-        case 'pause':
+        case "pause":
           result = await this.handlePauseCommand(command);
           break;
-        case 'resume':
+        case "resume":
           result = await this.handleResumeCommand(command);
           break;
-        case 'config':
+        case "config":
           result = await this.handleConfigCommand(command);
           break;
         default:
           throw new Error(`Unknown action: ${command.action}`);
       }
-      
+
       // Emit success event if event bus is available
       if (this.eventBus) {
-        this.eventBus.publish('streaming.port.action', {
+        this.eventBus.publish("streaming.port.action", {
           port: command.port,
           action: command.action,
           options: command.options,
           result: result,
           commandId: command.commandId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
-      logger.info(`Successfully executed ${command.action} for port ${command.port}`);
-      
+
+      logger.info(
+        `Successfully executed ${command.action} for port ${command.port}`,
+      );
+
       return {
-        success: true,
         commandId: command.commandId,
         port: command.port,
         action: command.action,
         result: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
-      logger.error(`Error handling command ${command.commandId}:`, error.message);
-      
+      logger.error(
+        `Error handling command ${command.commandId}:`,
+        error.message,
+      );
+
       // Emit error event if event bus is available
       if (this.eventBus) {
-        this.eventBus.publish('streaming.port.error', {
+        this.eventBus.publish("streaming.port.error", {
           port: command.port,
           action: command.action,
           error: error.message,
           commandId: command.commandId,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
+
       return {
-        success: false,
+       
         commandId: command.commandId,
         port: command.port,
         action: command.action,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -109,9 +113,12 @@ class PortStreamingHandler {
     if (existingPort && existingPort.isActive()) {
       throw new Error(`Port ${command.port} is already streaming`);
     }
-    
+
     // Start streaming
-    return await this.screenshotStreamingService.startStreaming(command.port, command.options);
+    return await this.screenshotStreamingService.startStreaming(
+      command.port,
+      command.options,
+    );
   }
 
   /**
@@ -125,7 +132,7 @@ class PortStreamingHandler {
     if (!existingPort) {
       throw new Error(`Port ${command.port} is not streaming`);
     }
-    
+
     // Stop streaming
     return await this.screenshotStreamingService.stopStreaming(command.port);
   }
@@ -141,11 +148,13 @@ class PortStreamingHandler {
     if (!existingPort) {
       throw new Error(`Port ${command.port} is not streaming`);
     }
-    
+
     if (!existingPort.isActive()) {
-      throw new Error(`Port ${command.port} is not active and cannot be paused`);
+      throw new Error(
+        `Port ${command.port} is not active and cannot be paused`,
+      );
     }
-    
+
     // Pause streaming
     return await this.screenshotStreamingService.pauseStreaming(command.port);
   }
@@ -161,11 +170,13 @@ class PortStreamingHandler {
     if (!existingPort) {
       throw new Error(`Port ${command.port} is not streaming`);
     }
-    
+
     if (!existingPort.isPaused()) {
-      throw new Error(`Port ${command.port} is not paused and cannot be resumed`);
+      throw new Error(
+        `Port ${command.port} is not paused and cannot be resumed`,
+      );
     }
-    
+
     // Resume streaming
     return await this.screenshotStreamingService.resumeStreaming(command.port);
   }
@@ -181,9 +192,12 @@ class PortStreamingHandler {
     if (!existingPort) {
       throw new Error(`Port ${command.port} is not streaming`);
     }
-    
+
     // Update configuration
-    return await this.screenshotStreamingService.updatePortConfig(command.port, command.options);
+    return await this.screenshotStreamingService.updatePortConfig(
+      command.port,
+      command.options,
+    );
   }
 
   /**
@@ -192,7 +206,10 @@ class PortStreamingHandler {
    * @returns {boolean} Whether handler can handle the command
    */
   canHandle(command) {
-    return command instanceof PortStreamingCommand || command.type === 'PortStreamingCommand';
+    return (
+      command instanceof PortStreamingCommand ||
+      command.type === "PortStreamingCommand"
+    );
   }
 
   /**
@@ -201,12 +218,12 @@ class PortStreamingHandler {
    */
   getMetadata() {
     return {
-      type: 'PortStreamingHandler',
-      supportedCommands: ['PortStreamingCommand'],
-      supportedActions: ['start', 'stop', 'pause', 'resume', 'config'],
-      description: 'Handles port-based IDE screenshot streaming commands'
+      type: "PortStreamingHandler",
+      supportedCommands: ["PortStreamingCommand"],
+      supportedActions: ["start", "stop", "pause", "resume", "config"],
+      description: "Handles port-based IDE screenshot streaming commands",
     };
   }
 }
 
-module.exports = PortStreamingHandler; 
+module.exports = PortStreamingHandler;

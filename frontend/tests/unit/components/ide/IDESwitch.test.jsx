@@ -27,7 +27,7 @@ describe('IDESwitch Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    apiCall.mockResolvedValue({ success: true, data: { port: 9223 } });
+    apiCall.mockResolvedValue({ data: { port: 9223 } });
   });
 
   describe('Rendering', () => {

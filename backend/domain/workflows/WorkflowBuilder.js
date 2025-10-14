@@ -2,8 +2,8 @@
  * WorkflowBuilder - Main workflow builder with fluent interface
  * Provides a fluent API for building composed workflows with steps, metadata, and validation
  */
-const ComposedWorkflow = require('./ComposedWorkflow');
-const WorkflowTemplateRegistry = require('./WorkflowTemplateRegistry');
+const ComposedWorkflow = require("./ComposedWorkflow");
+const WorkflowTemplateRegistry = require("./WorkflowTemplateRegistry");
 
 /**
  * Workflow builder with fluent interface
@@ -75,7 +75,7 @@ class WorkflowBuilder {
       this._steps,
       this._metadata,
       this._validationRules,
-      this._rollbackStrategy
+      this._rollbackStrategy,
     );
   }
 
@@ -88,11 +88,11 @@ class WorkflowBuilder {
   static fromTemplate(templateName, options = {}) {
     const builder = new WorkflowBuilder();
     const template = WorkflowTemplateRegistry.getTemplate(templateName);
-    
+
     if (!template) {
       throw new Error(`Workflow template not found: ${templateName}`);
     }
-    
+
     return template.apply(builder, options);
   }
 
@@ -210,4 +210,4 @@ class WorkflowBuilder {
   }
 }
 
-module.exports = WorkflowBuilder; 
+module.exports = WorkflowBuilder;

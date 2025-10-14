@@ -3,288 +3,301 @@
  * Provides unified task execution through the queue system
  */
 
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class QueueTaskExecutionService {
-    constructor(dependencies = {}) {
-        this.logger = new ServiceLogger('QueueTaskExecutionService');
-        this.taskQueueStore = dependencies.taskQueueStore;
-        this.taskRepository = dependencies.taskRepository;
-        this.eventBus = dependencies.eventBus;
-        this.workflowLoaderService = dependencies.workflowLoaderService;
-        
-        this.logger.info('QueueTaskExecutionService initialized');
-    }
+  constructor(dependencies = {}) {
+    this.logger = new ServiceLogger("QueueTaskExecutionService");
+    this.taskQueueStore = dependencies.taskQueueStore;
+    this.taskRepository = dependencies.taskRepository;
+    this.eventBus = dependencies.eventBus;
+    this.workflowLoaderService = dependencies.workflowLoaderService;
 
-    /**
-     * Add task to queue for execution
-     * @param {string} projectId - Project identifier
-     * @param {string} userId - User identifier
-     * @param {string} taskId - Task identifier
-     * @param {Object} options - Execution options
-     * @returns {Promise<Object>} Queue item with execution details
-     */
-    async addTaskToQueue(projectId, userId, taskId, options = {}) {
-        try {
-            this.logger.info('Adding task to queue', { 
-                projectId, 
-                userId, 
-                taskId,
-                priority: options.priority || 'normal'
-            });
+    this.logger.info("QueueTaskExecutionService initialized");
+  }
 
-            // For task creation workflows, skip task validation since task doesn't exist yet
-            let task = null;
-            if (options.taskMode === 'task-create-workflow' || options.taskMode === 'advanced-task-create-workflow') {
-                // This is a task creation workflow with real task in database
-                this.logger.info('Task creation workflow detected, loading real task from database');
-                task = await this.taskRepository.findById(taskId);
-                if (!task) {
-                    throw new Error(`Task not found: ${taskId}`);
-                }
-            } else {
-                // Validate task exists and belongs to project
-                task = await this.taskRepository.findById(taskId);
-                if (!task) {
-                    throw new Error(`Task not found: ${taskId}`);
-                }
-            }
+  /**
+   * Add task to queue for execution
+   * @param {string} projectId - Project identifier
+   * @param {string} userId - User identifier
+   * @param {string} taskId - Task identifier
+   * @param {Object} options - Execution options
+   * @returns {Promise<Object>} Queue item with execution details
+   */
+  async addTaskToQueue(projectId, userId, taskId, options = {}) {
+    try {
+      this.logger.info("Adding task to queue", {
+        projectId,
+        userId,
+        taskId,
+        priority: options.priority || "normal",
+      });
 
-            // Load workflow configuration
-            const WorkflowLoaderService = require('../workflow/WorkflowLoaderService');
-            const workflowLoader = new WorkflowLoaderService();
-            await workflowLoader.loadWorkflows();
-            
-            // Use workflow from options (set by frontend) - NO FALLBACKS!
-            if (!options.workflow) {
-                throw new Error('Workflow must be specified in options.workflow');
-            }
-            const workflowName = options.workflow;
-            
-            // Get workflow
-            const workflow = workflowLoader.getWorkflow(workflowName);
-            if (!workflow) {
-                throw new Error(`Workflow '${workflowName}' not found`);
-            }
-
-            // Create workflow context with task data
-            const context = {
-                task,
-                taskId,
-                projectId,
-                userId,
-                projectPath: options.projectPath,
-                createGitBranch: options.createGitBranch || false,
-                branchName: options.branchName,
-                autoExecute: options.autoExecute || true,
-                taskData: options.taskData, // Pass taskData to context
-                ...options
-            };
-
-            // Add to queue with proper priority
-            const queueItem = await this.taskQueueStore.addToProjectQueue(
-                projectId,
-                userId,
-                workflow,
-                context,
-                {
-                    priority: options.priority || 'normal',
-                    retryCount: 0,
-                    maxRetries: options.maxRetries || 3,
-                    timeout: options.timeout || 300000,
-                    taskId,
-                    taskType: task.type?.value,
-                    ...options
-                }
-            );
-
-            // Emit queue:item:added event
-            if (this.eventBus) {
-                this.eventBus.emit('queue:item:added', {
-                    projectId,
-                    userId,
-                    item: queueItem,
-                    taskId,
-                    taskType: task.type?.value
-                });
-            }
-
-            this.logger.info('Task added to queue successfully', { 
-                taskId,
-                queueItemId: queueItem.id,
-                position: queueItem.position
-            });
-
-            return {
-                success: true,
-                taskId: task.id,
-                queueItemId: queueItem.id,
-                status: 'queued',
-                position: queueItem.position,
-                estimatedStartTime: queueItem.estimatedStartTime,
-                message: `Task "${task.title}" added to queue for execution`
-            };
-
-        } catch (error) {
-            this.logger.error('Failed to add task to queue', { 
-                projectId, 
-                userId, 
-                taskId, 
-                error: error.message 
-            });
-            throw error;
+      // For task creation workflows, skip task validation since task doesn't exist yet
+      let task = null;
+      if (
+        options.taskMode === "task-create-workflow" ||
+        options.taskMode === "advanced-task-create-workflow"
+      ) {
+        // This is a task creation workflow with real task in database
+        this.logger.info(
+          "Task creation workflow detected, loading real task from database",
+        );
+        task = await this.taskRepository.findById(taskId);
+        if (!task) {
+          throw new Error(`Task not found: ${taskId}`);
         }
-    }
-
-    /**
-     * Get task execution status from queue
-     * @param {string} projectId - Project identifier
-     * @param {string} queueItemId - Queue item identifier
-     * @returns {Promise<Object>} Execution status with progress
-     */
-    async getTaskExecutionStatus(projectId, queueItemId) {
-        try {
-            this.logger.debug('Getting task execution status', { projectId, queueItemId });
-
-            const projectQueue = this.taskQueueStore.getProjectQueue(projectId);
-            const queueItem = projectQueue.find(item => item.id === queueItemId);
-            
-            if (!queueItem) {
-                throw new Error(`Queue item ${queueItemId} not found`);
-            }
-
-            const status = {
-                queueItemId,
-                projectId,
-                status: queueItem.status,
-                progress: queueItem.workflow?.progress || 0,
-                currentStep: queueItem.workflow?.currentStep || 0,
-                totalSteps: queueItem.workflow?.steps?.length || 0,
-                startedAt: queueItem.startedAt,
-                completedAt: queueItem.completedAt,
-                error: queueItem.error,
-                position: queueItem.position,
-                estimatedStartTime: queueItem.estimatedStartTime,
-                lastUpdated: queueItem.updatedAt || queueItem.addedAt
-            };
-
-            // Add step details if available
-            if (queueItem.workflow?.steps) {
-                status.steps = queueItem.workflow.steps.map(step => ({
-                    id: step.id,
-                    name: step.name,
-                    status: step.status || 'pending',
-                    progress: step.progress || 0,
-                    startedAt: step.startedAt,
-                    completedAt: step.completedAt,
-                    error: step.error
-                }));
-            }
-
-            return status;
-
-        } catch (error) {
-            this.logger.error('Failed to get task execution status', { 
-                projectId, 
-                queueItemId, 
-                error: error.message 
-            });
-            throw error;
+      } else {
+        // Validate task exists and belongs to project
+        task = await this.taskRepository.findById(taskId);
+        if (!task) {
+          throw new Error(`Task not found: ${taskId}`);
         }
+      }
+
+      // Load workflow configuration
+      const WorkflowLoaderService = require("../workflow/WorkflowLoaderService");
+      const workflowLoader = new WorkflowLoaderService();
+      await workflowLoader.loadWorkflows();
+
+      // Use workflow from options (set by frontend) - NO FALLBACKS!
+      if (!options.workflow) {
+        throw new Error("Workflow must be specified in options.workflow");
+      }
+      const workflowName = options.workflow;
+
+      // Get workflow
+      const workflow = workflowLoader.getWorkflow(workflowName);
+      if (!workflow) {
+        throw new Error(`Workflow '${workflowName}' not found`);
+      }
+
+      // Create workflow context with task data
+      const context = {
+        task,
+        taskId,
+        projectId,
+        userId,
+        projectPath: options.projectPath,
+        createGitBranch: options.createGitBranch || false,
+        branchName: options.branchName,
+        autoExecute: options.autoExecute || true,
+        taskData: options.taskData, // Pass taskData to context
+        ...options,
+      };
+
+      // Add to queue with proper priority
+      const queueItem = await this.taskQueueStore.addToProjectQueue(
+        projectId,
+        userId,
+        workflow,
+        context,
+        {
+          priority: options.priority || "normal",
+          retryCount: 0,
+          maxRetries: options.maxRetries || 3,
+          timeout: options.timeout || 300000,
+          taskId,
+          taskType: task.type?.value,
+          ...options,
+        },
+      );
+
+      // Emit queue:item:added event
+      if (this.eventBus) {
+        this.eventBus.emit("queue:item:added", {
+          projectId,
+          userId,
+          item: queueItem,
+          taskId,
+          taskType: task.type?.value,
+        });
+      }
+
+      this.logger.info("Task added to queue successfully", {
+        taskId,
+        queueItemId: queueItem.id,
+        position: queueItem.position,
+      });
+
+      return {
+        taskId: task.id,
+        queueItemId: queueItem.id,
+        status: "queued",
+        position: queueItem.position,
+        estimatedStartTime: queueItem.estimatedStartTime,
+        message: `Task "${task.title}" added to queue for execution`,
+      };
+    } catch (error) {
+      this.logger.error("Failed to add task to queue", {
+        projectId,
+        userId,
+        taskId,
+        error: error.message,
+      });
+      throw error;
     }
+  }
 
-    /**
-     * Cancel task execution
-     * @param {string} projectId - Project identifier
-     * @param {string} queueItemId - Queue item identifier
-     * @param {string} userId - User identifier
-     * @returns {Promise<Object>} Cancellation result
-     */
-    async cancelTaskExecution(projectId, queueItemId, userId) {
-        try {
-            this.logger.info('Cancelling task execution', { projectId, queueItemId, userId });
+  /**
+   * Get task execution status from queue
+   * @param {string} projectId - Project identifier
+   * @param {string} queueItemId - Queue item identifier
+   * @returns {Promise<Object>} Execution status with progress
+   */
+  async getTaskExecutionStatus(projectId, queueItemId) {
+    try {
+      this.logger.debug("Getting task execution status", {
+        projectId,
+        queueItemId,
+      });
 
-            // Update queue item status to cancelled
-            const updatedItem = await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
-                status: 'cancelled',
-                cancelledAt: new Date().toISOString(),
-                cancelledBy: userId
-            });
+      const projectQueue = this.taskQueueStore.getProjectQueue(projectId);
+      const queueItem = projectQueue.find((item) => item.id === queueItemId);
 
-            // Emit queue:item:cancelled event
-            if (this.eventBus) {
-                this.eventBus.emit('queue:item:cancelled', {
-                    projectId,
-                    userId,
-                    item: updatedItem,
-                    cancelledBy: userId
-                });
-            }
+      if (!queueItem) {
+        throw new Error(`Queue item ${queueItemId} not found`);
+      }
 
-            this.logger.info('Task execution cancelled successfully', { 
-                queueItemId,
-                cancelledBy: userId
-            });
+      const status = {
+        queueItemId,
+        projectId,
+        status: queueItem.status,
+        progress: queueItem.workflow?.progress || 0,
+        currentStep: queueItem.workflow?.currentStep || 0,
+        totalSteps: queueItem.workflow?.steps?.length || 0,
+        startedAt: queueItem.startedAt,
+        completedAt: queueItem.completedAt,
+        error: queueItem.error,
+        position: queueItem.position,
+        estimatedStartTime: queueItem.estimatedStartTime,
+        lastUpdated: queueItem.updatedAt || queueItem.addedAt,
+      };
 
-            return {
-                success: true,
-                queueItemId,
-                status: 'cancelled',
-                message: 'Task execution cancelled successfully'
-            };
+      // Add step details if available
+      if (queueItem.workflow?.steps) {
+        status.steps = queueItem.workflow.steps.map((step) => ({
+          id: step.id,
+          name: step.name,
+          status: step.status || "pending",
+          progress: step.progress || 0,
+          startedAt: step.startedAt,
+          completedAt: step.completedAt,
+          error: step.error,
+        }));
+      }
 
-        } catch (error) {
-            this.logger.error('Failed to cancel task execution', { 
-                projectId, 
-                queueItemId, 
-                userId, 
-                error: error.message 
-            });
-            throw error;
-        }
+      return status;
+    } catch (error) {
+      this.logger.error("Failed to get task execution status", {
+        projectId,
+        queueItemId,
+        error: error.message,
+      });
+      throw error;
     }
+  }
 
-    /**
-     * Get all task executions for a project
-     * @param {string} projectId - Project identifier
-     * @param {string} userId - User identifier
-     * @returns {Promise<Array>} Array of task executions
-     */
-    async getProjectTaskExecutions(projectId, userId) {
-        try {
-            this.logger.debug('Getting project task executions', { projectId, userId });
+  /**
+   * Cancel task execution
+   * @param {string} projectId - Project identifier
+   * @param {string} queueItemId - Queue item identifier
+   * @param {string} userId - User identifier
+   * @returns {Promise<Object>} Cancellation result
+   */
+  async cancelTaskExecution(projectId, queueItemId, userId) {
+    try {
+      this.logger.info("Cancelling task execution", {
+        projectId,
+        queueItemId,
+        userId,
+      });
 
-            const projectQueue = this.taskQueueStore.getProjectQueue(projectId);
-            
-            // Filter queue items that are task executions
-            const taskExecutions = projectQueue.filter(item => 
-                item.context?.taskId || item.options?.taskId
-            );
+      // Update queue item status to cancelled
+      const updatedItem = await this.taskQueueStore.updateQueueItem(
+        projectId,
+        queueItemId,
+        {
+          status: "cancelled",
+          cancelledAt: new Date().toISOString(),
+          cancelledBy: userId,
+        },
+      );
 
-            return taskExecutions.map(item => ({
-                queueItemId: item.id,
-                taskId: item.context?.taskId || item.options?.taskId,
-                status: item.status,
-                progress: item.workflow?.progress || 0,
-                currentStep: item.workflow?.currentStep || 0,
-                totalSteps: item.workflow?.steps?.length || 0,
-                addedAt: item.addedAt,
-                startedAt: item.startedAt,
-                completedAt: item.completedAt,
-                cancelledAt: item.cancelledAt,
-                error: item.error,
-                position: item.position
-            }));
+      // Emit queue:item:cancelled event
+      if (this.eventBus) {
+        this.eventBus.emit("queue:item:cancelled", {
+          projectId,
+          userId,
+          item: updatedItem,
+          cancelledBy: userId,
+        });
+      }
 
-        } catch (error) {
-            this.logger.error('Failed to get project task executions', { 
-                projectId, 
-                userId, 
-                error: error.message 
-            });
-            throw error;
-        }
+      this.logger.info("Task execution cancelled successfully", {
+        queueItemId,
+        cancelledBy: userId,
+      });
+
+      return {
+        queueItemId,
+        status: "cancelled",
+        message: "Task execution cancelled successfully",
+      };
+    } catch (error) {
+      this.logger.error("Failed to cancel task execution", {
+        projectId,
+        queueItemId,
+        userId,
+        error: error.message,
+      });
+      throw error;
     }
+  }
+
+  /**
+   * Get all task executions for a project
+   * @param {string} projectId - Project identifier
+   * @param {string} userId - User identifier
+   * @returns {Promise<Array>} Array of task executions
+   */
+  async getProjectTaskExecutions(projectId, userId) {
+    try {
+      this.logger.debug("Getting project task executions", {
+        projectId,
+        userId,
+      });
+
+      const projectQueue = this.taskQueueStore.getProjectQueue(projectId);
+
+      // Filter queue items that are task executions
+      const taskExecutions = projectQueue.filter(
+        (item) => item.context?.taskId || item.options?.taskId,
+      );
+
+      return taskExecutions.map((item) => ({
+        queueItemId: item.id,
+        taskId: item.context?.taskId || item.options?.taskId,
+        status: item.status,
+        progress: item.workflow?.progress || 0,
+        currentStep: item.workflow?.currentStep || 0,
+        totalSteps: item.workflow?.steps?.length || 0,
+        addedAt: item.addedAt,
+        startedAt: item.startedAt,
+        completedAt: item.completedAt,
+        cancelledAt: item.cancelledAt,
+        error: item.error,
+        position: item.position,
+      }));
+    } catch (error) {
+      this.logger.error("Failed to get project task executions", {
+        projectId,
+        userId,
+        error: error.message,
+      });
+      throw error;
+    }
+  }
 }
 
-module.exports = QueueTaskExecutionService; 
+module.exports = QueueTaskExecutionService;

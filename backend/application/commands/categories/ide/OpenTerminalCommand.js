@@ -26,20 +26,22 @@ class OpenTerminalCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
     // Validate IDE type if provided
     if (this.ideType) {
-      const validTypes = ['cursor', 'vscode', 'windsurf'];
+      const validTypes = ["cursor", "vscode", "windsurf"];
       if (!validTypes.includes(this.ideType)) {
-        throw new Error(`Invalid IDE type. Must be one of: ${validTypes.join(', ')}`);
+        throw new Error(
+          `Invalid IDE type. Must be one of: ${validTypes.join(", ")}`,
+        );
       }
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -51,17 +53,17 @@ class OpenTerminalCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'OpenTerminalCommand',
+      type: "OpenTerminalCommand",
       userId: this.userId,
       ideType: this.ideType,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = OpenTerminalCommand; 
+module.exports = OpenTerminalCommand;

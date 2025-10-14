@@ -27,24 +27,24 @@ class RestartUserAppCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.appName && typeof this.appName !== 'string') {
-      throw new Error('App name must be a string');
+    if (this.appName && typeof this.appName !== "string") {
+      throw new Error("App name must be a string");
     }
 
     if (this.appName && this.appName.length > 200) {
-      throw new Error('App name too long (max 200 characters)');
+      throw new Error("App name too long (max 200 characters)");
     }
 
-    if (typeof this.forceRestart !== 'boolean') {
-      throw new Error('forceRestart must be a boolean');
+    if (typeof this.forceRestart !== "boolean") {
+      throw new Error("forceRestart must be a boolean");
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -56,18 +56,18 @@ class RestartUserAppCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'RestartUserAppCommand',
+      type: "RestartUserAppCommand",
       userId: this.userId,
       appName: this.appName,
       forceRestart: this.forceRestart,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = RestartUserAppCommand; 
+module.exports = RestartUserAppCommand;

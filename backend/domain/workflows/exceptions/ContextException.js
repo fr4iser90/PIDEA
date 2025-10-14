@@ -2,7 +2,7 @@
  * ContextException - Exception for context-specific errors
  * Extends WorkflowException for workflow context-related errors
  */
-const WorkflowException = require('./WorkflowException');
+const WorkflowException = require("./WorkflowException");
 
 class ContextException extends WorkflowException {
   constructor(
@@ -10,14 +10,14 @@ class ContextException extends WorkflowException {
     contextId = null,
     contextType = null,
     field = null,
-    code = 'CONTEXT_ERROR',
+    code = "CONTEXT_ERROR",
     context = null,
     cause = null,
-    metadata = {}
+    metadata = {},
   ) {
     super(message, code, context, cause, metadata);
-    
-    this.name = 'ContextException';
+
+    this.name = "ContextException";
     this.contextId = contextId;
     this.contextType = contextType;
     this.field = field;
@@ -85,16 +85,18 @@ class ContextException extends WorkflowException {
   getFullMessage() {
     let message = this.message;
     const contextInfo = this.getContextInfo();
-    
+
     if (Object.keys(contextInfo).length > 0) {
       const contextParts = [];
-      if (contextInfo.contextId) contextParts.push(`context: ${contextInfo.contextId}`);
-      if (contextInfo.contextType) contextParts.push(`type: ${contextInfo.contextType}`);
+      if (contextInfo.contextId)
+        contextParts.push(`context: ${contextInfo.contextId}`);
+      if (contextInfo.contextType)
+        contextParts.push(`type: ${contextInfo.contextType}`);
       if (contextInfo.field) contextParts.push(`field: ${contextInfo.field}`);
-      
-      message += ` (${contextParts.join(', ')})`;
+
+      message += ` (${contextParts.join(", ")})`;
     }
-    
+
     return message;
   }
 
@@ -108,7 +110,7 @@ class ContextException extends WorkflowException {
       contextType: this.contextType,
       field: this.field,
       contextInfo: this.getContextInfo(),
-      fullMessage: this.getFullMessage()
+      fullMessage: this.getFullMessage(),
     };
   }
 
@@ -121,18 +123,31 @@ class ContextException extends WorkflowException {
       data.code,
       data.context,
       data.cause ? WorkflowException.fromJSON(data.cause) : null,
-      data.metadata
+      data.metadata,
     );
-    
+
     exception.timestamp = new Date(data.timestamp);
     exception.stack = data.stack;
-    
+
     return exception;
   }
 
   // Factory methods
-  static create(message, contextId = null, contextType = null, field = null, context = null) {
-    return new ContextException(message, contextId, contextType, field, 'CONTEXT_ERROR', context);
+  static create(
+    message,
+    contextId = null,
+    contextType = null,
+    field = null,
+    context = null,
+  ) {
+    return new ContextException(
+      message,
+      contextId,
+      contextType,
+      field,
+      "CONTEXT_ERROR",
+      context,
+    );
   }
 
   static createContextNotFound(contextId, contextType = null, context = null) {
@@ -141,19 +156,24 @@ class ContextException extends WorkflowException {
       contextId,
       contextType,
       null,
-      'CONTEXT_NOT_FOUND',
-      context
+      "CONTEXT_NOT_FOUND",
+      context,
     );
   }
 
-  static createContextInvalid(contextId, reason, contextType = null, context = null) {
+  static createContextInvalid(
+    contextId,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Context is invalid: ${reason}`,
       contextId,
       contextType,
       null,
-      'CONTEXT_INVALID',
-      context
+      "CONTEXT_INVALID",
+      context,
     );
   }
 
@@ -163,195 +183,286 @@ class ContextException extends WorkflowException {
       contextId,
       contextType,
       null,
-      'CONTEXT_EXPIRED',
-      context
+      "CONTEXT_EXPIRED",
+      context,
     );
   }
 
-  static createContextCorrupted(contextId, reason, contextType = null, context = null) {
+  static createContextCorrupted(
+    contextId,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Context is corrupted: ${reason}`,
       contextId,
       contextType,
       null,
-      'CONTEXT_CORRUPTED',
-      context
+      "CONTEXT_CORRUPTED",
+      context,
     );
   }
 
-  static createFieldNotFound(contextId, field, contextType = null, context = null) {
+  static createFieldNotFound(
+    contextId,
+    field,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Field '${field}' not found in context`,
       contextId,
       contextType,
       field,
-      'FIELD_NOT_FOUND',
-      context
+      "FIELD_NOT_FOUND",
+      context,
     );
   }
 
-  static createFieldInvalid(contextId, field, reason, contextType = null, context = null) {
+  static createFieldInvalid(
+    contextId,
+    field,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Field '${field}' is invalid: ${reason}`,
       contextId,
       contextType,
       field,
-      'FIELD_INVALID',
-      context
+      "FIELD_INVALID",
+      context,
     );
   }
 
-  static createFieldRequired(contextId, field, contextType = null, context = null) {
+  static createFieldRequired(
+    contextId,
+    field,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Field '${field}' is required in context`,
       contextId,
       contextType,
       field,
-      'FIELD_REQUIRED',
-      context
+      "FIELD_REQUIRED",
+      context,
     );
   }
 
-  static createStateInvalid(contextId, state, reason, contextType = null, context = null) {
+  static createStateInvalid(
+    contextId,
+    state,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Context state is invalid: ${reason}`,
       contextId,
       contextType,
-      'state',
-      'STATE_INVALID',
-      context
+      "state",
+      "STATE_INVALID",
+      context,
     );
   }
 
-  static createStateTransitionInvalid(contextId, fromState, toState, contextType = null, context = null) {
+  static createStateTransitionInvalid(
+    contextId,
+    fromState,
+    toState,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Invalid state transition from '${fromState}' to '${toState}'`,
       contextId,
       contextType,
-      'state',
-      'STATE_TRANSITION_INVALID',
-      context
+      "state",
+      "STATE_TRANSITION_INVALID",
+      context,
     );
   }
 
-  static createMetadataInvalid(contextId, reason, contextType = null, context = null) {
+  static createMetadataInvalid(
+    contextId,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Context metadata is invalid: ${reason}`,
       contextId,
       contextType,
-      'metadata',
-      'METADATA_INVALID',
-      context
+      "metadata",
+      "METADATA_INVALID",
+      context,
     );
   }
 
-  static createDataInvalid(contextId, field, reason, contextType = null, context = null) {
+  static createDataInvalid(
+    contextId,
+    field,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Context data is invalid: ${reason}`,
       contextId,
       contextType,
       field,
-      'DATA_INVALID',
-      context
+      "DATA_INVALID",
+      context,
     );
   }
 
-  static createDependencyMissing(contextId, dependency, contextType = null, context = null) {
+  static createDependencyMissing(
+    contextId,
+    dependency,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Required dependency '${dependency}' is missing in context`,
       contextId,
       contextType,
-      'dependencies',
-      'DEPENDENCY_MISSING',
-      context
+      "dependencies",
+      "DEPENDENCY_MISSING",
+      context,
     );
   }
 
-  static createDependencyInvalid(contextId, dependency, reason, contextType = null, context = null) {
+  static createDependencyInvalid(
+    contextId,
+    dependency,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Dependency '${dependency}' is invalid: ${reason}`,
       contextId,
       contextType,
-      'dependencies',
-      'DEPENDENCY_INVALID',
-      context
+      "dependencies",
+      "DEPENDENCY_INVALID",
+      context,
     );
   }
 
-  static createPermissionDenied(contextId, operation, contextType = null, context = null) {
+  static createPermissionDenied(
+    contextId,
+    operation,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Permission denied for operation '${operation}' on context`,
       contextId,
       contextType,
-      'permissions',
-      'PERMISSION_DENIED',
-      context
+      "permissions",
+      "PERMISSION_DENIED",
+      context,
     );
   }
 
-  static createAccessDenied(contextId, resource, contextType = null, context = null) {
+  static createAccessDenied(
+    contextId,
+    resource,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Access denied to resource '${resource}' in context`,
       contextId,
       contextType,
-      'access',
-      'ACCESS_DENIED',
-      context
+      "access",
+      "ACCESS_DENIED",
+      context,
     );
   }
 
-  static createTimeout(contextId, operation, timeout, contextType = null, context = null) {
+  static createTimeout(
+    contextId,
+    operation,
+    timeout,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Operation '${operation}' timed out after ${timeout}ms`,
       contextId,
       contextType,
-      'timeout',
-      'CONTEXT_TIMEOUT',
-      context
+      "timeout",
+      "CONTEXT_TIMEOUT",
+      context,
     );
   }
 
-  static createResourceUnavailable(contextId, resource, contextType = null, context = null) {
+  static createResourceUnavailable(
+    contextId,
+    resource,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Resource '${resource}' is unavailable in context`,
       contextId,
       contextType,
-      'resources',
-      'RESOURCE_UNAVAILABLE',
-      context
+      "resources",
+      "RESOURCE_UNAVAILABLE",
+      context,
     );
   }
 
-  static createConfigurationError(contextId, reason, contextType = null, context = null) {
+  static createConfigurationError(
+    contextId,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Configuration error: ${reason}`,
       contextId,
       contextType,
-      'configuration',
-      'CONFIGURATION_ERROR',
-      context
+      "configuration",
+      "CONFIGURATION_ERROR",
+      context,
     );
   }
 
-  static createSerializationError(contextId, reason, contextType = null, context = null) {
+  static createSerializationError(
+    contextId,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Serialization error: ${reason}`,
       contextId,
       contextType,
-      'serialization',
-      'SERIALIZATION_ERROR',
-      context
+      "serialization",
+      "SERIALIZATION_ERROR",
+      context,
     );
   }
 
-  static createDeserializationError(contextId, reason, contextType = null, context = null) {
+  static createDeserializationError(
+    contextId,
+    reason,
+    contextType = null,
+    context = null,
+  ) {
     return new ContextException(
       `Deserialization error: ${reason}`,
       contextId,
       contextType,
-      'deserialization',
-      'DESERIALIZATION_ERROR',
-      context
+      "deserialization",
+      "DESERIALIZATION_ERROR",
+      context,
     );
   }
 
@@ -360,9 +471,14 @@ class ContextException extends WorkflowException {
     return error instanceof ContextException;
   }
 
-  static fromWorkflowException(workflowException, contextId = null, contextType = null, field = null) {
+  static fromWorkflowException(
+    workflowException,
+    contextId = null,
+    contextType = null,
+    field = null,
+  ) {
     if (!(workflowException instanceof WorkflowException)) {
-      throw new Error('Input must be a WorkflowException');
+      throw new Error("Input must be a WorkflowException");
     }
 
     return new ContextException(
@@ -373,11 +489,17 @@ class ContextException extends WorkflowException {
       workflowException.code,
       workflowException.context,
       workflowException.cause,
-      workflowException.metadata
+      workflowException.metadata,
     );
   }
 
-  static wrapContextError(error, contextId = null, contextType = null, field = null, context = null) {
+  static wrapContextError(
+    error,
+    contextId = null,
+    contextType = null,
+    field = null,
+    context = null,
+  ) {
     if (ContextException.isContextException(error)) {
       if (contextId) error.setContextId(contextId);
       if (contextType) error.setContextType(contextType);
@@ -387,17 +509,22 @@ class ContextException extends WorkflowException {
     }
 
     if (WorkflowException.isWorkflowException(error)) {
-      return ContextException.fromWorkflowException(error, contextId, contextType, field);
+      return ContextException.fromWorkflowException(
+        error,
+        contextId,
+        contextType,
+        field,
+      );
     }
 
     return new ContextException(
-      error.message || 'Context error occurred',
+      error.message || "Context error occurred",
       contextId,
       contextType,
       field,
-      'CONTEXT_ERROR',
+      "CONTEXT_ERROR",
       context,
-      error
+      error,
     );
   }
 
@@ -405,37 +532,53 @@ class ContextException extends WorkflowException {
   static contextNotFound(contextId, contextType = null, context = null) {
     return this.createContextNotFound(contextId, contextType, context);
   }
-  static keyNotFound(key, contextId = null, contextType = null, context = null) {
+  static keyNotFound(
+    key,
+    contextId = null,
+    contextType = null,
+    context = null,
+  ) {
     return this.createFieldNotFound(contextId, key, contextType, context);
   }
-  static stateInvalid(state, contextId = null, contextType = null, context = null) {
-    return this.createStateInvalid(contextId, state, 'Invalid state', contextType, context);
+  static stateInvalid(
+    state,
+    contextId = null,
+    contextType = null,
+    context = null,
+  ) {
+    return this.createStateInvalid(
+      contextId,
+      state,
+      "Invalid state",
+      contextType,
+      context,
+    );
   }
 
   // Common context error codes
   static CODES = {
-    CONTEXT_ERROR: 'CONTEXT_ERROR',
-    CONTEXT_NOT_FOUND: 'CONTEXT_NOT_FOUND',
-    CONTEXT_INVALID: 'CONTEXT_INVALID',
-    CONTEXT_EXPIRED: 'CONTEXT_EXPIRED',
-    CONTEXT_CORRUPTED: 'CONTEXT_CORRUPTED',
-    FIELD_NOT_FOUND: 'FIELD_NOT_FOUND',
-    FIELD_INVALID: 'FIELD_INVALID',
-    FIELD_REQUIRED: 'FIELD_REQUIRED',
-    STATE_INVALID: 'STATE_INVALID',
-    STATE_TRANSITION_INVALID: 'STATE_TRANSITION_INVALID',
-    METADATA_INVALID: 'METADATA_INVALID',
-    DATA_INVALID: 'DATA_INVALID',
-    DEPENDENCY_MISSING: 'DEPENDENCY_MISSING',
-    DEPENDENCY_INVALID: 'DEPENDENCY_INVALID',
-    PERMISSION_DENIED: 'PERMISSION_DENIED',
-    ACCESS_DENIED: 'ACCESS_DENIED',
-    CONTEXT_TIMEOUT: 'CONTEXT_TIMEOUT',
-    RESOURCE_UNAVAILABLE: 'RESOURCE_UNAVAILABLE',
-    CONFIGURATION_ERROR: 'CONFIGURATION_ERROR',
-    SERIALIZATION_ERROR: 'SERIALIZATION_ERROR',
-    DESERIALIZATION_ERROR: 'DESERIALIZATION_ERROR'
+    CONTEXT_ERROR: "CONTEXT_ERROR",
+    CONTEXT_NOT_FOUND: "CONTEXT_NOT_FOUND",
+    CONTEXT_INVALID: "CONTEXT_INVALID",
+    CONTEXT_EXPIRED: "CONTEXT_EXPIRED",
+    CONTEXT_CORRUPTED: "CONTEXT_CORRUPTED",
+    FIELD_NOT_FOUND: "FIELD_NOT_FOUND",
+    FIELD_INVALID: "FIELD_INVALID",
+    FIELD_REQUIRED: "FIELD_REQUIRED",
+    STATE_INVALID: "STATE_INVALID",
+    STATE_TRANSITION_INVALID: "STATE_TRANSITION_INVALID",
+    METADATA_INVALID: "METADATA_INVALID",
+    DATA_INVALID: "DATA_INVALID",
+    DEPENDENCY_MISSING: "DEPENDENCY_MISSING",
+    DEPENDENCY_INVALID: "DEPENDENCY_INVALID",
+    PERMISSION_DENIED: "PERMISSION_DENIED",
+    ACCESS_DENIED: "ACCESS_DENIED",
+    CONTEXT_TIMEOUT: "CONTEXT_TIMEOUT",
+    RESOURCE_UNAVAILABLE: "RESOURCE_UNAVAILABLE",
+    CONFIGURATION_ERROR: "CONFIGURATION_ERROR",
+    SERIALIZATION_ERROR: "SERIALIZATION_ERROR",
+    DESERIALIZATION_ERROR: "DESERIALIZATION_ERROR",
   };
 }
 
-module.exports = ContextException; 
+module.exports = ContextException;

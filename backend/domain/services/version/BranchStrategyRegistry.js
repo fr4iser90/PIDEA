@@ -3,48 +3,48 @@
  * Provides centralized strategy management and selection
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('BranchStrategyRegistry');
+const Logger = require("@logging/Logger");
+const logger = new Logger("BranchStrategyRegistry");
 
 class BranchStrategyRegistry {
   constructor() {
     this.strategies = new Map();
-    this.defaultStrategy = 'unified';
+    this.defaultStrategy = "unified";
     this.logger = logger;
-    
+
     // Strategy mappings for automatic selection
     this.strategyMappings = {
       taskTypeMappings: {
-        'feature': 'unified',
-        'bug': 'unified',
-        'hotfix': 'unified',
-        'refactor': 'unified',
-        'optimization': 'unified',
-        'analysis': 'unified',
-        'documentation': 'unified',
-        'test': 'unified',
-        'chore': 'unified'
+        feature: "unified",
+        bug: "unified",
+        hotfix: "unified",
+        refactor: "unified",
+        optimization: "unified",
+        analysis: "unified",
+        documentation: "unified",
+        test: "unified",
+        chore: "unified",
       },
       priorityMappings: {
-        'critical': 'unified',
-        'high': 'unified',
-        'medium': 'unified',
-        'low': 'unified',
-        'urgent': 'unified',
-        'emergency': 'unified'
+        critical: "unified",
+        high: "unified",
+        medium: "unified",
+        low: "unified",
+        urgent: "unified",
+        emergency: "unified",
       },
       categoryMappings: {
-        'automation': 'unified',
-        'frontend': 'unified',
-        'backend': 'unified',
-        'database': 'unified',
-        'security': 'unified',
-        'performance': 'unified',
-        'testing': 'unified',
-        'documentation': 'unified',
-        'ai': 'unified',
-        'ide': 'unified'
-      }
+        automation: "unified",
+        frontend: "unified",
+        backend: "unified",
+        database: "unified",
+        security: "unified",
+        performance: "unified",
+        testing: "unified",
+        documentation: "unified",
+        ai: "unified",
+        ide: "unified",
+      },
     };
   }
 
@@ -54,18 +54,20 @@ class BranchStrategyRegistry {
    * @param {BaseBranchStrategy} strategy - Strategy instance
    */
   registerStrategy(name, strategy) {
-    if (!name || typeof name !== 'string') {
-      throw new Error('Strategy name must be a non-empty string');
+    if (!name || typeof name !== "string") {
+      throw new Error("Strategy name must be a non-empty string");
     }
-    
-    if (!strategy || typeof strategy.generateBranchName !== 'function') {
-      throw new Error('Strategy must be an instance of BaseBranchStrategy');
+
+    if (!strategy || typeof strategy.generateBranchName !== "function") {
+      throw new Error("Strategy must be an instance of BaseBranchStrategy");
     }
-    
+
     this.strategies.set(name, strategy);
     this.logger.debug(`Registered branch strategy: ${name}`, {
-      strategyType: strategy.getStrategyType ? strategy.getStrategyType() : strategy.strategyType || strategy.type || 'unknown',
-      priority: strategy.getPriority ? strategy.getPriority() : 1
+      strategyType: strategy.getStrategyType
+        ? strategy.getStrategyType()
+        : strategy.strategyType || strategy.type || "unknown",
+      priority: strategy.getPriority ? strategy.getPriority() : 1,
     });
   }
 
@@ -96,7 +98,7 @@ class BranchStrategyRegistry {
    */
   getStrategyType(name) {
     const strategy = this.strategies.get(name);
-    return strategy ? strategy.constructor.name : 'UnknownStrategy';
+    return strategy ? strategy.constructor.name : "UnknownStrategy";
   }
 
   /**
@@ -133,7 +135,7 @@ class BranchStrategyRegistry {
   determineStrategy(task, context = {}) {
     try {
       // Check explicit strategy in context
-      const explicitStrategy = context.get('branchStrategy');
+      const explicitStrategy = context.get("branchStrategy");
       if (explicitStrategy && this.strategies.has(explicitStrategy)) {
         this.logger.info(`Using explicit strategy: ${explicitStrategy}`);
         return explicitStrategy;
@@ -143,7 +145,9 @@ class BranchStrategyRegistry {
       const taskType = task.type?.value || task.type;
       if (taskType && this.strategyMappings.taskTypeMappings[taskType]) {
         const strategy = this.strategyMappings.taskTypeMappings[taskType];
-        this.logger.info(`Using task type strategy: ${strategy} (task type: ${taskType})`);
+        this.logger.info(
+          `Using task type strategy: ${strategy} (task type: ${taskType})`,
+        );
         return strategy;
       }
 
@@ -151,7 +155,9 @@ class BranchStrategyRegistry {
       const priority = task.priority?.value || task.priority;
       if (priority && this.strategyMappings.priorityMappings[priority]) {
         const strategy = this.strategyMappings.priorityMappings[priority];
-        this.logger.info(`Using priority strategy: ${strategy} (priority: ${priority})`);
+        this.logger.info(
+          `Using priority strategy: ${strategy} (priority: ${priority})`,
+        );
         return strategy;
       }
 
@@ -159,7 +165,9 @@ class BranchStrategyRegistry {
       const category = task.category;
       if (category && this.strategyMappings.categoryMappings[category]) {
         const strategy = this.strategyMappings.categoryMappings[category];
-        this.logger.info(`Using category strategy: ${strategy} (category: ${category})`);
+        this.logger.info(
+          `Using category strategy: ${strategy} (category: ${category})`,
+        );
         return strategy;
       }
 
@@ -173,7 +181,6 @@ class BranchStrategyRegistry {
       // Use default strategy
       this.logger.info(`Using default strategy: ${this.defaultStrategy}`);
       return this.defaultStrategy;
-
     } catch (error) {
       this.logger.error(`Error determining strategy: ${error.message}`);
       return this.defaultStrategy;
@@ -186,23 +193,36 @@ class BranchStrategyRegistry {
    * @returns {string|null} Strategy name or null
    */
   analyzeKeywords(task) {
-    const text = `${task.title || ''} ${task.description || ''}`.toLowerCase();
-    
+    const text = `${task.title || ""} ${task.description || ""}`.toLowerCase();
+
     // Keyword patterns for different strategies
     const keywordPatterns = {
-      'unified': [
-        'feature', 'bug', 'fix', 'hotfix', 'refactor', 'optimize',
-        'enhance', 'improve', 'update', 'modify', 'change',
-        'add', 'remove', 'delete', 'create', 'implement'
-      ]
+      unified: [
+        "feature",
+        "bug",
+        "fix",
+        "hotfix",
+        "refactor",
+        "optimize",
+        "enhance",
+        "improve",
+        "update",
+        "modify",
+        "change",
+        "add",
+        "remove",
+        "delete",
+        "create",
+        "implement",
+      ],
     };
-    
+
     for (const [strategy, keywords] of Object.entries(keywordPatterns)) {
-      if (keywords.some(keyword => text.includes(keyword))) {
+      if (keywords.some((keyword) => text.includes(keyword))) {
         return strategy;
       }
     }
-    
+
     return null;
   }
 
@@ -215,17 +235,19 @@ class BranchStrategyRegistry {
   getStrategyForTask(task, context = {}) {
     const strategyName = this.determineStrategy(task, context);
     const strategy = this.getStrategy(strategyName);
-    
+
     if (!strategy) {
       throw new Error(`Strategy '${strategyName}' not found`);
     }
-    
+
     // Validate task compatibility
     const taskType = task.type?.value || task.type;
     if (taskType && !strategy.isCompatibleWithTaskType(taskType)) {
-      this.logger.warn(`Strategy '${strategyName}' may not be compatible with task type '${taskType}'`);
+      this.logger.warn(
+        `Strategy '${strategyName}' may not be compatible with task type '${taskType}'`,
+      );
     }
-    
+
     return strategy;
   }
 
@@ -301,7 +323,7 @@ class BranchStrategyRegistry {
    * @param {string} action - Commit action
    * @returns {string} Commit message
    */
-  getCommitMessageTemplate(task, action = 'feat') {
+  getCommitMessageTemplate(task, action = "feat") {
     const strategy = this.getStrategyForTask(task);
     return strategy.getCommitMessageTemplate(task, action);
   }
@@ -325,7 +347,7 @@ class BranchStrategyRegistry {
     if (!this.strategies.has(name)) {
       throw new Error(`Strategy '${name}' is not registered`);
     }
-    
+
     this.defaultStrategy = name;
     this.logger.info(`Set default strategy to: ${name}`);
   }
@@ -344,7 +366,7 @@ class BranchStrategyRegistry {
    */
   updateStrategyMappings(mappings) {
     this.strategyMappings = { ...this.strategyMappings, ...mappings };
-    this.logger.info('Updated strategy mappings', { mappings });
+    this.logger.info("Updated strategy mappings", { mappings });
   }
 
   /**
@@ -360,7 +382,7 @@ class BranchStrategyRegistry {
    */
   clear() {
     this.strategies.clear();
-    this.logger.info('Cleared all branch strategies');
+    this.logger.info("Cleared all branch strategies");
   }
 
   /**
@@ -369,15 +391,16 @@ class BranchStrategyRegistry {
    */
   getStatistics() {
     const strategies = Array.from(this.strategies.values());
-    const priorities = strategies.map(s => s.getPriority());
-    
+    const priorities = strategies.map((s) => s.getPriority());
+
     return {
       totalStrategies: this.strategies.size,
       strategyNames: this.getStrategyNames(),
       defaultStrategy: this.defaultStrategy,
-      averagePriority: priorities.reduce((a, b) => a + b, 0) / priorities.length,
+      averagePriority:
+        priorities.reduce((a, b) => a + b, 0) / priorities.length,
       maxPriority: Math.max(...priorities),
-      minPriority: Math.min(...priorities)
+      minPriority: Math.min(...priorities),
     };
   }
 }

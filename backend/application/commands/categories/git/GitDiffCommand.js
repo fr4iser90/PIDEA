@@ -8,9 +8,9 @@ class GitDiffCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitdiffcommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
+
     this.staged = params.staged || false;
     this.file = params.file;
     this.commit1 = params.commit1;
@@ -19,9 +19,9 @@ class GitDiffCommand {
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     return true;
   }
 
@@ -30,7 +30,7 @@ class GitDiffCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       staged: this.staged,
       file: this.file,
       commit1: this.commit1,

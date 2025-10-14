@@ -2,8 +2,8 @@
  * ExecutionMonitor - Real-time execution monitoring and metrics collection
  * Provides comprehensive monitoring capabilities for workflow execution
  */
-const EventEmitter = require('events');
-const ServiceLogger = require('@logging/ServiceLogger');
+const EventEmitter = require("events");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * Execution metrics data structure
@@ -24,12 +24,12 @@ class ExecutionMetrics {
     this.resourceUsage = {
       memory: [],
       cpu: [],
-      network: []
+      network: [],
     };
     this.performanceMetrics = {
       stepDurations: [],
       optimizationSavings: 0,
-      parallelExecutionSavings: 0
+      parallelExecutionSavings: 0,
     };
     this.errors = [];
     this.warnings = [];
@@ -62,12 +62,12 @@ class ExecutionMetrics {
    * @param {Error} error - Error object
    * @param {string} context - Error context
    */
-  addError(error, context = '') {
+  addError(error, context = "") {
     this.errors.push({
       message: error.message,
       stack: error.stack,
       context,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -76,11 +76,11 @@ class ExecutionMetrics {
    * @param {string} message - Warning message
    * @param {string} context - Warning context
    */
-  addWarning(message, context = '') {
+  addWarning(message, context = "") {
     this.warnings.push({
       message,
       context,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -96,16 +96,25 @@ class ExecutionMetrics {
       stepCount: this.stepCount,
       completedSteps: this.completedSteps,
       failedSteps: this.failedSteps,
-      successRate: this.stepCount > 0 ? (this.completedSteps / this.stepCount) * 100 : 0,
-      cacheHitRate: (this.cacheHits + this.cacheMisses) > 0 ? 
-        (this.cacheHits / (this.cacheHits + this.cacheMisses)) * 100 : 0,
+      successRate:
+        this.stepCount > 0 ? (this.completedSteps / this.stepCount) * 100 : 0,
+      cacheHitRate:
+        this.cacheHits + this.cacheMisses > 0
+          ? (this.cacheHits / (this.cacheHits + this.cacheMisses)) * 100
+          : 0,
       retryAttempts: this.retryAttempts,
       errorCount: this.errors.length,
       warningCount: this.warnings.length,
-      averageStepDuration: this.performanceMetrics.stepDurations.length > 0 ?
-        this.performanceMetrics.stepDurations.reduce((sum, d) => sum + d.duration, 0) / this.performanceMetrics.stepDurations.length : 0,
+      averageStepDuration:
+        this.performanceMetrics.stepDurations.length > 0
+          ? this.performanceMetrics.stepDurations.reduce(
+              (sum, d) => sum + d.duration,
+              0,
+            ) / this.performanceMetrics.stepDurations.length
+          : 0,
       optimizationSavings: this.performanceMetrics.optimizationSavings,
-      parallelExecutionSavings: this.performanceMetrics.parallelExecutionSavings
+      parallelExecutionSavings:
+        this.performanceMetrics.parallelExecutionSavings,
     };
   }
 
@@ -121,7 +130,7 @@ class ExecutionMetrics {
       errors: this.errors,
       warnings: this.warnings,
       startTime: this.startTime,
-      endTime: this.endTime
+      endTime: this.endTime,
     };
   }
 }
@@ -137,7 +146,8 @@ class AlertConfig {
     this.cpuThreshold = options.cpuThreshold || 90; // 90% CPU usage
     this.errorThreshold = options.errorThreshold || 3; // 3 errors
     this.stepFailureThreshold = options.stepFailureThreshold || 0.5; // 50% step failures
-    this.performanceDegradationThreshold = options.performanceDegradationThreshold || 0.3; // 30% slower
+    this.performanceDegradationThreshold =
+      options.performanceDegradationThreshold || 0.3; // 30% slower
   }
 }
 
@@ -160,15 +170,15 @@ class ExecutionAlert {
    */
   determineSeverity(type) {
     const severityMap = {
-      'execution_timeout': 'critical',
-      'memory_exceeded': 'warning',
-      'cpu_exceeded': 'warning',
-      'error_threshold': 'error',
-      'step_failure': 'error',
-      'performance_degradation': 'warning',
-      'resource_shortage': 'warning'
+      execution_timeout: "critical",
+      memory_exceeded: "warning",
+      cpu_exceeded: "warning",
+      error_threshold: "error",
+      step_failure: "error",
+      performance_degradation: "warning",
+      resource_shortage: "warning",
     };
-    return severityMap[type] || 'info';
+    return severityMap[type] || "info";
   }
 
   /**
@@ -181,7 +191,7 @@ class ExecutionAlert {
       message: this.message,
       data: this.data,
       timestamp: this.timestamp,
-      severity: this.severity
+      severity: this.severity,
     };
   }
 }
@@ -192,26 +202,26 @@ class ExecutionAlert {
 class ExecutionMonitor extends EventEmitter {
   constructor(options = {}) {
     super();
-    
+
     this.enabled = options.enabled !== false;
     this.monitoringInterval = options.monitoringInterval || 1000; // 1 second
     this.metricsRetention = options.metricsRetention || 24 * 60 * 60 * 1000; // 24 hours
     this.alertConfig = new AlertConfig(options.alertConfig);
-    
+
     // Storage
     this.activeExecutions = new Map(); // executionId -> ExecutionMetrics
     this.executionHistory = new Map(); // executionId -> ExecutionMetrics
     this.alerts = []; // Array of ExecutionAlert
-    
+
     // Monitoring state
     this.isMonitoring = false;
     this.monitoringTimer = null;
-    
+
     // Performance tracking
     this.performanceBaseline = new Map(); // workflowName -> baseline metrics
     this.performanceThresholds = new Map(); // workflowName -> thresholds
-    
-    this.logger = options.logger || new ServiceLogger('ExecutionMonitor');
+
+    this.logger = options.logger || new ServiceLogger("ExecutionMonitor");
   }
 
   /**
@@ -228,10 +238,10 @@ class ExecutionMonitor extends EventEmitter {
     }, this.monitoringInterval);
 
     // Only log in debug mode
-    if (process.env.DEBUG_MONITORING === 'true') {
-      this.logger.info('Started monitoring');
+    if (process.env.DEBUG_MONITORING === "true") {
+      this.logger.info("Started monitoring");
     }
-    this.emit('monitoring:started');
+    this.emit("monitoring:started");
   }
 
   /**
@@ -248,8 +258,8 @@ class ExecutionMonitor extends EventEmitter {
       this.monitoringTimer = null;
     }
 
-    this.logger.info('Stopped monitoring');
-    this.emit('monitoring:stopped');
+    this.logger.info("Stopped monitoring");
+    this.emit("monitoring:stopped");
   }
 
   /**
@@ -269,13 +279,13 @@ class ExecutionMonitor extends EventEmitter {
     metrics.stepCount = executionData.stepCount || 0;
 
     this.activeExecutions.set(executionId, metrics);
-    
-    this.logger.info('Registered execution for monitoring', {
+
+    this.logger.info("Registered execution for monitoring", {
       executionId,
-      workflowName: executionData.workflowName
+      workflowName: executionData.workflowName,
     });
-    
-    this.emit('execution:registered', { executionId, metrics });
+
+    this.emit("execution:registered", { executionId, metrics });
   }
 
   /**
@@ -330,7 +340,7 @@ class ExecutionMonitor extends EventEmitter {
       metrics.addWarning(updateData.warning, updateData.warningContext);
     }
 
-    this.emit('execution:updated', { executionId, metrics, updateData });
+    this.emit("execution:updated", { executionId, metrics, updateData });
   }
 
   /**
@@ -354,10 +364,12 @@ class ExecutionMonitor extends EventEmitter {
 
     // Apply final data
     if (finalData.optimizationSavings !== undefined) {
-      metrics.performanceMetrics.optimizationSavings = finalData.optimizationSavings;
+      metrics.performanceMetrics.optimizationSavings =
+        finalData.optimizationSavings;
     }
     if (finalData.parallelExecutionSavings !== undefined) {
-      metrics.performanceMetrics.parallelExecutionSavings = finalData.parallelExecutionSavings;
+      metrics.performanceMetrics.parallelExecutionSavings =
+        finalData.parallelExecutionSavings;
     }
 
     // Move to history
@@ -373,13 +385,13 @@ class ExecutionMonitor extends EventEmitter {
     // Cleanup old history
     this.cleanupOldHistory();
 
-    this.logger.info('Completed execution monitoring', {
+    this.logger.info("Completed execution monitoring", {
       executionId,
       duration: metrics.duration,
-      successRate: metrics.getSummary().successRate
+      successRate: metrics.getSummary().successRate,
     });
 
-    this.emit('execution:completed', { executionId, metrics });
+    this.emit("execution:completed", { executionId, metrics });
   }
 
   /**
@@ -396,54 +408,76 @@ class ExecutionMonitor extends EventEmitter {
     for (const [executionId, metrics] of this.activeExecutions) {
       // Check execution timeout
       if (now - metrics.startTime > this.alertConfig.executionTimeout) {
-        this.createAlert('execution_timeout', `Execution ${executionId} exceeded timeout`, {
-          executionId,
-          duration: now - metrics.startTime,
-          timeout: this.alertConfig.executionTimeout
-        });
+        this.createAlert(
+          "execution_timeout",
+          `Execution ${executionId} exceeded timeout`,
+          {
+            executionId,
+            duration: now - metrics.startTime,
+            timeout: this.alertConfig.executionTimeout,
+          },
+        );
       }
 
       // Check resource usage
       if (metrics.resourceUsage.memory.length > 0) {
-        const latestMemory = metrics.resourceUsage.memory[metrics.resourceUsage.memory.length - 1];
+        const latestMemory =
+          metrics.resourceUsage.memory[metrics.resourceUsage.memory.length - 1];
         if (latestMemory.value > this.alertConfig.memoryThreshold) {
-          this.createAlert('memory_exceeded', `Memory usage exceeded threshold for execution ${executionId}`, {
-            executionId,
-            memoryUsage: latestMemory.value,
-            threshold: this.alertConfig.memoryThreshold
-          });
+          this.createAlert(
+            "memory_exceeded",
+            `Memory usage exceeded threshold for execution ${executionId}`,
+            {
+              executionId,
+              memoryUsage: latestMemory.value,
+              threshold: this.alertConfig.memoryThreshold,
+            },
+          );
         }
       }
 
       if (metrics.resourceUsage.cpu.length > 0) {
-        const latestCpu = metrics.resourceUsage.cpu[metrics.resourceUsage.cpu.length - 1];
+        const latestCpu =
+          metrics.resourceUsage.cpu[metrics.resourceUsage.cpu.length - 1];
         if (latestCpu.value > this.alertConfig.cpuThreshold) {
-          this.createAlert('cpu_exceeded', `CPU usage exceeded threshold for execution ${executionId}`, {
-            executionId,
-            cpuUsage: latestCpu.value,
-            threshold: this.alertConfig.cpuThreshold
-          });
+          this.createAlert(
+            "cpu_exceeded",
+            `CPU usage exceeded threshold for execution ${executionId}`,
+            {
+              executionId,
+              cpuUsage: latestCpu.value,
+              threshold: this.alertConfig.cpuThreshold,
+            },
+          );
         }
       }
 
       // Check error threshold
       if (metrics.errors.length >= this.alertConfig.errorThreshold) {
-        this.createAlert('error_threshold', `Error threshold exceeded for execution ${executionId}`, {
-          executionId,
-          errorCount: metrics.errors.length,
-          threshold: this.alertConfig.errorThreshold
-        });
+        this.createAlert(
+          "error_threshold",
+          `Error threshold exceeded for execution ${executionId}`,
+          {
+            executionId,
+            errorCount: metrics.errors.length,
+            threshold: this.alertConfig.errorThreshold,
+          },
+        );
       }
 
       // Check step failure threshold
       if (metrics.stepCount > 0) {
         const failureRate = metrics.failedSteps / metrics.stepCount;
         if (failureRate >= this.alertConfig.stepFailureThreshold) {
-          this.createAlert('step_failure', `Step failure rate exceeded threshold for execution ${executionId}`, {
-            executionId,
-            failureRate,
-            threshold: this.alertConfig.stepFailureThreshold
-          });
+          this.createAlert(
+            "step_failure",
+            `Step failure rate exceeded threshold for execution ${executionId}`,
+            {
+              executionId,
+              failureRate,
+              threshold: this.alertConfig.stepFailureThreshold,
+            },
+          );
         }
       }
     }
@@ -459,13 +493,13 @@ class ExecutionMonitor extends EventEmitter {
     const alert = new ExecutionAlert(type, message, data);
     this.alerts.push(alert);
 
-    this.logger.warn('Alert created', {
+    this.logger.warn("Alert created", {
       type: alert.type,
       message: alert.message,
-      severity: alert.severity
+      severity: alert.severity,
     });
 
-    this.emit('alert:created', alert);
+    this.emit("alert:created", alert);
   }
 
   /**
@@ -481,7 +515,7 @@ class ExecutionMonitor extends EventEmitter {
       count: 0,
       totalDuration: 0,
       averageDuration: 0,
-      stepDurations: []
+      stepDurations: [],
     };
 
     baseline.count++;
@@ -489,7 +523,7 @@ class ExecutionMonitor extends EventEmitter {
     baseline.averageDuration = baseline.totalDuration / baseline.count;
 
     // Update step durations
-    metrics.performanceMetrics.stepDurations.forEach(stepDuration => {
+    metrics.performanceMetrics.stepDurations.forEach((stepDuration) => {
       baseline.stepDurations.push(stepDuration);
     });
 
@@ -511,19 +545,25 @@ class ExecutionMonitor extends EventEmitter {
       return; // Need at least 3 executions for baseline
     }
 
-    const degradationThreshold = this.alertConfig.performanceDegradationThreshold;
+    const degradationThreshold =
+      this.alertConfig.performanceDegradationThreshold;
     const currentDuration = metrics.duration;
     const baselineDuration = baseline.averageDuration;
 
     if (currentDuration > baselineDuration * (1 + degradationThreshold)) {
-      this.createAlert('performance_degradation', `Performance degradation detected for execution ${executionId}`, {
-        executionId,
-        workflowName: metrics.workflowName,
-        currentDuration,
-        baselineDuration,
-        degradation: ((currentDuration - baselineDuration) / baselineDuration) * 100,
-        threshold: degradationThreshold * 100
-      });
+      this.createAlert(
+        "performance_degradation",
+        `Performance degradation detected for execution ${executionId}`,
+        {
+          executionId,
+          workflowName: metrics.workflowName,
+          currentDuration,
+          baselineDuration,
+          degradation:
+            ((currentDuration - baselineDuration) / baselineDuration) * 100,
+          threshold: degradationThreshold * 100,
+        },
+      );
     }
   }
 
@@ -540,8 +580,8 @@ class ExecutionMonitor extends EventEmitter {
     }
 
     // Cleanup old alerts
-    this.alerts = this.alerts.filter(alert => 
-      alert.timestamp.getTime() > cutoffTime
+    this.alerts = this.alerts.filter(
+      (alert) => alert.timestamp.getTime() > cutoffTime,
     );
   }
 
@@ -551,7 +591,11 @@ class ExecutionMonitor extends EventEmitter {
    * @returns {ExecutionMetrics|null} Execution metrics
    */
   getExecutionMetrics(executionId) {
-    return this.activeExecutions.get(executionId) || this.executionHistory.get(executionId) || null;
+    return (
+      this.activeExecutions.get(executionId) ||
+      this.executionHistory.get(executionId) ||
+      null
+    );
   }
 
   /**
@@ -561,7 +605,7 @@ class ExecutionMonitor extends EventEmitter {
   getActiveExecutions() {
     return Array.from(this.activeExecutions.entries()).map(([id, metrics]) => ({
       executionId: id,
-      metrics: metrics.getSummary()
+      metrics: metrics.getSummary(),
     }));
   }
 
@@ -575,19 +619,27 @@ class ExecutionMonitor extends EventEmitter {
 
     // Apply filters
     if (filters.workflowName) {
-      history = history.filter(metrics => metrics.workflowName === filters.workflowName);
+      history = history.filter(
+        (metrics) => metrics.workflowName === filters.workflowName,
+      );
     }
     if (filters.minDuration) {
-      history = history.filter(metrics => metrics.duration >= filters.minDuration);
+      history = history.filter(
+        (metrics) => metrics.duration >= filters.minDuration,
+      );
     }
     if (filters.maxDuration) {
-      history = history.filter(metrics => metrics.duration <= filters.maxDuration);
+      history = history.filter(
+        (metrics) => metrics.duration <= filters.maxDuration,
+      );
     }
     if (filters.minSuccessRate) {
-      history = history.filter(metrics => metrics.getSummary().successRate >= filters.minSuccessRate);
+      history = history.filter(
+        (metrics) => metrics.getSummary().successRate >= filters.minSuccessRate,
+      );
     }
 
-    return history.map(metrics => metrics.getSummary());
+    return history.map((metrics) => metrics.getSummary());
   }
 
   /**
@@ -600,16 +652,16 @@ class ExecutionMonitor extends EventEmitter {
 
     // Apply filters
     if (filters.severity) {
-      alerts = alerts.filter(alert => alert.severity === filters.severity);
+      alerts = alerts.filter((alert) => alert.severity === filters.severity);
     }
     if (filters.type) {
-      alerts = alerts.filter(alert => alert.type === filters.type);
+      alerts = alerts.filter((alert) => alert.type === filters.type);
     }
     if (filters.since) {
-      alerts = alerts.filter(alert => alert.timestamp >= filters.since);
+      alerts = alerts.filter((alert) => alert.timestamp >= filters.since);
     }
 
-    return alerts.map(alert => alert.toJSON());
+    return alerts.map((alert) => alert.toJSON());
   }
 
   /**
@@ -632,7 +684,7 @@ class ExecutionMonitor extends EventEmitter {
       totalAlerts: this.alerts.length,
       performanceBaselines: this.performanceBaseline.size,
       isMonitoring: this.isMonitoring,
-      enabled: this.enabled
+      enabled: this.enabled,
     };
   }
 
@@ -646,8 +698,8 @@ class ExecutionMonitor extends EventEmitter {
     this.performanceBaseline.clear();
     this.performanceThresholds.clear();
 
-    this.logger.info('Reset all monitoring data');
-    this.emit('monitoring:reset');
+    this.logger.info("Reset all monitoring data");
+    this.emit("monitoring:reset");
   }
 }
 
@@ -655,5 +707,5 @@ module.exports = {
   ExecutionMonitor,
   ExecutionMetrics,
   AlertConfig,
-  ExecutionAlert
-}; 
+  ExecutionAlert,
+};

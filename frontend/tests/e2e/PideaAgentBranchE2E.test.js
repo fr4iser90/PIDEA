@@ -64,7 +64,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully pulled changes',
             changes: ['file1.js', 'file2.js'],
             status: 'up-to-date'
@@ -95,7 +94,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully merged changes',
             mergedFiles: ['file1.js', 'file2.js'],
             status: 'up-to-date'
@@ -126,7 +124,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             differences: [
               { file: 'file1.js', status: 'modified', changes: 5 },
               { file: 'file2.js', status: 'added', changes: 10 }
@@ -155,7 +152,7 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 500,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: false,
+           
             error: 'Internal server error'
           })
         });
@@ -199,7 +196,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             status: 'behind',
             behindCount: 3
           })
@@ -211,7 +207,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully pulled changes',
             status: 'up-to-date'
           })
@@ -238,7 +233,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully merged changes',
             status: 'up-to-date'
           })
@@ -266,7 +260,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully pulled changes',
             status: 'up-to-date'
           })
@@ -279,7 +272,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully merged changes',
             status: 'up-to-date'
           })
@@ -312,7 +304,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Successfully pulled changes'
           })
         });
@@ -406,7 +397,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Success'
           })
         });
@@ -417,7 +407,6 @@ test.describe('PIDEA Agent Branch E2E Tests', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            success: true,
             message: 'Success'
           })
         });

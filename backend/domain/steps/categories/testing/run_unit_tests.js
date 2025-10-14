@@ -1,84 +1,82 @@
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class RunUnitTestsStep {
   constructor() {
-    this.name = 'run_unit_tests';
-    this.description = 'Execute unit tests and collect results';
-    this.category = 'testing';
-    this.dependencies = ['jest', 'testRunner'];
+    this.name = "run_unit_tests";
+    this.description = "Execute unit tests and collect results";
+    this.category = "testing";
+    this.dependencies = ["jest", "testRunner"];
   }
 
   static getConfig() {
     return {
-      name: 'RunUnitTests',
-      type: 'testing',
-      description: 'Execute unit tests and collect results',
-      category: 'testing',
-      dependencies: ['jest', 'testRunner'],
+      name: "RunUnitTests",
+      type: "testing",
+      description: "Execute unit tests and collect results",
+      category: "testing",
+      dependencies: ["jest", "testRunner"],
       settings: {
         timeout: 30000,
         parallel: true,
         coverage: true,
-        verbose: false
+        verbose: false,
       },
       validation: {
-        requiredFiles: ['package.json', 'jest.config.js'],
-        supportedCommands: ['npm test', 'yarn test', 'jest']
-      }
+        requiredFiles: ["package.json", "jest.config.js"],
+        supportedCommands: ["npm test", "yarn test", "jest"],
+      },
     };
   }
 
   async execute(context = {}) {
     const config = RunUnitTestsStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🧪 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       // Execute unit tests
       const results = await this.runTests(context);
-      
+
       // Collect coverage
       const coverage = await this.collectCoverage(context);
-      
+
       // Validate results
       const validation = await this.validateResults(results, coverage);
-      
+
       logger.info(`✅ ${this.name} completed successfully`);
       return {
-        success: true,
         step: this.name,
         results: {
           tests: results,
           coverage,
-          validation
+          validation,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.error(`❌ ${this.name} failed:`, error.message);
       return {
-        success: false,
+       
         step: this.name,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
 
   async runTests(context) {
     const { projectPath, testConfig = {} } = context;
-    
+
     // Execute test command
-    const testCommand = testConfig.command || 'npm test';
+    const testCommand = testConfig.command || "npm test";
     const testArgs = testConfig.args || [];
-    
+
     // This would integrate with actual test runner
     const testResults = {
       total: 0,
@@ -86,24 +84,24 @@ class RunUnitTestsStep {
       failed: 0,
       skipped: 0,
       duration: 0,
-      errors: []
+      errors: [],
     };
-    
+
     return testResults;
   }
 
   async collectCoverage(context) {
     const { projectPath, coverageConfig = {} } = context;
-    
+
     // Collect coverage information
     const coverage = {
       statements: 0,
       branches: 0,
       functions: 0,
       lines: 0,
-      threshold: coverageConfig.threshold || 80
+      threshold: coverageConfig.threshold || 80,
     };
-    
+
     return coverage;
   }
 
@@ -111,22 +109,23 @@ class RunUnitTestsStep {
     const validation = {
       testsPassed: results.failed === 0,
       coverageMet: coverage.lines >= coverage.threshold,
-      overallSuccess: false
+      overallSuccess: false,
     };
-    
-    validation.overallSuccess = validation.testsPassed && validation.coverageMet;
-    
+
+    validation.overallSuccess =
+      validation.testsPassed && validation.coverageMet;
+
     return validation;
   }
 
   validateContext(context) {
-    const required = ['projectPath'];
-    const missing = required.filter(key => !context[key]);
-    
+    const required = ["projectPath"];
+    const missing = required.filter((key) => !context[key]);
+
     if (missing.length > 0) {
-      throw new Error(`Missing required context: ${missing.join(', ')}`);
+      throw new Error(`Missing required context: ${missing.join(", ")}`);
     }
-    
+
     return true;
   }
 }
@@ -137,5 +136,5 @@ module.exports = {
   execute: async (context = {}) => {
     const step = new RunUnitTestsStep();
     return await step.execute(context);
-  }
-}; 
+  },
+};

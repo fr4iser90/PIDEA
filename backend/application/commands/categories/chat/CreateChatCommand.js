@@ -6,7 +6,7 @@
 class CreateChatCommand {
   constructor(params = {}) {
     this.userId = params.userId;
-    this.title = params.title || 'New Chat';
+    this.title = params.title || "New Chat";
     this.metadata = params.metadata || {};
     this.options = params.options || {};
     this.clickNewChat = params.clickNewChat !== false; // Default to true
@@ -28,20 +28,20 @@ class CreateChatCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
     if (this.title && this.title.trim().length === 0) {
-      throw new Error('Chat title cannot be empty');
+      throw new Error("Chat title cannot be empty");
     }
 
     if (this.title && this.title.length > 200) {
-      throw new Error('Chat title too long (max 200 characters)');
+      throw new Error("Chat title too long (max 200 characters)");
     }
 
     // Validate metadata
-    if (this.metadata && typeof this.metadata !== 'object') {
-      throw new Error('Metadata must be an object');
+    if (this.metadata && typeof this.metadata !== "object") {
+      throw new Error("Metadata must be an object");
     }
   }
 
@@ -53,18 +53,18 @@ class CreateChatCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'CreateChatCommand',
+      type: "CreateChatCommand",
       userId: this.userId,
       title: this.title,
       metadata: this.metadata,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = CreateChatCommand; 
+module.exports = CreateChatCommand;

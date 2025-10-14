@@ -1,8 +1,7 @@
-const AuthService = require('@domain/services/security/AuthService');
-const TokenValidator = require('./TokenValidator');
-const Logger = require('@logging/Logger');
-const logger = new Logger('AuthMiddleware');
-
+const AuthService = require("@domain/services/security/AuthService");
+const TokenValidator = require("./TokenValidator");
+const Logger = require("@logging/Logger");
+const logger = new Logger("AuthMiddleware");
 
 class AuthMiddleware {
   constructor(authService) {
@@ -13,12 +12,12 @@ class AuthMiddleware {
     this.maxFailedAttempts = 10; // Increased for legitimate validation attempts
     this.blockDuration = 5 * 60 * 1000; // Reduced to 5 minutes
     this.validationAttempts = new Map(); // Track validation attempts separately
-    
+
     // Add authentication caching
     this.authCache = new Map();
     this.cacheTTL = 5 * 60 * 1000; // 5 minutes
     this.cacheCleanupInterval = 10 * 60 * 1000; // 10 minutes
-    
+
     // Start cache cleanup
     setInterval(() => this.cleanupCache(), this.cacheCleanupInterval);
   }
@@ -44,14 +43,14 @@ class AuthMiddleware {
   setCachedAuth(token, result) {
     this.authCache.set(token, {
       result,
-      expiresAt: Date.now() + this.cacheTTL
+      expiresAt: Date.now() + this.cacheTTL,
     });
   }
 
   // Brute force protection methods
   recordFailedAttempt(ip) {
     const now = Date.now();
-    
+
     if (!this.failedAttempts.has(ip)) {
       this.failedAttempts.set(ip, []);
     }
@@ -60,13 +59,17 @@ class AuthMiddleware {
     attempts.push(now);
 
     // Remove attempts older than block duration
-    const recentAttempts = attempts.filter(time => now - time < this.blockDuration);
+    const recentAttempts = attempts.filter(
+      (time) => now - time < this.blockDuration,
+    );
     this.failedAttempts.set(ip, recentAttempts);
 
     // Check if IP should be blocked
     if (recentAttempts.length >= this.maxFailedAttempts) {
       this.blockedIPs.set(ip, now);
-      logger.warn(`IP ${ip} blocked due to ${recentAttempts.length} failed attempts`);
+      logger.warn(
+        `IP ${ip} blocked due to ${recentAttempts.length} failed attempts`,
+      );
     }
   }
 
@@ -82,7 +85,7 @@ class AuthMiddleware {
 
   isBlocked(ip) {
     const blockTime = this.blockedIPs.get(ip);
-    
+
     if (!blockTime) {
       return false;
     }
@@ -102,18 +105,18 @@ class AuthMiddleware {
   isLegitimateValidation(ip, userAgent) {
     const attempts = this.validationAttempts.get(ip) || [];
     const now = Date.now();
-    
+
     // Clean old attempts
-    const recentAttempts = attempts.filter(time => now - time < 60000); // Last minute
+    const recentAttempts = attempts.filter((time) => now - time < 60000); // Last minute
     this.validationAttempts.set(ip, recentAttempts);
-    
+
     // If less than 3 validation attempts in last minute, consider legitimate
     return recentAttempts.length < 3;
   }
 
   getRetryAfter(ip) {
     const blockTime = this.blockedIPs.get(ip);
-    
+
     if (!blockTime) {
       return 0;
     }
@@ -127,35 +130,37 @@ class AuthMiddleware {
     return async (req, res, next) => {
       try {
         const clientIp = req.ip || req.connection.remoteAddress;
-        
+
         // Check brute force protection with smart detection
         if (this.isBlocked(clientIp)) {
           const retryAfter = this.getRetryAfter(clientIp);
-          logger.warn(`❌ IP ${clientIp} is blocked due to brute force attempts`);
+          logger.warn(
+            `❌ IP ${clientIp} is blocked due to brute force attempts`,
+          );
           return res.status(429).json({
-            success: false,
-            error: 'Too many failed attempts. Please try again later.',
-            code: 'BRUTE_FORCE_BLOCKED',
-            retryAfter: retryAfter
+           
+            error: "Too many failed attempts. Please try again later.",
+            code: "BRUTE_FORCE_BLOCKED",
+            retryAfter: retryAfter,
           });
         }
 
         // Track validation attempts for legitimate requests
-        const userAgent = req.get('User-Agent') || '';
+        const userAgent = req.get("User-Agent") || "";
         if (this.isLegitimateValidation(clientIp, userAgent)) {
           const attempts = this.validationAttempts.get(clientIp) || [];
           attempts.push(Date.now());
           this.validationAttempts.set(clientIp, attempts);
         }
-        
+
         const token = this.extractToken(req);
-        
+
         if (!token) {
-          logger.info('❌ No token found');
+          logger.info("❌ No token found");
           return res.status(401).json({
-            success: false,
-            error: 'Access token required',
-            code: 'TOKEN_MISSING'
+           
+            error: "Access token required",
+            code: "TOKEN_MISSING",
           });
         }
 
@@ -166,49 +171,52 @@ class AuthMiddleware {
           req.session = cachedAuth.session;
           this.addSecurityHeaders(res, cachedAuth.user, cachedAuth.session);
           this.recordSuccessfulAttempt(clientIp);
-          logger.debug(`✅ Cached authentication used for user: ${cachedAuth.user.email}`);
+          logger.debug(
+            `✅ Cached authentication used for user: ${cachedAuth.user.email}`,
+          );
           return next();
         }
 
-        const { user, session } = await this.authService.validateAccessToken(token);
-        
+        const { user, session } =
+          await this.authService.validateAccessToken(token);
+
         // Check if user account is locked
         if (user.isLocked) {
           logger.warn(`❌ User ${user.email} account is locked`);
           return res.status(403).json({
-            success: false,
-            error: 'Account is locked. Please contact support.',
-            code: 'ACCOUNT_LOCKED'
+           
+            error: "Account is locked. Please contact support.",
+            code: "ACCOUNT_LOCKED",
           });
         }
-        
+
         // Cache successful authentication
         this.setCachedAuth(token, { user, session });
-        
+
         // Inject user context into request
         req.user = user;
         req.session = session;
-        
+
         // Add security headers
         this.addSecurityHeaders(res, user, session);
-        
+
         // Record successful authentication
         this.recordSuccessfulAttempt(clientIp);
-        
+
         // Only log on debug level to reduce spam
         logger.debug(`✅ Token validated successfully for user: ${user.email}`);
         next();
       } catch (error) {
-        logger.error('❌ Authentication failed:', error.message);
-        
+        logger.error("❌ Authentication failed:", error.message);
+
         // Record failed attempt for brute force protection
         const clientIp = req.ip || req.connection.remoteAddress;
         this.recordFailedAttempt(clientIp);
-        
+
         return res.status(401).json({
-          success: false,
-          error: 'Invalid or expired access token',
-          code: 'TOKEN_INVALID'
+         
+          error: "Invalid or expired access token",
+          code: "TOKEN_INVALID",
         });
       }
     };
@@ -219,15 +227,15 @@ class AuthMiddleware {
     return (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
+         
+          error: "Authentication required",
         });
       }
 
       if (!req.user.hasPermission(permission)) {
         return res.status(403).json({
-          success: false,
-          error: 'Insufficient permissions'
+         
+          error: "Insufficient permissions",
         });
       }
 
@@ -240,15 +248,15 @@ class AuthMiddleware {
     return (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
+         
+          error: "Authentication required",
         });
       }
 
       if (!req.user.isAdmin()) {
         return res.status(403).json({
-          success: false,
-          error: 'Admin access required'
+         
+          error: "Admin access required",
         });
       }
 
@@ -261,17 +269,18 @@ class AuthMiddleware {
     return (req, res, next) => {
       if (!req.user) {
         return res.status(401).json({
-          success: false,
-          error: 'Authentication required'
+         
+          error: "Authentication required",
         });
       }
 
-      const resourceOwnerId = req.params.userId || req.body.userId || req.query.userId;
-      
+      const resourceOwnerId =
+        req.params.userId || req.body.userId || req.query.userId;
+
       if (!req.user.canAccessResource(resourceType, resourceOwnerId)) {
         return res.status(403).json({
-          success: false,
-          error: 'Access denied to this resource'
+         
+          error: "Access denied to this resource",
         });
       }
 
@@ -288,7 +297,7 @@ class AuthMiddleware {
 
     // From Authorization header (fallback)
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       return authHeader.substring(7);
     }
 
@@ -305,20 +314,21 @@ class AuthMiddleware {
     return async (socket, next) => {
       try {
         const token = this.extractWebSocketToken(socket);
-        
+
         if (!token) {
-          return next(new Error('Authentication required'));
+          return next(new Error("Authentication required"));
         }
 
-        const { user, session } = await this.authService.validateAccessToken(token);
-        
+        const { user, session } =
+          await this.authService.validateAccessToken(token);
+
         // Attach user to socket
         socket.user = user;
         socket.session = session;
-        
+
         next();
       } catch (error) {
-        next(new Error('Invalid or expired authentication'));
+        next(new Error("Invalid or expired authentication"));
       }
     };
   }
@@ -333,7 +343,7 @@ class AuthMiddleware {
     // From headers (fallback)
     if (socket.handshake.headers.authorization) {
       const authHeader = socket.handshake.headers.authorization;
-      if (authHeader.startsWith('Bearer ')) {
+      if (authHeader.startsWith("Bearer ")) {
         return authHeader.substring(7);
       }
     }
@@ -343,16 +353,16 @@ class AuthMiddleware {
 
   // Add security headers to responses
   addSecurityHeaders(res, user, session) {
-    res.setHeader('X-Auth-Status', 'authenticated');
-    res.setHeader('X-User-ID', user.id);
-    res.setHeader('X-Session-ID', session.id);
-    res.setHeader('X-Auth-Timestamp', new Date().toISOString());
+    res.setHeader("X-Auth-Status", "authenticated");
+    res.setHeader("X-User-ID", user.id);
+    res.setHeader("X-Session-ID", session.id);
+    res.setHeader("X-Auth-Timestamp", new Date().toISOString());
   }
 
   // Enhanced rate limiting middleware for authenticated users
   rateLimitByUser() {
     const userRequests = new Map();
-    
+
     return (req, res, next) => {
       if (!req.user) {
         return next();
@@ -361,15 +371,15 @@ class AuthMiddleware {
       const userId = req.user.id;
       const now = Date.now();
       const windowMs = 15 * 60 * 1000; // 15 minutes
-      
+
       // Much higher limits for authenticated users
       let maxRequests = 5000; // Increased from 100 to 5000
-      
+
       if (req.user.isAdmin()) {
         maxRequests = 10000; // Increased from 2000 to 10000
-      } else if (req.path.includes('/api/auth/')) {
+      } else if (req.path.includes("/api/auth/")) {
         maxRequests = 200; // Increased from 50 to 200
-      } else if (req.path.includes('/api/projects/')) {
+      } else if (req.path.includes("/api/projects/")) {
         maxRequests = 1000; // Increased from 200 to 1000
       }
 
@@ -378,18 +388,20 @@ class AuthMiddleware {
       }
 
       const userRequestsList = userRequests.get(userId);
-      
+
       // Remove old requests outside the window
-      const validRequests = userRequestsList.filter(time => now - time < windowMs);
+      const validRequests = userRequestsList.filter(
+        (time) => now - time < windowMs,
+      );
       userRequests.set(userId, validRequests);
 
       if (validRequests.length >= maxRequests) {
         logger.warn(`❌ Rate limit exceeded for user: ${req.user.email}`);
         return res.status(429).json({
-          success: false,
-          error: 'Rate limit exceeded for this user',
-          code: 'USER_RATE_LIMIT_EXCEEDED',
-          retryAfter: Math.ceil(windowMs / 1000)
+         
+          error: "Rate limit exceeded for this user",
+          code: "USER_RATE_LIMIT_EXCEEDED",
+          retryAfter: Math.ceil(windowMs / 1000),
         });
       }
 
@@ -402,21 +414,21 @@ class AuthMiddleware {
   bruteForceProtection() {
     return (req, res, next) => {
       const clientIp = req.ip || req.connection.remoteAddress;
-      
+
       if (this.isBlocked(clientIp)) {
         const retryAfter = this.getRetryAfter(clientIp);
         logger.warn(`❌ Brute force protection blocked IP: ${clientIp}`);
         return res.status(429).json({
-          success: false,
-          error: 'Too many failed attempts. Please try again later.',
-          code: 'BRUTE_FORCE_BLOCKED',
-          retryAfter: retryAfter
+         
+          error: "Too many failed attempts. Please try again later.",
+          code: "BRUTE_FORCE_BLOCKED",
+          retryAfter: retryAfter,
         });
       }
-      
+
       next();
     };
   }
 }
 
-module.exports = AuthMiddleware; 
+module.exports = AuthMiddleware;

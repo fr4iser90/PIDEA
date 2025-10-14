@@ -11,19 +11,19 @@ class LayerTaskHandler {
     this.taskRepository = dependencies.taskRepository;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || null;
-    
+
     this.initialize();
   }
 
   initialize() {
     // Initialize logger
-    const ServiceLogger = require('@logging/ServiceLogger');
-    this.logger = this.logger || new ServiceLogger('LayerTaskHandler');
+    const ServiceLogger = require("@logging/ServiceLogger");
+    this.logger = this.logger || new ServiceLogger("LayerTaskHandler");
   }
 
   async handleTaskDistribution(taskId, options = {}) {
     try {
-      this.logger.info('Handling task distribution', { taskId, options });
+      this.logger.info("Handling task distribution", { taskId, options });
 
       // Get task
       const task = await this.taskRepository.findById(taskId);
@@ -32,25 +32,25 @@ class LayerTaskHandler {
       }
 
       // Distribute task
-      const distributionResults = await this.taskDistributionManager.distributeTask(
-        task, 
-        options.targetLayers
-      );
+      const distributionResults =
+        await this.taskDistributionManager.distributeTask(
+          task,
+          options.targetLayers,
+        );
 
-      this.logger.info('Task distribution handled successfully', { 
-        taskId, 
-        distributedTo: distributionResults.length 
+      this.logger.info("Task distribution handled successfully", {
+        taskId,
+        distributedTo: distributionResults.length,
       });
 
       return {
-        success: true,
         taskId,
-        distributionResults
+        distributionResults,
       };
     } catch (error) {
-      this.logger.error('Failed to handle task distribution', { 
-        taskId, 
-        error: error.message 
+      this.logger.error("Failed to handle task distribution", {
+        taskId,
+        error: error.message,
       });
       throw error;
     }
@@ -58,42 +58,54 @@ class LayerTaskHandler {
 
   async handleStatusUpdate(taskId, layerId, status, options = {}) {
     try {
-      this.logger.info('Handling status update', { taskId, layerId, status, options });
+      this.logger.info("Handling status update", {
+        taskId,
+        layerId,
+        status,
+        options,
+      });
 
       // Validate status transition
-      await this.statusCoordinator.validateStatusTransition(taskId, layerId, status);
+      await this.statusCoordinator.validateStatusTransition(
+        taskId,
+        layerId,
+        status,
+      );
 
       // Update layer task status
-      await this.taskDistributionManager.updateTaskLayerStatus(taskId, layerId, status);
+      await this.taskDistributionManager.updateTaskLayerStatus(
+        taskId,
+        layerId,
+        status,
+      );
 
       // Coordinate status if requested
       if (options.coordinate !== false) {
-        const coordinationType = options.coordinationType || 'sync';
+        const coordinationType = options.coordinationType || "sync";
         await this.statusCoordinator.coordinateStatus(
-          taskId, 
-          layerId, 
-          status, 
-          coordinationType
+          taskId,
+          layerId,
+          status,
+          coordinationType,
         );
       }
 
-      this.logger.info('Status update handled successfully', { 
-        taskId, 
-        layerId, 
-        status 
+      this.logger.info("Status update handled successfully", {
+        taskId,
+        layerId,
+        status,
       });
 
       return {
-        success: true,
         taskId,
         layerId,
-        status
+        status,
       };
     } catch (error) {
-      this.logger.error('Failed to handle status update', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to handle status update", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -101,7 +113,11 @@ class LayerTaskHandler {
 
   async handleTaskAssignment(taskId, layerId, options = {}) {
     try {
-      this.logger.info('Handling task assignment', { taskId, layerId, options });
+      this.logger.info("Handling task assignment", {
+        taskId,
+        layerId,
+        options,
+      });
 
       // Get task
       const task = await this.taskRepository.findById(taskId);
@@ -116,25 +132,25 @@ class LayerTaskHandler {
       }
 
       // Assign task to layer
-      const assignmentResult = await this.taskDistributionManager.assignTaskToLayer(task, layer);
+      const assignmentResult =
+        await this.taskDistributionManager.assignTaskToLayer(task, layer);
 
-      this.logger.info('Task assignment handled successfully', { 
-        taskId, 
-        layerId, 
-        assignmentId: assignmentResult.assignmentId 
+      this.logger.info("Task assignment handled successfully", {
+        taskId,
+        layerId,
+        assignmentId: assignmentResult.assignmentId,
       });
 
       return {
-        success: true,
         taskId,
         layerId,
-        assignmentResult
+        assignmentResult,
       };
     } catch (error) {
-      this.logger.error('Failed to handle task assignment', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to handle task assignment", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -142,26 +158,25 @@ class LayerTaskHandler {
 
   async handleTaskRemoval(taskId, layerId) {
     try {
-      this.logger.info('Handling task removal', { taskId, layerId });
+      this.logger.info("Handling task removal", { taskId, layerId });
 
       // Remove task from layer
       await this.taskDistributionManager.removeTaskFromLayer(taskId, layerId);
 
-      this.logger.info('Task removal handled successfully', { 
-        taskId, 
-        layerId 
+      this.logger.info("Task removal handled successfully", {
+        taskId,
+        layerId,
       });
 
       return {
-        success: true,
         taskId,
-        layerId
+        layerId,
       };
     } catch (error) {
-      this.logger.error('Failed to handle task removal', { 
-        taskId, 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to handle task removal", {
+        taskId,
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -169,29 +184,28 @@ class LayerTaskHandler {
 
   async handleLayerCreation(layerData) {
     try {
-      this.logger.info('Handling layer creation', { layerData });
+      this.logger.info("Handling layer creation", { layerData });
 
       // Create layer
       const layer = await this.layerManager.createLayer(
         layerData.name,
         layerData.layerType,
         layerData.description,
-        layerData.orderIndex
+        layerData.orderIndex,
       );
 
-      this.logger.info('Layer creation handled successfully', { 
-        layerId: layer.id, 
-        layerName: layer.name 
+      this.logger.info("Layer creation handled successfully", {
+        layerId: layer.id,
+        layerName: layer.name,
       });
 
       return {
-        success: true,
-        layer
+        layer,
       };
     } catch (error) {
-      this.logger.error('Failed to handle layer creation', { 
-        layerData, 
-        error: error.message 
+      this.logger.error("Failed to handle layer creation", {
+        layerData,
+        error: error.message,
       });
       throw error;
     }
@@ -199,24 +213,23 @@ class LayerTaskHandler {
 
   async handleLayerUpdate(layerId, updates) {
     try {
-      this.logger.info('Handling layer update', { layerId, updates });
+      this.logger.info("Handling layer update", { layerId, updates });
 
       // Update layer
       const layer = await this.layerManager.updateLayer(layerId, updates);
 
-      this.logger.info('Layer update handled successfully', { 
-        layerId: layer.id, 
-        layerName: layer.name 
+      this.logger.info("Layer update handled successfully", {
+        layerId: layer.id,
+        layerName: layer.name,
       });
 
       return {
-        success: true,
-        layer
+        layer,
       };
     } catch (error) {
-      this.logger.error('Failed to handle layer update', { 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to handle layer update", {
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -224,29 +237,31 @@ class LayerTaskHandler {
 
   async handleLayerDeletion(layerId) {
     try {
-      this.logger.info('Handling layer deletion', { layerId });
+      this.logger.info("Handling layer deletion", { layerId });
 
       // Check if layer has assigned tasks
-      const layerTasks = await this.taskDistributionManager.getLayerTasks(layerId);
+      const layerTasks =
+        await this.taskDistributionManager.getLayerTasks(layerId);
       if (layerTasks.length > 0) {
-        throw new Error(`Cannot delete layer with ${layerTasks.length} assigned tasks`);
+        throw new Error(
+          `Cannot delete layer with ${layerTasks.length} assigned tasks`,
+        );
       }
 
       // Delete layer
       await this.layerManager.deleteLayer(layerId);
 
-      this.logger.info('Layer deletion handled successfully', { 
-        layerId 
+      this.logger.info("Layer deletion handled successfully", {
+        layerId,
       });
 
       return {
-        success: true,
-        layerId
+        layerId,
       };
     } catch (error) {
-      this.logger.error('Failed to handle layer deletion', { 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to handle layer deletion", {
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -254,25 +269,25 @@ class LayerTaskHandler {
 
   async handleCoordinationResolution(coordinationId) {
     try {
-      this.logger.info('Handling coordination resolution', { coordinationId });
+      this.logger.info("Handling coordination resolution", { coordinationId });
 
       // Resolve pending coordination
-      const result = await this.statusCoordinator.resolvePendingCoordination(coordinationId);
+      const result =
+        await this.statusCoordinator.resolvePendingCoordination(coordinationId);
 
-      this.logger.info('Coordination resolution handled successfully', { 
-        coordinationId, 
-        coordinated: result.coordinated 
+      this.logger.info("Coordination resolution handled successfully", {
+        coordinationId,
+        coordinated: result.coordinated,
       });
 
       return {
-        success: true,
         coordinationId,
-        result
+        result,
       };
     } catch (error) {
-      this.logger.error('Failed to handle coordination resolution', { 
-        coordinationId, 
-        error: error.message 
+      this.logger.error("Failed to handle coordination resolution", {
+        coordinationId,
+        error: error.message,
       });
       throw error;
     }
@@ -280,24 +295,24 @@ class LayerTaskHandler {
 
   async handleDistributionRuleCreation(ruleData) {
     try {
-      this.logger.info('Handling distribution rule creation', { ruleData });
+      this.logger.info("Handling distribution rule creation", { ruleData });
 
       // Create distribution rule
-      const rule = await this.taskDistributionManager.createDistributionRule(ruleData);
+      const rule =
+        await this.taskDistributionManager.createDistributionRule(ruleData);
 
-      this.logger.info('Distribution rule creation handled successfully', { 
-        ruleId: rule.id, 
-        ruleName: rule.rule_name 
+      this.logger.info("Distribution rule creation handled successfully", {
+        ruleId: rule.id,
+        ruleName: rule.rule_name,
       });
 
       return {
-        success: true,
-        rule
+        rule,
       };
     } catch (error) {
-      this.logger.error('Failed to handle distribution rule creation', { 
-        ruleData, 
-        error: error.message 
+      this.logger.error("Failed to handle distribution rule creation", {
+        ruleData,
+        error: error.message,
       });
       throw error;
     }
@@ -305,25 +320,25 @@ class LayerTaskHandler {
 
   async handleTaskLayerQuery(taskId) {
     try {
-      this.logger.info('Handling task layer query', { taskId });
+      this.logger.info("Handling task layer query", { taskId });
 
       // Get task layer assignments
-      const assignments = await this.taskDistributionManager.getTaskLayerAssignments(taskId);
+      const assignments =
+        await this.taskDistributionManager.getTaskLayerAssignments(taskId);
 
-      this.logger.info('Task layer query handled successfully', { 
-        taskId, 
-        assignments: assignments.length 
+      this.logger.info("Task layer query handled successfully", {
+        taskId,
+        assignments: assignments.length,
       });
 
       return {
-        success: true,
         taskId,
-        assignments
+        assignments,
       };
     } catch (error) {
-      this.logger.error('Failed to handle task layer query', { 
-        taskId, 
-        error: error.message 
+      this.logger.error("Failed to handle task layer query", {
+        taskId,
+        error: error.message,
       });
       throw error;
     }
@@ -331,25 +346,27 @@ class LayerTaskHandler {
 
   async handleLayerTaskQuery(layerId, status = null) {
     try {
-      this.logger.info('Handling layer task query', { layerId, status });
+      this.logger.info("Handling layer task query", { layerId, status });
 
       // Get layer tasks
-      const tasks = await this.taskDistributionManager.getLayerTasks(layerId, status);
+      const tasks = await this.taskDistributionManager.getLayerTasks(
+        layerId,
+        status,
+      );
 
-      this.logger.info('Layer task query handled successfully', { 
-        layerId, 
-        tasks: tasks.length 
+      this.logger.info("Layer task query handled successfully", {
+        layerId,
+        tasks: tasks.length,
       });
 
       return {
-        success: true,
         layerId,
-        tasks
+        tasks,
       };
     } catch (error) {
-      this.logger.error('Failed to handle layer task query', { 
-        layerId, 
-        error: error.message 
+      this.logger.error("Failed to handle layer task query", {
+        layerId,
+        error: error.message,
       });
       throw error;
     }
@@ -357,25 +374,30 @@ class LayerTaskHandler {
 
   async handleCoordinationHistoryQuery(taskId, limit = 50) {
     try {
-      this.logger.info('Handling coordination history query', { taskId, limit });
+      this.logger.info("Handling coordination history query", {
+        taskId,
+        limit,
+      });
 
       // Get coordination history
-      const history = await this.statusCoordinator.getCoordinationHistory(taskId, limit);
+      const history = await this.statusCoordinator.getCoordinationHistory(
+        taskId,
+        limit,
+      );
 
-      this.logger.info('Coordination history query handled successfully', { 
-        taskId, 
-        history: history.length 
+      this.logger.info("Coordination history query handled successfully", {
+        taskId,
+        history: history.length,
       });
 
       return {
-        success: true,
         taskId,
-        history
+        history,
       };
     } catch (error) {
-      this.logger.error('Failed to handle coordination history query', { 
-        taskId, 
-        error: error.message 
+      this.logger.error("Failed to handle coordination history query", {
+        taskId,
+        error: error.message,
       });
       throw error;
     }
@@ -383,22 +405,22 @@ class LayerTaskHandler {
 
   async handlePendingCoordinationsQuery() {
     try {
-      this.logger.info('Handling pending coordinations query');
+      this.logger.info("Handling pending coordinations query");
 
       // Get pending coordinations
-      const coordinations = await this.statusCoordinator.getPendingCoordinations();
+      const coordinations =
+        await this.statusCoordinator.getPendingCoordinations();
 
-      this.logger.info('Pending coordinations query handled successfully', { 
-        coordinations: coordinations.length 
+      this.logger.info("Pending coordinations query handled successfully", {
+        coordinations: coordinations.length,
       });
 
       return {
-        success: true,
-        coordinations
+        coordinations,
       };
     } catch (error) {
-      this.logger.error('Failed to handle pending coordinations query', { 
-        error: error.message 
+      this.logger.error("Failed to handle pending coordinations query", {
+        error: error.message,
       });
       throw error;
     }
@@ -406,22 +428,21 @@ class LayerTaskHandler {
 
   async handleLayerHierarchyQuery() {
     try {
-      this.logger.info('Handling layer hierarchy query');
+      this.logger.info("Handling layer hierarchy query");
 
       // Get layer hierarchy
       const hierarchy = await this.layerManager.getLayerHierarchy();
 
-      this.logger.info('Layer hierarchy query handled successfully', { 
-        layers: hierarchy.length 
+      this.logger.info("Layer hierarchy query handled successfully", {
+        layers: hierarchy.length,
       });
 
       return {
-        success: true,
-        hierarchy
+        hierarchy,
       };
     } catch (error) {
-      this.logger.error('Failed to handle layer hierarchy query', { 
-        error: error.message 
+      this.logger.error("Failed to handle layer hierarchy query", {
+        error: error.message,
       });
       throw error;
     }
@@ -429,22 +450,21 @@ class LayerTaskHandler {
 
   async handleDefaultLayersInitialization() {
     try {
-      this.logger.info('Handling default layers initialization');
+      this.logger.info("Handling default layers initialization");
 
       // Initialize default layers
       const layers = await this.layerManager.initializeDefaultLayers();
 
-      this.logger.info('Default layers initialization handled successfully', { 
-        layers: layers.length 
+      this.logger.info("Default layers initialization handled successfully", {
+        layers: layers.length,
       });
 
       return {
-        success: true,
-        layers
+        layers,
       };
     } catch (error) {
-      this.logger.error('Failed to handle default layers initialization', { 
-        error: error.message 
+      this.logger.error("Failed to handle default layers initialization", {
+        error: error.message,
       });
       throw error;
     }

@@ -1,140 +1,140 @@
-require('module-alias/register');
-const { getLogger } = require('@logging/Logger');
+require("module-alias/register");
+const { getLogger } = require("@logging/Logger");
 
 /**
  * ServiceLogger - A wrapper for service-specific logging
  * Provides consistent interface and metadata for service logging
  */
 class ServiceLogger {
-    constructor(serviceName, options = {}) {
-        this.serviceName = serviceName;
-        this.options = {
-            enableSanitization: true,
-            enablePerformanceLogging: false,
-            logLevel: 'info',
-            ...options
-        };
-        
-        // Use singleton logger - nur EINE Logger-Instanz für alle Services!
-        this.logger = getLogger(serviceName);
-    }
+  constructor(serviceName, options = {}) {
+    this.serviceName = serviceName;
+    this.options = {
+      enableSanitization: true,
+      enablePerformanceLogging: false,
+      logLevel: "info",
+      ...options,
+    };
 
-    /**
-     * Log info message with service metadata
-     */
-    info(message, meta = {}) {
-        // Don't add service metadata since Logger constructor already handles it
-        this.logger.info(message, meta);
-    }
+    // Use singleton logger - nur EINE Logger-Instanz für alle Services!
+    this.logger = getLogger(serviceName);
+  }
 
-    /**
-     * Log warning message with service metadata
-     */
-    warn(message, meta = {}) {
-        // Don't add service metadata since Logger constructor already handles it
-        this.logger.warn(message, meta);
-    }
+  /**
+   * Log info message with service metadata
+   */
+  info(message, meta = {}) {
+    // Don't add service metadata since Logger constructor already handles it
+    this.logger.info(message, meta);
+  }
 
-    /**
-     * Log error message with service metadata
-     */
-    error(message, meta = {}) {
-        // Don't add service metadata since Logger constructor already handles it
-        this.logger.error(message, meta);
-    }
+  /**
+   * Log warning message with service metadata
+   */
+  warn(message, meta = {}) {
+    // Don't add service metadata since Logger constructor already handles it
+    this.logger.warn(message, meta);
+  }
 
-    /**
-     * Log debug message with service metadata
-     */
-    debug(message, meta = {}) {
-        // Don't add service metadata since Logger constructor already handles it
-        this.logger.debug(message, meta);
-    }
+  /**
+   * Log error message with service metadata
+   */
+  error(message, meta = {}) {
+    // Don't add service metadata since Logger constructor already handles it
+    this.logger.error(message, meta);
+  }
 
-    /**
-     * Log success message with service metadata
-     */
-    success(message, meta = {}) {
-        // Don't add service metadata since Logger constructor already handles it
-        this.logger.success(message, meta);
-    }
+  /**
+   * Log debug message with service metadata
+   */
+  debug(message, meta = {}) {
+    // Don't add service metadata since Logger constructor already handles it
+    this.logger.debug(message, meta);
+  }
 
-    /**
-     * Log failure message with service metadata
-     */
-    failure(message, meta = {}) {
-        // Don't add service metadata since Logger constructor already handles it
-        this.logger.failure(message, meta);
-    }
+  /**
+   * Log success message with service metadata
+   */
+  success(message, meta = {}) {
+    // Don't add service metadata since Logger constructor already handles it
+    this.logger.success(message, meta);
+  }
 
-    /**
-     * Log service method execution
-     */
-    serviceMethod(methodName, message, meta = {}) {
-        this.info(`[${methodName}] ${message}`, meta);
-    }
+  /**
+   * Log failure message with service metadata
+   */
+  failure(message, meta = {}) {
+    // Don't add service metadata since Logger constructor already handles it
+    this.logger.failure(message, meta);
+  }
 
-    /**
-     * Log service error with method context
-     */
-    serviceError(methodName, error, meta = {}) {
-        this.error(`[${methodName}] ${error.message}`, {
-            error: error.stack,
-            ...meta
-        });
-    }
+  /**
+   * Log service method execution
+   */
+  serviceMethod(methodName, message, meta = {}) {
+    this.info(`[${methodName}] ${message}`, meta);
+  }
 
-    /**
-     * Start performance timing (if enabled)
-     */
-    time(label) {
-        if (this.options.enablePerformanceLogging) {
-            this.logger.time(label);
-        }
-    }
+  /**
+   * Log service error with method context
+   */
+  serviceError(methodName, error, meta = {}) {
+    this.error(`[${methodName}] ${error.message}`, {
+      error: error.stack,
+      ...meta,
+    });
+  }
 
-    /**
-     * End performance timing (if enabled)
-     */
-    timeEnd(label) {
-        if (this.options.enablePerformanceLogging) {
-            this.logger.timeEnd(label);
-        }
+  /**
+   * Start performance timing (if enabled)
+   */
+  time(label) {
+    if (this.options.enablePerformanceLogging) {
+      this.logger.time(label);
     }
+  }
 
-    /**
-     * Log API request with service context
-     */
-    apiRequest(method, path, statusCode, duration, meta = {}) {
-        this.info(`API ${method} ${path}`, {
-            method,
-            path,
-            statusCode,
-            duration,
-            ...meta
-        });
+  /**
+   * End performance timing (if enabled)
+   */
+  timeEnd(label) {
+    if (this.options.enablePerformanceLogging) {
+      this.logger.timeEnd(label);
     }
+  }
 
-    /**
-     * Log user action with service context
-     */
-    userAction(action, userId, meta = {}) {
-        this.info(`User action: ${action}`, {
-            action,
-            userId,
-            ...meta
-        });
-    }
+  /**
+   * Log API request with service context
+   */
+  apiRequest(method, path, statusCode, duration, meta = {}) {
+    this.info(`API ${method} ${path}`, {
+      method,
+      path,
+      statusCode,
+      duration,
+      ...meta,
+    });
+  }
 
-    /**
-     * Log system event with service context
-     */
-    systemEvent(event, meta = {}) {
-        this.info(`System event: ${event}`, {
-            event,
-            ...meta
-        });
-    }
+  /**
+   * Log user action with service context
+   */
+  userAction(action, userId, meta = {}) {
+    this.info(`User action: ${action}`, {
+      action,
+      userId,
+      ...meta,
+    });
+  }
+
+  /**
+   * Log system event with service context
+   */
+  systemEvent(event, meta = {}) {
+    this.info(`System event: ${event}`, {
+      event,
+      ...meta,
+    });
+  }
 }
 
-module.exports = ServiceLogger; 
+module.exports = ServiceLogger;

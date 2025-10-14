@@ -2,21 +2,21 @@
  * PerformanceMonitor - Database performance monitoring core
  * Provides comprehensive performance tracking, metrics collection, and alerting
  */
-const EventEmitter = require('events');
-const Logger = require('@logging/Logger');
-const crypto = require('crypto');
+const EventEmitter = require("events");
+const Logger = require("@logging/Logger");
+const crypto = require("crypto");
 
 class PerformanceMonitor extends EventEmitter {
   constructor(databaseConnection, options = {}) {
     super();
-    
+
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('PerformanceMonitor');
+    this.logger = new Logger("PerformanceMonitor");
     this.enabled = options.enabled !== false;
     this.slowQueryThreshold = options.slowQueryThreshold || 1000; // 1 second
     this.metricsRetentionDays = options.metricsRetentionDays || 30;
     this.maxCacheSize = options.maxCacheSize || 1000;
-    
+
     // Performance tracking
     this.queryMetrics = new Map();
     this.performanceHistory = [];
@@ -24,19 +24,19 @@ class PerformanceMonitor extends EventEmitter {
     this.cacheStats = {
       hits: 0,
       misses: 0,
-      size: 0
+      size: 0,
     };
-    
+
     // Configuration
     this.config = {
       trackQueries: true,
       trackCache: true,
       trackMetrics: true,
       alertSlowQueries: true,
-      ...options
+      ...options,
     };
-    
-    this.logger.info('PerformanceMonitor initialized');
+
+    this.logger.info("PerformanceMonitor initialized");
   }
 
   /**
@@ -44,18 +44,21 @@ class PerformanceMonitor extends EventEmitter {
    */
   start() {
     if (!this.enabled) {
-      this.logger.info('Performance monitoring disabled');
+      this.logger.info("Performance monitoring disabled");
       return;
     }
 
-    this.logger.info('Starting performance monitoring');
-    
+    this.logger.info("Starting performance monitoring");
+
     // Set up periodic cleanup
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupOldMetrics();
-    }, 24 * 60 * 60 * 1000); // Daily cleanup
-    
-    this.emit('started');
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupOldMetrics();
+      },
+      24 * 60 * 60 * 1000,
+    ); // Daily cleanup
+
+    this.emit("started");
   }
 
   /**
@@ -66,9 +69,9 @@ class PerformanceMonitor extends EventEmitter {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
     }
-    
-    this.logger.info('Performance monitoring stopped');
-    this.emit('stopped');
+
+    this.logger.info("Performance monitoring stopped");
+    this.emit("stopped");
   }
 
   /**
@@ -85,7 +88,7 @@ class PerformanceMonitor extends EventEmitter {
     try {
       const queryHash = this.generateQueryHash(query, params);
       const queryText = this.sanitizeQuery(query);
-      
+
       const queryMetric = {
         queryHash,
         queryText,
@@ -93,27 +96,26 @@ class PerformanceMonitor extends EventEmitter {
         rowsAffected: result?.rowCount || 0,
         rowsReturned: result?.rows?.length || 0,
         databaseType,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Store metric
       this.queryMetrics.set(queryHash, queryMetric);
-      
+
       // Add to performance history
       this.performanceHistory.push(queryMetric);
-      
+
       // Check for slow queries
       if (executionTime > this.slowQueryThreshold) {
         await this.handleSlowQuery(queryMetric);
       }
-      
+
       // Store in database
       await this.storeQueryMetric(queryMetric);
-      
-      this.emit('queryTracked', queryMetric);
-      
+
+      this.emit("queryTracked", queryMetric);
     } catch (error) {
-      this.logger.error('Error tracking query:', error.message);
+      this.logger.error("Error tracking query:", error.message);
     }
   }
 
@@ -136,10 +138,10 @@ class PerformanceMonitor extends EventEmitter {
       cacheKey,
       hit,
       responseTime,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    this.emit('cacheTracked', cacheMetric);
+    this.emit("cacheTracked", cacheMetric);
   }
 
   /**
@@ -158,16 +160,15 @@ class PerformanceMonitor extends EventEmitter {
         value,
         unit,
         databaseType,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Store in database
       await this.storePerformanceMetric(metric);
-      
-      this.emit('metricRecorded', metric);
-      
+
+      this.emit("metricRecorded", metric);
     } catch (error) {
-      this.logger.error('Error recording metric:', error.message);
+      this.logger.error("Error recording metric:", error.message);
     }
   }
 
@@ -182,19 +183,23 @@ class PerformanceMonitor extends EventEmitter {
       const slowQuery = {
         ...queryMetric,
         threshold: this.slowQueryThreshold,
-        alertLevel: queryMetric.executionTime > this.slowQueryThreshold * 2 ? 'critical' : 'warning'
+        alertLevel:
+          queryMetric.executionTime > this.slowQueryThreshold * 2
+            ? "critical"
+            : "warning",
       };
 
       this.slowQueries.push(slowQuery);
-      
+
       // Store alert in database
       await this.storeSlowQueryAlert(slowQuery);
-      
-      this.logger.warn(`Slow query detected: ${queryMetric.executionTime}ms - ${queryMetric.queryText.substring(0, 100)}...`);
-      this.emit('slowQueryDetected', slowQuery);
-      
+
+      this.logger.warn(
+        `Slow query detected: ${queryMetric.executionTime}ms - ${queryMetric.queryText.substring(0, 100)}...`,
+      );
+      this.emit("slowQueryDetected", slowQuery);
     } catch (error) {
-      this.logger.error('Error handling slow query:', error.message);
+      this.logger.error("Error handling slow query:", error.message);
     }
   }
 
@@ -204,14 +209,21 @@ class PerformanceMonitor extends EventEmitter {
    */
   getStats() {
     const totalQueries = this.queryMetrics.size;
-    const avgExecutionTime = totalQueries > 0 
-      ? Array.from(this.queryMetrics.values()).reduce((sum, metric) => sum + metric.executionTime, 0) / totalQueries
-      : 0;
-    
+    const avgExecutionTime =
+      totalQueries > 0
+        ? Array.from(this.queryMetrics.values()).reduce(
+            (sum, metric) => sum + metric.executionTime,
+            0,
+          ) / totalQueries
+        : 0;
+
     const slowQueryCount = this.slowQueries.length;
-    const cacheHitRate = this.cacheStats.hits + this.cacheStats.misses > 0
-      ? (this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses)) * 100
-      : 0;
+    const cacheHitRate =
+      this.cacheStats.hits + this.cacheStats.misses > 0
+        ? (this.cacheStats.hits /
+            (this.cacheStats.hits + this.cacheStats.misses)) *
+          100
+        : 0;
 
     return {
       totalQueries,
@@ -220,7 +232,7 @@ class PerformanceMonitor extends EventEmitter {
       cacheHitRate: Math.round(cacheHitRate * 100) / 100,
       cacheStats: { ...this.cacheStats },
       enabled: this.enabled,
-      config: this.config
+      config: this.config,
     };
   }
 
@@ -255,7 +267,11 @@ class PerformanceMonitor extends EventEmitter {
   generateQueryHash(query, params) {
     const normalizedQuery = this.normalizeQuery(query);
     const queryString = normalizedQuery + JSON.stringify(params || []);
-    return crypto.createHash('sha256').update(queryString).digest('hex').substring(0, 16);
+    return crypto
+      .createHash("sha256")
+      .update(queryString)
+      .digest("hex")
+      .substring(0, 16);
   }
 
   /**
@@ -265,8 +281,8 @@ class PerformanceMonitor extends EventEmitter {
    */
   normalizeQuery(query) {
     return query
-      .replace(/\s+/g, ' ')
-      .replace(/\$\d+/g, '?')
+      .replace(/\s+/g, " ")
+      .replace(/\$\d+/g, "?")
       .trim()
       .toLowerCase();
   }
@@ -277,10 +293,7 @@ class PerformanceMonitor extends EventEmitter {
    * @returns {string} Sanitized query
    */
   sanitizeQuery(query) {
-    return query
-      .replace(/\s+/g, ' ')
-      .trim()
-      .substring(0, 500); // Limit length
+    return query.replace(/\s+/g, " ").trim().substring(0, 500); // Limit length
   }
 
   /**
@@ -295,7 +308,7 @@ class PerformanceMonitor extends EventEmitter {
           rows_returned, database_type, user_id, timestamp, metadata
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      
+
       const params = [
         metric.queryHash,
         metric.queryText,
@@ -303,15 +316,14 @@ class PerformanceMonitor extends EventEmitter {
         metric.rowsAffected,
         metric.rowsReturned,
         metric.databaseType,
-        'system',
+        "system",
         metric.timestamp,
-        JSON.stringify({})
+        JSON.stringify({}),
       ];
 
       await this.databaseConnection.execute(sql, params);
-      
     } catch (error) {
-      this.logger.error('Error storing query metric:', error.message);
+      this.logger.error("Error storing query metric:", error.message);
     }
   }
 
@@ -326,20 +338,19 @@ class PerformanceMonitor extends EventEmitter {
           metric_type, metric_value, metric_unit, database_type, timestamp, metadata
         ) VALUES (?, ?, ?, ?, ?, ?)
       `;
-      
+
       const params = [
         metric.metricType,
         metric.value,
         metric.unit,
         metric.databaseType,
         metric.timestamp,
-        JSON.stringify({})
+        JSON.stringify({}),
       ];
 
       await this.databaseConnection.execute(sql, params);
-      
     } catch (error) {
-      this.logger.error('Error storing performance metric:', error.message);
+      this.logger.error("Error storing performance metric:", error.message);
     }
   }
 
@@ -355,7 +366,7 @@ class PerformanceMonitor extends EventEmitter {
           alert_level, database_type, timestamp, metadata
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      
+
       const params = [
         alert.queryHash,
         alert.queryText,
@@ -364,13 +375,12 @@ class PerformanceMonitor extends EventEmitter {
         alert.alertLevel,
         alert.databaseType,
         alert.timestamp,
-        JSON.stringify({})
+        JSON.stringify({}),
       ];
 
       await this.databaseConnection.execute(sql, params);
-      
     } catch (error) {
-      this.logger.error('Error storing slow query alert:', error.message);
+      this.logger.error("Error storing slow query alert:", error.message);
     }
   }
 
@@ -381,24 +391,23 @@ class PerformanceMonitor extends EventEmitter {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - this.metricsRetentionDays);
-      
+
       // Cleanup in-memory data
       this.performanceHistory = this.performanceHistory.filter(
-        metric => new Date(metric.timestamp) > cutoffDate
+        (metric) => new Date(metric.timestamp) > cutoffDate,
       );
-      
+
       this.slowQueries = this.slowQueries.filter(
-        query => new Date(query.timestamp) > cutoffDate
+        (query) => new Date(query.timestamp) > cutoffDate,
       );
-      
+
       // Cleanup database
-      const sql = 'DELETE FROM query_performance WHERE timestamp < ?';
+      const sql = "DELETE FROM query_performance WHERE timestamp < ?";
       await this.databaseConnection.execute(sql, [cutoffDate.toISOString()]);
-      
-      this.logger.info('Old metrics cleaned up');
-      
+
+      this.logger.info("Old metrics cleaned up");
     } catch (error) {
-      this.logger.error('Error cleaning up old metrics:', error.message);
+      this.logger.error("Error cleaning up old metrics:", error.message);
     }
   }
 }

@@ -63,19 +63,19 @@ this.projectController = new ProjectController(this.serviceRegistry.getService('
 ```javascript
 try {
   const result = await this.projectApplicationService.methodName(params);
-  res.json({ success: true, data: result });
+  res.json({ data: result });
 } catch (error) {
   this.logger.error('Operation failed:', error);
   
   if (error.message.includes('Project not found')) {
-    return res.status(404).json({ success: false, error: 'Project not found' });
+    return res.status(404).json({ error: 'Project not found' });
   }
   
   if (error.message.includes('Valid port number required')) {
-    return res.status(400).json({ success: false, error: 'Valid port number required' });
+    return res.status(400).json({ error: 'Valid port number required' });
   }
   
-  res.status(500).json({ success: false, error: 'Operation failed' });
+  res.status(500).json({ error: 'Operation failed' });
 }
 ```
 
@@ -91,7 +91,7 @@ class ProjectController {
   
   async list(req, res) {
     const projects = await this.projectApplicationService.getAllProjects(); // No direct repository access
-    res.json({ success: true, data: projects });
+    res.json({ data: projects });
   }
 }
 

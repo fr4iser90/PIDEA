@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 /**
  * Chat Routes - Professional RESTful API Design
- * 
+ *
  * This module provides a clean, modular approach to chat endpoints
  * including message sending, history retrieval, and settings management.
  */
@@ -24,32 +24,44 @@ class ChatRoutes {
     // ========================================
     // CHAT MESSAGE ROUTES - Message Operations
     // ========================================
-    
+
     // Send chat message
-    app.post('/api/chat', (req, res) => this.webChatController.sendMessage(req, res));
-    
+    app.post("/api/chat", (req, res) =>
+      this.webChatController.sendMessage(req, res),
+    );
+
     // Get chat history
-    app.get('/api/chat/history', (req, res) => this.webChatController.getChatHistory(req, res));
-    
+    app.get("/api/chat/history", (req, res) =>
+      this.webChatController.getChatHistory(req, res),
+    );
+
     // Get chat history for specific port
-    app.get('/api/chat/port/:port/history', (req, res) => this.webChatController.getPortChatHistory(req, res));
-    
+    app.get("/api/chat/port/:port/history", (req, res) =>
+      this.webChatController.getPortChatHistory(req, res),
+    );
+
     // Get connection status
-    app.get('/api/chat/status', (req, res) => this.webChatController.getConnectionStatus(req, res));
+    app.get("/api/chat/status", (req, res) =>
+      this.webChatController.getConnectionStatus(req, res),
+    );
 
     // ========================================
     // SETTINGS ROUTES - Settings Management
     // ========================================
-    
+
     // Get chat settings
-    app.get('/api/settings', (req, res) => this.webChatController.getSettings(req, res));
+    app.get("/api/settings", (req, res) =>
+      this.webChatController.getSettings(req, res),
+    );
 
     // ========================================
     // PROMPTS ROUTES - Prompt Management
     // ========================================
-    
+
     // Get quick prompts
-    app.get('/api/prompts/quick', (req, res) => this.webChatController.getQuickPrompts(req, res));
+    app.get("/api/prompts/quick", (req, res) =>
+      this.webChatController.getQuickPrompts(req, res),
+    );
   }
 }
 

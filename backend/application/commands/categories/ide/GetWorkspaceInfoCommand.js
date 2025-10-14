@@ -28,24 +28,24 @@ class GetWorkspaceInfoCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.workspacePath && typeof this.workspacePath !== 'string') {
-      throw new Error('Workspace path must be a string');
+    if (this.workspacePath && typeof this.workspacePath !== "string") {
+      throw new Error("Workspace path must be a string");
     }
 
-    if (typeof this.includeDetails !== 'boolean') {
-      throw new Error('includeDetails must be a boolean');
+    if (typeof this.includeDetails !== "boolean") {
+      throw new Error("includeDetails must be a boolean");
     }
 
-    if (typeof this.includeProjects !== 'boolean') {
-      throw new Error('includeProjects must be a boolean');
+    if (typeof this.includeProjects !== "boolean") {
+      throw new Error("includeProjects must be a boolean");
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -57,19 +57,19 @@ class GetWorkspaceInfoCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'GetWorkspaceInfoCommand',
+      type: "GetWorkspaceInfoCommand",
       userId: this.userId,
       workspacePath: this.workspacePath,
       includeDetails: this.includeDetails,
       includeProjects: this.includeProjects,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = GetWorkspaceInfoCommand; 
+module.exports = GetWorkspaceInfoCommand;

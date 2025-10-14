@@ -5,62 +5,81 @@
 
 const STANDARD_CATEGORIES = {
   // Core Development Categories
-  ANALYSIS: 'analysis',
-  TESTING: 'testing',
-  REFACTORING: 'refactoring',
-  DEPLOYMENT: 'deployment',
-  GENERATE: 'generate',
-  MANAGEMENT: 'management',
-  
+  ANALYSIS: "analysis",
+  TESTING: "testing",
+  REFACTORING: "refactoring",
+  DEPLOYMENT: "deployment",
+  GENERATE: "generate",
+  MANAGEMENT: "management",
+
   // Quality & Security Categories
-  SECURITY: 'security',
-  VALIDATION: 'validation',
-  OPTIMIZATION: 'optimization',
-  DOCUMENTATION: 'documentation',
-  
+  SECURITY: "security",
+  VALIDATION: "validation",
+  OPTIMIZATION: "optimization",
+  DOCUMENTATION: "documentation",
+
   // Specialized Categories
-  TASK: 'task',
-  APPLICATION: 'application',
-  ANALYZE: 'analyze', // Legacy support
-  COMPLETION: 'completion', // Task completion, process completion, workflow completion
-  FILE: 'file', // File operations, file management, file processing
-  
+  TASK: "task",
+  APPLICATION: "application",
+  ANALYZE: "analyze", // Legacy support
+  COMPLETION: "completion", // Task completion, process completion, workflow completion
+  FILE: "file", // File operations, file management, file processing
+
   // IDE Categories
-  IDE: 'ide',
-  
+  IDE: "ide",
+
   // Version Control Categories
-  GIT: 'git',
-  
+  GIT: "git",
+
   // Terminal Categories
-  TERMINAL: 'terminal',
-  
+  TERMINAL: "terminal",
+
   // Chat Categories
-  CHAT: 'chat'
+  CHAT: "chat",
 };
 
 /**
  * Category descriptions for documentation
  */
 const CATEGORY_DESCRIPTIONS = {
-  [STANDARD_CATEGORIES.ANALYSIS]: 'Code analysis, architecture review, dependency analysis',
-  [STANDARD_CATEGORIES.TESTING]: 'Test execution, test generation, test validation',
-  [STANDARD_CATEGORIES.REFACTORING]: 'Code refactoring, module organization, architecture restructuring',
-  [STANDARD_CATEGORIES.DEPLOYMENT]: 'Application deployment, container management, infrastructure',
-  [STANDARD_CATEGORIES.GENERATE]: 'Code generation, documentation generation, script generation',
-  [STANDARD_CATEGORIES.MANAGEMENT]: 'Task management, project management, workflow management',
-  [STANDARD_CATEGORIES.SECURITY]: 'Security analysis, vulnerability scanning, security validation',
-  [STANDARD_CATEGORIES.VALIDATION]: 'Input validation, configuration validation, data validation',
-  [STANDARD_CATEGORIES.OPTIMIZATION]: 'Performance optimization, code optimization, resource optimization',
-  [STANDARD_CATEGORIES.DOCUMENTATION]: 'Documentation generation, API documentation, user guides',
-  [STANDARD_CATEGORIES.TASK]: 'Task execution, task management, task automation',
-  [STANDARD_CATEGORIES.APPLICATION]: 'Application-specific operations, business logic',
-  [STANDARD_CATEGORIES.ANALYZE]: 'Legacy analysis operations (deprecated, use ANALYSIS)',
-  [STANDARD_CATEGORIES.FILE]: 'File operations, file management, file processing',
-  [STANDARD_CATEGORIES.IDE]: 'IDE integration, chat commands, session management',
-  [STANDARD_CATEGORIES.GIT]: 'Git operations, version control, branch management',
-  [STANDARD_CATEGORIES.TERMINAL]: 'Terminal operations, command execution, process management',
-  [STANDARD_CATEGORIES.CHAT]: 'Chat operations, message handling, conversation management',
-  [STANDARD_CATEGORIES.COMPLETION]: 'Task completion, process completion, workflow completion'
+  [STANDARD_CATEGORIES.ANALYSIS]:
+    "Code analysis, architecture review, dependency analysis",
+  [STANDARD_CATEGORIES.TESTING]:
+    "Test execution, test generation, test validation",
+  [STANDARD_CATEGORIES.REFACTORING]:
+    "Code refactoring, module organization, architecture restructuring",
+  [STANDARD_CATEGORIES.DEPLOYMENT]:
+    "Application deployment, container management, infrastructure",
+  [STANDARD_CATEGORIES.GENERATE]:
+    "Code generation, documentation generation, script generation",
+  [STANDARD_CATEGORIES.MANAGEMENT]:
+    "Task management, project management, workflow management",
+  [STANDARD_CATEGORIES.SECURITY]:
+    "Security analysis, vulnerability scanning, security validation",
+  [STANDARD_CATEGORIES.VALIDATION]:
+    "Input validation, configuration validation, data validation",
+  [STANDARD_CATEGORIES.OPTIMIZATION]:
+    "Performance optimization, code optimization, resource optimization",
+  [STANDARD_CATEGORIES.DOCUMENTATION]:
+    "Documentation generation, API documentation, user guides",
+  [STANDARD_CATEGORIES.TASK]:
+    "Task execution, task management, task automation",
+  [STANDARD_CATEGORIES.APPLICATION]:
+    "Application-specific operations, business logic",
+  [STANDARD_CATEGORIES.ANALYZE]:
+    "Legacy analysis operations (deprecated, use ANALYSIS)",
+  [STANDARD_CATEGORIES.FILE]:
+    "File operations, file management, file processing",
+  [STANDARD_CATEGORIES.IDE]:
+    "IDE integration, chat commands, session management",
+  [STANDARD_CATEGORIES.GIT]:
+    "Git operations, version control, branch management",
+  [STANDARD_CATEGORIES.TERMINAL]:
+    "Terminal operations, command execution, process management",
+  [STANDARD_CATEGORIES.CHAT]:
+    "Chat operations, message handling, conversation management",
+  [STANDARD_CATEGORIES.COMPLETION]:
+    "Task completion, process completion, workflow completion",
 };
 
 /**
@@ -78,7 +97,7 @@ function isValidCategory(category) {
  * @returns {string} Category description
  */
 function getCategoryDescription(category) {
-  return CATEGORY_DESCRIPTIONS[category] || 'Unknown category';
+  return CATEGORY_DESCRIPTIONS[category] || "Unknown category";
 }
 
 /**
@@ -101,24 +120,22 @@ function getCategoriesByType() {
       STANDARD_CATEGORIES.REFACTORING,
       STANDARD_CATEGORIES.DEPLOYMENT,
       STANDARD_CATEGORIES.GENERATE,
-      STANDARD_CATEGORIES.MANAGEMENT
+      STANDARD_CATEGORIES.MANAGEMENT,
     ],
     quality: [
       STANDARD_CATEGORIES.SECURITY,
       STANDARD_CATEGORIES.VALIDATION,
       STANDARD_CATEGORIES.OPTIMIZATION,
-      STANDARD_CATEGORIES.DOCUMENTATION
+      STANDARD_CATEGORIES.DOCUMENTATION,
     ],
     specialized: [
       STANDARD_CATEGORIES.TASK,
       STANDARD_CATEGORIES.APPLICATION,
       STANDARD_CATEGORIES.ANALYZE,
       STANDARD_CATEGORIES.COMPLETION,
-      STANDARD_CATEGORIES.FILE
+      STANDARD_CATEGORIES.FILE,
     ],
-    ide: [
-      STANDARD_CATEGORIES.IDE
-    ]
+    ide: [STANDARD_CATEGORIES.IDE],
   };
 }
 
@@ -132,9 +149,9 @@ function getDefaultCategory(componentType) {
     framework: STANDARD_CATEGORIES.APPLICATION,
     step: STANDARD_CATEGORIES.TASK,
     command: STANDARD_CATEGORIES.MANAGEMENT,
-    handler: STANDARD_CATEGORIES.MANAGEMENT
+    handler: STANDARD_CATEGORIES.MANAGEMENT,
   };
-  
+
   return defaultCategories[componentType] || STANDARD_CATEGORIES.APPLICATION;
 }
 
@@ -145,5 +162,5 @@ module.exports = {
   getCategoryDescription,
   getAllCategories,
   getCategoriesByType,
-  getDefaultCategory
-}; 
+  getDefaultCategory,
+};

@@ -2,7 +2,7 @@
  * ValidationResult - Detailed validation result information
  * Provides structured validation results with errors and warnings
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class ValidationResult {
   constructor(
@@ -11,7 +11,7 @@ class ValidationResult {
     errors = [],
     warnings = [],
     metadata = {},
-    createdAt = new Date()
+    createdAt = new Date(),
   ) {
     this._id = id;
     this._isValid = isValid;
@@ -24,12 +24,24 @@ class ValidationResult {
   }
 
   // Getters
-  get id() { return this._id; }
-  get isValid() { return this._isValid; }
-  get errors() { return [...this._errors]; }
-  get warnings() { return [...this._warnings]; }
-  get metadata() { return { ...this._metadata }; }
-  get createdAt() { return new Date(this._createdAt); }
+  get id() {
+    return this._id;
+  }
+  get isValid() {
+    return this._isValid;
+  }
+  get errors() {
+    return [...this._errors];
+  }
+  get warnings() {
+    return [...this._warnings];
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
 
   // Validation status
   hasErrors() {
@@ -59,11 +71,11 @@ class ValidationResult {
 
   // Message filtering
   getErrorsByField(field) {
-    return this._errors.filter(error => error.field === field);
+    return this._errors.filter((error) => error.field === field);
   }
 
   getWarningsByField(field) {
-    return this._warnings.filter(warning => warning.field === field);
+    return this._warnings.filter((warning) => warning.field === field);
   }
 
   getMessagesByField(field) {
@@ -71,11 +83,11 @@ class ValidationResult {
   }
 
   getErrorsByCode(code) {
-    return this._errors.filter(error => error.code === code);
+    return this._errors.filter((error) => error.code === code);
   }
 
   getWarningsByCode(code) {
-    return this._warnings.filter(warning => warning.code === code);
+    return this._warnings.filter((warning) => warning.code === code);
   }
 
   getMessagesByCode(code) {
@@ -83,86 +95,86 @@ class ValidationResult {
   }
 
   getErrorsByLevel(level) {
-    return this._errors.filter(error => error.level === level);
+    return this._errors.filter((error) => error.level === level);
   }
 
   getWarningsByLevel(level) {
-    return this._warnings.filter(warning => warning.level === level);
+    return this._warnings.filter((warning) => warning.level === level);
   }
 
   // Message operations
   addError(error, message, code) {
-    if (typeof error === 'string' && typeof message === 'string') {
+    if (typeof error === "string" && typeof message === "string") {
       this._errors.push({
         id: this._generateMessageId(),
         field: error,
         message: message,
-        code: code || '_ERROR',
-        level: 'error',
-        timestamp: new Date()
+        code: code || "_ERROR",
+        level: "error",
+        timestamp: new Date(),
       });
       this._isValid = false;
       return;
     }
-    if (typeof error === 'string') {
+    if (typeof error === "string") {
       this._errors.push({
         id: this._generateMessageId(),
-        field: '',
+        field: "",
         message: error,
-        code: '_ERROR',
-        level: 'error',
-        timestamp: new Date()
+        code: "_ERROR",
+        level: "error",
+        timestamp: new Date(),
       });
     } else {
       this._errors.push({
         id: this._generateMessageId(),
-        field: error.field || '',
-        message: error.message || error.field || 'Unknown error',
-        code: error.code || '_ERROR',
+        field: error.field || "",
+        message: error.message || error.field || "Unknown error",
+        code: error.code || "_ERROR",
         data: error.data,
-        level: error.level || 'error',
-        timestamp: new Date()
+        level: error.level || "error",
+        timestamp: new Date(),
       });
     }
     this._isValid = false;
   }
 
   addWarning(warning, message, code) {
-    if (typeof warning === 'string' && typeof message === 'string') {
+    if (typeof warning === "string" && typeof message === "string") {
       this._warnings.push({
         id: this._generateMessageId(),
         field: warning,
         message: message,
-        code: code || '_WARNING',
-        level: 'warning',
-        timestamp: new Date()
+        code: code || "_WARNING",
+        level: "warning",
+        timestamp: new Date(),
       });
       return;
     }
-    if (typeof warning === 'string') {
+    if (typeof warning === "string") {
       this._warnings.push({
         id: this._generateMessageId(),
-        field: '',
+        field: "",
         message: warning,
-        code: '_WARNING',
-        level: 'warning',
-        timestamp: new Date()
+        code: "_WARNING",
+        level: "warning",
+        timestamp: new Date(),
       });
     } else {
       this._warnings.push({
         id: this._generateMessageId(),
-        field: warning.field || '',
-        message: warning.message || warning.field || 'Unknown warning',
-        code: warning.code || '_WARNING',
+        field: warning.field || "",
+        message: warning.message || warning.field || "Unknown warning",
+        code: warning.code || "_WARNING",
         data: warning.data,
-        level: warning.level || 'warning',
-        timestamp: new Date()
+        level: warning.level || "warning",
+        timestamp: new Date(),
       });
     }
   }
 
   removeError(errorId) {
-    const index = this._errors.findIndex(error => error.id === errorId);
+    const index = this._errors.findIndex((error) => error.id === errorId);
     if (index > -1) {
       this._errors.splice(index, 1);
       this._updateValidity();
@@ -170,7 +182,9 @@ class ValidationResult {
   }
 
   removeWarning(warningId) {
-    const index = this._warnings.findIndex(warning => warning.id === warningId);
+    const index = this._warnings.findIndex(
+      (warning) => warning.id === warningId,
+    );
     if (index > -1) {
       this._warnings.splice(index, 1);
     }
@@ -197,7 +211,9 @@ class ValidationResult {
   }
 
   getMetadata(key, defaultValue = null) {
-    return this._metadata[key] !== undefined ? this._metadata[key] : defaultValue;
+    return this._metadata[key] !== undefined
+      ? this._metadata[key]
+      : defaultValue;
   }
 
   hasMetadata(key) {
@@ -215,7 +231,7 @@ class ValidationResult {
   // Merging
   merge(other) {
     if (!(other instanceof ValidationResult)) {
-      throw new Error('Can only merge with another ValidationResult instance');
+      throw new Error("Can only merge with another ValidationResult instance");
     }
 
     this._errors.push(...other.errors);
@@ -232,12 +248,14 @@ class ValidationResult {
       errorCount: this.getErrorCount(),
       warningCount: this.getWarningCount(),
       totalCount: this.getMessageCount(),
-      fieldsWithErrors: [...new Set(this._errors.map(e => e.field))],
-      fieldsWithWarnings: [...new Set(this._warnings.map(w => w.field))],
-      errorCodes: [...new Set(this._errors.map(e => e.code).filter(Boolean))],
-      warningCodes: [...new Set(this._warnings.map(w => w.code).filter(Boolean))],
+      fieldsWithErrors: [...new Set(this._errors.map((e) => e.field))],
+      fieldsWithWarnings: [...new Set(this._warnings.map((w) => w.field))],
+      errorCodes: [...new Set(this._errors.map((e) => e.code).filter(Boolean))],
+      warningCodes: [
+        ...new Set(this._warnings.map((w) => w.code).filter(Boolean)),
+      ],
       createdAt: this._createdAt,
-      metadata: this._metadata
+      metadata: this._metadata,
     };
   }
 
@@ -260,36 +278,36 @@ class ValidationResult {
   }
 
   getErrorMessages() {
-    return this._errors.map(error => error.message);
+    return this._errors.map((error) => error.message);
   }
 
   getWarningMessages() {
-    return this._warnings.map(warning => warning.message);
+    return this._warnings.map((warning) => warning.message);
   }
 
   getAllMessages() {
     return [
-      ...this._errors.map(error => ({ ...error, type: 'error' })),
-      ...this._warnings.map(warning => ({ ...warning, type: 'warning' }))
+      ...this._errors.map((error) => ({ ...error, type: "error" })),
+      ...this._warnings.map((warning) => ({ ...warning, type: "warning" })),
     ];
   }
 
   // Validation
   _validate() {
-    if (typeof this._isValid !== 'boolean') {
-      throw new Error('isValid must be a boolean');
+    if (typeof this._isValid !== "boolean") {
+      throw new Error("isValid must be a boolean");
     }
 
     if (!Array.isArray(this._errors)) {
-      throw new Error('errors must be an array');
+      throw new Error("errors must be an array");
     }
 
     if (!Array.isArray(this._warnings)) {
-      throw new Error('warnings must be an array');
+      throw new Error("warnings must be an array");
     }
 
-    if (typeof this._metadata !== 'object') {
-      throw new Error('metadata must be an object');
+    if (typeof this._metadata !== "object") {
+      throw new Error("metadata must be an object");
     }
   }
 
@@ -310,7 +328,7 @@ class ValidationResult {
       warnings: this._warnings,
       metadata: this._metadata,
       createdAt: this._createdAt.toISOString(),
-      summary: this.getSummary()
+      summary: this.getSummary(),
     };
   }
 
@@ -321,7 +339,7 @@ class ValidationResult {
       data.errors,
       data.warnings,
       data.metadata,
-      new Date(data.createdAt)
+      new Date(data.createdAt),
     );
   }
 
@@ -351,7 +369,7 @@ class ValidationResult {
       field,
       message,
       code,
-      data
+      data,
     };
     return ValidationResult.createWithErrors([error]);
   }
@@ -361,7 +379,7 @@ class ValidationResult {
       field,
       message,
       code,
-      data
+      data,
     };
     return ValidationResult.createWithWarnings([warning]);
   }
@@ -370,7 +388,7 @@ class ValidationResult {
     return ValidationResult.createWithError(
       field,
       `Field '${field}' is required`,
-      'FIELD_REQUIRED'
+      "FIELD_REQUIRED",
     );
   }
 
@@ -378,8 +396,8 @@ class ValidationResult {
     return ValidationResult.createWithError(
       field,
       `Field '${field}' must be of type '${expectedType}', got '${actualType}'`,
-      'INVALID_TYPE',
-      { expectedType, actualType }
+      "INVALID_TYPE",
+      { expectedType, actualType },
     );
   }
 
@@ -398,8 +416,8 @@ class ValidationResult {
     return ValidationResult.createWithError(
       field,
       message,
-      'LENGTH_VIOLATION',
-      { minLength, maxLength, actualLength }
+      "LENGTH_VIOLATION",
+      { minLength, maxLength, actualLength },
     );
   }
 
@@ -407,8 +425,8 @@ class ValidationResult {
     return ValidationResult.createWithError(
       field,
       `Field '${field}' does not match required pattern`,
-      'PATTERN_MISMATCH',
-      { pattern: pattern.toString() }
+      "PATTERN_MISMATCH",
+      { pattern: pattern.toString() },
     );
   }
 
@@ -424,22 +442,21 @@ class ValidationResult {
       return ValidationResult.createValid();
     }
 
-    return ValidationResult.createWithError(
-      field,
-      message,
-      'RANGE_VIOLATION',
-      { min, max, actual }
-    );
+    return ValidationResult.createWithError(field, message, "RANGE_VIOLATION", {
+      min,
+      max,
+      actual,
+    });
   }
 
   static createFieldEnumError(field, allowedValues, actualValue) {
     return ValidationResult.createWithError(
       field,
-      `Field '${field}' must be one of: ${allowedValues.join(', ')}, got '${actualValue}'`,
-      'ENUM_VIOLATION',
-      { allowedValues, actualValue }
+      `Field '${field}' must be one of: ${allowedValues.join(", ")}, got '${actualValue}'`,
+      "ENUM_VIOLATION",
+      { allowedValues, actualValue },
     );
   }
 }
 
-module.exports = ValidationResult; 
+module.exports = ValidationResult;

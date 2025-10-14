@@ -3,20 +3,20 @@
  * Handler for switching between different IDE ports
  */
 
-const SwitchIDEPortCommand = require('@categories/ide/SwitchIDEPortCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const SwitchIDEPortCommand = require("@categories/ide/SwitchIDEPortCommand");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class SwitchIDEPortHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.browserManager = dependencies.browserManager;
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
-    
+
     this.handlerId = this.generateHandlerId();
   }
 
@@ -25,11 +25,17 @@ class SwitchIDEPortHandler {
    * @param {Object} dependencies - Handler dependencies
    */
   validateDependencies(dependencies) {
-    const requiredDeps = ['ideAutomationService', 'browserManager', 'ideManager'];
-    const missingDeps = requiredDeps.filter(dep => !dependencies[dep]);
-    
+    const requiredDeps = [
+      "ideAutomationService",
+      "browserManager",
+      "ideManager",
+    ];
+    const missingDeps = requiredDeps.filter((dep) => !dependencies[dep]);
+
     if (missingDeps.length > 0) {
-      throw new Error(`SwitchIDEPortHandler missing required dependencies: ${missingDeps.join(', ')}`);
+      throw new Error(
+        `SwitchIDEPortHandler missing required dependencies: ${missingDeps.join(", ")}`,
+      );
     }
   }
 
@@ -48,22 +54,21 @@ class SwitchIDEPortHandler {
    */
   async validateCommand(command) {
     try {
-      if (!command || command.type !== 'SwitchIDEPortCommand') {
+      if (!command || command.type !== "SwitchIDEPortCommand") {
         return {
           isValid: false,
-          errors: ['Invalid command type for SwitchIDEPortHandler']
+          errors: ["Invalid command type for SwitchIDEPortHandler"],
         };
       }
 
       // Validate command parameters
       const validationResult = await command.validate();
       return validationResult;
-
     } catch (error) {
-      this.logger.error('Command validation error:', error);
+      this.logger.error("Command validation error:", error);
       return {
         isValid: false,
-        errors: [error.message]
+        errors: [error.message],
       };
     }
   }
@@ -79,37 +84,41 @@ class SwitchIDEPortHandler {
       // Validate command
       const validationResult = await this.validateCommand(command);
       if (!validationResult.isValid) {
-        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Command validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
-      this.logger.info('Handling command', {
+      this.logger.info("Handling command", {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
         port: command.port,
-        ideType: command.ideType
+        ideType: command.ideType,
       });
 
       // Publish event
-      await this.eventBus.publish('ide.port.switching', {
+      await this.eventBus.publish("ide.port.switching", {
         commandId: command.commandId,
         userId: command.userId,
         port: command.port,
         ideType: command.ideType,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Update IDE manager with new active port (handles browser switching internally)
       await this.ideManager.switchToIDE(command.port);
 
       // Use IDEAutomationService for additional IDE-specific operations
-      const automationResult = await this.ideAutomationService.switchIDEPort(command.port, {
-        ideType: command.ideType,
-        ...command.options
-      });
+      const automationResult = await this.ideAutomationService.switchIDEPort(
+        command.port,
+        {
+          ideType: command.ideType,
+          ...command.options,
+        },
+      );
 
       const result = {
-        success: true,
         commandId: command.commandId,
         port: command.port,
         ideType: command.ideType,
@@ -118,39 +127,38 @@ class SwitchIDEPortHandler {
         metadata: {
           handlerId: this.handlerId,
           executionTime: new Date(),
-          options: options
-        }
+          options: options,
+        },
       };
 
       // Publish success event
-      await this.eventBus.publish('ide.port.switched', {
+      await this.eventBus.publish("ide.port.switched", {
         commandId: command.commandId,
         userId: command.userId,
         port: command.port,
         ideType: command.ideType,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info('Command handled successfully', {
+      this.logger.info("Command handled successfully", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        result: result
+        result: result,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Command handling failed:', error);
+      this.logger.error("Command handling failed:", error);
 
       // Publish failure event
-      await this.eventBus.publish('ide.port.switch.failed', {
+      await this.eventBus.publish("ide.port.switch.failed", {
         commandId: command.commandId,
         userId: command.userId,
         port: command.port,
         ideType: command.ideType,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -164,11 +172,16 @@ class SwitchIDEPortHandler {
   getMetadata() {
     return {
       id: this.handlerId,
-      type: 'SwitchIDEPortHandler',
-      dependencies: ['ideAutomationService', 'browserManager', 'ideManager', 'eventBus'],
-      supportedCommands: ['SwitchIDEPortCommand']
+      type: "SwitchIDEPortHandler",
+      dependencies: [
+        "ideAutomationService",
+        "browserManager",
+        "ideManager",
+        "eventBus",
+      ],
+      supportedCommands: ["SwitchIDEPortCommand"],
     };
   }
 }
 
-module.exports = SwitchIDEPortHandler; 
+module.exports = SwitchIDEPortHandler;

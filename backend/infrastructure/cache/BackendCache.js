@@ -4,38 +4,38 @@
  * Implements shared cache configuration and coordination
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('BackendCache');
+const Logger = require("@logging/Logger");
+const logger = new Logger("BackendCache");
 
 class BackendCache {
   constructor(options = {}) {
     // One memory cache for all backend operations
     this.memoryCache = new Map();
-    
+
     // Centralized configuration (shared with frontend)
     this.config = {
       // Analysis data TTLs (from cache-config.js)
-      project: { ttl: 24 * 60 * 60, priority: 'high' },      // 24 hours
-      dependency: { ttl: 24 * 60 * 60, priority: 'high' },   // 24 hours
-      codeQuality: { ttl: 6 * 60 * 60, priority: 'medium' }, // 6 hours
-      security: { ttl: 4 * 60 * 60, priority: 'medium' },    // 4 hours
-      performance: { ttl: 8 * 60 * 60, priority: 'medium' }, // 8 hours
-      architecture: { ttl: 12 * 60 * 60, priority: 'high' }, // 12 hours
-      techStack: { ttl: 24 * 60 * 60, priority: 'high' },    // 24 hours
-      repositoryType: { ttl: 24 * 60 * 60, priority: 'high' }, // 24 hours
-      
+      project: { ttl: 24 * 60 * 60, priority: "high" }, // 24 hours
+      dependency: { ttl: 24 * 60 * 60, priority: "high" }, // 24 hours
+      codeQuality: { ttl: 6 * 60 * 60, priority: "medium" }, // 6 hours
+      security: { ttl: 4 * 60 * 60, priority: "medium" }, // 4 hours
+      performance: { ttl: 8 * 60 * 60, priority: "medium" }, // 8 hours
+      architecture: { ttl: 12 * 60 * 60, priority: "high" }, // 12 hours
+      techStack: { ttl: 24 * 60 * 60, priority: "high" }, // 24 hours
+      repositoryType: { ttl: 24 * 60 * 60, priority: "high" }, // 24 hours
+
       // Backend-specific data types
-      chat: { ttl: 5 * 60, priority: 'low' },               // 5 minutes
-      workflow: { ttl: 5 * 60, priority: 'low' },           // 5 minutes
-      ide: { ttl: 5 * 60, priority: 'medium' },             // 5 minutes
-      default: { ttl: 12 * 60 * 60, priority: 'medium' }   // 12 hours
+      chat: { ttl: 5 * 60, priority: "low" }, // 5 minutes
+      workflow: { ttl: 5 * 60, priority: "low" }, // 5 minutes
+      ide: { ttl: 5 * 60, priority: "medium" }, // 5 minutes
+      default: { ttl: 12 * 60 * 60, priority: "medium" }, // 12 hours
     };
-    
+
     // Memory management
     this.maxMemorySize = 100 * 1024 * 1024; // 100MB
     this.maxMemoryEntries = 2000;
     this.currentMemorySize = 0;
-    
+
     // Performance monitoring
     this.stats = {
       hits: 0,
@@ -45,19 +45,19 @@ class BackendCache {
       selectiveInvalidations: 0,
       totalSize: 0,
       hitRate: 0,
-      averageResponseTime: 0
+      averageResponseTime: 0,
     };
-    
+
     // Namespace management for selective invalidation
     this.namespaces = new Map();
-    
+
     // Event coordination
     this.eventHandlers = new Map();
-    
-    logger.info('BackendCache initialized with centralized configuration', {
+
+    logger.info("BackendCache initialized with centralized configuration", {
       maxMemorySize: this.maxMemorySize,
       maxMemoryEntries: this.maxMemoryEntries,
-      dataTypes: Object.keys(this.config).length
+      dataTypes: Object.keys(this.config).length,
     });
   }
 
@@ -69,23 +69,23 @@ class BackendCache {
    * @param {string} namespace - Namespace for selective invalidation
    * @returns {boolean} Success status
    */
-  set(key, data, dataType = 'default', namespace = 'global') {
+  set(key, data, dataType = "default", namespace = "global") {
     const startTime = Date.now();
-    
+
     try {
       const config = this.config[dataType] || this.config.default;
       const dataSize = this.calculateSize(data);
       const timestamp = Date.now();
-      
+
       // Check memory limits
       if (this.currentMemorySize + dataSize > this.maxMemorySize) {
         this.evictByPriority(config.priority);
       }
-      
+
       if (this.memoryCache.size >= this.maxMemoryEntries) {
         this.evictOldestEntry();
       }
-      
+
       const cacheItem = {
         data,
         timestamp,
@@ -94,26 +94,27 @@ class BackendCache {
         priority: config.priority,
         dataType,
         namespace,
-        expires: timestamp + (config.ttl * 1000)
+        expires: timestamp + config.ttl * 1000,
       };
-      
+
       // Store in memory cache
       this.memoryCache.set(key, cacheItem);
       this.currentMemorySize += dataSize;
-      
+
       // Track namespace for selective invalidation
       this.trackNamespace(namespace, key);
-      
+
       // Update statistics
       this.stats.sets++;
       this.stats.totalSize += dataSize;
       this.updateResponseTime(Date.now() - startTime);
-      
-      logger.debug(`💾 Cached data: ${key}, type: ${dataType}, namespace: ${namespace}, size: ${dataSize} bytes`);
+
+      logger.debug(
+        `💾 Cached data: ${key}, type: ${dataType}, namespace: ${namespace}, size: ${dataSize} bytes`,
+      );
       return true;
-      
     } catch (error) {
-      logger.error('Failed to set cache data:', error);
+      logger.error("Failed to set cache data:", error);
       return false;
     }
   }
@@ -125,16 +126,16 @@ class BackendCache {
    */
   get(key) {
     const startTime = Date.now();
-    
+
     try {
       const cacheItem = this.memoryCache.get(key);
-      
+
       if (!cacheItem) {
         this.stats.misses++;
         this.updateResponseTime(Date.now() - startTime);
         return null;
       }
-      
+
       // Check if expired
       if (Date.now() > cacheItem.expires) {
         this.delete(key);
@@ -142,19 +143,18 @@ class BackendCache {
         this.updateResponseTime(Date.now() - startTime);
         return null;
       }
-      
+
       // Update access time for LRU
       cacheItem.lastAccess = Date.now();
-      
+
       this.stats.hits++;
       this.updateHitRate();
       this.updateResponseTime(Date.now() - startTime);
-      
+
       logger.debug(`✅ Cache hit: ${key}, type: ${cacheItem.dataType}`);
       return cacheItem.data;
-      
     } catch (error) {
-      logger.error('Failed to get cache data:', error);
+      logger.error("Failed to get cache data:", error);
       this.stats.misses++;
       return null;
     }
@@ -168,23 +168,22 @@ class BackendCache {
   delete(key) {
     try {
       const cacheItem = this.memoryCache.get(key);
-      
+
       if (cacheItem) {
         this.currentMemorySize -= cacheItem.size;
         this.memoryCache.delete(key);
-        
+
         // Remove from namespace tracking
         this.removeFromNamespace(cacheItem.namespace, key);
-        
+
         this.stats.deletes++;
         logger.debug(`🗑️ Deleted cache entry: ${key}`);
         return true;
       }
-      
+
       return false;
-      
     } catch (error) {
-      logger.error('Failed to delete cache data:', error);
+      logger.error("Failed to delete cache data:", error);
       return false;
     }
   }
@@ -198,22 +197,23 @@ class BackendCache {
     try {
       const namespaceKeys = this.namespaces.get(namespace) || new Set();
       let invalidatedCount = 0;
-      
+
       for (const key of namespaceKeys) {
         const cacheItem = this.memoryCache.get(key);
-        
+
         if (cacheItem && (!identifier || key.includes(identifier))) {
           this.delete(key);
           invalidatedCount++;
         }
       }
-      
+
       this.stats.selectiveInvalidations++;
-      
-      logger.info(`🔄 Selective invalidation: ${namespace}${identifier ? ` (${identifier})` : ''}, invalidated: ${invalidatedCount} entries`);
-      
+
+      logger.info(
+        `🔄 Selective invalidation: ${namespace}${identifier ? ` (${identifier})` : ""}, invalidated: ${invalidatedCount} entries`,
+      );
     } catch (error) {
-      logger.error('Failed to invalidate namespace:', error);
+      logger.error("Failed to invalidate namespace:", error);
     }
   }
 
@@ -251,7 +251,7 @@ class BackendCache {
   evictByPriority(priority) {
     const priorityOrder = { low: 1, medium: 2, high: 3 };
     const currentPriority = priorityOrder[priority] || 2;
-    
+
     for (const [key, cacheItem] of this.memoryCache) {
       if (priorityOrder[cacheItem.priority] < currentPriority) {
         this.delete(key);
@@ -266,7 +266,7 @@ class BackendCache {
   evictOldestEntry() {
     let oldestKey = null;
     let oldestTime = Date.now();
-    
+
     for (const [key, cacheItem] of this.memoryCache) {
       const accessTime = cacheItem.lastAccess || cacheItem.timestamp;
       if (accessTime < oldestTime) {
@@ -274,7 +274,7 @@ class BackendCache {
         oldestKey = key;
       }
     }
-    
+
     if (oldestKey) {
       this.delete(oldestKey);
     }
@@ -287,7 +287,7 @@ class BackendCache {
    */
   calculateSize(data) {
     try {
-      return Buffer.byteLength(JSON.stringify(data), 'utf8');
+      return Buffer.byteLength(JSON.stringify(data), "utf8");
     } catch (error) {
       return JSON.stringify(data).length * 2; // Rough estimate
     }
@@ -307,9 +307,10 @@ class BackendCache {
    */
   updateResponseTime(responseTime) {
     const total = this.stats.hits + this.stats.misses;
-    this.stats.averageResponseTime = total > 0 
-      ? (this.stats.averageResponseTime * (total - 1) + responseTime) / total 
-      : responseTime;
+    this.stats.averageResponseTime =
+      total > 0
+        ? (this.stats.averageResponseTime * (total - 1) + responseTime) / total
+        : responseTime;
   }
 
   /**
@@ -335,14 +336,14 @@ class BackendCache {
   cleanupExpiredEntries() {
     const now = Date.now();
     let cleanedCount = 0;
-    
+
     for (const [key, cacheItem] of this.memoryCache) {
       if (now > cacheItem.expires) {
         this.delete(key);
         cleanedCount++;
       }
     }
-    
+
     if (cleanedCount > 0) {
       logger.debug(`🧹 Cleaned up ${cleanedCount} expired cache entries`);
     }
@@ -352,9 +353,9 @@ class BackendCache {
    * Cleanup old cache entries based on access time
    */
   cleanupOldEntries() {
-    const cutoffTime = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
+    const cutoffTime = Date.now() - 24 * 60 * 60 * 1000; // 24 hours
     let cleanedCount = 0;
-    
+
     for (const [key, cacheItem] of this.memoryCache) {
       const accessTime = cacheItem.lastAccess || cacheItem.timestamp;
       if (accessTime < cutoffTime) {
@@ -362,7 +363,7 @@ class BackendCache {
         cleanedCount++;
       }
     }
-    
+
     if (cleanedCount > 0) {
       logger.debug(`🧹 Cleaned up ${cleanedCount} old cache entries`);
     }
@@ -377,7 +378,7 @@ class BackendCache {
       ...this.stats,
       memorySize: this.currentMemorySize,
       memoryEntries: this.memoryCache.size,
-      namespaces: this.namespaces.size
+      namespaces: this.namespaces.size,
     };
   }
 
@@ -388,8 +389,10 @@ class BackendCache {
     this.memoryCache.clear();
     this.namespaces.clear();
     this.currentMemorySize = 0;
-    
-    logger.warn('⚠️ All backend cache cleared - this should be avoided in favor of selective invalidation');
+
+    logger.warn(
+      "⚠️ All backend cache cleared - this should be avoided in favor of selective invalidation",
+    );
   }
 
   /**
@@ -406,7 +409,7 @@ class BackendCache {
    */
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
-    logger.info('Backend cache configuration updated', newConfig);
+    logger.info("Backend cache configuration updated", newConfig);
   }
 
   /**
@@ -428,7 +431,7 @@ class BackendCache {
    */
   emit(eventType, data) {
     const handlers = this.eventHandlers.get(eventType) || [];
-    handlers.forEach(handler => {
+    handlers.forEach((handler) => {
       try {
         handler(data);
       } catch (error) {
@@ -442,14 +445,20 @@ class BackendCache {
    */
   startCleanupIntervals() {
     // Cleanup expired entries every 5 minutes
-    setInterval(() => {
-      this.cleanupExpiredEntries();
-    }, 5 * 60 * 1000);
-    
+    setInterval(
+      () => {
+        this.cleanupExpiredEntries();
+      },
+      5 * 60 * 1000,
+    );
+
     // Cleanup old entries every 30 minutes
-    setInterval(() => {
-      this.cleanupOldEntries();
-    }, 30 * 60 * 1000);
+    setInterval(
+      () => {
+        this.cleanupOldEntries();
+      },
+      30 * 60 * 1000,
+    );
   }
 }
 

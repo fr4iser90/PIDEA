@@ -23,7 +23,6 @@ class ResponseManager {
       if (response.ok) {
         // Success response - data is direct
         return {
-          success: true,
           data: data,
           status: response.status,
           headers: response.headers
@@ -31,7 +30,7 @@ class ResponseManager {
       } else {
         // Error response - structured error object
         return {
-          success: false,
+         
           error: data.error || {
             message: 'Unknown error',
             code: 'UNKNOWN_ERROR',
@@ -44,7 +43,7 @@ class ResponseManager {
     } catch (error) {
       // JSON parsing error
       return {
-        success: false,
+       
         error: {
           message: 'Failed to parse response',
           code: 'PARSE_ERROR',
@@ -76,7 +75,7 @@ class ResponseManager {
     } catch (error) {
       // Network error
       return {
-        success: false,
+       
         error: {
           message: 'Network error',
           code: 'NETWORK_ERROR',

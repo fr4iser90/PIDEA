@@ -43,7 +43,7 @@ describe('IDEMirror Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    apiCall.mockResolvedValue({ success: true, data: mockDOMData });
+    apiCall.mockResolvedValue({ data: mockDOMData });
   });
 
   describe('Rendering', () => {

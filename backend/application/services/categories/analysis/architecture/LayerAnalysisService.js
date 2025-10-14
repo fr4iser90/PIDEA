@@ -3,12 +3,14 @@
  * Specialized service for layer organization analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { LayerAnalysisStep } = require('@domain/steps/categories/analysis/architecture');
+const Logger = require("@logging/Logger");
+const {
+  LayerAnalysisStep,
+} = require("@domain/steps/categories/analysis/architecture");
 
 class LayerAnalysisService {
   constructor() {
-    this.logger = new Logger('LayerAnalysisService');
+    this.logger = new Logger("LayerAnalysisService");
     this.layerStep = new LayerAnalysisStep();
   }
 
@@ -22,22 +24,23 @@ class LayerAnalysisService {
    */
   async executeLayerAnalysis(params) {
     try {
-      this.logger.info('Starting layer organization analysis', { projectId: params.projectId });
+      this.logger.info("Starting layer organization analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.layerStep.execute(params);
 
-      this.logger.info('Layer analysis completed', { 
+      this.logger.info("Layer analysis completed", {
         projectId: params.projectId,
         layerViolations: result.layerViolations?.length || 0,
-        issuesFound: result.issues?.length || 0
+        issuesFound: result.issues?.length || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Layer analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Layer analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,18 @@ class LayerAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Layer Organization Analyzer',
-      version: '1.0.0',
-      description: 'Layer organization and separation of concerns analysis',
-      metrics: ['layer-violations', 'separation-of-concerns', 'dependency-direction', 'layer-cohesion'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Layer Organization Analyzer",
+      version: "1.0.0",
+      description: "Layer organization and separation of concerns analysis",
+      metrics: [
+        "layer-violations",
+        "separation-of-concerns",
+        "dependency-direction",
+        "layer-cohesion",
+      ],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = LayerAnalysisService; 
+module.exports = LayerAnalysisService;

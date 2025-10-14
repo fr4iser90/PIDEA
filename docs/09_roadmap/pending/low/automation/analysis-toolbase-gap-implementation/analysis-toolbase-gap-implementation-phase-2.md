@@ -96,7 +96,6 @@ class LegacyCodeAnalysisStep extends BaseAnalysisStep {
     const modernizationPaths = await this.generateModernizationPaths(technicalDebt);
     
     return {
-      success: true,
       data: {
         deprecatedAPIs,
         legacyPatterns,
@@ -136,7 +135,6 @@ class CodeDuplicationAnalysisStep extends BaseAnalysisStep {
     const duplicationMetrics = await this.calculateDuplicationMetrics(duplicates);
     
     return {
-      success: true,
       data: {
         duplicates,
         similarityAnalysis,
@@ -176,7 +174,6 @@ class AccessibilityAnalysisStep extends BaseAnalysisStep {
     const keyboardNavigation = await this.testKeyboardNavigation(projectPath);
     
     return {
-      success: true,
       data: {
         wcagCompliance,
         ariaAnalysis,
@@ -216,7 +213,6 @@ class StaticAssetAnalysisStep extends BaseAnalysisStep {
     const bundleAnalysis = await this.analyzeBundleOptimization(projectPath);
     
     return {
-      success: true,
       data: {
         imageAnalysis,
         compressionAnalysis,

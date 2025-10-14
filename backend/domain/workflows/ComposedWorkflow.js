@@ -2,16 +2,21 @@
  * ComposedWorkflow - Implementation of IWorkflow for composed workflows
  * Manages execution of multiple workflow steps with validation, rollback, and error handling
  */
-const IWorkflow = require('../../application/handlers/workflow/interfaces/IWorkflow');
-const WorkflowException = require('./exceptions/WorkflowException');
-const ValidationException = require('./exceptions/ValidationException');
-const ValidationResult = require('./validation/ValidationResult');
+const IWorkflow = require("../../application/handlers/workflow/interfaces/IWorkflow");
+const WorkflowException = require("./exceptions/WorkflowException");
+const ValidationException = require("./exceptions/ValidationException");
+const ValidationResult = require("./validation/ValidationResult");
 
 /**
  * Composed workflow implementation
  */
 class ComposedWorkflow extends IWorkflow {
-  constructor(steps = [], metadata = {}, validationRules = [], rollbackStrategy = null) {
+  constructor(
+    steps = [],
+    metadata = {},
+    validationRules = [],
+    rollbackStrategy = null,
+  ) {
     super();
     this._steps = [...steps];
     this._metadata = { ...metadata };
@@ -27,40 +32,50 @@ class ComposedWorkflow extends IWorkflow {
    */
   async execute(context) {
     const startTime = Date.now();
-    
+
     try {
       // Validate workflow before execution
       const validationResult = await this.validate(context);
       if (!validationResult.isValid) {
-        throw new ValidationException('Workflow validation failed', validationResult);
+        throw new ValidationException(
+          "Workflow validation failed",
+          validationResult,
+        );
       }
 
       // Execute steps sequentially
       const results = [];
       for (let i = 0; i < this._steps.length; i++) {
         const step = this._steps[i];
-        
+
         try {
           // Update context with current step
-          context.setState(new (require('../context/WorkflowState'))('executing', { currentStep: i, totalSteps: this._steps.length }));
-          
+          context.setState(
+            new (require("../context/WorkflowState"))("executing", {
+              currentStep: i,
+              totalSteps: this._steps.length,
+            }),
+          );
+
           // Execute step
           const stepResult = await step.execute(context);
           results.push(stepResult);
-          
+
           // Record execution
           this._executionHistory.push({
             stepIndex: i,
             stepName: step.getMetadata().name,
             result: stepResult,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
-          
+
           // Check if step failed
           if (!stepResult.success) {
-            throw new WorkflowException(`Step ${step.getMetadata().name} failed`, stepResult);
+            throw new WorkflowException(
+              `Step ${step.getMetadata().name} failed`,
+              stepResult,
+            );
           }
-          
         } catch (error) {
           // Attempt rollback if strategy is available
           if (this._rollbackStrategy) {
@@ -71,24 +86,22 @@ class ComposedWorkflow extends IWorkflow {
       }
 
       const duration = Date.now() - startTime;
-      
+
       return {
-        success: true,
         results,
         duration,
         executionHistory: this._executionHistory,
-        metadata: this._metadata
+        metadata: this._metadata,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
-        success: false,
+       
         error: error.message,
         duration,
         executionHistory: this._executionHistory,
-        metadata: this._metadata
+        metadata: this._metadata,
       };
     }
   }
@@ -107,12 +120,14 @@ class ComposedWorkflow extends IWorkflow {
       try {
         const stepValidation = await step.validate(context);
         results.push(stepValidation);
-        
+
         if (!stepValidation.isValid) {
           isValid = false;
         }
       } catch (error) {
-        results.push(new ValidationResult(undefined, false, [error.message], [], {}));
+        results.push(
+          new ValidationResult(undefined, false, [error.message], [], {}),
+        );
         isValid = false;
       }
     }
@@ -122,12 +137,14 @@ class ComposedWorkflow extends IWorkflow {
       try {
         const ruleValidation = await rule.validate(context);
         results.push(ruleValidation);
-        
+
         if (!ruleValidation.isValid) {
           isValid = false;
         }
       } catch (error) {
-        results.push(new ValidationResult(undefined, false, [error.message], [], {}));
+        results.push(
+          new ValidationResult(undefined, false, [error.message], [], {}),
+        );
         isValid = false;
       }
     }
@@ -143,7 +160,7 @@ class ComposedWorkflow extends IWorkflow {
    */
   async rollback(context, stepId) {
     if (!this._rollbackStrategy) {
-      throw new WorkflowException('No rollback strategy configured');
+      throw new WorkflowException("No rollback strategy configured");
     }
 
     return await this._rollbackStrategy.rollback(context, stepId, []);
@@ -155,13 +172,13 @@ class ComposedWorkflow extends IWorkflow {
    */
   getMetadata() {
     return {
-      name: this._metadata.name || 'ComposedWorkflow',
-      description: this._metadata.description || 'Composed workflow',
-      type: 'composed',
-      version: this._metadata.version || '1.0.0',
-      steps: this._steps.map(step => step.getMetadata()),
+      name: this._metadata.name || "ComposedWorkflow",
+      description: this._metadata.description || "Composed workflow",
+      type: "composed",
+      version: this._metadata.version || "1.0.0",
+      steps: this._steps.map((step) => step.getMetadata()),
       validationRules: this._validationRules.length,
-      hasRollbackStrategy: !!this._rollbackStrategy
+      hasRollbackStrategy: !!this._rollbackStrategy,
     };
   }
 
@@ -171,18 +188,18 @@ class ComposedWorkflow extends IWorkflow {
    */
   getDependencies() {
     const dependencies = new Set();
-    
+
     // Collect dependencies from all steps
     for (const step of this._steps) {
       const stepDeps = step.getDependencies ? step.getDependencies() : [];
-      stepDeps.forEach(dep => dependencies.add(dep));
+      stepDeps.forEach((dep) => dependencies.add(dep));
     }
-    
+
     // Add workflow-level dependencies
     if (this._metadata.dependencies) {
-      this._metadata.dependencies.forEach(dep => dependencies.add(dep));
+      this._metadata.dependencies.forEach((dep) => dependencies.add(dep));
     }
-    
+
     return Array.from(dependencies);
   }
 
@@ -213,7 +230,7 @@ class ComposedWorkflow extends IWorkflow {
    * @returns {string} The workflow type
    */
   getType() {
-    return 'composed';
+    return "composed";
   }
 
   /**
@@ -221,7 +238,7 @@ class ComposedWorkflow extends IWorkflow {
    * @returns {string} The workflow version
    */
   getVersion() {
-    return this._metadata.version || '1.0.0';
+    return this._metadata.version || "1.0.0";
   }
 
   /**
@@ -316,4 +333,4 @@ class ComposedWorkflow extends IWorkflow {
   }
 }
 
-module.exports = ComposedWorkflow; 
+module.exports = ComposedWorkflow;

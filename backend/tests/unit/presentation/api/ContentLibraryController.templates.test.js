@@ -1,14 +1,14 @@
-const ContentLibraryController = require('@api/ContentLibraryController');
-const fs = require('fs').promises;
+const ContentLibraryController = require("@api/ContentLibraryController");
+const fs = require("fs").promises;
 
-jest.mock('fs', () => ({
+jest.mock("fs", () => ({
   promises: {
     readdir: jest.fn(),
-    readFile: jest.fn()
-  }
+    readFile: jest.fn(),
+  },
 }));
 
-describe('ContentLibraryController Templates', () => {
+describe("ContentLibraryController Templates", () => {
   let controller;
   let mockReq;
   let mockRes;
@@ -18,7 +18,7 @@ describe('ContentLibraryController Templates', () => {
     mockReq = { params: {}, query: {} };
     mockRes = {
       json: jest.fn(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
     jest.clearAllMocks();
   });
@@ -37,4 +37,4 @@ describe('ContentLibraryController Templates', () => {
 
   // getFrameworkTemplateFile
   // ... (kopiere alle Tests für getFrameworkTemplateFile)
-}); 
+});

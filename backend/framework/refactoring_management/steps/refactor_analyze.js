@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * RefactorAnalyzeStep - Analyzes project for refactoring opportunities
@@ -8,13 +8,14 @@ const logger = new Logger('Logger');
  */
 
 const config = {
-  name: 'RefactorAnalyze',
-  type: 'refactoring',
-  description: 'Analyzes project structure to identify refactoring opportunities',
-  category: 'refactoring',
-  version: '1.0.0',
-  framework: 'refactoring_management',
-  dependencies: ['projectAnalyzer', 'projectPath']
+  name: "RefactorAnalyze",
+  type: "refactoring",
+  description:
+    "Analyzes project structure to identify refactoring opportunities",
+  category: "refactoring",
+  version: "1.0.0",
+  framework: "refactoring_management",
+  dependencies: ["projectAnalyzer", "projectPath"],
 };
 
 async function execute(context, options = {}) {
@@ -24,58 +25,65 @@ async function execute(context, options = {}) {
   const architectureAnalyzer = context.architectureAnalyzer;
   const projectAnalysisRepository = context.projectAnalysisRepository;
 
-  if (!projectPath) throw new Error('Project path not found in context');
-  if (!projectAnalyzer) throw new Error('Project analyzer not found in context');
+  if (!projectPath) throw new Error("Project path not found in context");
+  if (!projectAnalyzer)
+    throw new Error("Project analyzer not found in context");
 
-  logger.info('🔍 [RefactorAnalyze] Starting project analysis for refactoring');
+  logger.info("🔍 [RefactorAnalyze] Starting project analysis for refactoring");
 
   try {
     // Run comprehensive analysis using available analyzers
     const analysisResults = {
       projectAnalysis: null,
       codeQuality: null,
-      architecture: null
+      architecture: null,
     };
 
     // 1. Project Analysis
     if (projectAnalyzer) {
-      logger.info('📊 [RefactorAnalyze] Running project analysis');
-      analysisResults.projectAnalysis = await projectAnalyzer.analyzeProject(projectPath, {
-        includeRepoStructure: true,
-        includeDependencies: true,
-        ...options
-      });
+      logger.info("📊 [RefactorAnalyze] Running project analysis");
+      analysisResults.projectAnalysis = await projectAnalyzer.analyzeProject(
+        projectPath,
+        {
+          includeRepoStructure: true,
+          includeDependencies: true,
+          ...options,
+        },
+      );
     }
 
     // 2. Code Quality Analysis
     if (codeQualityAnalyzer) {
-      logger.info('🎯 [RefactorAnalyze] Running code quality analysis');
-      analysisResults.codeQuality = await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
-        includeMetrics: true,
-        includeIssues: true,
-        includeSuggestions: true,
-        ...options
-      });
+      logger.info("🎯 [RefactorAnalyze] Running code quality analysis");
+      analysisResults.codeQuality =
+        await codeQualityAnalyzer.analyzeCodeQuality(projectPath, {
+          includeMetrics: true,
+          includeIssues: true,
+          includeSuggestions: true,
+          ...options,
+        });
     }
 
     // 3. Architecture Analysis
     if (architectureAnalyzer) {
-      logger.info('🏗️ [RefactorAnalyze] Running architecture analysis');
-      analysisResults.architecture = await architectureAnalyzer.analyzeArchitecture(projectPath, {
-        includePatterns: true,
-        includeViolations: true,
-        ...options
-      });
+      logger.info("🏗️ [RefactorAnalyze] Running architecture analysis");
+      analysisResults.architecture =
+        await architectureAnalyzer.analyzeArchitecture(projectPath, {
+          includePatterns: true,
+          includeViolations: true,
+          ...options,
+        });
     }
 
     // Extract large files from analysis
     const largeFiles = extractLargeFiles(analysisResults);
 
-    logger.info(`✅ [RefactorAnalyze] Analysis completed. Found ${largeFiles.length} large files`);
+    logger.info(
+      `✅ [RefactorAnalyze] Analysis completed. Found ${largeFiles.length} large files`,
+    );
     logger.info(`🔍 [RefactorAnalyze] Sample large files available`);
 
     const result = {
-      success: true,
       analysisResults,
       largeFiles,
       recommendations: generateRecommendations(largeFiles),
@@ -83,16 +91,15 @@ async function execute(context, options = {}) {
         projectPath,
         analysisTimestamp: new Date().toISOString(),
         totalFiles: largeFiles.length,
-        framework: 'refactoring_management'
-      }
+        framework: "refactoring_management",
+      },
     };
 
     logger.info(`🔍 [RefactorAnalyze] Returning result with largeFiles`);
 
     return result;
-
   } catch (error) {
-    logger.error('❌ [RefactorAnalyze] Analysis failed:', error);
+    logger.error("❌ [RefactorAnalyze] Analysis failed:", error);
     throw error;
   }
 }
@@ -101,7 +108,9 @@ function extractLargeFiles(analysisResults) {
   const largeFiles = [];
   const processedPaths = new Set();
 
-  logger.info(`🔍 [RefactorAnalyze] Extracting large files from analysis results`);
+  logger.info(
+    `🔍 [RefactorAnalyze] Extracting large files from analysis results`,
+  );
 
   // Check multiple possible locations for large files data
   const possibleSources = [
@@ -110,32 +119,33 @@ function extractLargeFiles(analysisResults) {
     analysisResults.codeQuality?.realMetrics?.largeFiles,
     analysisResults.largeFiles,
     analysisResults.analysis?.codeQuality?.largeFiles,
-    analysisResults.analysis?.codeQuality?.data?.largeFiles
+    analysisResults.analysis?.codeQuality?.data?.largeFiles,
   ];
 
   logger.info(`🔍 [RefactorAnalyze] Checking possible sources`);
 
   for (const source of possibleSources) {
     if (source && Array.isArray(source)) {
-      source.forEach(file => {
+      source.forEach((file) => {
         const filePath = file.file || file.path;
         if (filePath && !processedPaths.has(filePath)) {
           let lines = 0;
-          if (typeof file.lines === 'number') {
+          if (typeof file.lines === "number") {
             lines = file.lines;
-          } else if (typeof file.lines === 'string') {
+          } else if (typeof file.lines === "string") {
             lines = parseInt(file.lines) || 0;
           } else if (file.size) {
             lines = Math.round(file.size / 50); // Estimate from file size
           }
 
-          if (lines > 200) { // Files with more than 200 lines
+          if (lines > 200) {
+            // Files with more than 200 lines
             largeFiles.push({
               path: filePath,
               lines: lines,
               package: file.package || getPackageFromPath(filePath),
               priority: calculatePriority(lines),
-              estimatedTime: estimateRefactoringTime(lines)
+              estimatedTime: estimateRefactoringTime(lines),
             });
             processedPaths.add(filePath);
           }
@@ -152,20 +162,21 @@ function generateRecommendations(largeFiles) {
 
   if (largeFiles.length === 0) {
     recommendations.push({
-      type: 'no_refactoring_needed',
-      severity: 'low',
-      message: 'No large files found. Project structure appears to be well-organized.',
-      priority: 'low'
+      type: "no_refactoring_needed",
+      severity: "low",
+      message:
+        "No large files found. Project structure appears to be well-organized.",
+      priority: "low",
     });
   } else {
     recommendations.push({
-      type: 'refactoring_recommended',
-      severity: 'high',
+      type: "refactoring_recommended",
+      severity: "high",
       message: `${largeFiles.length} large files identified for refactoring`,
-      priority: 'high',
+      priority: "high",
       details: {
-        files: largeFiles.map(f => ({ path: f.path, lines: f.lines }))
-      }
+        files: largeFiles.map((f) => ({ path: f.path, lines: f.lines })),
+      },
     });
   }
 
@@ -173,22 +184,22 @@ function generateRecommendations(largeFiles) {
 }
 
 function calculatePriority(lines) {
-  if (lines > 1000) return 'high';
-  if (lines > 750) return 'medium';
-  return 'low';
+  if (lines > 1000) return "high";
+  if (lines > 750) return "medium";
+  return "low";
 }
 
 function estimateRefactoringTime(lines) {
   const hours = Math.ceil(lines / 200);
-  return `${hours} hour${hours > 1 ? 's' : ''}`;
+  return `${hours} hour${hours > 1 ? "s" : ""}`;
 }
 
 function getPackageFromPath(filePath) {
-  const parts = filePath.split('/');
+  const parts = filePath.split("/");
   if (parts.length > 1) {
     return parts[0];
   }
-  return 'root';
+  return "root";
 }
 
-module.exports = { config, execute }; 
+module.exports = { config, execute };

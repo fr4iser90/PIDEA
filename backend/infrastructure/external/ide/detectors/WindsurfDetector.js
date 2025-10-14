@@ -1,24 +1,23 @@
-
 /**
  * Windsurf IDE Detector
  * Detects Windsurf IDE instances and manages Windsurf-specific detection logic
  */
 
-const http = require('http');
-const net = require('net');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('WindsurfDetector');
+const http = require("http");
+const net = require("net");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("WindsurfDetector");
 
 class WindsurfDetector {
   constructor() {
     this.portRange = { start: 9242, end: 9251 };
     this.scanTimeout = 1000; // 1 second timeout per port
     this.config = {
-      name: 'Windsurf',
-      executable: 'windsurf',
+      name: "Windsurf",
+      executable: "windsurf",
       portRange: this.portRange,
-      detectionMethod: 'http',
-      versionEndpoint: '/json/version'
+      detectionMethod: "http",
+      versionEndpoint: "/json/version",
     };
   }
 
@@ -28,7 +27,7 @@ class WindsurfDetector {
    */
   async scanForIDEs() {
     // logger.info('🔍 Scanning for Windsurf IDEs on ports', this.portRange.start, 'to', this.portRange.end);
-    
+
     const availableIDEs = [];
     const promises = [];
 
@@ -37,19 +36,19 @@ class WindsurfDetector {
     }
 
     const results = await Promise.allSettled(promises);
-    
+
     results.forEach((result, index) => {
       const port = this.portRange.start + index;
-      if (result.status === 'fulfilled' && result.value) {
-d        // Always use localhost since we're using network_mode: "host"
-        const host = '127.0.0.1';
+      if (result.status === "fulfilled" && result.value) {
+        d; // Always use localhost since we're using network_mode: "host"
+        const host = "127.0.0.1";
         availableIDEs.push({
           port: port,
-          status: 'running',
+          status: "running",
           url: `http://${host}:${port}`,
-          ideType: 'windsurf',
-          version: result.value.version || 'unknown',
-          webSocketUrl: result.value.webSocketUrl || null
+          ideType: "windsurf",
+          version: result.value.version || "unknown",
+          webSocketUrl: result.value.webSocketUrl || null,
         });
       }
     });
@@ -66,40 +65,46 @@ d        // Always use localhost since we're using network_mode: "host"
   async checkPort(port) {
     return new Promise((resolve) => {
       // Always use localhost since we're using network_mode: "host"
-      const host = '127.0.0.1';
-      const req = http.get({
-        hostname: host,
-        port: port,
-        path: this.config.versionEndpoint,
-        timeout: this.scanTimeout
-      }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data);
-            if (json.Browser && json.webSocketDebuggerUrl) {
-              // Check if it's Windsurf
-              if (json.Browser.includes('Windsurf') || json.Browser.includes('windsurf')) {
-                resolve({
-                  version: json.Browser,
-                  webSocketUrl: json.webSocketDebuggerUrl,
-                  userAgent: json['User-Agent'] || null
-                });
+      const host = "127.0.0.1";
+      const req = http.get(
+        {
+          hostname: host,
+          port: port,
+          path: this.config.versionEndpoint,
+          timeout: this.scanTimeout,
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            try {
+              const json = JSON.parse(data);
+              if (json.Browser && json.webSocketDebuggerUrl) {
+                // Check if it's Windsurf
+                if (
+                  json.Browser.includes("Windsurf") ||
+                  json.Browser.includes("windsurf")
+                ) {
+                  resolve({
+                    version: json.Browser,
+                    webSocketUrl: json.webSocketDebuggerUrl,
+                    userAgent: json["User-Agent"] || null,
+                  });
+                } else {
+                  resolve(false);
+                }
               } else {
                 resolve(false);
               }
-            } else {
+            } catch {
               resolve(false);
             }
-          } catch {
-            resolve(false);
-          }
-        });
-      });
-      
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => {
+          });
+        },
+      );
+
+      req.on("error", () => resolve(false));
+      req.on("timeout", () => {
         req.destroy();
         resolve(false);
       });
@@ -112,15 +117,17 @@ d        // Always use localhost since we're using network_mode: "host"
    */
   async findAvailablePort() {
     const runningIDEs = await this.scanForIDEs();
-    const usedPorts = runningIDEs.map(ide => ide.port);
-    
+    const usedPorts = runningIDEs.map((ide) => ide.port);
+
     for (let port = this.portRange.start; port <= this.portRange.end; port++) {
       if (!usedPorts.includes(port)) {
         return port;
       }
     }
-    
-    throw new Error(`No available ports in range ${this.portRange.start}-${this.portRange.end} for Windsurf`);
+
+    throw new Error(
+      `No available ports in range ${this.portRange.start}-${this.portRange.end} for Windsurf`,
+    );
   }
 
   /**
@@ -129,14 +136,14 @@ d        // Always use localhost since we're using network_mode: "host"
    */
   async isInstalled() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('which', ['windsurf'], { stdio: 'ignore' });
-      
-      process.on('close', (code) => {
+      const { spawn } = require("child_process");
+      const process = spawn("which", ["windsurf"], { stdio: "ignore" });
+
+      process.on("close", (code) => {
         resolve(code === 0);
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(false);
       });
     });
@@ -148,23 +155,23 @@ d        // Always use localhost since we're using network_mode: "host"
    */
   async getVersion() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('windsurf', ['--version'], { stdio: 'pipe' });
-      
-      let output = '';
-      process.stdout.on('data', (data) => {
+      const { spawn } = require("child_process");
+      const process = spawn("windsurf", ["--version"], { stdio: "pipe" });
+
+      let output = "";
+      process.stdout.on("data", (data) => {
         output += data.toString();
       });
-      
-      process.on('close', (code) => {
+
+      process.on("close", (code) => {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
           resolve(null);
         }
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(null);
       });
     });
@@ -175,14 +182,17 @@ d        // Always use localhost since we're using network_mode: "host"
    * @returns {string|null} Path to Windsurf executable or null if not found
    */
   findWindsurfExecutable() {
-    const { spawn } = require('child_process');
-    
+    const { spawn } = require("child_process");
+
     // Try common Windsurf executable names
-    const possibleExecutables = ['windsurf', 'windsurf-ide', 'windsurf-editor'];
-    
+    const possibleExecutables = ["windsurf", "windsurf-ide", "windsurf-editor"];
+
     for (const executable of possibleExecutables) {
       try {
-        const result = require('child_process').execSync(`which ${executable}`, { encoding: 'utf8' });
+        const result = require("child_process").execSync(
+          `which ${executable}`,
+          { encoding: "utf8" },
+        );
         if (result.trim()) {
           return result.trim();
         }
@@ -190,24 +200,24 @@ d        // Always use localhost since we're using network_mode: "host"
         // Continue to next executable
       }
     }
-    
+
     // Try common installation paths
     const commonPaths = [
-      '/usr/bin/windsurf',
-      '/usr/local/bin/windsurf',
-      '/opt/windsurf/bin/windsurf',
-      '/Applications/Windsurf.app/Contents/MacOS/windsurf'
+      "/usr/bin/windsurf",
+      "/usr/local/bin/windsurf",
+      "/opt/windsurf/bin/windsurf",
+      "/Applications/Windsurf.app/Contents/MacOS/windsurf",
     ];
-    
+
     for (const path of commonPaths) {
       try {
-        require('fs').accessSync(path, require('fs').constants.X_OK);
+        require("fs").accessSync(path, require("fs").constants.X_OK);
         return path;
       } catch (error) {
         // Continue to next path
       }
     }
-    
+
     return null;
   }
 
@@ -219,13 +229,13 @@ d        // Always use localhost since we're using network_mode: "host"
     const isInstalled = await this.isInstalled();
     const version = isInstalled ? await this.getVersion() : null;
     const executablePath = this.findWindsurfExecutable();
-    
+
     return {
       isInstalled,
       version,
       executablePath,
       isValid: isInstalled && version !== null && executablePath !== null,
-      executable: this.config.executable
+      executable: this.config.executable,
     };
   }
 
@@ -247,24 +257,23 @@ d        // Always use localhost since we're using network_mode: "host"
       const ideInfo = await this.checkPort(port);
       if (ideInfo) {
         return {
-          success: true,
           port: port,
           version: ideInfo.version,
           webSocketUrl: ideInfo.webSocketUrl,
-          responseTime: Date.now()
+          responseTime: Date.now(),
         };
       } else {
         return {
-          success: false,
+         
           port: port,
-          error: 'No Windsurf IDE found on port'
+          error: "No Windsurf IDE found on port",
         };
       }
     } catch (error) {
       return {
-        success: false,
+       
         port: port,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -280,9 +289,9 @@ d        // Always use localhost since we're using network_mode: "host"
       supportsFileSystem: true,
       supportsExtensions: true,
       supportsAI: true, // Windsurf has AI capabilities
-      defaultPortRange: this.portRange
+      defaultPortRange: this.portRange,
     };
   }
 }
 
-module.exports = WindsurfDetector; 
+module.exports = WindsurfDetector;

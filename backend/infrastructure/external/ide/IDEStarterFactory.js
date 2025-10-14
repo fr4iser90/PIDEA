@@ -1,15 +1,14 @@
-
 /**
  * IDE Starter Factory
  * Manages IDE-specific starters using the factory pattern
  * Provides unified interface for starting different IDE types
  */
 
-const CursorStarter = require('./starters/CursorStarter');
-const VSCodeStarter = require('./starters/VSCodeStarter');
-const WindsurfStarter = require('./starters/WindsurfStarter');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('IDEStarterFactory');
+const CursorStarter = require("./starters/CursorStarter");
+const VSCodeStarter = require("./starters/VSCodeStarter");
+const WindsurfStarter = require("./starters/WindsurfStarter");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("IDEStarterFactory");
 
 class IDEStarterFactory {
   constructor() {
@@ -22,9 +21,9 @@ class IDEStarterFactory {
    * Initialize default IDE starters
    */
   initializeDefaultStarters() {
-    this.registerStarter('cursor', new CursorStarter());
-    this.registerStarter('vscode', new VSCodeStarter());
-    this.registerStarter('windsurf', new WindsurfStarter());
+    this.registerStarter("cursor", new CursorStarter());
+    this.registerStarter("vscode", new VSCodeStarter());
+    this.registerStarter("windsurf", new WindsurfStarter());
   }
 
   /**
@@ -46,8 +45,8 @@ class IDEStarterFactory {
    * @param {Object} starter - Starter instance
    */
   registerStarter(type, starter) {
-    if (!starter || typeof starter.startIDE !== 'function') {
-      throw new Error('Starter must implement startIDE method');
+    if (!starter || typeof starter.startIDE !== "function") {
+      throw new Error("Starter must implement startIDE method");
     }
     this.starters.set(type.toLowerCase(), starter);
   }
@@ -70,26 +69,26 @@ class IDEStarterFactory {
    */
   async startIDE(type, port, workspacePath = null, options = {}) {
     const starter = this.createStarter(type);
-    
+
     if (this.runningProcesses.has(port)) {
       throw new Error(`IDE already running on port ${port}`);
     }
 
     try {
       const ideInfo = await starter.startIDE(port, workspacePath, options);
-      
+
       // Track the process if the starter provides it
       if (ideInfo.process) {
         this.runningProcesses.set(port, ideInfo.process);
-        
+
         // Handle process events if the process has event emitter capabilities
-        if (typeof ideInfo.process.on === 'function') {
-          ideInfo.process.on('close', (code) => {
+        if (typeof ideInfo.process.on === "function") {
+          ideInfo.process.on("close", (code) => {
             logger.info(`${type} IDE ${port} process closed with code ${code}`);
             this.runningProcesses.delete(port);
           });
 
-          ideInfo.process.on('error', (error) => {
+          ideInfo.process.on("error", (error) => {
             logger.error(`${type} IDE ${port} process error:`, error);
             this.runningProcesses.delete(port);
           });
@@ -100,7 +99,7 @@ class IDEStarterFactory {
         ...ideInfo,
         ideType: type,
         port: port,
-        workspacePath: workspacePath
+        workspacePath: workspacePath,
       };
     } catch (error) {
       logger.error(`Failed to start ${type} IDE:`, error);
@@ -116,7 +115,7 @@ class IDEStarterFactory {
    */
   async stopIDE(port, type = null) {
     const process = this.runningProcesses.get(port);
-    
+
     if (!process) {
       throw new Error(`No IDE process found on port ${port}`);
     }
@@ -128,20 +127,20 @@ class IDEStarterFactory {
       }
 
       const starter = this.createStarter(type);
-      
-      if (typeof starter.stopIDE === 'function') {
+
+      if (typeof starter.stopIDE === "function") {
         await starter.stopIDE(port);
       } else {
         // Fallback: kill the process directly
-        process.kill('SIGTERM');
+        process.kill("SIGTERM");
       }
 
       this.runningProcesses.delete(port);
-      
+
       return {
         port: port,
-        status: 'stopped',
-        ideType: type
+        status: "stopped",
+        ideType: type,
       };
     } catch (error) {
       logger.error(`Error stopping IDE on port ${port}:`, error);
@@ -155,16 +154,16 @@ class IDEStarterFactory {
    */
   getRunningIDEs() {
     const runningIDEs = [];
-    
+
     for (const [port, process] of this.runningProcesses) {
       runningIDEs.push({
         port: parseInt(port),
         pid: process.pid,
-        status: 'running',
-        ideType: this.detectIDEType(port) || 'unknown'
+        status: "running",
+        ideType: this.detectIDEType(port) || "unknown",
       });
     }
-    
+
     return runningIDEs;
   }
 
@@ -176,7 +175,7 @@ class IDEStarterFactory {
    */
   isIDERunning(port, type = null) {
     const process = this.runningProcesses.get(port);
-    
+
     if (!process) {
       return false;
     }
@@ -199,11 +198,11 @@ class IDEStarterFactory {
     // This is a simplified detection - in practice, you might want to
     // check the process name or other characteristics
     if (port >= 9222 && port <= 9231) {
-      return 'cursor';
+      return "cursor";
     } else if (port >= 9232 && port <= 9241) {
-      return 'vscode';
+      return "vscode";
     } else if (port >= 9242 && port <= 9251) {
-      return 'windsurf';
+      return "windsurf";
     }
     return null;
   }
@@ -215,7 +214,7 @@ class IDEStarterFactory {
    */
   getStarterConfig(type) {
     const starter = this.createStarter(type);
-    if (typeof starter.getConfig === 'function') {
+    if (typeof starter.getConfig === "function") {
       return starter.getConfig();
     }
     return null;
@@ -229,10 +228,10 @@ class IDEStarterFactory {
   validateStarter(type) {
     try {
       const starter = this.createStarter(type);
-      const requiredMethods = ['startIDE'];
-      
-      return requiredMethods.every(method => 
-        typeof starter[method] === 'function'
+      const requiredMethods = ["startIDE"];
+
+      return requiredMethods.every(
+        (method) => typeof starter[method] === "function",
       );
     } catch (error) {
       return false;
@@ -248,7 +247,7 @@ class IDEStarterFactory {
       totalStarters: this.starters.size,
       availableTypes: this.getAvailableStarters(),
       validStarters: 0,
-      runningIDEs: this.runningProcesses.size
+      runningIDEs: this.runningProcesses.size,
     };
 
     for (const type of this.starters.keys()) {
@@ -271,10 +270,10 @@ class IDEStarterFactory {
     for (const [port, process] of this.runningProcesses) {
       stopPromises.push(
         this.stopIDE(parseInt(port))
-          .then(result => stoppedIDEs.push(result))
-          .catch(error => {
+          .then((result) => stoppedIDEs.push(result))
+          .catch((error) => {
             logger.error(`Error stopping IDE on port ${port}:`, error);
-          })
+          }),
       );
     }
 
@@ -283,4 +282,4 @@ class IDEStarterFactory {
   }
 }
 
-module.exports = IDEStarterFactory; 
+module.exports = IDEStarterFactory;

@@ -1,14 +1,13 @@
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('AutoSecurityManager');
-
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const Logger = require("@logging/Logger");
+const logger = new Logger("AutoSecurityManager");
 
 class AutoSecurityManager {
   constructor() {
     this.config = {};
-    this.secretsPath = path.join(__dirname, '../../.secrets');
+    this.secretsPath = path.join(__dirname, "../../.secrets");
     this.initialize();
   }
 
@@ -17,63 +16,69 @@ class AutoSecurityManager {
     if (this.config.environment) {
       return;
     }
-    
-    logger.info('🔐 Initializing auto-security...');
-    
+
+    logger.info("🔐 Initializing auto-security...");
+
     // Auto-detect environment
     this.config.environment = this.detectEnvironment();
-    
+
     // Auto-generate secrets
-    this.config.jwtSecret = this.getOrGenerateSecret('JWT_SECRET');
-    this.config.jwtRefreshSecret = this.getOrGenerateSecret('JWT_REFRESH_SECRET');
-    
+    this.config.jwtSecret = this.getOrGenerateSecret("JWT_SECRET");
+    this.config.jwtRefreshSecret =
+      this.getOrGenerateSecret("JWT_REFRESH_SECRET");
+
     // Auto-configure security settings
     this.config.security = this.getSecurityConfig();
-    
+
     // Auto-configure database
     this.config.database = this.getDatabaseConfig();
-    
+
     // Auto-configure rate limiting
     this.config.rateLimiting = this.getRateLimitingConfig();
-    
-    logger.info('✅ Auto-security initialized');
+
+    logger.info("✅ Auto-security initialized");
   }
 
   detectEnvironment() {
     // Automatische Erkennung: Docker vs npm run dev
-    let env = process.env.NODE_ENV || 'development';
-    
+    let env = process.env.NODE_ENV || "development";
+
     // Docker-Erkennung
-    const isDocker = process.env.DOCKER_ENV === 'true' || 
-                     process.env.KUBERNETES_SERVICE_HOST ||
-                     process.env.DOCKER_CONTAINER ||
-                     process.env.HOSTNAME?.includes('container') ||
-                     process.env.HOSTNAME?.includes('docker');
-    
+    const isDocker =
+      process.env.DOCKER_ENV === "true" ||
+      process.env.KUBERNETES_SERVICE_HOST ||
+      process.env.DOCKER_CONTAINER ||
+      process.env.HOSTNAME?.includes("container") ||
+      process.env.HOSTNAME?.includes("docker");
+
     if (isDocker) {
       // Docker kann auch Development sein - respektiere NODE_ENV
-      if (process.env.NODE_ENV === 'development') {
-        env = 'development';
-        logger.info('🐳 Docker environment detected, using development settings');
+      if (process.env.NODE_ENV === "development") {
+        env = "development";
+        logger.info(
+          "🐳 Docker environment detected, using development settings",
+        );
       } else {
-        env = 'production';
-        logger.info('🐳 Docker environment detected, using production settings');
+        env = "production";
+        logger.info(
+          "🐳 Docker environment detected, using production settings",
+        );
       }
     } else {
-      logger.info('💻 Local development environment detected');
+      logger.info("💻 Local development environment detected");
     }
-    
+
     logger.info(`🌍 Detected environment: ${env}`);
     return env;
   }
 
   getOrGenerateSecret(key) {
     const secretsFile = path.join(this.secretsPath, `${key}.txt`);
-    
+
     try {
       // Try to read existing secret
       if (fs.existsSync(secretsFile)) {
-        const secret = fs.readFileSync(secretsFile, 'utf8').trim();
+        const secret = fs.readFileSync(secretsFile, "utf8").trim();
         logger.info(`🔑 Loaded existing secret: ${key}`);
         return secret;
       }
@@ -82,19 +87,21 @@ class AutoSecurityManager {
     }
 
     // Generate new secret
-    const secret = crypto.randomBytes(64).toString('hex');
-    
+    const secret = crypto.randomBytes(64).toString("hex");
+
     try {
       // Ensure secrets directory exists
       if (!fs.existsSync(this.secretsPath)) {
         fs.mkdirSync(this.secretsPath, { recursive: true });
       }
-      
+
       // Save secret to file
       fs.writeFileSync(secretsFile, secret);
       logger.info(`🔑 [AutoSecurityManager] Generated new secret: ${key}`);
     } catch (error) {
-      logger.warn(`⚠️ [AutoSecurityManager] Could not save secret file: ${error.message}`);
+      logger.warn(
+        `⚠️ [AutoSecurityManager] Could not save secret file: ${error.message}`,
+      );
     }
 
     return secret;
@@ -104,23 +111,23 @@ class AutoSecurityManager {
     // Get URLs from environment variables
     const frontendUrl = process.env.VITE_FRONTEND_URL;
     const backendUrl = process.env.VITE_BACKEND_URL;
-    
+
     // Dynamische CORS-Origin: Wenn kein Port in VITE_FRONTEND_URL, dann automatisch Port hinzufügen
     let corsOrigin = frontendUrl;
-    if (frontendUrl && !frontendUrl.includes(':')) {
+    if (frontendUrl && !frontendUrl.includes(":")) {
       // Kein Port angegeben - automatisch Port basierend auf Environment
-      const port = this.config.environment === 'development' ? ':4000' : ':80';
+      const port = this.config.environment === "development" ? ":4000" : ":80";
       corsOrigin = frontendUrl + port;
     }
-    
-    const isProduction = this.config.environment === 'production';
-    
+
+    const isProduction = this.config.environment === "production";
+
     return {
       cors: {
         origin: corsOrigin,
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
       },
       helmet: {
         contentSecurityPolicy: {
@@ -129,63 +136,65 @@ class AutoSecurityManager {
             styleSrc: ["'self'", "'unsafe-inline'"],
             scriptSrc: ["'self'"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "ws:", "wss:"]
-          }
+            connectSrc: ["'self'", "ws:", "wss:"],
+          },
         },
-        hsts: isProduction ? { maxAge: 31536000, includeSubDomains: true } : false
+        hsts: isProduction
+          ? { maxAge: 31536000, includeSubDomains: true }
+          : false,
       },
       jwt: {
-        accessTokenExpiry: '15m',
-        refreshTokenExpiry: '7d',
-        algorithm: 'HS256'
-      }
+        accessTokenExpiry: "15m",
+        refreshTokenExpiry: "7d",
+        algorithm: "HS256",
+      },
     };
   }
 
   getDatabaseConfig() {
     // Check DATABASE_TYPE first
-    const databaseType = process.env.DATABASE_TYPE || 'sqlite';
-    
-    if (databaseType === 'postgres' || databaseType === 'postgresql') {
+    const databaseType = process.env.DATABASE_TYPE || "sqlite";
+
+    if (databaseType === "postgres" || databaseType === "postgresql") {
       // PostgreSQL configuration
       return {
-        type: 'postgresql',
-        host: process.env.DB_HOST || 'localhost',
+        type: "postgresql",
+        host: process.env.DB_HOST || "localhost",
         port: process.env.DB_PORT || 5432,
-        database: process.env.DB_NAME || 'pidea_dev',
-        username: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASSWORD || 'postgres',
+        database: process.env.DB_NAME || "pidea_dev",
+        username: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "postgres",
         fallback: {
-          type: 'sqlite',
-          database: path.join(__dirname, '../../database/pidea-dev.db')
-        }
+          type: "sqlite",
+          database: path.join(__dirname, "../../database/pidea-dev.db"),
+        },
       };
     } else {
       // SQLite configuration (default)
       return {
-        type: 'sqlite',
-        database: path.join(__dirname, '../../database/pidea-dev.db'),
+        type: "sqlite",
+        database: path.join(__dirname, "../../database/pidea-dev.db"),
         fallback: {
-          type: 'memory',
-          database: ':memory:'
-        }
+          type: "memory",
+          database: ":memory:",
+        },
       };
     }
   }
 
   getRateLimitingConfig() {
-    const isProduction = this.config.environment === 'production';
-    
+    const isProduction = this.config.environment === "production";
+
     return {
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: isProduction ? 100 : 1000, // requests per windowMs
-      message: 'Too many requests from this IP, please try again later.',
+      message: "Too many requests from this IP, please try again later.",
       standardHeaders: true,
       legacyHeaders: false,
       skip: (req) => {
         // Skip rate limiting for health checks
-        return req.path === '/api/health';
-      }
+        return req.path === "/api/health";
+      },
     };
   }
 
@@ -206,11 +215,11 @@ class AutoSecurityManager {
   }
 
   isProduction() {
-    return this.config.environment === 'production';
+    return this.config.environment === "production";
   }
 
   isDevelopment() {
-    return this.config.environment === 'development';
+    return this.config.environment === "development";
   }
 
   // Auto-cleanup expired secrets (older than 30 days)
@@ -219,21 +228,25 @@ class AutoSecurityManager {
       if (!fs.existsSync(this.secretsPath)) return;
 
       const files = fs.readdirSync(this.secretsPath);
-      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
       for (const file of files) {
         const filePath = path.join(this.secretsPath, file);
         const stats = fs.statSync(filePath);
-        
+
         if (stats.mtime.getTime() < thirtyDaysAgo) {
           fs.unlinkSync(filePath);
-          logger.info(`🗑️ [AutoSecurityManager] Cleaned up old secret: ${file}`);
+          logger.info(
+            `🗑️ [AutoSecurityManager] Cleaned up old secret: ${file}`,
+          );
         }
       }
     } catch (error) {
-      logger.warn(`⚠️ [AutoSecurityManager] Could not cleanup old secrets: ${error.message}`);
+      logger.warn(
+        `⚠️ [AutoSecurityManager] Could not cleanup old secrets: ${error.message}`,
+      );
     }
   }
 }
 
-module.exports = AutoSecurityManager; 
+module.exports = AutoSecurityManager;

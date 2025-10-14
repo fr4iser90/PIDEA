@@ -2,7 +2,7 @@
  * ExecutionQueue - Manages workflow execution queue
  * Provides queue management for workflow execution with priority and scheduling
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Execution queue for managing workflow execution
@@ -14,7 +14,7 @@ class ExecutionQueue {
     this.processingQueue = new Map();
     this.completedQueue = new Map();
     this.failedQueue = new Map();
-    
+
     // Queue statistics
     this.stats = {
       totalEnqueued: 0,
@@ -22,9 +22,9 @@ class ExecutionQueue {
       totalCompleted: 0,
       totalFailed: 0,
       averageWaitTime: 0,
-      averageProcessingTime: 0
+      averageProcessingTime: 0,
     };
-    
+
     // Queue configuration
     this.config = {
       enablePriority: options.enablePriority !== false,
@@ -32,7 +32,7 @@ class ExecutionQueue {
       maxRetries: options.maxRetries || 3,
       retryDelay: options.retryDelay || 5000,
       enableTimeout: options.enableTimeout !== false,
-      defaultTimeout: options.defaultTimeout || 300000 // 5 minutes
+      defaultTimeout: options.defaultTimeout || 300000, // 5 minutes
     };
   }
 
@@ -45,23 +45,23 @@ class ExecutionQueue {
     if (this.queue.length >= this.maxSize) {
       return false;
     }
-    
+
     const queueItem = {
       id: execution.id || uuidv4(),
       execution,
       priority: this.calculatePriority(execution),
       queuedAt: new Date(),
       retryCount: 0,
-      status: 'queued'
+      status: "queued",
     };
-    
+
     // Add to queue with priority ordering
     if (this.config.enablePriority) {
       this.insertWithPriority(queueItem);
     } else {
       this.queue.push(queueItem);
     }
-    
+
     this.stats.totalEnqueued++;
     return true;
   }
@@ -73,14 +73,14 @@ class ExecutionQueue {
    */
   insertWithPriority(queueItem) {
     let insertIndex = this.queue.length;
-    
+
     for (let i = 0; i < this.queue.length; i++) {
       if (this.queue[i].priority < queueItem.priority) {
         insertIndex = i;
         break;
       }
     }
-    
+
     this.queue.splice(insertIndex, 0, queueItem);
   }
 
@@ -91,27 +91,27 @@ class ExecutionQueue {
    */
   calculatePriority(execution) {
     let priority = 1;
-    
+
     // Increase priority for critical executions
     if (execution.options?.critical) {
       priority += 10;
     }
-    
+
     // Increase priority for high priority tasks
-    if (execution.options?.priority === 'high') {
+    if (execution.options?.priority === "high") {
       priority += 5;
     }
-    
+
     // Increase priority for urgent tasks
     if (execution.options?.urgent) {
       priority += 3;
     }
-    
+
     // Decrease priority for low priority tasks
-    if (execution.options?.priority === 'low') {
+    if (execution.options?.priority === "low") {
       priority -= 2;
     }
-    
+
     return Math.max(1, priority);
   }
 
@@ -123,14 +123,14 @@ class ExecutionQueue {
     if (this.queue.length === 0) {
       return null;
     }
-    
+
     const queueItem = this.queue.shift();
-    queueItem.status = 'processing';
+    queueItem.status = "processing";
     queueItem.dequeuedAt = new Date();
-    
+
     // Move to processing queue
     this.processingQueue.set(queueItem.id, queueItem);
-    
+
     this.stats.totalDequeued++;
     return queueItem.execution;
   }
@@ -145,19 +145,20 @@ class ExecutionQueue {
     if (!queueItem) {
       return;
     }
-    
-    queueItem.status = 'completed';
+
+    queueItem.status = "completed";
     queueItem.completedAt = new Date();
     queueItem.result = result;
-    
+
     // Calculate processing time
-    const processingTime = queueItem.completedAt.getTime() - queueItem.dequeuedAt.getTime();
+    const processingTime =
+      queueItem.completedAt.getTime() - queueItem.dequeuedAt.getTime();
     queueItem.processingTime = processingTime;
-    
+
     // Move to completed queue
     this.processingQueue.delete(executionId);
     this.completedQueue.set(executionId, queueItem);
-    
+
     this.stats.totalCompleted++;
     this.updateAverageProcessingTime(processingTime);
   }
@@ -172,26 +173,28 @@ class ExecutionQueue {
     if (!queueItem) {
       return;
     }
-    
-    queueItem.status = 'failed';
+
+    queueItem.status = "failed";
     queueItem.failedAt = new Date();
     queueItem.error = error;
-    
+
     // Check if retry is possible
-    if (this.config.enableRetry && queueItem.retryCount < this.config.maxRetries) {
+    if (
+      this.config.enableRetry &&
+      queueItem.retryCount < this.config.maxRetries
+    ) {
       queueItem.retryCount++;
-      queueItem.status = 'queued';
+      queueItem.status = "queued";
       queueItem.retryAt = new Date(Date.now() + this.config.retryDelay);
-      
+
       // Re-queue with retry
       this.processingQueue.delete(executionId);
       this.enqueue(queueItem.execution);
-      
     } else {
       // Move to failed queue
       this.processingQueue.delete(executionId);
       this.failedQueue.set(executionId, queueItem);
-      
+
       this.stats.totalFailed++;
     }
   }
@@ -272,26 +275,26 @@ class ExecutionQueue {
    */
   getQueueItem(executionId) {
     // Check in main queue
-    const queueItem = this.queue.find(item => item.id === executionId);
+    const queueItem = this.queue.find((item) => item.id === executionId);
     if (queueItem) {
       return queueItem;
     }
-    
+
     // Check in processing queue
     if (this.processingQueue.has(executionId)) {
       return this.processingQueue.get(executionId);
     }
-    
+
     // Check in completed queue
     if (this.completedQueue.has(executionId)) {
       return this.completedQueue.get(executionId);
     }
-    
+
     // Check in failed queue
     if (this.failedQueue.has(executionId)) {
       return this.failedQueue.get(executionId);
     }
-    
+
     return null;
   }
 
@@ -301,12 +304,12 @@ class ExecutionQueue {
    * @returns {boolean} True if removed
    */
   removeFromQueue(executionId) {
-    const index = this.queue.findIndex(item => item.id === executionId);
+    const index = this.queue.findIndex((item) => item.id === executionId);
     if (index !== -1) {
       this.queue.splice(index, 1);
       return true;
     }
-    
+
     return false;
   }
 
@@ -325,7 +328,7 @@ class ExecutionQueue {
       oldestItem: this.queue[0]?.queuedAt || null,
       newestItem: this.queue[this.queue.length - 1]?.queuedAt || null,
       averageWaitTime: this.stats.averageWaitTime,
-      averageProcessingTime: this.stats.averageProcessingTime
+      averageProcessingTime: this.stats.averageProcessingTime,
     };
   }
 
@@ -337,8 +340,9 @@ class ExecutionQueue {
   updateAverageProcessingTime(processingTime) {
     const totalCompleted = this.stats.totalCompleted;
     const currentAverage = this.stats.averageProcessingTime;
-    
-    this.stats.averageProcessingTime = (currentAverage * (totalCompleted - 1) + processingTime) / totalCompleted;
+
+    this.stats.averageProcessingTime =
+      (currentAverage * (totalCompleted - 1) + processingTime) / totalCompleted;
   }
 
   /**
@@ -349,8 +353,9 @@ class ExecutionQueue {
   updateAverageWaitTime(waitTime) {
     const totalDequeued = this.stats.totalDequeued;
     const currentAverage = this.stats.averageWaitTime;
-    
-    this.stats.averageWaitTime = (currentAverage * (totalDequeued - 1) + waitTime) / totalDequeued;
+
+    this.stats.averageWaitTime =
+      (currentAverage * (totalDequeued - 1) + waitTime) / totalDequeued;
   }
 
   /**
@@ -360,13 +365,13 @@ class ExecutionQueue {
    */
   getItemsByStatus(status) {
     switch (status) {
-      case 'queued':
+      case "queued":
         return [...this.queue];
-      case 'processing':
+      case "processing":
         return Array.from(this.processingQueue.values());
-      case 'completed':
+      case "completed":
         return Array.from(this.completedQueue.values());
-      case 'failed':
+      case "failed":
         return Array.from(this.failedQueue.values());
       default:
         return [];
@@ -380,8 +385,8 @@ class ExecutionQueue {
    * @returns {Array} Queue items
    */
   getItemsByPriorityRange(minPriority, maxPriority) {
-    return this.queue.filter(item => 
-      item.priority >= minPriority && item.priority <= maxPriority
+    return this.queue.filter(
+      (item) => item.priority >= minPriority && item.priority <= maxPriority,
     );
   }
 
@@ -392,8 +397,8 @@ class ExecutionQueue {
    * @returns {Array} Queue items
    */
   getItemsByTimeRange(startTime, endTime) {
-    return this.queue.filter(item => 
-      item.queuedAt >= startTime && item.queuedAt <= endTime
+    return this.queue.filter(
+      (item) => item.queuedAt >= startTime && item.queuedAt <= endTime,
     );
   }
 
@@ -419,8 +424,9 @@ class ExecutionQueue {
    */
   getHealthStatus() {
     const stats = this.getStatistics();
-    const utilization = (stats.queueLength + stats.processingLength) / stats.maxSize;
-    
+    const utilization =
+      (stats.queueLength + stats.processingLength) / stats.maxSize;
+
     return {
       healthy: utilization < 0.9,
       utilization,
@@ -428,7 +434,7 @@ class ExecutionQueue {
       processingLength: stats.processingLength,
       maxSize: stats.maxSize,
       averageWaitTime: stats.averageWaitTime,
-      averageProcessingTime: stats.averageProcessingTime
+      averageProcessingTime: stats.averageProcessingTime,
     };
   }
 
@@ -444,9 +450,9 @@ class ExecutionQueue {
       completedLength: this.completedQueue.size,
       failedLength: this.failedQueue.size,
       stats: this.stats,
-      config: this.config
+      config: this.config,
     };
   }
 }
 
-module.exports = ExecutionQueue; 
+module.exports = ExecutionQueue;

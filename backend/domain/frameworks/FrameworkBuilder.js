@@ -1,12 +1,11 @@
-
 /**
  * Framework Builder - Domain Layer
  * Builds framework instances from configurations and handles framework customization
  */
 
-const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const path = require("path");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class FrameworkBuilder {
   constructor(frameworkRegistry) {
@@ -23,11 +22,13 @@ class FrameworkBuilder {
     try {
       // Get framework configuration from registry
       const framework = this.registry.getFramework(frameworkName);
-      
+
       // Check cache first
       const cacheKey = this.getCacheKey(frameworkName, options);
       if (this.buildCache.has(cacheKey)) {
-        logger.info(`📦 Using cached framework instance for "${frameworkName}"`);
+        logger.info(
+          `📦 Using cached framework instance for "${frameworkName}"`,
+        );
         return this.buildCache.get(cacheKey);
       }
 
@@ -43,7 +44,10 @@ class FrameworkBuilder {
       logger.info(`🔨 Framework "${frameworkName}" built successfully`);
       return instance;
     } catch (error) {
-      logger.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
+      logger.error(
+        `❌ Failed to build framework "${frameworkName}":`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -55,7 +59,7 @@ class FrameworkBuilder {
    */
   async createFrameworkInstance(framework, options) {
     const { config } = framework;
-    
+
     // Create base instance
     const instance = {
       name: config.name,
@@ -68,8 +72,8 @@ class FrameworkBuilder {
       metadata: {
         builtAt: new Date(),
         buildOptions: options,
-        originalConfig: config
-      }
+        originalConfig: config,
+      },
     };
 
     // Build steps
@@ -101,8 +105,11 @@ class FrameworkBuilder {
         const step = await this.buildStep(stepConfig, options);
         steps.push(step);
       } catch (error) {
-        logger.error(`❌ Failed to build step "${stepConfig.name}":`, error.message);
-        
+        logger.error(
+          `❌ Failed to build step "${stepConfig.name}":`,
+          error.message,
+        );
+
         // Continue with other steps if this one fails
         if (options.continueOnError !== false) {
           continue;
@@ -127,11 +134,14 @@ class FrameworkBuilder {
       description: stepConfig.description,
       order: stepConfig.order || 0,
       required: stepConfig.required !== false,
-      settings: { ...stepConfig.settings, ...options.stepSettings?.[stepConfig.name] },
+      settings: {
+        ...stepConfig.settings,
+        ...options.stepSettings?.[stepConfig.name],
+      },
       dependencies: stepConfig.dependencies || [],
       metadata: {
-        config: stepConfig
-      }
+        config: stepConfig,
+      },
     };
 
     // Add step-specific properties
@@ -147,16 +157,19 @@ class FrameworkBuilder {
    * @param {Object} options - Build options
    */
   validateBuildOptions(options) {
-    if (options.settings && typeof options.settings !== 'object') {
-      throw new Error('Build options settings must be an object');
+    if (options.settings && typeof options.settings !== "object") {
+      throw new Error("Build options settings must be an object");
     }
 
-    if (options.stepSettings && typeof options.stepSettings !== 'object') {
-      throw new Error('Build options stepSettings must be an object');
+    if (options.stepSettings && typeof options.stepSettings !== "object") {
+      throw new Error("Build options stepSettings must be an object");
     }
 
-    if (options.continueOnError !== undefined && typeof options.continueOnError !== 'boolean') {
-      throw new Error('Build options continueOnError must be a boolean');
+    if (
+      options.continueOnError !== undefined &&
+      typeof options.continueOnError !== "boolean"
+    ) {
+      throw new Error("Build options continueOnError must be a boolean");
     }
 
     return true;
@@ -168,21 +181,21 @@ class FrameworkBuilder {
    */
   validateFrameworkInstance(instance) {
     if (!instance.name) {
-      throw new Error('Framework instance must have a name');
+      throw new Error("Framework instance must have a name");
     }
 
     if (!instance.version) {
-      throw new Error('Framework instance must have a version');
+      throw new Error("Framework instance must have a version");
     }
 
     if (!instance.steps || !Array.isArray(instance.steps)) {
-      throw new Error('Framework instance must have a steps array');
+      throw new Error("Framework instance must have a steps array");
     }
 
     // Validate steps
     for (const step of instance.steps) {
       if (!step.name) {
-        throw new Error('All steps must have a name');
+        throw new Error("All steps must have a name");
       }
 
       if (!step.type) {
@@ -210,15 +223,16 @@ class FrameworkBuilder {
   clearCache(frameworkName = null) {
     if (frameworkName) {
       // Clear cache for specific framework
-      const keysToDelete = Array.from(this.buildCache.keys())
-        .filter(key => key.startsWith(frameworkName + ':'));
-      
-      keysToDelete.forEach(key => this.buildCache.delete(key));
+      const keysToDelete = Array.from(this.buildCache.keys()).filter((key) =>
+        key.startsWith(frameworkName + ":"),
+      );
+
+      keysToDelete.forEach((key) => this.buildCache.delete(key));
       logger.info(`🗑️ Cleared cache for framework "${frameworkName}"`);
     } else {
       // Clear all cache
       this.buildCache.clear();
-      logger.info('🗑️ Cleared all framework build cache');
+      logger.info("🗑️ Cleared all framework build cache");
     }
   }
 
@@ -228,7 +242,9 @@ class FrameworkBuilder {
   getCacheStats() {
     return {
       totalCached: this.buildCache.size,
-      frameworks: Array.from(this.buildCache.keys()).map(key => key.split(':')[0])
+      frameworks: Array.from(this.buildCache.keys()).map(
+        (key) => key.split(":")[0],
+      ),
     };
   }
 
@@ -240,7 +256,7 @@ class FrameworkBuilder {
   async buildMultipleFrameworks(frameworkNames, options = {}) {
     const results = {
       successful: [],
-      failed: []
+      failed: [],
     };
 
     for (const frameworkName of frameworkNames) {
@@ -248,16 +264,19 @@ class FrameworkBuilder {
         const instance = await this.buildFramework(frameworkName, options);
         results.successful.push({
           name: frameworkName,
-          instance
+          instance,
         });
       } catch (error) {
         results.failed.push({
           name: frameworkName,
-          error: error.message
+          error: error.message,
         });
 
         if (options.continueOnError !== false) {
-          logger.error(`❌ Failed to build framework "${frameworkName}":`, error.message);
+          logger.error(
+            `❌ Failed to build framework "${frameworkName}":`,
+            error.message,
+          );
           continue;
         } else {
           throw error;
@@ -278,11 +297,14 @@ class FrameworkBuilder {
 
     // Apply customizations
     if (customizations.settings) {
-      customized.settings = { ...customized.settings, ...customizations.settings };
+      customized.settings = {
+        ...customized.settings,
+        ...customizations.settings,
+      };
     }
 
     if (customizations.steps) {
-      customized.steps = customized.steps.map(step => {
+      customized.steps = customized.steps.map((step) => {
         const stepCustomization = customizations.steps[step.name];
         if (stepCustomization) {
           return { ...step, ...stepCustomization };
@@ -303,4 +325,4 @@ class FrameworkBuilder {
   }
 }
 
-module.exports = FrameworkBuilder; 
+module.exports = FrameworkBuilder;

@@ -3,19 +3,19 @@
  * Handler for closing chat sessions
  */
 
-const CloseChatCommand = require('@categories/chat/CloseChatCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const CloseChatCommand = require("@categories/chat/CloseChatCommand");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class CloseChatHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.chatSessionService = dependencies.chatSessionService;
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
-    
+
     this.handlerId = this.generateHandlerId();
   }
 
@@ -25,7 +25,7 @@ class CloseChatHandler {
    * @throws {Error} If dependencies are invalid
    */
   validateDependencies(dependencies) {
-    const required = ['chatSessionService', 'ideManager', 'eventBus'];
+    const required = ["chatSessionService", "ideManager", "eventBus"];
     for (const dep of required) {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
@@ -52,64 +52,64 @@ class CloseChatHandler {
       // Validate command
       const validationResult = await this.validateCommand(command);
       if (!validationResult.isValid) {
-        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Command validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
-      this.logger.info('Closing chat session', {
+      this.logger.info("Closing chat session", {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
-        sessionId: command.sessionId
+        sessionId: command.sessionId,
       });
 
       // Publish event
-      await this.eventBus.publish('chat.closing', {
+      await this.eventBus.publish("chat.closing", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: command.sessionId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Close session using ChatSessionService
       const success = await this.chatSessionService.closeSession(
         command.userId,
-        command.sessionId
+        command.sessionId,
       );
 
       // Publish success event
-      await this.eventBus.publish('chat.closed', {
+      await this.eventBus.publish("chat.closed", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: command.sessionId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info('Chat session closed successfully', {
+      this.logger.info("Chat session closed successfully", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        sessionId: command.sessionId
+        sessionId: command.sessionId,
       });
 
       return {
-        success: true,
         sessionId: command.sessionId,
-        commandId: command.commandId
+        commandId: command.commandId,
       };
-
     } catch (error) {
-      this.logger.error('Failed to close chat session', {
+      this.logger.error("Failed to close chat session", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        error: error.message
+        error: error.message,
       });
 
       // Publish failure event
-      await this.eventBus.publish('chat.closing.failed', {
+      await this.eventBus.publish("chat.closing.failed", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: command.sessionId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -126,23 +126,27 @@ class CloseChatHandler {
     const warnings = [];
 
     if (!command.userId) {
-      errors.push('User ID is required');
+      errors.push("User ID is required");
     }
 
     if (!command.sessionId) {
-      errors.push('Session ID is required');
+      errors.push("Session ID is required");
     }
 
-    if (command.sessionId && (typeof command.sessionId !== 'string' || command.sessionId.trim().length === 0)) {
-      errors.push('Session ID must be a non-empty string');
+    if (
+      command.sessionId &&
+      (typeof command.sessionId !== "string" ||
+        command.sessionId.trim().length === 0)
+    ) {
+      errors.push("Session ID must be a non-empty string");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 }
 
-module.exports = CloseChatHandler; 
+module.exports = CloseChatHandler;

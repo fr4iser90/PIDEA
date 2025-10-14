@@ -15,21 +15,23 @@ class MessageTypeDetector {
    */
   detectUserMessage(content, metadata = {}) {
     const analysis = {
-      type: 'user',
+      type: "user",
       hasCodeBlocks: false,
       hasInlineCode: false,
       hasMarkdown: false,
       codeBlocks: [],
       inlineCode: [],
       language: null,
-      confidence: 1.0
+      confidence: 1.0,
     };
 
     // Check for code blocks
-    if (content.includes('```')) {
+    if (content.includes("```")) {
       analysis.hasCodeBlocks = true;
       analysis.codeBlocks = this.extractCodeBlocks(content);
-      analysis.language = this.detectLanguageFromCodeBlocks(analysis.codeBlocks);
+      analysis.language = this.detectLanguageFromCodeBlocks(
+        analysis.codeBlocks,
+      );
     }
 
     // Check for inline code
@@ -53,14 +55,14 @@ class MessageTypeDetector {
    */
   detectAITextMessage(content) {
     const analysis = {
-      type: 'ai_text',
+      type: "ai_text",
       hasCodeBlocks: false,
       hasInlineCode: false,
       hasMarkdown: false,
       codeBlocks: [],
       inlineCode: [],
       language: null,
-      confidence: 0.8
+      confidence: 0.8,
     };
 
     // Check for markdown code blocks
@@ -91,16 +93,16 @@ class MessageTypeDetector {
    * @param {string} content - Raw content
    * @returns {Object} AI code block analysis
    */
-  detectAICodeBlockMessage(codeBlocks, content = '') {
+  detectAICodeBlockMessage(codeBlocks, content = "") {
     const analysis = {
-      type: 'ai_code_block',
+      type: "ai_code_block",
       hasCodeBlocks: true,
       hasInlineCode: false,
       hasMarkdown: false,
       codeBlocks: codeBlocks,
       inlineCode: [],
       language: null,
-      confidence: 0.9
+      confidence: 0.9,
     };
 
     if (codeBlocks.length > 0) {
@@ -119,19 +121,19 @@ class MessageTypeDetector {
   extractMarkdownCodeBlocks(content) {
     const codeBlocks = [];
     const codeBlockRegex = /```(\w+)?\s*([\s\S]+?)```/g;
-    
+
     let match;
     while ((match = codeBlockRegex.exec(content)) !== null) {
       codeBlocks.push({
-        type: 'markdown_code_block',
-        language: match[1] || 'text',
+        type: "markdown_code_block",
+        language: match[1] || "text",
         content: match[2].trim(),
         startIndex: match.index,
         endIndex: match.index + match[0].length,
-        confidence: 0.8
+        confidence: 0.8,
       });
     }
-    
+
     return codeBlocks;
   }
 
@@ -143,24 +145,24 @@ class MessageTypeDetector {
   extractInlineCode(content) {
     const inlineCode = [];
     const inlinePatterns = [
-      /`([^`]+)`/g,  // Backticks
-      /<code>([^<]+)<\/code>/g,  // HTML code tags
-      /\$\{([^}]+)\}/g  // Template literals
+      /`([^`]+)`/g, // Backticks
+      /<code>([^<]+)<\/code>/g, // HTML code tags
+      /\$\{([^}]+)\}/g, // Template literals
     ];
-    
-    inlinePatterns.forEach(pattern => {
+
+    inlinePatterns.forEach((pattern) => {
       let match;
       while ((match = pattern.exec(content)) !== null) {
         inlineCode.push({
-          type: 'inline_code',
+          type: "inline_code",
           content: match[1],
           startIndex: match.index,
           endIndex: match.index + match[0].length,
-          pattern: pattern.source
+          pattern: pattern.source,
         });
       }
     });
-    
+
     return inlineCode;
   }
 
@@ -179,11 +181,11 @@ class MessageTypeDetector {
    * @returns {string} Detected language
    */
   detectLanguageFromCodeBlocks(codeBlocks) {
-    if (codeBlocks.length === 0) return 'text';
-    
+    if (codeBlocks.length === 0) return "text";
+
     // Use the first code block's language
     const firstBlock = codeBlocks[0];
-    return firstBlock.language || 'text';
+    return firstBlock.language || "text";
   }
 
   /**
@@ -193,18 +195,18 @@ class MessageTypeDetector {
    */
   hasMarkdown(content) {
     const markdownPatterns = [
-      /^#{1,6}\s+/m,  // Headers
-      /\*\*[^*]+\*\*/,  // Bold
-      /\*[^*]+\*/,  // Italic
-      /\[[^\]]+\]\([^)]+\)/,  // Links
-      /!\[[^\]]+\]\([^)]+\)/,  // Images
-      /^\s*[-*+]\s+/m,  // Lists
-      /^\s*\d+\.\s+/m,  // Numbered lists
-      /`[^`]+`/,  // Inline code
-      /```[\s\S]+?```/  // Code blocks
+      /^#{1,6}\s+/m, // Headers
+      /\*\*[^*]+\*\*/, // Bold
+      /\*[^*]+\*/, // Italic
+      /\[[^\]]+\]\([^)]+\)/, // Links
+      /!\[[^\]]+\]\([^)]+\)/, // Images
+      /^\s*[-*+]\s+/m, // Lists
+      /^\s*\d+\.\s+/m, // Numbered lists
+      /`[^`]+`/, // Inline code
+      /```[\s\S]+?```/, // Code blocks
     ];
-    
-    return markdownPatterns.some(pattern => pattern.test(content));
+
+    return markdownPatterns.some((pattern) => pattern.test(content));
   }
 
   /**
@@ -214,12 +216,12 @@ class MessageTypeDetector {
    */
   calculateCodeBlockConfidence(codeBlocks) {
     if (codeBlocks.length === 0) return 0;
-    
+
     let totalConfidence = 0;
-    codeBlocks.forEach(block => {
+    codeBlocks.forEach((block) => {
       totalConfidence += block.confidence || 0.8;
     });
-    
+
     return totalConfidence / codeBlocks.length;
   }
 
@@ -231,11 +233,13 @@ class MessageTypeDetector {
    * @returns {Object} Complete message analysis
    */
   analyzeMessage(content, sender, domCodeBlocks = []) {
-    this.logger.info(`🔍 [MessageTypeDetector] Analyzing message from ${sender}`);
-    
-    if (sender === 'user') {
+    this.logger.info(
+      `🔍 [MessageTypeDetector] Analyzing message from ${sender}`,
+    );
+
+    if (sender === "user") {
       return this.detectUserMessage(content);
-    } else if (sender === 'assistant') {
+    } else if (sender === "assistant") {
       if (domCodeBlocks.length > 0) {
         return this.detectAICodeBlockMessage(domCodeBlocks, content);
       } else {
@@ -243,17 +247,17 @@ class MessageTypeDetector {
       }
     } else {
       return {
-        type: 'unknown',
+        type: "unknown",
         hasCodeBlocks: false,
         hasInlineCode: false,
         hasMarkdown: false,
         codeBlocks: [],
         inlineCode: [],
         language: null,
-        confidence: 0.5
+        confidence: 0.5,
       };
     }
   }
 }
 
-module.exports = MessageTypeDetector; 
+module.exports = MessageTypeDetector;

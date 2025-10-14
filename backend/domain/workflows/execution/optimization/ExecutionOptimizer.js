@@ -2,9 +2,9 @@
  * ExecutionOptimizer - Advanced optimization algorithms for workflow execution
  * Provides step combination, reordering, resource allocation, parallel execution, and predictive optimization
  */
-const EventEmitter = require('events');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const EventEmitter = require("events");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * Optimization strategy configuration
@@ -18,25 +18,25 @@ class OptimizationConfig {
     this.resourceOptimization = options.resourceOptimization !== false;
     this.predictiveOptimization = options.predictiveOptimization !== false;
     this.caching = options.caching !== false;
-    
+
     // Step combination settings
     this.maxCombinedSteps = options.maxCombinedSteps || 5;
     this.combinationThreshold = options.combinationThreshold || 0.8; // 80% similarity
-    
+
     // Step reordering settings
     this.reorderingEnabled = options.reorderingEnabled !== false;
     this.dependencyAware = options.dependencyAware !== false;
     this.priorityBased = options.priorityBased !== false;
-    
+
     // Parallel execution settings
     this.maxParallelSteps = options.maxParallelSteps || 3;
     this.parallelThreshold = options.parallelThreshold || 0.6; // 60% independent
-    
+
     // Resource optimization settings
     this.memoryOptimization = options.memoryOptimization !== false;
     this.cpuOptimization = options.cpuOptimization !== false;
     this.networkOptimization = options.networkOptimization !== false;
-    
+
     // Predictive optimization settings
     this.learningEnabled = options.learningEnabled !== false;
     this.predictionConfidence = options.predictionConfidence || 0.7;
@@ -55,7 +55,7 @@ class OptimizationResult {
     this.estimatedSavings = {
       time: 0,
       memory: 0,
-      cpu: 0
+      cpu: 0,
     };
     this.confidence = 0;
     this.risks = [];
@@ -71,7 +71,7 @@ class OptimizationResult {
     this.appliedOptimizations.push({
       type,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -84,7 +84,10 @@ class OptimizationResult {
       time: this.estimatedSavings.time,
       memory: this.estimatedSavings.memory,
       cpu: this.estimatedSavings.cpu,
-      total: this.estimatedSavings.time + this.estimatedSavings.memory + this.estimatedSavings.cpu
+      total:
+        this.estimatedSavings.time +
+        this.estimatedSavings.memory +
+        this.estimatedSavings.cpu,
     };
   }
 
@@ -100,7 +103,7 @@ class OptimizationResult {
       estimatedSavings: this.estimatedSavings,
       confidence: this.confidence,
       risks: this.risks,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 }
@@ -117,7 +120,7 @@ class StepAnalysis {
     this.resourceRequirements = {
       memory: 0,
       cpu: 0,
-      network: 0
+      network: 0,
     };
     this.executionTime = 0;
     this.cacheable = false;
@@ -161,9 +164,13 @@ class StepAnalysis {
    * @returns {boolean} Can be combined
    */
   canBeCombined(otherStep) {
-    return this.combinable && otherStep.combinable && 
-           this.dependencies.length === otherStep.dependencies.length &&
-           this.resourceRequirements.memory + otherStep.resourceRequirements.memory < 512; // 512MB limit
+    return (
+      this.combinable &&
+      otherStep.combinable &&
+      this.dependencies.length === otherStep.dependencies.length &&
+      this.resourceRequirements.memory + otherStep.resourceRequirements.memory <
+        512
+    ); // 512MB limit
   }
 }
 
@@ -173,12 +180,12 @@ class StepAnalysis {
 class ExecutionOptimizer extends EventEmitter {
   constructor(options = {}) {
     super();
-    
+
     this.config = new OptimizationConfig(options);
     this.historicalData = new Map(); // workflowName -> historical execution data
     this.optimizationCache = new Map(); // optimization key -> cached result
     this.performanceMetrics = new Map(); // step type -> performance metrics
-    
+
     this.logger = options.logger || console;
   }
 
@@ -191,11 +198,11 @@ class ExecutionOptimizer extends EventEmitter {
    */
   async optimizeWorkflow(steps, context, options = {}) {
     const startTime = Date.now();
-    
+
     try {
-      this.logger.info('ExecutionOptimizer: Starting workflow optimization', {
+      this.logger.info("ExecutionOptimizer: Starting workflow optimization", {
         stepCount: steps.length,
-        options: { ...this.config, ...options }
+        options: { ...this.config, ...options },
       });
 
       const result = new OptimizationResult();
@@ -203,61 +210,88 @@ class ExecutionOptimizer extends EventEmitter {
 
       // Analyze steps
       const stepAnalysis = await this.analyzeSteps(steps, context);
-      
+
       // Apply optimizations based on configuration
       let optimizedSteps = [...steps];
 
       if (this.config.stepCombination) {
-        optimizedSteps = await this.applyStepCombination(optimizedSteps, stepAnalysis, context);
-        result.addOptimization('step_combination', {
+        optimizedSteps = await this.applyStepCombination(
+          optimizedSteps,
+          stepAnalysis,
+          context,
+        );
+        result.addOptimization("step_combination", {
           originalCount: steps.length,
-          optimizedCount: optimizedSteps.length
+          optimizedCount: optimizedSteps.length,
         });
       }
 
       if (this.config.stepReordering) {
-        optimizedSteps = await this.applyStepReordering(optimizedSteps, stepAnalysis, context);
-        result.addOptimization('step_reordering', {
-          reordered: true
+        optimizedSteps = await this.applyStepReordering(
+          optimizedSteps,
+          stepAnalysis,
+          context,
+        );
+        result.addOptimization("step_reordering", {
+          reordered: true,
         });
       }
 
       if (this.config.parallelExecution) {
-        const parallelGroups = await this.identifyParallelGroups(optimizedSteps, stepAnalysis, context);
-        result.addOptimization('parallel_execution', {
+        const parallelGroups = await this.identifyParallelGroups(
+          optimizedSteps,
+          stepAnalysis,
+          context,
+        );
+        result.addOptimization("parallel_execution", {
           parallelGroups: parallelGroups.length,
-          parallelSteps: parallelGroups.reduce((sum, group) => sum + group.length, 0)
+          parallelSteps: parallelGroups.reduce(
+            (sum, group) => sum + group.length,
+            0,
+          ),
         });
       }
 
       if (this.config.resourceOptimization) {
-        await this.optimizeResourceAllocation(optimizedSteps, stepAnalysis, context);
-        result.addOptimization('resource_allocation', {
-          optimized: true
+        await this.optimizeResourceAllocation(
+          optimizedSteps,
+          stepAnalysis,
+          context,
+        );
+        result.addOptimization("resource_allocation", {
+          optimized: true,
         });
       }
 
       if (this.config.predictiveOptimization) {
-        const prediction = await this.applyPredictiveOptimization(optimizedSteps, stepAnalysis, context);
-        result.addOptimization('predictive_optimization', prediction);
+        const prediction = await this.applyPredictiveOptimization(
+          optimizedSteps,
+          stepAnalysis,
+          context,
+        );
+        result.addOptimization("predictive_optimization", prediction);
       }
 
       // Calculate estimated savings
       result.optimizedSteps = optimizedSteps;
-      result.estimatedSavings = await this.calculateSavings(steps, optimizedSteps, stepAnalysis);
+      result.estimatedSavings = await this.calculateSavings(
+        steps,
+        optimizedSteps,
+        stepAnalysis,
+      );
       result.confidence = await this.calculateConfidence(result, stepAnalysis);
 
       // Identify risks
       result.risks = await this.identifyRisks(result, stepAnalysis);
 
       const duration = Date.now() - startTime;
-      
-      this.logger.info('ExecutionOptimizer: Workflow optimization completed', {
+
+      this.logger.info("ExecutionOptimizer: Workflow optimization completed", {
         originalSteps: steps.length,
         optimizedSteps: optimizedSteps.length,
         estimatedSavings: result.estimatedSavings,
         confidence: result.confidence,
-        duration
+        duration,
       });
 
       // Cache result
@@ -270,13 +304,12 @@ class ExecutionOptimizer extends EventEmitter {
         await this.learnFromOptimization(steps, result, context);
       }
 
-      this.emit('optimization:completed', { result, duration });
+      this.emit("optimization:completed", { result, duration });
       return result;
-
     } catch (error) {
-      this.logger.error('ExecutionOptimizer: Workflow optimization failed', {
+      this.logger.error("ExecutionOptimizer: Workflow optimization failed", {
         error: error.message,
-        stepCount: steps.length
+        stepCount: steps.length,
       });
       throw error;
     }
@@ -297,8 +330,12 @@ class ExecutionOptimizer extends EventEmitter {
 
       // Analyze step metadata
       const metadata = step.getMetadata ? step.getMetadata() : {};
-      stepAnalysis.resourceRequirements = await this.estimateResourceRequirements(step, context);
-      stepAnalysis.executionTime = await this.estimateExecutionTime(step, context);
+      stepAnalysis.resourceRequirements =
+        await this.estimateResourceRequirements(step, context);
+      stepAnalysis.executionTime = await this.estimateExecutionTime(
+        step,
+        context,
+      );
       stepAnalysis.cacheable = this.isStepCacheable(step, context);
       stepAnalysis.parallelizable = this.isStepParallelizable(step, context);
       stepAnalysis.combinable = this.isStepCombinable(step, context);
@@ -307,8 +344,10 @@ class ExecutionOptimizer extends EventEmitter {
 
       // Analyze dependencies
       if (metadata.dependencies) {
-        metadata.dependencies.forEach(dep => {
-          const depIndex = steps.findIndex(s => s.getMetadata?.()?.name === dep);
+        metadata.dependencies.forEach((dep) => {
+          const depIndex = steps.findIndex(
+            (s) => s.getMetadata?.()?.name === dep,
+          );
           if (depIndex !== -1) {
             stepAnalysis.addDependency(depIndex);
           }
@@ -320,7 +359,7 @@ class ExecutionOptimizer extends EventEmitter {
 
     // Build dependency graph
     for (let i = 0; i < analysis.length; i++) {
-      analysis[i].dependencies.forEach(depIndex => {
+      analysis[i].dependencies.forEach((depIndex) => {
         if (analysis[depIndex]) {
           analysis[depIndex].addDependent(i);
         }
@@ -352,7 +391,11 @@ class ExecutionOptimizer extends EventEmitter {
       let combinedIndices = [i];
 
       // Look for combinable steps
-      for (let j = i + 1; j < steps.length && combinedSteps.length < this.config.maxCombinedSteps; j++) {
+      for (
+        let j = i + 1;
+        j < steps.length && combinedSteps.length < this.config.maxCombinedSteps;
+        j++
+      ) {
         if (combined.has(j)) {
           continue;
         }
@@ -361,8 +404,12 @@ class ExecutionOptimizer extends EventEmitter {
         const nextAnalysis = stepAnalysis[j];
 
         if (currentAnalysis.canBeCombined(nextAnalysis)) {
-          const similarity = await this.calculateStepSimilarity(currentStep, nextStep, context);
-          
+          const similarity = await this.calculateStepSimilarity(
+            currentStep,
+            nextStep,
+            context,
+          );
+
           if (similarity >= this.config.combinationThreshold) {
             combinedSteps.push(nextStep);
             combinedIndices.push(j);
@@ -373,12 +420,15 @@ class ExecutionOptimizer extends EventEmitter {
 
       if (combinedSteps.length > 1) {
         // Create combined step
-        const combinedStep = await this.createCombinedStep(combinedSteps, context);
+        const combinedStep = await this.createCombinedStep(
+          combinedSteps,
+          context,
+        );
         optimizedSteps.push(combinedStep);
-        
-        this.logger.info('ExecutionOptimizer: Combined steps', {
+
+        this.logger.info("ExecutionOptimizer: Combined steps", {
           indices: combinedIndices,
-          combinedCount: combinedSteps.length
+          combinedCount: combinedSteps.length,
         });
       } else {
         optimizedSteps.push(currentStep);
@@ -404,11 +454,11 @@ class ExecutionOptimizer extends EventEmitter {
 
     // Create dependency graph
     const dependencyGraph = this.buildDependencyGraph(stepAnalysis);
-    
+
     // Topological sort with priority consideration
     const sortedIndices = this.topologicalSort(dependencyGraph, stepAnalysis);
-    
-    return sortedIndices.map(index => steps[index]);
+
+    return sortedIndices.map((index) => steps[index]);
   }
 
   /**
@@ -428,7 +478,7 @@ class ExecutionOptimizer extends EventEmitter {
       }
 
       const currentAnalysis = stepAnalysis[i];
-      
+
       if (currentAnalysis.canBeParallelized()) {
         const group = [i];
         processed.add(i);
@@ -440,15 +490,18 @@ class ExecutionOptimizer extends EventEmitter {
           }
 
           const nextAnalysis = stepAnalysis[j];
-          
-          if (nextAnalysis.canBeParallelized() && 
-              group.length < this.config.maxParallelSteps) {
-            
+
+          if (
+            nextAnalysis.canBeParallelized() &&
+            group.length < this.config.maxParallelSteps
+          ) {
             // Check if steps are independent
             const independent = await this.areStepsIndependent(
-              steps[i], steps[j], context
+              steps[i],
+              steps[j],
+              context,
             );
-            
+
             if (independent) {
               group.push(j);
               processed.add(j);
@@ -473,27 +526,32 @@ class ExecutionOptimizer extends EventEmitter {
    */
   async optimizeResourceAllocation(steps, stepAnalysis, context) {
     // Calculate total resource requirements
-    const totalRequirements = stepAnalysis.reduce((total, analysis) => {
-      total.memory += analysis.resourceRequirements.memory;
-      total.cpu += analysis.resourceRequirements.cpu;
-      total.network += analysis.resourceRequirements.network;
-      return total;
-    }, { memory: 0, cpu: 0, network: 0 });
+    const totalRequirements = stepAnalysis.reduce(
+      (total, analysis) => {
+        total.memory += analysis.resourceRequirements.memory;
+        total.cpu += analysis.resourceRequirements.cpu;
+        total.network += analysis.resourceRequirements.network;
+        return total;
+      },
+      { memory: 0, cpu: 0, network: 0 },
+    );
 
     // Optimize based on available resources
     const availableResources = await this.getAvailableResources(context);
-    
+
     // Adjust resource allocation based on availability
     for (const analysis of stepAnalysis) {
       if (totalRequirements.memory > availableResources.memory) {
         analysis.resourceRequirements.memory = Math.floor(
-          analysis.resourceRequirements.memory * (availableResources.memory / totalRequirements.memory)
+          analysis.resourceRequirements.memory *
+            (availableResources.memory / totalRequirements.memory),
         );
       }
-      
+
       if (totalRequirements.cpu > availableResources.cpu) {
         analysis.resourceRequirements.cpu = Math.floor(
-          analysis.resourceRequirements.cpu * (availableResources.cpu / totalRequirements.cpu)
+          analysis.resourceRequirements.cpu *
+            (availableResources.cpu / totalRequirements.cpu),
         );
       }
     }
@@ -507,7 +565,7 @@ class ExecutionOptimizer extends EventEmitter {
    * @returns {Promise<Object>} Prediction result
    */
   async applyPredictiveOptimization(steps, stepAnalysis, context) {
-    const workflowName = context.getData?.('workflowName') || 'unknown';
+    const workflowName = context.getData?.("workflowName") || "unknown";
     const historicalData = this.historicalData.get(workflowName);
 
     if (!historicalData || historicalData.length < 3) {
@@ -518,7 +576,7 @@ class ExecutionOptimizer extends EventEmitter {
     let totalConfidence = 0;
 
     for (const analysis of stepAnalysis) {
-      const stepType = analysis.step.getMetadata?.()?.type || 'unknown';
+      const stepType = analysis.step.getMetadata?.()?.type || "unknown";
       const stepMetrics = this.performanceMetrics.get(stepType);
 
       if (stepMetrics) {
@@ -527,7 +585,7 @@ class ExecutionOptimizer extends EventEmitter {
           stepType,
           predictedDuration: stepMetrics.averageDuration,
           predictedMemory: stepMetrics.averageMemory,
-          confidence: stepMetrics.confidence
+          confidence: stepMetrics.confidence,
         };
 
         predictions.push(prediction);
@@ -535,12 +593,13 @@ class ExecutionOptimizer extends EventEmitter {
       }
     }
 
-    const averageConfidence = predictions.length > 0 ? totalConfidence / predictions.length : 0;
+    const averageConfidence =
+      predictions.length > 0 ? totalConfidence / predictions.length : 0;
 
     return {
       confidence: averageConfidence,
       predictions,
-      historicalDataPoints: historicalData.length
+      historicalDataPoints: historicalData.length,
     };
   }
 
@@ -552,9 +611,18 @@ class ExecutionOptimizer extends EventEmitter {
    * @returns {Promise<Object>} Estimated savings
    */
   async calculateSavings(originalSteps, optimizedSteps, stepAnalysis) {
-    const originalTime = stepAnalysis.reduce((sum, analysis) => sum + analysis.executionTime, 0);
-    const originalMemory = stepAnalysis.reduce((sum, analysis) => sum + analysis.resourceRequirements.memory, 0);
-    const originalCpu = stepAnalysis.reduce((sum, analysis) => sum + analysis.resourceRequirements.cpu, 0);
+    const originalTime = stepAnalysis.reduce(
+      (sum, analysis) => sum + analysis.executionTime,
+      0,
+    );
+    const originalMemory = stepAnalysis.reduce(
+      (sum, analysis) => sum + analysis.resourceRequirements.memory,
+      0,
+    );
+    const originalCpu = stepAnalysis.reduce(
+      (sum, analysis) => sum + analysis.resourceRequirements.cpu,
+      0,
+    );
 
     // Estimate optimized values (simplified calculation)
     const optimizationFactor = 0.8; // Assume 20% improvement
@@ -565,7 +633,7 @@ class ExecutionOptimizer extends EventEmitter {
     return {
       time: originalTime - optimizedTime,
       memory: originalMemory - optimizedMemory,
-      cpu: originalCpu - optimizedCpu
+      cpu: originalCpu - optimizedCpu,
     };
   }
 
@@ -588,7 +656,9 @@ class ExecutionOptimizer extends EventEmitter {
     confidence += Math.min(optimizationCount * 0.1, 0.3);
 
     // Factor in step analysis quality
-    const analyzedSteps = stepAnalysis.filter(analysis => analysis.executionTime > 0).length;
+    const analyzedSteps = stepAnalysis.filter(
+      (analysis) => analysis.executionTime > 0,
+    ).length;
     const analysisQuality = analyzedSteps / stepAnalysis.length;
     confidence += analysisQuality * 0.2;
 
@@ -605,35 +675,44 @@ class ExecutionOptimizer extends EventEmitter {
     const risks = [];
 
     // Check for high-risk steps
-    const highRiskSteps = stepAnalysis.filter(analysis => analysis.risk > 0.7);
+    const highRiskSteps = stepAnalysis.filter(
+      (analysis) => analysis.risk > 0.7,
+    );
     if (highRiskSteps.length > 0) {
       risks.push({
-        type: 'high_risk_steps',
+        type: "high_risk_steps",
         description: `${highRiskSteps.length} steps have high risk factors`,
-        severity: 'medium',
-        steps: highRiskSteps.map(analysis => analysis.index)
+        severity: "medium",
+        steps: highRiskSteps.map((analysis) => analysis.index),
       });
     }
 
     // Check for dependency violations
-    const dependencyViolations = this.checkDependencyViolations(result.optimizedSteps, stepAnalysis);
+    const dependencyViolations = this.checkDependencyViolations(
+      result.optimizedSteps,
+      stepAnalysis,
+    );
     if (dependencyViolations.length > 0) {
       risks.push({
-        type: 'dependency_violations',
+        type: "dependency_violations",
         description: `${dependencyViolations.length} potential dependency violations`,
-        severity: 'high',
-        violations: dependencyViolations
+        severity: "high",
+        violations: dependencyViolations,
       });
     }
 
     // Check for resource over-allocation
-    const totalMemory = stepAnalysis.reduce((sum, analysis) => sum + analysis.resourceRequirements.memory, 0);
-    if (totalMemory > 1024) { // 1GB limit
+    const totalMemory = stepAnalysis.reduce(
+      (sum, analysis) => sum + analysis.resourceRequirements.memory,
+      0,
+    );
+    if (totalMemory > 1024) {
+      // 1GB limit
       risks.push({
-        type: 'resource_over_allocation',
-        description: 'Total memory requirements exceed recommended limit',
-        severity: 'medium',
-        totalMemory
+        type: "resource_over_allocation",
+        description: "Total memory requirements exceed recommended limit",
+        severity: "medium",
+        totalMemory,
       });
     }
 
@@ -652,8 +731,8 @@ class ExecutionOptimizer extends EventEmitter {
     // Default resource requirements
     const defaultRequirements = {
       memory: 64, // 64MB
-      cpu: 10,    // 10% CPU
-      network: 0  // No network
+      cpu: 10, // 10% CPU
+      network: 0, // No network
     };
 
     // Check if step has resource requirements defined
@@ -663,9 +742,9 @@ class ExecutionOptimizer extends EventEmitter {
     }
 
     // Estimate based on step type
-    const stepType = metadata.type || 'unknown';
+    const stepType = metadata.type || "unknown";
     const typeRequirements = this.getTypeResourceRequirements(stepType);
-    
+
     return { ...defaultRequirements, ...typeRequirements };
   }
 
@@ -677,8 +756,8 @@ class ExecutionOptimizer extends EventEmitter {
    */
   async estimateExecutionTime(step, context) {
     const metadata = step.getMetadata ? step.getMetadata() : {};
-    const stepType = metadata.type || 'unknown';
-    
+    const stepType = metadata.type || "unknown";
+
     // Check historical data
     const stepMetrics = this.performanceMetrics.get(stepType);
     if (stepMetrics) {
@@ -687,12 +766,12 @@ class ExecutionOptimizer extends EventEmitter {
 
     // Default estimates based on step type
     const defaultTimes = {
-      'analysis': 5000,
-      'generation': 3000,
-      'refactoring': 2000,
-      'testing': 4000,
-      'deployment': 10000,
-      'unknown': 1000
+      analysis: 5000,
+      generation: 3000,
+      refactoring: 2000,
+      testing: 4000,
+      deployment: 10000,
+      unknown: 1000,
     };
 
     return defaultTimes[stepType] || defaultTimes.unknown;
@@ -706,7 +785,7 @@ class ExecutionOptimizer extends EventEmitter {
    */
   isStepCacheable(step, context) {
     const metadata = step.getMetadata ? step.getMetadata() : {};
-    
+
     // Steps with side effects are not cacheable
     if (metadata.hasSideEffects) {
       return false;
@@ -729,7 +808,7 @@ class ExecutionOptimizer extends EventEmitter {
    */
   isStepParallelizable(step, context) {
     const metadata = step.getMetadata ? step.getMetadata() : {};
-    
+
     // Steps with dependencies are not parallelizable
     if (metadata.dependencies && metadata.dependencies.length > 0) {
       return false;
@@ -756,7 +835,7 @@ class ExecutionOptimizer extends EventEmitter {
    */
   isStepCombinable(step, context) {
     const metadata = step.getMetadata ? step.getMetadata() : {};
-    
+
     // Steps with side effects are not combinable
     if (metadata.hasSideEffects) {
       return false;
@@ -768,7 +847,7 @@ class ExecutionOptimizer extends EventEmitter {
     }
 
     // Steps with complex logic are not combinable
-    if (metadata.complexity === 'high') {
+    if (metadata.complexity === "high") {
       return false;
     }
 
@@ -783,7 +862,7 @@ class ExecutionOptimizer extends EventEmitter {
    */
   calculateStepPriority(step, context) {
     const metadata = step.getMetadata ? step.getMetadata() : {};
-    
+
     let priority = 5; // Default priority
 
     // Critical steps have high priority
@@ -812,7 +891,7 @@ class ExecutionOptimizer extends EventEmitter {
    */
   calculateStepRisk(step, context) {
     const metadata = step.getMetadata ? step.getMetadata() : {};
-    
+
     let risk = 0.1; // Base risk
 
     // Steps with side effects have higher risk
@@ -826,7 +905,7 @@ class ExecutionOptimizer extends EventEmitter {
     }
 
     // Complex steps have higher risk
-    if (metadata.complexity === 'high') {
+    if (metadata.complexity === "high") {
       risk += 0.2;
     }
 
@@ -861,18 +940,23 @@ class ExecutionOptimizer extends EventEmitter {
     // Compare resource requirements
     const req1 = await this.estimateResourceRequirements(step1, context);
     const req2 = await this.estimateResourceRequirements(step2, context);
-    
-    const memorySimilarity = 1 - Math.abs(req1.memory - req2.memory) / Math.max(req1.memory, req2.memory, 1);
-    const cpuSimilarity = 1 - Math.abs(req1.cpu - req2.cpu) / Math.max(req1.cpu, req2.cpu, 1);
-    
+
+    const memorySimilarity =
+      1 -
+      Math.abs(req1.memory - req2.memory) /
+        Math.max(req1.memory, req2.memory, 1);
+    const cpuSimilarity =
+      1 - Math.abs(req1.cpu - req2.cpu) / Math.max(req1.cpu, req2.cpu, 1);
+
     similarity += (memorySimilarity + cpuSimilarity) * 0.3;
     factors++;
 
     // Compare execution time
     const time1 = await this.estimateExecutionTime(step1, context);
     const time2 = await this.estimateExecutionTime(step2, context);
-    
-    const timeSimilarity = 1 - Math.abs(time1 - time2) / Math.max(time1, time2, 1);
+
+    const timeSimilarity =
+      1 - Math.abs(time1 - time2) / Math.max(time1, time2, 1);
     similarity += timeSimilarity * 0.3;
     factors++;
 
@@ -890,30 +974,30 @@ class ExecutionOptimizer extends EventEmitter {
     const combinedStep = {
       getMetadata: () => ({
         name: `combined_${steps.length}_steps`,
-        type: 'combined',
+        type: "combined",
         description: `Combined ${steps.length} steps`,
-        steps: steps.map(step => step.getMetadata?.()?.name || 'unknown')
+        steps: steps.map((step) => step.getMetadata?.()?.name || "unknown"),
       }),
-      
+
       execute: async (execContext) => {
         const results = [];
-        
+
         for (const step of steps) {
           const result = await step.execute(execContext);
           results.push(result);
-          
+
           // Stop if any step fails
           if (!result.success) {
             break;
           }
         }
-        
+
         return {
-          success: results.every(r => r.success),
+          success: results.every((r) => r.success),
           results,
-          combined: true
+          combined: true,
         };
-      }
+      },
     };
 
     return combinedStep;
@@ -926,11 +1010,11 @@ class ExecutionOptimizer extends EventEmitter {
    */
   buildDependencyGraph(stepAnalysis) {
     const graph = {};
-    
+
     for (let i = 0; i < stepAnalysis.length; i++) {
       graph[i] = stepAnalysis[i].dependencies;
     }
-    
+
     return graph;
   }
 
@@ -943,26 +1027,26 @@ class ExecutionOptimizer extends EventEmitter {
   topologicalSort(graph, stepAnalysis) {
     const visited = new Set();
     const sorted = [];
-    
+
     const visit = (node) => {
       if (visited.has(node)) {
         return;
       }
-      
+
       visited.add(node);
-      
+
       // Visit dependencies first
       const dependencies = graph[node] || [];
-      dependencies.forEach(dep => visit(dep));
-      
+      dependencies.forEach((dep) => visit(dep));
+
       sorted.push(node);
     };
-    
+
     // Visit all nodes
     for (const node in graph) {
       visit(parseInt(node));
     }
-    
+
     // Sort by priority within dependency groups
     return sorted.sort((a, b) => {
       const priorityA = stepAnalysis[a]?.priority || 1;
@@ -981,24 +1065,24 @@ class ExecutionOptimizer extends EventEmitter {
   async areStepsIndependent(step1, step2, context) {
     const metadata1 = step1.getMetadata ? step1.getMetadata() : {};
     const metadata2 = step2.getMetadata ? step2.getMetadata() : {};
-    
+
     // Check if steps modify the same resources
     if (metadata1.modifiesResources && metadata2.modifiesResources) {
       const resources1 = new Set(metadata1.modifiesResources);
       const resources2 = new Set(metadata2.modifiesResources);
-      
+
       for (const resource of resources1) {
         if (resources2.has(resource)) {
           return false;
         }
       }
     }
-    
+
     // Check if steps have conflicting side effects
     if (metadata1.hasSideEffects && metadata2.hasSideEffects) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -1011,8 +1095,8 @@ class ExecutionOptimizer extends EventEmitter {
     // Default available resources
     return {
       memory: 1024, // 1GB
-      cpu: 100,     // 100% CPU
-      network: 100  // 100% network
+      cpu: 100, // 100% CPU
+      network: 100, // 100% network
     };
   }
 
@@ -1023,14 +1107,14 @@ class ExecutionOptimizer extends EventEmitter {
    */
   getTypeResourceRequirements(stepType) {
     const requirements = {
-      'analysis': { memory: 128, cpu: 20, network: 0 },
-      'generation': { memory: 256, cpu: 30, network: 0 },
-      'refactoring': { memory: 512, cpu: 50, network: 0 },
-      'testing': { memory: 256, cpu: 40, network: 0 },
-      'deployment': { memory: 1024, cpu: 80, network: 50 },
-      'unknown': { memory: 64, cpu: 10, network: 0 }
+      analysis: { memory: 128, cpu: 20, network: 0 },
+      generation: { memory: 256, cpu: 30, network: 0 },
+      refactoring: { memory: 512, cpu: 50, network: 0 },
+      testing: { memory: 256, cpu: 40, network: 0 },
+      deployment: { memory: 1024, cpu: 80, network: 50 },
+      unknown: { memory: 64, cpu: 10, network: 0 },
     };
-    
+
     return requirements[stepType] || requirements.unknown;
   }
 
@@ -1042,21 +1126,21 @@ class ExecutionOptimizer extends EventEmitter {
    */
   checkDependencyViolations(optimizedSteps, stepAnalysis) {
     const violations = [];
-    
+
     for (let i = 0; i < optimizedSteps.length; i++) {
       const analysis = stepAnalysis[i];
-      
+
       for (const depIndex of analysis.dependencies) {
         if (depIndex > i) {
           violations.push({
             stepIndex: i,
             dependencyIndex: depIndex,
-            description: `Step ${i} depends on step ${depIndex} but comes first in execution order`
+            description: `Step ${i} depends on step ${depIndex} but comes first in execution order`,
           });
         }
       }
     }
-    
+
     return violations;
   }
 
@@ -1071,7 +1155,7 @@ class ExecutionOptimizer extends EventEmitter {
     this.optimizationCache.set(key, {
       result,
       timestamp: new Date(),
-      ttl: 3600000 // 1 hour
+      ttl: 3600000, // 1 hour
     });
   }
 
@@ -1082,13 +1166,17 @@ class ExecutionOptimizer extends EventEmitter {
    * @returns {string} Cache key
    */
   generateOptimizationKey(steps, context) {
-    const stepSignatures = steps.map(step => {
-      const metadata = step.getMetadata ? step.getMetadata() : {};
-      return `${metadata.name}:${metadata.type}:${metadata.version || '1.0'}`;
-    }).join('|');
-    
-    const contextHash = JSON.stringify(context.getData ? context.getData() : {});
-    
+    const stepSignatures = steps
+      .map((step) => {
+        const metadata = step.getMetadata ? step.getMetadata() : {};
+        return `${metadata.name}:${metadata.type}:${metadata.version || "1.0"}`;
+      })
+      .join("|");
+
+    const contextHash = JSON.stringify(
+      context.getData ? context.getData() : {},
+    );
+
     return `${stepSignatures}|${contextHash}`;
   }
 
@@ -1099,12 +1187,12 @@ class ExecutionOptimizer extends EventEmitter {
    * @param {Object} context - Workflow context
    */
   async learnFromOptimization(steps, result, context) {
-    const workflowName = context.getData?.('workflowName') || 'unknown';
-    
+    const workflowName = context.getData?.("workflowName") || "unknown";
+
     if (!this.historicalData.has(workflowName)) {
       this.historicalData.set(workflowName, []);
     }
-    
+
     const historicalData = this.historicalData.get(workflowName);
     historicalData.push({
       timestamp: new Date(),
@@ -1112,19 +1200,19 @@ class ExecutionOptimizer extends EventEmitter {
       optimizedSteps: result.optimizedSteps.length,
       savings: result.estimatedSavings,
       confidence: result.confidence,
-      appliedOptimizations: result.appliedOptimizations.map(opt => opt.type)
+      appliedOptimizations: result.appliedOptimizations.map((opt) => opt.type),
     });
-    
+
     // Keep only recent data (last 100 entries)
     if (historicalData.length > 100) {
       historicalData.splice(0, historicalData.length - 100);
     }
-    
+
     // Update performance metrics
     for (const step of steps) {
       const metadata = step.getMetadata ? step.getMetadata() : {};
-      const stepType = metadata.type || 'unknown';
-      
+      const stepType = metadata.type || "unknown";
+
       if (!this.performanceMetrics.has(stepType)) {
         this.performanceMetrics.set(stepType, {
           count: 0,
@@ -1132,23 +1220,25 @@ class ExecutionOptimizer extends EventEmitter {
           averageDuration: 0,
           totalMemory: 0,
           averageMemory: 0,
-          confidence: 0
+          confidence: 0,
         });
       }
-      
+
       const metrics = this.performanceMetrics.get(stepType);
       metrics.count++;
-      
+
       // Update with estimated values (in real implementation, these would come from actual execution)
       const estimatedDuration = await this.estimateExecutionTime(step, context);
-      const estimatedMemory = (await this.estimateResourceRequirements(step, context)).memory;
-      
+      const estimatedMemory = (
+        await this.estimateResourceRequirements(step, context)
+      ).memory;
+
       metrics.totalDuration += estimatedDuration;
       metrics.averageDuration = metrics.totalDuration / metrics.count;
-      
+
       metrics.totalMemory += estimatedMemory;
       metrics.averageMemory = metrics.totalMemory / metrics.count;
-      
+
       // Update confidence based on data points
       metrics.confidence = Math.min(metrics.count / 10, 1.0);
     }
@@ -1163,7 +1253,7 @@ class ExecutionOptimizer extends EventEmitter {
       historicalDataSize: this.historicalData.size,
       optimizationCacheSize: this.optimizationCache.size,
       performanceMetricsSize: this.performanceMetrics.size,
-      config: this.config
+      config: this.config,
     };
   }
 
@@ -1172,7 +1262,7 @@ class ExecutionOptimizer extends EventEmitter {
    */
   clearCache() {
     this.optimizationCache.clear();
-    this.logger.info('ExecutionOptimizer: Cleared optimization cache');
+    this.logger.info("ExecutionOptimizer: Cleared optimization cache");
   }
 
   /**
@@ -1182,9 +1272,9 @@ class ExecutionOptimizer extends EventEmitter {
     this.historicalData.clear();
     this.optimizationCache.clear();
     this.performanceMetrics.clear();
-    
-    this.logger.info('ExecutionOptimizer: Reset all optimization data');
-    this.emit('optimizer:reset');
+
+    this.logger.info("ExecutionOptimizer: Reset all optimization data");
+    this.emit("optimizer:reset");
   }
 }
 
@@ -1192,5 +1282,5 @@ module.exports = {
   ExecutionOptimizer,
   OptimizationConfig,
   OptimizationResult,
-  StepAnalysis
-}; 
+  StepAnalysis,
+};

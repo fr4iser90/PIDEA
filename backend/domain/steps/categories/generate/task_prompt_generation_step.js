@@ -1,21 +1,20 @@
-
 // Dynamic path resolution functions
 function getTaskDocumentationPath(task) {
   const { status, priority, category, completedAt } = task;
-  
-  if (status === 'completed') {
+
+  if (status === "completed") {
     const quarter = getCompletionQuarter(completedAt);
     return `docs/09_roadmap/completed/${quarter}/${category}/`;
-  } else if (status === 'in_progress') {
+  } else if (status === "in_progress") {
     return `docs/09_roadmap/in-progress/${category}/`;
-  } else if (status === 'pending') {
+  } else if (status === "pending") {
     return `docs/09_roadmap/pending/${priority}/${category}/`;
-  } else if (status === 'blocked') {
+  } else if (status === "blocked") {
     return `docs/09_roadmap/blocked/${category}/`;
-  } else if (status === 'cancelled') {
+  } else if (status === "cancelled") {
     return `docs/09_roadmap/cancelled/${category}/`;
   }
-  
+
   return `docs/09_roadmap/pending/${priority}/${category}/`;
 }
 
@@ -24,17 +23,17 @@ function getCompletionQuarter(completedAt) {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
-    
+
     if (month <= 3) return `${year}-q1`;
     if (month <= 6) return `${year}-q2`;
     if (month <= 9) return `${year}-q3`;
     return `${year}-q4`;
   }
-  
+
   const date = new Date(completedAt);
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
-  
+
   if (month <= 3) return `${year}-q1`;
   if (month <= 6) return `${year}-q2`;
   if (month <= 9) return `${year}-q3`;
@@ -43,13 +42,13 @@ function getCompletionQuarter(completedAt) {
 
 function getPromptPath(promptType) {
   const promptPaths = {
-    'task-create': 'content-library/prompts/task-management/task-create.md',
-    'task-execute': 'content-library/prompts/task-management/task-execute.md',
-    'task-analyze': 'content-library/prompts/task-management/task-analyze.md',
-    'task-review': 'content-library/prompts/task-management/task-review.md'
+    "task-create": "content-library/prompts/task-management/task-create.md",
+    "task-execute": "content-library/prompts/task-management/task-execute.md",
+    "task-analyze": "content-library/prompts/task-management/task-analyze.md",
+    "task-review": "content-library/prompts/task-management/task-review.md",
   };
-  
-  return promptPaths[promptType] || promptPaths['task-create'];
+
+  return promptPaths[promptType] || promptPaths["task-create"];
 }
 
 function getWorkflowPath(taskMode) {
@@ -61,39 +60,39 @@ function getWorkflowPath(taskMode) {
  * Generates comprehensive task creation prompts using content library
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('TaskPromptGenerationStep');
+const logger = new Logger("TaskPromptGenerationStep");
 
 // Step configuration
 const config = {
-  name: 'TaskPromptGenerationStep',
-  type: 'generate',
-  category: 'generate',
-  description: 'Generate task creation prompts using content library',
-  version: '1.0.0',
-  dependencies: ['ProjectAnalyzer', 'ContentLibraryService'],
+  name: "TaskPromptGenerationStep",
+  type: "generate",
+  category: "generate",
+  description: "Generate task creation prompts using content library",
+  version: "1.0.0",
+  dependencies: ["ProjectAnalyzer", "ContentLibraryService"],
   settings: {
     includeProjectAnalysis: true,
     includeArchitectureContext: true,
     includeDependencies: true,
-    timeout: 30000
+    timeout: 30000,
   },
   validation: {
-    required: ['projectId', 'taskData'],
-    optional: ['workspacePath', 'promptType']
-  }
+    required: ["projectId", "taskData"],
+    optional: ["workspacePath", "promptType"],
+  },
 };
 
 class TaskPromptGenerationStep {
   constructor() {
-    this.name = 'TaskPromptGenerationStep';
-    this.description = 'Generate task creation prompts using content library';
-    this.category = 'generate';
-    this.version = '1.0.0';
+    this.name = "TaskPromptGenerationStep";
+    this.description = "Generate task creation prompts using content library";
+    this.category = "generate";
+    this.version = "1.0.0";
   }
 
   static getConfig() {
@@ -103,74 +102,79 @@ class TaskPromptGenerationStep {
   async execute(context = {}) {
     const config = TaskPromptGenerationStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
-      logger.info('Starting TaskPromptGenerationStep execution');
-      
+      logger.info("Starting TaskPromptGenerationStep execution");
+
       // Validate context
       this.validateContext(context);
-      
-      const { 
-        projectId, 
-        workspacePath = process.cwd(), 
-        taskData, 
-        promptType = 'task-create',
-        options = {} 
+
+      const {
+        projectId,
+        workspacePath = process.cwd(),
+        taskData,
+        promptType = "task-create",
+        options = {},
       } = context;
 
       logger.info(`Generating task prompt for project ${projectId}`, {
         taskTitle: taskData.title,
         promptType,
-        includeProjectAnalysis: options.includeProjectAnalysis !== false
+        includeProjectAnalysis: options.includeProjectAnalysis !== false,
       });
 
       // Get services via dependency injection
-      const projectAnalyzer = context.getService('ProjectAnalyzer');
-      const contentLibraryService = context.getService('ContentLibraryService');
-      
+      const projectAnalyzer = context.getService("ProjectAnalyzer");
+      const contentLibraryService = context.getService("ContentLibraryService");
+
       if (!projectAnalyzer) {
-        throw new Error('ProjectAnalyzer not available in context');
+        throw new Error("ProjectAnalyzer not available in context");
       }
 
       // Step 1: Load prompt template from content library
-      const promptTemplate = await this.loadPromptTemplate(promptType, contentLibraryService);
-      
+      const promptTemplate = await this.loadPromptTemplate(
+        promptType,
+        contentLibraryService,
+      );
+
       // Step 2: Get project analysis if requested
-      let projectAnalysis = '';
+      let projectAnalysis = "";
       if (options.includeProjectAnalysis !== false) {
-        projectAnalysis = await this.getProjectAnalysis(projectAnalyzer, workspacePath, options);
+        projectAnalysis = await this.getProjectAnalysis(
+          projectAnalyzer,
+          workspacePath,
+          options,
+        );
       }
 
       // Step 3: Generate the final prompt
       const finalPrompt = await this.generateFinalPrompt(
-        promptTemplate, 
-        taskData, 
-        projectAnalysis, 
-        options
+        promptTemplate,
+        taskData,
+        projectAnalysis,
+        options,
       );
 
-      logger.info('Task prompt generated successfully');
+      logger.info("Task prompt generated successfully");
 
       return {
-        success: true,
-        message: 'Task prompt generated successfully',
+        message: "Task prompt generated successfully",
         data: {
           prompt: finalPrompt,
           promptType,
           taskData,
-          projectAnalysis: projectAnalysis.length > 0 ? 'included' : 'excluded',
+          projectAnalysis: projectAnalysis.length > 0 ? "included" : "excluded",
           promptLength: finalPrompt.length,
-          generatedAt: new Date()
-        }
+          generatedAt: new Date(),
+        },
       };
-
     } catch (error) {
-      logger.error('Failed to generate task prompt:', error);
-      
+      logger.error("Failed to generate task prompt:", error);
+
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -182,13 +186,14 @@ class TaskPromptGenerationStep {
     try {
       // Define prompt paths based on type
       const promptPaths = {
-        'task-create': 'content-library/prompts/task-management/task-create.md',
-        'quick-task': 'content-library/prompts/task-management/task-create.md',
-        'advanced-task': 'content-library/prompts/task-management/task-create.md'
+        "task-create": "content-library/prompts/task-management/task-create.md",
+        "quick-task": "content-library/prompts/task-management/task-create.md",
+        "advanced-task":
+          "content-library/prompts/task-management/task-create.md",
       };
 
-      const promptPath = promptPaths[promptType] || promptPaths['task-create'];
-      
+      const promptPath = promptPaths[promptType] || promptPaths["task-create"];
+
       // Try to load via content library service first
       if (contentLibraryService) {
         try {
@@ -198,20 +203,21 @@ class TaskPromptGenerationStep {
             return content;
           }
         } catch (error) {
-          logger.warn(`Failed to load via ContentLibraryService: ${error.message}`);
+          logger.warn(
+            `Failed to load via ContentLibraryService: ${error.message}`,
+          );
         }
       }
 
       // Fallback to direct file system
       const fullPath = path.resolve(process.cwd(), promptPath);
-      const content = await fs.readFile(fullPath, 'utf8');
-      
+      const content = await fs.readFile(fullPath, "utf8");
+
       logger.info(`Loaded prompt template from file system`);
       return content;
-
     } catch (error) {
       logger.error(`Failed to load prompt template: ${error.message}`);
-      
+
       // Return a basic fallback template
       return this.getFallbackTemplate();
     }
@@ -222,7 +228,7 @@ class TaskPromptGenerationStep {
    */
   async getProjectAnalysis(projectAnalyzer, workspacePath, options) {
     try {
-      logger.info('Getting project analysis for prompt generation');
+      logger.info("Getting project analysis for prompt generation");
 
       const analysisOptions = {
         includeArchitecture: options.includeArchitectureContext !== false,
@@ -230,16 +236,18 @@ class TaskPromptGenerationStep {
         includeCodeQuality: true,
         includeSecurity: options.includeSecurityContext !== false,
         includePerformance: options.includePerformanceContext !== false,
-        simplified: options.simplified === true
+        simplified: options.simplified === true,
       };
 
-      const analysis = await projectAnalyzer.analyzeProject(workspacePath, analysisOptions);
-      
-      return this.formatProjectAnalysis(analysis, options);
+      const analysis = await projectAnalyzer.analyzeProject(
+        workspacePath,
+        analysisOptions,
+      );
 
+      return this.formatProjectAnalysis(analysis, options);
     } catch (error) {
       logger.warn(`Failed to get project analysis: ${error.message}`);
-      return 'Project analysis not available';
+      return "Project analysis not available";
     }
   }
 
@@ -249,32 +257,39 @@ class TaskPromptGenerationStep {
   formatProjectAnalysis(analysis, options) {
     try {
       if (options.simplified) {
-        return `**Project Context:** ${analysis.summary || 'Standard project structure'}`;
+        return `**Project Context:** ${analysis.summary || "Standard project structure"}`;
       }
 
       const sections = [];
 
       if (analysis.architecture) {
-        sections.push(`**Architecture:** ${analysis.architecture.pattern || 'Standard architecture'}`);
+        sections.push(
+          `**Architecture:** ${analysis.architecture.pattern || "Standard architecture"}`,
+        );
       }
 
       if (analysis.techStack) {
-        sections.push(`**Tech Stack:** ${analysis.techStack.join(', ')}`);
+        sections.push(`**Tech Stack:** ${analysis.techStack.join(", ")}`);
       }
 
       if (analysis.dependencies) {
-        sections.push(`**Key Dependencies:** ${analysis.dependencies.slice(0, 5).join(', ')}`);
+        sections.push(
+          `**Key Dependencies:** ${analysis.dependencies.slice(0, 5).join(", ")}`,
+        );
       }
 
       if (analysis.codeQuality) {
-        sections.push(`**Code Quality:** ${analysis.codeQuality.score || 'Standard'}`);
+        sections.push(
+          `**Code Quality:** ${analysis.codeQuality.score || "Standard"}`,
+        );
       }
 
-      return sections.length > 0 ? sections.join('\n') : 'Standard project structure';
-      
+      return sections.length > 0
+        ? sections.join("\n")
+        : "Standard project structure";
     } catch (error) {
       logger.warn(`Failed to format project analysis: ${error.message}`);
-      return 'Project analysis available but formatting failed';
+      return "Project analysis available but formatting failed";
     }
   }
 
@@ -283,19 +298,23 @@ class TaskPromptGenerationStep {
    */
   async generateFinalPrompt(template, taskData, projectAnalysis, options) {
     try {
-      const { title, description, category, priority, type, estimatedHours } = taskData;
+      const { title, description, category, priority, type, estimatedHours } =
+        taskData;
 
       // Replace placeholders in template
       let finalPrompt = template
-        .replace(/{taskTitle}/g, title || 'New Task')
-        .replace(/{taskDescription}/g, description || 'No description provided')
-        .replace(/{category}/g, category || 'general')
-        .replace(/{priority}/g, priority || 'medium')
-        .replace(/{type}/g, type || 'feature')
-        .replace(/{estimatedHours}/g, estimatedHours || 'Not specified');
+        .replace(/{taskTitle}/g, title || "New Task")
+        .replace(/{taskDescription}/g, description || "No description provided")
+        .replace(/{category}/g, category || "general")
+        .replace(/{priority}/g, priority || "medium")
+        .replace(/{type}/g, type || "feature")
+        .replace(/{estimatedHours}/g, estimatedHours || "Not specified");
 
       // Add project analysis section
-      if (projectAnalysis && projectAnalysis !== 'Project analysis not available') {
+      if (
+        projectAnalysis &&
+        projectAnalysis !== "Project analysis not available"
+      ) {
         finalPrompt += `\n\n## Project Context Analysis\n${projectAnalysis}`;
       }
 
@@ -310,7 +329,6 @@ class TaskPromptGenerationStep {
       }
 
       return finalPrompt;
-
     } catch (error) {
       logger.error(`Failed to generate final prompt: ${error.message}`);
       throw new Error(`Prompt generation failed: ${error.message}`);
@@ -349,17 +367,17 @@ Please provide a complete, actionable implementation plan in Markdown format.`;
    */
   validateContext(context) {
     const { projectId, taskData } = context;
-    
+
     if (!projectId) {
-      throw new Error('projectId is required');
+      throw new Error("projectId is required");
     }
-    
-    if (!taskData || typeof taskData !== 'object') {
-      throw new Error('taskData is required and must be an object');
+
+    if (!taskData || typeof taskData !== "object") {
+      throw new Error("taskData is required and must be an object");
     }
-    
+
     if (!taskData.title && !taskData.description) {
-      throw new Error('taskData must contain at least title or description');
+      throw new Error("taskData must contain at least title or description");
     }
   }
 }
@@ -370,5 +388,5 @@ const stepInstance = new TaskPromptGenerationStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
-}; 
+  execute: async (context) => await stepInstance.execute(context),
+};

@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 /**
  * Token Value Object
@@ -12,30 +12,42 @@ class Token {
   }
 
   // Getters
-  get value() { return this._token; }
-  get prefix() { return this._token.substring(0, this._prefixLength); }
-  get prefixLength() { return this._prefixLength; }
-  get length() { return this._token.length; }
+  get value() {
+    return this._token;
+  }
+  get prefix() {
+    return this._token.substring(0, this._prefixLength);
+  }
+  get prefixLength() {
+    return this._prefixLength;
+  }
+  get length() {
+    return this._token.length;
+  }
 
   // Validation
   _validate() {
-    if (!this._token || typeof this._token !== 'string') {
-      throw new Error('Token must be a non-empty string');
+    if (!this._token || typeof this._token !== "string") {
+      throw new Error("Token must be a non-empty string");
     }
 
     if (this._token.length < this._prefixLength) {
-      throw new Error(`Token must be at least ${this._prefixLength} characters long`);
+      throw new Error(
+        `Token must be at least ${this._prefixLength} characters long`,
+      );
     }
 
     // Basic JWT format validation (header.payload.signature)
-    const parts = this._token.split('.');
+    const parts = this._token.split(".");
     if (parts.length !== 3) {
-      throw new Error('Invalid JWT format: must have 3 parts separated by dots');
+      throw new Error(
+        "Invalid JWT format: must have 3 parts separated by dots",
+      );
     }
 
     // Validate each part is not empty
     if (!parts[0] || !parts[1] || !parts[2]) {
-      throw new Error('Invalid JWT format: all parts must be non-empty');
+      throw new Error("Invalid JWT format: all parts must be non-empty");
     }
   }
 
@@ -44,7 +56,7 @@ class Token {
     try {
       const payload = this._decodePayload();
       if (!payload.exp) return false;
-      
+
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp < currentTime;
     } catch (error) {
@@ -73,17 +85,17 @@ class Token {
 
   // Utility methods
   _decodePayload() {
-    const parts = this._token.split('.');
+    const parts = this._token.split(".");
     const payload = parts[1];
-    
+
     // Add padding if needed
-    const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
-    
+    const paddedPayload = payload + "=".repeat((4 - (payload.length % 4)) % 4);
+
     try {
-      const decoded = Buffer.from(paddedPayload, 'base64').toString('utf8');
+      const decoded = Buffer.from(paddedPayload, "base64").toString("utf8");
       return JSON.parse(decoded);
     } catch (error) {
-      throw new Error('Invalid JWT payload format');
+      throw new Error("Invalid JWT payload format");
     }
   }
 
@@ -94,7 +106,7 @@ class Token {
 
   static fromPrefix(prefix, fullToken) {
     if (!fullToken.startsWith(prefix)) {
-      throw new Error('Token does not match the provided prefix');
+      throw new Error("Token does not match the provided prefix");
     }
     return new Token(fullToken, prefix.length);
   }
@@ -108,7 +120,7 @@ class Token {
       length: this.length,
       isExpired: this.isExpired(),
       expirationTime: this.getExpirationTime(),
-      userId: this.getUserId()
+      userId: this.getUserId(),
     };
   }
 
@@ -117,4 +129,4 @@ class Token {
   }
 }
 
-module.exports = Token; 
+module.exports = Token;

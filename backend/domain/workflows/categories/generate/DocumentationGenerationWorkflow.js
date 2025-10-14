@@ -1,13 +1,13 @@
 /**
  * DocumentationGenerationWorkflow - Domain Layer: Documentation Generation Workflow
- * 
+ *
  * This workflow handles documentation generation tasks, orchestrating the
  * creation of various types of documentation (API docs, README files,
  * technical documentation, etc.).
  */
-const IWorkflow = require('../../../interfaces/IWorkflow');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const IWorkflow = require("../../../interfaces/IWorkflow");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class DocumentationGenerationWorkflow extends IWorkflow {
   /**
@@ -30,10 +30,13 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    */
   async execute(context) {
     try {
-      this.logger.info('DocumentationGenerationWorkflow: Starting documentation generation', {
-        docType: context.docType,
-        targetPath: context.targetPath
-      });
+      this.logger.info(
+        "DocumentationGenerationWorkflow: Starting documentation generation",
+        {
+          docType: context.docType,
+          targetPath: context.targetPath,
+        },
+      );
 
       // Validate input
       await this.validateInput(context);
@@ -42,7 +45,10 @@ class DocumentationGenerationWorkflow extends IWorkflow {
       const projectAnalysis = await this.analyzeProject(context);
 
       // Generate documentation content
-      const docContent = await this.generateDocumentation(context, projectAnalysis);
+      const docContent = await this.generateDocumentation(
+        context,
+        projectAnalysis,
+      );
 
       // Validate generated documentation
       await this.validateDocumentation(docContent, context);
@@ -50,41 +56,45 @@ class DocumentationGenerationWorkflow extends IWorkflow {
       // Save documentation to target location
       const result = await this.saveDocumentation(docContent, context);
 
-      this.logger.info('DocumentationGenerationWorkflow: Documentation generation completed', {
-        docType: context.docType,
-        targetPath: context.targetPath,
-        success: true
-      });
+      this.logger.info(
+        "DocumentationGenerationWorkflow: Documentation generation completed",
+        {
+          docType: context.docType,
+          targetPath: context.targetPath,
+         
+        },
+      );
 
       return {
-        success: true,
         data: {
           docContent,
           targetPath: context.targetPath,
           docType: context.docType,
-          metadata: result.metadata
+          metadata: result.metadata,
         },
         metadata: {
-          taskMode: 'documentation_generation',
+          taskMode: "documentation_generation",
           executionTime: Date.now(),
-          docSize: docContent.length
-        }
+          docSize: docContent.length,
+        },
       };
-
     } catch (error) {
-      this.logger.error('DocumentationGenerationWorkflow: Documentation generation failed', {
-        error: error.message,
-        docType: context.docType,
-        targetPath: context.targetPath
-      });
+      this.logger.error(
+        "DocumentationGenerationWorkflow: Documentation generation failed",
+        {
+          error: error.message,
+          docType: context.docType,
+          targetPath: context.targetPath,
+        },
+      );
 
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
-          taskMode: 'documentation_generation',
-          executionTime: Date.now()
-        }
+          taskMode: "documentation_generation",
+          executionTime: Date.now(),
+        },
       };
     }
   }
@@ -96,24 +106,24 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    */
   async validateInput(context) {
     if (!context.docType) {
-      throw new Error('Documentation type is required');
+      throw new Error("Documentation type is required");
     }
 
     if (!context.targetPath) {
-      throw new Error('Target path is required');
+      throw new Error("Target path is required");
     }
 
     const validDocTypes = [
-      'readme',
-      'api',
-      'technical',
-      'user_guide',
-      'developer_guide',
-      'installation',
-      'changelog',
-      'contributing',
-      'license',
-      'architecture'
+      "readme",
+      "api",
+      "technical",
+      "user_guide",
+      "developer_guide",
+      "installation",
+      "changelog",
+      "contributing",
+      "license",
+      "architecture",
     ];
 
     if (!validDocTypes.includes(context.docType)) {
@@ -144,10 +154,10 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    */
   requiresProjectAnalysis(docType) {
     const typesRequiringAnalysis = [
-      'api',
-      'technical',
-      'architecture',
-      'developer_guide'
+      "api",
+      "technical",
+      "architecture",
+      "developer_guide",
     ];
 
     return typesRequiringAnalysis.includes(docType);
@@ -163,7 +173,8 @@ class DocumentationGenerationWorkflow extends IWorkflow {
     const { docType, targetPath, options = {} } = context;
 
     // Get template for documentation type
-    const template = await this.templateService.getDocumentationTemplate(docType);
+    const template =
+      await this.templateService.getDocumentationTemplate(docType);
 
     // Generate documentation content using template, options, and analysis
     const docContent = await this.documentationService.generateDocumentation({
@@ -171,7 +182,7 @@ class DocumentationGenerationWorkflow extends IWorkflow {
       docType,
       targetPath,
       options,
-      projectAnalysis
+      projectAnalysis,
     });
 
     return docContent;
@@ -185,11 +196,14 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    */
   async validateDocumentation(docContent, context) {
     if (!docContent || docContent.trim().length === 0) {
-      throw new Error('Generated documentation content is empty');
+      throw new Error("Generated documentation content is empty");
     }
 
     // Validate documentation structure and content
-    await this.validationService.validateDocumentation(docContent, context.docType);
+    await this.validationService.validateDocumentation(
+      docContent,
+      context.docType,
+    );
   }
 
   /**
@@ -206,7 +220,10 @@ class DocumentationGenerationWorkflow extends IWorkflow {
     const fullPath = `${targetPath}.${extension}`;
 
     // Save documentation to file system
-    const result = await this.documentationService.saveDocumentation(fullPath, docContent);
+    const result = await this.documentationService.saveDocumentation(
+      fullPath,
+      docContent,
+    );
 
     return {
       path: fullPath,
@@ -214,8 +231,8 @@ class DocumentationGenerationWorkflow extends IWorkflow {
         size: docContent.length,
         extension,
         docType,
-        savedAt: new Date()
-      }
+        savedAt: new Date(),
+      },
     };
   }
 
@@ -226,19 +243,19 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    */
   getDocumentationExtension(docType) {
     const extensionMap = {
-      readme: 'md',
-      api: 'md',
-      technical: 'md',
-      user_guide: 'md',
-      developer_guide: 'md',
-      installation: 'md',
-      changelog: 'md',
-      contributing: 'md',
-      license: 'txt',
-      architecture: 'md'
+      readme: "md",
+      api: "md",
+      technical: "md",
+      user_guide: "md",
+      developer_guide: "md",
+      installation: "md",
+      changelog: "md",
+      contributing: "md",
+      license: "txt",
+      architecture: "md",
     };
 
-    return extensionMap[docType] || 'md';
+    return extensionMap[docType] || "md";
   }
 
   /**
@@ -247,22 +264,22 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    */
   getMetadata() {
     return {
-      name: 'Documentation Generation Workflow',
-      description: 'Workflow for generating various types of documentation',
-      version: '1.0.0',
-      type: 'documentation_generation',
+      name: "Documentation Generation Workflow",
+      description: "Workflow for generating various types of documentation",
+      version: "1.0.0",
+      type: "documentation_generation",
       supportedDocTypes: [
-        'readme',
-        'api',
-        'technical',
-        'user_guide',
-        'developer_guide',
-        'installation',
-        'changelog',
-        'contributing',
-        'license',
-        'architecture'
-      ]
+        "readme",
+        "api",
+        "technical",
+        "user_guide",
+        "developer_guide",
+        "installation",
+        "changelog",
+        "contributing",
+        "license",
+        "architecture",
+      ],
     };
   }
 
@@ -271,7 +288,12 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    * @returns {Array<string>} Required dependencies
    */
   getDependencies() {
-    return ['documentationService', 'templateService', 'analysisService', 'validationService'];
+    return [
+      "documentationService",
+      "templateService",
+      "analysisService",
+      "validationService",
+    ];
   }
 
   /**
@@ -279,7 +301,7 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    * @returns {string} Workflow version
    */
   getVersion() {
-    return '1.0.0';
+    return "1.0.0";
   }
 
   /**
@@ -287,8 +309,8 @@ class DocumentationGenerationWorkflow extends IWorkflow {
    * @returns {string} Workflow type
    */
   getType() {
-    return 'documentation_generation';
+    return "documentation_generation";
   }
 }
 
-module.exports = DocumentationGenerationWorkflow; 
+module.exports = DocumentationGenerationWorkflow;

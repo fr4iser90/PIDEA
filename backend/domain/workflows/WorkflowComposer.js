@@ -2,9 +2,9 @@
  * WorkflowComposer - Complex workflow composition logic
  * Provides advanced workflow composition patterns and templates
  */
-const WorkflowBuilder = require('./WorkflowBuilder');
-const WorkflowStepBuilder = require('./WorkflowStepBuilder');
-const StepRegistry = require('../steps/StepRegistry');
+const WorkflowBuilder = require("./WorkflowBuilder");
+const WorkflowStepBuilder = require("./WorkflowStepBuilder");
+const StepRegistry = require("../steps/StepRegistry");
 
 /**
  * Workflow composer for complex workflow logic
@@ -21,26 +21,27 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeAnalysisWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Analysis Workflow',
-        description: 'Comprehensive analysis workflow',
-        type: 'analysis',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Analysis Workflow",
+      description: "Comprehensive analysis workflow",
+      type: "analysis",
+      version: "1.0.0",
+    });
 
     // Add analysis steps
     const projectAnalysisStep = WorkflowStepBuilder.analysis(options).build();
     builder.addStep(projectAnalysisStep);
-    
+
     // Add additional analysis steps based on options
     if (options.includeTechStack !== false) {
-      const techStackStep = new (require('../steps/categories/analysis/TechStackAnalysisStep'))();
+      const techStackStep =
+        new (require("../steps/categories/analysis/TechStackAnalysisStep"))();
       builder.addStep(techStackStep);
     }
-    
+
     if (options.includeArchitecture !== false) {
-      const architectureStep = new (require('../steps/categories/analysis/ArchitectureAnalysisStep'))();
+      const architectureStep =
+        new (require("../steps/categories/analysis/ArchitectureAnalysisStep"))();
       builder.addStep(architectureStep);
     }
 
@@ -48,7 +49,7 @@ class WorkflowComposer {
     if (options.includeValidation !== false) {
       const validationStep = WorkflowStepBuilder.validation({
         validateResults: true,
-        generateReport: true
+        generateReport: true,
       }).build();
       builder.addStep(validationStep);
     }
@@ -57,7 +58,7 @@ class WorkflowComposer {
     if (options.includeDocumentation !== false) {
       const documentationStep = WorkflowStepBuilder.documentation({
         generateReport: true,
-        format: options.reportFormat || 'markdown'
+        format: options.reportFormat || "markdown",
       }).build();
       builder.addStep(documentationStep);
     }
@@ -71,22 +72,22 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeRefactoringWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Refactoring Workflow',
-        description: 'Code refactoring workflow with validation',
-        type: 'refactoring',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Refactoring Workflow",
+      description: "Code refactoring workflow with validation",
+      type: "refactoring",
+      version: "1.0.0",
+    });
 
     // Add analysis steps for understanding current code
     const projectAnalysisStep = WorkflowStepBuilder.analysis({
-      type: 'code-analysis',
-      includeMetrics: true
+      type: "code-analysis",
+      includeMetrics: true,
     }).build();
     builder.addStep(projectAnalysisStep);
-    
-    const codeQualityStep = new (require('../steps/categories/analysis/CodeQualityAnalysisStep'))();
+
+    const codeQualityStep =
+      new (require("../steps/categories/analysis/CodeQualityAnalysisStep"))();
     builder.addStep(codeQualityStep);
 
     // Add refactoring step
@@ -96,14 +97,14 @@ class WorkflowComposer {
     // Add testing step to ensure refactoring didn't break anything
     const testingStep = WorkflowStepBuilder.testing({
       runTests: true,
-      validateResults: true
+      validateResults: true,
     }).build();
     builder.addStep(testingStep);
 
     // Add validation step
     const validationStep = WorkflowStepBuilder.validation({
       validateCode: true,
-      checkQuality: true
+      checkQuality: true,
     }).build();
     builder.addStep(validationStep);
 
@@ -116,28 +117,28 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeFeatureWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Feature Development Workflow',
-        description: 'Complete feature development workflow',
-        type: 'feature',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Feature Development Workflow",
+      description: "Complete feature development workflow",
+      type: "feature",
+      version: "1.0.0",
+    });
 
     // Add analysis steps for requirements understanding
     const projectAnalysisStep = WorkflowStepBuilder.analysis({
-      type: 'requirements-analysis',
-      includeArchitecture: true
+      type: "requirements-analysis",
+      includeArchitecture: true,
     }).build();
     builder.addStep(projectAnalysisStep);
-    
-    const architectureStep = new (require('../steps/categories/analysis/ArchitectureAnalysisStep'))();
+
+    const architectureStep =
+      new (require("../steps/categories/analysis/ArchitectureAnalysisStep"))();
     builder.addStep(architectureStep);
 
     // Add implementation step (using refactoring step for code generation)
     const implementationStep = WorkflowStepBuilder.refactoring({
-      type: 'feature-implementation',
-      generateCode: true
+      type: "feature-implementation",
+      generateCode: true,
     }).build();
     builder.addStep(implementationStep);
 
@@ -145,21 +146,21 @@ class WorkflowComposer {
     const testingStep = WorkflowStepBuilder.testing({
       runTests: true,
       generateTests: true,
-      validateCoverage: true
+      validateCoverage: true,
     }).build();
     builder.addStep(testingStep);
 
     // Add validation step
     const validationStep = WorkflowStepBuilder.validation({
       validateFeature: true,
-      checkIntegration: true
+      checkIntegration: true,
     }).build();
     builder.addStep(validationStep);
 
     // Add documentation step
     const documentationStep = WorkflowStepBuilder.documentation({
       generateDocs: true,
-      includeAPI: true
+      includeAPI: true,
     }).build();
     builder.addStep(documentationStep);
 
@@ -172,22 +173,22 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeTestingWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Testing Workflow',
-        description: 'Comprehensive testing workflow',
-        type: 'testing',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Testing Workflow",
+      description: "Comprehensive testing workflow",
+      type: "testing",
+      version: "1.0.0",
+    });
 
     // Add analysis steps to understand test requirements
     const projectAnalysisStep = WorkflowStepBuilder.analysis({
-      type: 'test-analysis',
-      identifyGaps: true
+      type: "test-analysis",
+      identifyGaps: true,
     }).build();
     builder.addStep(projectAnalysisStep);
-    
-    const dependencyStep = new (require('../steps/categories/analysis/DependencyAnalysisStep'))();
+
+    const dependencyStep =
+      new (require("../steps/categories/analysis/DependencyAnalysisStep"))();
     builder.addStep(dependencyStep);
 
     // Add testing step
@@ -196,8 +197,8 @@ class WorkflowComposer {
 
     // Add optimization step for test improvements
     const optimizationStep = WorkflowStepBuilder.optimization({
-      type: 'test-optimization',
-      improveCoverage: true
+      type: "test-optimization",
+      improveCoverage: true,
     }).build();
     builder.addStep(optimizationStep);
 
@@ -210,32 +211,31 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeDeploymentWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Deployment Workflow',
-        description: 'Complete deployment workflow',
-        type: 'deployment',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Deployment Workflow",
+      description: "Complete deployment workflow",
+      type: "deployment",
+      version: "1.0.0",
+    });
 
     // Add validation step
     const validationStep = WorkflowStepBuilder.validation({
       validateDeployment: true,
-      checkDependencies: true
+      checkDependencies: true,
     }).build();
     builder.addStep(validationStep);
 
     // Add testing step
     const testingStep = WorkflowStepBuilder.testing({
       runTests: true,
-      validateDeployment: true
+      validateDeployment: true,
     }).build();
     builder.addStep(testingStep);
 
     // Add security step
     const securityStep = WorkflowStepBuilder.security({
       securityScan: true,
-      vulnerabilityCheck: true
+      vulnerabilityCheck: true,
     }).build();
     builder.addStep(securityStep);
 
@@ -252,22 +252,22 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeSecurityWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Security Workflow',
-        description: 'Security analysis and validation workflow',
-        type: 'security',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Security Workflow",
+      description: "Security analysis and validation workflow",
+      type: "security",
+      version: "1.0.0",
+    });
 
     // Add security analysis steps
     const projectAnalysisStep = WorkflowStepBuilder.analysis({
-      type: 'security-analysis',
-      includeVulnerabilities: true
+      type: "security-analysis",
+      includeVulnerabilities: true,
     }).build();
     builder.addStep(projectAnalysisStep);
-    
-    const securityAnalysisStep = new (require('../steps/categories/analysis/SecurityAnalysisOrchestrator'))();
+
+    const securityAnalysisStep =
+      new (require("../steps/categories/analysis/SecurityAnalysisOrchestrator"))();
     builder.addStep(securityAnalysisStep);
 
     // Add security step
@@ -277,7 +277,7 @@ class WorkflowComposer {
     // Add validation step
     const validationStep = WorkflowStepBuilder.validation({
       validateSecurity: true,
-      checkCompliance: true
+      checkCompliance: true,
     }).build();
     builder.addStep(validationStep);
 
@@ -290,22 +290,22 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   composeOptimizationWorkflow(options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata({
-        name: 'Optimization Workflow',
-        description: 'Performance and code optimization workflow',
-        type: 'optimization',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata({
+      name: "Optimization Workflow",
+      description: "Performance and code optimization workflow",
+      type: "optimization",
+      version: "1.0.0",
+    });
 
     // Add performance analysis steps
     const projectAnalysisStep = WorkflowStepBuilder.analysis({
-      type: 'performance-analysis',
-      includeMetrics: true
+      type: "performance-analysis",
+      includeMetrics: true,
     }).build();
     builder.addStep(projectAnalysisStep);
-    
-    const performanceStep = new (require('../steps/categories/analysis/PerformanceAnalysisOrchestrator'))();
+
+    const performanceStep =
+      new (require("../steps/categories/analysis/PerformanceAnalysisOrchestrator"))();
     builder.addStep(performanceStep);
 
     // Add optimization step
@@ -315,14 +315,14 @@ class WorkflowComposer {
     // Add testing step to ensure optimizations work
     const testingStep = WorkflowStepBuilder.testing({
       runTests: true,
-      validatePerformance: true
+      validatePerformance: true,
     }).build();
     builder.addStep(testingStep);
 
     // Add validation step
     const validationStep = WorkflowStepBuilder.validation({
       validateOptimizations: true,
-      checkPerformance: true
+      checkPerformance: true,
     }).build();
     builder.addStep(validationStep);
 
@@ -401,16 +401,20 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   createFromStepTypes(stepTypes, options = {}) {
-    const builder = new WorkflowBuilder()
-      .setMetadata(options.metadata || {
-        name: 'Custom Workflow',
-        description: 'Custom workflow from step types',
-        type: 'custom',
-        version: '1.0.0'
-      });
+    const builder = new WorkflowBuilder().setMetadata(
+      options.metadata || {
+        name: "Custom Workflow",
+        description: "Custom workflow from step types",
+        type: "custom",
+        version: "1.0.0",
+      },
+    );
 
     for (const stepType of stepTypes) {
-      const step = WorkflowStepBuilder.fromTemplate(stepType, options[stepType] || {}).build();
+      const step = WorkflowStepBuilder.fromTemplate(
+        stepType,
+        options[stepType] || {},
+      ).build();
       builder.addStep(step);
     }
 
@@ -423,8 +427,7 @@ class WorkflowComposer {
    * @returns {ComposedWorkflow} Composed workflow
    */
   createFromConfig(config) {
-    const builder = new WorkflowBuilder()
-      .setMetadata(config.metadata || {});
+    const builder = new WorkflowBuilder().setMetadata(config.metadata || {});
 
     if (config.validationRules) {
       for (const rule of config.validationRules) {
@@ -438,8 +441,10 @@ class WorkflowComposer {
 
     if (config.steps) {
       for (const stepConfig of config.steps) {
-        const step = WorkflowStepBuilder
-          .fromTemplate(stepConfig.type, stepConfig.options || {})
+        const step = WorkflowStepBuilder.fromTemplate(
+          stepConfig.type,
+          stepConfig.options || {},
+        )
           .setMetadata(stepConfig.metadata || {})
           .build();
         builder.addStep(step);
@@ -450,4 +455,4 @@ class WorkflowComposer {
   }
 }
 
-module.exports = WorkflowComposer; 
+module.exports = WorkflowComposer;

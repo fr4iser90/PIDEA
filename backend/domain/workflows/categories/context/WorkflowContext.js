@@ -2,24 +2,24 @@
  * WorkflowContext - Implementation of IWorkflowContext
  * Manages workflow execution context including state, metadata, and data
  */
-const { v4: uuidv4 } = require('uuid');
-const IWorkflowContext = require('../interfaces/IWorkflowContext');
-const WorkflowState = require('./WorkflowState');
-const WorkflowMetadata = require('./WorkflowMetadata');
+const { v4: uuidv4 } = require("uuid");
+const IWorkflowContext = require("../interfaces/IWorkflowContext");
+const WorkflowState = require("./WorkflowState");
+const WorkflowMetadata = require("./WorkflowMetadata");
 
 class WorkflowContext extends IWorkflowContext {
   constructor(
     workflowId = uuidv4(),
-    taskMode = 'default',
-    workflowVersion = '1.0.0',
+    taskMode = "default",
+    workflowVersion = "1.0.0",
     state = null,
     metadata = null,
     data = {},
     dependencies = [],
-    createdAt = new Date()
+    createdAt = new Date(),
   ) {
     super();
-    
+
     this._workflowId = workflowId;
     this._taskMode = taskMode;
     this._workflowVersion = workflowVersion;
@@ -45,7 +45,7 @@ class WorkflowContext extends IWorkflowContext {
 
   setState(state) {
     if (!(state instanceof WorkflowState)) {
-      throw new Error('State must be an instance of WorkflowState');
+      throw new Error("State must be an instance of WorkflowState");
     }
     this._state = state;
     this._updatedAt = new Date();
@@ -57,7 +57,7 @@ class WorkflowContext extends IWorkflowContext {
 
   setMetadata(metadata) {
     if (!(metadata instanceof WorkflowMetadata)) {
-      throw new Error('Metadata must be an instance of WorkflowMetadata');
+      throw new Error("Metadata must be an instance of WorkflowMetadata");
     }
     this._metadata = metadata;
     this._updatedAt = new Date();
@@ -135,7 +135,7 @@ class WorkflowContext extends IWorkflowContext {
       level,
       message,
       data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
     this._updatedAt = new Date();
   }
@@ -154,7 +154,7 @@ class WorkflowContext extends IWorkflowContext {
       id: uuidv4(),
       action,
       data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
     this._updatedAt = new Date();
   }
@@ -191,7 +191,7 @@ class WorkflowContext extends IWorkflowContext {
 
   // Additional convenience methods
   getLogsByLevel(level) {
-    return this._logs.filter(log => log.level === level);
+    return this._logs.filter((log) => log.level === level);
   }
 
   getRecentLogs(limit = 10) {
@@ -199,13 +199,13 @@ class WorkflowContext extends IWorkflowContext {
   }
 
   getLogsInRange(startTime, endTime) {
-    return this._logs.filter(log => 
-      log.timestamp >= startTime && log.timestamp <= endTime
+    return this._logs.filter(
+      (log) => log.timestamp >= startTime && log.timestamp <= endTime,
     );
   }
 
   getExecutionHistoryByAction(action) {
-    return this._executionHistory.filter(entry => entry.action === action);
+    return this._executionHistory.filter((entry) => entry.action === action);
   }
 
   getRecentExecutionHistory(limit = 10) {
@@ -239,11 +239,11 @@ class WorkflowContext extends IWorkflowContext {
   transitionTo(newStatus, data = {}, metadata = {}) {
     const newState = this._state.transitionTo(newStatus, data, metadata);
     this.setState(newState);
-    this.addExecutionHistory('state_transition', {
+    this.addExecutionHistory("state_transition", {
       from: this._state.status,
       to: newStatus,
       data,
-      metadata
+      metadata,
     });
     return newState;
   }
@@ -294,16 +294,16 @@ class WorkflowContext extends IWorkflowContext {
     const results = {
       isValid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     // Validate state
     if (!this._state) {
       results.isValid = false;
       results.errors.push({
-        field: 'state',
-        message: 'Workflow state is required',
-        code: 'STATE_REQUIRED'
+        field: "state",
+        message: "Workflow state is required",
+        code: "STATE_REQUIRED",
       });
     }
 
@@ -321,9 +321,9 @@ class WorkflowContext extends IWorkflowContext {
       } catch (error) {
         results.isValid = false;
         results.errors.push({
-          field: 'metadata',
+          field: "metadata",
           message: `Metadata validation error: ${error.message}`,
-          code: 'METADATA_VALIDATION_ERROR'
+          code: "METADATA_VALIDATION_ERROR",
         });
       }
     }
@@ -332,9 +332,9 @@ class WorkflowContext extends IWorkflowContext {
     if (!this._workflowId) {
       results.isValid = false;
       results.errors.push({
-        field: 'workflowId',
-        message: 'Workflow ID is required',
-        code: 'WORKFLOW_ID_REQUIRED'
+        field: "workflowId",
+        message: "Workflow ID is required",
+        code: "WORKFLOW_ID_REQUIRED",
       });
     }
 
@@ -342,9 +342,9 @@ class WorkflowContext extends IWorkflowContext {
     if (!this._taskMode) {
       results.isValid = false;
       results.errors.push({
-        field: 'taskMode',
-        message: 'Workflow type is required',
-        code: 'WORKFLOW_TYPE_REQUIRED'
+        field: "taskMode",
+        message: "Workflow type is required",
+        code: "WORKFLOW_TYPE_REQUIRED",
       });
     }
 
@@ -378,30 +378,30 @@ class WorkflowContext extends IWorkflowContext {
       hasError: this._error !== null,
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
-      duration: this.getDuration()
+      duration: this.getDuration(),
     };
   }
 
   // Validation
   _validate() {
     if (!this._workflowId) {
-      throw new Error('Workflow ID is required');
+      throw new Error("Workflow ID is required");
     }
 
     if (!this._taskMode) {
-      throw new Error('Workflow type is required');
+      throw new Error("Workflow type is required");
     }
 
     if (!this._workflowVersion) {
-      throw new Error('Workflow version is required');
+      throw new Error("Workflow version is required");
     }
 
     if (!this._state) {
-      throw new Error('Workflow state is required');
+      throw new Error("Workflow state is required");
     }
 
     if (!this._metadata) {
-      throw new Error('Workflow metadata is required');
+      throw new Error("Workflow metadata is required");
     }
   }
 
@@ -421,7 +421,7 @@ class WorkflowContext extends IWorkflowContext {
       result: this._result,
       error: this._error,
       createdAt: this._createdAt.toISOString(),
-      updatedAt: this._updatedAt.toISOString()
+      updatedAt: this._updatedAt.toISOString(),
     };
   }
 
@@ -434,7 +434,7 @@ class WorkflowContext extends IWorkflowContext {
       WorkflowMetadata.fromJSON(data.metadata),
       data.data,
       data.dependencies,
-      new Date(data.createdAt)
+      new Date(data.createdAt),
     );
 
     context._metrics = data.metrics || {};
@@ -448,21 +448,44 @@ class WorkflowContext extends IWorkflowContext {
   }
 
   // Factory methods
-  static create(workflowId, taskMode, workflowVersion = '1.0.0') {
+  static create(workflowId, taskMode, workflowVersion = "1.0.0") {
     return new WorkflowContext(workflowId, taskMode, workflowVersion);
   }
 
-  static createWithData(workflowId, taskMode, data, workflowVersion = '1.0.0') {
-    return new WorkflowContext(workflowId, taskMode, workflowVersion, null, null, data);
+  static createWithData(workflowId, taskMode, data, workflowVersion = "1.0.0") {
+    return new WorkflowContext(
+      workflowId,
+      taskMode,
+      workflowVersion,
+      null,
+      null,
+      data,
+    );
   }
 
-  static createWithState(workflowId, taskMode, state, workflowVersion = '1.0.0') {
+  static createWithState(
+    workflowId,
+    taskMode,
+    state,
+    workflowVersion = "1.0.0",
+  ) {
     return new WorkflowContext(workflowId, taskMode, workflowVersion, state);
   }
 
-  static createWithMetadata(workflowId, taskMode, metadata, workflowVersion = '1.0.0') {
-    return new WorkflowContext(workflowId, taskMode, workflowVersion, null, metadata);
+  static createWithMetadata(
+    workflowId,
+    taskMode,
+    metadata,
+    workflowVersion = "1.0.0",
+  ) {
+    return new WorkflowContext(
+      workflowId,
+      taskMode,
+      workflowVersion,
+      null,
+      metadata,
+    );
   }
 }
 
-module.exports = WorkflowContext; 
+module.exports = WorkflowContext;

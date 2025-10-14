@@ -1,6 +1,6 @@
 /**
  * HandlerException - Exception class for handler errors
- * 
+ *
  * This class provides a standardized exception type for handler-related
  * errors, including validation errors, execution errors, and system errors.
  */
@@ -12,10 +12,10 @@ class HandlerException extends Error {
    * @param {string} code - Error code
    * @param {string} type - Error type
    */
-  constructor(message, details = {}, code = 'HANDLER_ERROR', type = '') {
+  constructor(message, details = {}, code = "HANDLER_ERROR", type = "") {
     super(message);
-    
-    this.name = 'HandlerException';
+
+    this.name = "HandlerException";
     this.message = message;
     this.details = details;
     this.code = code;
@@ -34,8 +34,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'VALIDATION_ERROR',
-      'VALIDATION'
+      "VALIDATION_ERROR",
+      "VALIDATION",
     );
   }
 
@@ -49,8 +49,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'EXECUTION_ERROR',
-      'EXECUTION'
+      "EXECUTION_ERROR",
+      "EXECUTION",
     );
   }
 
@@ -61,12 +61,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Adapter exception
    */
   static adapterError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'ADAPTER_ERROR',
-      'ADAPTER'
-    );
+    return new HandlerException(message, details, "ADAPTER_ERROR", "ADAPTER");
   }
 
   /**
@@ -76,12 +71,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Registry exception
    */
   static registryError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'REGISTRY_ERROR',
-      'REGISTRY'
-    );
+    return new HandlerException(message, details, "REGISTRY_ERROR", "REGISTRY");
   }
 
   /**
@@ -91,12 +81,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Factory exception
    */
   static factoryError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'FACTORY_ERROR',
-      'FACTORY'
-    );
+    return new HandlerException(message, details, "FACTORY_ERROR", "FACTORY");
   }
 
   /**
@@ -106,12 +91,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Context exception
    */
   static contextError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'CONTEXT_ERROR',
-      'CONTEXT'
-    );
+    return new HandlerException(message, details, "CONTEXT_ERROR", "CONTEXT");
   }
 
   /**
@@ -124,8 +104,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'MIGRATION_ERROR',
-      'MIGRATION'
+      "MIGRATION_ERROR",
+      "MIGRATION",
     );
   }
 
@@ -136,12 +116,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Timeout exception
    */
   static timeoutError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'TIMEOUT_ERROR',
-      'TIMEOUT'
-    );
+    return new HandlerException(message, details, "TIMEOUT_ERROR", "TIMEOUT");
   }
 
   /**
@@ -151,12 +126,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Resource exception
    */
   static resourceError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'RESOURCE_ERROR',
-      'RESOURCE'
-    );
+    return new HandlerException(message, details, "RESOURCE_ERROR", "RESOURCE");
   }
 
   /**
@@ -169,8 +139,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'CONFIGURATION_ERROR',
-      'CONFIGURATION'
+      "CONFIGURATION_ERROR",
+      "CONFIGURATION",
     );
   }
 
@@ -184,8 +154,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'DEPENDENCY_ERROR',
-      'DEPENDENCY'
+      "DEPENDENCY_ERROR",
+      "DEPENDENCY",
     );
   }
 
@@ -199,8 +169,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'HEALTH_CHECK_ERROR',
-      'HEALTH_CHECK'
+      "HEALTH_CHECK_ERROR",
+      "HEALTH_CHECK",
     );
   }
 
@@ -211,12 +181,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Metrics exception
    */
   static metricsError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'METRICS_ERROR',
-      'METRICS'
-    );
+    return new HandlerException(message, details, "METRICS_ERROR", "METRICS");
   }
 
   /**
@@ -226,12 +191,7 @@ class HandlerException extends Error {
    * @returns {HandlerException} Audit exception
    */
   static auditError(message, details = {}) {
-    return new HandlerException(
-      message,
-      details,
-      'AUDIT_ERROR',
-      'AUDIT'
-    );
+    return new HandlerException(message, details, "AUDIT_ERROR", "AUDIT");
   }
 
   /**
@@ -244,8 +204,8 @@ class HandlerException extends Error {
     return new HandlerException(
       message,
       details,
-      'OPTIMIZATION_ERROR',
-      'OPTIMIZATION'
+      "OPTIMIZATION_ERROR",
+      "OPTIMIZATION",
     );
   }
 
@@ -260,7 +220,7 @@ class HandlerException extends Error {
       code: this.code,
       type: this.type,
       timestamp: this.timestamp,
-      hasDetails: Object.keys(this.details).length > 0
+      hasDetails: Object.keys(this.details).length > 0,
     };
   }
 
@@ -272,7 +232,7 @@ class HandlerException extends Error {
     return {
       ...this.details,
       stack: this.stack,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -299,7 +259,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if validation error
    */
   isValidationError() {
-    return this.isType('VALIDATION');
+    return this.isType("VALIDATION");
   }
 
   /**
@@ -307,7 +267,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if execution error
    */
   isExecutionError() {
-    return this.isType('EXECUTION');
+    return this.isType("EXECUTION");
   }
 
   /**
@@ -315,7 +275,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if adapter error
    */
   isAdapterError() {
-    return this.isType('ADAPTER');
+    return this.isType("ADAPTER");
   }
 
   /**
@@ -323,7 +283,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if registry error
    */
   isRegistryError() {
-    return this.isType('REGISTRY');
+    return this.isType("REGISTRY");
   }
 
   /**
@@ -331,7 +291,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if factory error
    */
   isFactoryError() {
-    return this.isType('FACTORY');
+    return this.isType("FACTORY");
   }
 
   /**
@@ -339,7 +299,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if context error
    */
   isContextError() {
-    return this.isType('CONTEXT');
+    return this.isType("CONTEXT");
   }
 
   /**
@@ -347,7 +307,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if migration error
    */
   isMigrationError() {
-    return this.isType('MIGRATION');
+    return this.isType("MIGRATION");
   }
 
   /**
@@ -355,7 +315,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if timeout error
    */
   isTimeoutError() {
-    return this.isType('TIMEOUT');
+    return this.isType("TIMEOUT");
   }
 
   /**
@@ -363,7 +323,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if resource error
    */
   isResourceError() {
-    return this.isType('RESOURCE');
+    return this.isType("RESOURCE");
   }
 
   /**
@@ -371,7 +331,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if configuration error
    */
   isConfigurationError() {
-    return this.isType('CONFIGURATION');
+    return this.isType("CONFIGURATION");
   }
 
   /**
@@ -379,7 +339,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if dependency error
    */
   isDependencyError() {
-    return this.isType('DEPENDENCY');
+    return this.isType("DEPENDENCY");
   }
 
   /**
@@ -387,7 +347,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if health check error
    */
   isHealthCheckError() {
-    return this.isType('HEALTH_CHECK');
+    return this.isType("HEALTH_CHECK");
   }
 
   /**
@@ -395,7 +355,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if metrics error
    */
   isMetricsError() {
-    return this.isType('METRICS');
+    return this.isType("METRICS");
   }
 
   /**
@@ -403,7 +363,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if audit error
    */
   isAuditError() {
-    return this.isType('AUDIT');
+    return this.isType("AUDIT");
   }
 
   /**
@@ -411,7 +371,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if optimization error
    */
   isOptimizationError() {
-    return this.isType('OPTIMIZATION');
+    return this.isType("OPTIMIZATION");
   }
 
   /**
@@ -426,7 +386,7 @@ class HandlerException extends Error {
       type: this.type,
       timestamp: this.timestamp,
       details: this.details,
-      stack: this.stack
+      stack: this.stack,
     };
   }
 
@@ -444,24 +404,24 @@ class HandlerException extends Error {
    */
   getSeverity() {
     const severityMap = {
-      'VALIDATION': 'LOW',
-      'CONFIGURATION': 'LOW',
-      'CONTEXT': 'MEDIUM',
-      'ADAPTER': 'MEDIUM',
-      'REGISTRY': 'MEDIUM',
-      'FACTORY': 'MEDIUM',
-      'EXECUTION': 'HIGH',
-      'MIGRATION': 'HIGH',
-      'TIMEOUT': 'HIGH',
-      'RESOURCE': 'HIGH',
-      'DEPENDENCY': 'HIGH',
-      'HEALTH_CHECK': 'HIGH',
-      'METRICS': 'LOW',
-      'AUDIT': 'LOW',
-      'OPTIMIZATION': 'MEDIUM'
+      VALIDATION: "LOW",
+      CONFIGURATION: "LOW",
+      CONTEXT: "MEDIUM",
+      ADAPTER: "MEDIUM",
+      REGISTRY: "MEDIUM",
+      FACTORY: "MEDIUM",
+      EXECUTION: "HIGH",
+      MIGRATION: "HIGH",
+      TIMEOUT: "HIGH",
+      RESOURCE: "HIGH",
+      DEPENDENCY: "HIGH",
+      HEALTH_CHECK: "HIGH",
+      METRICS: "LOW",
+      AUDIT: "LOW",
+      OPTIMIZATION: "MEDIUM",
     };
 
-    return severityMap[this.type] || 'MEDIUM';
+    return severityMap[this.type] || "MEDIUM";
   }
 
   /**
@@ -469,7 +429,7 @@ class HandlerException extends Error {
    * @returns {boolean} True if critical error
    */
   isCritical() {
-    return this.getSeverity() === 'HIGH';
+    return this.getSeverity() === "HIGH";
   }
 
   /**
@@ -477,8 +437,10 @@ class HandlerException extends Error {
    * @returns {boolean} True if recoverable error
    */
   isRecoverable() {
-    return !this.isCritical() || this.isType('TIMEOUT') || this.isType('RESOURCE');
+    return (
+      !this.isCritical() || this.isType("TIMEOUT") || this.isType("RESOURCE")
+    );
   }
 }
 
-module.exports = HandlerException; 
+module.exports = HandlerException;

@@ -3,12 +3,14 @@
  * Specialized service for CPU performance analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { CpuAnalysisStep } = require('@domain/steps/categories/analysis/performance');
+const Logger = require("@logging/Logger");
+const {
+  CpuAnalysisStep,
+} = require("@domain/steps/categories/analysis/performance");
 
 class CpuAnalysisService {
   constructor() {
-    this.logger = new Logger('CpuAnalysisService');
+    this.logger = new Logger("CpuAnalysisService");
     this.cpuStep = new CpuAnalysisStep();
   }
 
@@ -22,22 +24,23 @@ class CpuAnalysisService {
    */
   async executeCpuAnalysis(params) {
     try {
-      this.logger.info('Starting CPU performance analysis', { projectId: params.projectId });
+      this.logger.info("Starting CPU performance analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.cpuStep.execute(params);
 
-      this.logger.info('CPU analysis completed', { 
+      this.logger.info("CPU analysis completed", {
         projectId: params.projectId,
         issuesFound: result.issues?.length || 0,
-        cpuUsage: result.metrics?.cpuUsage || 0
+        cpuUsage: result.metrics?.cpuUsage || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('CPU analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("CPU analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,13 @@ class CpuAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'CPU Performance Analyzer',
-      version: '1.0.0',
-      description: 'CPU performance patterns and code optimization analysis',
-      metrics: ['cpu-usage', 'execution-time', 'complexity', 'bottlenecks'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "CPU Performance Analyzer",
+      version: "1.0.0",
+      description: "CPU performance patterns and code optimization analysis",
+      metrics: ["cpu-usage", "execution-time", "complexity", "bottlenecks"],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = CpuAnalysisService; 
+module.exports = CpuAnalysisService;

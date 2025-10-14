@@ -2,7 +2,7 @@
  * HandlerBuilder - Application Layer: Handler builder
  * Builds handlers with validation and configuration
  */
-const HandlerRegistry = require('./HandlerRegistry');
+const HandlerRegistry = require("./HandlerRegistry");
 
 class HandlerBuilder {
   constructor(registry) {
@@ -27,16 +27,20 @@ class HandlerBuilder {
    * @returns {Object} Validation result
    */
   static validateDependencies(handlerName, dependencies) {
-    const HandlerClass = HandlerRegistry.buildFromCategory('management', handlerName, dependencies);
-    
+    const HandlerClass = HandlerRegistry.buildFromCategory(
+      "management",
+      handlerName,
+      dependencies,
+    );
+
     if (!HandlerClass) {
       return { isValid: false, errors: [`Handler not found: ${handlerName}`] };
     }
 
     try {
       const handler = new HandlerClass(dependencies);
-      
-      if (typeof handler.validateDependencies === 'function') {
+
+      if (typeof handler.validateDependencies === "function") {
         handler.validateDependencies(dependencies);
       }
 

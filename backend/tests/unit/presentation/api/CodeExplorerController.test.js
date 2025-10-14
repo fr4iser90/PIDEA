@@ -1,10 +1,10 @@
-const CodeExplorerController = require('@api/CodeExplorerController');
-const BrowserManager = require('@external/BrowserManager');
+const CodeExplorerController = require("@api/CodeExplorerController");
+const BrowserManager = require("@external/BrowserManager");
 
 // Mock BrowserManager
-jest.mock('../../../../infrastructure/external/BrowserManager');
+jest.mock("../../../../infrastructure/external/BrowserManager");
 
-describe('CodeExplorerController', () => {
+describe("CodeExplorerController", () => {
   let controller;
   let mockBrowserManager;
   let mockReq;
@@ -17,7 +17,7 @@ describe('CodeExplorerController', () => {
       openFile: jest.fn(),
       getCurrentFileContent: jest.fn(),
       getCurrentFileInfo: jest.fn(),
-      refreshExplorer: jest.fn()
+      refreshExplorer: jest.fn(),
     };
 
     // Mock the BrowserManager constructor
@@ -30,12 +30,12 @@ describe('CodeExplorerController', () => {
     mockReq = {
       body: {},
       params: {},
-      query: {}
+      query: {},
     };
 
     mockRes = {
       json: jest.fn(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
 
     // Reset console mocks
@@ -46,8 +46,8 @@ describe('CodeExplorerController', () => {
     jest.clearAllMocks();
   });
 
-  describe('constructor', () => {
-    it('should initialize with BrowserManager instance', () => {
+  describe("constructor", () => {
+    it("should initialize with BrowserManager instance", () => {
       // Create a new controller instance for this test
       const newController = new CodeExplorerController();
       expect(BrowserManager).toHaveBeenCalledTimes(1);
@@ -55,28 +55,28 @@ describe('CodeExplorerController', () => {
     });
   });
 
-  describe('getFileTree', () => {
-    it('should return file tree successfully', async () => {
+  describe("getFileTree", () => {
+    it("should return file tree successfully", async () => {
       const mockFiles = [
         {
-          name: 'backend',
-          path: 'backend',
-          type: 'directory',
+          name: "backend",
+          path: "backend",
+          type: "directory",
           level: 1,
           expanded: true,
           selected: false,
           children: [
             {
-              name: 'package.json',
-              path: 'backend/package.json',
-              type: 'file',
+              name: "package.json",
+              path: "backend/package.json",
+              type: "file",
               level: 2,
               expanded: false,
               selected: false,
-              children: []
-            }
-          ]
-        }
+              children: [],
+            },
+          ],
+        },
       ];
 
       mockBrowserManager.getFileExplorerTree.mockResolvedValue(mockFiles);
@@ -85,14 +85,13 @@ describe('CodeExplorerController', () => {
 
       expect(mockBrowserManager.getFileExplorerTree).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockFiles
+        data: mockFiles,
       });
       expect(mockRes.status).not.toHaveBeenCalled();
     });
 
-    it('should handle error when getting file tree fails', async () => {
-      const error = new Error('Failed to get file tree');
+    it("should handle error when getting file tree fails", async () => {
+      const error = new Error("Failed to get file tree");
       mockBrowserManager.getFileExplorerTree.mockRejectedValue(error);
 
       await controller.getFileTree(mockReq, mockRes);
@@ -100,30 +99,29 @@ describe('CodeExplorerController', () => {
       expect(mockBrowserManager.getFileExplorerTree).toHaveBeenCalledTimes(1);
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to get file tree'
+       
+        error: "Failed to get file tree",
       });
     });
 
-    it('should handle empty file tree', async () => {
+    it("should handle empty file tree", async () => {
       mockBrowserManager.getFileExplorerTree.mockResolvedValue([]);
 
       await controller.getFileTree(mockReq, mockRes);
 
       expect(mockBrowserManager.getFileExplorerTree).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: []
+        data: [],
       });
     });
   });
 
-  describe('getFileContent', () => {
+  describe("getFileContent", () => {
     beforeEach(() => {
-      mockReq.params = { path: 'backend/package.json' };
+      mockReq.params = { path: "backend/package.json" };
     });
 
-    it('should return file content successfully', async () => {
+    it("should return file content successfully", async () => {
       const mockContent = '{"name": "backend", "version": "1.0.0"}';
       const mockOpened = true;
 
@@ -132,65 +130,72 @@ describe('CodeExplorerController', () => {
 
       await controller.getFileContent(mockReq, mockRes);
 
-      expect(mockBrowserManager.openFile).toHaveBeenCalledWith('backend/package.json');
+      expect(mockBrowserManager.openFile).toHaveBeenCalledWith(
+        "backend/package.json",
+      );
       expect(mockBrowserManager.getCurrentFileContent).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
         data: {
-          path: 'backend/package.json',
+          path: "backend/package.json",
           content: mockContent,
-          opened: mockOpened
-        }
+          opened: mockOpened,
+        },
       });
       expect(mockRes.status).not.toHaveBeenCalled();
     });
 
-    it('should return 404 when file cannot be opened', async () => {
+    it("should return 404 when file cannot be opened", async () => {
       mockBrowserManager.openFile.mockResolvedValue(false);
 
       await controller.getFileContent(mockReq, mockRes);
 
-      expect(mockBrowserManager.openFile).toHaveBeenCalledWith('backend/package.json');
+      expect(mockBrowserManager.openFile).toHaveBeenCalledWith(
+        "backend/package.json",
+      );
       expect(mockBrowserManager.getCurrentFileContent).not.toHaveBeenCalled();
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'File not found or could not be opened'
+       
+        error: "File not found or could not be opened",
       });
     });
 
-    it('should handle error when opening file fails', async () => {
-      const error = new Error('Failed to open file');
+    it("should handle error when opening file fails", async () => {
+      const error = new Error("Failed to open file");
       mockBrowserManager.openFile.mockRejectedValue(error);
 
       await controller.getFileContent(mockReq, mockRes);
 
-      expect(mockBrowserManager.openFile).toHaveBeenCalledWith('backend/package.json');
+      expect(mockBrowserManager.openFile).toHaveBeenCalledWith(
+        "backend/package.json",
+      );
       expect(mockBrowserManager.getCurrentFileContent).not.toHaveBeenCalled();
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to open file'
+       
+        error: "Failed to open file",
       });
     });
 
-    it('should handle error when getting file content fails', async () => {
-      const error = new Error('Failed to get file content');
+    it("should handle error when getting file content fails", async () => {
+      const error = new Error("Failed to get file content");
       mockBrowserManager.openFile.mockResolvedValue(true);
       mockBrowserManager.getCurrentFileContent.mockRejectedValue(error);
 
       await controller.getFileContent(mockReq, mockRes);
 
-      expect(mockBrowserManager.openFile).toHaveBeenCalledWith('backend/package.json');
+      expect(mockBrowserManager.openFile).toHaveBeenCalledWith(
+        "backend/package.json",
+      );
       expect(mockBrowserManager.getCurrentFileContent).toHaveBeenCalledTimes(1);
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to get file content'
+       
+        error: "Failed to get file content",
       });
     });
 
-    it('should handle missing path parameter', async () => {
+    it("should handle missing path parameter", async () => {
       mockReq.params = {};
       mockBrowserManager.openFile.mockResolvedValue(false);
 
@@ -199,12 +204,12 @@ describe('CodeExplorerController', () => {
       expect(mockBrowserManager.openFile).toHaveBeenCalledWith(undefined);
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'File not found or could not be opened'
+       
+        error: "File not found or could not be opened",
       });
     });
 
-    it('should handle null path parameter', async () => {
+    it("should handle null path parameter", async () => {
       mockReq.params = { path: null };
       mockBrowserManager.openFile.mockResolvedValue(false);
 
@@ -213,20 +218,20 @@ describe('CodeExplorerController', () => {
       expect(mockBrowserManager.openFile).toHaveBeenCalledWith(null);
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'File not found or could not be opened'
+       
+        error: "File not found or could not be opened",
       });
     });
   });
 
-  describe('getCurrentFileInfo', () => {
-    it('should return current file info successfully', async () => {
+  describe("getCurrentFileInfo", () => {
+    it("should return current file info successfully", async () => {
       const mockFileInfo = {
-        name: 'package.json',
-        path: 'backend/package.json',
+        name: "package.json",
+        path: "backend/package.json",
         size: 1024,
         modified: new Date().toISOString(),
-        type: 'file'
+        type: "file",
       };
 
       mockBrowserManager.getCurrentFileInfo.mockResolvedValue(mockFileInfo);
@@ -235,14 +240,13 @@ describe('CodeExplorerController', () => {
 
       expect(mockBrowserManager.getCurrentFileInfo).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: mockFileInfo
+        data: mockFileInfo,
       });
       expect(mockRes.status).not.toHaveBeenCalled();
     });
 
-    it('should handle error when getting current file info fails', async () => {
-      const error = new Error('Failed to get current file info');
+    it("should handle error when getting current file info fails", async () => {
+      const error = new Error("Failed to get current file info");
       mockBrowserManager.getCurrentFileInfo.mockRejectedValue(error);
 
       await controller.getCurrentFileInfo(mockReq, mockRes);
@@ -250,38 +254,36 @@ describe('CodeExplorerController', () => {
       expect(mockBrowserManager.getCurrentFileInfo).toHaveBeenCalledTimes(1);
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to get current file info'
+       
+        error: "Failed to get current file info",
       });
     });
 
-    it('should handle null file info', async () => {
+    it("should handle null file info", async () => {
       mockBrowserManager.getCurrentFileInfo.mockResolvedValue(null);
 
       await controller.getCurrentFileInfo(mockReq, mockRes);
 
       expect(mockBrowserManager.getCurrentFileInfo).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: null
+        data: null,
       });
     });
 
-    it('should handle empty file info object', async () => {
+    it("should handle empty file info object", async () => {
       mockBrowserManager.getCurrentFileInfo.mockResolvedValue({});
 
       await controller.getCurrentFileInfo(mockReq, mockRes);
 
       expect(mockBrowserManager.getCurrentFileInfo).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: {}
+        data: {},
       });
     });
   });
 
-  describe('refreshExplorer', () => {
-    it('should refresh explorer successfully', async () => {
+  describe("refreshExplorer", () => {
+    it("should refresh explorer successfully", async () => {
       const mockRefreshed = true;
 
       mockBrowserManager.refreshExplorer.mockResolvedValue(mockRefreshed);
@@ -290,14 +292,13 @@ describe('CodeExplorerController', () => {
 
       expect(mockBrowserManager.refreshExplorer).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: { refreshed: mockRefreshed }
+        data: { refreshed: mockRefreshed },
       });
       expect(mockRes.status).not.toHaveBeenCalled();
     });
 
-    it('should handle error when refreshing explorer fails', async () => {
-      const error = new Error('Failed to refresh explorer');
+    it("should handle error when refreshing explorer fails", async () => {
+      const error = new Error("Failed to refresh explorer");
       mockBrowserManager.refreshExplorer.mockRejectedValue(error);
 
       await controller.refreshExplorer(mockReq, mockRes);
@@ -305,120 +306,131 @@ describe('CodeExplorerController', () => {
       expect(mockBrowserManager.refreshExplorer).toHaveBeenCalledTimes(1);
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Failed to refresh explorer'
+       
+        error: "Failed to refresh explorer",
       });
     });
 
-    it('should handle refresh returning false', async () => {
+    it("should handle refresh returning false", async () => {
       mockBrowserManager.refreshExplorer.mockResolvedValue(false);
 
       await controller.refreshExplorer(mockReq, mockRes);
 
       expect(mockBrowserManager.refreshExplorer).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: { refreshed: false }
+        data: { refreshed: false },
       });
     });
 
-    it('should handle refresh returning null', async () => {
+    it("should handle refresh returning null", async () => {
       mockBrowserManager.refreshExplorer.mockResolvedValue(null);
 
       await controller.refreshExplorer(mockReq, mockRes);
 
       expect(mockBrowserManager.refreshExplorer).toHaveBeenCalledTimes(1);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: { refreshed: null }
+        data: { refreshed: null },
       });
     });
   });
 
-  describe('error handling edge cases', () => {
-    it('should handle non-Error objects thrown', async () => {
-      const nonError = 'String error';
+  describe("error handling edge cases", () => {
+    it("should handle non-Error objects thrown", async () => {
+      const nonError = "String error";
       mockBrowserManager.getFileExplorerTree.mockRejectedValue(nonError);
 
       await controller.getFileTree(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'String error'
+       
+        error: "String error",
       });
     });
 
-    it('should handle Error objects without message property', async () => {
+    it("should handle Error objects without message property", async () => {
       const errorWithoutMessage = new Error();
       delete errorWithoutMessage.message;
-      mockBrowserManager.getFileExplorerTree.mockRejectedValue(errorWithoutMessage);
+      mockBrowserManager.getFileExplorerTree.mockRejectedValue(
+        errorWithoutMessage,
+      );
 
       await controller.getFileTree(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Error'
+       
+        error: "Error",
       });
     });
 
-    it('should handle undefined error', async () => {
+    it("should handle undefined error", async () => {
       mockBrowserManager.getFileExplorerTree.mockRejectedValue(undefined);
 
       await controller.getFileTree(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'undefined'
+       
+        error: "undefined",
       });
     });
   });
 
-  describe('console logging', () => {
-    it('should log success messages', async () => {
-      const mockFiles = [{ name: 'test.js', path: 'test.js', type: 'file' }];
+  describe("console logging", () => {
+    it("should log success messages", async () => {
+      const mockFiles = [{ name: "test.js", path: "test.js", type: "file" }];
       mockBrowserManager.getFileExplorerTree.mockResolvedValue(mockFiles);
 
       await controller.getFileTree(mockReq, mockRes);
 
-      expect(console.log).toHaveBeenCalledWith('[CodeExplorerController] Getting file tree...');
+      expect(console.log).toHaveBeenCalledWith(
+        "[CodeExplorerController] Getting file tree...",
+      );
     });
 
-    it('should log error messages', async () => {
-      const error = new Error('Test error');
+    it("should log error messages", async () => {
+      const error = new Error("Test error");
       mockBrowserManager.getFileExplorerTree.mockRejectedValue(error);
 
       await controller.getFileTree(mockReq, mockRes);
 
-      expect(console.error).toHaveBeenCalledWith('[CodeExplorerController] Error getting file tree:', error);
+      expect(console.error).toHaveBeenCalledWith(
+        "[CodeExplorerController] Error getting file tree:",
+        error,
+      );
     });
 
-    it('should log file content requests with path', async () => {
-      mockReq.params = { path: 'test/file.js' };
+    it("should log file content requests with path", async () => {
+      mockReq.params = { path: "test/file.js" };
       mockBrowserManager.openFile.mockResolvedValue(true);
-      mockBrowserManager.getCurrentFileContent.mockResolvedValue('content');
+      mockBrowserManager.getCurrentFileContent.mockResolvedValue("content");
 
       await controller.getFileContent(mockReq, mockRes);
 
-      expect(console.log).toHaveBeenCalledWith('[CodeExplorerController] Getting file content for: test/file.js');
+      expect(console.log).toHaveBeenCalledWith(
+        "[CodeExplorerController] Getting file content for: test/file.js",
+      );
     });
 
-    it('should log current file info requests', async () => {
+    it("should log current file info requests", async () => {
       mockBrowserManager.getCurrentFileInfo.mockResolvedValue({});
 
       await controller.getCurrentFileInfo(mockReq, mockRes);
 
-      expect(console.log).toHaveBeenCalledWith('[CodeExplorerController] Getting current file info...');
+      expect(console.log).toHaveBeenCalledWith(
+        "[CodeExplorerController] Getting current file info...",
+      );
     });
 
-    it('should log refresh explorer requests', async () => {
+    it("should log refresh explorer requests", async () => {
       mockBrowserManager.refreshExplorer.mockResolvedValue(true);
 
       await controller.refreshExplorer(mockReq, mockRes);
 
-      expect(console.log).toHaveBeenCalledWith('[CodeExplorerController] Refreshing explorer...');
+      expect(console.log).toHaveBeenCalledWith(
+        "[CodeExplorerController] Refreshing explorer...",
+      );
     });
   });
-}); 
+});

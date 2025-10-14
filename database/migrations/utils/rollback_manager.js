@@ -56,12 +56,12 @@ class RollbackManager {
             this.recordRollback({
                 migrationNumber,
                 executedAt: new Date().toISOString(),
-                success: false,
+               
                 error: error.message
             });
 
             return {
-                success: false,
+               
                 migrationNumber,
                 executedAt: new Date().toISOString(),
                 error: error.message
@@ -90,12 +90,11 @@ class RollbackManager {
             }
 
             return {
-                success: true,
                 statementsExecuted: statements.length
             };
         } catch (error) {
             return {
-                success: false,
+               
                 error: error.message
             };
         }

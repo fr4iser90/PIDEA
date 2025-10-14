@@ -155,7 +155,6 @@ class ETagManager {
   handleNotModified(endpoint, projectId = null) {
     this.logger.info(`Using cached data for ${endpoint} (304 Not Modified)`);
     return {
-      success: true,
       data: null, // No data in 304 response
       cached: true,
       etag: this.getStoredETag(endpoint, projectId)

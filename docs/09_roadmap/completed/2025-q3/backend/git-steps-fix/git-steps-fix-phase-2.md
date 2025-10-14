@@ -55,7 +55,7 @@ curl -X POST http://localhost:3000/api/projects/pidea/git/pidea-agent-status \
 ```
 GitBranchHandler: ✅ Returns { local: [...], remote: [...], all: [...] }
 GitGetBranchesStep: ✅ Returns { result: { local: [...], remote: [...], all: [...] } }
-GitService: ✅ Returns { success: true, result: { local: [...], remote: [...], all: [...] } }
+GitService: ✅ Returns { result: { local: [...], remote: [...], all: [...] } }
 GitController: ✅ Extracts branchesResult.result.all correctly
 ```
 
@@ -65,7 +65,7 @@ GitController: ✅ Extracts branchesResult.result.all correctly
 The GitController was trying to access `branchesResult.all` directly, but the actual data structure was:
 ```javascript
 {
-  success: true,
+ 
   result: {
     local: [...],
     remote: [...],

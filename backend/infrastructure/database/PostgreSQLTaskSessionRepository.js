@@ -1,6 +1,6 @@
-const TaskSession = require('@entities/TaskSession');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const TaskSession = require("@entities/TaskSession");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * PostgreSQLTaskSessionRepository - PostgreSQL implementation of TaskSessionRepository
@@ -9,7 +9,7 @@ const logger = new Logger('Logger');
 class PostgreSQLTaskSessionRepository {
   constructor(databaseConnection) {
     this.db = databaseConnection;
-    this.tableName = 'task_sessions';
+    this.tableName = "task_sessions";
     this.logger = logger;
   }
 
@@ -19,10 +19,10 @@ class PostgreSQLTaskSessionRepository {
   async initialize() {
     try {
       await this.initTable();
-      this.logger.info('Initialized successfully');
+      this.logger.info("Initialized successfully");
       return true;
     } catch (error) {
-      this.logger.error('Initialization failed:', error.message);
+      this.logger.error("Initialization failed:", error.message);
       throw error;
     }
   }
@@ -57,12 +57,20 @@ class PostgreSQLTaskSessionRepository {
     `;
 
     await this.db.execute(createTableSQL);
-    
+
     // Create indexes for better performance
-    await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_${this.tableName}_user_id ON ${this.tableName} (user_id)`);
-    await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_${this.tableName}_project_id ON ${this.tableName} (project_id)`);
-    await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_${this.tableName}_status ON ${this.tableName} (status)`);
-    await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_${this.tableName}_created_at ON ${this.tableName} (created_at)`);
+    await this.db.execute(
+      `CREATE INDEX IF NOT EXISTS idx_${this.tableName}_user_id ON ${this.tableName} (user_id)`,
+    );
+    await this.db.execute(
+      `CREATE INDEX IF NOT EXISTS idx_${this.tableName}_project_id ON ${this.tableName} (project_id)`,
+    );
+    await this.db.execute(
+      `CREATE INDEX IF NOT EXISTS idx_${this.tableName}_status ON ${this.tableName} (status)`,
+    );
+    await this.db.execute(
+      `CREATE INDEX IF NOT EXISTS idx_${this.tableName}_created_at ON ${this.tableName} (created_at)`,
+    );
   }
 
   /**
@@ -73,7 +81,7 @@ class PostgreSQLTaskSessionRepository {
   async save(session) {
     try {
       if (!session || !(session instanceof TaskSession)) {
-        throw new Error('Invalid session: must be a TaskSession instance');
+        throw new Error("Invalid session: must be a TaskSession instance");
       }
 
       const upsertSQL = `
@@ -121,7 +129,7 @@ class PostgreSQLTaskSessionRepository {
         session.duration,
         session.result ? JSON.stringify(session.result) : null,
         session.error,
-        session.metadata ? JSON.stringify(session.metadata) : null
+        session.metadata ? JSON.stringify(session.metadata) : null,
       ];
 
       await this.db.execute(upsertSQL, values);
@@ -141,12 +149,12 @@ class PostgreSQLTaskSessionRepository {
   async findById(id) {
     try {
       if (!id) {
-        throw new Error('Session ID is required');
+        throw new Error("Session ID is required");
       }
 
       const selectSQL = `SELECT * FROM ${this.tableName} WHERE id = $1`;
       const row = await this.db.getOne(selectSQL, [id]);
-      
+
       if (!row) {
         return null;
       }
@@ -167,28 +175,31 @@ class PostgreSQLTaskSessionRepository {
   async findByUserId(userId, options = {}) {
     try {
       if (!userId) {
-        throw new Error('User ID is required');
+        throw new Error("User ID is required");
       }
 
       let selectSQL = `SELECT * FROM ${this.tableName} WHERE user_id = $1`;
       const params = [userId];
 
       if (options.status) {
-        selectSQL += ' AND status = $2';
+        selectSQL += " AND status = $2";
         params.push(options.status);
       }
 
-      selectSQL += ' ORDER BY created_at DESC';
+      selectSQL += " ORDER BY created_at DESC";
 
       if (options.limit) {
-        selectSQL += ' LIMIT $' + (params.length + 1);
+        selectSQL += " LIMIT $" + (params.length + 1);
         params.push(options.limit);
       }
 
       const rows = await this.db.query(selectSQL, params);
-      return rows.map(row => this.mapRowToSession(row));
+      return rows.map((row) => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`Failed to find sessions by user ${userId}:`, error.message);
+      this.logger.error(
+        `Failed to find sessions by user ${userId}:`,
+        error.message,
+      );
       return [];
     }
   }
@@ -202,28 +213,31 @@ class PostgreSQLTaskSessionRepository {
   async findByProjectId(projectId, options = {}) {
     try {
       if (!projectId) {
-        throw new Error('Project ID is required');
+        throw new Error("Project ID is required");
       }
 
       let selectSQL = `SELECT * FROM ${this.tableName} WHERE project_id = $1`;
       const params = [projectId];
 
       if (options.status) {
-        selectSQL += ' AND status = $2';
+        selectSQL += " AND status = $2";
         params.push(options.status);
       }
 
-      selectSQL += ' ORDER BY created_at DESC';
+      selectSQL += " ORDER BY created_at DESC";
 
       if (options.limit) {
-        selectSQL += ' LIMIT $' + (params.length + 1);
+        selectSQL += " LIMIT $" + (params.length + 1);
         params.push(options.limit);
       }
 
       const rows = await this.db.query(selectSQL, params);
-      return rows.map(row => this.mapRowToSession(row));
+      return rows.map((row) => this.mapRowToSession(row));
     } catch (error) {
-      this.logger.error(`Failed to find sessions by project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to find sessions by project ${projectId}:`,
+        error.message,
+      );
       return [];
     }
   }
@@ -239,24 +253,26 @@ class PostgreSQLTaskSessionRepository {
       const params = [];
 
       if (options.userId) {
-        selectSQL += ' AND user_id = $1';
+        selectSQL += " AND user_id = $1";
         params.push(options.userId);
       }
 
       if (options.projectId) {
-        selectSQL += options.userId ? ' AND project_id = $2' : ' AND project_id = $1';
+        selectSQL += options.userId
+          ? " AND project_id = $2"
+          : " AND project_id = $1";
         params.push(options.projectId);
       }
 
-      selectSQL += ' ORDER BY created_at DESC';
+      selectSQL += " ORDER BY created_at DESC";
 
       if (options.limit) {
-        selectSQL += ' LIMIT $' + (params.length + 1);
+        selectSQL += " LIMIT $" + (params.length + 1);
         params.push(options.limit);
       }
 
       const rows = await this.db.query(selectSQL, params);
-      return rows.map(row => this.mapRowToSession(row));
+      return rows.map((row) => this.mapRowToSession(row));
     } catch (error) {
       this.logger.error(`Failed to find active sessions:`, error.message);
       return [];
@@ -271,7 +287,7 @@ class PostgreSQLTaskSessionRepository {
   async deleteById(id) {
     try {
       if (!id) {
-        throw new Error('Session ID is required');
+        throw new Error("Session ID is required");
       }
 
       const deleteSQL = `DELETE FROM ${this.tableName} WHERE id = $1`;
@@ -302,7 +318,7 @@ class PostgreSQLTaskSessionRepository {
       `;
 
       const result = await this.db.getOne(statsSQL);
-      
+
       return {
         total: result.total,
         completed: result.completed,
@@ -310,7 +326,7 @@ class PostgreSQLTaskSessionRepository {
         running: result.running,
         pending: result.pending,
         averageProgress: result.average_progress || 0,
-        averageDuration: result.average_duration || 0
+        averageDuration: result.average_duration || 0,
       };
     } catch (error) {
       this.logger.error(`Failed to get stats:`, error.message);
@@ -321,7 +337,7 @@ class PostgreSQLTaskSessionRepository {
         running: 0,
         pending: 0,
         averageProgress: 0,
-        averageDuration: 0
+        averageDuration: 0,
       };
     }
   }
@@ -353,7 +369,7 @@ class PostgreSQLTaskSessionRepository {
         error: row.error,
         metadata: row.metadata ? JSON.parse(row.metadata) : {},
         createdAt: row.created_at,
-        updatedAt: row.updated_at
+        updatedAt: row.updated_at,
       };
 
       return TaskSession.fromJSON(sessionData);
@@ -385,4 +401,4 @@ class PostgreSQLTaskSessionRepository {
   }
 }
 
-module.exports = PostgreSQLTaskSessionRepository; 
+module.exports = PostgreSQLTaskSessionRepository;

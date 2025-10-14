@@ -1,20 +1,20 @@
 /**
  * WebChat Handler - ChatGPT/DeepSeek via Browser
- * 
+ *
  * Handles web-based chat interfaces like ChatGPT, DeepSeek, Claude, etc.
  * Uses browser automation to interact with chat services.
  */
 
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class WebChatHandler {
   constructor(dependencies = {}) {
-    this.logger = dependencies.logger || new ServiceLogger('WebChatHandler');
+    this.logger = dependencies.logger || new ServiceLogger("WebChatHandler");
     this.browserManager = dependencies.browserManager;
     this.eventBus = dependencies.eventBus;
     this.serviceRegistry = dependencies.serviceRegistry;
-    
+
     // WebChat state
     this.activeChats = new Map(); // sessionId -> chat instance
     this.chatHistory = new Map(); // sessionId -> message history
@@ -29,17 +29,21 @@ class WebChatHandler {
   async createInterface(config, interfaceId) {
     try {
       const { chatUrl, provider, sessionId, autoLogin } = config;
-      
+
       this.logger.info(`Creating WebChat interface: ${interfaceId}`, {
         chatUrl,
         provider,
         sessionId,
-        autoLogin
+        autoLogin,
       });
 
       // Initialize browser session
-      const browserSession = await this.initializeBrowserSession(chatUrl, provider, autoLogin);
-      
+      const browserSession = await this.initializeBrowserSession(
+        chatUrl,
+        provider,
+        autoLogin,
+      );
+
       // Store active chat
       this.activeChats.set(sessionId || interfaceId, {
         id: interfaceId,
@@ -47,22 +51,21 @@ class WebChatHandler {
         provider,
         sessionId: sessionId || interfaceId,
         browserSession,
-        status: 'connected',
-        createdAt: new Date()
+        status: "connected",
+        createdAt: new Date(),
       });
 
       return {
         id: interfaceId,
-        type: 'webchat',
+        type: "webchat",
         chatUrl,
         provider,
         sessionId: sessionId || interfaceId,
-        status: 'connected',
-        createdAt: new Date()
+        status: "connected",
+        createdAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Failed to create WebChat interface:', error);
+      this.logger.error("Failed to create WebChat interface:", error);
       throw new Error(`Failed to create WebChat interface: ${error.message}`);
     }
   }
@@ -76,24 +79,25 @@ class WebChatHandler {
    */
   async initializeBrowserSession(chatUrl, provider, autoLogin = false) {
     try {
-      this.logger.info(`Initializing browser session for ${provider} at ${chatUrl}`);
+      this.logger.info(
+        `Initializing browser session for ${provider} at ${chatUrl}`,
+      );
 
       if (!this.browserManager) {
-        throw new Error('Browser Manager not available');
+        throw new Error("Browser Manager not available");
       }
 
       const session = await this.browserManager.createSession({
         url: chatUrl,
         provider,
-        autoLogin
+        autoLogin,
       });
-      
-      this.logger.info(`Browser session initialized for ${provider}`);
-      
-      return session;
 
+      this.logger.info(`Browser session initialized for ${provider}`);
+
+      return session;
     } catch (error) {
-      this.logger.error('Failed to initialize browser session:', error);
+      this.logger.error("Failed to initialize browser session:", error);
       throw new Error(`Failed to initialize browser session: ${error.message}`);
     }
   }
@@ -107,38 +111,43 @@ class WebChatHandler {
   async sendMessage(sessionId, message) {
     try {
       const chat = this.activeChats.get(sessionId);
-      
+
       if (!chat) {
         throw new Error(`Chat session ${sessionId} not found`);
       }
 
-      this.logger.info(`Sending message to ${chat.provider}`, { sessionId, message });
+      this.logger.info(`Sending message to ${chat.provider}`, {
+        sessionId,
+        message,
+      });
 
-      const result = await this.browserManager.sendMessage(chat.browserSession, message);
-      
+      const result = await this.browserManager.sendMessage(
+        chat.browserSession,
+        message,
+      );
+
       // Store in history
       if (!this.chatHistory.has(sessionId)) {
         this.chatHistory.set(sessionId, []);
       }
-      
+
       this.chatHistory.get(sessionId).push({
-        type: 'user',
+        type: "user",
         message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-      
+
       if (result.response) {
         this.chatHistory.get(sessionId).push({
-          type: 'assistant',
+          type: "assistant",
           message: result.response,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
-      
-      return result;
 
+      return result;
     } catch (error) {
-      this.logger.error('Failed to send message:', error);
+      this.logger.error("Failed to send message:", error);
       throw new Error(`Failed to send message: ${error.message}`);
     }
   }
@@ -159,29 +168,29 @@ class WebChatHandler {
   getAvailableProviders() {
     return [
       {
-        name: 'chatgpt',
-        url: 'https://chat.openai.com',
-        features: ['text', 'code', 'images'],
-        supported: true
+        name: "chatgpt",
+        url: "https://chat.openai.com",
+        features: ["text", "code", "images"],
+        supported: true,
       },
       {
-        name: 'deepseek',
-        url: 'https://chat.deepseek.com',
-        features: ['text', 'code'],
-        supported: true
+        name: "deepseek",
+        url: "https://chat.deepseek.com",
+        features: ["text", "code"],
+        supported: true,
       },
       {
-        name: 'claude',
-        url: 'https://claude.ai',
-        features: ['text', 'code', 'files'],
-        supported: true
+        name: "claude",
+        url: "https://claude.ai",
+        features: ["text", "code", "files"],
+        supported: true,
       },
       {
-        name: 'gemini',
-        url: 'https://gemini.google.com',
-        features: ['text', 'code', 'images'],
-        supported: true
-      }
+        name: "gemini",
+        url: "https://gemini.google.com",
+        features: ["text", "code", "images"],
+        supported: true,
+      },
     ];
   }
 
@@ -193,24 +202,25 @@ class WebChatHandler {
   async getChatStatus(sessionId) {
     try {
       const chat = this.activeChats.get(sessionId);
-      
+
       if (!chat) {
         throw new Error(`Chat session ${sessionId} not found`);
       }
 
-      const status = await this.browserManager.getSessionStatus(chat.browserSession);
-      
+      const status = await this.browserManager.getSessionStatus(
+        chat.browserSession,
+      );
+
       return {
         sessionId,
         status: chat.status,
         provider: chat.provider,
         chatUrl: chat.chatUrl,
         uptime: Date.now() - chat.createdAt.getTime(),
-        ...status
+        ...status,
       };
-
     } catch (error) {
-      this.logger.error('Failed to get chat status:', error);
+      this.logger.error("Failed to get chat status:", error);
       throw new Error(`Failed to get chat status: ${error.message}`);
     }
   }
@@ -223,23 +233,22 @@ class WebChatHandler {
   async closeChat(sessionId) {
     try {
       const chat = this.activeChats.get(sessionId);
-      
+
       if (!chat) {
         throw new Error(`Chat session ${sessionId} not found`);
       }
 
       await this.browserManager.closeSession(chat.browserSession);
-      
+
       // Remove from active chats
       this.activeChats.delete(sessionId);
       this.chatHistory.delete(sessionId);
-      
-      this.logger.info(`Chat session ${sessionId} closed`);
-      
-      return { success: true };
 
+      this.logger.info(`Chat session ${sessionId} closed`);
+
+      return { success: true };
     } catch (error) {
-      this.logger.error('Failed to close chat:', error);
+      this.logger.error("Failed to close chat:", error);
       throw new Error(`Failed to close chat: ${error.message}`);
     }
   }
@@ -251,9 +260,12 @@ class WebChatHandler {
   getWebChatStats() {
     return {
       activeChats: this.activeChats.size,
-      totalHistory: Array.from(this.chatHistory.values()).reduce((total, history) => total + history.length, 0),
+      totalHistory: Array.from(this.chatHistory.values()).reduce(
+        (total, history) => total + history.length,
+        0,
+      ),
       providers: this.getAvailableProviders().length,
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
   }
 
@@ -275,10 +287,9 @@ class WebChatHandler {
       this.activeChats.clear();
       this.chatHistory.clear();
 
-      this.logger.info('WebChat Handler cleanup completed');
-
+      this.logger.info("WebChat Handler cleanup completed");
     } catch (error) {
-      this.logger.error('Failed to cleanup WebChat Handler:', error);
+      this.logger.error("Failed to cleanup WebChat Handler:", error);
     }
   }
 }

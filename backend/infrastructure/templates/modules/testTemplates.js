@@ -1,20 +1,20 @@
 /**
  * Test Templates Module
  */
-const { TEMPLATE_CATEGORIES } = require('./constants');
+const { TEMPLATE_CATEGORIES } = require("./constants");
 
 class TestTemplates {
-    /**
-     * Get test script templates
-     * @returns {Object} Test templates
-     */
-    static getTemplates() {
-        return {
-            unitTests: {
-                name: 'Unit Tests Script',
-                description: 'Run unit tests',
-                category: TEMPLATE_CATEGORIES.TEST,
-                template: `#!/bin/bash
+  /**
+   * Get test script templates
+   * @returns {Object} Test templates
+   */
+  static getTemplates() {
+    return {
+      unitTests: {
+        name: "Unit Tests Script",
+        description: "Run unit tests",
+        category: TEMPLATE_CATEGORIES.TEST,
+        template: `#!/bin/bash
 # Unit Tests Script
 echo "Running unit tests..."
 
@@ -43,17 +43,17 @@ else
     echo "Unit tests failed!"
     exit 1
 fi`,
-                variables: {
-                    NODE_ENV: 'test'
-                },
-                outputs: ['test-results', 'coverage/']
-            },
+        variables: {
+          NODE_ENV: "test",
+        },
+        outputs: ["test-results", "coverage/"],
+      },
 
-            integrationTests: {
-                name: 'Integration Tests Script',
-                description: 'Run integration tests',
-                category: TEMPLATE_CATEGORIES.TEST,
-                template: `#!/bin/bash
+      integrationTests: {
+        name: "Integration Tests Script",
+        description: "Run integration tests",
+        category: TEMPLATE_CATEGORIES.TEST,
+        template: `#!/bin/bash
 # Integration Tests Script
 echo "Running integration tests..."
 
@@ -95,17 +95,17 @@ if [ "$1" = "--with-db" ]; then
     echo "Stopping test database..."
     docker-compose -f docker-compose.test.yml down
 fi`,
-                variables: {
-                    NODE_ENV: 'test'
-                },
-                outputs: ['integration-test-results']
-            },
+        variables: {
+          NODE_ENV: "test",
+        },
+        outputs: ["integration-test-results"],
+      },
 
-            e2eTests: {
-                name: 'E2E Tests Script',
-                description: 'Run end-to-end tests',
-                category: TEMPLATE_CATEGORIES.TEST,
-                template: `#!/bin/bash
+      e2eTests: {
+        name: "E2E Tests Script",
+        description: "Run end-to-end tests",
+        category: TEMPLATE_CATEGORIES.TEST,
+        template: `#!/bin/bash
 # E2E Tests Script
 echo "Running E2E tests..."
 
@@ -144,17 +144,17 @@ else
     echo "E2E tests failed!"
     exit 1
 fi`,
-                variables: {
-                    NODE_ENV: 'test'
-                },
-                outputs: ['e2e-test-results']
-            },
+        variables: {
+          NODE_ENV: "test",
+        },
+        outputs: ["e2e-test-results"],
+      },
 
-            performanceTests: {
-                name: 'Performance Tests Script',
-                description: 'Run performance tests',
-                category: TEMPLATE_CATEGORIES.TEST,
-                template: `#!/bin/bash
+      performanceTests: {
+        name: "Performance Tests Script",
+        description: "Run performance tests",
+        category: TEMPLATE_CATEGORIES.TEST,
+        template: `#!/bin/bash
 # Performance Tests Script
 echo "Running performance tests..."
 
@@ -194,13 +194,13 @@ else
     echo "Performance tests failed!"
     exit 1
 fi`,
-                variables: {
-                    NODE_ENV: 'test'
-                },
-                outputs: ['performance-test-results', 'performance-report.html']
-            }
-        };
-    }
+        variables: {
+          NODE_ENV: "test",
+        },
+        outputs: ["performance-test-results", "performance-report.html"],
+      },
+    };
+  }
 }
 
-module.exports = TestTemplates; 
+module.exports = TestTemplates;

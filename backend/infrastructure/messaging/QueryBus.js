@@ -1,4 +1,4 @@
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 /**
  * QueryBus - Handles query execution and routing
  * Implements the Query Bus pattern for CQRS architecture
@@ -7,7 +7,7 @@ class QueryBus {
   constructor() {
     this.handlers = new Map();
     this.middleware = [];
-    this.logger = new ServiceLogger('QueryBus');
+    this.logger = new ServiceLogger("QueryBus");
   }
 
   /**
@@ -16,10 +16,10 @@ class QueryBus {
    * @param {Object} handler - Query handler instance
    */
   register(queryName, handler) {
-    if (!handler || typeof handler.handle !== 'function') {
+    if (!handler || typeof handler.handle !== "function") {
       throw new Error(`Invalid handler for query: ${queryName}`);
     }
-    
+
     this.handlers.set(queryName, handler);
     this.logger.info(`Registered handler for query: ${queryName}`);
   }
@@ -48,13 +48,13 @@ class QueryBus {
 
       // Execute handler
       const result = await handler.handle(processedQueryData);
-      
+
       this.logger.info(`Query executed successfully: ${queryName}`);
       return result;
     } catch (error) {
       this.logger.error(`Query execution failed: ${queryName}`, {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       throw error;
     }
@@ -65,8 +65,8 @@ class QueryBus {
    * @param {Function} middleware - Middleware function
    */
   use(middleware) {
-    if (typeof middleware !== 'function') {
-      throw new Error('Middleware must be a function');
+    if (typeof middleware !== "function") {
+      throw new Error("Middleware must be a function");
     }
     this.middleware.push(middleware);
   }
@@ -105,4 +105,4 @@ class QueryBus {
   }
 }
 
-module.exports = QueryBus; 
+module.exports = QueryBus;

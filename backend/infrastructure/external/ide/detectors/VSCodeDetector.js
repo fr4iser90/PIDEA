@@ -1,24 +1,23 @@
-
 /**
  * VSCode IDE Detector
  * Detects VSCode IDE instances and manages VSCode-specific detection logic
  */
 
-const http = require('http');
-const net = require('net');
-const ServiceLogger = require('@logging/ServiceLogger');
-const logger = new ServiceLogger('VSCodeDetector');
+const http = require("http");
+const net = require("net");
+const ServiceLogger = require("@logging/ServiceLogger");
+const logger = new ServiceLogger("VSCodeDetector");
 
 class VSCodeDetector {
   constructor() {
     this.portRange = { start: 9232, end: 9241 };
     this.scanTimeout = 1000; // 1 second timeout per port
     this.config = {
-      name: 'VSCode',
-      executable: 'code',
+      name: "VSCode",
+      executable: "code",
       portRange: this.portRange,
-      detectionMethod: 'http',
-      versionEndpoint: '/json'
+      detectionMethod: "http",
+      versionEndpoint: "/json",
     };
   }
 
@@ -28,7 +27,7 @@ class VSCodeDetector {
    */
   async scanForIDEs() {
     // logger.info('🔍 Scanning for VSCode IDEs on ports', this.portRange.start, 'to', this.portRange.end);
-    
+
     const availableIDEs = [];
     const promises = [];
 
@@ -37,19 +36,19 @@ class VSCodeDetector {
     }
 
     const results = await Promise.allSettled(promises);
-    
+
     results.forEach((result, index) => {
       const port = this.portRange.start + index;
-      if (result.status === 'fulfilled' && result.value) {
+      if (result.status === "fulfilled" && result.value) {
         // Always use localhost since we're using network_mode: "host"
-        const host = '127.0.0.1';
+        const host = "127.0.0.1";
         availableIDEs.push({
           port: port,
-          status: 'running',
+          status: "running",
           url: `http://${host}:${port}`,
-          ideType: 'vscode',
-          version: result.value.version || 'unknown',
-          webSocketUrl: result.value.webSocketUrl || null
+          ideType: "vscode",
+          version: result.value.version || "unknown",
+          webSocketUrl: result.value.webSocketUrl || null,
         });
       }
     });
@@ -66,56 +65,62 @@ class VSCodeDetector {
   async checkPort(port) {
     return new Promise((resolve) => {
       // Always use localhost since we're using network_mode: "host"
-      const host = '127.0.0.1';
-      const req = http.get({
-        hostname: host,
-        port: port,
-        path: this.config.versionEndpoint,
-        timeout: this.scanTimeout
-      }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data);
-            
-            // Handle both array format (from /json) and single object format
-            const pages = Array.isArray(json) ? json : [json];
-            
-            // Look for VSCode pages
-            for (const page of pages) {
-              if (page.title && page.title.includes('Visual Studio Code')) {
-                resolve({
-                  version: 'VSCode',
-                  webSocketUrl: page.webSocketDebuggerUrl,
-                  userAgent: page.description || null,
-                  title: page.title
-                });
-                return;
+      const host = "127.0.0.1";
+      const req = http.get(
+        {
+          hostname: host,
+          port: port,
+          path: this.config.versionEndpoint,
+          timeout: this.scanTimeout,
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            try {
+              const json = JSON.parse(data);
+
+              // Handle both array format (from /json) and single object format
+              const pages = Array.isArray(json) ? json : [json];
+
+              // Look for VSCode pages
+              for (const page of pages) {
+                if (page.title && page.title.includes("Visual Studio Code")) {
+                  resolve({
+                    version: "VSCode",
+                    webSocketUrl: page.webSocketDebuggerUrl,
+                    userAgent: page.description || null,
+                    title: page.title,
+                  });
+                  return;
+                }
               }
-            }
-            
-            // If no VSCode pages found, check if it's a single browser object
-            if (json.Browser && json.webSocketDebuggerUrl) {
-              if (json.Browser.includes('VS Code') || json.Browser.includes('Code')) {
-                resolve({
-                  version: json.Browser,
-                  webSocketUrl: json.webSocketDebuggerUrl,
-                  userAgent: json['User-Agent'] || null
-                });
-                return;
+
+              // If no VSCode pages found, check if it's a single browser object
+              if (json.Browser && json.webSocketDebuggerUrl) {
+                if (
+                  json.Browser.includes("VS Code") ||
+                  json.Browser.includes("Code")
+                ) {
+                  resolve({
+                    version: json.Browser,
+                    webSocketUrl: json.webSocketDebuggerUrl,
+                    userAgent: json["User-Agent"] || null,
+                  });
+                  return;
+                }
               }
+
+              resolve(false);
+            } catch {
+              resolve(false);
             }
-            
-            resolve(false);
-          } catch {
-            resolve(false);
-          }
-        });
-      });
-      
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => {
+          });
+        },
+      );
+
+      req.on("error", () => resolve(false));
+      req.on("timeout", () => {
         req.destroy();
         resolve(false);
       });
@@ -128,15 +133,17 @@ class VSCodeDetector {
    */
   async findAvailablePort() {
     const runningIDEs = await this.scanForIDEs();
-    const usedPorts = runningIDEs.map(ide => ide.port);
-    
+    const usedPorts = runningIDEs.map((ide) => ide.port);
+
     for (let port = this.portRange.start; port <= this.portRange.end; port++) {
       if (!usedPorts.includes(port)) {
         return port;
       }
     }
-    
-    throw new Error(`No available ports in range ${this.portRange.start}-${this.portRange.end} for VSCode`);
+
+    throw new Error(
+      `No available ports in range ${this.portRange.start}-${this.portRange.end} for VSCode`,
+    );
   }
 
   /**
@@ -145,14 +152,14 @@ class VSCodeDetector {
    */
   async isInstalled() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('which', ['code'], { stdio: 'ignore' });
-      
-      process.on('close', (code) => {
+      const { spawn } = require("child_process");
+      const process = spawn("which", ["code"], { stdio: "ignore" });
+
+      process.on("close", (code) => {
         resolve(code === 0);
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(false);
       });
     });
@@ -164,23 +171,23 @@ class VSCodeDetector {
    */
   async getVersion() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('code', ['--version'], { stdio: 'pipe' });
-      
-      let output = '';
-      process.stdout.on('data', (data) => {
+      const { spawn } = require("child_process");
+      const process = spawn("code", ["--version"], { stdio: "pipe" });
+
+      let output = "";
+      process.stdout.on("data", (data) => {
         output += data.toString();
       });
-      
-      process.on('close', (code) => {
+
+      process.on("close", (code) => {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
           resolve(null);
         }
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(null);
       });
     });
@@ -191,14 +198,17 @@ class VSCodeDetector {
    * @returns {string|null} Path to VSCode executable or null if not found
    */
   findVSCodeExecutable() {
-    const { spawn } = require('child_process');
-    
+    const { spawn } = require("child_process");
+
     // Try common VSCode executable names
-    const possibleExecutables = ['code', 'code-insiders', 'vscode'];
-    
+    const possibleExecutables = ["code", "code-insiders", "vscode"];
+
     for (const executable of possibleExecutables) {
       try {
-        const result = require('child_process').execSync(`which ${executable}`, { encoding: 'utf8' });
+        const result = require("child_process").execSync(
+          `which ${executable}`,
+          { encoding: "utf8" },
+        );
         if (result.trim()) {
           return result.trim();
         }
@@ -206,24 +216,24 @@ class VSCodeDetector {
         // Continue to next executable
       }
     }
-    
+
     // Try common installation paths
     const commonPaths = [
-      '/usr/bin/code',
-      '/usr/local/bin/code',
-      '/opt/visual-studio-code/bin/code',
-      '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code'
+      "/usr/bin/code",
+      "/usr/local/bin/code",
+      "/opt/visual-studio-code/bin/code",
+      "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
     ];
-    
+
     for (const path of commonPaths) {
       try {
-        require('fs').accessSync(path, require('fs').constants.X_OK);
+        require("fs").accessSync(path, require("fs").constants.X_OK);
         return path;
       } catch (error) {
         // Continue to next path
       }
     }
-    
+
     return null;
   }
 
@@ -235,13 +245,13 @@ class VSCodeDetector {
     const isInstalled = await this.isInstalled();
     const version = isInstalled ? await this.getVersion() : null;
     const executablePath = this.findVSCodeExecutable();
-    
+
     return {
       isInstalled,
       version,
       executablePath,
       isValid: isInstalled && version !== null && executablePath !== null,
-      executable: this.config.executable
+      executable: this.config.executable,
     };
   }
 
@@ -263,24 +273,23 @@ class VSCodeDetector {
       const ideInfo = await this.checkPort(port);
       if (ideInfo) {
         return {
-          success: true,
           port: port,
           version: ideInfo.version,
           webSocketUrl: ideInfo.webSocketUrl,
-          responseTime: Date.now()
+          responseTime: Date.now(),
         };
       } else {
         return {
-          success: false,
+         
           port: port,
-          error: 'No VSCode IDE found on port'
+          error: "No VSCode IDE found on port",
         };
       }
     } catch (error) {
       return {
-        success: false,
+       
         port: port,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -296,9 +305,9 @@ class VSCodeDetector {
       supportsFileSystem: true,
       supportsExtensions: true,
       supportsAI: false, // VSCode doesn't have built-in AI like Cursor
-      defaultPortRange: this.portRange
+      defaultPortRange: this.portRange,
     };
   }
 }
 
-module.exports = VSCodeDetector; 
+module.exports = VSCodeDetector;

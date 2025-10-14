@@ -4,15 +4,15 @@
  * Created: 2025-09-28T17:54:16.000Z
  */
 
-const TaskStatusSyncStep = require('../../domain/steps/categories/task/task_status_sync_step');
-const Logger = require('@logging/Logger');
+const TaskStatusSyncStep = require("../../domain/steps/categories/task/task_status_sync_step");
+const Logger = require("@logging/Logger");
 
 class TaskStatusSyncController {
   constructor(taskRepository, statusTransitionService, eventBus) {
     this.taskRepository = taskRepository;
     this.statusTransitionService = statusTransitionService;
     this.eventBus = eventBus;
-    this.logger = new Logger('TaskStatusSyncController');
+    this.logger = new Logger("TaskStatusSyncController");
     this.syncStep = new TaskStatusSyncStep();
   }
 
@@ -25,32 +25,35 @@ class TaskStatusSyncController {
       const { projectId } = req.params;
       const userId = req.user.id;
       const {
-        operation = 'sync',
+        operation = "sync",
         taskIds = [],
         targetStatus,
-        sourceSystem = 'manual',
-        targetSystem = 'automated',
-        options = {}
+        sourceSystem = "manual",
+        targetSystem = "automated",
+        options = {},
       } = req.body;
 
-      this.logger.info('🔄 [TaskStatusSyncController] syncTaskStatuses called', {
-        projectId,
-        userId,
-        operation,
-        taskIds: taskIds.length,
-        targetStatus
-      });
+      this.logger.info(
+        "🔄 [TaskStatusSyncController] syncTaskStatuses called",
+        {
+          projectId,
+          userId,
+          operation,
+          taskIds: taskIds.length,
+          targetStatus,
+        },
+      );
 
       // Create context with required services
       const context = {
         getService: (serviceName) => {
           const serviceMap = {
-            'taskRepository': this.taskRepository,
-            'statusTransitionService': this.statusTransitionService,
-            'eventBus': this.eventBus
+            taskRepository: this.taskRepository,
+            statusTransitionService: this.statusTransitionService,
+            eventBus: this.eventBus,
           };
           return serviceMap[serviceName];
-        }
+        },
       };
 
       // Execute sync step
@@ -65,34 +68,40 @@ class TaskStatusSyncController {
           moveFiles: true,
           emitEvents: true,
           createBackup: true,
-          ...options
-        }
+          ...options,
+        },
       });
 
-      this.logger.info('✅ [TaskStatusSyncController] Task status sync completed', {
-        projectId,
-        operation,
-        success: result.success,
-        processedTasks: result.processedTasks || result.totalTasks || 0
-      });
+      this.logger.info(
+        "✅ [TaskStatusSyncController] Task status sync completed",
+        {
+          projectId,
+          operation,
+          success: result.success,
+          processedTasks: result.processedTasks || result.totalTasks || 0,
+        },
+      );
 
       // Emit WebSocket event
       if (this.eventBus) {
-        this.eventBus.emit('task:status:sync:completed', {
+        this.eventBus.emit("task:status:sync:completed", {
           projectId,
           userId,
           operation,
           result,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       res.success(result);
-
     } catch (error) {
-      this.logger.error('❌ [TaskStatusSyncController] Task status sync failed:', error);
-      res.error('Failed to sync task statuses', 500, { details: error.message
-       });
+      this.logger.error(
+        "❌ [TaskStatusSyncController] Task status sync failed:",
+        error,
+      );
+      res.error("Failed to sync task statuses", 500, {
+        details: error.message,
+      });
     }
   }
 
@@ -106,44 +115,53 @@ class TaskStatusSyncController {
       const userId = req.user.id;
       const { taskIds = [], targetStatus } = req.body;
 
-      this.logger.info('🔍 [TaskStatusSyncController] validateTaskStatuses called', {
-        projectId,
-        userId,
-        taskIds: taskIds.length,
-        targetStatus
-      });
+      this.logger.info(
+        "🔍 [TaskStatusSyncController] validateTaskStatuses called",
+        {
+          projectId,
+          userId,
+          taskIds: taskIds.length,
+          targetStatus,
+        },
+      );
 
       // Create context
       const context = {
         getService: (serviceName) => {
           const serviceMap = {
-            'taskRepository': this.taskRepository,
-            'statusTransitionService': this.statusTransitionService,
-            'eventBus': this.eventBus
+            taskRepository: this.taskRepository,
+            statusTransitionService: this.statusTransitionService,
+            eventBus: this.eventBus,
           };
           return serviceMap[serviceName];
-        }
+        },
       };
 
       // Execute validation
       const result = await this.syncStep.execute(context, {
-        operation: 'validate',
+        operation: "validate",
         taskIds,
-        targetStatus
+        targetStatus,
       });
 
-      this.logger.info('✅ [TaskStatusSyncController] Task status validation completed', {
-        projectId,
-        validTasks: result.validTasks,
-        invalidTasks: result.invalidTasks
-      });
+      this.logger.info(
+        "✅ [TaskStatusSyncController] Task status validation completed",
+        {
+          projectId,
+          validTasks: result.validTasks,
+          invalidTasks: result.invalidTasks,
+        },
+      );
 
       res.success(result);
-
     } catch (error) {
-      this.logger.error('❌ [TaskStatusSyncController] Task status validation failed:', error);
-      res.error('Failed to validate task statuses', 500, { details: error.message
-       });
+      this.logger.error(
+        "❌ [TaskStatusSyncController] Task status validation failed:",
+        error,
+      );
+      res.error("Failed to validate task statuses", 500, {
+        details: error.message,
+      });
     }
   }
 
@@ -157,54 +175,63 @@ class TaskStatusSyncController {
       const userId = req.user.id;
       const { taskIds = [], previousStatus } = req.body;
 
-      this.logger.info('🔄 [TaskStatusSyncController] rollbackTaskStatuses called', {
-        projectId,
-        userId,
-        taskIds: taskIds.length,
-        previousStatus
-      });
+      this.logger.info(
+        "🔄 [TaskStatusSyncController] rollbackTaskStatuses called",
+        {
+          projectId,
+          userId,
+          taskIds: taskIds.length,
+          previousStatus,
+        },
+      );
 
       // Create context
       const context = {
         getService: (serviceName) => {
           const serviceMap = {
-            'taskRepository': this.taskRepository,
-            'statusTransitionService': this.statusTransitionService,
-            'eventBus': this.eventBus
+            taskRepository: this.taskRepository,
+            statusTransitionService: this.statusTransitionService,
+            eventBus: this.eventBus,
           };
           return serviceMap[serviceName];
-        }
+        },
       };
 
       // Execute rollback
       const result = await this.syncStep.execute(context, {
-        operation: 'rollback',
+        operation: "rollback",
         taskIds,
-        previousStatus
+        previousStatus,
       });
 
-      this.logger.info('✅ [TaskStatusSyncController] Task status rollback completed', {
-        projectId,
-        successfulRollbacks: result.successfulRollbacks,
-        failedRollbacks: result.failedRollbacks
-      });
+      this.logger.info(
+        "✅ [TaskStatusSyncController] Task status rollback completed",
+        {
+          projectId,
+          successfulRollbacks: result.successfulRollbacks,
+          failedRollbacks: result.failedRollbacks,
+        },
+      );
 
       // Emit WebSocket event
       if (this.eventBus) {
-        this.eventBus.emit('task:status:rollback:completed', {
+        this.eventBus.emit("task:status:rollback:completed", {
           projectId,
           userId,
           result,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       res.success(result);
-
     } catch (error) {
-      this.logger.error('❌ [TaskStatusSyncController] Task status rollback failed:', error);
-      res.error('Failed to rollback task statuses', 500, { details: error.message
-       });
+      this.logger.error(
+        "❌ [TaskStatusSyncController] Task status rollback failed:",
+        error,
+      );
+      res.error("Failed to rollback task statuses", 500, {
+        details: error.message,
+      });
     }
   }
 }

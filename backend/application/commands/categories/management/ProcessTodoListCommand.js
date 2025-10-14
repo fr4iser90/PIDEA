@@ -5,13 +5,13 @@
 class ProcessTodoListCommand {
   constructor(data = {}) {
     this.commandId = data.commandId || `todo-process-${Date.now()}`;
-    this.todoInput = data.todoInput || '';
+    this.todoInput = data.todoInput || "";
     this.userId = data.userId || null;
     this.projectId = data.projectId || null;
     this.options = data.options || {};
     this.metadata = data.metadata || {};
     this.timestamp = data.timestamp || new Date();
-    
+
     // Validate required fields
     this.validate();
   }
@@ -21,29 +21,31 @@ class ProcessTodoListCommand {
    */
   validate() {
     const errors = [];
-    
-    if (!this.todoInput || typeof this.todoInput !== 'string') {
-      errors.push('todoInput must be a non-empty string');
+
+    if (!this.todoInput || typeof this.todoInput !== "string") {
+      errors.push("todoInput must be a non-empty string");
     }
-    
+
     if (this.todoInput.length > 10000) {
-      errors.push('todoInput must be less than 10,000 characters');
+      errors.push("todoInput must be less than 10,000 characters");
     }
-    
-    if (this.userId && typeof this.userId !== 'string') {
-      errors.push('userId must be a string');
+
+    if (this.userId && typeof this.userId !== "string") {
+      errors.push("userId must be a string");
     }
-    
-    if (this.projectId && typeof this.projectId !== 'string') {
-      errors.push('projectId must be a string');
+
+    if (this.projectId && typeof this.projectId !== "string") {
+      errors.push("projectId must be a string");
     }
-    
-    if (this.options && typeof this.options !== 'object') {
-      errors.push('options must be an object');
+
+    if (this.options && typeof this.options !== "object") {
+      errors.push("options must be an object");
     }
-    
+
     if (errors.length > 0) {
-      throw new Error(`ProcessTodoListCommand validation failed: ${errors.join(', ')}`);
+      throw new Error(
+        `ProcessTodoListCommand validation failed: ${errors.join(", ")}`,
+      );
     }
   }
 
@@ -58,7 +60,7 @@ class ProcessTodoListCommand {
       userId: this.userId,
       projectId: this.projectId,
       options: this.options,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -74,7 +76,7 @@ class ProcessTodoListCommand {
       projectId: this.projectId,
       options: this.options,
       metadata: this.metadata,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -88,4 +90,4 @@ class ProcessTodoListCommand {
   }
 }
 
-module.exports = ProcessTodoListCommand; 
+module.exports = ProcessTodoListCommand;

@@ -3,29 +3,29 @@
  * Replaces fragmented branch strategies with a single, configurable system
  */
 
-const BaseBranchStrategy = require('./BaseBranchStrategy');
-const Logger = require('@logging/Logger');
-const logger = new Logger('UnifiedBranchStrategy');
+const BaseBranchStrategy = require("./BaseBranchStrategy");
+const Logger = require("@logging/Logger");
+const logger = new Logger("UnifiedBranchStrategy");
 
 class UnifiedBranchStrategy extends BaseBranchStrategy {
   constructor(config = {}) {
     super({
-      prefix: config.prefix || 'task',
-      separator: config.separator || '/',
+      prefix: config.prefix || "task",
+      separator: config.separator || "/",
       maxLength: config.maxLength || 50,
       includeTaskId: config.includeTaskId !== false,
       includeTimestamp: config.includeTimestamp !== false,
       sanitizeTitle: config.sanitizeTitle !== false,
-      protection: config.protection || 'medium',
+      protection: config.protection || "medium",
       autoMerge: config.autoMerge || false,
       requiresReview: config.requiresReview !== false,
-      mergeTarget: config.mergeTarget || 'pidea-agent',
+      mergeTarget: config.mergeTarget || "pidea-agent",
       includePriority: config.includePriority || false,
       includeCategory: config.includeCategory || false,
-      ...config
+      ...config,
     });
-    
-    this.strategyType = 'UnifiedBranchStrategy';
+
+    this.strategyType = "UnifiedBranchStrategy";
   }
 
   /**
@@ -36,64 +36,67 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
    */
   generateBranchName(task, context = {}) {
     try {
-      const taskId = task.id || context.get('taskId') || 'unknown';
-      const title = task.title || task.description || 'task';
-      const priority = task.priority?.value || task.priority || context.get('priority');
-      const category = task.category || context.get('category');
-      
+      const taskId = task.id || context.get("taskId") || "unknown";
+      const title = task.title || task.description || "task";
+      const priority =
+        task.priority?.value || task.priority || context.get("priority");
+      const category = task.category || context.get("category");
+
       let branchName = this.config.prefix;
-      
+
       // Add task ID if enabled
       if (this.config.includeTaskId) {
         branchName += this.config.separator + taskId;
       }
-      
+
       // Add priority if enabled and available
       if (this.config.includePriority && priority) {
         branchName += this.config.separator + this.sanitizePriority(priority);
       }
-      
+
       // Add category if enabled and available
       if (this.config.includeCategory && category) {
         branchName += this.config.separator + this.sanitizeCategory(category);
       }
-      
+
       // Add sanitized title
       if (this.config.sanitizeTitle) {
         const sanitizedTitle = this.sanitizeTitle(title);
         branchName += this.config.separator + sanitizedTitle;
       }
-      
+
       // Add timestamp if enabled
       if (this.config.includeTimestamp) {
         const timestamp = this.formatTimestamp(new Date());
         branchName += this.config.separator + timestamp;
       }
-      
+
       // Truncate if too long
       if (branchName.length > this.config.maxLength) {
         branchName = this.truncateBranchName(branchName, this.config.maxLength);
       }
-      
-      this.logger.info('UnifiedBranchStrategy: Generated branch name', {
+
+      this.logger.info("UnifiedBranchStrategy: Generated branch name", {
         taskId,
         originalTitle: title,
         priority,
         category,
         branchName,
-        config: this.config
+        config: this.config,
       });
-      
+
       return branchName;
-      
     } catch (error) {
-      this.logger.error('UnifiedBranchStrategy: Failed to generate branch name', {
-        taskId: task.id,
-        error: error.message
-      });
-      
+      this.logger.error(
+        "UnifiedBranchStrategy: Failed to generate branch name",
+        {
+          taskId: task.id,
+          error: error.message,
+        },
+      );
+
       // Fallback to simple naming
-      return `${this.config.prefix}/${task.id || 'task'}`;
+      return `${this.config.prefix}/${task.id || "task"}`;
     }
   }
 
@@ -103,25 +106,27 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
    * @returns {string} Sanitized priority
    */
   sanitizePriority(priority) {
-    if (!priority || typeof priority !== 'string') {
-      return '';
+    if (!priority || typeof priority !== "string") {
+      return "";
     }
-    
+
     const priorityMap = {
-      'critical': 'crit',
-      'high': 'high',
-      'medium': 'med',
-      'low': 'low',
-      'urgent': 'urg',
-      'emergency': 'emg',
-      'p0': 'p0',
-      'p1': 'p1',
-      'p2': 'p2',
-      'p3': 'p3'
+      critical: "crit",
+      high: "high",
+      medium: "med",
+      low: "low",
+      urgent: "urg",
+      emergency: "emg",
+      p0: "p0",
+      p1: "p1",
+      p2: "p2",
+      p3: "p3",
     };
-    
+
     const normalizedPriority = priority.toLowerCase().trim();
-    return priorityMap[normalizedPriority] || normalizedPriority.substring(0, 3);
+    return (
+      priorityMap[normalizedPriority] || normalizedPriority.substring(0, 3)
+    );
   }
 
   /**
@@ -130,13 +135,13 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
    * @returns {string} Sanitized category
    */
   sanitizeCategory(category) {
-    if (!category || typeof category !== 'string') {
-      return '';
+    if (!category || typeof category !== "string") {
+      return "";
     }
-    
+
     return category
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
+      .replace(/[^a-z0-9]/g, "")
       .substring(0, 10);
   }
 
@@ -150,34 +155,42 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
     const taskType = task.type?.value || task.type;
     const priority = task.priority?.value || task.priority;
     const category = task.category;
-    
+
     // Determine protection level based on priority
-    let protection = 'medium';
-    if (priority === 'critical' || priority === 'urgent' || priority === 'emergency') {
-      protection = 'high';
-    } else if (priority === 'low') {
-      protection = 'low';
+    let protection = "medium";
+    if (
+      priority === "critical" ||
+      priority === "urgent" ||
+      priority === "emergency"
+    ) {
+      protection = "high";
+    } else if (priority === "low") {
+      protection = "low";
     }
-    
+
     // Determine merge target based on task type
-    let mergeTarget = 'pidea-agent';
-    if (taskType === 'feature' || taskType === 'optimization' || taskType === 'refactor') {
-      mergeTarget = 'pidea-ai-main';
-    } else if (taskType === 'hotfix' || taskType === 'bug') {
-      mergeTarget = 'main';
+    let mergeTarget = "pidea-agent";
+    if (
+      taskType === "feature" ||
+      taskType === "optimization" ||
+      taskType === "refactor"
+    ) {
+      mergeTarget = "pidea-ai-main";
+    } else if (taskType === "hotfix" || taskType === "bug") {
+      mergeTarget = "main";
     }
-    
+
     // Determine auto-merge based on task type
     let autoMerge = false;
-    if (taskType === 'analysis' || taskType === 'documentation') {
+    if (taskType === "analysis" || taskType === "documentation") {
       autoMerge = true;
     }
-    
+
     return {
       protection,
       mergeTarget,
       autoMerge,
-      requiresReview: !autoMerge
+      requiresReview: !autoMerge,
     };
   }
 
@@ -189,16 +202,16 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
    */
   getConfiguration(task = null, context = {}) {
     const baseConfig = super.getConfiguration();
-    
+
     if (task) {
       const strategy = this.determineStrategy(task, context);
       return {
         ...baseConfig,
         ...strategy,
-        type: 'unified'
+        type: "unified",
       };
     }
-    
+
     return baseConfig;
   }
 
@@ -217,7 +230,7 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
       this.config.protection = originalProtection;
       return rules;
     }
-    
+
     return super.getProtectionRules();
   }
 
@@ -231,14 +244,14 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
     if (task) {
       const strategy = this.determineStrategy(task, context);
       return {
-        method: strategy.protection === 'high' ? 'merge' : 'squash',
+        method: strategy.protection === "high" ? "merge" : "squash",
         deleteBranch: true,
         requireReview: strategy.requiresReview,
         autoMerge: strategy.autoMerge,
-        mergeTarget: strategy.mergeTarget
+        mergeTarget: strategy.mergeTarget,
       };
     }
-    
+
     return super.getMergeStrategy();
   }
 
@@ -249,25 +262,25 @@ class UnifiedBranchStrategy extends BaseBranchStrategy {
    */
   getBranchDescription(task) {
     const strategy = this.determineStrategy(task);
-    const taskType = task.type?.value || task.type || 'task';
-    const priority = task.priority?.value || task.priority || 'medium';
-    
-    return `Unified branch for: ${task.title || task.description || 'Unknown task'}
+    const taskType = task.type?.value || task.type || "task";
+    const priority = task.priority?.value || task.priority || "medium";
+
+    return `Unified branch for: ${task.title || task.description || "Unknown task"}
 
 Task ID: ${task.id}
 Created: ${new Date().toISOString()}
 Type: ${taskType}
 Priority: ${priority}
-Category: ${task.category || 'general'}
+Category: ${task.category || "general"}
 
 Description:
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 Strategy Configuration:
 - Protection Level: ${strategy.protection}
 - Merge Target: ${strategy.mergeTarget}
-- Auto Merge: ${strategy.autoMerge ? 'Yes' : 'No'}
-- Requires Review: ${strategy.requiresReview ? 'Yes' : 'No'}
+- Auto Merge: ${strategy.autoMerge ? "Yes" : "No"}
+- Requires Review: ${strategy.requiresReview ? "Yes" : "No"}
 
 Acceptance Criteria:
 - [ ] Task implementation completed
@@ -283,20 +296,20 @@ Acceptance Criteria:
    * @param {string} action - Commit action (feat, fix, etc.)
    * @returns {string} Commit message
    */
-  getCommitMessageTemplate(task, action = 'feat') {
-    const title = task.title || task.description || 'task';
+  getCommitMessageTemplate(task, action = "feat") {
+    const title = task.title || task.description || "task";
     const sanitizedTitle = this.sanitizeTitle(title);
-    const taskType = task.type?.value || task.type || 'task';
-    const priority = task.priority?.value || task.priority || 'medium';
-    
+    const taskType = task.type?.value || task.type || "task";
+    const priority = task.priority?.value || task.priority || "medium";
+
     return `${action}: ${sanitizedTitle}
 
 Task ID: ${task.id}
 Type: ${taskType}
 Priority: ${priority}
-Category: ${task.category || 'general'}
+Category: ${task.category || "general"}
 
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 - [ ] Task implementation
 - [ ] Tests added
@@ -311,27 +324,27 @@ ${task.description || 'No description provided'}
    */
   getPullRequestTemplate(task, branchName) {
     const strategy = this.determineStrategy(task);
-    const taskType = task.type?.value || task.type || 'task';
-    const priority = task.priority?.value || task.priority || 'medium';
-    
+    const taskType = task.type?.value || task.type || "task";
+    const priority = task.priority?.value || task.priority || "medium";
+
     return {
-      title: `${taskType}: ${task.title || task.description || 'New task'}`,
+      title: `${taskType}: ${task.title || task.description || "New task"}`,
       description: `## ${taskType} Implementation
 
 **Task ID:** ${task.id}
 **Branch:** ${branchName}
 **Type:** ${taskType}
 **Priority:** ${priority}
-**Category:** ${task.category || 'general'}
+**Category:** ${task.category || "general"}
 
 ### Description
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 ### Strategy Configuration
 - **Protection Level:** ${strategy.protection}
 - **Merge Target:** ${strategy.mergeTarget}
-- **Auto Merge:** ${strategy.autoMerge ? 'Yes' : 'No'}
-- **Requires Review:** ${strategy.requiresReview ? 'Yes' : 'No'}
+- **Auto Merge:** ${strategy.autoMerge ? "Yes" : "No"}
+- **Requires Review:** ${strategy.requiresReview ? "Yes" : "No"}
 
 ### Changes Made
 - [ ] Task implementation
@@ -351,9 +364,9 @@ ${task.description || 'No description provided'}
 
 ### Related Issues
 Closes #${task.id}`,
-      labels: [taskType, priority, task.category || 'general'],
+      labels: [taskType, priority, task.category || "general"],
       assignees: [],
-      reviewers: []
+      reviewers: [],
     };
   }
 
@@ -366,28 +379,28 @@ Closes #${task.id}`,
     const baseValidation = super.validateTask(task);
     const errors = [...baseValidation.errors];
     const warnings = [...baseValidation.warnings];
-    
+
     // Check task type
     const taskType = task.type?.value || task.type;
     if (!taskType) {
-      warnings.push('Task type not specified - using default strategy');
+      warnings.push("Task type not specified - using default strategy");
     }
-    
+
     // Check priority
     const priority = task.priority?.value || task.priority;
     if (!priority) {
-      warnings.push('Task priority not specified - using medium protection');
+      warnings.push("Task priority not specified - using medium protection");
     }
-    
+
     // Check category
     if (!task.category) {
-      warnings.push('Task category not specified - using general category');
+      warnings.push("Task category not specified - using general category");
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -414,7 +427,7 @@ Closes #${task.id}`,
    * @returns {string} Strategy name
    */
   getStrategyName() {
-    return 'unified';
+    return "unified";
   }
 }
 

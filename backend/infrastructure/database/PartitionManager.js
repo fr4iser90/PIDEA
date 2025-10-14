@@ -2,15 +2,15 @@
  * PartitionManager - Database table partitioning utilities
  * Provides table partitioning, management, and optimization
  */
-const Logger = require('@logging/Logger');
+const Logger = require("@logging/Logger");
 
 class PartitionManager {
   constructor(databaseConnection) {
     this.db = databaseConnection;
-    this.logger = new Logger('PartitionManager');
+    this.logger = new Logger("PartitionManager");
     this.partitionCache = new Map();
     this.partitionStrategies = new Map();
-    
+
     this.initializePartitionStrategies();
   }
 
@@ -18,22 +18,22 @@ class PartitionManager {
    * Initialize partition strategies
    */
   initializePartitionStrategies() {
-    this.partitionStrategies.set('range', {
-      description: 'Partition by range of values',
-      sqlTemplate: 'PARTITION BY RANGE ({column})',
-      examples: ['date', 'timestamp', 'numeric']
+    this.partitionStrategies.set("range", {
+      description: "Partition by range of values",
+      sqlTemplate: "PARTITION BY RANGE ({column})",
+      examples: ["date", "timestamp", "numeric"],
     });
 
-    this.partitionStrategies.set('list', {
-      description: 'Partition by list of values',
-      sqlTemplate: 'PARTITION BY LIST ({column})',
-      examples: ['status', 'region', 'category']
+    this.partitionStrategies.set("list", {
+      description: "Partition by list of values",
+      sqlTemplate: "PARTITION BY LIST ({column})",
+      examples: ["status", "region", "category"],
     });
 
-    this.partitionStrategies.set('hash', {
-      description: 'Partition by hash of values',
-      sqlTemplate: 'PARTITION BY HASH ({column})',
-      examples: ['id', 'user_id']
+    this.partitionStrategies.set("hash", {
+      description: "Partition by hash of values",
+      sqlTemplate: "PARTITION BY HASH ({column})",
+      examples: ["id", "user_id"],
     });
   }
 
@@ -47,21 +47,31 @@ class PartitionManager {
    */
   async createPartition(table, partitionKey, strategy, options = {}) {
     try {
-      this.logger.info('Creating partition', { table, partitionKey, strategy, options });
-      
+      this.logger.info("Creating partition", {
+        table,
+        partitionKey,
+        strategy,
+        options,
+      });
+
       const partitionName = this.generatePartitionName(table, partitionKey);
-      const partitionSQL = this.generatePartitionSQL(table, partitionKey, strategy, options);
-      
+      const partitionSQL = this.generatePartitionSQL(
+        table,
+        partitionKey,
+        strategy,
+        options,
+      );
+
       // Check if partition already exists
       const existingPartition = await this.getPartition(partitionName);
       if (existingPartition) {
-        this.logger.warn('Partition already exists', { partitionName });
+        this.logger.warn("Partition already exists", { partitionName });
         return existingPartition;
       }
-      
+
       // Create the partition
       await this.db.execute(partitionSQL);
-      
+
       const result = {
         partitionName,
         table,
@@ -69,18 +79,17 @@ class PartitionManager {
         strategy,
         options,
         createdAt: new Date().toISOString(),
-        status: 'active'
+        status: "active",
       };
-      
+
       // Cache the partition
       this.partitionCache.set(partitionName, result);
-      
-      this.logger.info('Partition created successfully', { partitionName });
-      
+
+      this.logger.info("Partition created successfully", { partitionName });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Partition creation failed', { error: error.message });
+      this.logger.error("Partition creation failed", { error: error.message });
       throw error;
     }
   }
@@ -94,35 +103,42 @@ class PartitionManager {
    */
   async createRangePartition(table, partitionKey, rangeOptions) {
     try {
-      this.logger.info('Creating range partition', { table, partitionKey, rangeOptions });
-      
+      this.logger.info("Creating range partition", {
+        table,
+        partitionKey,
+        rangeOptions,
+      });
+
       const { startValue, endValue, partitionName } = rangeOptions;
       const partitionSQL = `
         CREATE TABLE IF NOT EXISTS ${partitionName} PARTITION OF ${table}
         FOR VALUES FROM ('${startValue}') TO ('${endValue}')
       `;
-      
+
       await this.db.execute(partitionSQL);
-      
+
       const result = {
         partitionName,
         table,
         partitionKey,
-        strategy: 'range',
+        strategy: "range",
         startValue,
         endValue,
         createdAt: new Date().toISOString(),
-        status: 'active'
+        status: "active",
       };
-      
+
       this.partitionCache.set(partitionName, result);
-      
-      this.logger.info('Range partition created successfully', { partitionName });
-      
+
+      this.logger.info("Range partition created successfully", {
+        partitionName,
+      });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Range partition creation failed', { error: error.message });
+      this.logger.error("Range partition creation failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -136,35 +152,42 @@ class PartitionManager {
    */
   async createListPartition(table, partitionKey, listOptions) {
     try {
-      this.logger.info('Creating list partition', { table, partitionKey, listOptions });
-      
+      this.logger.info("Creating list partition", {
+        table,
+        partitionKey,
+        listOptions,
+      });
+
       const { values, partitionName } = listOptions;
-      const valuesList = values.map(v => `'${v}'`).join(', ');
+      const valuesList = values.map((v) => `'${v}'`).join(", ");
       const partitionSQL = `
         CREATE TABLE IF NOT EXISTS ${partitionName} PARTITION OF ${table}
         FOR VALUES IN (${valuesList})
       `;
-      
+
       await this.db.execute(partitionSQL);
-      
+
       const result = {
         partitionName,
         table,
         partitionKey,
-        strategy: 'list',
+        strategy: "list",
         values,
         createdAt: new Date().toISOString(),
-        status: 'active'
+        status: "active",
       };
-      
+
       this.partitionCache.set(partitionName, result);
-      
-      this.logger.info('List partition created successfully', { partitionName });
-      
+
+      this.logger.info("List partition created successfully", {
+        partitionName,
+      });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('List partition creation failed', { error: error.message });
+      this.logger.error("List partition creation failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -176,12 +199,16 @@ class PartitionManager {
    */
   async managePartitions(table) {
     try {
-      this.logger.debug('Managing partitions', { table });
-      
+      this.logger.debug("Managing partitions", { table });
+
       const partitions = await this.getPartitions(table);
-      const managementActions = await this.generateManagementActions(partitions);
-      const recommendations = await this.generatePartitionRecommendations(table, partitions);
-      
+      const managementActions =
+        await this.generateManagementActions(partitions);
+      const recommendations = await this.generatePartitionRecommendations(
+        table,
+        partitions,
+      );
+
       const result = {
         table,
         partitions,
@@ -189,22 +216,25 @@ class PartitionManager {
         recommendations,
         summary: {
           totalPartitions: partitions.length,
-          activePartitions: partitions.filter(p => p.status === 'active').length,
-          inactivePartitions: partitions.filter(p => p.status === 'inactive').length
+          activePartitions: partitions.filter((p) => p.status === "active")
+            .length,
+          inactivePartitions: partitions.filter((p) => p.status === "inactive")
+            .length,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
-      this.logger.info('Partition management completed', { 
+
+      this.logger.info("Partition management completed", {
         table,
         totalPartitions: result.summary.totalPartitions,
-        managementActions: managementActions.length
+        managementActions: managementActions.length,
       });
-      
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Partition management failed', { error: error.message });
+      this.logger.error("Partition management failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -216,8 +246,8 @@ class PartitionManager {
    */
   async getPartitions(table) {
     try {
-      this.logger.debug('Getting partitions for table', { table });
-      
+      this.logger.debug("Getting partitions for table", { table });
+
       const query = `
         SELECT 
           schemaname,
@@ -230,28 +260,29 @@ class PartitionManager {
         WHERE tablename = $1
         ORDER BY partitionname
       `;
-      
+
       const result = await this.db.execute(query, [table]);
-      
-      const partitions = result.rows.map(row => ({
+
+      const partitions = result.rows.map((row) => ({
         schema: row.schemaname,
         table: row.tablename,
         partitionName: row.partitionname,
         boundDefinition: row.partitionbounddef,
         isDefault: row.partitionisdefault,
         isNull: row.partitionisnull,
-        status: 'active'
+        status: "active",
       }));
-      
-      this.logger.debug('Retrieved table partitions', { 
-        table, 
-        count: partitions.length 
+
+      this.logger.debug("Retrieved table partitions", {
+        table,
+        count: partitions.length,
       });
-      
+
       return partitions;
-      
     } catch (error) {
-      this.logger.error('Failed to get table partitions', { error: error.message });
+      this.logger.error("Failed to get table partitions", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -267,7 +298,7 @@ class PartitionManager {
       if (this.partitionCache.has(partitionName)) {
         return this.partitionCache.get(partitionName);
       }
-      
+
       // Query database for partition information
       const query = `
         SELECT 
@@ -280,13 +311,13 @@ class PartitionManager {
         FROM pg_partitions
         WHERE partitionname = $1
       `;
-      
+
       const result = await this.db.execute(query, [partitionName]);
-      
+
       if (result.rows.length === 0) {
         return null;
       }
-      
+
       const partitionInfo = result.rows[0];
       const partition = {
         schema: partitionInfo.schemaname,
@@ -295,16 +326,15 @@ class PartitionManager {
         boundDefinition: partitionInfo.partitionbounddef,
         isDefault: partitionInfo.partitionisdefault,
         isNull: partitionInfo.partitionisnull,
-        status: 'active'
+        status: "active",
       };
-      
+
       // Cache the partition
       this.partitionCache.set(partitionName, partition);
-      
+
       return partition;
-      
     } catch (error) {
-      this.logger.error('Failed to get partition', { error: error.message });
+      this.logger.error("Failed to get partition", { error: error.message });
       throw error;
     }
   }
@@ -316,31 +346,30 @@ class PartitionManager {
    */
   async dropPartition(partitionName) {
     try {
-      this.logger.info('Dropping partition', { partitionName });
-      
+      this.logger.info("Dropping partition", { partitionName });
+
       const partition = await this.getPartition(partitionName);
       if (!partition) {
         throw new Error(`Partition ${partitionName} not found`);
       }
-      
+
       const dropSQL = `DROP TABLE IF EXISTS ${partitionName}`;
       await this.db.execute(dropSQL);
-      
+
       // Remove from cache
       this.partitionCache.delete(partitionName);
-      
+
       const result = {
         partitionName,
         droppedAt: new Date().toISOString(),
-        status: 'dropped'
+        status: "dropped",
       };
-      
-      this.logger.info('Partition dropped successfully', { partitionName });
-      
+
+      this.logger.info("Partition dropped successfully", { partitionName });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Partition drop failed', { error: error.message });
+      this.logger.error("Partition drop failed", { error: error.message });
       throw error;
     }
   }
@@ -368,10 +397,10 @@ class PartitionManager {
     if (!strategyInfo) {
       throw new Error(`Unknown partition strategy: ${strategy}`);
     }
-    
+
     const sqlTemplate = strategyInfo.sqlTemplate;
-    const partitionSQL = sqlTemplate.replace('{column}', partitionKey);
-    
+    const partitionSQL = sqlTemplate.replace("{column}", partitionKey);
+
     return `CREATE TABLE ${table}_partitioned ${partitionSQL}`;
   }
 
@@ -383,33 +412,34 @@ class PartitionManager {
   async generateManagementActions(partitions) {
     try {
       const actions = [];
-      
+
       // Find partitions that need maintenance
       for (const partition of partitions) {
-        if (partition.status === 'inactive') {
+        if (partition.status === "inactive") {
           actions.push({
-            type: 'activate',
+            type: "activate",
             partitionName: partition.partitionName,
-            description: 'Activate inactive partition',
-            priority: 'medium'
+            description: "Activate inactive partition",
+            priority: "medium",
           });
         }
-        
+
         // Find partitions that might need archiving
         if (this.shouldArchivePartition(partition)) {
           actions.push({
-            type: 'archive',
+            type: "archive",
             partitionName: partition.partitionName,
-            description: 'Archive old partition',
-            priority: 'low'
+            description: "Archive old partition",
+            priority: "low",
           });
         }
       }
-      
+
       return actions;
-      
     } catch (error) {
-      this.logger.error('Failed to generate management actions', { error: error.message });
+      this.logger.error("Failed to generate management actions", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -423,34 +453,36 @@ class PartitionManager {
   async generatePartitionRecommendations(table, partitions) {
     try {
       const recommendations = [];
-      
+
       // Recommend partitioning for large tables
       const tableSize = await this.getTableSize(table);
-      if (tableSize > 1000000) { // 1 million rows
+      if (tableSize > 1000000) {
+        // 1 million rows
         recommendations.push({
-          type: 'partition_large_table',
+          type: "partition_large_table",
           table,
-          description: 'Table is large - consider partitioning',
-          priority: 'high',
-          estimatedImprovement: 30
+          description: "Table is large - consider partitioning",
+          priority: "high",
+          estimatedImprovement: 30,
         });
       }
-      
+
       // Recommend partitioning by date for time-series data
       if (this.isTimeSeriesTable(table)) {
         recommendations.push({
-          type: 'partition_by_date',
+          type: "partition_by_date",
           table,
-          description: 'Time-series table - consider partitioning by date',
-          priority: 'medium',
-          estimatedImprovement: 25
+          description: "Time-series table - consider partitioning by date",
+          priority: "medium",
+          estimatedImprovement: 25,
         });
       }
-      
+
       return recommendations;
-      
     } catch (error) {
-      this.logger.error('Failed to generate partition recommendations', { error: error.message });
+      this.logger.error("Failed to generate partition recommendations", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -464,7 +496,7 @@ class PartitionManager {
     // Simple logic - archive partitions older than 1 year
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    
+
     // This would need to be implemented based on actual partition data
     return false;
   }
@@ -480,7 +512,7 @@ class PartitionManager {
       const result = await this.db.execute(query);
       return parseInt(result.rows[0].count) || 0;
     } catch (error) {
-      this.logger.error('Failed to get table size', { error: error.message });
+      this.logger.error("Failed to get table size", { error: error.message });
       return 0;
     }
   }
@@ -492,7 +524,7 @@ class PartitionManager {
    */
   isTimeSeriesTable(table) {
     // Simple heuristic - tables with created_at or timestamp columns
-    const timeSeriesTables = ['tasks', 'queue_history', 'performance_metrics'];
+    const timeSeriesTables = ["tasks", "queue_history", "performance_metrics"];
     return timeSeriesTables.includes(table);
   }
 
@@ -504,7 +536,7 @@ class PartitionManager {
     return {
       totalPartitions: this.partitionCache.size,
       partitionStrategies: Array.from(this.partitionStrategies.keys()),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -513,7 +545,7 @@ class PartitionManager {
    */
   clearCache() {
     this.partitionCache.clear();
-    this.logger.info('Partition cache cleared');
+    this.logger.info("Partition cache cleared");
   }
 }
 

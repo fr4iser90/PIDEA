@@ -2,7 +2,7 @@
  * ExecutionResult - Handles workflow execution results
  * Provides structured result data and metadata for workflow execution
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Execution result for workflow execution
@@ -11,34 +11,34 @@ class ExecutionResult {
   constructor(options = {}) {
     this.id = options.id || uuidv4();
     this.success = options.success !== false;
-    this.strategy = options.strategy || 'unknown';
+    this.strategy = options.strategy || "unknown";
     this.duration = options.duration || 0;
     this.results = options.results || [];
     this.stepCount = options.stepCount || 0;
     this.error = options.error || null;
     this.metadata = options.metadata || {};
     this.timestamp = options.timestamp || new Date();
-    
+
     // Performance metrics
     this.performanceMetrics = options.performanceMetrics || {};
-    
+
     // Execution details
     this.executionId = options.executionId || null;
     this.workflowId = options.workflowId || null;
     this.workflowName = options.workflowName || null;
-    
+
     // Step results
     this.stepResults = options.stepResults || [];
     this.failedSteps = options.failedSteps || [];
     this.successfulSteps = options.successfulSteps || [];
-    
+
     // Resource usage
     this.resourceUsage = options.resourceUsage || {
       memory: 0,
       cpu: 0,
-      disk: 0
+      disk: 0,
     };
-    
+
     this._validate();
   }
 
@@ -47,16 +47,16 @@ class ExecutionResult {
    * @private
    */
   _validate() {
-    if (typeof this.success !== 'boolean') {
-      throw new Error('Success must be a boolean value');
+    if (typeof this.success !== "boolean") {
+      throw new Error("Success must be a boolean value");
     }
-    
-    if (typeof this.duration !== 'number' || this.duration < 0) {
-      throw new Error('Duration must be a non-negative number');
+
+    if (typeof this.duration !== "number" || this.duration < 0) {
+      throw new Error("Duration must be a non-negative number");
     }
-    
-    if (typeof this.stepCount !== 'number' || this.stepCount < 0) {
-      throw new Error('Step count must be a non-negative number');
+
+    if (typeof this.stepCount !== "number" || this.stepCount < 0) {
+      throw new Error("Step count must be a non-negative number");
     }
   }
 
@@ -108,7 +108,7 @@ class ExecutionResult {
     const seconds = Math.floor(this.duration / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
@@ -201,7 +201,9 @@ class ExecutionResult {
    * @returns {*} Performance metric
    */
   getPerformanceMetric(key, defaultValue = null) {
-    return this.performanceMetrics[key] !== undefined ? this.performanceMetrics[key] : defaultValue;
+    return this.performanceMetrics[key] !== undefined
+      ? this.performanceMetrics[key]
+      : defaultValue;
   }
 
   /**
@@ -267,7 +269,7 @@ class ExecutionResult {
   addStepResult(stepResult) {
     this.stepResults.push({
       ...stepResult,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -286,7 +288,7 @@ class ExecutionResult {
   addFailedStep(failedStep) {
     this.failedSteps.push({
       ...failedStep,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -305,7 +307,7 @@ class ExecutionResult {
   addSuccessfulStep(successfulStep) {
     this.successfulSteps.push({
       ...successfulStep,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -333,7 +335,7 @@ class ExecutionResult {
     if (this.stepCount === 0) {
       return 0;
     }
-    
+
     return this.successfulSteps.length / this.stepCount;
   }
 
@@ -345,7 +347,7 @@ class ExecutionResult {
     if (this.stepCount === 0) {
       return 0;
     }
-    
+
     return this.failedSteps.length / this.stepCount;
   }
 
@@ -357,11 +359,11 @@ class ExecutionResult {
     if (this.stepResults.length === 0) {
       return 0;
     }
-    
+
     const totalDuration = this.stepResults.reduce((sum, step) => {
       return sum + (step.duration || 0);
     }, 0);
-    
+
     return totalDuration / this.stepResults.length;
   }
 
@@ -384,7 +386,7 @@ class ExecutionResult {
       executionId: this.executionId,
       workflowId: this.workflowId,
       workflowName: this.workflowName,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -404,12 +406,12 @@ class ExecutionResult {
     if (!this.hasError()) {
       return null;
     }
-    
+
     return {
       message: this.error,
       timestamp: this.timestamp,
       strategy: this.strategy,
-      duration: this.duration
+      duration: this.duration,
     };
   }
 
@@ -435,7 +437,7 @@ class ExecutionResult {
       stepResults: this.stepResults,
       failedSteps: this.failedSteps,
       successfulSteps: this.successfulSteps,
-      resourceUsage: this.resourceUsage
+      resourceUsage: this.resourceUsage,
     };
   }
 
@@ -447,7 +449,7 @@ class ExecutionResult {
   static createSuccess(options = {}) {
     return new ExecutionResult({
       ...options,
-      success: true
+     
     });
   }
 
@@ -460,8 +462,8 @@ class ExecutionResult {
   static createFailure(error, options = {}) {
     return new ExecutionResult({
       ...options,
-      success: false,
-      error
+     
+      error,
     });
   }
 
@@ -488,9 +490,9 @@ class ExecutionResult {
       stepResults: data.stepResults,
       failedSteps: data.failedSteps,
       successfulSteps: data.successfulSteps,
-      resourceUsage: data.resourceUsage
+      resourceUsage: data.resourceUsage,
     });
   }
 }
 
-module.exports = ExecutionResult; 
+module.exports = ExecutionResult;

@@ -1,8 +1,8 @@
-const ChatRepository = require('@repositories/ChatRepository');
-const ChatSession = require('@entities/ChatSession');
-const ChatMessage = require('@entities/ChatMessage');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const ChatRepository = require("@repositories/ChatRepository");
+const ChatSession = require("@entities/ChatSession");
+const ChatMessage = require("@entities/ChatMessage");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class PostgreSQLChatRepository extends ChatRepository {
   constructor(databaseConnection) {
@@ -12,7 +12,7 @@ class PostgreSQLChatRepository extends ChatRepository {
 
   async saveSession(session) {
     if (!(session instanceof ChatSession)) {
-      throw new Error('Invalid session');
+      throw new Error("Invalid session");
     }
 
     const sql = `
@@ -25,72 +25,89 @@ class PostgreSQLChatRepository extends ChatRepository {
     `;
 
     const sessionData = session.toJSON();
-    const metadataValue = this.db.getType() === 'postgresql' ? sessionData.metadata : JSON.stringify(sessionData.metadata);
-    
+    const metadataValue =
+      this.db.getType() === "postgresql"
+        ? sessionData.metadata
+        : JSON.stringify(sessionData.metadata);
+
     await this.db.execute(sql, [
       sessionData.id,
       sessionData.userId,
       sessionData.title,
       sessionData.createdAt,
       sessionData.updatedAt,
-      metadataValue
+      metadataValue,
     ]);
 
     return session;
   }
 
   async findSessionById(sessionId) {
-    const sql = 'SELECT * FROM chat_sessions WHERE id = $1';
+    const sql = "SELECT * FROM chat_sessions WHERE id = $1";
     const row = await this.db.getOne(sql, [sessionId]);
-    
+
     if (!row) return null;
-    
+
     let metadata = {};
     if (row.metadata) {
       try {
-        metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
+        metadata =
+          typeof row.metadata === "string"
+            ? JSON.parse(row.metadata)
+            : row.metadata;
       } catch (error) {
-        logger.warn('Failed to parse metadata for chat session:', sessionId, error.message);
+        logger.warn(
+          "Failed to parse metadata for chat session:",
+          sessionId,
+          error.message,
+        );
         metadata = {};
       }
     }
-    
+
     const sessionData = {
       id: row.id,
       userId: row.user_id,
       title: row.title,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      metadata
+      metadata,
     };
-    
+
     return ChatSession.fromJSON(sessionData);
   }
 
   async getAllSessions() {
-    const sql = 'SELECT * FROM chat_sessions ORDER BY updated_at DESC';
+    const sql = "SELECT * FROM chat_sessions ORDER BY updated_at DESC";
     const rows = await this.db.query(sql);
-    
-    return rows.map(row => {
+
+    return rows.map((row) => {
       let metadata = {};
       if (row.metadata) {
         try {
-          metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
+          metadata =
+            typeof row.metadata === "string"
+              ? JSON.parse(row.metadata)
+              : row.metadata;
         } catch (error) {
-          logger.warn('Failed to parse metadata for chat session:', row.id, error.message);
+          logger.warn(
+            "Failed to parse metadata for chat session:",
+            row.id,
+            error.message,
+          );
           metadata = {};
         }
       }
-      
+
       const sessionData = {
         id: row.id,
         userId: row.user_id,
         title: row.title,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        metadata
+        metadata,
       };
-      
+
       return ChatSession.fromJSON(sessionData);
     });
   }
@@ -100,7 +117,7 @@ class PostgreSQLChatRepository extends ChatRepository {
   }
 
   async deleteSession(id) {
-    const sql = 'DELETE FROM chat_sessions WHERE id = $1';
+    const sql = "DELETE FROM chat_sessions WHERE id = $1";
     const result = await this.db.execute(sql, [id]);
     return result.rowsAffected > 0;
   }
@@ -108,11 +125,11 @@ class PostgreSQLChatRepository extends ChatRepository {
   async addMessageToSession(sessionId, message) {
     const session = await this.findSessionById(sessionId);
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     if (!(message instanceof ChatMessage)) {
-      throw new Error('message must be an instance of ChatMessage');
+      throw new Error("message must be an instance of ChatMessage");
     }
 
     const sql = `
@@ -121,8 +138,11 @@ class PostgreSQLChatRepository extends ChatRepository {
     `;
 
     const messageData = message.toJSON();
-    const metadataValue = this.db.getType() === 'postgresql' ? messageData.metadata : JSON.stringify(messageData.metadata);
-    
+    const metadataValue =
+      this.db.getType() === "postgresql"
+        ? messageData.metadata
+        : JSON.stringify(messageData.metadata);
+
     await this.db.execute(sql, [
       messageData.id,
       sessionId,
@@ -130,7 +150,7 @@ class PostgreSQLChatRepository extends ChatRepository {
       messageData.sender,
       messageData.type,
       messageData.timestamp,
-      metadataValue
+      metadataValue,
     ]);
 
     session.addMessage(message);
@@ -139,20 +159,28 @@ class PostgreSQLChatRepository extends ChatRepository {
   }
 
   async getSessionMessages(sessionId) {
-    const sql = 'SELECT * FROM chat_messages WHERE session_id = $1 ORDER BY timestamp ASC';
+    const sql =
+      "SELECT * FROM chat_messages WHERE session_id = $1 ORDER BY timestamp ASC";
     const rows = await this.db.query(sql, [sessionId]);
-    
-    return rows.map(row => {
+
+    return rows.map((row) => {
       let metadata = {};
       if (row.metadata) {
         try {
-          metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
+          metadata =
+            typeof row.metadata === "string"
+              ? JSON.parse(row.metadata)
+              : row.metadata;
         } catch (error) {
-          logger.warn('Failed to parse metadata for chat message:', row.id, error.message);
+          logger.warn(
+            "Failed to parse metadata for chat message:",
+            row.id,
+            error.message,
+          );
           metadata = {};
         }
       }
-      
+
       const messageData = {
         id: row.id,
         sessionId: row.session_id,
@@ -160,9 +188,9 @@ class PostgreSQLChatRepository extends ChatRepository {
         sender: row.sender,
         type: row.type,
         timestamp: row.timestamp,
-        metadata
+        metadata,
       };
-      
+
       return ChatMessage.fromJSON(messageData);
     });
   }
@@ -172,4 +200,4 @@ class PostgreSQLChatRepository extends ChatRepository {
   }
 }
 
-module.exports = PostgreSQLChatRepository; 
+module.exports = PostgreSQLChatRepository;

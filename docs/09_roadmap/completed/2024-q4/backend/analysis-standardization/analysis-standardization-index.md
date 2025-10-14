@@ -127,7 +127,7 @@ docs/09_roadmap/tasks/backend/analysis-standardization/
 ```javascript
 // ✅ TARGET STRUCTURE FOR ALL ANALYSIS STEPS:
 {
-  success: true,
+ 
   result: {
     issues: [
       {

@@ -1,9 +1,18 @@
-const { v4: uuidv4 } = require('uuid');
-const Token = require('@domain/value-objects/Token');
-const TokenHash = require('@domain/value-objects/TokenHash');
+const { v4: uuidv4 } = require("uuid");
+const Token = require("@domain/value-objects/Token");
+const TokenHash = require("@domain/value-objects/TokenHash");
 
 class UserSession {
-  constructor(id, userId, accessToken, refreshToken, expiresAt, createdAt, metadata = {}, accessTokenHash = null) {
+  constructor(
+    id,
+    userId,
+    accessToken,
+    refreshToken,
+    expiresAt,
+    createdAt,
+    metadata = {},
+    accessTokenHash = null,
+  ) {
     this._id = id || uuidv4();
     this._userId = userId;
     this._accessToken = accessToken;
@@ -16,18 +25,34 @@ class UserSession {
   }
 
   // Getters
-  get id() { return this._id; }
-  get userId() { return this._userId; }
-  get accessToken() { return this._accessToken; }
-  get refreshToken() { return this._refreshToken; }
-  get expiresAt() { return this._expiresAt; }
-  get createdAt() { return this._createdAt; }
-  get metadata() { return { ...this._metadata }; }
-  get accessTokenHash() { return this._accessTokenHash; }
-  
+  get id() {
+    return this._id;
+  }
+  get userId() {
+    return this._userId;
+  }
+  get accessToken() {
+    return this._accessToken;
+  }
+  get refreshToken() {
+    return this._refreshToken;
+  }
+  get expiresAt() {
+    return this._expiresAt;
+  }
+  get createdAt() {
+    return this._createdAt;
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get accessTokenHash() {
+    return this._accessTokenHash;
+  }
+
   // Secure token getters
-  get accessTokenStart() { 
-    return this._accessToken ? this._accessToken.substring(0, 20) : null; 
+  get accessTokenStart() {
+    return this._accessToken ? this._accessToken.substring(0, 20) : null;
   }
 
   // Domain methods
@@ -55,19 +80,19 @@ class UserSession {
   // Business rules validation
   _validate() {
     if (!this._userId) {
-      throw new Error('UserSession userId cannot be empty');
+      throw new Error("UserSession userId cannot be empty");
     }
     if (!this._accessToken || this._accessToken.length < 10) {
-      throw new Error('UserSession accessToken is invalid');
+      throw new Error("UserSession accessToken is invalid");
     }
     if (!this._refreshToken || this._refreshToken.length < 10) {
-      throw new Error('UserSession refreshToken is invalid');
+      throw new Error("UserSession refreshToken is invalid");
     }
     if (!(this._expiresAt instanceof Date)) {
-      throw new Error('UserSession expiresAt must be a Date object');
+      throw new Error("UserSession expiresAt must be a Date object");
     }
     if (!(this._createdAt instanceof Date)) {
-      throw new Error('UserSession createdAt must be a Date object');
+      throw new Error("UserSession createdAt must be a Date object");
     }
   }
 
@@ -91,7 +116,13 @@ class UserSession {
   }
 
   // Factory methods
-  static createSession(userId, accessToken, refreshToken, expiresAt, metadata = {}) {
+  static createSession(
+    userId,
+    accessToken,
+    refreshToken,
+    expiresAt,
+    metadata = {},
+  ) {
     return new UserSession(
       null,
       userId,
@@ -99,7 +130,7 @@ class UserSession {
       refreshToken,
       expiresAt,
       new Date(),
-      metadata
+      metadata,
     );
   }
 
@@ -113,7 +144,7 @@ class UserSession {
       expiresAt: this._expiresAt.toISOString(),
       createdAt: this._createdAt.toISOString(),
       metadata: this._metadata,
-      accessTokenHash: this._accessTokenHash
+      accessTokenHash: this._accessTokenHash,
     };
   }
 
@@ -126,9 +157,9 @@ class UserSession {
       new Date(data.expiresAt),
       new Date(data.createdAt),
       data.metadata,
-      data.accessTokenHash
+      data.accessTokenHash,
     );
   }
 }
 
-module.exports = UserSession; 
+module.exports = UserSession;

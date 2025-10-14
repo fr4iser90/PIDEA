@@ -1,6 +1,6 @@
 /**
  * IHandlerAdapter - Interface for handler adapters
- * 
+ *
  * This interface defines the contract for handler adapters that can
  * create handlers from different sources (legacy handlers, external
  * services, etc.). Adapters provide backward compatibility and
@@ -14,7 +14,7 @@ class IHandlerAdapter {
    * @returns {Promise<IHandler>} Created handler instance
    */
   async createHandler(request, context) {
-    throw new Error('createHandler method must be implemented');
+    throw new Error("createHandler method must be implemented");
   }
 
   /**
@@ -23,7 +23,7 @@ class IHandlerAdapter {
    * @returns {boolean} True if adapter can handle the request
    */
   canHandle(request) {
-    throw new Error('canHandle method must be implemented');
+    throw new Error("canHandle method must be implemented");
   }
 
   /**
@@ -31,7 +31,7 @@ class IHandlerAdapter {
    * @returns {Object} Adapter metadata including name, description, and capabilities
    */
   getMetadata() {
-    throw new Error('getMetadata method must be implemented');
+    throw new Error("getMetadata method must be implemented");
   }
 
   /**
@@ -39,7 +39,7 @@ class IHandlerAdapter {
    * @returns {string} Adapter type identifier
    */
   getType() {
-    throw new Error('getType method must be implemented');
+    throw new Error("getType method must be implemented");
   }
 
   /**
@@ -47,7 +47,7 @@ class IHandlerAdapter {
    * @returns {string} Adapter version string
    */
   getVersion() {
-    throw new Error('getVersion method must be implemented');
+    throw new Error("getVersion method must be implemented");
   }
 
   /**
@@ -56,7 +56,7 @@ class IHandlerAdapter {
    * @returns {Promise<void>} Initialization result
    */
   async initialize(config = {}) {
-    throw new Error('initialize method must be implemented');
+    throw new Error("initialize method must be implemented");
   }
 
   /**
@@ -64,7 +64,7 @@ class IHandlerAdapter {
    * @returns {Promise<void>} Cleanup result
    */
   async cleanup() {
-    throw new Error('cleanup method must be implemented');
+    throw new Error("cleanup method must be implemented");
   }
 
   /**
@@ -73,7 +73,7 @@ class IHandlerAdapter {
    * @returns {Promise<ValidationResult>} Validation result
    */
   async validateRequest(request) {
-    throw new Error('validateRequest method must be implemented');
+    throw new Error("validateRequest method must be implemented");
   }
 
   /**
@@ -81,7 +81,7 @@ class IHandlerAdapter {
    * @returns {Array<string>} Array of supported request types
    */
   getSupportedTypes() {
-    throw new Error('getSupportedTypes method must be implemented');
+    throw new Error("getSupportedTypes method must be implemented");
   }
 
   /**
@@ -89,7 +89,7 @@ class IHandlerAdapter {
    * @returns {Object} Adapter capabilities and features
    */
   getCapabilities() {
-    throw new Error('getCapabilities method must be implemented');
+    throw new Error("getCapabilities method must be implemented");
   }
 
   /**
@@ -97,8 +97,8 @@ class IHandlerAdapter {
    * @returns {Promise<boolean>} True if adapter is healthy
    */
   async isHealthy() {
-    throw new Error('isHealthy method must be implemented');
+    throw new Error("isHealthy method must be implemented");
   }
 }
 
-module.exports = IHandlerAdapter; 
+module.exports = IHandlerAdapter;

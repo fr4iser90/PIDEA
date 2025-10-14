@@ -57,7 +57,7 @@ class ProjectController {
   
   async list(req, res) {
     const projects = await this.projectApplicationService.getAllProjects();
-    res.json({ success: true, data: projects });
+    res.json({ data: projects });
   }
 }
 
@@ -94,7 +94,7 @@ const logger = new Logger('ProjectController');
 // ✅ Proper Error Handling
 try {
   const result = await this.projectApplicationService.methodName(params);
-  res.json({ success: true, data: result });
+  res.json({ data: result });
 } catch (error) {
   this.logger.error('Operation failed:', error);
   // Proper error mapping to HTTP responses
@@ -124,7 +124,7 @@ class ProjectController {
   async list(req, res) {
     // Direct repository access
     const projects = await this.projectRepository.findAll();
-    res.json({ success: true, data: projects });
+    res.json({ data: projects });
   }
 }
 
@@ -137,7 +137,7 @@ class ProjectController {
   async list(req, res) {
     // Application service access only
     const projects = await this.projectApplicationService.getAllProjects();
-    res.json({ success: true, data: projects });
+    res.json({ data: projects });
   }
 }
 ```

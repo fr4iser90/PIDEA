@@ -1,17 +1,16 @@
-
 /**
  * IDE Configuration Manager
  * Manages IDE configurations, settings, and preferences
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const fs = require("fs").promises;
+const path = require("path");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class IDEConfigManager {
   constructor() {
-    this.configPath = path.join(process.cwd(), 'config', 'ide-config.json');
+    this.configPath = path.join(process.cwd(), "config", "ide-config.json");
     this.defaultConfig = {
       ideTypes: {
         cursor: {
@@ -21,10 +20,10 @@ class IDEConfigManager {
             userDataDir: null,
             extensionsDir: null,
             disableExtensions: false,
-            verbose: false
+            verbose: false,
           },
           startupTimeout: 3000,
-          autoStart: false
+          autoStart: false,
         },
         vscode: {
           enabled: true,
@@ -34,10 +33,10 @@ class IDEConfigManager {
             extensionsDir: null,
             disableExtensions: false,
             verbose: false,
-            newWindow: false
+            newWindow: false,
           },
           startupTimeout: 5000,
-          autoStart: false
+          autoStart: false,
         },
         windsurf: {
           enabled: true,
@@ -47,24 +46,24 @@ class IDEConfigManager {
             extensionsDir: null,
             disableExtensions: false,
             verbose: false,
-            newWindow: false
+            newWindow: false,
           },
           startupTimeout: 4000,
-          autoStart: false
-        }
+          autoStart: false,
+        },
       },
       global: {
-        defaultIDE: 'cursor',
+        defaultIDE: "cursor",
         autoDetect: true,
         healthCheckInterval: 30000,
         maxConcurrentIDEs: 5,
-        logLevel: 'info'
+        logLevel: "info",
       },
       workspace: {
         rememberLastUsed: true,
         autoSwitch: false,
-        defaultWorkspace: null
-      }
+        defaultWorkspace: null,
+      },
     };
     this.config = null;
   }
@@ -80,23 +79,23 @@ class IDEConfigManager {
       await fs.mkdir(configDir, { recursive: true });
 
       // Try to load existing config
-      const configData = await fs.readFile(this.configPath, 'utf8');
+      const configData = await fs.readFile(this.configPath, "utf8");
       this.config = JSON.parse(configData);
-      
+
       // Merge with default config to ensure all required fields exist
       this.config = this.mergeWithDefaults(this.config);
-      
-      logger.info('Configuration loaded successfully');
+
+      logger.info("Configuration loaded successfully");
       return this.config;
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         // Config file doesn't exist, create with defaults
-        logger.info('No configuration file found, creating with defaults');
+        logger.info("No configuration file found, creating with defaults");
         this.config = this.defaultConfig;
         await this.saveConfig();
         return this.config;
       } else {
-        logger.error('Error loading configuration:', error);
+        logger.error("Error loading configuration:", error);
         // Fallback to default config
         this.config = this.defaultConfig;
         return this.config;
@@ -112,18 +111,22 @@ class IDEConfigManager {
   async saveConfig(config = null) {
     try {
       const configToSave = config || this.config || this.defaultConfig;
-      
+
       // Ensure config directory exists
       const configDir = path.dirname(this.configPath);
       await fs.mkdir(configDir, { recursive: true });
 
       // Save configuration with pretty formatting
-      await fs.writeFile(this.configPath, JSON.stringify(configToSave, null, 2), 'utf8');
-      
+      await fs.writeFile(
+        this.configPath,
+        JSON.stringify(configToSave, null, 2),
+        "utf8",
+      );
+
       this.config = configToSave;
-      logger.info('Configuration saved successfully');
+      logger.info("Configuration saved successfully");
     } catch (error) {
-      logger.error('Error saving configuration:', error);
+      logger.error("Error saving configuration:", error);
       throw error;
     }
   }
@@ -135,7 +138,7 @@ class IDEConfigManager {
    */
   getIDEConfig(ideType) {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     const ideConfig = this.config.ideTypes[ideType.toLowerCase()];
@@ -165,7 +168,7 @@ class IDEConfigManager {
     // Merge with existing config
     this.config.ideTypes[ideTypeLower] = {
       ...this.config.ideTypes[ideTypeLower],
-      ...newConfig
+      ...newConfig,
     };
 
     await this.saveConfig();
@@ -177,7 +180,7 @@ class IDEConfigManager {
    */
   getGlobalConfig() {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     return this.config.global;
@@ -195,7 +198,7 @@ class IDEConfigManager {
 
     this.config.global = {
       ...this.config.global,
-      ...newConfig
+      ...newConfig,
     };
 
     await this.saveConfig();
@@ -207,7 +210,7 @@ class IDEConfigManager {
    */
   getWorkspaceConfig() {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     return this.config.workspace;
@@ -225,7 +228,7 @@ class IDEConfigManager {
 
     this.config.workspace = {
       ...this.config.workspace,
-      ...newConfig
+      ...newConfig,
     };
 
     await this.saveConfig();
@@ -242,46 +245,60 @@ class IDEConfigManager {
     const warnings = [];
 
     if (!configToValidate) {
-      errors.push('Configuration is null or undefined');
+      errors.push("Configuration is null or undefined");
       return { isValid: false, errors, warnings };
     }
 
     // Validate IDE types
     if (!configToValidate.ideTypes) {
-      errors.push('Missing ideTypes configuration');
+      errors.push("Missing ideTypes configuration");
     } else {
-      for (const [ideType, ideConfig] of Object.entries(configToValidate.ideTypes)) {
+      for (const [ideType, ideConfig] of Object.entries(
+        configToValidate.ideTypes,
+      )) {
         if (!ideConfig.portRange) {
           errors.push(`Missing portRange for ${ideType}`);
         } else {
           if (ideConfig.portRange.start >= ideConfig.portRange.end) {
-            errors.push(`Invalid port range for ${ideType}: start must be less than end`);
+            errors.push(
+              `Invalid port range for ${ideType}: start must be less than end`,
+            );
           }
         }
 
         if (ideConfig.startupTimeout && ideConfig.startupTimeout < 1000) {
-          warnings.push(`Startup timeout for ${ideType} is very low (${ideConfig.startupTimeout}ms)`);
+          warnings.push(
+            `Startup timeout for ${ideType} is very low (${ideConfig.startupTimeout}ms)`,
+          );
         }
       }
     }
 
     // Validate global config
     if (!configToValidate.global) {
-      errors.push('Missing global configuration');
+      errors.push("Missing global configuration");
     } else {
-      if (configToValidate.global.maxConcurrentIDEs && configToValidate.global.maxConcurrentIDEs < 1) {
-        errors.push('maxConcurrentIDEs must be at least 1');
+      if (
+        configToValidate.global.maxConcurrentIDEs &&
+        configToValidate.global.maxConcurrentIDEs < 1
+      ) {
+        errors.push("maxConcurrentIDEs must be at least 1");
       }
 
-      if (configToValidate.global.healthCheckInterval && configToValidate.global.healthCheckInterval < 5000) {
-        warnings.push('Health check interval is very low (less than 5 seconds)');
+      if (
+        configToValidate.global.healthCheckInterval &&
+        configToValidate.global.healthCheckInterval < 5000
+      ) {
+        warnings.push(
+          "Health check interval is very low (less than 5 seconds)",
+        );
       }
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -292,7 +309,7 @@ class IDEConfigManager {
   async resetToDefaults() {
     this.config = this.defaultConfig;
     await this.saveConfig();
-    logger.info('Configuration reset to defaults');
+    logger.info("Configuration reset to defaults");
   }
 
   /**
@@ -301,7 +318,7 @@ class IDEConfigManager {
    */
   getEnabledIDETypes() {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     return Object.entries(this.config.ideTypes)
@@ -329,7 +346,7 @@ class IDEConfigManager {
    */
   getDefaultIDE() {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     return this.config.global.defaultIDE;
@@ -348,7 +365,7 @@ class IDEConfigManager {
         if (merged.ideTypes[ideType]) {
           merged.ideTypes[ideType] = {
             ...merged.ideTypes[ideType],
-            ...ideConfig
+            ...ideConfig,
           };
         }
       }
@@ -357,14 +374,14 @@ class IDEConfigManager {
     if (config.global) {
       merged.global = {
         ...merged.global,
-        ...config.global
+        ...config.global,
       };
     }
 
     if (config.workspace) {
       merged.workspace = {
         ...merged.workspace,
-        ...config.workspace
+        ...config.workspace,
       };
     }
 
@@ -377,7 +394,7 @@ class IDEConfigManager {
    */
   getConfigStats() {
     if (!this.config) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     const enabledIDEs = this.getEnabledIDETypes();
@@ -390,9 +407,9 @@ class IDEConfigManager {
       isValid: validation.isValid,
       errors: validation.errors.length,
       warnings: validation.warnings.length,
-      configPath: this.configPath
+      configPath: this.configPath,
     };
   }
 }
 
-module.exports = IDEConfigManager; 
+module.exports = IDEConfigManager;

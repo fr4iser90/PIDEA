@@ -1,7 +1,7 @@
-const request = require('supertest');
-const Application = require('@/Application');
+const request = require("supertest");
+const Application = require("@/Application");
 
-describe('TODO Processing Integration', () => {
+describe("TODO Processing Integration", () => {
   let app;
   let server;
 
@@ -15,8 +15,8 @@ describe('TODO Processing Integration', () => {
     await app.cleanup();
   });
 
-  describe('POST /api/auto-finish/process', () => {
-    it('should process TODO list successfully', async () => {
+  describe("POST /api/auto-finish/process", () => {
+    it("should process TODO list successfully", async () => {
       const todoInput = `
 TODO: Create a new button component
 - Add form validation
@@ -25,12 +25,12 @@ TODO: Create a new button component
       `;
 
       const response = await request(server)
-        .post('/api/auto-finish/process')
+        .post("/api/auto-finish/process")
         .send({
           todoInput,
           options: {
-            stopOnError: false
-          }
+            stopOnError: false,
+          },
         })
         .expect(200);
 
@@ -39,39 +39,39 @@ TODO: Create a new button component
       expect(response.body.result).toBeDefined();
     });
 
-    it('should handle invalid TODO input', async () => {
+    it("should handle invalid TODO input", async () => {
       const response = await request(server)
-        .post('/api/auto-finish/process')
+        .post("/api/auto-finish/process")
         .send({
-          todoInput: '',
-          options: {}
+          todoInput: "",
+          options: {},
         })
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('todoInput is required');
+      expect(response.body.error).toContain("todoInput is required");
     });
 
-    it('should handle TODO input with no tasks', async () => {
+    it("should handle TODO input with no tasks", async () => {
       const response = await request(server)
-        .post('/api/auto-finish/process')
+        .post("/api/auto-finish/process")
         .send({
-          todoInput: 'This is just some text with no tasks',
-          options: {}
+          todoInput: "This is just some text with no tasks",
+          options: {},
         })
         .expect(500);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('No tasks found');
+      expect(response.body.error).toContain("No tasks found");
     });
   });
 
-  describe('GET /api/auto-finish/sessions/:sessionId', () => {
-    it('should get session status', async () => {
+  describe("GET /api/auto-finish/sessions/:sessionId", () => {
+    it("should get session status", async () => {
       // First create a session
-      const todoInput = 'TODO: Test session status';
+      const todoInput = "TODO: Test session status";
       const createResponse = await request(server)
-        .post('/api/auto-finish/process')
+        .post("/api/auto-finish/process")
         .send({ todoInput })
         .expect(200);
 
@@ -87,20 +87,20 @@ TODO: Create a new button component
       expect(response.body.session.id).toBe(sessionId);
     });
 
-    it('should handle non-existent session', async () => {
+    it("should handle non-existent session", async () => {
       const response = await request(server)
-        .get('/api/auto-finish/sessions/non-existent-id')
+        .get("/api/auto-finish/sessions/non-existent-id")
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Session not found');
+      expect(response.body.error).toContain("Session not found");
     });
   });
 
-  describe('GET /api/auto-finish/stats', () => {
-    it('should get system statistics', async () => {
+  describe("GET /api/auto-finish/stats", () => {
+    it("should get system statistics", async () => {
       const response = await request(server)
-        .get('/api/auto-finish/stats')
+        .get("/api/auto-finish/stats")
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -109,10 +109,10 @@ TODO: Create a new button component
     });
   });
 
-  describe('GET /api/auto-finish/patterns', () => {
-    it('should get supported patterns', async () => {
+  describe("GET /api/auto-finish/patterns", () => {
+    it("should get supported patterns", async () => {
       const response = await request(server)
-        .get('/api/auto-finish/patterns')
+        .get("/api/auto-finish/patterns")
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -121,22 +121,22 @@ TODO: Create a new button component
     });
   });
 
-  describe('GET /api/auto-finish/task-types', () => {
-    it('should get task type keywords', async () => {
+  describe("GET /api/auto-finish/task-types", () => {
+    it("should get task type keywords", async () => {
       const response = await request(server)
-        .get('/api/auto-finish/task-types')
+        .get("/api/auto-finish/task-types")
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.taskTypes).toBeDefined();
-      expect(typeof response.body.taskTypes).toBe('object');
+      expect(typeof response.body.taskTypes).toBe("object");
     });
   });
 
-  describe('GET /api/auto-finish/health', () => {
-    it('should get health status', async () => {
+  describe("GET /api/auto-finish/health", () => {
+    it("should get health status", async () => {
       const response = await request(server)
-        .get('/api/auto-finish/health')
+        .get("/api/auto-finish/health")
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -144,4 +144,4 @@ TODO: Create a new button component
       expect(response.body.health.autoFinishSystem).toBeDefined();
     });
   });
-}); 
+});

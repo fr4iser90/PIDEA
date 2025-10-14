@@ -11,7 +11,7 @@ async register(req, res) {
   try {
     const { email, password, username } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     const userData = { email, password, username };
@@ -23,7 +23,7 @@ async register(req, res) {
     });
   } catch (error) {
     logger.error('Registration error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ message: error.message });
   }
 }
 ```
@@ -68,7 +68,6 @@ async getProjectTasks(req, res) {
     });
 
     res.json({
-      success: true,
       data: tasks,
       projectId,
       timestamp: new Date().toISOString()
@@ -76,7 +75,7 @@ async getProjectTasks(req, res) {
   } catch (error) {
     this.logger.error('Failed to get project tasks:', error);
     res.status(500).json({
-      success: false,
+     
       error: 'Failed to get project tasks',
       message: error.message
     });
@@ -129,7 +128,6 @@ async executeWorkflow(req, res) {
     });
 
     res.json({
-      success: true,
       data: {
         workflowId: result.workflowId,
         status: result.status,
@@ -140,7 +138,7 @@ async executeWorkflow(req, res) {
   } catch (error) {
     this.logger.error('Workflow execution failed:', error);
     res.status(500).json({
-      success: false,
+     
       error: 'Workflow execution failed',
       message: error.message
     });
@@ -188,7 +186,7 @@ async mirrorIDE(req, res) {
     
     if (!projectId || !ideType) {
       return res.status(400).json({
-        success: false,
+       
         error: 'Project ID and IDE type are required'
       });
     }
@@ -196,7 +194,6 @@ async mirrorIDE(req, res) {
     const result = await this.ideMirrorService.mirrorIDE(projectId, ideType);
     
     res.json({
-      success: true,
       data: {
         mirrorId: result.mirrorId,
         status: result.status,
@@ -206,7 +203,7 @@ async mirrorIDE(req, res) {
   } catch (error) {
     this.logger.error('IDE mirror failed:', error);
     res.status(500).json({
-      success: false,
+     
       error: 'IDE mirror failed',
       message: error.message
     });
@@ -250,7 +247,7 @@ async analyze(req, res) {
 
     if (!projectId || !projectPath) {
       return res.status(400).json({
-        success: false,
+       
         error: 'Missing required parameters: projectId and projectPath',
         data: null
       });
@@ -263,7 +260,6 @@ async analyze(req, res) {
     });
 
     res.json({
-      success: true,
       data: {
         projectId: projectId,
         timestamp: new Date().toISOString(),
@@ -277,7 +273,7 @@ async analyze(req, res) {
   } catch (error) {
     this.logger.error('Performance analysis failed:', error);
     res.status(500).json({
-      success: false,
+     
       data: null,
       error: {
         message: 'Performance analysis failed',
@@ -330,7 +326,7 @@ if (data && typeof data === 'object' && data.success !== undefined) {
   if (data.success) {
     return data.data || data;
   } else {
-    return { success: false, error: data.error || 'Request failed' };
+    return { error: data.error || 'Request failed' };
   }
 }
 ```
@@ -366,7 +362,7 @@ const apiCall = async (endpoint, options = {}, projectId = null) => {
     return data;
   } catch (error) {
     logger.error('API call failed:', error);
-    return { success: false, error: error.message };
+    return { error: error.message };
   }
 };
 ```
@@ -499,7 +495,7 @@ const apiCall = async (endpoint, options = {}, projectId = null) => {
 ### Success Response Migration:
 ```javascript
 // FROM:
-res.json({ success: true, data: result })
+res.json({ data: result })
 
 // TO:
 res.success(result)
@@ -508,7 +504,7 @@ res.success(result)
 ### Error Response Migration:
 ```javascript
 // FROM:
-res.status(500).json({ success: false, error: 'Error message' })
+res.status(500).json({ error: 'Error message' })
 
 // TO:
 res.internalError('Error message')
@@ -517,7 +513,7 @@ res.internalError('Error message')
 ### Validation Error Migration:
 ```javascript
 // FROM:
-res.status(400).json({ success: false, error: 'Validation failed' })
+res.status(400).json({ error: 'Validation failed' })
 
 // TO:
 res.validationError('Validation failed')
@@ -526,7 +522,7 @@ res.validationError('Validation failed')
 ### Created Response Migration:
 ```javascript
 // FROM:
-res.status(201).json({ success: true, data: result })
+res.status(201).json({ data: result })
 
 // TO:
 res.created(result)
@@ -535,7 +531,7 @@ res.created(result)
 ### Unauthorized Response Migration:
 ```javascript
 // FROM:
-res.status(401).json({ success: false, error: 'Authentication required' })
+res.status(401).json({ error: 'Authentication required' })
 
 // TO:
 res.unauthorized('Authentication required')
@@ -554,7 +550,7 @@ async extendSession(req, res) {
     
     if (!user || !session) {
       return res.status(401).json({
-        success: false,
+       
         error: 'Authentication required'
       });
     }
@@ -565,7 +561,6 @@ async extendSession(req, res) {
     );
 
     res.json({
-      success: true,
       data: {
         sessionId: result.sessionId,
         expiresAt: result.expiresAt,
@@ -576,7 +571,7 @@ async extendSession(req, res) {
   } catch (error) {
     logger.error('Session extension failed:', error);
     res.status(500).json({
-      success: false,
+     
       error: error.message || 'Failed to extend session'
     });
   }
@@ -625,7 +620,6 @@ async getQueueStatus(req, res) {
     const queueStatus = await this.taskQueueStore.getProjectQueueStatus(projectId, userId);
     
     res.json({
-      success: true,
       data: queueStatus,
       timestamp: new Date().toISOString()
     });
@@ -633,7 +627,7 @@ async getQueueStatus(req, res) {
   } catch (error) {
     this.logger.error('Failed to get queue status', { error: error.message });
     res.status(500).json({
-      success: false,
+     
       error: 'Failed to get queue status',
       message: error.message
     });
@@ -673,14 +667,14 @@ async getStatus(req, res) {
 
     if (!projectId) {
       return res.status(400).json({
-        success: false,
+       
         error: 'Project ID is required'
       });
     }
 
     if (!projectPath) {
       return res.status(400).json({
-        success: false,
+       
         error: 'Project path is required'
       });
     }
@@ -691,7 +685,6 @@ async getStatus(req, res) {
     ]);
     
     const responseData = {
-      success: true,
       data: {
         status,
         currentBranch
@@ -705,7 +698,7 @@ async getStatus(req, res) {
   } catch (error) {
     this.logger.error('GitController: Failed to get Git status:', error);
     res.status(500).json({
-      success: false,
+     
       error: 'Failed to get Git status',
       message: error.message
     });
@@ -758,10 +751,10 @@ async getPrompt(req, res) {
   try {
     const { category, filename } = req.params;
     const content = await this.contentLibraryService.getPrompt(category, filename);
-    res.json({ success: true, category, filename, content });
+    res.json({ category, filename, content });
   } catch (error) {
     this.logger.error('Failed to get prompt:', error);
-    res.status(404).json({ success: false, error: 'Prompt file not found', message: error.message });
+    res.status(404).json({ error: 'Prompt file not found', message: error.message });
   }
 }
 ```
@@ -786,31 +779,31 @@ async getPrompt(req, res) {
 ### All Legacy Patterns to Replace:
 
 1. **Success with data wrapper:**
-   - `res.json({ success: true, data: X })` → `res.success(X)`
+   - `res.json({ data: X })` → `res.success(X)`
 
 2. **Success with data and timestamp:**
-   - `res.json({ success: true, data: X, timestamp: new Date().toISOString() })` → `res.success(X)`
+   - `res.json({ data: X, timestamp: new Date().toISOString() })` → `res.success(X)`
 
 3. **Success with message:**
-   - `res.json({ success: true, data: X, message: 'Y' })` → `res.success(X, 200, { message: 'Y' })`
+   - `res.json({ data: X, message: 'Y' })` → `res.success(X, 200, { message: 'Y' })`
 
 4. **Error 400 (Validation):**
-   - `res.status(400).json({ success: false, error: 'X' })` → `res.validationError('X')`
+   - `res.status(400).json({ error: 'X' })` → `res.validationError('X')`
 
 5. **Error 401 (Unauthorized):**
-   - `res.status(401).json({ success: false, error: 'X' })` → `res.unauthorized('X')`
+   - `res.status(401).json({ error: 'X' })` → `res.unauthorized('X')`
 
 6. **Error 404 (Not Found):**
-   - `res.status(404).json({ success: false, error: 'X' })` → `res.notFound('X')`
+   - `res.status(404).json({ error: 'X' })` → `res.notFound('X')`
 
 7. **Error 500 (Internal):**
-   - `res.status(500).json({ success: false, error: 'X' })` → `res.internalError('X')`
+   - `res.status(500).json({ error: 'X' })` → `res.internalError('X')`
 
 8. **Error with message field:**
-   - `res.status(500).json({ success: false, error: 'X', message: error.message })` → `res.internalError('X')`
+   - `res.status(500).json({ error: 'X', message: error.message })` → `res.internalError('X')`
 
 9. **Success with null error:**
-   - `res.json({ success: true, data: X, error: null })` → `res.success(X)`
+   - `res.json({ data: X, error: null })` → `res.success(X)`
 
 10. **Error with null data:**
-    - `res.status(500).json({ success: false, data: null, error: 'X' })` → `res.internalError('X')`
+    - `res.status(500).json({ data: null, error: 'X' })` → `res.internalError('X')`

@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 /**
  * Auth Routes - Professional RESTful API Design
- * 
+ *
  * This module provides a clean, modular approach to authentication endpoints
  * including login, logout, profile management, and session handling.
  */
@@ -22,31 +22,49 @@ class AuthRoutes {
     // ========================================
     // PUBLIC AUTH ROUTES - No Authentication Required
     // ========================================
-    
+
     // Login with brute force protection
-    app.post('/api/auth/login', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.login(req, res));
-    
+    app.post(
+      "/api/auth/login",
+      this.authMiddleware.bruteForceProtection(),
+      (req, res) => this.authController.login(req, res),
+    );
+
     // Refresh token with brute force protection
-    app.post('/api/auth/refresh', this.authMiddleware.bruteForceProtection(), (req, res) => this.authController.refresh(req, res));
-    
+    app.post(
+      "/api/auth/refresh",
+      this.authMiddleware.bruteForceProtection(),
+      (req, res) => this.authController.refresh(req, res),
+    );
+
     // Validate token (public endpoint)
-    app.get('/api/auth/validate', (req, res) => this.authController.validateToken(req, res));
+    app.get("/api/auth/validate", (req, res) =>
+      this.authController.validateToken(req, res),
+    );
 
     // ========================================
     // PROTECTED AUTH ROUTES - Authentication Required
     // ========================================
-    
+
     // Authentication handled by global middleware
 
     // Profile management
-    app.get('/api/auth/profile', (req, res) => this.authController.getProfile(req, res));
-    app.put('/api/auth/profile', (req, res) => this.authController.updateProfile(req, res));
-    
+    app.get("/api/auth/profile", (req, res) =>
+      this.authController.getProfile(req, res),
+    );
+    app.put("/api/auth/profile", (req, res) =>
+      this.authController.updateProfile(req, res),
+    );
+
     // Session management
-    app.get('/api/auth/sessions', (req, res) => this.authController.getSessions(req, res));
-    
+    app.get("/api/auth/sessions", (req, res) =>
+      this.authController.getSessions(req, res),
+    );
+
     // Logout
-    app.post('/api/auth/logout', (req, res) => this.authController.logout(req, res));
+    app.post("/api/auth/logout", (req, res) =>
+      this.authController.logout(req, res),
+    );
   }
 }
 

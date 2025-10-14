@@ -1,13 +1,19 @@
 /**
  * ArchitectureService - Domain service for architecture analysis
  */
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class ArchitectureService {
-  constructor(architectureAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
+  constructor(
+    architectureAnalyzer,
+    eventBus,
+    logger,
+    analysisOutputService,
+    analysisRepository,
+  ) {
     this.architectureAnalyzer = architectureAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
-    this.logger = logger || new ServiceLogger('ArchitectureService');
+    this.logger = logger || new ServiceLogger("ArchitectureService");
     this.analysisOutputService = analysisOutputService;
     this.analysisRepository = analysisRepository;
   }
@@ -23,38 +29,51 @@ class ArchitectureService {
     try {
       this.logger.info(`Starting architecture analysis for project`);
 
-      const analysis = await this.architectureAnalyzer.analyzeArchitecture(projectPath, options);
+      const analysis = await this.architectureAnalyzer.analyzeArchitecture(
+        projectPath,
+        options,
+      );
 
       // Save to file ONLY if explicitly requested
       if (this.analysisOutputService && options.saveToFile !== false) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
-          projectId, 
-          'architecture', 
-          analysis
+          projectId,
+          "architecture",
+          analysis,
         );
-        
+
         // Save to database ONLY if explicitly requested
         if (this.analysisRepository && options.saveToDatabase !== false) {
-          const AnalysisResult = require('@entities/AnalysisResult');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+          const AnalysisResult = require("@entities/AnalysisResult");
+          const Logger = require("@logging/Logger");
+          const logger = new Logger("Logger");
           const analysisResult = AnalysisResult.create(
-            projectId, 
-            'architecture', 
-            analysis, 
-            fileResult.filepath
+            projectId,
+            "architecture",
+            analysis,
+            fileResult.filepath,
           );
           await this.analysisRepository.save(analysisResult);
         }
       }
 
       this.logger.info(`Architecture analysis completed for project`);
-      this.eventBus.emit('architecture:analysis:completed', { projectPath, analysis, projectId });
+      this.eventBus.emit("architecture:analysis:completed", {
+        projectPath,
+        analysis,
+        projectId,
+      });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`Architecture analysis failed for ${projectPath}:`, error);
-      this.eventBus.emit('architecture:analysis:failed', { projectPath, error: error.message });
+      this.logger.error(
+        `Architecture analysis failed for ${projectPath}:`,
+        error,
+      );
+      this.eventBus.emit("architecture:analysis:failed", {
+        projectPath,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -66,7 +85,9 @@ const logger = new Logger('Logger');
    */
   async analyzeProjectStructure(projectPath) {
     try {
-      return await this.architectureAnalyzer.analyzeProjectStructure(projectPath);
+      return await this.architectureAnalyzer.analyzeProjectStructure(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Project structure analysis failed:`, error);
       throw error;
@@ -122,7 +143,9 @@ const logger = new Logger('Logger');
    */
   async generateDependencyGraph(projectPath) {
     try {
-      return await this.architectureAnalyzer.generateDependencyGraph(projectPath);
+      return await this.architectureAnalyzer.generateDependencyGraph(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Dependency graph generation failed:`, error);
       throw error;
@@ -136,7 +159,9 @@ const logger = new Logger('Logger');
    */
   async detectArchitectureViolations(projectPath) {
     try {
-      return await this.architectureAnalyzer.detectArchitectureViolations(projectPath);
+      return await this.architectureAnalyzer.detectArchitectureViolations(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Architecture violation detection failed:`, error);
       throw error;
@@ -150,9 +175,14 @@ const logger = new Logger('Logger');
    */
   async generateRecommendations(analysis) {
     try {
-      return await this.architectureAnalyzer.generateArchitectureRecommendations(analysis);
+      return await this.architectureAnalyzer.generateArchitectureRecommendations(
+        analysis,
+      );
     } catch (error) {
-      this.logger.error(`Architecture recommendation generation failed:`, error);
+      this.logger.error(
+        `Architecture recommendation generation failed:`,
+        error,
+      );
       throw error;
     }
   }
@@ -173,11 +203,11 @@ const logger = new Logger('Logger');
    * @returns {string} Architecture level
    */
   getArchitectureLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -187,7 +217,7 @@ const logger = new Logger('Logger');
    */
   getCriticalIssues(analysis) {
     if (!analysis || !analysis.issues) return [];
-    return analysis.issues.filter(issue => issue.severity === 'critical');
+    return analysis.issues.filter((issue) => issue.severity === "critical");
   }
 
   /**
@@ -197,13 +227,15 @@ const logger = new Logger('Logger');
    */
   getArchitectureSummary(analysis) {
     if (!analysis) return {};
-    
+
     const issues = analysis.issues || [];
-    const criticalIssues = issues.filter(issue => issue.severity === 'critical');
-    const highIssues = issues.filter(issue => issue.severity === 'high');
-    const mediumIssues = issues.filter(issue => issue.severity === 'medium');
-    const lowIssues = issues.filter(issue => issue.severity === 'low');
-    
+    const criticalIssues = issues.filter(
+      (issue) => issue.severity === "critical",
+    );
+    const highIssues = issues.filter((issue) => issue.severity === "high");
+    const mediumIssues = issues.filter((issue) => issue.severity === "medium");
+    const lowIssues = issues.filter((issue) => issue.severity === "low");
+
     return {
       totalIssues: issues.length,
       criticalIssues: criticalIssues.length,
@@ -211,7 +243,9 @@ const logger = new Logger('Logger');
       mediumIssues: mediumIssues.length,
       lowIssues: lowIssues.length,
       overallScore: analysis.architectureScore || 0,
-      architectureLevel: this.getArchitectureLevel(analysis.architectureScore || 0)
+      architectureLevel: this.getArchitectureLevel(
+        analysis.architectureScore || 0,
+      ),
     };
   }
 
@@ -221,8 +255,10 @@ const logger = new Logger('Logger');
    * @returns {boolean} Architecture is well-structured
    */
   isWellStructured(analysis) {
-    return analysis.detectedPatterns.length > 0 && 
-           analysis.violations.filter(v => v.severity === 'critical').length === 0;
+    return (
+      analysis.detectedPatterns.length > 0 &&
+      analysis.violations.filter((v) => v.severity === "critical").length === 0
+    );
   }
 
   /**
@@ -241,14 +277,14 @@ const logger = new Logger('Logger');
    */
   getPatternsSummary(analysis) {
     const patterns = {};
-    
+
     for (const pattern of analysis.detectedPatterns) {
       patterns[pattern.pattern] = {
         confidence: pattern.confidence,
-        description: pattern.description
+        description: pattern.description,
       };
     }
-    
+
     return patterns;
   }
 
@@ -259,19 +295,23 @@ const logger = new Logger('Logger');
    */
   getCouplingSummary(analysis) {
     const modules = Object.keys(analysis.coupling.instability);
-    const avgInstability = modules.reduce((sum, module) => 
-      sum + analysis.coupling.instability[module], 0) / modules.length;
-    
-    const highInstabilityCount = modules.filter(module => 
-      analysis.coupling.instability[module] > 0.7).length;
-    
+    const avgInstability =
+      modules.reduce(
+        (sum, module) => sum + analysis.coupling.instability[module],
+        0,
+      ) / modules.length;
+
+    const highInstabilityCount = modules.filter(
+      (module) => analysis.coupling.instability[module] > 0.7,
+    ).length;
+
     return {
       totalModules: modules.length,
       averageInstability: avgInstability,
       highInstabilityModules: highInstabilityCount,
-      stableModules: modules.length - highInstabilityCount
+      stableModules: modules.length - highInstabilityCount,
     };
   }
 }
 
-module.exports = ArchitectureService; 
+module.exports = ArchitectureService;

@@ -203,7 +203,6 @@ test.describe('Task Creation Modal E2E', () => {
         contentType: 'application/json',
         body: JSON.stringify({ 
           workflowId: 'retry-test-123',
-          success: true,
           status: 'started'
         })
       });

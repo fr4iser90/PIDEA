@@ -1,56 +1,55 @@
-
 /**
  * IDE API Deployment Configuration
- * 
+ *
  * This file contains deployment-specific configurations for the Unified IDE API.
  * It includes environment-specific settings, performance optimizations, and
  * deployment validation checks.
  */
 
-const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('IDE-Deployment-Config');
-const centralizedConfig = require('./centralized-config');
+const path = require("path");
+const Logger = require("@logging/Logger");
+const logger = new Logger("IDE-Deployment-Config");
+const centralizedConfig = require("./centralized-config");
 
 // Environment detection
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const isProduction = NODE_ENV === 'production';
-const isStaging = NODE_ENV === 'staging';
-const isDevelopment = NODE_ENV === 'development';
+const NODE_ENV = process.env.NODE_ENV || "development";
+const isProduction = NODE_ENV === "production";
+const isStaging = NODE_ENV === "staging";
+const isDevelopment = NODE_ENV === "development";
 
 // Base configuration
 const baseConfig = {
   // API Configuration
   api: {
     port: centralizedConfig.backendPort,
-    host: centralizedConfig.backendUrl?.split('://')[1]?.split(':')[0],
+    host: centralizedConfig.backendUrl?.split("://")[1]?.split(":")[0],
     cors: {
       origin: centralizedConfig.frontendUrl,
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     },
     rateLimit: {
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: isProduction ? 100 : 1000, // requests per windowMs
-      message: 'Too many requests from this IP, please try again later.',
+      message: "Too many requests from this IP, please try again later.",
       standardHeaders: true,
-      legacyHeaders: false
+      legacyHeaders: false,
     },
     timeout: parseInt(process.env.API_TIMEOUT) || 30000,
     compression: isProduction,
-    helmet: isProduction
+    helmet: isProduction,
   },
 
   // WebSocket Configuration
   websocket: {
     port: centralizedConfig.websocketPort,
-    path: '/ws',
+    path: "/ws",
     pingInterval: 25000,
     pingTimeout: 5000,
     maxPayload: 16 * 1024, // 16KB
     perMessageDeflate: isProduction,
-    clientTracking: true
+    clientTracking: true,
   },
 
   // IDE Service Configuration
@@ -59,12 +58,12 @@ const baseConfig = {
     defaultPort: 9222,
     portRange: {
       min: 9222,
-      max: 9232
+      max: 9232,
     },
     connectionTimeout: parseInt(process.env.IDE_CONNECTION_TIMEOUT) || 10000,
     heartbeatInterval: parseInt(process.env.IDE_HEARTBEAT_INTERVAL) || 5000,
     retryAttempts: parseInt(process.env.IDE_RETRY_ATTEMPTS) || 3,
-    retryDelay: parseInt(process.env.IDE_RETRY_DELAY) || 1000
+    retryDelay: parseInt(process.env.IDE_RETRY_DELAY) || 1000,
   },
 
   // Database Configuration
@@ -72,32 +71,32 @@ const baseConfig = {
 
   // Logging Configuration
   logging: {
-    level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
-    format: isProduction ? 'json' : 'simple',
+    level: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
+    format: isProduction ? "json" : "simple",
     transports: {
       console: {
         enabled: true,
-        level: process.env.CONSOLE_LOG_LEVEL || 'info'
+        level: process.env.CONSOLE_LOG_LEVEL || "info",
       },
       file: {
         enabled: isProduction,
-        filename: path.join(__dirname, '../logs/app.log'),
+        filename: path.join(__dirname, "../logs/app.log"),
         maxsize: 10 * 1024 * 1024, // 10MB
         maxFiles: 5,
-        level: 'error'
-      }
-    }
+        level: "error",
+      },
+    },
   },
 
   // Security Configuration
   security: {
     bcrypt: {
-      rounds: parseInt(process.env.BCRYPT_ROUNDS)
+      rounds: parseInt(process.env.BCRYPT_ROUNDS),
     },
     cors: {
       enabled: true,
       origin: centralizedConfig.frontendUrl,
-      credentials: true
+      credentials: true,
     },
     helmet: {
       enabled: isProduction,
@@ -107,10 +106,10 @@ const baseConfig = {
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
           imgSrc: ["'self'", "data:", "https:"],
-          connectSrc: ["'self'", "ws:", "wss:"]
-        }
-      }
-    }
+          connectSrc: ["'self'", "ws:", "wss:"],
+        },
+      },
+    },
   },
 
   // Performance Configuration
@@ -118,17 +117,18 @@ const baseConfig = {
     compression: {
       enabled: isProduction,
       level: 6,
-      threshold: 1024
+      threshold: 1024,
     },
     caching: {
       enabled: isProduction,
       ttl: 300, // 5 minutes
-      maxSize: 100
+      maxSize: 100,
     },
     clustering: {
       enabled: isProduction,
-      workers: parseInt(process.env.CLUSTER_WORKERS) || require('os').cpus().length
-    }
+      workers:
+        parseInt(process.env.CLUSTER_WORKERS) || require("os").cpus().length,
+    },
   },
 
   // Monitoring Configuration
@@ -136,19 +136,19 @@ const baseConfig = {
     enabled: isProduction,
     metrics: {
       enabled: true,
-      port: centralizedConfig.monitoringConfig.metrics.port
+      port: centralizedConfig.monitoringConfig.metrics.port,
     },
     healthCheck: {
       enabled: true,
-      path: '/health',
-      interval: 30000
+      path: "/health",
+      interval: 30000,
     },
     errorTracking: {
       enabled: isProduction,
-      service: process.env.ERROR_TRACKING_SERVICE || 'sentry',
-      dsn: process.env.ERROR_TRACKING_DSN
-    }
-  }
+      service: process.env.ERROR_TRACKING_SERVICE || "sentry",
+      dsn: process.env.ERROR_TRACKING_DSN,
+    },
+  },
 };
 
 // Environment-specific overrides
@@ -156,81 +156,90 @@ const environmentConfigs = {
   development: {
     api: {
       cors: {
-        origin: ['http://localhost:3000', 'http://localhost:4000', 'http://127.0.0.1:3000', 'http://127.0.0.1:4000']
-      }
+        origin: [
+          "http://localhost:3000",
+          "http://localhost:4000",
+          "http://127.0.0.1:3000",
+          "http://127.0.0.1:4000",
+        ],
+      },
     },
     logging: {
-      level: 'debug',
-      format: 'simple'
+      level: "debug",
+      format: "simple",
     },
     security: {
       helmet: {
-        enabled: false
-      }
+        enabled: false,
+      },
     },
     performance: {
       compression: {
-        enabled: false
+        enabled: false,
       },
       clustering: {
-        enabled: false
-      }
-    }
+        enabled: false,
+      },
+    },
   },
 
   staging: {
     api: {
       cors: {
-        origin: process.env.STAGING_CORS_ORIGIN?.split(',') || ['https://staging.yourapp.com']
-      }
+        origin: process.env.STAGING_CORS_ORIGIN?.split(",") || [
+          "https://staging.yourapp.com",
+        ],
+      },
     },
     logging: {
-      level: 'info',
-      format: 'json'
+      level: "info",
+      format: "json",
     },
     security: {
       helmet: {
-        enabled: true
-      }
+        enabled: true,
+      },
     },
     performance: {
       compression: {
-        enabled: true
+        enabled: true,
       },
       clustering: {
         enabled: true,
-        workers: 2
-      }
-    }
+        workers: 2,
+      },
+    },
   },
 
   production: {
     api: {
       cors: {
-        origin: process.env.PRODUCTION_CORS_ORIGIN?.split(',') || ['https://yourapp.com']
-      }
+        origin: process.env.PRODUCTION_CORS_ORIGIN?.split(",") || [
+          "https://yourapp.com",
+        ],
+      },
     },
     logging: {
-      level: 'warn',
-      format: 'json'
+      level: "warn",
+      format: "json",
     },
     security: {
       helmet: {
-        enabled: true
-      }
+        enabled: true,
+      },
     },
     performance: {
       compression: {
-        enabled: true
+        enabled: true,
       },
       clustering: {
-        enabled: true
-      }
+        enabled: true,
+      },
     },
     monitoring: {
-      enabled: true
-    }
-  }
+      enabled: true,
+    },
+  },
 };
 
 // Merge configurations
@@ -240,7 +249,7 @@ const config = {
   env: NODE_ENV,
   isProduction,
   isStaging,
-  isDevelopment
+  isDevelopment,
 };
 
 // Validation function
@@ -257,7 +266,7 @@ function validateConfig() {
   const requiredEnvVars = [];
 
   if (isProduction) {
-    requiredEnvVars.push('ERROR_TRACKING_DSN');
+    requiredEnvVars.push("ERROR_TRACKING_DSN");
   }
 
   for (const envVar of requiredEnvVars) {
@@ -268,26 +277,26 @@ function validateConfig() {
 
   // Validate port ranges
   if (config.ide.portRange.min >= config.ide.portRange.max) {
-    errors.push('IDE port range min must be less than max');
+    errors.push("IDE port range min must be less than max");
   }
 
   // Validate timeouts
   if (config.api.timeout < 1000) {
-    errors.push('API timeout must be at least 1000ms');
+    errors.push("API timeout must be at least 1000ms");
   }
 
   if (config.ide.connectionTimeout < 1000) {
-    errors.push('IDE connection timeout must be at least 1000ms');
+    errors.push("IDE connection timeout must be at least 1000ms");
   }
 
   // Validate rate limits
   if (config.api.rateLimit.max < 1) {
-    errors.push('Rate limit max must be at least 1');
+    errors.push("Rate limit max must be at least 1");
   }
 
   if (errors.length > 0) {
-    logger.error('Configuration validation failed:');
-    errors.forEach(error => logger.error(`  - ${error}`));
+    logger.error("Configuration validation failed:");
+    errors.forEach((error) => logger.error(`  - ${error}`));
     process.exit(1);
   }
 
@@ -300,29 +309,41 @@ const healthChecks = {
   database: async () => {
     try {
       // Add database health check logic
-      return { status: 'healthy', timestamp: new Date().toISOString() };
+      return { status: "healthy", timestamp: new Date().toISOString() };
     } catch (error) {
-      return { status: 'unhealthy', error: error.message, timestamp: new Date().toISOString() };
+      return {
+        status: "unhealthy",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
     }
   },
 
   ideService: async () => {
     try {
       // Add IDE service health check logic
-      return { status: 'healthy', timestamp: new Date().toISOString() };
+      return { status: "healthy", timestamp: new Date().toISOString() };
     } catch (error) {
-      return { status: 'unhealthy', error: error.message, timestamp: new Date().toISOString() };
+      return {
+        status: "unhealthy",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
     }
   },
 
   websocket: async () => {
     try {
       // Add WebSocket health check logic
-      return { status: 'healthy', timestamp: new Date().toISOString() };
+      return { status: "healthy", timestamp: new Date().toISOString() };
     } catch (error) {
-      return { status: 'unhealthy', error: error.message, timestamp: new Date().toISOString() };
+      return {
+        status: "unhealthy",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
     }
-  }
+  },
 };
 
 // Performance monitoring
@@ -357,13 +378,14 @@ const performanceMetrics = {
     return {
       requestCount: this.requestCount,
       errorCount: this.errorCount,
-      errorRate: this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0,
+      errorRate:
+        this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0,
       averageResponseTime: this.averageResponseTime,
       activeConnections: this.activeConnections,
       ideInstances: this.ideInstances,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-  }
+  },
 };
 
 // Deployment utilities
@@ -371,13 +393,13 @@ const deploymentUtils = {
   // Graceful shutdown
   async gracefulShutdown(signal) {
     logger.info(`Received ${signal}. Starting graceful shutdown...`);
-    
+
     // Close database connections
     // Close WebSocket connections
     // Stop accepting new requests
     // Wait for ongoing requests to complete
-    
-    logger.info('Graceful shutdown completed');
+
+    logger.info("Graceful shutdown completed");
     process.exit(0);
   },
 
@@ -389,22 +411,22 @@ const deploymentUtils = {
       heapTotal: Math.round(usage.heapTotal / 1024 / 1024), // MB
       heapUsed: Math.round(usage.heapUsed / 1024 / 1024), // MB
       external: Math.round(usage.external / 1024 / 1024), // MB
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   },
 
   // CPU usage monitoring
   async getCPUUsage() {
     const startUsage = process.cpuUsage();
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const endUsage = process.cpuUsage(startUsage);
-    
+
     return {
       user: Math.round(endUsage.user / 1000), // ms
       system: Math.round(endUsage.system / 1000), // ms
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-  }
+  },
 };
 
 // Export configuration and utilities
@@ -413,5 +435,5 @@ module.exports = {
   validateConfig,
   healthChecks,
   performanceMetrics,
-  deploymentUtils
-}; 
+  deploymentUtils,
+};

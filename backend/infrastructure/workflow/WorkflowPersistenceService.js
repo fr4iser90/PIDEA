@@ -2,9 +2,9 @@
  * WorkflowPersistenceService
  * Service for managing workflow persistence operations and data management
  */
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class WorkflowPersistenceService {
   constructor(workflowRepository, logger = console) {
@@ -19,23 +19,33 @@ class WorkflowPersistenceService {
    */
   async createWorkflowExecution(executionData) {
     try {
-      this.logger.info('WorkflowPersistenceService: Creating workflow execution', {
-        workflowId: executionData.workflowId,
-        workflowName: executionData.workflowName
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Creating workflow execution",
+        {
+          workflowId: executionData.workflowId,
+          workflowName: executionData.workflowName,
+        },
+      );
 
-      const execution = await this.workflowRepository.saveExecution(executionData);
-      
-      this.logger.info('WorkflowPersistenceService: Workflow execution created successfully', {
-        executionId: execution.execution_id
-      });
+      const execution =
+        await this.workflowRepository.saveExecution(executionData);
+
+      this.logger.info(
+        "WorkflowPersistenceService: Workflow execution created successfully",
+        {
+          executionId: execution.execution_id,
+        },
+      );
 
       return execution;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to create workflow execution', {
-        workflowId: executionData.workflowId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to create workflow execution",
+        {
+          workflowId: executionData.workflowId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to create workflow execution: ${error.message}`);
     }
   }
@@ -48,24 +58,36 @@ class WorkflowPersistenceService {
    */
   async updateWorkflowExecution(executionId, updates) {
     try {
-      this.logger.info('WorkflowPersistenceService: Updating workflow execution', {
-        executionId,
-        updates: Object.keys(updates)
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Updating workflow execution",
+        {
+          executionId,
+          updates: Object.keys(updates),
+        },
+      );
 
-      const execution = await this.workflowRepository.updateExecution(executionId, updates);
-      
-      this.logger.info('WorkflowPersistenceService: Workflow execution updated successfully', {
+      const execution = await this.workflowRepository.updateExecution(
         executionId,
-        status: updates.status
-      });
+        updates,
+      );
+
+      this.logger.info(
+        "WorkflowPersistenceService: Workflow execution updated successfully",
+        {
+          executionId,
+          status: updates.status,
+        },
+      );
 
       return execution;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to update workflow execution', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to update workflow execution",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to update workflow execution: ${error.message}`);
     }
   }
@@ -77,29 +99,42 @@ class WorkflowPersistenceService {
    */
   async getWorkflowExecution(executionId) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Getting workflow execution', {
-        executionId
-      });
-
-      const execution = await this.workflowRepository.getExecutionWithMetrics(executionId);
-      
-      if (!execution) {
-        this.logger.warn('WorkflowPersistenceService: Workflow execution not found', {
-          executionId
-        });
-      } else {
-        this.logger.debug('WorkflowPersistenceService: Workflow execution retrieved successfully', {
+      this.logger.debug(
+        "WorkflowPersistenceService: Getting workflow execution",
+        {
           executionId,
-          status: execution.status
-        });
+        },
+      );
+
+      const execution =
+        await this.workflowRepository.getExecutionWithMetrics(executionId);
+
+      if (!execution) {
+        this.logger.warn(
+          "WorkflowPersistenceService: Workflow execution not found",
+          {
+            executionId,
+          },
+        );
+      } else {
+        this.logger.debug(
+          "WorkflowPersistenceService: Workflow execution retrieved successfully",
+          {
+            executionId,
+            status: execution.status,
+          },
+        );
       }
 
       return execution;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to get workflow execution', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to get workflow execution",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get workflow execution: ${error.message}`);
     }
   }
@@ -112,37 +147,60 @@ class WorkflowPersistenceService {
    */
   async findWorkflowExecutions(filters = {}, options = {}) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Finding workflow executions', {
-        filters,
-        options
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Finding workflow executions",
+        {
+          filters,
+          options,
+        },
+      );
 
       let executions = [];
 
       if (filters.workflowId) {
-        executions = await this.workflowRepository.findExecutionsByWorkflowId(filters.workflowId, options);
+        executions = await this.workflowRepository.findExecutionsByWorkflowId(
+          filters.workflowId,
+          options,
+        );
       } else if (filters.taskId) {
-        executions = await this.workflowRepository.findExecutionsByTaskId(filters.taskId);
+        executions = await this.workflowRepository.findExecutionsByTaskId(
+          filters.taskId,
+        );
       } else if (filters.userId) {
-        executions = await this.workflowRepository.findExecutionsByUserId(filters.userId, options);
+        executions = await this.workflowRepository.findExecutionsByUserId(
+          filters.userId,
+          options,
+        );
       } else if (filters.status) {
-        executions = await this.workflowRepository.findExecutionsByStatus(filters.status, options);
+        executions = await this.workflowRepository.findExecutionsByStatus(
+          filters.status,
+          options,
+        );
       } else {
         // Default: get all executions with options
-        executions = await this.workflowRepository.findExecutionsByWorkflowId('*', options);
+        executions = await this.workflowRepository.findExecutionsByWorkflowId(
+          "*",
+          options,
+        );
       }
 
-      this.logger.debug('WorkflowPersistenceService: Workflow executions found', {
-        count: executions.length,
-        filters
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Workflow executions found",
+        {
+          count: executions.length,
+          filters,
+        },
+      );
 
       return executions;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to find workflow executions', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to find workflow executions",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to find workflow executions: ${error.message}`);
     }
   }
@@ -154,28 +212,41 @@ class WorkflowPersistenceService {
    */
   async deleteWorkflowExecution(executionId) {
     try {
-      this.logger.info('WorkflowPersistenceService: Deleting workflow execution', {
-        executionId
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Deleting workflow execution",
+        {
+          executionId,
+        },
+      );
 
-      const success = await this.workflowRepository.deleteExecution(executionId);
-      
+      const success =
+        await this.workflowRepository.deleteExecution(executionId);
+
       if (success) {
-        this.logger.info('WorkflowPersistenceService: Workflow execution deleted successfully', {
-          executionId
-        });
+        this.logger.info(
+          "WorkflowPersistenceService: Workflow execution deleted successfully",
+          {
+            executionId,
+          },
+        );
       } else {
-        this.logger.warn('WorkflowPersistenceService: Workflow execution not found for deletion', {
-          executionId
-        });
+        this.logger.warn(
+          "WorkflowPersistenceService: Workflow execution not found for deletion",
+          {
+            executionId,
+          },
+        );
       }
 
       return success;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to delete workflow execution', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to delete workflow execution",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to delete workflow execution: ${error.message}`);
     }
   }
@@ -188,25 +259,38 @@ class WorkflowPersistenceService {
    */
   async recordWorkflowMetric(executionId, metric) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Recording workflow metric', {
-        executionId,
-        metricName: metric.metricName
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Recording workflow metric",
+        {
+          executionId,
+          metricName: metric.metricName,
+        },
+      );
 
-      const recordedMetric = await this.workflowRepository.recordExecutionMetrics(executionId, metric);
-      
-      this.logger.debug('WorkflowPersistenceService: Workflow metric recorded successfully', {
-        executionId,
-        metricName: metric.metricName
-      });
+      const recordedMetric =
+        await this.workflowRepository.recordExecutionMetrics(
+          executionId,
+          metric,
+        );
+
+      this.logger.debug(
+        "WorkflowPersistenceService: Workflow metric recorded successfully",
+        {
+          executionId,
+          metricName: metric.metricName,
+        },
+      );
 
       return recordedMetric;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to record workflow metric', {
-        executionId,
-        metricName: metric.metricName,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to record workflow metric",
+        {
+          executionId,
+          metricName: metric.metricName,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to record workflow metric: ${error.message}`);
     }
   }
@@ -219,24 +303,36 @@ class WorkflowPersistenceService {
    */
   async getWorkflowMetrics(executionId, options = {}) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Getting workflow metrics', {
-        executionId,
-        options
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Getting workflow metrics",
+        {
+          executionId,
+          options,
+        },
+      );
 
-      const metrics = await this.workflowRepository.getMetricsForExecution(executionId, options);
-      
-      this.logger.debug('WorkflowPersistenceService: Workflow metrics retrieved successfully', {
+      const metrics = await this.workflowRepository.getMetricsForExecution(
         executionId,
-        count: metrics.length
-      });
+        options,
+      );
+
+      this.logger.debug(
+        "WorkflowPersistenceService: Workflow metrics retrieved successfully",
+        {
+          executionId,
+          count: metrics.length,
+        },
+      );
 
       return metrics;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to get workflow metrics', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to get workflow metrics",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get workflow metrics: ${error.message}`);
     }
   }
@@ -248,22 +344,32 @@ class WorkflowPersistenceService {
    */
   async getWorkflowStatistics(filters = {}) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Getting workflow statistics', {
-        filters
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Getting workflow statistics",
+        {
+          filters,
+        },
+      );
 
-      const statistics = await this.workflowRepository.getExecutionStatistics(filters);
-      
-      this.logger.debug('WorkflowPersistenceService: Workflow statistics retrieved successfully', {
-        totalExecutions: statistics.executions.total_executions
-      });
+      const statistics =
+        await this.workflowRepository.getExecutionStatistics(filters);
+
+      this.logger.debug(
+        "WorkflowPersistenceService: Workflow statistics retrieved successfully",
+        {
+          totalExecutions: statistics.executions.total_executions,
+        },
+      );
 
       return statistics;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to get workflow statistics', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to get workflow statistics",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get workflow statistics: ${error.message}`);
     }
   }
@@ -275,22 +381,32 @@ class WorkflowPersistenceService {
    */
   async getAggregatedMetrics(filters = {}) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Getting aggregated metrics', {
-        filters
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Getting aggregated metrics",
+        {
+          filters,
+        },
+      );
 
-      const metrics = await this.workflowRepository.getAggregatedMetrics(filters);
-      
-      this.logger.debug('WorkflowPersistenceService: Aggregated metrics retrieved successfully', {
-        count: metrics.length
-      });
+      const metrics =
+        await this.workflowRepository.getAggregatedMetrics(filters);
+
+      this.logger.debug(
+        "WorkflowPersistenceService: Aggregated metrics retrieved successfully",
+        {
+          count: metrics.length,
+        },
+      );
 
       return metrics;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to get aggregated metrics', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to get aggregated metrics",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get aggregated metrics: ${error.message}`);
     }
   }
@@ -302,22 +418,32 @@ class WorkflowPersistenceService {
    */
   async getMetricsStatistics(filters = {}) {
     try {
-      this.logger.debug('WorkflowPersistenceService: Getting metrics statistics', {
-        filters
-      });
+      this.logger.debug(
+        "WorkflowPersistenceService: Getting metrics statistics",
+        {
+          filters,
+        },
+      );
 
-      const statistics = await this.workflowRepository.getMetricsStatistics(filters);
-      
-      this.logger.debug('WorkflowPersistenceService: Metrics statistics retrieved successfully', {
-        totalMetrics: statistics.total_metrics
-      });
+      const statistics =
+        await this.workflowRepository.getMetricsStatistics(filters);
+
+      this.logger.debug(
+        "WorkflowPersistenceService: Metrics statistics retrieved successfully",
+        {
+          totalMetrics: statistics.total_metrics,
+        },
+      );
 
       return statistics;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to get metrics statistics', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to get metrics statistics",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get metrics statistics: ${error.message}`);
     }
   }
@@ -329,23 +455,33 @@ class WorkflowPersistenceService {
    */
   async cleanupOldExecutions(daysOld = 30) {
     try {
-      this.logger.info('WorkflowPersistenceService: Cleaning up old executions', {
-        daysOld
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Cleaning up old executions",
+        {
+          daysOld,
+        },
+      );
 
-      const deletedCount = await this.workflowRepository.cleanupOldExecutions(daysOld);
-      
-      this.logger.info('WorkflowPersistenceService: Cleanup completed successfully', {
-        deletedCount,
-        daysOld
-      });
+      const deletedCount =
+        await this.workflowRepository.cleanupOldExecutions(daysOld);
+
+      this.logger.info(
+        "WorkflowPersistenceService: Cleanup completed successfully",
+        {
+          deletedCount,
+          daysOld,
+        },
+      );
 
       return deletedCount;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to cleanup old executions', {
-        daysOld,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to cleanup old executions",
+        {
+          daysOld,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to cleanup old executions: ${error.message}`);
     }
   }
@@ -357,9 +493,12 @@ class WorkflowPersistenceService {
    */
   async bulkCreateWorkflowExecutions(executions) {
     try {
-      this.logger.info('WorkflowPersistenceService: Bulk creating workflow executions', {
-        count: executions.length
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Bulk creating workflow executions",
+        {
+          count: executions.length,
+        },
+      );
 
       const createdExecutions = [];
       const errors = [];
@@ -371,19 +510,22 @@ class WorkflowPersistenceService {
         } catch (error) {
           errors.push({
             executionData,
-            error: error.message
+            error: error.message,
           });
-          this.logger.error('WorkflowPersistenceService: Failed to create execution in bulk', {
-            workflowId: executionData.workflowId,
-            error: error.message
-          });
+          this.logger.error(
+            "WorkflowPersistenceService: Failed to create execution in bulk",
+            {
+              workflowId: executionData.workflowId,
+              error: error.message,
+            },
+          );
         }
       }
 
-      this.logger.info('WorkflowPersistenceService: Bulk creation completed', {
+      this.logger.info("WorkflowPersistenceService: Bulk creation completed", {
         created: createdExecutions.length,
         errors: errors.length,
-        total: executions.length
+        total: executions.length,
       });
 
       return {
@@ -392,15 +534,20 @@ class WorkflowPersistenceService {
         summary: {
           total: executions.length,
           created: createdExecutions.length,
-          failed: errors.length
-        }
+          failed: errors.length,
+        },
       };
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to bulk create workflow executions', {
-        count: executions.length,
-        error: error.message
-      });
-      throw new Error(`Failed to bulk create workflow executions: ${error.message}`);
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to bulk create workflow executions",
+        {
+          count: executions.length,
+          error: error.message,
+        },
+      );
+      throw new Error(
+        `Failed to bulk create workflow executions: ${error.message}`,
+      );
     }
   }
 
@@ -411,9 +558,12 @@ class WorkflowPersistenceService {
    */
   async bulkUpdateWorkflowExecutions(updates) {
     try {
-      this.logger.info('WorkflowPersistenceService: Bulk updating workflow executions', {
-        count: updates.length
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Bulk updating workflow executions",
+        {
+          count: updates.length,
+        },
+      );
 
       const updatedExecutions = [];
       const errors = [];
@@ -421,24 +571,30 @@ class WorkflowPersistenceService {
       for (const update of updates) {
         try {
           const { executionId, ...updateData } = update;
-          const execution = await this.updateWorkflowExecution(executionId, updateData);
+          const execution = await this.updateWorkflowExecution(
+            executionId,
+            updateData,
+          );
           updatedExecutions.push(execution);
         } catch (error) {
           errors.push({
             update,
-            error: error.message
+            error: error.message,
           });
-          this.logger.error('WorkflowPersistenceService: Failed to update execution in bulk', {
-            executionId: update.executionId,
-            error: error.message
-          });
+          this.logger.error(
+            "WorkflowPersistenceService: Failed to update execution in bulk",
+            {
+              executionId: update.executionId,
+              error: error.message,
+            },
+          );
         }
       }
 
-      this.logger.info('WorkflowPersistenceService: Bulk update completed', {
+      this.logger.info("WorkflowPersistenceService: Bulk update completed", {
         updated: updatedExecutions.length,
         errors: errors.length,
-        total: updates.length
+        total: updates.length,
       });
 
       return {
@@ -447,15 +603,20 @@ class WorkflowPersistenceService {
         summary: {
           total: updates.length,
           updated: updatedExecutions.length,
-          failed: errors.length
-        }
+          failed: errors.length,
+        },
       };
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to bulk update workflow executions', {
-        count: updates.length,
-        error: error.message
-      });
-      throw new Error(`Failed to bulk update workflow executions: ${error.message}`);
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to bulk update workflow executions",
+        {
+          count: updates.length,
+          error: error.message,
+        },
+      );
+      throw new Error(
+        `Failed to bulk update workflow executions: ${error.message}`,
+      );
     }
   }
 
@@ -467,12 +628,15 @@ class WorkflowPersistenceService {
    */
   async exportWorkflowData(filters = {}, options = {}) {
     try {
-      this.logger.info('WorkflowPersistenceService: Exporting workflow data', {
+      this.logger.info("WorkflowPersistenceService: Exporting workflow data", {
         filters,
-        options
+        options,
       });
 
-      const executions = await this.findWorkflowExecutions(filters, { ...options, limit: 10000 });
+      const executions = await this.findWorkflowExecutions(filters, {
+        ...options,
+        limit: 10000,
+      });
       const statistics = await this.getWorkflowStatistics(filters);
       const aggregatedMetrics = await this.getAggregatedMetrics(filters);
 
@@ -484,25 +648,31 @@ class WorkflowPersistenceService {
           summary: {
             executions: executions.length,
             statistics,
-            metrics: aggregatedMetrics.length
-          }
+            metrics: aggregatedMetrics.length,
+          },
         },
         executions,
         statistics,
-        aggregatedMetrics
+        aggregatedMetrics,
       };
 
-      this.logger.info('WorkflowPersistenceService: Workflow data exported successfully', {
-        executionsCount: executions.length,
-        metricsCount: aggregatedMetrics.length
-      });
+      this.logger.info(
+        "WorkflowPersistenceService: Workflow data exported successfully",
+        {
+          executionsCount: executions.length,
+          metricsCount: aggregatedMetrics.length,
+        },
+      );
 
       return exportData;
     } catch (error) {
-      this.logger.error('WorkflowPersistenceService: Failed to export workflow data', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowPersistenceService: Failed to export workflow data",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to export workflow data: ${error.message}`);
     }
   }
@@ -516,4 +686,4 @@ class WorkflowPersistenceService {
   }
 }
 
-module.exports = WorkflowPersistenceService; 
+module.exports = WorkflowPersistenceService;

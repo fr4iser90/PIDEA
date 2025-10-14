@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * TodoTask - Entity representing an individual task within a TODO list
@@ -8,12 +8,12 @@ class TodoTask {
   constructor(data = {}) {
     this.id = data.id || uuidv4();
     this.sessionId = data.sessionId || null;
-    this.description = data.description || '';
+    this.description = data.description || "";
     this.lineNumber = data.lineNumber || 0;
-    this.pattern = data.pattern || '';
+    this.pattern = data.pattern || "";
     this.priority = data.priority || 1;
-    this.type = data.type || '';
-    this.status = data.status || 'pending'; // pending, running, completed, failed, skipped
+    this.type = data.type || "";
+    this.status = data.status || "pending"; // pending, running, completed, failed, skipped
     this.dependencies = data.dependencies || [];
     this.dependents = data.dependents || [];
     this.result = data.result || null;
@@ -36,7 +36,7 @@ class TodoTask {
    * Start task execution
    */
   start() {
-    this.status = 'running';
+    this.status = "running";
     this.startTime = new Date();
     this.attempts++;
     this.updatedAt = new Date();
@@ -47,9 +47,11 @@ class TodoTask {
    * @param {Object} result - Task result
    */
   complete(result) {
-    this.status = 'completed';
+    this.status = "completed";
     this.endTime = new Date();
-    this.duration = this.endTime.getTime() - (this.startTime ? this.startTime.getTime() : this.createdAt.getTime());
+    this.duration =
+      this.endTime.getTime() -
+      (this.startTime ? this.startTime.getTime() : this.createdAt.getTime());
     this.result = result;
     this.updatedAt = new Date();
   }
@@ -59,9 +61,11 @@ class TodoTask {
    * @param {string} error - Error message
    */
   fail(error) {
-    this.status = 'failed';
+    this.status = "failed";
     this.endTime = new Date();
-    this.duration = this.endTime.getTime() - (this.startTime ? this.startTime.getTime() : this.createdAt.getTime());
+    this.duration =
+      this.endTime.getTime() -
+      (this.startTime ? this.startTime.getTime() : this.createdAt.getTime());
     this.error = error;
     this.updatedAt = new Date();
   }
@@ -70,10 +74,12 @@ class TodoTask {
    * Skip task execution
    * @param {string} reason - Skip reason
    */
-  skip(reason = 'Skipped') {
-    this.status = 'skipped';
+  skip(reason = "Skipped") {
+    this.status = "skipped";
     this.endTime = new Date();
-    this.duration = this.endTime.getTime() - (this.startTime ? this.startTime.getTime() : this.createdAt.getTime());
+    this.duration =
+      this.endTime.getTime() -
+      (this.startTime ? this.startTime.getTime() : this.createdAt.getTime());
     this.result = { reason };
     this.updatedAt = new Date();
   }
@@ -83,7 +89,7 @@ class TodoTask {
    */
   retry() {
     if (this.attempts < this.maxAttempts) {
-      this.status = 'pending';
+      this.status = "pending";
       this.startTime = null;
       this.endTime = null;
       this.duration = 0;
@@ -173,7 +179,7 @@ class TodoTask {
    * @returns {boolean} Is pending
    */
   isPending() {
-    return this.status === 'pending';
+    return this.status === "pending";
   }
 
   /**
@@ -181,7 +187,7 @@ class TodoTask {
    * @returns {boolean} Is running
    */
   isRunning() {
-    return this.status === 'running';
+    return this.status === "running";
   }
 
   /**
@@ -189,7 +195,7 @@ class TodoTask {
    * @returns {boolean} Is completed
    */
   isCompleted() {
-    return this.status === 'completed';
+    return this.status === "completed";
   }
 
   /**
@@ -197,7 +203,7 @@ class TodoTask {
    * @returns {boolean} Is failed
    */
   isFailed() {
-    return this.status === 'failed';
+    return this.status === "failed";
   }
 
   /**
@@ -205,7 +211,7 @@ class TodoTask {
    * @returns {boolean} Is skipped
    */
   isSkipped() {
-    return this.status === 'skipped';
+    return this.status === "skipped";
   }
 
   /**
@@ -213,7 +219,7 @@ class TodoTask {
    * @returns {boolean} Can retry
    */
   canRetry() {
-    return this.status === 'failed' && this.attempts < this.maxAttempts;
+    return this.status === "failed" && this.attempts < this.maxAttempts;
   }
 
   /**
@@ -237,9 +243,9 @@ class TodoTask {
    * @returns {string} Priority level
    */
   getPriorityLevel() {
-    if (this.priority <= 1) return 'high';
-    if (this.priority <= 3) return 'medium';
-    return 'low';
+    if (this.priority <= 1) return "high";
+    if (this.priority <= 3) return "medium";
+    return "low";
   }
 
   /**
@@ -248,17 +254,17 @@ class TodoTask {
    */
   getTypeCategory() {
     const categories = {
-      'ui': 'User Interface',
-      'api': 'API/Backend',
-      'database': 'Database',
-      'test': 'Testing',
-      'deployment': 'Deployment',
-      'security': 'Security',
-      'performance': 'Performance',
-      'refactor': 'Refactoring',
-      '': ''
+      ui: "User Interface",
+      api: "API/Backend",
+      database: "Database",
+      test: "Testing",
+      deployment: "Deployment",
+      security: "Security",
+      performance: "Performance",
+      refactor: "Refactoring",
+      "": "",
     };
-    return categories[this.type] || '';
+    return categories[this.type] || "";
   }
 
   /**
@@ -276,7 +282,7 @@ class TodoTask {
       duration: this.duration,
       startTime: this.startTime,
       endTime: this.endTime,
-      error: this.error
+      error: this.error,
     };
   }
 
@@ -294,7 +300,7 @@ class TodoTask {
       dependents: this.dependents.length,
       hasAIResponse: !!this.aiResponse,
       hasConfirmationResult: !!this.confirmationResult,
-      hasFallbackAction: !!this.fallbackAction
+      hasFallbackAction: !!this.fallbackAction,
     };
   }
 
@@ -305,26 +311,37 @@ class TodoTask {
    */
   static validate(data) {
     const errors = [];
-    
-    if (!data.description || typeof data.description !== 'string') {
-      errors.push('description must be a non-empty string');
+
+    if (!data.description || typeof data.description !== "string") {
+      errors.push("description must be a non-empty string");
     }
-    
-    if (data.priority && (typeof data.priority !== 'number' || data.priority < 1)) {
-      errors.push('priority must be a positive number');
+
+    if (
+      data.priority &&
+      (typeof data.priority !== "number" || data.priority < 1)
+    ) {
+      errors.push("priority must be a positive number");
     }
-    
-    if (data.status && !['pending', 'running', 'completed', 'failed', 'skipped'].includes(data.status)) {
-      errors.push('Invalid status value');
+
+    if (
+      data.status &&
+      !["pending", "running", "completed", "failed", "skipped"].includes(
+        data.status,
+      )
+    ) {
+      errors.push("Invalid status value");
     }
-    
-    if (data.maxAttempts && (typeof data.maxAttempts !== 'number' || data.maxAttempts < 1)) {
-      errors.push('maxAttempts must be a positive number');
+
+    if (
+      data.maxAttempts &&
+      (typeof data.maxAttempts !== "number" || data.maxAttempts < 1)
+    ) {
+      errors.push("maxAttempts must be a positive number");
     }
-    
+
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -343,7 +360,7 @@ class TodoTask {
       priority: todoItem.priority,
       type: todoItem.type,
       dependencies: todoItem.dependencies || [],
-      metadata: todoItem.metadata || {}
+      metadata: todoItem.metadata || {},
     });
   }
 
@@ -376,7 +393,7 @@ class TodoTask {
       fallbackAction: this.fallbackAction,
       metadata: this.metadata,
       createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      updatedAt: this.updatedAt,
     };
   }
 
@@ -390,4 +407,4 @@ class TodoTask {
   }
 }
 
-module.exports = TodoTask; 
+module.exports = TodoTask;

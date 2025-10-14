@@ -119,7 +119,6 @@ describe('ProjectStore Cache Integration', () => {
       
       // Mock API response
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockProjects
       });
 
@@ -227,7 +226,6 @@ describe('ProjectStore Cache Integration', () => {
       };
 
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockCreatedProject
       });
 
@@ -257,7 +255,6 @@ describe('ProjectStore Cache Integration', () => {
       };
 
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockUpdatedProject
       });
 
@@ -304,7 +301,6 @@ describe('ProjectStore Cache Integration', () => {
       mockCacheService.get.mockReturnValue(null);
       
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockProjects
       });
 
@@ -470,7 +466,6 @@ describe('ProjectStore Cache Integration', () => {
       ];
 
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockProjects
       });
 

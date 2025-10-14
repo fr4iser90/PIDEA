@@ -66,7 +66,6 @@ class IDEStartService {
         logger.info('IDE started successfully:', result.data);
         this.emit('startSuccess', { config, result: result.data });
         return {
-          success: true,
           data: result.data,
           config
         };

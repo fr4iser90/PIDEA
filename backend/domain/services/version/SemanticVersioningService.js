@@ -3,13 +3,14 @@
  * Handles version parsing, comparison, and bumping according to SemVer specification
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('SemanticVersioningService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("SemanticVersioningService");
 
 class SemanticVersioningService {
   constructor() {
     this.logger = logger;
-    this.versionRegex = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+    this.versionRegex =
+      /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
   }
 
   /**
@@ -18,7 +19,7 @@ class SemanticVersioningService {
    * @returns {Object|null} Parsed version or null if invalid
    */
   parseVersion(version) {
-    if (!version || typeof version !== 'string') {
+    if (!version || typeof version !== "string") {
       return null;
     }
 
@@ -33,7 +34,7 @@ class SemanticVersioningService {
       patch: parseInt(match[3], 10),
       prerelease: match[4] || null,
       build: match[5] || null,
-      version: version
+      version: version,
     };
   }
 
@@ -57,7 +58,7 @@ class SemanticVersioningService {
     const v2 = this.parseVersion(version2);
 
     if (!v1 || !v2) {
-      throw new Error('Invalid version strings provided');
+      throw new Error("Invalid version strings provided");
     }
 
     // Compare major version
@@ -94,14 +95,14 @@ class SemanticVersioningService {
    * @returns {number} Comparison result
    */
   comparePrerelease(prerelease1, prerelease2) {
-    const parts1 = prerelease1.split('.');
-    const parts2 = prerelease2.split('.');
+    const parts1 = prerelease1.split(".");
+    const parts2 = prerelease2.split(".");
 
     const maxLength = Math.max(parts1.length, parts2.length);
 
     for (let i = 0; i < maxLength; i++) {
-      const part1 = parts1[i] || '0';
-      const part2 = parts2[i] || '0';
+      const part1 = parts1[i] || "0";
+      const part2 = parts2[i] || "0";
 
       const isNumeric1 = /^\d+$/.test(part1);
       const isNumeric2 = /^\d+$/.test(part2);
@@ -142,28 +143,30 @@ class SemanticVersioningService {
 
     let newVersion;
     switch (bumpType.toLowerCase()) {
-      case 'major':
+      case "major":
         newVersion = `${version.major + 1}.0.0`;
         break;
-      case 'minor':
+      case "minor":
         newVersion = `${version.major}.${version.minor + 1}.0`;
         break;
-      case 'patch':
+      case "patch":
         newVersion = `${version.major}.${version.minor}.${version.patch + 1}`;
         break;
       default:
-        throw new Error(`Invalid bump type: ${bumpType}. Must be major, minor, or patch.`);
+        throw new Error(
+          `Invalid bump type: ${bumpType}. Must be major, minor, or patch.`,
+        );
     }
 
     if (prerelease) {
       newVersion += `-${prerelease}`;
     }
 
-    this.logger.info('Version bumped', {
+    this.logger.info("Version bumped", {
       currentVersion,
       bumpType,
       newVersion,
-      prerelease
+      prerelease,
     });
 
     return newVersion;
@@ -185,8 +188,8 @@ class SemanticVersioningService {
    * @returns {string} Suggested bump type
    */
   determineBumpType(changes) {
-    if (!changes || typeof changes !== 'object') {
-      return 'patch';
+    if (!changes || typeof changes !== "object") {
+      return "patch";
     }
 
     const {
@@ -195,26 +198,26 @@ class SemanticVersioningService {
       bugFixes = 0,
       documentation = 0,
       refactoring = 0,
-      performance = 0
+      performance = 0,
     } = changes;
 
     // Major version for breaking changes
     if (breakingChanges > 0) {
-      return 'major';
+      return "major";
     }
 
     // Minor version for new features, significant refactoring, or performance improvements
     if (newFeatures > 0 || refactoring > 2 || performance > 0) {
-      return 'minor';
+      return "minor";
     }
 
     // Patch version for bug fixes, documentation, or minor changes
     if (bugFixes > 0 || documentation > 0 || refactoring > 0) {
-      return 'patch';
+      return "patch";
     }
 
     // Default to patch for any changes
-    return 'patch';
+    return "patch";
   }
 
   /**
@@ -315,7 +318,7 @@ class SemanticVersioningService {
   satisfiesRange(version, range) {
     // Simple implementation for common ranges
     // For full semver range support, consider using semver library
-    
+
     if (!version || !range) {
       return false;
     }
@@ -326,40 +329,44 @@ class SemanticVersioningService {
     }
 
     // Handle simple ranges like ">=1.0.0", "~1.0.0", "^1.0.0"
-    if (range.startsWith('>=')) {
+    if (range.startsWith(">=")) {
       const targetVersion = range.substring(2);
       return this.compareVersions(version, targetVersion) >= 0;
-    } else if (range.startsWith('>')) {
+    } else if (range.startsWith(">")) {
       const targetVersion = range.substring(1);
       return this.compareVersions(version, targetVersion) > 0;
-    } else if (range.startsWith('<=')) {
+    } else if (range.startsWith("<=")) {
       const targetVersion = range.substring(2);
       return this.compareVersions(version, targetVersion) <= 0;
-    } else if (range.startsWith('<')) {
+    } else if (range.startsWith("<")) {
       const targetVersion = range.substring(1);
       return this.compareVersions(version, targetVersion) < 0;
-    } else if (range.startsWith('~')) {
+    } else if (range.startsWith("~")) {
       // Tilde range: ~1.2.3 means >=1.2.3 <1.3.0
       const targetVersion = range.substring(1);
       const target = this.parseVersion(targetVersion);
       if (!target) return false;
-      
+
       const minVersion = `${target.major}.${target.minor}.${target.patch}`;
       const maxVersion = `${target.major}.${target.minor + 1}.0`;
-      
-      return this.compareVersions(version, minVersion) >= 0 && 
-             this.compareVersions(version, maxVersion) < 0;
-    } else if (range.startsWith('^')) {
+
+      return (
+        this.compareVersions(version, minVersion) >= 0 &&
+        this.compareVersions(version, maxVersion) < 0
+      );
+    } else if (range.startsWith("^")) {
       // Caret range: ^1.2.3 means >=1.2.3 <2.0.0
       const targetVersion = range.substring(1);
       const target = this.parseVersion(targetVersion);
       if (!target) return false;
-      
+
       const minVersion = `${target.major}.${target.minor}.${target.patch}`;
       const maxVersion = `${target.major + 1}.0.0`;
-      
-      return this.compareVersions(version, minVersion) >= 0 && 
-             this.compareVersions(version, maxVersion) < 0;
+
+      return (
+        this.compareVersions(version, minVersion) >= 0 &&
+        this.compareVersions(version, maxVersion) < 0
+      );
     }
 
     // Exact match
@@ -377,8 +384,8 @@ class SemanticVersioningService {
     }
 
     // Filter valid version tags
-    const versionTags = tags.filter(tag => this.isValidVersion(tag));
-    
+    const versionTags = tags.filter((tag) => this.isValidVersion(tag));
+
     if (versionTags.length === 0) {
       return null;
     }
@@ -392,11 +399,11 @@ class SemanticVersioningService {
    * @returns {string} Version string
    */
   getVersionFromPackage(packageJson) {
-    if (!packageJson || typeof packageJson !== 'object') {
-      return '0.0.0';
+    if (!packageJson || typeof packageJson !== "object") {
+      return "0.0.0";
     }
 
-    return packageJson.version || '0.0.0';
+    return packageJson.version || "0.0.0";
   }
 
   /**
@@ -405,16 +412,18 @@ class SemanticVersioningService {
    * @returns {string} Normalized version
    */
   normalizeVersion(version) {
-    if (!version || typeof version !== 'string') {
-      return '0.0.0';
+    if (!version || typeof version !== "string") {
+      return "0.0.0";
     }
 
     // Remove 'v' prefix if present
-    const cleanVersion = version.startsWith('v') ? version.substring(1) : version;
+    const cleanVersion = version.startsWith("v")
+      ? version.substring(1)
+      : version;
 
     if (!this.isValidVersion(cleanVersion)) {
       this.logger.warn(`Invalid version format: ${version}, using 0.0.0`);
-      return '0.0.0';
+      return "0.0.0";
     }
 
     return cleanVersion;

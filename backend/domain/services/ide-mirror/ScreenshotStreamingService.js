@@ -1,41 +1,40 @@
-
 /**
  * ScreenshotStreamingService
- * 
+ *
  * Core service for continuous IDE screenshot streaming with compression,
  * buffering, and WebSocket delivery. Manages streaming ports and
  * coordinates between BrowserManager, CompressionEngine, and FrameBuffer.
  * Updated to use port-based architecture instead of session-based.
  */
-const StreamingPort = require('../../entities/StreamingPort');
-const FrameMetrics = require('../../entities/FrameMetrics');
-const CompressionEngine = require('./CompressionEngine');
-const FrameBuffer = require('./FrameBuffer');
-const RegionDetector = require('./RegionDetector');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const StreamingPort = require("../../entities/StreamingPort");
+const FrameMetrics = require("../../entities/FrameMetrics");
+const CompressionEngine = require("./CompressionEngine");
+const FrameBuffer = require("./FrameBuffer");
+const RegionDetector = require("./RegionDetector");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class ScreenshotStreamingService {
   constructor(browserManager, webSocketManager, options = {}) {
     this.browserManager = browserManager;
     this.webSocketManager = webSocketManager;
-    
+
     // Core services
     this.compressionEngine = new CompressionEngine();
     this.frameBuffer = new FrameBuffer(options.frameBuffer || {});
     this.regionDetector = new RegionDetector();
-    
+
     // Port management
     this.activePorts = new Map(); // port -> StreamingPort
     this.streamingIntervals = new Map(); // port -> interval
     this.frameCounters = new Map(); // port -> frame counter
-    
+
     // Configuration
     this.defaultFPS = options.defaultFPS || 10;
     this.maxFPS = options.maxFPS || 30;
     this.defaultQuality = options.defaultQuality || 0.8;
     this.maxFrameSize = options.maxFrameSize || 50 * 1024; // 50KB
-    
+
     // Performance tracking
     this.stats = {
       totalPorts: 0,
@@ -43,14 +42,17 @@ class ScreenshotStreamingService {
       totalFramesStreamed: 0,
       totalErrors: 0,
       averageLatency: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
-    
+
     // Error handling
     this.maxRetries = options.maxRetries || 3;
     this.retryDelay = options.retryDelay || 1000;
-    
-    logger.info('Initialized with port-based architecture, default FPS:', this.defaultFPS);
+
+    logger.info(
+      "Initialized with port-based architecture, default FPS:",
+      this.defaultFPS,
+    );
   }
 
   /**
@@ -61,84 +63,88 @@ class ScreenshotStreamingService {
    */
   async startStreaming(port, options = {}) {
     logger.info(`Starting streaming for port ${port}`);
-    
+
     // Validate port number
-    if (!port || typeof port !== 'number' || port < 1 || port > 65535) {
-      throw new Error('Valid port number (1-65535) is required');
+    if (!port || typeof port !== "number" || port < 1 || port > 65535) {
+      throw new Error("Valid port number (1-65535) is required");
     }
-    
+
     // Check if port is already streaming
     if (this.activePorts.has(port)) {
       throw new Error(`Streaming port ${port} already exists`);
     }
-    
+
     try {
       // Ensure browser connection to the port
       await this.ensureBrowserConnection(port);
-      
+
       // Default options with JPEG only
       const defaultOptions = {
         fps: 10,
         quality: 0.4, // Compressed for small frames
-        format: 'jpeg', // JPEG only
+        format: "jpeg", // JPEG only
         maxFrameSize: 3 * 1024 * 1024, // 3MB for testing
         enableRegionDetection: false,
         retryAttempts: 3,
-        retryDelay: 1000
+        retryDelay: 1000,
       };
-      
-      const portOptions = { ...defaultOptions, ...options, format: 'jpeg' };
-      
+
+      const portOptions = { ...defaultOptions, ...options, format: "jpeg" };
+
       // Create streaming port
       const streamingPort = new StreamingPort(port, portOptions);
       streamingPort.start();
       this.activePorts.set(port, streamingPort);
-      
+
       // Start frame capture loop
       const frameInterval = 1000 / portOptions.fps;
-      logger.info(`Streaming started for port ${port} at ${portOptions.fps} FPS`);
-      
+      logger.info(
+        `Streaming started for port ${port} at ${portOptions.fps} FPS`,
+      );
+
       // Publish streaming started event
       if (this.eventBus) {
-        this.eventBus.publish('streaming.port.started', {
+        this.eventBus.publish("streaming.port.started", {
           port,
-          options: { ...portOptions, format: 'jpeg' },
+          options: { ...portOptions, format: "jpeg" },
           result: {
-            success: true,
             port,
             fps: portOptions.fps,
             quality: portOptions.quality,
-            format: 'jpeg',
-            status: 'active'
+            format: "jpeg",
+            status: "active",
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
+
       // Start frame capture loop
       this.startFrameCaptureLoop(port, frameInterval);
-      
+
       return {
-        success: true,
         port,
-        result: streamingPort.toJSON()
+        result: streamingPort.toJSON(),
       };
-      
     } catch (error) {
-      logger.error(`Failed to start streaming for port ${port}:`, error.message);
-      
+      logger.error(
+        `Failed to start streaming for port ${port}:`,
+        error.message,
+      );
+
       // Re-throw validation errors to maintain proper error handling
-      if (error.message.includes('FPS must be between') || 
-          error.message.includes('Quality must be between') ||
-          error.message.includes('Format must be') ||
-          error.message.includes('Valid port number')) {
+      if (
+        error.message.includes("FPS must be between") ||
+        error.message.includes("Quality must be between") ||
+        error.message.includes("Format must be") ||
+        error.message.includes("Valid port number")
+      ) {
         throw error;
       }
-      
+
       return {
-        success: false,
+       
         port,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -152,40 +158,42 @@ class ScreenshotStreamingService {
    */
   async startStreamingSession(sessionId, port, options = {}) {
     try {
-      logger.info(`Starting streaming for session ${sessionId} on port ${port}`);
-      
+      logger.info(
+        `Starting streaming for session ${sessionId} on port ${port}`,
+      );
+
       // Validate session ID
-      if (!sessionId || typeof sessionId !== 'string') {
-        return { success: false, error: 'Valid session ID is required' };
+      if (!sessionId || typeof sessionId !== "string") {
+        return { error: "Valid session ID is required" };
       }
-      
+
       // Check if session already exists
       const existingSession = this.getSession(sessionId);
       if (existingSession) {
-        return { success: false, error: `Session ${sessionId} already exists` };
+        return { error: `Session ${sessionId} already exists` };
       }
-      
+
       // Start streaming using port
       const result = await this.startStreaming(port, options);
-      
+
       if (result.success) {
         // Update the result to include session ID
         return {
           ...result,
           sessionId,
-          success: true
+         
         };
       }
-      
+
       return result;
-      
     } catch (error) {
-      logger.error(`Error starting streaming for session ${sessionId}:`, error.message);
-      return { success: false, error: error.message };
+      logger.error(
+        `Error starting streaming for session ${sessionId}:`,
+        error.message,
+      );
+      return { error: error.message };
     }
   }
-
-
 
   /**
    * Stop streaming for a session (compatibility method)
@@ -195,9 +203,9 @@ class ScreenshotStreamingService {
   async stopSession(sessionId) {
     const portMatch = sessionId.match(/^session-(\d+)$/);
     if (!portMatch) {
-      return { success: false, error: 'Invalid session ID format' };
+      return { error: "Invalid session ID format" };
     }
-    
+
     const port = parseInt(portMatch[1]);
     return await this.stopStreamingPort(port);
   }
@@ -213,22 +221,27 @@ class ScreenshotStreamingService {
       logger.error(`Port ${port} not found for frame capture loop`);
       return;
     }
-    
-    logger.info(`Starting frame capture loop for port ${port} with ${frameInterval}ms interval`);
-    
+
+    logger.info(
+      `Starting frame capture loop for port ${port} with ${frameInterval}ms interval`,
+    );
+
     const captureLoop = async () => {
       if (!this.activePorts.has(port)) {
         logger.info(`Port ${port} stopped, ending capture loop`);
         return;
       }
-      
+
       try {
         await this.captureAndStreamFrame(port);
       } catch (error) {
-        logger.error(`Frame capture error in loop for port ${port}:`, error.message);
+        logger.error(
+          `Frame capture error in loop for port ${port}:`,
+          error.message,
+        );
       }
     };
-    
+
     // COMMENTED OUT: Continuous frame capture causes filesystem/performance issues
     // Use simple command-based screenshots instead
     /*
@@ -239,8 +252,10 @@ class ScreenshotStreamingService {
     // Start the loop immediately
     captureLoop();
     */
-    
-    logger.info(`Frame capture setup complete (no continuous streaming to avoid filesystem errors) for port ${port}`);
+
+    logger.info(
+      `Frame capture setup complete (no continuous streaming to avoid filesystem errors) for port ${port}`,
+    );
   }
 
   /**
@@ -254,24 +269,27 @@ class ScreenshotStreamingService {
       logger.warn(`Port ${port} not found for frame capture`);
       return false;
     }
-    
+
     const startTime = Date.now();
     const frameNumber = streamingPort.frameCount + 1;
-    
+
     try {
       // Capture screenshot
       const screenshot = await this.captureScreenshot(port);
       if (!screenshot) {
-        throw new Error('Failed to capture screenshot');
+        throw new Error("Failed to capture screenshot");
       }
-      
+
       // Compress frame with adaptive quality
-      const compressedFrame = await this.compressionEngine.compress(screenshot, {
-        format: streamingPort.format,
-        quality: streamingPort.quality,
-        maxSize: streamingPort.maxFrameSize
-      });
-      
+      const compressedFrame = await this.compressionEngine.compress(
+        screenshot,
+        {
+          format: streamingPort.format,
+          quality: streamingPort.quality,
+          maxSize: streamingPort.maxFrameSize,
+        },
+      );
+
       // Add to frame buffer
       const frameData = {
         data: compressedFrame.buffer,
@@ -284,34 +302,33 @@ class ScreenshotStreamingService {
           port: port,
           compressionTime: compressedFrame.compressionTime,
           originalSize: compressedFrame.originalSize,
-          compressionRatio: compressedFrame.compressionRatio
-        }
+          compressionRatio: compressedFrame.compressionRatio,
+        },
       };
-      
+
       const bufferSuccess = this.frameBuffer.addFrame(port, frameData);
       if (!bufferSuccess) {
         logger.warn(`Failed to add frame to buffer for port ${port}`);
       }
-      
+
       // Stream via WebSocket
       await this.streamFrame(port, frameData);
-      
+
       // Update port metrics
       const totalLatency = Date.now() - startTime;
       streamingPort.updateFrame(compressedFrame.size, totalLatency);
-      
+
       // Update service statistics
       this.stats.totalFramesStreamed++;
       this.updateAverageLatency(totalLatency);
-      
+
       return true;
-      
     } catch (error) {
       logger.error(`Frame capture error for port ${port}:`, error.message);
-      
+
       streamingPort.error(error.message);
       this.stats.totalErrors++;
-      
+
       return false;
     }
   }
@@ -325,33 +342,35 @@ class ScreenshotStreamingService {
     try {
       // Ensure browser is connected to the correct port
       await this.ensureBrowserConnection(port);
-      
+
       const page = await this.browserManager.getPage();
       if (!page) {
-        throw new Error('No browser page available');
+        throw new Error("No browser page available");
       }
-      
+
       // Check if page is still connected
       if (page.isClosed && page.isClosed()) {
-        logger.info('Page closed, reconnecting...');
+        logger.info("Page closed, reconnecting...");
         await this.browserManager.reconnect();
         const newPage = await this.browserManager.getPage();
         if (!newPage) {
-          throw new Error('Could not reconnect to browser');
+          throw new Error("Could not reconnect to browser");
         }
         return await this.captureScreenshot(port); // Retry with new page
       }
-      
+
       // Capture screenshot - use PNG format without quality option
       const screenshotBuffer = await page.screenshot({
-        type: 'png',
-        fullPage: false // Only visible area for better performance
+        type: "png",
+        fullPage: false, // Only visible area for better performance
       });
-      
+
       return screenshotBuffer;
-      
     } catch (error) {
-      logger.error(`Screenshot capture failed for port ${port}:`, error.message);
+      logger.error(
+        `Screenshot capture failed for port ${port}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -364,18 +383,17 @@ class ScreenshotStreamingService {
   async ensureBrowserConnection(port) {
     try {
       const currentPort = this.browserManager.getCurrentPort();
-      
+
       if (currentPort !== port) {
         logger.info(`Switching browser from port ${currentPort} to ${port}`);
         await this.browserManager.connectToPort(port);
       }
-      
+
       // Ensure connection is active
       if (!this.browserManager.isConnected()) {
         logger.info(`Reconnecting browser to port ${port}`);
         await this.browserManager.connectToPort(port);
       }
-      
     } catch (error) {
       logger.error(`Browser connection error for port ${port}:`, error.message);
       throw error;
@@ -391,27 +409,29 @@ class ScreenshotStreamingService {
   async streamFrame(port, frameData) {
     try {
       if (!this.webSocketManager) {
-        logger.warn('WebSocket manager not available');
+        logger.warn("WebSocket manager not available");
         return;
       }
-      
+
       const message = {
-        type: 'frame',
+        type: "frame",
         port: port,
         timestamp: frameData.timestamp,
         frameNumber: frameData.frameNumber,
         format: frameData.format,
         size: frameData.size,
         quality: frameData.quality,
-        data: frameData.data.toString('base64'), // Convert binary to base64 for JSON
-        metadata: frameData.metadata
+        data: frameData.data.toString("base64"), // Convert binary to base64 for JSON
+        metadata: frameData.metadata,
       };
-      
+
       // Broadcast to all clients subscribed to this port
       this.webSocketManager.broadcastToTopic(`mirror-${port}-frames`, message);
-      
     } catch (error) {
-      logger.error(`WebSocket streaming error for port ${port}:`, error.message);
+      logger.error(
+        `WebSocket streaming error for port ${port}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -431,7 +451,7 @@ class ScreenshotStreamingService {
    * @returns {Array} Array of active port information
    */
   getAllPorts() {
-    return Array.from(this.activePorts.values()).map(port => port.toJSON());
+    return Array.from(this.activePorts.values()).map((port) => port.toJSON());
   }
 
   /**
@@ -440,7 +460,7 @@ class ScreenshotStreamingService {
    * @returns {Array} Array of active session information
    */
   getAllSessions() {
-    return Array.from(this.activePorts.values()).map(port => ({
+    return Array.from(this.activePorts.values()).map((port) => ({
       id: `session-${port.port}`,
       port: port.port,
       status: port.status,
@@ -450,8 +470,8 @@ class ScreenshotStreamingService {
       fps: port.fps,
       quality: port.quality,
       format: port.format,
-      isActive: () => port.status === 'active',
-      isStopped: () => ['stopped', 'error'].includes(port.status)
+      isActive: () => port.status === "active",
+      isStopped: () => ["stopped", "error"].includes(port.status),
     }));
   }
 
@@ -467,14 +487,14 @@ class ScreenshotStreamingService {
     if (!portMatch) {
       return null;
     }
-    
+
     const port = parseInt(portMatch[1]);
     const streamingPort = this.activePorts.get(port);
-    
+
     if (!streamingPort) {
       return null;
     }
-    
+
     return {
       id: sessionId,
       port: streamingPort.port,
@@ -485,12 +505,10 @@ class ScreenshotStreamingService {
       fps: streamingPort.fps,
       quality: streamingPort.quality,
       format: streamingPort.format,
-      isActive: () => streamingPort.status === 'active',
-      isStopped: () => ['stopped', 'error'].includes(streamingPort.status)
+      isActive: () => streamingPort.status === "active",
+      isStopped: () => ["stopped", "error"].includes(streamingPort.status),
     };
   }
-
-
 
   /**
    * Pause streaming for a session (compatibility method)
@@ -500,14 +518,12 @@ class ScreenshotStreamingService {
   async pauseSession(sessionId) {
     const portMatch = sessionId.match(/^session-(\d+)$/);
     if (!portMatch) {
-      return { success: false, error: 'Invalid session ID format' };
+      return { error: "Invalid session ID format" };
     }
-    
+
     const port = parseInt(portMatch[1]);
     return await this.pauseStreaming(port);
   }
-
-
 
   /**
    * Pause streaming for a session (compatibility method)
@@ -517,7 +533,7 @@ class ScreenshotStreamingService {
   async pauseStreamingSession(sessionId) {
     const port = this.extractPortFromSessionId(sessionId);
     if (!port) {
-      return { success: false, error: 'Invalid session ID format' };
+      return { error: "Invalid session ID format" };
     }
     return this.pauseStreaming(port);
   }
@@ -529,7 +545,7 @@ class ScreenshotStreamingService {
    */
   async pauseStreaming(sessionId) {
     // If sessionId is a string, treat it as session ID
-    if (typeof sessionId === 'string') {
+    if (typeof sessionId === "string") {
       return this.pauseStreamingSession(sessionId);
     }
     // Otherwise treat it as port number
@@ -545,25 +561,24 @@ class ScreenshotStreamingService {
     try {
       const streamingPort = this.activePorts.get(port);
       if (!streamingPort) {
-        return { success: false, error: 'Port not found' };
+        return { error: "Port not found" };
       }
-      
+
       streamingPort.pause();
-      
+
       // Stop the streaming interval
       const interval = this.streamingIntervals.get(port);
       if (interval) {
         clearInterval(interval);
         this.streamingIntervals.delete(port);
       }
-      
+
       logger.info(`Streaming paused for port ${port}`);
-      
-      return { success: true, port, status: streamingPort.status };
-      
+
+      return { port, status: streamingPort.status };
     } catch (error) {
       logger.error(`Error pausing streaming for port ${port}:`, error.message);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -575,7 +590,7 @@ class ScreenshotStreamingService {
   async resumeStreamingSession(sessionId) {
     const port = this.extractPortFromSessionId(sessionId);
     if (!port) {
-      return { success: false, error: 'Invalid session ID format' };
+      return { error: "Invalid session ID format" };
     }
     return this.resumeStreaming(port);
   }
@@ -587,7 +602,7 @@ class ScreenshotStreamingService {
    */
   async resumeStreaming(sessionId) {
     // If sessionId is a string, treat it as session ID
-    if (typeof sessionId === 'string') {
+    if (typeof sessionId === "string") {
       return this.resumeStreamingSession(sessionId);
     }
     // Otherwise treat it as port number
@@ -603,11 +618,11 @@ class ScreenshotStreamingService {
     try {
       const streamingPort = this.activePorts.get(port);
       if (!streamingPort) {
-        return { success: false, error: 'Port not found' };
+        return { error: "Port not found" };
       }
-      
+
       streamingPort.resume();
-      
+
       // COMMENTED OUT: Restart streaming interval causes filesystem issues
       // Use simple command-based capture instead
       /*
@@ -618,14 +633,13 @@ class ScreenshotStreamingService {
       
       this.streamingIntervals.set(port, streamingInterval);
       */
-      
+
       logger.info(`Streaming resumed for port ${port}`);
-      
-      return { success: true, port, status: streamingPort.status };
-      
+
+      return { port, status: streamingPort.status };
     } catch (error) {
       logger.error(`Error resuming streaming for port ${port}:`, error.message);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -637,7 +651,7 @@ class ScreenshotStreamingService {
   async stopStreamingSession(sessionId) {
     const port = this.extractPortFromSessionId(sessionId);
     if (!port) {
-      return { success: false, error: 'Invalid session ID format' };
+      return { error: "Invalid session ID format" };
     }
     return this.stopStreamingPort(port);
   }
@@ -649,7 +663,7 @@ class ScreenshotStreamingService {
    */
   async stopStreaming(sessionId) {
     // If sessionId is a string, treat it as session ID
-    if (typeof sessionId === 'string') {
+    if (typeof sessionId === "string") {
       return this.stopStreamingSession(sessionId);
     }
     // Otherwise treat it as port number
@@ -664,43 +678,41 @@ class ScreenshotStreamingService {
   async stopStreamingPort(port) {
     try {
       logger.info(`Stopping streaming for port ${port}`);
-      
+
       const streamingPort = this.activePorts.get(port);
       if (!streamingPort) {
-        return { success: false, error: 'Port not found' };
+        return { error: "Port not found" };
       }
-      
+
       // Stop the streaming interval
       const interval = this.streamingIntervals.get(port);
       if (interval) {
         clearInterval(interval);
         this.streamingIntervals.delete(port);
       }
-      
+
       // Stop the port
       streamingPort.stop();
-      
+
       // Clean up resources
       this.frameBuffer.clearBuffer(port);
       this.frameCounters.delete(port);
       this.activePorts.delete(port);
-      
+
       // Update statistics
       this.stats.activePorts = Math.max(0, this.stats.activePorts - 1);
-      
+
       logger.info(`Streaming stopped for port ${port}`);
-      
+
       return {
-        success: true,
         port,
         status: streamingPort.status,
         duration: streamingPort.getDuration(),
-        frameCount: streamingPort.frameCount
+        frameCount: streamingPort.frameCount,
       };
-      
     } catch (error) {
       logger.error(`Error stopping streaming for port ${port}:`, error.message);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -710,22 +722,22 @@ class ScreenshotStreamingService {
    * @returns {number|null} Port number or null if invalid
    */
   extractPortFromSessionId(sessionId) {
-    if (!sessionId || typeof sessionId !== 'string') {
+    if (!sessionId || typeof sessionId !== "string") {
       return null;
     }
-    
+
     // Handle session-{port} format
     const match = sessionId.match(/^session-(\d+)$/);
     if (match) {
       return parseInt(match[1], 10);
     }
-    
+
     // Handle direct port number as session ID
     const port = parseInt(sessionId, 10);
     if (!isNaN(port) && port > 0 && port <= 65535) {
       return port;
     }
-    
+
     return null;
   }
 
@@ -737,9 +749,9 @@ class ScreenshotStreamingService {
   async resumeSession(sessionId) {
     const portMatch = sessionId.match(/^session-(\d+)$/);
     if (!portMatch) {
-      return { success: false, error: 'Invalid session ID format' };
+      return { error: "Invalid session ID format" };
     }
-    
+
     const port = parseInt(portMatch[1]);
     return await this.resumeStreaming(port);
   }
@@ -754,22 +766,22 @@ class ScreenshotStreamingService {
     try {
       const streamingPort = this.activePorts.get(port);
       if (!streamingPort) {
-        return { success: false, error: 'Port not found' };
+        return { error: "Port not found" };
       }
-      
+
       // Update port configuration
       if (options.fps !== undefined) {
         streamingPort.fps = Math.min(Math.max(options.fps, 1), this.maxFPS);
       }
-      
+
       if (options.quality !== undefined) {
         streamingPort.quality = Math.min(Math.max(options.quality, 0.1), 1.0);
       }
-      
+
       if (options.format !== undefined) {
         streamingPort.format = options.format;
       }
-      
+
       // COMMENTED OUT: Restart interval causes filesystem issues
       // Use simple command-based capture instead
       /*
@@ -784,14 +796,13 @@ class ScreenshotStreamingService {
         this.streamingIntervals.set(port, newStreamingInterval);
       }
       */
-      
+
       logger.info(`Updated configuration for port ${port}`);
-      
-      return { success: true, port, config: streamingPort.toJSON() };
-      
+
+      return { port, config: streamingPort.toJSON() };
     } catch (error) {
       logger.error(`Error updating port config for ${port}:`, error.message);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -801,7 +812,8 @@ class ScreenshotStreamingService {
    */
   updateAverageLatency(latency) {
     const alpha = 0.1; // Smoothing factor
-    this.stats.averageLatency = this.stats.averageLatency * (1 - alpha) + latency * alpha;
+    this.stats.averageLatency =
+      this.stats.averageLatency * (1 - alpha) + latency * alpha;
   }
 
   /**
@@ -810,29 +822,32 @@ class ScreenshotStreamingService {
    */
   getStats() {
     const uptime = Date.now() - this.stats.startTime;
-    
+
     // Safely get compression stats with fallback
     let compressionStats = {};
     try {
-      if (this.compressionEngine && typeof this.compressionEngine.getStats === 'function') {
+      if (
+        this.compressionEngine &&
+        typeof this.compressionEngine.getStats === "function"
+      ) {
         compressionStats = this.compressionEngine.getStats() || {};
       }
     } catch (error) {
-      logger.warn('Error getting compression stats:', error.message);
+      logger.warn("Error getting compression stats:", error.message);
       compressionStats = {};
     }
-    
+
     // Safely get buffer stats with fallback
     let bufferStats = {};
     try {
-      if (this.frameBuffer && typeof this.frameBuffer.getStats === 'function') {
+      if (this.frameBuffer && typeof this.frameBuffer.getStats === "function") {
         bufferStats = this.frameBuffer.getStats() || {};
       }
     } catch (error) {
-      logger.warn('Error getting buffer stats:', error.message);
+      logger.warn("Error getting buffer stats:", error.message);
       bufferStats = {};
     }
-    
+
     // Safely get ports and sessions
     let ports = [];
     let sessions = [];
@@ -840,9 +855,9 @@ class ScreenshotStreamingService {
       ports = this.getAllPorts() || [];
       sessions = this.getAllSessions() || [];
     } catch (error) {
-      logger.warn('Error getting ports/sessions:', error.message);
+      logger.warn("Error getting ports/sessions:", error.message);
     }
-    
+
     return {
       ...this.stats,
       uptime,
@@ -853,7 +868,7 @@ class ScreenshotStreamingService {
       // Session-based compatibility statistics
       totalSessions: this.stats.totalPorts || 0,
       activeSessions: this.stats.activePorts || 0,
-      sessions: sessions
+      sessions: sessions,
     };
   }
 
@@ -865,19 +880,18 @@ class ScreenshotStreamingService {
     try {
       const ports = Array.from(this.activePorts.keys());
       let stoppedCount = 0;
-      
+
       for (const port of ports) {
         const result = await this.stopStreaming(port);
         if (result.success) {
           stoppedCount++;
         }
       }
-      
+
       logger.info(`Stopped all streaming ports: ${stoppedCount} ports`);
       return stoppedCount;
-      
     } catch (error) {
-      logger.error('Error stopping all streaming:', error.message);
+      logger.error("Error stopping all streaming:", error.message);
       return 0;
     }
   }
@@ -887,26 +901,25 @@ class ScreenshotStreamingService {
    */
   async cleanup() {
     try {
-      logger.info('Cleaning up resources...');
-      
+      logger.info("Cleaning up resources...");
+
       // Stop all streaming
       await this.stopAllStreaming();
-      
+
       // Clean up services
       this.compressionEngine.cleanup();
       this.frameBuffer.cleanup();
-      
+
       // Clear all maps
       this.activePorts.clear();
       this.streamingIntervals.clear();
       this.frameCounters.clear();
-      
-      logger.info('Cleanup completed');
-      
+
+      logger.info("Cleanup completed");
     } catch (error) {
-      logger.error('Error during cleanup:', error.message);
+      logger.error("Error during cleanup:", error.message);
     }
   }
 }
 
-module.exports = ScreenshotStreamingService; 
+module.exports = ScreenshotStreamingService;

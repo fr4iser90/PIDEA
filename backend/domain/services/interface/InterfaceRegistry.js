@@ -1,13 +1,13 @@
 /**
  * InterfaceRegistry - Registry for interface type management
- * 
+ *
  * This registry provides centralized management of interface types,
  * their configurations, and metadata. It implements the Registry
  * pattern to maintain a catalog of available interface types and
  * their associated information.
  */
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class InterfaceRegistry {
   /**
@@ -15,24 +15,24 @@ class InterfaceRegistry {
    * @param {Object} dependencies - Dependency injection container
    */
   constructor(dependencies = {}) {
-    this.logger = dependencies.logger || new ServiceLogger('InterfaceRegistry');
+    this.logger = dependencies.logger || new ServiceLogger("InterfaceRegistry");
     this.configService = dependencies.configService || null;
-    
+
     // Registry storage
     this.interfaceTypes = new Map();
     this.typeCategories = new Map();
     this.typeMetadata = new Map();
     this.typeConstraints = new Map();
-    
+
     // Registry statistics
     this.stats = {
       totalRegistered: 0,
       totalUnregistered: 0,
       activeTypes: 0,
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
-    
-    this.logger.info('InterfaceRegistry initialized');
+
+    this.logger.info("InterfaceRegistry initialized");
   }
 
   /**
@@ -42,42 +42,44 @@ class InterfaceRegistry {
    * @returns {void}
    */
   registerInterfaceType(interfaceType, metadata = {}) {
-    if (!interfaceType || typeof interfaceType !== 'string') {
-      throw new Error('interfaceType must be a non-empty string');
+    if (!interfaceType || typeof interfaceType !== "string") {
+      throw new Error("interfaceType must be a non-empty string");
     }
-    
-    if (typeof metadata !== 'object' || metadata === null) {
-      throw new Error('metadata must be an object');
+
+    if (typeof metadata !== "object" || metadata === null) {
+      throw new Error("metadata must be an object");
     }
-    
+
     // Validate required metadata fields
-    const requiredFields = ['name', 'description', 'version'];
+    const requiredFields = ["name", "description", "version"];
     for (const field of requiredFields) {
       if (!metadata[field]) {
         throw new Error(`Required metadata field '${field}' is missing`);
       }
     }
-    
+
     // Check if type already exists
     if (this.interfaceTypes.has(interfaceType)) {
-      this.logger.warn(`Interface type '${interfaceType}' is already registered, updating metadata`);
+      this.logger.warn(
+        `Interface type '${interfaceType}' is already registered, updating metadata`,
+      );
     }
-    
+
     // Store interface type
     this.interfaceTypes.set(interfaceType, {
       ...metadata,
       registeredAt: new Date(),
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     });
-    
+
     // Update statistics
     this.stats.totalRegistered++;
     this.stats.activeTypes = this.interfaceTypes.size;
     this.stats.lastActivity = new Date();
-    
+
     this.logger.info(`Registered interface type: ${interfaceType}`, {
       interfaceType,
-      metadata
+      metadata,
     });
   }
 
@@ -88,21 +90,23 @@ class InterfaceRegistry {
    */
   unregisterInterfaceType(interfaceType) {
     if (!this.interfaceTypes.has(interfaceType)) {
-      this.logger.warn(`Interface type not found for unregistration: ${interfaceType}`);
+      this.logger.warn(
+        `Interface type not found for unregistration: ${interfaceType}`,
+      );
       return false;
     }
-    
+
     // Remove from all registries
     this.interfaceTypes.delete(interfaceType);
     this.typeCategories.delete(interfaceType);
     this.typeMetadata.delete(interfaceType);
     this.typeConstraints.delete(interfaceType);
-    
+
     // Update statistics
     this.stats.totalUnregistered++;
     this.stats.activeTypes = this.interfaceTypes.size;
     this.stats.lastActivity = new Date();
-    
+
     this.logger.info(`Unregistered interface type: ${interfaceType}`);
     return true;
   }
@@ -117,18 +121,20 @@ class InterfaceRegistry {
     if (!this.interfaceTypes.has(interfaceType)) {
       throw new Error(`Interface type '${interfaceType}' is not registered`);
     }
-    
-    if (!category || typeof category !== 'string') {
-      throw new Error('category must be a non-empty string');
+
+    if (!category || typeof category !== "string") {
+      throw new Error("category must be a non-empty string");
     }
-    
+
     if (!this.typeCategories.has(category)) {
       this.typeCategories.set(category, new Set());
     }
-    
+
     this.typeCategories.get(category).add(interfaceType);
-    
-    this.logger.debug(`Added interface type '${interfaceType}' to category '${category}'`);
+
+    this.logger.debug(
+      `Added interface type '${interfaceType}' to category '${category}'`,
+    );
   }
 
   /**
@@ -141,19 +147,21 @@ class InterfaceRegistry {
     if (!this.typeCategories.has(category)) {
       return false;
     }
-    
+
     const categorySet = this.typeCategories.get(category);
     const removed = categorySet.delete(interfaceType);
-    
+
     // Clean up empty categories
     if (categorySet.size === 0) {
       this.typeCategories.delete(category);
     }
-    
+
     if (removed) {
-      this.logger.debug(`Removed interface type '${interfaceType}' from category '${category}'`);
+      this.logger.debug(
+        `Removed interface type '${interfaceType}' from category '${category}'`,
+      );
     }
-    
+
     return removed;
   }
 
@@ -167,24 +175,24 @@ class InterfaceRegistry {
     if (!this.interfaceTypes.has(interfaceType)) {
       throw new Error(`Interface type '${interfaceType}' is not registered`);
     }
-    
-    if (typeof metadata !== 'object' || metadata === null) {
-      throw new Error('metadata must be an object');
+
+    if (typeof metadata !== "object" || metadata === null) {
+      throw new Error("metadata must be an object");
     }
-    
+
     // Merge with existing metadata
     const existingMetadata = this.typeMetadata.get(interfaceType) || {};
     const mergedMetadata = {
       ...existingMetadata,
       ...metadata,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
-    
+
     this.typeMetadata.set(interfaceType, mergedMetadata);
-    
+
     this.logger.debug(`Updated metadata for interface type: ${interfaceType}`, {
       interfaceType,
-      metadata: mergedMetadata
+      metadata: mergedMetadata,
     });
   }
 
@@ -198,19 +206,19 @@ class InterfaceRegistry {
     if (!this.interfaceTypes.has(interfaceType)) {
       throw new Error(`Interface type '${interfaceType}' is not registered`);
     }
-    
-    if (typeof constraints !== 'object' || constraints === null) {
-      throw new Error('constraints must be an object');
+
+    if (typeof constraints !== "object" || constraints === null) {
+      throw new Error("constraints must be an object");
     }
-    
+
     this.typeConstraints.set(interfaceType, {
       ...constraints,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     });
-    
+
     this.logger.debug(`Set constraints for interface type: ${interfaceType}`, {
       interfaceType,
-      constraints
+      constraints,
     });
   }
 
@@ -224,15 +232,15 @@ class InterfaceRegistry {
     if (!baseInfo) {
       return null;
     }
-    
+
     const metadata = this.typeMetadata.get(interfaceType) || {};
     const constraints = this.typeConstraints.get(interfaceType) || {};
-    
+
     return {
       ...baseInfo,
       metadata,
       constraints,
-      categories: this.getCategoriesForType(interfaceType)
+      categories: this.getCategoriesForType(interfaceType),
     };
   }
 
@@ -304,30 +312,41 @@ class InterfaceRegistry {
    */
   searchInterfaceTypes(criteria = {}) {
     const results = [];
-    
+
     for (const [interfaceType, info] of this.interfaceTypes.entries()) {
       let matches = true;
-      
+
       // Check name match
-      if (criteria.name && !info.name.toLowerCase().includes(criteria.name.toLowerCase())) {
+      if (
+        criteria.name &&
+        !info.name.toLowerCase().includes(criteria.name.toLowerCase())
+      ) {
         matches = false;
       }
-      
+
       // Check description match
-      if (criteria.description && !info.description.toLowerCase().includes(criteria.description.toLowerCase())) {
+      if (
+        criteria.description &&
+        !info.description
+          .toLowerCase()
+          .includes(criteria.description.toLowerCase())
+      ) {
         matches = false;
       }
-      
+
       // Check version match
       if (criteria.version && info.version !== criteria.version) {
         matches = false;
       }
-      
+
       // Check category match
-      if (criteria.category && !this.isInCategory(interfaceType, criteria.category)) {
+      if (
+        criteria.category &&
+        !this.isInCategory(interfaceType, criteria.category)
+      ) {
         matches = false;
       }
-      
+
       // Check metadata match
       if (criteria.metadata) {
         const typeMetadata = this.typeMetadata.get(interfaceType) || {};
@@ -338,12 +357,12 @@ class InterfaceRegistry {
           }
         }
       }
-      
+
       if (matches) {
         results.push(this.getInterfaceType(interfaceType));
       }
     }
-    
+
     return results;
   }
 
@@ -356,7 +375,7 @@ class InterfaceRegistry {
       ...this.stats,
       categories: this.typeCategories.size,
       typesWithMetadata: this.typeMetadata.size,
-      typesWithConstraints: this.typeConstraints.size
+      typesWithConstraints: this.typeConstraints.size,
     };
   }
 
@@ -369,12 +388,12 @@ class InterfaceRegistry {
     for (const [category, typeSet] of this.typeCategories.entries()) {
       categories[category] = Array.from(typeSet);
     }
-    
+
     return {
       totalTypes: this.interfaceTypes.size,
       categories,
       types: this.getAllInterfaceTypes(),
-      lastActivity: this.stats.lastActivity
+      lastActivity: this.stats.lastActivity,
     };
   }
 
@@ -386,14 +405,17 @@ class InterfaceRegistry {
     const data = {
       interfaceTypes: Object.fromEntries(this.interfaceTypes),
       typeCategories: Object.fromEntries(
-        Array.from(this.typeCategories.entries()).map(([key, value]) => [key, Array.from(value)])
+        Array.from(this.typeCategories.entries()).map(([key, value]) => [
+          key,
+          Array.from(value),
+        ]),
       ),
       typeMetadata: Object.fromEntries(this.typeMetadata),
       typeConstraints: Object.fromEntries(this.typeConstraints),
       stats: this.stats,
-      exportedAt: new Date()
+      exportedAt: new Date(),
     };
-    
+
     return data;
   }
 
@@ -403,45 +425,49 @@ class InterfaceRegistry {
    * @returns {void}
    */
   importData(data) {
-    if (typeof data !== 'object' || data === null) {
-      throw new Error('data must be an object');
+    if (typeof data !== "object" || data === null) {
+      throw new Error("data must be an object");
     }
-    
+
     // Import interface types
     if (data.interfaceTypes) {
       for (const [interfaceType, info] of Object.entries(data.interfaceTypes)) {
         this.interfaceTypes.set(interfaceType, info);
       }
     }
-    
+
     // Import categories
     if (data.typeCategories) {
       for (const [category, types] of Object.entries(data.typeCategories)) {
         this.typeCategories.set(category, new Set(types));
       }
     }
-    
+
     // Import metadata
     if (data.typeMetadata) {
-      for (const [interfaceType, metadata] of Object.entries(data.typeMetadata)) {
+      for (const [interfaceType, metadata] of Object.entries(
+        data.typeMetadata,
+      )) {
         this.typeMetadata.set(interfaceType, metadata);
       }
     }
-    
+
     // Import constraints
     if (data.typeConstraints) {
-      for (const [interfaceType, constraints] of Object.entries(data.typeConstraints)) {
+      for (const [interfaceType, constraints] of Object.entries(
+        data.typeConstraints,
+      )) {
         this.typeConstraints.set(interfaceType, constraints);
       }
     }
-    
+
     // Update statistics
     this.stats.activeTypes = this.interfaceTypes.size;
     this.stats.lastActivity = new Date();
-    
-    this.logger.info('Imported registry data', {
+
+    this.logger.info("Imported registry data", {
       types: this.interfaceTypes.size,
-      categories: this.typeCategories.size
+      categories: this.typeCategories.size,
     });
   }
 
@@ -454,13 +480,13 @@ class InterfaceRegistry {
     this.typeCategories.clear();
     this.typeMetadata.clear();
     this.typeConstraints.clear();
-    
+
     this.stats.totalRegistered = 0;
     this.stats.totalUnregistered = 0;
     this.stats.activeTypes = 0;
     this.stats.lastActivity = new Date();
-    
-    this.logger.info('Cleared all registry data');
+
+    this.logger.info("Cleared all registry data");
   }
 
   /**
@@ -469,7 +495,7 @@ class InterfaceRegistry {
    */
   destroy() {
     this.clear();
-    this.logger.info('InterfaceRegistry destroyed');
+    this.logger.info("InterfaceRegistry destroyed");
   }
 }
 

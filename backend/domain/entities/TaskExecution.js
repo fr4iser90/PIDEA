@@ -2,8 +2,8 @@
  * TaskExecution Entity
  * Tracks task execution with comprehensive monitoring and logging
  */
-const { v4: uuidv4 } = require('uuid');
-const TaskStatus = require('@value-objects/TaskStatus');
+const { v4: uuidv4 } = require("uuid");
+const TaskStatus = require("@value-objects/TaskStatus");
 
 class TaskExecution {
   constructor(
@@ -17,7 +17,7 @@ class TaskExecution {
     logs = [],
     metadata = {},
     createdAt = new Date(),
-    updatedAt = new Date()
+    updatedAt = new Date(),
   ) {
     this._id = id;
     this._taskId = taskId;
@@ -36,7 +36,7 @@ class TaskExecution {
     this._performanceMetrics = {
       cpuUsage: [],
       memoryUsage: [],
-      executionTime: 0
+      executionTime: 0,
     };
     this._workflowState = null;
 
@@ -44,22 +44,54 @@ class TaskExecution {
   }
 
   // Getters
-  get id() { return this._id; }
-  get taskId() { return this._taskId; }
-  get status() { return this._status; }
-  get startedAt() { return this._startedAt ? new Date(this._startedAt) : null; }
-  get completedAt() { return this._completedAt ? new Date(this._completedAt) : null; }
-  get result() { return this._result; }
-  get error() { return this._error; }
-  get logs() { return [...this._logs]; }
-  get metadata() { return { ...this._metadata }; }
-  get createdAt() { return new Date(this._createdAt); }
-  get updatedAt() { return new Date(this._updatedAt); }
-  get progress() { return this._progress; }
-  get currentStep() { return this._currentStep; }
-  get steps() { return [...this._steps]; }
-  get performanceMetrics() { return { ...this._performanceMetrics }; }
-  get workflowState() { return this._workflowState; }
+  get id() {
+    return this._id;
+  }
+  get taskId() {
+    return this._taskId;
+  }
+  get status() {
+    return this._status;
+  }
+  get startedAt() {
+    return this._startedAt ? new Date(this._startedAt) : null;
+  }
+  get completedAt() {
+    return this._completedAt ? new Date(this._completedAt) : null;
+  }
+  get result() {
+    return this._result;
+  }
+  get error() {
+    return this._error;
+  }
+  get logs() {
+    return [...this._logs];
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
+  get updatedAt() {
+    return new Date(this._updatedAt);
+  }
+  get progress() {
+    return this._progress;
+  }
+  get currentStep() {
+    return this._currentStep;
+  }
+  get steps() {
+    return [...this._steps];
+  }
+  get performanceMetrics() {
+    return { ...this._performanceMetrics };
+  }
+  get workflowState() {
+    return this._workflowState;
+  }
 
   // Domain methods
   isPending() {
@@ -125,19 +157,19 @@ class TaskExecution {
   // State transitions
   start() {
     if (this.hasStarted()) {
-      throw new Error('Task execution has already started');
+      throw new Error("Task execution has already started");
     }
 
     this._status = this._status.transitionTo(TaskStatus.IN_PROGRESS);
     this._startedAt = new Date();
     this._updatedAt = new Date();
     this._progress = 0;
-    this._addLog('info', 'Task execution started');
+    this._addLog("info", "Task execution started");
   }
 
   complete(result = null) {
     if (!this.isRunning()) {
-      throw new Error('Cannot complete task execution that is not running');
+      throw new Error("Cannot complete task execution that is not running");
     }
 
     this._status = this._status.transitionTo(TaskStatus.COMPLETED);
@@ -146,12 +178,12 @@ class TaskExecution {
     this._result = result;
     this._progress = 100;
     this._currentStep = null;
-    this._addLog('info', 'Task execution completed successfully', { result });
+    this._addLog("info", "Task execution completed successfully", { result });
   }
 
   fail(error) {
     if (!this.isRunning()) {
-      throw new Error('Cannot fail task execution that is not running');
+      throw new Error("Cannot fail task execution that is not running");
     }
 
     this._status = this._status.transitionTo(TaskStatus.FAILED);
@@ -159,24 +191,26 @@ class TaskExecution {
     this._updatedAt = new Date();
     this._error = error;
     this._currentStep = null;
-    this._addLog('error', 'Task execution failed', { error: error.message || error });
+    this._addLog("error", "Task execution failed", {
+      error: error.message || error,
+    });
   }
 
   cancel(reason = null) {
     if (this.hasCompleted()) {
-      throw new Error('Cannot cancel completed task execution');
+      throw new Error("Cannot cancel completed task execution");
     }
 
     this._status = this._status.transitionTo(TaskStatus.CANCELLED);
     this._completedAt = new Date();
     this._updatedAt = new Date();
     this._currentStep = null;
-    this._addLog('warn', 'Task execution cancelled', { reason });
+    this._addLog("warn", "Task execution cancelled", { reason });
   }
 
   retry() {
     if (!this.isFailed()) {
-      throw new Error('Can only retry failed task executions');
+      throw new Error("Can only retry failed task executions");
     }
 
     this._status = this._status.transitionTo(TaskStatus.PENDING);
@@ -187,13 +221,13 @@ class TaskExecution {
     this._progress = 0;
     this._currentStep = null;
     this._updatedAt = new Date();
-    this._addLog('info', 'Task execution retry initiated');
+    this._addLog("info", "Task execution retry initiated");
   }
 
   // Progress management
   updateProgress(progress, step = null) {
     if (!this.isRunning()) {
-      throw new Error('Cannot update progress for non-running task execution');
+      throw new Error("Cannot update progress for non-running task execution");
     }
 
     this._progress = Math.max(0, Math.min(100, progress));
@@ -201,7 +235,10 @@ class TaskExecution {
     this._updatedAt = new Date();
 
     if (step) {
-      this._addLog('info', `Progress updated: ${progress}%`, { step, progress });
+      this._addLog("info", `Progress updated: ${progress}%`, {
+        step,
+        progress,
+      });
     }
   }
 
@@ -210,36 +247,38 @@ class TaskExecution {
       name: step,
       startedAt: new Date(),
       completedAt: null,
-      status: 'pending'
+      status: "pending",
     });
     this._currentStep = step;
-    this._addLog('info', `Step started: ${step}`);
+    this._addLog("info", `Step started: ${step}`);
   }
 
   completeStep(step, result = null) {
-    const stepIndex = this._steps.findIndex(s => s.name === step);
+    const stepIndex = this._steps.findIndex((s) => s.name === step);
     if (stepIndex === -1) {
       throw new Error(`Step ${step} not found`);
     }
 
     this._steps[stepIndex].completedAt = new Date();
-    this._steps[stepIndex].status = 'completed';
+    this._steps[stepIndex].status = "completed";
     this._steps[stepIndex].result = result;
     this._currentStep = null;
-    this._addLog('info', `Step completed: ${step}`, { result });
+    this._addLog("info", `Step completed: ${step}`, { result });
   }
 
   failStep(step, error = null) {
-    const stepIndex = this._steps.findIndex(s => s.name === step);
+    const stepIndex = this._steps.findIndex((s) => s.name === step);
     if (stepIndex === -1) {
       throw new Error(`Step ${step} not found`);
     }
 
     this._steps[stepIndex].completedAt = new Date();
-    this._steps[stepIndex].status = 'failed';
+    this._steps[stepIndex].status = "failed";
     this._steps[stepIndex].error = error;
     this._currentStep = null;
-    this._addLog('error', `Step failed: ${step}`, { error: error?.message || error });
+    this._addLog("error", `Step failed: ${step}`, {
+      error: error?.message || error,
+    });
   }
 
   // Logging
@@ -248,13 +287,13 @@ class TaskExecution {
       timestamp: new Date(),
       level,
       message,
-      data
+      data,
     });
     this._updatedAt = new Date();
   }
 
   getLogsByLevel(level) {
-    return this._logs.filter(log => log.level === level);
+    return this._logs.filter((log) => log.level === level);
   }
 
   getRecentLogs(limit = 10) {
@@ -262,15 +301,15 @@ class TaskExecution {
   }
 
   getErrorLogs() {
-    return this.getLogsByLevel('error');
+    return this.getLogsByLevel("error");
   }
 
   getWarningLogs() {
-    return this.getLogsByLevel('warn');
+    return this.getLogsByLevel("warn");
   }
 
   getInfoLogs() {
-    return this.getLogsByLevel('info');
+    return this.getLogsByLevel("info");
   }
 
   // Performance monitoring
@@ -278,10 +317,10 @@ class TaskExecution {
     if (!this._performanceMetrics[type]) {
       this._performanceMetrics[type] = [];
     }
-    
+
     this._performanceMetrics[type].push({
       timestamp: new Date(),
-      value
+      value,
     });
   }
 
@@ -290,7 +329,7 @@ class TaskExecution {
     if (metrics.length === 0) {
       return 0;
     }
-    
+
     const sum = metrics.reduce((acc, metric) => acc + metric.value, 0);
     return sum / metrics.length;
   }
@@ -300,8 +339,8 @@ class TaskExecution {
     if (metrics.length === 0) {
       return 0;
     }
-    
-    return Math.max(...metrics.map(metric => metric.value));
+
+    return Math.max(...metrics.map((metric) => metric.value));
   }
 
   // Metadata management
@@ -323,7 +362,7 @@ class TaskExecution {
   setWorkflowState(state) {
     this._workflowState = state;
     this._updatedAt = new Date();
-    this._addLog('info', 'Workflow state updated', { state: state?.status });
+    this._addLog("info", "Workflow state updated", { state: state?.status });
   }
 
   getWorkflowState() {
@@ -338,9 +377,9 @@ class TaskExecution {
     if (this._workflowState) {
       this._workflowState = state;
       this._updatedAt = new Date();
-      this._addLog('info', 'Workflow state updated', { 
+      this._addLog("info", "Workflow state updated", {
         fromState: this._workflowState?.status,
-        toState: state?.status 
+        toState: state?.status,
       });
     }
   }
@@ -348,7 +387,7 @@ class TaskExecution {
   clearWorkflowState() {
     this._workflowState = null;
     this._updatedAt = new Date();
-    this._addLog('info', 'Workflow state cleared');
+    this._addLog("info", "Workflow state cleared");
   }
 
   // Workflow compatibility methods
@@ -379,16 +418,20 @@ class TaskExecution {
 
   // Business rules
   _validate() {
-    if (!this._taskId || typeof this._taskId !== 'string') {
-      throw new Error('Task ID is required and must be a string');
+    if (!this._taskId || typeof this._taskId !== "string") {
+      throw new Error("Task ID is required and must be a string");
     }
 
     if (this._progress < 0 || this._progress > 100) {
-      throw new Error('Progress must be between 0 and 100');
+      throw new Error("Progress must be between 0 and 100");
     }
 
-    if (this._startedAt && this._completedAt && this._startedAt > this._completedAt) {
-      throw new Error('Start time cannot be after completion time');
+    if (
+      this._startedAt &&
+      this._completedAt &&
+      this._startedAt > this._completedAt
+    ) {
+      throw new Error("Start time cannot be after completion time");
     }
   }
 
@@ -413,7 +456,7 @@ class TaskExecution {
       duration: this.getDuration(),
       formattedDuration: this.getFormattedDuration(),
       isRunning: this.isRunning(),
-      hasError: this.hasError()
+      hasError: this.hasError(),
     };
   }
 
@@ -429,7 +472,7 @@ class TaskExecution {
       data.logs,
       data.metadata,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
     );
   }
 
@@ -443,9 +486,9 @@ class TaskExecution {
       null,
       null,
       [],
-      metadata
+      metadata,
     );
   }
 }
 
-module.exports = TaskExecution; 
+module.exports = TaskExecution;

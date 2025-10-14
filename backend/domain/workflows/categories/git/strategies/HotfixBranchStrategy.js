@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 /**
  * HotfixBranchStrategy - Strategy for hotfix branch creation and management
  * Implements hotfix branch naming conventions and validation for urgent bug fixes
@@ -7,19 +7,19 @@ const logger = new Logger('Logger');
 class HotfixBranchStrategy {
   constructor(config = {}) {
     this.config = {
-      prefix: config.prefix || 'hotfix',
-      separator: config.separator || '/',
+      prefix: config.prefix || "hotfix",
+      separator: config.separator || "/",
       maxLength: config.maxLength || 50,
       includeTaskId: config.includeTaskId !== false,
       includeDate: config.includeDate !== false, // Default to true for hotfixes
-      dateFormat: config.dateFormat || 'YYYYMMDD',
+      dateFormat: config.dateFormat || "YYYYMMDD",
       sanitizeTitle: config.sanitizeTitle !== false,
       includeVersion: config.includeVersion || false,
-      ...config
+      ...config,
     };
-    
+
     this.logger = config.logger || console;
-    this.strategyType = 'HotfixBranchStrategy';
+    this.strategyType = "HotfixBranchStrategy";
   }
 
   /**
@@ -46,57 +46,59 @@ class HotfixBranchStrategy {
    */
   generateBranchName(task, context = {}) {
     try {
-      const taskId = task.id || context.get('taskId') || 'unknown';
-      const title = task.title || task.description || 'hotfix';
-      const version = task.metadata?.version || context.get('version');
-      
+      const taskId = task.id || context.get("taskId") || "unknown";
+      const title = task.title || task.description || "hotfix";
+      const version = task.metadata?.version || context.get("version");
+
       let branchName = this.config.prefix;
-      
+
       // Add task ID if enabled
       if (this.config.includeTaskId) {
         branchName += this.config.separator + taskId;
       }
-      
+
       // Add version if enabled and available
       if (this.config.includeVersion && version) {
         branchName += this.config.separator + this.sanitizeVersion(version);
       }
-      
+
       // Add sanitized title
       if (this.config.sanitizeTitle) {
         const sanitizedTitle = this.sanitizeTitle(title);
         branchName += this.config.separator + sanitizedTitle;
       }
-      
+
       // Add date if enabled (default for hotfixes)
       if (this.config.includeDate) {
         const date = this.formatDate(new Date(), this.config.dateFormat);
         branchName += this.config.separator + date;
       }
-      
+
       // Truncate if too long
       if (branchName.length > this.config.maxLength) {
         branchName = this.truncateBranchName(branchName, this.config.maxLength);
       }
-      
-      this.logger.info('HotfixBranchStrategy: Generated branch name', {
+
+      this.logger.info("HotfixBranchStrategy: Generated branch name", {
         taskId,
         originalTitle: title,
         version,
         branchName,
-        config: this.config
+        config: this.config,
       });
-      
+
       return branchName;
-      
     } catch (error) {
-      this.logger.error('HotfixBranchStrategy: Failed to generate branch name', {
-        taskId: task.id,
-        error: error.message
-      });
-      
+      this.logger.error(
+        "HotfixBranchStrategy: Failed to generate branch name",
+        {
+          taskId: task.id,
+          error: error.message,
+        },
+      );
+
       // Fallback to simple naming
-      return `${this.config.prefix}/${task.id || 'hotfix'}`;
+      return `${this.config.prefix}/${task.id || "hotfix"}`;
     }
   }
 
@@ -106,22 +108,24 @@ class HotfixBranchStrategy {
    * @returns {string} Sanitized title
    */
   sanitizeTitle(title) {
-    if (!title || typeof title !== 'string') {
-      return 'hotfix';
+    if (!title || typeof title !== "string") {
+      return "hotfix";
     }
-    
-    return title
-      // Convert to lowercase
-      .toLowerCase()
-      // Replace spaces and special characters with hyphens
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      // Remove multiple consecutive hyphens
-      .replace(/-+/g, '-')
-      // Remove leading and trailing hyphens
-      .replace(/^-+|-+$/g, '')
-      // Limit length
-      .substring(0, 25); // Shorter for hotfixes
+
+    return (
+      title
+        // Convert to lowercase
+        .toLowerCase()
+        // Replace spaces and special characters with hyphens
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        // Remove multiple consecutive hyphens
+        .replace(/-+/g, "-")
+        // Remove leading and trailing hyphens
+        .replace(/^-+|-+$/g, "")
+        // Limit length
+        .substring(0, 25)
+    ); // Shorter for hotfixes
   }
 
   /**
@@ -130,19 +134,21 @@ class HotfixBranchStrategy {
    * @returns {string} Sanitized version
    */
   sanitizeVersion(version) {
-    if (!version || typeof version !== 'string') {
-      return '';
+    if (!version || typeof version !== "string") {
+      return "";
     }
-    
-    return version
-      // Keep only version-related characters
-      .replace(/[^0-9.]/g, '')
-      // Remove multiple consecutive dots
-      .replace(/\.+/g, '.')
-      // Remove leading and trailing dots
-      .replace(/^\.+|\.+$/g, '')
-      // Limit length
-      .substring(0, 15);
+
+    return (
+      version
+        // Keep only version-related characters
+        .replace(/[^0-9.]/g, "")
+        // Remove multiple consecutive dots
+        .replace(/\.+/g, ".")
+        // Remove leading and trailing dots
+        .replace(/^\.+|\.+$/g, "")
+        // Limit length
+        .substring(0, 15)
+    );
   }
 
   /**
@@ -153,13 +159,10 @@ class HotfixBranchStrategy {
    */
   formatDate(date, format) {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    
-    return format
-      .replace('YYYY', year)
-      .replace('MM', month)
-      .replace('DD', day);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return format.replace("YYYY", year).replace("MM", month).replace("DD", day);
   }
 
   /**
@@ -172,15 +175,15 @@ class HotfixBranchStrategy {
     if (branchName.length <= maxLength) {
       return branchName;
     }
-    
+
     // Try to preserve prefix and task ID
     const parts = branchName.split(this.config.separator);
-    
+
     if (parts.length >= 2) {
       const prefix = parts[0];
       const taskId = parts[1];
       const remainingLength = maxLength - prefix.length - taskId.length - 2; // 2 for separators
-      
+
       if (remainingLength > 0) {
         const title = parts.slice(2).join(this.config.separator);
         const truncatedTitle = title.substring(0, remainingLength);
@@ -189,7 +192,7 @@ class HotfixBranchStrategy {
         return `${prefix}${this.config.separator}${taskId}`;
       }
     }
-    
+
     // Fallback: simple truncation
     return branchName.substring(0, maxLength);
   }
@@ -202,53 +205,61 @@ class HotfixBranchStrategy {
   validateBranchName(branchName) {
     const errors = [];
     const warnings = [];
-    
-    if (!branchName || typeof branchName !== 'string') {
-      errors.push('Branch name must be a non-empty string');
+
+    if (!branchName || typeof branchName !== "string") {
+      errors.push("Branch name must be a non-empty string");
       return { isValid: false, errors, warnings };
     }
-    
+
     // Check length
     if (branchName.length > this.config.maxLength) {
-      errors.push(`Branch name exceeds maximum length of ${this.config.maxLength} characters`);
+      errors.push(
+        `Branch name exceeds maximum length of ${this.config.maxLength} characters`,
+      );
     }
-    
+
     // Check for invalid characters
     const invalidChars = /[^a-zA-Z0-9\-_\/]/;
     if (invalidChars.test(branchName)) {
-      errors.push('Branch name contains invalid characters (only letters, numbers, hyphens, underscores, and slashes allowed)');
+      errors.push(
+        "Branch name contains invalid characters (only letters, numbers, hyphens, underscores, and slashes allowed)",
+      );
     }
-    
+
     // Check for consecutive dots
-    if (branchName.includes('..')) {
-      errors.push('Branch name cannot contain consecutive dots');
+    if (branchName.includes("..")) {
+      errors.push("Branch name cannot contain consecutive dots");
     }
-    
+
     // Check for leading/trailing dots
-    if (branchName.startsWith('.') || branchName.endsWith('.')) {
-      errors.push('Branch name cannot start or end with a dot');
+    if (branchName.startsWith(".") || branchName.endsWith(".")) {
+      errors.push("Branch name cannot start or end with a dot");
     }
-    
+
     // Check for reserved names
-    const reservedNames = ['HEAD', 'ORIG_HEAD', 'FETCH_HEAD', 'MERGE_HEAD'];
+    const reservedNames = ["HEAD", "ORIG_HEAD", "FETCH_HEAD", "MERGE_HEAD"];
     if (reservedNames.includes(branchName.toUpperCase())) {
-      errors.push('Branch name is a reserved Git name');
+      errors.push("Branch name is a reserved Git name");
     }
-    
+
     // Check prefix
     if (!branchName.startsWith(this.config.prefix)) {
-      warnings.push(`Branch name should start with '${this.config.prefix}' prefix`);
+      warnings.push(
+        `Branch name should start with '${this.config.prefix}' prefix`,
+      );
     }
-    
+
     // Check for common patterns
-    if (branchName.includes(' ')) {
-      warnings.push('Branch name should not contain spaces (use hyphens instead)');
+    if (branchName.includes(" ")) {
+      warnings.push(
+        "Branch name should not contain spaces (use hyphens instead)",
+      );
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -258,7 +269,7 @@ class HotfixBranchStrategy {
    */
   getConfiguration() {
     return {
-      type: 'hotfix',
+      type: "hotfix",
       prefix: this.config.prefix,
       separator: this.config.separator,
       maxLength: this.config.maxLength,
@@ -267,10 +278,10 @@ class HotfixBranchStrategy {
       dateFormat: this.config.dateFormat,
       sanitizeTitle: this.config.sanitizeTitle,
       includeVersion: this.config.includeVersion,
-      protection: 'high',
+      protection: "high",
       autoMerge: false,
       requiresReview: true,
-      mergeTarget: 'main'
+      mergeTarget: "main",
     };
   }
 
@@ -280,16 +291,16 @@ class HotfixBranchStrategy {
    */
   getProtectionRules() {
     return {
-      requiredStatusChecks: ['ci', 'test', 'security'],
+      requiredStatusChecks: ["ci", "test", "security"],
       enforceAdmins: true,
       requiredPullRequestReviews: {
         requiredApprovingReviewCount: 2,
         dismissStaleReviews: true,
-        requireCodeOwnerReviews: true
+        requireCodeOwnerReviews: true,
       },
       restrictions: null,
       allowForcePushes: false,
-      allowDeletions: false
+      allowDeletions: false,
     };
   }
 
@@ -299,10 +310,10 @@ class HotfixBranchStrategy {
    */
   getMergeStrategy() {
     return {
-      method: 'merge',
+      method: "merge",
       deleteBranch: true,
       requireReview: true,
-      autoMerge: false
+      autoMerge: false,
     };
   }
 
@@ -312,7 +323,7 @@ class HotfixBranchStrategy {
    * @returns {string} Branch description
    */
   getBranchDescription(task) {
-    return `Hotfix branch for: ${task.title || task.description || 'Unknown hotfix'}
+    return `Hotfix branch for: ${task.title || task.description || "Unknown hotfix"}
 
 Task ID: ${task.id}
 Created: ${new Date().toISOString()}
@@ -320,7 +331,7 @@ Type: Hotfix (Urgent Bug Fix)
 Priority: HIGH
 
 Description:
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 Acceptance Criteria:
 - [ ] Critical bug identified and fixed
@@ -338,16 +349,16 @@ Acceptance Criteria:
    * @param {string} action - Commit action (fix, hotfix, etc.)
    * @returns {string} Commit message
    */
-  getCommitMessageTemplate(task, action = 'fix') {
-    const title = task.title || task.description || 'hotfix';
+  getCommitMessageTemplate(task, action = "fix") {
+    const title = task.title || task.description || "hotfix";
     const sanitizedTitle = this.sanitizeTitle(title);
-    
+
     return `${action}: ${sanitizedTitle}
 
 Task ID: ${task.id}
 Type: HOTFIX (URGENT)
 
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 - [ ] Critical bug fix
 - [ ] Tests added
@@ -363,7 +374,7 @@ ${task.description || 'No description provided'}
    */
   getPullRequestTemplate(task, branchName) {
     return {
-      title: `🚨 HOTFIX: ${task.title || task.description || 'Critical bug fix'}`,
+      title: `🚨 HOTFIX: ${task.title || task.description || "Critical bug fix"}`,
       description: `## 🚨 HOTFIX - URGENT
 
 **Task ID:** ${task.id}
@@ -372,7 +383,7 @@ ${task.description || 'No description provided'}
 **Priority:** HIGH
 
 ### 🚨 Critical Issue
-${task.description || 'No description provided'}
+${task.description || "No description provided"}
 
 ### 🔧 Fix Applied
 - [ ] Root cause identified
@@ -403,9 +414,9 @@ Closes #${task.id}
 - [ ] Documentation updated
 
 **⚠️  URGENT: This hotfix requires immediate attention and deployment.**`,
-      labels: ['hotfix', 'urgent', 'bug', 'critical'],
+      labels: ["hotfix", "urgent", "bug", "critical"],
       assignees: [],
-      reviewers: []
+      reviewers: [],
     };
   }
 
@@ -417,29 +428,33 @@ Closes #${task.id}
   validateTask(task) {
     const errors = [];
     const warnings = [];
-    
+
     // Check task type
     const taskType = task.type?.value || task.type;
     if (taskType && !this.isValidTaskType(taskType)) {
-      warnings.push(`Task type '${taskType}' may not be suitable for hotfix branch strategy`);
+      warnings.push(
+        `Task type '${taskType}' may not be suitable for hotfix branch strategy`,
+      );
     }
-    
+
     // Check priority
     const priority = task.priority || task.metadata?.priority;
     if (priority && !this.isValidPriority(priority)) {
-      warnings.push(`Task priority '${priority}' may not indicate urgent hotfix`);
+      warnings.push(
+        `Task priority '${priority}' may not indicate urgent hotfix`,
+      );
     }
-    
+
     // Check for version information
     const version = task.metadata?.version;
     if (!version && this.config.includeVersion) {
-      warnings.push('Version information not provided for hotfix');
+      warnings.push("Version information not provided for hotfix");
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -450,10 +465,16 @@ Closes #${task.id}
    */
   isValidTaskType(taskType) {
     const validTypes = [
-      'bug', 'hotfix', 'critical', 'urgent', 'security',
-      'fix', 'patch', 'emergency'
+      "bug",
+      "hotfix",
+      "critical",
+      "urgent",
+      "security",
+      "fix",
+      "patch",
+      "emergency",
     ];
-    
+
     return validTypes.includes(taskType.toLowerCase());
   }
 
@@ -464,12 +485,17 @@ Closes #${task.id}
    */
   isValidPriority(priority) {
     const validPriorities = [
-      'critical', 'high', 'urgent', 'emergency',
-      'p0', 'p1', 'blocker'
+      "critical",
+      "high",
+      "urgent",
+      "emergency",
+      "p0",
+      "p1",
+      "blocker",
     ];
-    
+
     return validPriorities.includes(priority.toLowerCase());
   }
 }
 
-module.exports = HotfixBranchStrategy; 
+module.exports = HotfixBranchStrategy;

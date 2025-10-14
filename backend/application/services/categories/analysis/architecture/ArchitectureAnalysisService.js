@@ -3,17 +3,17 @@
  * Orchestrates all architecture analysis steps and coordinates results
  */
 
-const Logger = require('@logging/Logger');
-const { 
-  StructureAnalysisStep, 
-  PatternAnalysisStep, 
-  CouplingAnalysisStep, 
-  LayerAnalysisStep 
-} = require('@domain/steps/categories/analysis/architecture');
+const Logger = require("@logging/Logger");
+const {
+  StructureAnalysisStep,
+  PatternAnalysisStep,
+  CouplingAnalysisStep,
+  LayerAnalysisStep,
+} = require("@domain/steps/categories/analysis/architecture");
 
 class ArchitectureAnalysisService {
   constructor() {
-    this.logger = new Logger('ArchitectureAnalysisService');
+    this.logger = new Logger("ArchitectureAnalysisService");
     this.structureStep = new StructureAnalysisStep();
     this.patternStep = new PatternAnalysisStep();
     this.couplingStep = new CouplingAnalysisStep();
@@ -30,27 +30,25 @@ class ArchitectureAnalysisService {
    */
   async executeArchitectureAnalysis(params) {
     try {
-      this.logger.info('Starting comprehensive architecture analysis', { projectId: params.projectId });
+      this.logger.info("Starting comprehensive architecture analysis", {
+        projectId: params.projectId,
+      });
 
       // Execute all architecture analysis steps in parallel
-      const [
-        structureResults,
-        patternResults,
-        couplingResults,
-        layerResults
-      ] = await Promise.allSettled([
-        this.structureStep.execute(params),
-        this.patternStep.execute(params),
-        this.couplingStep.execute(params),
-        this.layerStep.execute(params)
-      ]);
+      const [structureResults, patternResults, couplingResults, layerResults] =
+        await Promise.allSettled([
+          this.structureStep.execute(params),
+          this.patternStep.execute(params),
+          this.couplingStep.execute(params),
+          this.layerStep.execute(params),
+        ]);
 
       // Process results and handle failures
       const results = {
-        structure: this.processResult(structureResults, 'Structure'),
-        patterns: this.processResult(patternResults, 'Patterns'),
-        coupling: this.processResult(couplingResults, 'Coupling'),
-        layers: this.processResult(layerResults, 'Layers')
+        structure: this.processResult(structureResults, "Structure"),
+        patterns: this.processResult(patternResults, "Patterns"),
+        coupling: this.processResult(couplingResults, "Coupling"),
+        layers: this.processResult(layerResults, "Layers"),
       };
 
       // Calculate overall architecture score
@@ -65,20 +63,19 @@ class ArchitectureAnalysisService {
         architectureScore,
         results,
         recommendations,
-        summary: this.generateArchitectureSummary(results)
+        summary: this.generateArchitectureSummary(results),
       };
 
-      this.logger.info('Architecture analysis completed', { 
-        projectId: params.projectId, 
-        architectureScore 
+      this.logger.info("Architecture analysis completed", {
+        projectId: params.projectId,
+        architectureScore,
       });
 
       return analysisResult;
-
     } catch (error) {
-      this.logger.error('Architecture analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Architecture analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -91,18 +88,19 @@ class ArchitectureAnalysisService {
    * @returns {Object} Processed result
    */
   processResult(result, stepName) {
-    if (result.status === 'fulfilled') {
+    if (result.status === "fulfilled") {
       return {
-        success: true,
         data: result.value,
-        error: null
+        error: null,
       };
     } else {
-      this.logger.warn(`${stepName} analysis failed`, { error: result.reason.message });
+      this.logger.warn(`${stepName} analysis failed`, {
+        error: result.reason.message,
+      });
       return {
-        success: false,
+       
         data: null,
-        error: result.reason.message
+        error: result.reason.message,
       };
     }
   }
@@ -117,7 +115,7 @@ class ArchitectureAnalysisService {
       structure: 0.25,
       patterns: 0.25,
       coupling: 0.25,
-      layers: 0.25
+      layers: 0.25,
     };
 
     let totalScore = 0;
@@ -143,52 +141,60 @@ class ArchitectureAnalysisService {
 
     // Structure recommendations
     if (results.structure.success && results.structure.data.issues) {
-      const structureIssues = results.structure.data.issues.filter(i => i.severity === 'HIGH');
+      const structureIssues = results.structure.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (structureIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Structure',
+          priority: "HIGH",
+          category: "Structure",
           message: `Found ${structureIssues.length} high-severity structural issues.`,
-          details: structureIssues.map(i => i.description)
+          details: structureIssues.map((i) => i.description),
         });
       }
     }
 
     // Pattern recommendations
     if (results.patterns.success && results.patterns.data.issues) {
-      const patternIssues = results.patterns.data.issues.filter(i => i.severity === 'HIGH');
+      const patternIssues = results.patterns.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (patternIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Patterns',
+          priority: "HIGH",
+          category: "Patterns",
           message: `Found ${patternIssues.length} high-severity pattern issues.`,
-          details: patternIssues.map(i => i.description)
+          details: patternIssues.map((i) => i.description),
         });
       }
     }
 
     // Coupling recommendations
     if (results.coupling.success && results.coupling.data.issues) {
-      const couplingIssues = results.coupling.data.issues.filter(i => i.severity === 'HIGH');
+      const couplingIssues = results.coupling.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (couplingIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Coupling',
+          priority: "HIGH",
+          category: "Coupling",
           message: `Found ${couplingIssues.length} high-severity coupling issues.`,
-          details: couplingIssues.map(i => i.description)
+          details: couplingIssues.map((i) => i.description),
         });
       }
     }
 
     // Layer recommendations
     if (results.layers.success && results.layers.data.issues) {
-      const layerIssues = results.layers.data.issues.filter(i => i.severity === 'HIGH');
+      const layerIssues = results.layers.data.issues.filter(
+        (i) => i.severity === "HIGH",
+      );
       if (layerIssues.length > 0) {
         recommendations.push({
-          priority: 'HIGH',
-          category: 'Layers',
+          priority: "HIGH",
+          category: "Layers",
           message: `Found ${layerIssues.length} high-severity layer organization issues.`,
-          details: layerIssues.map(i => i.description)
+          details: layerIssues.map((i) => i.description),
         });
       }
     }
@@ -210,15 +216,15 @@ class ArchitectureAnalysisService {
       lowIssues: 0,
       patternsDetected: 0,
       couplingScore: 0,
-      layerViolations: 0
+      layerViolations: 0,
     };
 
     // Aggregate architecture metrics
-    Object.values(results).forEach(result => {
+    Object.values(results).forEach((result) => {
       if (result.success && result.data) {
         if (result.data.issues) {
           summary.totalIssues += result.data.issues.length;
-          result.data.issues.forEach(i => {
+          result.data.issues.forEach((i) => {
             summary[`${i.severity.toLowerCase()}Issues`]++;
           });
         }
@@ -248,7 +254,7 @@ class ArchitectureAnalysisService {
       structure: this.structureStep,
       patterns: this.patternStep,
       coupling: this.couplingStep,
-      layers: this.layerStep
+      layers: this.layerStep,
     };
 
     const step = stepMap[stepType];
@@ -260,4 +266,4 @@ class ArchitectureAnalysisService {
   }
 }
 
-module.exports = ArchitectureAnalysisService; 
+module.exports = ArchitectureAnalysisService;

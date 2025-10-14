@@ -2,15 +2,15 @@
  * TaskAnalysisService
  * Provides AI-powered project analysis capabilities
  */
-const ProjectType = require('../../value-objects/ProjectType');
-const TaskType = require('../../value-objects/TaskType');
-const TaskPriority = require('../../value-objects/TaskPriority');
-const AISuggestion = require('../../value-objects/AISuggestion');
-const AIService = require('@external/AIService');
+const ProjectType = require("../../value-objects/ProjectType");
+const TaskType = require("../../value-objects/TaskType");
+const TaskPriority = require("../../value-objects/TaskPriority");
+const AISuggestion = require("../../value-objects/AISuggestion");
+const AIService = require("@external/AIService");
 // Phase 2: Using AnalysisOrchestrator instead of OLD7
-const Task = require('../../entities/Task');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Task = require("../../entities/Task");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class TaskAnalysisService {
   constructor(cursorIDEService, eventBus, logger, aiService, projectAnalyzer) {
@@ -22,14 +22,14 @@ class TaskAnalysisService {
       generateInsights: async () => ({}),
       performSecurityAnalysis: async () => ({}),
       generateRecommendations: async () => ({}),
-      analyzePerformance: async () => ({})
+      analyzePerformance: async () => ({}),
     };
     // Keep projectAnalyzer for backward compatibility during transition
     this.projectAnalyzer = projectAnalyzer || {
       analyzeProject: async () => ({}),
       analyzeCodeQuality: async () => ({}),
       detectPatterns: async () => ({}),
-      identifyDependencies: async () => ({})
+      identifyDependencies: async () => ({}),
     };
   }
 
@@ -54,7 +54,7 @@ class TaskAnalysisService {
         performance: {},
         suggestions: [],
         tasks: [],
-        metadata: {}
+        metadata: {},
       };
 
       // Phase 1: Project Type Detection
@@ -76,7 +76,10 @@ class TaskAnalysisService {
       analysis.performance = await this._analyzePerformance(projectPath);
 
       // Phase 7: Generate AI Suggestions
-      analysis.suggestions = await this._generateAISuggestions(analysis, options);
+      analysis.suggestions = await this._generateAISuggestions(
+        analysis,
+        options,
+      );
 
       // Phase 8: Generate Tasks
       analysis.tasks = await this._generateTasks(analysis, options);
@@ -85,12 +88,18 @@ class TaskAnalysisService {
       analysis.metadata = await this._generateMetadata(analysis);
 
       this.logger.info(`Project analysis completed for project`);
-      this.eventBus.emit('project:analysis:completed', { projectPath, analysis });
+      this.eventBus.emit("project:analysis:completed", {
+        projectPath,
+        analysis,
+      });
 
       return analysis;
     } catch (error) {
       this.logger.error(`Project analysis failed:`, error.message);
-      this.eventBus.emit('project:analysis:failed', { projectPath, error: error.message });
+      this.eventBus.emit("project:analysis:failed", {
+        projectPath,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -105,13 +114,19 @@ class TaskAnalysisService {
   async analyzeProjectAndGenerateTasks(projectId, projectPath, options = {}) {
     try {
       // Use projectAnalyzer for project analysis
-      const projectAnalysis = await this.projectAnalyzer.analyzeProject(projectPath, options);
-      
+      const projectAnalysis = await this.projectAnalyzer.analyzeProject(
+        projectPath,
+        options,
+      );
+
       // Generate AI-powered suggestions
-      const aiSuggestions = await this.aiService.generateTaskSuggestions(projectAnalysis.result, options);
-      
+      const aiSuggestions = await this.aiService.generateTaskSuggestions(
+        projectAnalysis.result,
+        options,
+      );
+
       // Convert suggestions to project-based tasks
-      const tasks = aiSuggestions.suggestions.map(suggestion => 
+      const tasks = aiSuggestions.suggestions.map((suggestion) =>
         Task.create(
           projectId,
           suggestion.title,
@@ -119,11 +134,11 @@ class TaskAnalysisService {
           suggestion.priority || TaskPriority.MEDIUM,
           suggestion.type || TaskType.FEATURE,
           {
-            source: 'ai_analysis',
+            source: "ai_analysis",
             projectPath,
-            analysisId: projectAnalysis.id
-          }
-        )
+            analysisId: projectAnalysis.id,
+          },
+        ),
       );
 
       return {
@@ -132,10 +147,12 @@ class TaskAnalysisService {
         analysis: projectAnalysis.result,
         tasks,
         aiSuggestions,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
-      throw new Error(`Project analysis failed for project ${projectId}: ${error.message}`);
+      throw new Error(
+        `Project analysis failed for project ${projectId}: ${error.message}`,
+      );
     }
   }
 
@@ -148,12 +165,13 @@ class TaskAnalysisService {
    */
   async generateOptimizationTasks(projectId, projectAnalysis, options = {}) {
     try {
-      const optimizationSuggestions = await this.aiService.generateTaskSuggestions(
-        projectAnalysis, 
-        { ...options, focus: 'optimization' }
-      );
+      const optimizationSuggestions =
+        await this.aiService.generateTaskSuggestions(projectAnalysis, {
+          ...options,
+          focus: "optimization",
+        });
 
-      return optimizationSuggestions.suggestions.map(suggestion =>
+      return optimizationSuggestions.suggestions.map((suggestion) =>
         Task.create(
           projectId,
           suggestion.title,
@@ -161,13 +179,15 @@ class TaskAnalysisService {
           TaskPriority.HIGH,
           TaskType.OPTIMIZATION,
           {
-            source: 'optimization_analysis',
-            analysisId: projectAnalysis.id
-          }
-        )
+            source: "optimization_analysis",
+            analysisId: projectAnalysis.id,
+          },
+        ),
       );
     } catch (error) {
-      throw new Error(`Optimization task generation failed for project ${projectId}: ${error.message}`);
+      throw new Error(
+        `Optimization task generation failed for project ${projectId}: ${error.message}`,
+      );
     }
   }
 
@@ -182,10 +202,10 @@ class TaskAnalysisService {
     try {
       const securitySuggestions = await this.aiService.generateTaskSuggestions(
         projectAnalysis,
-        { ...options, focus: 'security' }
+        { ...options, focus: "security" },
       );
 
-      return securitySuggestions.suggestions.map(suggestion =>
+      return securitySuggestions.suggestions.map((suggestion) =>
         Task.create(
           projectId,
           suggestion.title,
@@ -193,13 +213,15 @@ class TaskAnalysisService {
           TaskPriority.CRITICAL,
           TaskType.SECURITY,
           {
-            source: 'security_analysis',
-            analysisId: projectAnalysis.id
-          }
-        )
+            source: "security_analysis",
+            analysisId: projectAnalysis.id,
+          },
+        ),
       );
     } catch (error) {
-      throw new Error(`Security task generation failed for project ${projectId}: ${error.message}`);
+      throw new Error(
+        `Security task generation failed for project ${projectId}: ${error.message}`,
+      );
     }
   }
 
@@ -213,12 +235,18 @@ class TaskAnalysisService {
    */
   async optimizeTask(projectId, task, context, options = {}) {
     if (!task.belongsToProject(projectId)) {
-      throw new Error(`Task ${task.id} does not belong to project ${projectId}`);
+      throw new Error(
+        `Task ${task.id} does not belong to project ${projectId}`,
+      );
     }
 
     try {
-      const optimization = await this.aiService.optimizeTask(task, context, options);
-      
+      const optimization = await this.aiService.optimizeTask(
+        task,
+        context,
+        options,
+      );
+
       // Create optimized task
       const optimizedTask = Task.create(
         projectId,
@@ -229,19 +257,21 @@ class TaskAnalysisService {
         {
           ...task.metadata,
           originalTaskId: task.id,
-          source: 'task_optimization',
-          improvements: optimization.improvements
-        }
+          source: "task_optimization",
+          improvements: optimization.improvements,
+        },
       );
 
       return {
         originalTask: task,
         optimizedTask,
         improvements: optimization.improvements,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
-      throw new Error(`Task optimization failed for project ${projectId}: ${error.message}`);
+      throw new Error(
+        `Task optimization failed for project ${projectId}: ${error.message}`,
+      );
     }
   }
 
@@ -273,7 +303,7 @@ class TaskAnalysisService {
         fileTypes: {},
         totalFiles: 0,
         totalLines: 0,
-        architecture: {}
+        architecture: {},
       };
 
       const files = await this._getProjectFiles(projectPath);
@@ -287,7 +317,10 @@ class TaskAnalysisService {
       structure.directories = this._analyzeDirectories(files);
 
       // Analyze architecture patterns
-      structure.architecture = await this._analyzeArchitecture(projectPath, files);
+      structure.architecture = await this._analyzeArchitecture(
+        projectPath,
+        files,
+      );
 
       return structure;
     } catch (error) {
@@ -311,11 +344,12 @@ class TaskAnalysisService {
         totalDependencies: 0,
         outdated: [],
         vulnerabilities: [],
-        recommendations: []
+        recommendations: [],
       };
 
       // Detect package manager
-      dependencies.packageManager = await this._detectPackageManager(projectPath);
+      dependencies.packageManager =
+        await this._detectPackageManager(projectPath);
 
       // Analyze package.json if exists
       if (dependencies.packageManager) {
@@ -345,7 +379,7 @@ class TaskAnalysisService {
         documentation: {},
         standards: {},
         issues: [],
-        recommendations: []
+        recommendations: [],
       };
 
       // Analyze linting configuration
@@ -386,17 +420,20 @@ class TaskAnalysisService {
         configuration: {},
         bestPractices: {},
         recommendations: [],
-        riskLevel: 'low'
+        riskLevel: "low",
       };
 
       // Analyze dependency vulnerabilities
-      security.dependencies = await this._analyzeDependencyVulnerabilities(projectPath);
+      security.dependencies =
+        await this._analyzeDependencyVulnerabilities(projectPath);
 
       // Analyze security configuration
-      security.configuration = await this._analyzeSecurityConfiguration(projectPath);
+      security.configuration =
+        await this._analyzeSecurityConfiguration(projectPath);
 
       // Analyze security best practices
-      security.bestPractices = await this._analyzeSecurityBestPractices(projectPath);
+      security.bestPractices =
+        await this._analyzeSecurityBestPractices(projectPath);
 
       // Calculate risk level
       security.riskLevel = this._calculateSecurityRiskLevel(security);
@@ -404,7 +441,7 @@ class TaskAnalysisService {
       return security;
     } catch (error) {
       this.logger.warn(`Security analysis failed: ${error.message}`);
-      return { riskLevel: 'unknown' };
+      return { riskLevel: "unknown" };
     }
   }
 
@@ -421,7 +458,7 @@ class TaskAnalysisService {
         runtime: {},
         optimization: {},
         bottlenecks: [],
-        recommendations: []
+        recommendations: [],
       };
 
       // Analyze build performance
@@ -454,23 +491,28 @@ class TaskAnalysisService {
       const suggestions = [];
 
       // Generate suggestions based on project type
-      const typeSuggestions = await this._generateTypeBasedSuggestions(analysis);
+      const typeSuggestions =
+        await this._generateTypeBasedSuggestions(analysis);
       suggestions.push(...typeSuggestions);
 
       // Generate suggestions based on code quality
-      const qualitySuggestions = await this._generateQualitySuggestions(analysis);
+      const qualitySuggestions =
+        await this._generateQualitySuggestions(analysis);
       suggestions.push(...qualitySuggestions);
 
       // Generate suggestions based on security
-      const securitySuggestions = await this._generateSecuritySuggestions(analysis);
+      const securitySuggestions =
+        await this._generateSecuritySuggestions(analysis);
       suggestions.push(...securitySuggestions);
 
       // Generate suggestions based on performance
-      const performanceSuggestions = await this._generatePerformanceSuggestions(analysis);
+      const performanceSuggestions =
+        await this._generatePerformanceSuggestions(analysis);
       suggestions.push(...performanceSuggestions);
 
       // Generate suggestions based on architecture
-      const architectureSuggestions = await this._generateArchitectureSuggestions(analysis);
+      const architectureSuggestions =
+        await this._generateArchitectureSuggestions(analysis);
       suggestions.push(...architectureSuggestions);
 
       return suggestions;
@@ -521,7 +563,7 @@ class TaskAnalysisService {
   async _generateMetadata(analysis) {
     return {
       analysisVersion: (() => {
-        const VersionService = require('../version/VersionService');
+        const VersionService = require("../version/VersionService");
         return new VersionService().getVersion();
       })(),
       timestamp: analysis.timestamp,
@@ -531,7 +573,7 @@ class TaskAnalysisService {
       totalTasks: analysis.tasks.length,
       complexity: this._calculateComplexity(analysis),
       riskLevel: this._calculateOverallRiskLevel(analysis),
-      priority: this._calculateOverallPriority(analysis)
+      priority: this._calculateOverallPriority(analysis),
     };
   }
 
@@ -543,8 +585,8 @@ class TaskAnalysisService {
 
   _analyzeFileTypes(files) {
     const fileTypes = {};
-    files.forEach(file => {
-      const ext = file.split('.').pop() || 'no-extension';
+    files.forEach((file) => {
+      const ext = file.split(".").pop() || "no-extension";
       fileTypes[ext] = (fileTypes[ext] || 0) + 1;
     });
     return fileTypes;
@@ -552,8 +594,8 @@ class TaskAnalysisService {
 
   _analyzeDirectories(files) {
     const directories = new Set();
-    files.forEach(file => {
-      const dir = file.split('/').slice(0, -1).join('/');
+    files.forEach((file) => {
+      const dir = file.split("/").slice(0, -1).join("/");
       if (dir) directories.add(dir);
     });
     return Array.from(directories);
@@ -621,7 +663,7 @@ class TaskAnalysisService {
 
   _calculateSecurityRiskLevel(security) {
     // Implementation would calculate security risk level
-    return 'low';
+    return "low";
   }
 
   async _analyzeBuildPerformance(projectPath) {
@@ -647,15 +689,17 @@ class TaskAnalysisService {
   // AI suggestion generation methods
   async _generateTypeBasedSuggestions(analysis) {
     const suggestions = [];
-    
+
     // Generate suggestions based on project type
     if (analysis.projectType.isMonorepo()) {
-      suggestions.push(new AISuggestion(
-        AISuggestion.TYPE_OPTIMIZATION,
-        'Consider implementing workspace-level caching and parallel builds for better monorepo performance',
-        AISuggestion.CONFIDENCE_HIGH,
-        { category: 'monorepo', impact: 'high' }
-      ));
+      suggestions.push(
+        new AISuggestion(
+          AISuggestion.TYPE_OPTIMIZATION,
+          "Consider implementing workspace-level caching and parallel builds for better monorepo performance",
+          AISuggestion.CONFIDENCE_HIGH,
+          { category: "monorepo", impact: "high" },
+        ),
+      );
     }
 
     return suggestions;
@@ -663,15 +707,17 @@ class TaskAnalysisService {
 
   async _generateQualitySuggestions(analysis) {
     const suggestions = [];
-    
+
     // Generate suggestions based on code quality issues
     if (analysis.codeQuality.issues && analysis.codeQuality.issues.length > 0) {
-      suggestions.push(new AISuggestion(
-        AISuggestion.TYPE_REFACTORING,
-        `Address ${analysis.codeQuality.issues.length} code quality issues to improve maintainability`,
-        AISuggestion.CONFIDENCE_MEDIUM,
-        { category: 'quality', impact: 'medium' }
-      ));
+      suggestions.push(
+        new AISuggestion(
+          AISuggestion.TYPE_REFACTORING,
+          `Address ${analysis.codeQuality.issues.length} code quality issues to improve maintainability`,
+          AISuggestion.CONFIDENCE_MEDIUM,
+          { category: "quality", impact: "medium" },
+        ),
+      );
     }
 
     return suggestions;
@@ -679,15 +725,20 @@ class TaskAnalysisService {
 
   async _generateSecuritySuggestions(analysis) {
     const suggestions = [];
-    
+
     // Generate suggestions based on security issues
-    if (analysis.security.vulnerabilities && analysis.security.vulnerabilities.length > 0) {
-      suggestions.push(new AISuggestion(
-        AISuggestion.TYPE_SECURITY,
-        `Fix ${analysis.security.vulnerabilities.length} security vulnerabilities to improve project security`,
-        AISuggestion.CONFIDENCE_HIGH,
-        { category: 'security', impact: 'high' }
-      ));
+    if (
+      analysis.security.vulnerabilities &&
+      analysis.security.vulnerabilities.length > 0
+    ) {
+      suggestions.push(
+        new AISuggestion(
+          AISuggestion.TYPE_SECURITY,
+          `Fix ${analysis.security.vulnerabilities.length} security vulnerabilities to improve project security`,
+          AISuggestion.CONFIDENCE_HIGH,
+          { category: "security", impact: "high" },
+        ),
+      );
     }
 
     return suggestions;
@@ -695,15 +746,20 @@ class TaskAnalysisService {
 
   async _generatePerformanceSuggestions(analysis) {
     const suggestions = [];
-    
+
     // Generate suggestions based on performance issues
-    if (analysis.performance.bottlenecks && analysis.performance.bottlenecks.length > 0) {
-      suggestions.push(new AISuggestion(
-        AISuggestion.TYPE_OPTIMIZATION,
-        `Optimize ${analysis.performance.bottlenecks.length} performance bottlenecks`,
-        AISuggestion.CONFIDENCE_MEDIUM,
-        { category: 'performance', impact: 'medium' }
-      ));
+    if (
+      analysis.performance.bottlenecks &&
+      analysis.performance.bottlenecks.length > 0
+    ) {
+      suggestions.push(
+        new AISuggestion(
+          AISuggestion.TYPE_OPTIMIZATION,
+          `Optimize ${analysis.performance.bottlenecks.length} performance bottlenecks`,
+          AISuggestion.CONFIDENCE_MEDIUM,
+          { category: "performance", impact: "medium" },
+        ),
+      );
     }
 
     return suggestions;
@@ -711,15 +767,17 @@ class TaskAnalysisService {
 
   async _generateArchitectureSuggestions(analysis) {
     const suggestions = [];
-    
+
     // Generate suggestions based on architecture patterns
     if (analysis.structure.architecture) {
-      suggestions.push(new AISuggestion(
-        AISuggestion.TYPE_REFACTORING,
-        'Review and optimize architectural patterns for better maintainability',
-        AISuggestion.CONFIDENCE_MEDIUM,
-        { category: 'architecture', impact: 'medium' }
-      ));
+      suggestions.push(
+        new AISuggestion(
+          AISuggestion.TYPE_REFACTORING,
+          "Review and optimize architectural patterns for better maintainability",
+          AISuggestion.CONFIDENCE_MEDIUM,
+          { category: "architecture", impact: "medium" },
+        ),
+      );
     }
 
     return suggestions;
@@ -728,16 +786,16 @@ class TaskAnalysisService {
   // Task generation methods
   _generateTypeBasedTasks(analysis) {
     const tasks = [];
-    
+
     // Generate tasks based on project type
     if (analysis.projectType.isMonorepo()) {
       tasks.push({
-        title: 'Optimize Monorepo Build Process',
-        description: 'Implement workspace-level caching and parallel builds',
+        title: "Optimize Monorepo Build Process",
+        description: "Implement workspace-level caching and parallel builds",
         type: TaskType.OPTIMIZATION,
         priority: TaskPriority.HIGH,
         estimatedDuration: 3600,
-        metadata: { category: 'monorepo' }
+        metadata: { category: "monorepo" },
       });
     }
 
@@ -746,22 +804,22 @@ class TaskAnalysisService {
 
   _generateSuggestionBasedTasks(analysis) {
     const tasks = [];
-    
+
     // Convert high-confidence suggestions to tasks
     analysis.suggestions
-      .filter(s => s.isHighConfidence())
-      .forEach(suggestion => {
+      .filter((s) => s.isHighConfidence())
+      .forEach((suggestion) => {
         tasks.push({
           title: suggestion.content,
           description: `AI-generated task based on analysis: ${suggestion.content}`,
           type: suggestion.type,
           priority: suggestion.getPriority(),
           estimatedDuration: suggestion._getEstimatedDuration(),
-          metadata: { 
+          metadata: {
             aiGenerated: true,
             suggestionId: suggestion.id,
-            confidence: suggestion.confidence
-          }
+            confidence: suggestion.confidence,
+          },
         });
       });
 
@@ -770,16 +828,16 @@ class TaskAnalysisService {
 
   _generateIssueBasedTasks(analysis) {
     const tasks = [];
-    
+
     // Generate tasks for code quality issues
     if (analysis.codeQuality.issues && analysis.codeQuality.issues.length > 0) {
       tasks.push({
-        title: 'Fix Code Quality Issues',
+        title: "Fix Code Quality Issues",
         description: `Address ${analysis.codeQuality.issues.length} code quality issues`,
         type: TaskType.REFACTORING,
         priority: TaskPriority.MEDIUM,
         estimatedDuration: 1800,
-        metadata: { category: 'quality' }
+        metadata: { category: "quality" },
       });
     }
 
@@ -788,15 +846,15 @@ class TaskAnalysisService {
 
   _generateImprovementTasks(analysis) {
     const tasks = [];
-    
+
     // Generate improvement tasks
     tasks.push({
-      title: 'Implement Automated Testing',
-      description: 'Add comprehensive test coverage for better code quality',
+      title: "Implement Automated Testing",
+      description: "Add comprehensive test coverage for better code quality",
       type: TaskType.TESTING,
       priority: TaskPriority.MEDIUM,
       estimatedDuration: 2400,
-      metadata: { category: 'testing' }
+      metadata: { category: "testing" },
     });
 
     return tasks;
@@ -805,25 +863,28 @@ class TaskAnalysisService {
   // Utility methods
   _countIssues(analysis) {
     let count = 0;
-    if (analysis.codeQuality.issues) count += analysis.codeQuality.issues.length;
-    if (analysis.security.vulnerabilities) count += analysis.security.vulnerabilities.length;
-    if (analysis.performance.bottlenecks) count += analysis.performance.bottlenecks.length;
+    if (analysis.codeQuality.issues)
+      count += analysis.codeQuality.issues.length;
+    if (analysis.security.vulnerabilities)
+      count += analysis.security.vulnerabilities.length;
+    if (analysis.performance.bottlenecks)
+      count += analysis.performance.bottlenecks.length;
     return count;
   }
 
   _calculateComplexity(analysis) {
     // Implementation would calculate overall complexity
-    return 'medium';
+    return "medium";
   }
 
   _calculateOverallRiskLevel(analysis) {
     // Implementation would calculate overall risk level
-    return 'low';
+    return "low";
   }
 
   _calculateOverallPriority(analysis) {
     // Implementation would calculate overall priority
-    return 'medium';
+    return "medium";
   }
 
   async analyzeCodeQuality(projectPath, options = {}) {
@@ -831,7 +892,9 @@ class TaskAnalysisService {
   }
 
   async generateQualityImprovements(qualityReport) {
-    return this.aiService.generateInsights(qualityReport, { context: 'code-quality-improvement' });
+    return this.aiService.generateInsights(qualityReport, {
+      context: "code-quality-improvement",
+    });
   }
 
   async analyzeSecurity(projectPath, options = {}) {
@@ -839,7 +902,9 @@ class TaskAnalysisService {
   }
 
   async generateSecurityFixes(securityReport) {
-    return this.aiService.generateRecommendations(securityReport, { context: 'security-fixes' });
+    return this.aiService.generateRecommendations(securityReport, {
+      context: "security-fixes",
+    });
   }
 
   async analyzePerformance(projectPath, options = {}) {
@@ -847,7 +912,9 @@ class TaskAnalysisService {
   }
 
   async generatePerformanceOptimizations(performanceReport) {
-    return this.aiService.generateRecommendations(performanceReport, { context: 'performance-optimization' });
+    return this.aiService.generateRecommendations(performanceReport, {
+      context: "performance-optimization",
+    });
   }
 
   async analyzeArchitecture(projectPath) {
@@ -855,7 +922,9 @@ class TaskAnalysisService {
   }
 
   async generateArchitectureImprovements(architectureReport) {
-    return this.aiService.generateRecommendations(architectureReport, { context: 'architecture-improvement' });
+    return this.aiService.generateRecommendations(architectureReport, {
+      context: "architecture-improvement",
+    });
   }
 
   async analyzeDependencies(projectPath) {
@@ -863,7 +932,9 @@ class TaskAnalysisService {
   }
 
   async generateDependencyRecommendations(dependencyReport) {
-    return this.aiService.generateRecommendations(dependencyReport, { context: 'dependency-management' });
+    return this.aiService.generateRecommendations(dependencyReport, {
+      context: "dependency-management",
+    });
   }
 
   async performComprehensiveAnalysis(projectPath, options = {}) {
@@ -872,4 +943,4 @@ class TaskAnalysisService {
   }
 }
 
-module.exports = TaskAnalysisService; 
+module.exports = TaskAnalysisService;

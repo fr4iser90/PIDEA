@@ -2,9 +2,9 @@
  * ExecutionPredictor - Execution time prediction for workflow execution
  * Provides execution time and resource requirement predictions based on historical data
  */
-const crypto = require('crypto');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const crypto = require("crypto");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * Execution predictor for workflow execution
@@ -12,22 +12,23 @@ const logger = new Logger('Logger');
 class ExecutionPredictor {
   constructor(options = {}) {
     this.logger = options.logger || console;
-    
+
     this.enablePrediction = options.enablePrediction !== false;
-    this.predictionAccuracyThreshold = options.predictionAccuracyThreshold || 0.8; // 80%
+    this.predictionAccuracyThreshold =
+      options.predictionAccuracyThreshold || 0.8; // 80%
     this.minDataPoints = options.minDataPoints || 5;
     this.maxPredictionHistory = options.maxPredictionHistory || 10000;
-    
+
     // Prediction data storage
     this.executionHistory = new Map();
     this.workflowPatterns = new Map();
     this.stepPatterns = new Map();
     this.resourcePatterns = new Map();
-    
+
     // Prediction models
     this.predictionModels = new Map();
     this.modelAccuracy = new Map();
-    
+
     // Initialize prediction models
     this.initializePredictionModels();
   }
@@ -37,27 +38,27 @@ class ExecutionPredictor {
    */
   initializePredictionModels() {
     // Simple average model
-    this.predictionModels.set('average', {
-      name: 'Average Model',
-      predict: (data) => this.predictWithAverage(data)
+    this.predictionModels.set("average", {
+      name: "Average Model",
+      predict: (data) => this.predictWithAverage(data),
     });
 
     // Linear regression model
-    this.predictionModels.set('linear', {
-      name: 'Linear Regression Model',
-      predict: (data) => this.predictWithLinearRegression(data)
+    this.predictionModels.set("linear", {
+      name: "Linear Regression Model",
+      predict: (data) => this.predictWithLinearRegression(data),
     });
 
     // Pattern-based model
-    this.predictionModels.set('pattern', {
-      name: 'Pattern-Based Model',
-      predict: (data) => this.predictWithPatterns(data)
+    this.predictionModels.set("pattern", {
+      name: "Pattern-Based Model",
+      predict: (data) => this.predictWithPatterns(data),
     });
 
     // Weighted average model
-    this.predictionModels.set('weighted', {
-      name: 'Weighted Average Model',
-      predict: (data) => this.predictWithWeightedAverage(data)
+    this.predictionModels.set("weighted", {
+      name: "Weighted Average Model",
+      predict: (data) => this.predictWithWeightedAverage(data),
     });
   }
 
@@ -76,30 +77,30 @@ class ExecutionPredictor {
     try {
       const workflowId = this.getWorkflowId(workflow);
       const contextHash = this.hashContext(context);
-      
-      this.logger.info('ExecutionPredictor: Predicting execution time', {
+
+      this.logger.info("ExecutionPredictor: Predicting execution time", {
         workflowId,
-        contextHash: contextHash.substring(0, 10) + '...'
+        contextHash: contextHash.substring(0, 10) + "...",
       });
 
       // Get historical data
       const historicalData = this.getHistoricalData(workflowId, contextHash);
-      
+
       if (historicalData.length < this.minDataPoints) {
-        this.logger.info('ExecutionPredictor: Insufficient historical data', {
+        this.logger.info("ExecutionPredictor: Insufficient historical data", {
           workflowId,
           dataPoints: historicalData.length,
-          required: this.minDataPoints
+          required: this.minDataPoints,
         });
         return this.getDefaultPrediction(workflow, context);
       }
 
       // Select best prediction model
       const bestModel = this.selectBestModel(workflowId, historicalData);
-      
+
       // Make prediction
       const prediction = await bestModel.predict(historicalData);
-      
+
       // Add confidence and metadata
       const enhancedPrediction = {
         ...prediction,
@@ -108,22 +109,21 @@ class ExecutionPredictor {
         dataPoints: historicalData.length,
         workflowId,
         contextHash,
-        predictedAt: new Date()
+        predictedAt: new Date(),
       };
 
-      this.logger.info('ExecutionPredictor: Prediction completed', {
+      this.logger.info("ExecutionPredictor: Prediction completed", {
         workflowId,
         predictedTime: enhancedPrediction.executionTime,
         confidence: enhancedPrediction.confidence,
-        model: enhancedPrediction.model
+        model: enhancedPrediction.model,
       });
 
       return enhancedPrediction;
-
     } catch (error) {
-      this.logger.error('ExecutionPredictor: Prediction failed', {
+      this.logger.error("ExecutionPredictor: Prediction failed", {
         workflowId: workflow.getMetadata().name,
-        error: error.message
+        error: error.message,
       });
       return this.getDefaultPrediction(workflow, context);
     }
@@ -144,22 +144,25 @@ class ExecutionPredictor {
       const workflowId = this.getWorkflowId(workflow);
       const metadata = workflow.getMetadata();
       const steps = metadata.steps || [];
-      
+
       // Predict resource requirements based on steps
       const resourcePrediction = {
         memory: 0,
         cpu: 0,
         timeout: 0,
-        estimatedCost: 0
+        estimatedCost: 0,
       };
 
       for (const step of steps) {
         const stepMetadata = step.getMetadata ? step.getMetadata() : step;
         const stepPrediction = this.predictStepResources(stepMetadata);
-        
+
         resourcePrediction.memory += stepPrediction.memory;
         resourcePrediction.cpu += stepPrediction.cpu;
-        resourcePrediction.timeout = Math.max(resourcePrediction.timeout, stepPrediction.timeout);
+        resourcePrediction.timeout = Math.max(
+          resourcePrediction.timeout,
+          stepPrediction.timeout,
+        );
       }
 
       // Add safety margins
@@ -168,19 +171,19 @@ class ExecutionPredictor {
       resourcePrediction.timeout = Math.ceil(resourcePrediction.timeout * 1.5); // 50% margin
 
       // Calculate estimated cost (simplified)
-      resourcePrediction.estimatedCost = this.calculateEstimatedCost(resourcePrediction);
+      resourcePrediction.estimatedCost =
+        this.calculateEstimatedCost(resourcePrediction);
 
       return {
         ...resourcePrediction,
         workflowId,
         stepCount: steps.length,
-        predictedAt: new Date()
+        predictedAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('ExecutionPredictor: Resource prediction failed', {
+      this.logger.error("ExecutionPredictor: Resource prediction failed", {
         workflowId: workflow.getMetadata().name,
-        error: error.message
+        error: error.message,
       });
       return this.getDefaultResourcePrediction(workflow, context);
     }
@@ -202,7 +205,7 @@ class ExecutionPredictor {
       const contextHash = this.hashContext(context);
       const actualTime = result.duration || 0;
       const actualSuccess = result.success !== false;
-      
+
       // Store execution data
       const executionData = {
         executionId,
@@ -211,23 +214,26 @@ class ExecutionPredictor {
         actualTime,
         actualSuccess,
         prediction: prediction.executionTime || 0,
-        accuracy: this.calculatePredictionAccuracy(prediction.executionTime || 0, actualTime),
+        accuracy: this.calculatePredictionAccuracy(
+          prediction.executionTime || 0,
+          actualTime,
+        ),
         timestamp: Date.now(),
         metadata: {
           stepCount: workflow.getMetadata().steps?.length || 0,
           strategy: result.strategy,
-          model: prediction.model
-        }
+          model: prediction.model,
+        },
       };
 
       this.executionHistory.set(executionId, executionData);
-      
+
       // Update workflow patterns
       this.updateWorkflowPatterns(workflowId, executionData);
-      
+
       // Update step patterns
       this.updateStepPatterns(workflow, executionData);
-      
+
       // Update model accuracy
       if (prediction.model) {
         this.updateModelAccuracy(prediction.model, executionData);
@@ -236,18 +242,17 @@ class ExecutionPredictor {
       // Cleanup old data
       this.cleanupOldData();
 
-      this.logger.debug('ExecutionPredictor: Learned from execution', {
+      this.logger.debug("ExecutionPredictor: Learned from execution", {
         executionId,
         workflowId,
         accuracy: executionData.accuracy,
         actualTime,
-        predictedTime: prediction.executionTime
+        predictedTime: prediction.executionTime,
       });
-
     } catch (error) {
-      this.logger.error('ExecutionPredictor: Learning failed', {
+      this.logger.error("ExecutionPredictor: Learning failed", {
         executionId,
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -260,20 +265,24 @@ class ExecutionPredictor {
    */
   getHistoricalData(workflowId, contextHash) {
     const data = [];
-    
+
     for (const execution of this.executionHistory.values()) {
       if (execution.workflowId === workflowId && execution.actualSuccess) {
         // Calculate similarity score
-        const similarity = this.calculateContextSimilarity(contextHash, execution.contextHash);
-        if (similarity > 0.5) { // 50% similarity threshold
+        const similarity = this.calculateContextSimilarity(
+          contextHash,
+          execution.contextHash,
+        );
+        if (similarity > 0.5) {
+          // 50% similarity threshold
           data.push({
             ...execution,
-            similarity
+            similarity,
           });
         }
       }
     }
-    
+
     // Sort by similarity and recency
     return data.sort((a, b) => {
       if (Math.abs(a.similarity - b.similarity) < 0.1) {
@@ -293,17 +302,17 @@ class ExecutionPredictor {
     if (contextHash1 === contextHash2) {
       return 1.0;
     }
-    
+
     // Simple similarity based on hash prefix
     const minLength = Math.min(contextHash1.length, contextHash2.length);
     let matchingChars = 0;
-    
+
     for (let i = 0; i < minLength; i++) {
       if (contextHash1[i] === contextHash2[i]) {
         matchingChars++;
       }
     }
-    
+
     return matchingChars / minLength;
   }
 
@@ -316,26 +325,29 @@ class ExecutionPredictor {
   selectBestModel(workflowId, historicalData) {
     // Check if we have accuracy data for this workflow
     const workflowAccuracy = this.modelAccuracy.get(workflowId);
-    
+
     if (workflowAccuracy) {
       // Find model with highest accuracy
       let bestModel = null;
       let bestAccuracy = 0;
-      
+
       for (const [modelName, accuracy] of Object.entries(workflowAccuracy)) {
-        if (accuracy > bestAccuracy && accuracy > this.predictionAccuracyThreshold) {
+        if (
+          accuracy > bestAccuracy &&
+          accuracy > this.predictionAccuracyThreshold
+        ) {
           bestAccuracy = accuracy;
           bestModel = this.predictionModels.get(modelName);
         }
       }
-      
+
       if (bestModel) {
         return bestModel;
       }
     }
-    
+
     // Fallback to weighted average model
-    return this.predictionModels.get('weighted');
+    return this.predictionModels.get("weighted");
   }
 
   /**
@@ -344,13 +356,14 @@ class ExecutionPredictor {
    * @returns {Object} Prediction
    */
   predictWithAverage(data) {
-    const times = data.map(d => d.actualTime);
-    const averageTime = times.reduce((sum, time) => sum + time, 0) / times.length;
-    
+    const times = data.map((d) => d.actualTime);
+    const averageTime =
+      times.reduce((sum, time) => sum + time, 0) / times.length;
+
     return {
       executionTime: Math.round(averageTime),
       confidence: 0.7,
-      method: 'average'
+      method: "average",
     };
   }
 
@@ -363,30 +376,30 @@ class ExecutionPredictor {
     if (data.length < 2) {
       return this.predictWithAverage(data);
     }
-    
+
     // Simple linear regression based on step count
     const n = data.length;
-    const stepCounts = data.map(d => d.metadata.stepCount);
-    const times = data.map(d => d.actualTime);
-    
+    const stepCounts = data.map((d) => d.metadata.stepCount);
+    const times = data.map((d) => d.actualTime);
+
     const sumX = stepCounts.reduce((sum, x) => sum + x, 0);
     const sumY = times.reduce((sum, y) => sum + y, 0);
     const sumXY = stepCounts.reduce((sum, x, i) => sum + x * times[i], 0);
     const sumXX = stepCounts.reduce((sum, x) => sum + x * x, 0);
-    
+
     const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
-    
+
     // Predict for average step count
     const avgStepCount = sumX / n;
     const predictedTime = slope * avgStepCount + intercept;
-    
+
     return {
       executionTime: Math.round(predictedTime),
       confidence: 0.8,
-      method: 'linear_regression',
+      method: "linear_regression",
       slope,
-      intercept
+      intercept,
     };
   }
 
@@ -398,25 +411,29 @@ class ExecutionPredictor {
   predictWithPatterns(data) {
     // Group by similar patterns
     const patterns = this.identifyPatterns(data);
-    
+
     if (patterns.length === 0) {
       return this.predictWithAverage(data);
     }
-    
+
     // Use most common pattern
     const mostCommonPattern = patterns[0];
-    const patternData = data.filter(d => this.matchesPattern(d, mostCommonPattern));
-    
+    const patternData = data.filter((d) =>
+      this.matchesPattern(d, mostCommonPattern),
+    );
+
     if (patternData.length > 0) {
-      const avgTime = patternData.reduce((sum, d) => sum + d.actualTime, 0) / patternData.length;
+      const avgTime =
+        patternData.reduce((sum, d) => sum + d.actualTime, 0) /
+        patternData.length;
       return {
         executionTime: Math.round(avgTime),
         confidence: 0.85,
-        method: 'pattern_based',
-        pattern: mostCommonPattern
+        method: "pattern_based",
+        pattern: mostCommonPattern,
       };
     }
-    
+
     return this.predictWithAverage(data);
   }
 
@@ -429,26 +446,26 @@ class ExecutionPredictor {
     // Weight by similarity and recency
     const now = Date.now();
     const maxAge = 86400000; // 24 hours
-    
+
     const weightedSum = data.reduce((sum, d) => {
       const ageWeight = Math.max(0.1, 1 - (now - d.timestamp) / maxAge);
       const similarityWeight = d.similarity || 0.5;
       const weight = ageWeight * similarityWeight;
-      return sum + (d.actualTime * weight);
+      return sum + d.actualTime * weight;
     }, 0);
-    
+
     const totalWeight = data.reduce((sum, d) => {
       const ageWeight = Math.max(0.1, 1 - (now - d.timestamp) / maxAge);
       const similarityWeight = d.similarity || 0.5;
-      return sum + (ageWeight * similarityWeight);
+      return sum + ageWeight * similarityWeight;
     }, 0);
-    
+
     const weightedAverage = totalWeight > 0 ? weightedSum / totalWeight : 0;
-    
+
     return {
       executionTime: Math.round(weightedAverage),
       confidence: 0.75,
-      method: 'weighted_average'
+      method: "weighted_average",
     };
   }
 
@@ -459,7 +476,7 @@ class ExecutionPredictor {
    */
   identifyPatterns(data) {
     const patterns = [];
-    
+
     // Group by step count ranges
     const stepCountGroups = {};
     for (const d of data) {
@@ -470,18 +487,18 @@ class ExecutionPredictor {
       }
       stepCountGroups[group].push(d);
     }
-    
+
     // Find groups with sufficient data
     for (const [group, groupData] of Object.entries(stepCountGroups)) {
       if (groupData.length >= 2) {
         patterns.push({
-          type: 'step_count_range',
+          type: "step_count_range",
           range: `${group}-${parseInt(group) + 4}`,
-          data: groupData
+          data: groupData,
         });
       }
     }
-    
+
     return patterns.sort((a, b) => b.data.length - a.data.length);
   }
 
@@ -492,8 +509,8 @@ class ExecutionPredictor {
    * @returns {boolean} True if matches
    */
   matchesPattern(data, pattern) {
-    if (pattern.type === 'step_count_range') {
-      const [min, max] = pattern.range.split('-').map(Number);
+    if (pattern.type === "step_count_range") {
+      const [min, max] = pattern.range.split("-").map(Number);
       return data.metadata.stepCount >= min && data.metadata.stepCount <= max;
     }
     return false;
@@ -508,27 +525,27 @@ class ExecutionPredictor {
     const baseResources = {
       memory: 32, // MB
       cpu: 5, // Percentage
-      timeout: 30000 // 30 seconds
+      timeout: 30000, // 30 seconds
     };
-    
+
     // Adjust based on step type
     const typeMultipliers = {
-      'setup': { memory: 0.5, cpu: 0.5, timeout: 0.5 },
-      'validation': { memory: 0.8, cpu: 0.8, timeout: 0.8 },
-      'analysis': { memory: 2.0, cpu: 1.5, timeout: 2.0 },
-      'processing': { memory: 1.5, cpu: 2.0, timeout: 1.5 },
-      'testing': { memory: 1.2, cpu: 1.2, timeout: 1.0 },
-      'deployment': { memory: 1.0, cpu: 1.0, timeout: 3.0 },
-      'cleanup': { memory: 0.5, cpu: 0.5, timeout: 0.5 }
+      setup: { memory: 0.5, cpu: 0.5, timeout: 0.5 },
+      validation: { memory: 0.8, cpu: 0.8, timeout: 0.8 },
+      analysis: { memory: 2.0, cpu: 1.5, timeout: 2.0 },
+      processing: { memory: 1.5, cpu: 2.0, timeout: 1.5 },
+      testing: { memory: 1.2, cpu: 1.2, timeout: 1.0 },
+      deployment: { memory: 1.0, cpu: 1.0, timeout: 3.0 },
+      cleanup: { memory: 0.5, cpu: 0.5, timeout: 0.5 },
     };
-    
-    const stepType = stepMetadata.type || 'processing';
+
+    const stepType = stepMetadata.type || "processing";
     const multipliers = typeMultipliers[stepType] || typeMultipliers.processing;
-    
+
     return {
       memory: Math.round(baseResources.memory * multipliers.memory),
       cpu: Math.round(baseResources.cpu * multipliers.cpu),
-      timeout: Math.round(baseResources.timeout * multipliers.timeout)
+      timeout: Math.round(baseResources.timeout * multipliers.timeout),
     };
   }
 
@@ -542,7 +559,7 @@ class ExecutionPredictor {
     const memoryCost = resources.memory * 0.001; // $0.001 per MB
     const cpuCost = resources.cpu * 0.01; // $0.01 per CPU %
     const timeCost = (resources.timeout / 1000) * 0.0001; // $0.0001 per second
-    
+
     return Math.round((memoryCost + cpuCost + timeCost) * 100) / 100;
   }
 
@@ -554,7 +571,7 @@ class ExecutionPredictor {
    */
   calculatePredictionAccuracy(predicted, actual) {
     if (actual === 0) return predicted === 0 ? 1 : 0;
-    
+
     const error = Math.abs(predicted - actual) / actual;
     return Math.max(0, 1 - error);
   }
@@ -567,20 +584,20 @@ class ExecutionPredictor {
    */
   calculateConfidence(data, prediction) {
     if (data.length === 0) return 0.5;
-    
+
     // Base confidence on data quality
     const dataQuality = Math.min(1, data.length / 10);
-    
+
     // Adjust based on prediction method
     const methodConfidence = {
-      'average': 0.7,
-      'linear_regression': 0.8,
-      'pattern_based': 0.85,
-      'weighted_average': 0.75
+      average: 0.7,
+      linear_regression: 0.8,
+      pattern_based: 0.85,
+      weighted_average: 0.75,
     };
-    
+
     const methodConf = methodConfidence[prediction.method] || 0.7;
-    
+
     return Math.min(1, dataQuality * methodConf);
   }
 
@@ -593,10 +610,10 @@ class ExecutionPredictor {
     if (!this.workflowPatterns.has(workflowId)) {
       this.workflowPatterns.set(workflowId, []);
     }
-    
+
     const patterns = this.workflowPatterns.get(workflowId);
     patterns.push(executionData);
-    
+
     // Keep only recent patterns
     if (patterns.length > 100) {
       patterns.splice(0, patterns.length - 100);
@@ -611,21 +628,21 @@ class ExecutionPredictor {
   updateStepPatterns(workflow, executionData) {
     const metadata = workflow.getMetadata();
     const steps = metadata.steps || [];
-    
+
     for (const step of steps) {
       const stepMetadata = step.getMetadata ? step.getMetadata() : step;
       const stepKey = `${stepMetadata.type}_${stepMetadata.name}`;
-      
+
       if (!this.stepPatterns.has(stepKey)) {
         this.stepPatterns.set(stepKey, []);
       }
-      
+
       const patterns = this.stepPatterns.get(stepKey);
       patterns.push({
         ...executionData,
-        stepMetadata
+        stepMetadata,
       });
-      
+
       // Keep only recent patterns
       if (patterns.length > 50) {
         patterns.splice(0, patterns.length - 50);
@@ -640,25 +657,26 @@ class ExecutionPredictor {
    */
   updateModelAccuracy(modelName, executionData) {
     const workflowId = executionData.workflowId;
-    
+
     if (!this.modelAccuracy.has(workflowId)) {
       this.modelAccuracy.set(workflowId, {});
     }
-    
+
     const workflowAccuracy = this.modelAccuracy.get(workflowId);
-    
+
     if (!workflowAccuracy[modelName]) {
       workflowAccuracy[modelName] = {
         totalPredictions: 0,
         totalAccuracy: 0,
-        averageAccuracy: 0
+        averageAccuracy: 0,
       };
     }
-    
+
     const modelStats = workflowAccuracy[modelName];
     modelStats.totalPredictions++;
     modelStats.totalAccuracy += executionData.accuracy;
-    modelStats.averageAccuracy = modelStats.totalAccuracy / modelStats.totalPredictions;
+    modelStats.averageAccuracy =
+      modelStats.totalAccuracy / modelStats.totalPredictions;
   }
 
   /**
@@ -681,9 +699,9 @@ class ExecutionPredictor {
       const contextData = context.getAll();
       const relevantData = this.extractRelevantContextData(contextData);
       const contextStr = JSON.stringify(relevantData);
-      return crypto.createHash('md5').update(contextStr).digest('hex');
+      return crypto.createHash("md5").update(contextStr).digest("hex");
     } catch (error) {
-      return 'default';
+      return "default";
     }
   }
 
@@ -694,17 +712,23 @@ class ExecutionPredictor {
    */
   extractRelevantContextData(contextData) {
     const relevantKeys = [
-      'projectId', 'userId', 'environment', 'mode', 'version',
-      'config', 'settings', 'parameters'
+      "projectId",
+      "userId",
+      "environment",
+      "mode",
+      "version",
+      "config",
+      "settings",
+      "parameters",
     ];
-    
+
     const relevant = {};
     for (const key of relevantKeys) {
       if (contextData[key] !== undefined) {
         relevant[key] = contextData[key];
       }
     }
-    
+
     return relevant;
   }
 
@@ -718,15 +742,15 @@ class ExecutionPredictor {
     const metadata = workflow.getMetadata();
     const steps = metadata.steps || [];
     const estimatedTime = steps.length * 1000; // 1 second per step
-    
+
     return {
       executionTime: estimatedTime,
       confidence: 0.5,
-      model: 'default',
-      method: 'default',
+      model: "default",
+      method: "default",
       dataPoints: 0,
       workflowId: this.getWorkflowId(workflow),
-      predictedAt: new Date()
+      predictedAt: new Date(),
     };
   }
 
@@ -739,7 +763,7 @@ class ExecutionPredictor {
   getDefaultResourcePrediction(workflow, context) {
     const metadata = workflow.getMetadata();
     const steps = metadata.steps || [];
-    
+
     return {
       memory: steps.length * 32, // 32MB per step
       cpu: steps.length * 5, // 5% per step
@@ -747,7 +771,7 @@ class ExecutionPredictor {
       estimatedCost: 0.01,
       workflowId: this.getWorkflowId(workflow),
       stepCount: steps.length,
-      predictedAt: new Date()
+      predictedAt: new Date(),
     };
   }
 
@@ -755,20 +779,21 @@ class ExecutionPredictor {
    * Cleanup old data
    */
   cleanupOldData() {
-    const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7 days
-    
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days
+
     // Cleanup execution history
     for (const [key, data] of this.executionHistory.entries()) {
       if (data.timestamp < cutoff) {
         this.executionHistory.delete(key);
       }
     }
-    
+
     // Limit history size
     if (this.executionHistory.size > this.maxPredictionHistory) {
-      const entries = Array.from(this.executionHistory.entries())
-        .sort(([, a], [, b]) => b.timestamp - a.timestamp);
-      
+      const entries = Array.from(this.executionHistory.entries()).sort(
+        ([, a], [, b]) => b.timestamp - a.timestamp,
+      );
+
       const toDelete = entries.slice(this.maxPredictionHistory);
       for (const [key] of toDelete) {
         this.executionHistory.delete(key);
@@ -787,7 +812,7 @@ class ExecutionPredictor {
       stepPatterns: this.stepPatterns.size,
       modelAccuracy: Object.fromEntries(this.modelAccuracy),
       enabled: this.enablePrediction,
-      accuracyThreshold: this.predictionAccuracyThreshold
+      accuracyThreshold: this.predictionAccuracyThreshold,
     };
   }
 
@@ -800,21 +825,21 @@ class ExecutionPredictor {
     this.stepPatterns.clear();
     this.resourcePatterns.clear();
     this.modelAccuracy.clear();
-    
-    this.logger.info('ExecutionPredictor: Prediction data cleared');
+
+    this.logger.info("ExecutionPredictor: Prediction data cleared");
   }
 
   /**
    * Shutdown predictor
    */
   shutdown() {
-    this.logger.info('ExecutionPredictor: Shutting down');
-    
+    this.logger.info("ExecutionPredictor: Shutting down");
+
     // Clear data
     this.clearPredictionData();
-    
-    this.logger.info('ExecutionPredictor: Shutdown complete');
+
+    this.logger.info("ExecutionPredictor: Shutdown complete");
   }
 }
 
-module.exports = ExecutionPredictor; 
+module.exports = ExecutionPredictor;

@@ -112,7 +112,6 @@ describe('IDESelectionModal', () => {
       ];
 
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
 
@@ -153,7 +152,6 @@ describe('IDESelectionModal', () => {
 
     beforeEach(() => {
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
     });
@@ -231,7 +229,7 @@ describe('IDESelectionModal', () => {
   describe('Error Handling', () => {
     it('should display error message when API fails', async () => {
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: false,
+       
         error: 'API Error'
       });
 
@@ -269,7 +267,6 @@ describe('IDESelectionModal', () => {
 
     it('should show empty state when no IDEs are found', async () => {
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: []
       });
 
@@ -290,11 +287,10 @@ describe('IDESelectionModal', () => {
     it('should retry loading IDEs when retry button is clicked', async () => {
       mockProjectRepository.getAvailableIDEs
         .mockResolvedValueOnce({
-          success: false,
+         
           error: 'API Error'
         })
         .mockResolvedValueOnce({
-          success: true,
           data: [{
             port: 9222,
             type: 'cursor',
@@ -410,7 +406,6 @@ describe('IDESelectionModal', () => {
       ];
 
       mockProjectRepository.getAvailableIDEs.mockResolvedValue({
-        success: true,
         data: mockIDEs
       });
 

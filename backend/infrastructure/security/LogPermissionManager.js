@@ -1,16 +1,15 @@
-const fs = require('fs').promises;
-const path = require('path');
-
+const fs = require("fs").promises;
+const path = require("path");
 
 /**
  * Log Permission Manager
- * 
+ *
  * Handles secure file permissions and path validation for log files.
  * Prevents path traversal attacks and ensures proper file security.
  */
 class LogPermissionManager {
   constructor() {
-    this.baseLogDir = '/tmp/IDEWEB';
+    this.baseLogDir = "/tmp/IDEWEB";
     this.allowedPaths = new Set();
   }
 
@@ -19,33 +18,35 @@ class LogPermissionManager {
    * @param {string} filePath - Path to the file or directory
    * @param {string} type - Type of item ('log', 'directory', 'key', 'metadata')
    */
-  async setSecurePermissions(filePath, type = 'log') {
+  async setSecurePermissions(filePath, type = "log") {
     try {
       const normalizedPath = this.validateLogPath(filePath);
-      
+
       let permissions;
       switch (type) {
-        case 'directory':
+        case "directory":
           permissions = 0o700; // Owner read/write/execute only
           break;
-        case 'log':
+        case "log":
           permissions = 0o600; // Owner read/write only
           break;
-        case 'key':
+        case "key":
           permissions = 0o600; // Owner read/write only
           break;
-        case 'metadata':
+        case "metadata":
           permissions = 0o644; // Owner read/write, others read
           break;
         default:
           permissions = 0o600; // Default to secure
       }
-      
+
       await fs.chmod(normalizedPath, permissions);
-      
-      logger.info(`Set permissions ${permissions.toString(8)} for: ${normalizedPath}`);
+
+      logger.info(
+        `Set permissions ${permissions.toString(8)} for: ${normalizedPath}`,
+      );
     } catch (error) {
-      logger.error('Error setting permissions:', error);
+      logger.error("Error setting permissions:", error);
       throw error;
     }
   }
@@ -57,25 +58,25 @@ class LogPermissionManager {
   async createSecureLogDirectory(logDir) {
     try {
       const normalizedPath = this.validateLogPath(logDir);
-      
+
       // Create directory recursively
       await fs.mkdir(normalizedPath, { recursive: true });
-      
+
       // Set secure directory permissions
-      await this.setSecurePermissions(normalizedPath, 'directory');
-      
+      await this.setSecurePermissions(normalizedPath, "directory");
+
       // Create subdirectories with proper permissions
-      const subDirs = ['keys', 'backups'];
+      const subDirs = ["keys", "backups"];
       for (const subDir of subDirs) {
         const subDirPath = path.join(normalizedPath, subDir);
         await fs.mkdir(subDirPath, { recursive: true });
-        await this.setSecurePermissions(subDirPath, 'directory');
+        await this.setSecurePermissions(subDirPath, "directory");
       }
-      
+
       logger.info(`Created secure log directory: ${normalizedPath}`);
       return normalizedPath;
     } catch (error) {
-      logger.error('Error creating secure log directory:', error);
+      logger.error("Error creating secure log directory:", error);
       throw error;
     }
   }
@@ -87,30 +88,33 @@ class LogPermissionManager {
    */
   validateLogPath(filePath) {
     try {
-      if (!filePath || typeof filePath !== 'string') {
-        throw new Error('Invalid file path provided');
+      if (!filePath || typeof filePath !== "string") {
+        throw new Error("Invalid file path provided");
       }
-      
+
       // Normalize path
       const normalized = path.normalize(filePath);
-      
+
       // Check for path traversal attempts
-      if (normalized.includes('..') || 
-          normalized.includes('~') || 
-          normalized.startsWith('/') && !normalized.startsWith(this.baseLogDir) ||
-          normalized.includes('\\')) {
-        throw new Error('Path traversal detected or invalid path');
+      if (
+        normalized.includes("..") ||
+        normalized.includes("~") ||
+        (normalized.startsWith("/") &&
+          !normalized.startsWith(this.baseLogDir)) ||
+        normalized.includes("\\")
+      ) {
+        throw new Error("Path traversal detected or invalid path");
       }
-      
+
       // Ensure path is within allowed base directory
       const resolvedPath = path.resolve(normalized);
       if (!resolvedPath.startsWith(this.baseLogDir)) {
-        throw new Error('Path outside allowed base directory');
+        throw new Error("Path outside allowed base directory");
       }
-      
+
       return resolvedPath;
     } catch (error) {
-      logger.error('Path validation failed:', error);
+      logger.error("Path validation failed:", error);
       throw error;
     }
   }
@@ -140,38 +144,49 @@ class LogPermissionManager {
     try {
       let fileName;
       switch (fileType) {
-        case 'log':
-          fileName = 'terminal.log';
+        case "log":
+          fileName = "terminal.log";
           break;
-        case 'encrypted':
-          fileName = 'terminal.encrypted.log';
+        case "encrypted":
+          fileName = "terminal.encrypted.log";
           break;
-        case 'metadata':
-          fileName = 'terminal.log.meta';
+        case "metadata":
+          fileName = "terminal.log.meta";
           break;
-        case 'key':
+        case "key":
           if (!sessionId) {
-            throw new Error('Session ID required for key files');
+            throw new Error("Session ID required for key files");
           }
           fileName = `session-${sessionId}.key`;
           break;
-        case 'index':
-          fileName = 'terminal.log.index';
+        case "index":
+          fileName = "terminal.log.index";
           break;
         default:
           throw new Error(`Unknown file type: ${fileType}`);
       }
-      
+
       let filePath;
-      if (fileType === 'key') {
-        filePath = path.join(this.baseLogDir, port.toString(), 'logs', 'keys', fileName);
+      if (fileType === "key") {
+        filePath = path.join(
+          this.baseLogDir,
+          port.toString(),
+          "logs",
+          "keys",
+          fileName,
+        );
       } else {
-        filePath = path.join(this.baseLogDir, port.toString(), 'logs', fileName);
+        filePath = path.join(
+          this.baseLogDir,
+          port.toString(),
+          "logs",
+          fileName,
+        );
       }
-      
+
       return this.validateLogPath(filePath);
     } catch (error) {
-      logger.error('Error getting secure file path:', error);
+      logger.error("Error getting secure file path:", error);
       throw error;
     }
   }
@@ -181,37 +196,37 @@ class LogPermissionManager {
    * @param {string} filePath - Path to the file
    * @param {string} expectedType - Expected file type for permission validation
    */
-  async ensureSecurePermissions(filePath, expectedType = 'log') {
+  async ensureSecurePermissions(filePath, expectedType = "log") {
     try {
       const normalizedPath = this.validateLogPath(filePath);
-      
+
       // Check current permissions
       const stats = await fs.stat(normalizedPath);
       const currentMode = stats.mode & 0o777;
-      
+
       let expectedMode;
       switch (expectedType) {
-        case 'directory':
+        case "directory":
           expectedMode = 0o700;
           break;
-        case 'log':
-        case 'key':
+        case "log":
+        case "key":
           expectedMode = 0o600;
           break;
-        case 'metadata':
+        case "metadata":
           expectedMode = 0o644;
           break;
         default:
           expectedMode = 0o600;
       }
-      
+
       // Fix permissions if they don't match
       if (currentMode !== expectedMode) {
         await this.setSecurePermissions(normalizedPath, expectedType);
         logger.info(`Fixed permissions for: ${normalizedPath}`);
       }
     } catch (error) {
-      logger.error('Error ensuring secure permissions:', error);
+      logger.error("Error ensuring secure permissions:", error);
       throw error;
     }
   }
@@ -223,23 +238,23 @@ class LogPermissionManager {
    */
   async cleanupOldLogs(port, maxAge = 24) {
     try {
-      const logDir = path.join(this.baseLogDir, port.toString(), 'logs');
+      const logDir = path.join(this.baseLogDir, port.toString(), "logs");
       const normalizedLogDir = this.validateLogPath(logDir);
-      
+
       const files = await fs.readdir(normalizedLogDir);
-      const cutoffTime = Date.now() - (maxAge * 60 * 60 * 1000);
-      
+      const cutoffTime = Date.now() - maxAge * 60 * 60 * 1000;
+
       for (const file of files) {
         const filePath = path.join(normalizedLogDir, file);
-        
+
         try {
           const stats = await fs.stat(filePath);
-          
+
           // Skip directories and recent files
           if (stats.isDirectory() || stats.mtime.getTime() > cutoffTime) {
             continue;
           }
-          
+
           // Securely delete old file
           await this.secureDelete(filePath);
           logger.info(`Deleted old log file: ${filePath}`);
@@ -248,7 +263,7 @@ class LogPermissionManager {
         }
       }
     } catch (error) {
-      logger.error('Error cleaning up old logs:', error);
+      logger.error("Error cleaning up old logs:", error);
       throw error;
     }
   }
@@ -260,26 +275,26 @@ class LogPermissionManager {
   async secureDelete(filePath) {
     try {
       const normalizedPath = this.validateLogPath(filePath);
-      
+
       // Get file size
       const stats = await fs.stat(normalizedPath);
       const fileSize = stats.size;
-      
+
       if (fileSize > 0) {
         // Overwrite with random data
-        const crypto = require('crypto');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+        const crypto = require("crypto");
+        const Logger = require("@logging/Logger");
+        const logger = new Logger("Logger");
         const randomData = crypto.randomBytes(fileSize);
         await fs.writeFile(normalizedPath, randomData);
       }
-      
+
       // Delete the file
       await fs.unlink(normalizedPath);
-      
+
       logger.info(`Securely deleted: ${normalizedPath}`);
     } catch (error) {
-      logger.error('Error in secure delete:', error);
+      logger.error("Error in secure delete:", error);
       throw error;
     }
   }
@@ -291,49 +306,49 @@ const logger = new Logger('Logger');
    */
   async getDirectoryStructure(port) {
     try {
-      const logDir = path.join(this.baseLogDir, port.toString(), 'logs');
+      const logDir = path.join(this.baseLogDir, port.toString(), "logs");
       const normalizedLogDir = this.validateLogPath(logDir);
-      
+
       const structure = {
         port: port,
         baseDir: normalizedLogDir,
         exists: false,
         subdirectories: [],
-        files: []
+        files: [],
       };
-      
+
       try {
         const stats = await fs.stat(normalizedLogDir);
         structure.exists = true;
         structure.permissions = (stats.mode & 0o777).toString(8);
-        
+
         const items = await fs.readdir(normalizedLogDir);
-        
+
         for (const item of items) {
           const itemPath = path.join(normalizedLogDir, item);
           const itemStats = await fs.stat(itemPath);
-          
+
           if (itemStats.isDirectory()) {
             structure.subdirectories.push({
               name: item,
-              permissions: (itemStats.mode & 0o777).toString(8)
+              permissions: (itemStats.mode & 0o777).toString(8),
             });
           } else {
             structure.files.push({
               name: item,
               size: itemStats.size,
               permissions: (itemStats.mode & 0o777).toString(8),
-              modified: itemStats.mtime
+              modified: itemStats.mtime,
             });
           }
         }
       } catch (error) {
         // Directory doesn't exist
       }
-      
+
       return structure;
     } catch (error) {
-      logger.error('Error getting directory structure:', error);
+      logger.error("Error getting directory structure:", error);
       throw error;
     }
   }
@@ -344,36 +359,36 @@ const logger = new Logger('Logger');
    */
   async validateAndFixPermissions(port) {
     try {
-      const logDir = path.join(this.baseLogDir, port.toString(), 'logs');
+      const logDir = path.join(this.baseLogDir, port.toString(), "logs");
       const normalizedLogDir = this.validateLogPath(logDir);
-      
+
       // Ensure base directory has correct permissions
-      await this.ensureSecurePermissions(normalizedLogDir, 'directory');
-      
+      await this.ensureSecurePermissions(normalizedLogDir, "directory");
+
       // Check all files and subdirectories
       const items = await fs.readdir(normalizedLogDir);
-      
+
       for (const item of items) {
         const itemPath = path.join(normalizedLogDir, item);
         const stats = await fs.stat(itemPath);
-        
+
         if (stats.isDirectory()) {
-          await this.ensureSecurePermissions(itemPath, 'directory');
-        } else if (item.endsWith('.key')) {
-          await this.ensureSecurePermissions(itemPath, 'key');
-        } else if (item.endsWith('.meta')) {
-          await this.ensureSecurePermissions(itemPath, 'metadata');
+          await this.ensureSecurePermissions(itemPath, "directory");
+        } else if (item.endsWith(".key")) {
+          await this.ensureSecurePermissions(itemPath, "key");
+        } else if (item.endsWith(".meta")) {
+          await this.ensureSecurePermissions(itemPath, "metadata");
         } else {
-          await this.ensureSecurePermissions(itemPath, 'log');
+          await this.ensureSecurePermissions(itemPath, "log");
         }
       }
-      
+
       logger.info(`Validated and fixed permissions for port ${port}`);
     } catch (error) {
-      logger.error('Error validating permissions:', error);
+      logger.error("Error validating permissions:", error);
       throw error;
     }
   }
 }
 
-module.exports = LogPermissionManager; 
+module.exports = LogPermissionManager;

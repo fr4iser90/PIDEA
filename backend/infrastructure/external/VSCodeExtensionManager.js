@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * VSCodeExtensionManager
@@ -19,14 +19,14 @@ class VSCodeExtensionManager {
     try {
       // Load installed extensions
       await this.loadInstalledExtensions();
-      
+
       // Load extension capabilities
       await this.loadExtensionCapabilities();
-      
+
       this.isInitialized = true;
-      logger.info('Initialized successfully');
+      logger.info("Initialized successfully");
     } catch (error) {
-      logger.error('Failed to initialize:', error);
+      logger.error("Failed to initialize:", error);
     }
   }
 
@@ -35,18 +35,18 @@ class VSCodeExtensionManager {
    */
   async loadInstalledExtensions() {
     // Mock implementation - in real scenario, this would query VSCode API
-    this.installedExtensions.set('ms-vscode.vscode-json', {
-      id: 'ms-vscode.vscode-json',
-      name: 'JSON Language Features',
-      version: '1.0.0',
-      enabled: true
+    this.installedExtensions.set("ms-vscode.vscode-json", {
+      id: "ms-vscode.vscode-json",
+      name: "JSON Language Features",
+      version: "1.0.0",
+      enabled: true,
     });
-    
-    this.installedExtensions.set('ms-vscode.vscode-typescript-next', {
-      id: 'ms-vscode.vscode-typescript-next',
-      name: 'TypeScript and JavaScript Language Features',
-      version: '1.0.0',
-      enabled: true
+
+    this.installedExtensions.set("ms-vscode.vscode-typescript-next", {
+      id: "ms-vscode.vscode-typescript-next",
+      name: "TypeScript and JavaScript Language Features",
+      version: "1.0.0",
+      enabled: true,
     });
   }
 
@@ -55,16 +55,16 @@ class VSCodeExtensionManager {
    */
   async loadExtensionCapabilities() {
     // Mock implementation - in real scenario, this would analyze extension manifests
-    this.extensionCapabilities.set('ms-vscode.vscode-json', {
-      languages: ['json'],
-      commands: ['json.validate'],
-      features: ['syntax-highlighting', 'validation']
+    this.extensionCapabilities.set("ms-vscode.vscode-json", {
+      languages: ["json"],
+      commands: ["json.validate"],
+      features: ["syntax-highlighting", "validation"],
     });
-    
-    this.extensionCapabilities.set('ms-vscode.vscode-typescript-next', {
-      languages: ['typescript', 'javascript'],
-      commands: ['typescript.reloadProjects', 'typescript.restartTsServer'],
-      features: ['intellisense', 'refactoring', 'diagnostics']
+
+    this.extensionCapabilities.set("ms-vscode.vscode-typescript-next", {
+      languages: ["typescript", "javascript"],
+      commands: ["typescript.reloadProjects", "typescript.restartTsServer"],
+      features: ["intellisense", "refactoring", "diagnostics"],
     });
   }
 
@@ -102,18 +102,18 @@ class VSCodeExtensionManager {
    */
   getExtensionsForLanguage(language) {
     const extensions = [];
-    
+
     for (const [id, capabilities] of this.extensionCapabilities) {
       if (capabilities.languages && capabilities.languages.includes(language)) {
         extensions.push({
           id,
           capabilities,
           installed: this.isExtensionInstalled(id),
-          enabled: this.isExtensionEnabled(id)
+          enabled: this.isExtensionEnabled(id),
         });
       }
     }
-    
+
     return extensions;
   }
 
@@ -122,20 +122,20 @@ class VSCodeExtensionManager {
    */
   getExtensionsWithFeature(feature) {
     const extensions = [];
-    
+
     for (const [id, capabilities] of this.extensionCapabilities) {
       if (capabilities.features && capabilities.features.includes(feature)) {
         extensions.push({
           id,
           capabilities,
           installed: this.isExtensionInstalled(id),
-          enabled: this.isExtensionEnabled(id)
+          enabled: this.isExtensionEnabled(id),
         });
       }
     }
-    
+
     return extensions;
   }
 }
 
-module.exports = VSCodeExtensionManager; 
+module.exports = VSCodeExtensionManager;

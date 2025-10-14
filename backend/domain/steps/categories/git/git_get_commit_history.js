@@ -3,35 +3,37 @@
  * Gets Git commit history using DDD pattern with Commands and Handlers
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const logger = new Logger('GitGetCommitHistoryStep');
-const CommandRegistry = require('@application/commands/CommandRegistry');
-const HandlerRegistry = require('@application/handlers/HandlerRegistry');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const logger = new Logger("GitGetCommitHistoryStep");
+const CommandRegistry = require("@application/commands/CommandRegistry");
+const HandlerRegistry = require("@application/handlers/HandlerRegistry");
 
 // Step configuration
 const config = {
-  name: 'GitGetCommitHistoryStep',
-  type: 'git',
-  description: 'Gets Git commit history using DDD pattern with Commands and Handlers',
-  category: 'git',
-  version: '1.0.0',
-  dependencies: ['terminalService'],
+  name: "GitGetCommitHistoryStep",
+  type: "git",
+  description:
+    "Gets Git commit history using DDD pattern with Commands and Handlers",
+  category: "git",
+  version: "1.0.0",
+  dependencies: ["terminalService"],
   settings: {
-    timeout: 30000
+    timeout: 30000,
   },
   validation: {
-    required: ['projectPath'],
-    optional: []
-  }
+    required: ["projectPath"],
+    optional: [],
+  },
 };
 
 class GitGetCommitHistoryStep {
   constructor() {
-    this.name = 'GitGetCommitHistoryStep';
-    this.description = 'Gets Git commit history using DDD pattern with Commands and Handlers';
-    this.category = 'git';
-    this.dependencies = ['terminalService'];
+    this.name = "GitGetCommitHistoryStep";
+    this.description =
+      "Gets Git commit history using DDD pattern with Commands and Handlers";
+    this.category = "git";
+    this.dependencies = ["terminalService"];
   }
 
   static getConfig() {
@@ -41,65 +43,72 @@ class GitGetCommitHistoryStep {
   async execute(context = {}) {
     const config = GitGetCommitHistoryStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       const { projectPath, ...otherParams } = context;
-      
+
       logger.info(`Executing ${this.name} using DDD pattern`, {
         projectPath,
-        ...otherParams
+        ...otherParams,
       });
 
       // ✅ DDD PATTERN: Create Command and Handler
-      const command = CommandRegistry.buildFromCategory('git', 'GitLogCommand', {
-        projectPath,
-        ...otherParams
-      });
+      const command = CommandRegistry.buildFromCategory(
+        "git",
+        "GitLogCommand",
+        {
+          projectPath,
+          ...otherParams,
+        },
+      );
 
-      const handler = HandlerRegistry.buildFromCategory('git', 'GitLogHandler', {
-        terminalService: context.terminalService,
-        logger: logger
-      });
+      const handler = HandlerRegistry.buildFromCategory(
+        "git",
+        "GitLogHandler",
+        {
+          terminalService: context.terminalService,
+          logger: logger,
+        },
+      );
 
       if (!command || !handler) {
-        throw new Error('Failed to create Git command or handler');
+        throw new Error("Failed to create Git command or handler");
       }
 
       // Execute command through handler
       const result = await handler.handle(command);
 
       logger.info(`${this.name} completed successfully using DDD pattern`, {
-        result: result.result
+        result: result.result,
       });
 
       return {
         success: result.success,
         result: result.result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       logger.error(`${this.name} failed`, {
         error: error.message,
-        context
+        context,
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
 
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
   }
 }
@@ -110,5 +119,5 @@ const stepInstance = new GitGetCommitHistoryStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

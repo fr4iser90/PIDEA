@@ -1,9 +1,9 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * HandlerOptimizer - Performance optimization and resource management for handlers
- * 
+ *
  * This class provides intelligent optimization strategies for handler performance,
  * including caching optimization, resource management, and adaptive tuning.
  */
@@ -26,7 +26,7 @@ class HandlerOptimizer {
       maxOptimizationHistory: options.maxOptimizationHistory || 1000,
       performanceThreshold: options.performanceThreshold || 5000, // 5 seconds
       memoryThreshold: options.memoryThreshold || 100 * 1024 * 1024, // 100MB
-      ...options
+      ...options,
     };
 
     // Initialize optimization strategies
@@ -43,35 +43,37 @@ class HandlerOptimizer {
    */
   initializeOptimizationStrategies() {
     // Caching optimization strategy
-    this.optimizationStrategies.set('caching', {
-      name: 'Caching Optimization',
-      description: 'Optimize handler caching based on usage patterns',
+    this.optimizationStrategies.set("caching", {
+      name: "Caching Optimization",
+      description: "Optimize handler caching based on usage patterns",
       execute: (handlerId, metrics) => this.optimizeCaching(handlerId, metrics),
-      priority: 1
+      priority: 1,
     });
 
     // Resource management strategy
-    this.optimizationStrategies.set('resource', {
-      name: 'Resource Management',
-      description: 'Optimize resource usage and memory management',
-      execute: (handlerId, metrics) => this.optimizeResources(handlerId, metrics),
-      priority: 2
+    this.optimizationStrategies.set("resource", {
+      name: "Resource Management",
+      description: "Optimize resource usage and memory management",
+      execute: (handlerId, metrics) =>
+        this.optimizeResources(handlerId, metrics),
+      priority: 2,
     });
 
     // Performance tuning strategy
-    this.optimizationStrategies.set('performance', {
-      name: 'Performance Tuning',
-      description: 'Optimize handler performance based on execution patterns',
-      execute: (handlerId, metrics) => this.optimizePerformance(handlerId, metrics),
-      priority: 3
+    this.optimizationStrategies.set("performance", {
+      name: "Performance Tuning",
+      description: "Optimize handler performance based on execution patterns",
+      execute: (handlerId, metrics) =>
+        this.optimizePerformance(handlerId, metrics),
+      priority: 3,
     });
 
     // Adaptive tuning strategy
-    this.optimizationStrategies.set('adaptive', {
-      name: 'Adaptive Tuning',
-      description: 'Adaptive optimization based on real-time performance data',
+    this.optimizationStrategies.set("adaptive", {
+      name: "Adaptive Tuning",
+      description: "Adaptive optimization based on real-time performance data",
       execute: (handlerId, metrics) => this.adaptiveTuning(handlerId, metrics),
-      priority: 4
+      priority: 4,
     });
   }
 
@@ -83,7 +85,7 @@ class HandlerOptimizer {
    */
   async optimize(handlerId, result) {
     if (!this.options.enableOptimization) {
-      return { optimized: false, reason: 'Optimization disabled' };
+      return { optimized: false, reason: "Optimization disabled" };
     }
 
     try {
@@ -92,7 +94,7 @@ class HandlerOptimizer {
         timestamp: new Date(),
         strategies: [],
         improvements: [],
-        recommendations: []
+        recommendations: [],
       };
 
       // Update performance profile
@@ -102,24 +104,32 @@ class HandlerOptimizer {
       this.updateResourceUsage(handlerId, result);
 
       // Execute optimization strategies
-      const strategies = Array.from(this.optimizationStrategies.entries())
-        .sort((a, b) => a[1].priority - b[1].priority);
+      const strategies = Array.from(this.optimizationStrategies.entries()).sort(
+        (a, b) => a[1].priority - b[1].priority,
+      );
 
       for (const [strategyKey, strategy] of strategies) {
         try {
           const strategyResult = await strategy.execute(handlerId, {
             result,
             performanceProfile: this.performanceProfiles.get(handlerId),
-            resourceUsage: this.resourceUsage.get(handlerId)
+            resourceUsage: this.resourceUsage.get(handlerId),
           });
 
           if (strategyResult.optimized) {
             optimizationResult.strategies.push(strategyKey);
-            optimizationResult.improvements.push(...strategyResult.improvements);
-            optimizationResult.recommendations.push(...strategyResult.recommendations);
+            optimizationResult.improvements.push(
+              ...strategyResult.improvements,
+            );
+            optimizationResult.recommendations.push(
+              ...strategyResult.recommendations,
+            );
           }
         } catch (error) {
-          logger.error(`HandlerOptimizer: Strategy ${strategyKey} failed`, error.message);
+          logger.error(
+            `HandlerOptimizer: Strategy ${strategyKey} failed`,
+            error.message,
+          );
         }
       }
 
@@ -127,16 +137,15 @@ class HandlerOptimizer {
       this.recordOptimizationHistory(optimizationResult);
 
       return optimizationResult;
-
     } catch (error) {
-      logger.error('HandlerOptimizer: Optimization failed', {
+      logger.error("HandlerOptimizer: Optimization failed", {
         handlerId,
-        error: error.message
+        error: error.message,
       });
 
       return {
         optimized: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -157,7 +166,7 @@ class HandlerOptimizer {
         successRate: 0,
         lastExecution: null,
         executionPattern: [],
-        performanceTrend: 'stable'
+        performanceTrend: "stable",
       });
     }
 
@@ -176,15 +185,18 @@ class HandlerOptimizer {
     }
 
     // Update success rate
-    const successCount = profile.executionPattern.filter(p => p.success).length;
-    profile.successRate = (successCount / profile.executionPattern.length) * 100;
+    const successCount = profile.executionPattern.filter(
+      (p) => p.success,
+    ).length;
+    profile.successRate =
+      (successCount / profile.executionPattern.length) * 100;
 
     // Update execution pattern
     profile.executionPattern.push({
       timestamp: new Date(),
       duration: result.getDuration(),
       success: result.isSuccess(),
-      error: result.getError()
+      error: result.getError(),
     });
 
     // Keep only recent executions for pattern analysis
@@ -193,7 +205,9 @@ class HandlerOptimizer {
     }
 
     // Analyze performance trend
-    profile.performanceTrend = this.analyzePerformanceTrend(profile.executionPattern);
+    profile.performanceTrend = this.analyzePerformanceTrend(
+      profile.executionPattern,
+    );
   }
 
   /**
@@ -207,7 +221,7 @@ class HandlerOptimizer {
         memoryUsage: [],
         cpuUsage: [],
         networkUsage: [],
-        lastUpdate: null
+        lastUpdate: null,
       });
     }
 
@@ -244,7 +258,7 @@ class HandlerOptimizer {
    */
   async optimizeCaching(handlerId, metrics) {
     if (!this.options.enableCachingOptimization) {
-      return { optimized: false, reason: 'Caching optimization disabled' };
+      return { optimized: false, reason: "Caching optimization disabled" };
     }
 
     const improvements = [];
@@ -252,7 +266,7 @@ class HandlerOptimizer {
 
     const profile = metrics.performanceProfile;
     if (!profile) {
-      return { optimized: false, reason: 'No performance profile available' };
+      return { optimized: false, reason: "No performance profile available" };
     }
 
     // Analyze caching opportunities
@@ -261,42 +275,43 @@ class HandlerOptimizer {
 
     // Check for repeated requests
     const requestPatterns = this.analyzeRequestPatterns(recentExecutions);
-    
-    if (requestPatterns.repeatedRequests > 0.3) { // 30% repeated requests
+
+    if (requestPatterns.repeatedRequests > 0.3) {
+      // 30% repeated requests
       improvements.push({
-        type: 'CACHE_HIT_RATE',
-        description: 'High repeated request pattern detected',
-        impact: 'HIGH',
-        action: 'Enable aggressive caching'
+        type: "CACHE_HIT_RATE",
+        description: "High repeated request pattern detected",
+        impact: "HIGH",
+        action: "Enable aggressive caching",
       });
 
       recommendations.push({
-        type: 'CACHE_STRATEGY',
-        description: 'Implement request-based caching',
-        priority: 'HIGH'
+        type: "CACHE_STRATEGY",
+        description: "Implement request-based caching",
+        priority: "HIGH",
       });
     }
 
     // Check for slow handlers that could benefit from caching
     if (profile.averageDuration > this.options.performanceThreshold) {
       improvements.push({
-        type: 'PERFORMANCE_CACHE',
-        description: 'Slow handler detected, caching recommended',
-        impact: 'MEDIUM',
-        action: 'Enable result caching'
+        type: "PERFORMANCE_CACHE",
+        description: "Slow handler detected, caching recommended",
+        impact: "MEDIUM",
+        action: "Enable result caching",
       });
 
       recommendations.push({
-        type: 'CACHE_DURATION',
-        description: 'Set cache duration based on data volatility',
-        priority: 'MEDIUM'
+        type: "CACHE_DURATION",
+        description: "Set cache duration based on data volatility",
+        priority: "MEDIUM",
       });
     }
 
     return {
       optimized: improvements.length > 0,
       improvements,
-      recommendations
+      recommendations,
     };
   }
 
@@ -308,7 +323,7 @@ class HandlerOptimizer {
    */
   async optimizeResources(handlerId, metrics) {
     if (!this.options.enableResourceManagement) {
-      return { optimized: false, reason: 'Resource management disabled' };
+      return { optimized: false, reason: "Resource management disabled" };
     }
 
     const improvements = [];
@@ -316,47 +331,48 @@ class HandlerOptimizer {
 
     const usage = metrics.resourceUsage;
     if (!usage) {
-      return { optimized: false, reason: 'No resource usage data available' };
+      return { optimized: false, reason: "No resource usage data available" };
     }
 
     // Analyze memory usage
     const avgMemoryUsage = this.calculateAverageUsage(usage.memoryUsage);
     if (avgMemoryUsage > this.options.memoryThreshold) {
       improvements.push({
-        type: 'MEMORY_OPTIMIZATION',
-        description: 'High memory usage detected',
-        impact: 'HIGH',
-        action: 'Implement memory cleanup'
+        type: "MEMORY_OPTIMIZATION",
+        description: "High memory usage detected",
+        impact: "HIGH",
+        action: "Implement memory cleanup",
       });
 
       recommendations.push({
-        type: 'MEMORY_STRATEGY',
-        description: 'Add memory cleanup in handler lifecycle',
-        priority: 'HIGH'
+        type: "MEMORY_STRATEGY",
+        description: "Add memory cleanup in handler lifecycle",
+        priority: "HIGH",
       });
     }
 
     // Analyze CPU usage
     const avgCpuUsage = this.calculateAverageUsage(usage.cpuUsage);
-    if (avgCpuUsage > 80) { // 80% CPU usage
+    if (avgCpuUsage > 80) {
+      // 80% CPU usage
       improvements.push({
-        type: 'CPU_OPTIMIZATION',
-        description: 'High CPU usage detected',
-        impact: 'MEDIUM',
-        action: 'Optimize computational operations'
+        type: "CPU_OPTIMIZATION",
+        description: "High CPU usage detected",
+        impact: "MEDIUM",
+        action: "Optimize computational operations",
       });
 
       recommendations.push({
-        type: 'CPU_STRATEGY',
-        description: 'Consider async operations and batching',
-        priority: 'MEDIUM'
+        type: "CPU_STRATEGY",
+        description: "Consider async operations and batching",
+        priority: "MEDIUM",
       });
     }
 
     return {
       optimized: improvements.length > 0,
       improvements,
-      recommendations
+      recommendations,
     };
   }
 
@@ -372,63 +388,65 @@ class HandlerOptimizer {
 
     const profile = metrics.performanceProfile;
     if (!profile) {
-      return { optimized: false, reason: 'No performance profile available' };
+      return { optimized: false, reason: "No performance profile available" };
     }
 
     // Check for performance degradation
-    if (profile.performanceTrend === 'degrading') {
+    if (profile.performanceTrend === "degrading") {
       improvements.push({
-        type: 'PERFORMANCE_DEGRADATION',
-        description: 'Performance degradation detected',
-        impact: 'HIGH',
-        action: 'Investigate performance bottlenecks'
+        type: "PERFORMANCE_DEGRADATION",
+        description: "Performance degradation detected",
+        impact: "HIGH",
+        action: "Investigate performance bottlenecks",
       });
 
       recommendations.push({
-        type: 'PERFORMANCE_ANALYSIS',
-        description: 'Profile handler execution and identify bottlenecks',
-        priority: 'HIGH'
+        type: "PERFORMANCE_ANALYSIS",
+        description: "Profile handler execution and identify bottlenecks",
+        priority: "HIGH",
       });
     }
 
     // Check for high variance in execution times
     const variance = this.calculateExecutionVariance(profile.executionPattern);
-    if (variance > 0.5) { // 50% variance
+    if (variance > 0.5) {
+      // 50% variance
       improvements.push({
-        type: 'EXECUTION_VARIANCE',
-        description: 'High execution time variance detected',
-        impact: 'MEDIUM',
-        action: 'Standardize execution paths'
+        type: "EXECUTION_VARIANCE",
+        description: "High execution time variance detected",
+        impact: "MEDIUM",
+        action: "Standardize execution paths",
       });
 
       recommendations.push({
-        type: 'VARIANCE_STRATEGY',
-        description: 'Implement consistent execution patterns',
-        priority: 'MEDIUM'
+        type: "VARIANCE_STRATEGY",
+        description: "Implement consistent execution patterns",
+        priority: "MEDIUM",
       });
     }
 
     // Check for error patterns
     const errorRate = this.calculateErrorRate(profile.executionPattern);
-    if (errorRate > 0.1) { // 10% error rate
+    if (errorRate > 0.1) {
+      // 10% error rate
       improvements.push({
-        type: 'ERROR_RATE',
-        description: 'High error rate detected',
-        impact: 'HIGH',
-        action: 'Improve error handling and validation'
+        type: "ERROR_RATE",
+        description: "High error rate detected",
+        impact: "HIGH",
+        action: "Improve error handling and validation",
       });
 
       recommendations.push({
-        type: 'ERROR_STRATEGY',
-        description: 'Implement comprehensive error handling',
-        priority: 'HIGH'
+        type: "ERROR_STRATEGY",
+        description: "Implement comprehensive error handling",
+        priority: "HIGH",
       });
     }
 
     return {
       optimized: improvements.length > 0,
       improvements,
-      recommendations
+      recommendations,
     };
   }
 
@@ -440,7 +458,7 @@ class HandlerOptimizer {
    */
   async adaptiveTuning(handlerId, metrics) {
     if (!this.options.enableAdaptiveTuning) {
-      return { optimized: false, reason: 'Adaptive tuning disabled' };
+      return { optimized: false, reason: "Adaptive tuning disabled" };
     }
 
     const improvements = [];
@@ -448,51 +466,54 @@ class HandlerOptimizer {
 
     const profile = metrics.performanceProfile;
     if (!profile) {
-      return { optimized: false, reason: 'No performance profile available' };
+      return { optimized: false, reason: "No performance profile available" };
     }
 
     // Adaptive timeout tuning
     const avgDuration = profile.averageDuration;
     const maxDuration = profile.maxDuration;
-    
+
     if (avgDuration > this.options.performanceThreshold) {
       const suggestedTimeout = Math.max(avgDuration * 2, maxDuration * 1.5);
-      
+
       improvements.push({
-        type: 'ADAPTIVE_TIMEOUT',
-        description: 'Adaptive timeout adjustment',
-        impact: 'MEDIUM',
-        action: `Set timeout to ${suggestedTimeout}ms`
+        type: "ADAPTIVE_TIMEOUT",
+        description: "Adaptive timeout adjustment",
+        impact: "MEDIUM",
+        action: `Set timeout to ${suggestedTimeout}ms`,
       });
 
       recommendations.push({
-        type: 'TIMEOUT_STRATEGY',
-        description: 'Implement dynamic timeout based on performance',
-        priority: 'MEDIUM'
+        type: "TIMEOUT_STRATEGY",
+        description: "Implement dynamic timeout based on performance",
+        priority: "MEDIUM",
       });
     }
 
     // Adaptive concurrency tuning
-    const executionFrequency = this.calculateExecutionFrequency(profile.executionPattern);
-    if (executionFrequency > 10) { // More than 10 executions per minute
+    const executionFrequency = this.calculateExecutionFrequency(
+      profile.executionPattern,
+    );
+    if (executionFrequency > 10) {
+      // More than 10 executions per minute
       improvements.push({
-        type: 'ADAPTIVE_CONCURRENCY',
-        description: 'High execution frequency detected',
-        impact: 'MEDIUM',
-        action: 'Implement concurrency limits'
+        type: "ADAPTIVE_CONCURRENCY",
+        description: "High execution frequency detected",
+        impact: "MEDIUM",
+        action: "Implement concurrency limits",
       });
 
       recommendations.push({
-        type: 'CONCURRENCY_STRATEGY',
-        description: 'Add rate limiting and concurrency controls',
-        priority: 'MEDIUM'
+        type: "CONCURRENCY_STRATEGY",
+        description: "Add rate limiting and concurrency controls",
+        priority: "MEDIUM",
       });
     }
 
     return {
       optimized: improvements.length > 0,
       improvements,
-      recommendations
+      recommendations,
     };
   }
 
@@ -503,20 +524,22 @@ class HandlerOptimizer {
    */
   analyzePerformanceTrend(executionPattern) {
     if (executionPattern.length < 10) {
-      return 'stable';
+      return "stable";
     }
 
     const recent = executionPattern.slice(-10);
     const older = executionPattern.slice(-20, -10);
 
-    const recentAvg = recent.reduce((sum, p) => sum + p.duration, 0) / recent.length;
-    const olderAvg = older.reduce((sum, p) => sum + p.duration, 0) / older.length;
+    const recentAvg =
+      recent.reduce((sum, p) => sum + p.duration, 0) / recent.length;
+    const olderAvg =
+      older.reduce((sum, p) => sum + p.duration, 0) / older.length;
 
     const change = (recentAvg - olderAvg) / olderAvg;
 
-    if (change > 0.2) return 'degrading';
-    if (change < -0.2) return 'improving';
-    return 'stable';
+    if (change > 0.2) return "degrading";
+    if (change < -0.2) return "improving";
+    return "stable";
   }
 
   /**
@@ -528,12 +551,13 @@ class HandlerOptimizer {
     // This is a simplified analysis - in a real implementation,
     // you would analyze actual request content for patterns
     const totalRequests = executions.length;
-    const uniqueRequests = new Set(executions.map(e => e.timestamp.getTime())).size;
-    
+    const uniqueRequests = new Set(executions.map((e) => e.timestamp.getTime()))
+      .size;
+
     return {
       totalRequests,
       uniqueRequests,
-      repeatedRequests: (totalRequests - uniqueRequests) / totalRequests
+      repeatedRequests: (totalRequests - uniqueRequests) / totalRequests,
     };
   }
 
@@ -576,7 +600,9 @@ class HandlerOptimizer {
    */
   calculateAverageUsage(usageData) {
     if (usageData.length === 0) return 0;
-    return usageData.reduce((sum, data) => sum + data.value, 0) / usageData.length;
+    return (
+      usageData.reduce((sum, data) => sum + data.value, 0) / usageData.length
+    );
   }
 
   /**
@@ -587,10 +613,12 @@ class HandlerOptimizer {
   calculateExecutionVariance(executionPattern) {
     if (executionPattern.length < 2) return 0;
 
-    const durations = executionPattern.map(p => p.duration);
+    const durations = executionPattern.map((p) => p.duration);
     const mean = durations.reduce((sum, d) => sum + d, 0) / durations.length;
-    const variance = durations.reduce((sum, d) => sum + Math.pow(d - mean, 2), 0) / durations.length;
-    
+    const variance =
+      durations.reduce((sum, d) => sum + Math.pow(d - mean, 2), 0) /
+      durations.length;
+
     return Math.sqrt(variance) / mean; // Coefficient of variation
   }
 
@@ -601,8 +629,8 @@ class HandlerOptimizer {
    */
   calculateErrorRate(executionPattern) {
     if (executionPattern.length === 0) return 0;
-    
-    const errors = executionPattern.filter(p => !p.success).length;
+
+    const errors = executionPattern.filter((p) => !p.success).length;
     return errors / executionPattern.length;
   }
 
@@ -617,7 +645,7 @@ class HandlerOptimizer {
     const recent = executionPattern.slice(-10);
     const timeSpan = recent[recent.length - 1].timestamp - recent[0].timestamp;
     const minutes = timeSpan / (1000 * 60);
-    
+
     return recent.length / minutes;
   }
 
@@ -630,7 +658,9 @@ class HandlerOptimizer {
 
     // Keep only recent history
     if (this.optimizationHistory.length > this.options.maxOptimizationHistory) {
-      this.optimizationHistory = this.optimizationHistory.slice(-this.options.maxOptimizationHistory);
+      this.optimizationHistory = this.optimizationHistory.slice(
+        -this.options.maxOptimizationHistory,
+      );
     }
   }
 
@@ -653,19 +683,24 @@ class HandlerOptimizer {
   async performPeriodicOptimization() {
     try {
       // Perform optimization for all handlers with recent activity
-      const cutoffTime = new Date(Date.now() - this.options.optimizationInterval);
-      
+      const cutoffTime = new Date(
+        Date.now() - this.options.optimizationInterval,
+      );
+
       for (const [handlerId, profile] of this.performanceProfiles) {
         if (profile.lastExecution > cutoffTime) {
           await this.optimize(handlerId, {
             getDuration: () => profile.averageDuration,
             isSuccess: () => profile.successRate > 90,
-            getError: () => null
+            getError: () => null,
           });
         }
       }
     } catch (error) {
-      logger.error('HandlerOptimizer: Periodic optimization failed', error.message);
+      logger.error(
+        "HandlerOptimizer: Periodic optimization failed",
+        error.message,
+      );
     }
   }
 
@@ -684,20 +719,20 @@ class HandlerOptimizer {
         if (profile.averageDuration > this.options.performanceThreshold) {
           recommendations.push({
             handlerId,
-            type: 'PERFORMANCE',
-            priority: 'HIGH',
-            description: 'Handler execution time exceeds threshold',
-            action: 'Consider caching or optimization'
+            type: "PERFORMANCE",
+            priority: "HIGH",
+            description: "Handler execution time exceeds threshold",
+            action: "Consider caching or optimization",
           });
         }
 
         if (profile.successRate < 90) {
           recommendations.push({
             handlerId,
-            type: 'RELIABILITY',
-            priority: 'HIGH',
-            description: 'Handler success rate is below 90%',
-            action: 'Improve error handling and validation'
+            type: "RELIABILITY",
+            priority: "HIGH",
+            description: "Handler success rate is below 90%",
+            action: "Improve error handling and validation",
           });
         }
       }
@@ -707,10 +742,10 @@ class HandlerOptimizer {
         if (profile.averageDuration > this.options.performanceThreshold) {
           recommendations.push({
             handlerId: id,
-            type: 'PERFORMANCE',
-            priority: 'MEDIUM',
-            description: 'Handler execution time exceeds threshold',
-            action: 'Consider caching or optimization'
+            type: "PERFORMANCE",
+            priority: "MEDIUM",
+            description: "Handler execution time exceeds threshold",
+            action: "Consider caching or optimization",
           });
         }
       }
@@ -725,19 +760,24 @@ class HandlerOptimizer {
    */
   getOptimizationStatistics() {
     const totalOptimizations = this.optimizationHistory.length;
-    const successfulOptimizations = this.optimizationHistory.filter(o => o.strategies.length > 0).length;
+    const successfulOptimizations = this.optimizationHistory.filter(
+      (o) => o.strategies.length > 0,
+    ).length;
     const activeHandlers = this.performanceProfiles.size;
 
     return {
       totalOptimizations,
       successfulOptimizations,
-      successRate: totalOptimizations > 0 ? (successfulOptimizations / totalOptimizations) * 100 : 0,
+      successRate:
+        totalOptimizations > 0
+          ? (successfulOptimizations / totalOptimizations) * 100
+          : 0,
       activeHandlers,
       optimizationHistory: this.optimizationHistory.length,
       enabled: this.options.enableOptimization,
       adaptiveTuning: this.options.enableAdaptiveTuning,
       resourceManagement: this.options.enableResourceManagement,
-      cachingOptimization: this.options.enableCachingOptimization
+      cachingOptimization: this.options.enableCachingOptimization,
     };
   }
 
@@ -752,4 +792,4 @@ class HandlerOptimizer {
   }
 }
 
-module.exports = HandlerOptimizer; 
+module.exports = HandlerOptimizer;

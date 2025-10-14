@@ -3,20 +3,20 @@
  * Handler for opening IDE command palette
  */
 
-const OpenCommandPaletteCommand = require('@categories/ide/OpenCommandPaletteCommand');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const OpenCommandPaletteCommand = require("@categories/ide/OpenCommandPaletteCommand");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class OpenCommandPaletteHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.browserManager = dependencies.browserManager;
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
-    
+
     this.handlerId = this.generateHandlerId();
   }
 
@@ -25,11 +25,17 @@ class OpenCommandPaletteHandler {
    * @param {Object} dependencies - Handler dependencies
    */
   validateDependencies(dependencies) {
-    const requiredDeps = ['ideAutomationService', 'browserManager', 'ideManager'];
-    const missingDeps = requiredDeps.filter(dep => !dependencies[dep]);
-    
+    const requiredDeps = [
+      "ideAutomationService",
+      "browserManager",
+      "ideManager",
+    ];
+    const missingDeps = requiredDeps.filter((dep) => !dependencies[dep]);
+
     if (missingDeps.length > 0) {
-      throw new Error(`OpenCommandPaletteHandler missing required dependencies: ${missingDeps.join(', ')}`);
+      throw new Error(
+        `OpenCommandPaletteHandler missing required dependencies: ${missingDeps.join(", ")}`,
+      );
     }
   }
 
@@ -48,22 +54,21 @@ class OpenCommandPaletteHandler {
    */
   async validateCommand(command) {
     try {
-      if (!command || command.type !== 'OpenCommandPaletteCommand') {
+      if (!command || command.type !== "OpenCommandPaletteCommand") {
         return {
           isValid: false,
-          errors: ['Invalid command type for OpenCommandPaletteHandler']
+          errors: ["Invalid command type for OpenCommandPaletteHandler"],
         };
       }
 
       // Validate command parameters
       const validationResult = await command.validate();
       return validationResult;
-
     } catch (error) {
-      this.logger.error('Command validation error:', error);
+      this.logger.error("Command validation error:", error);
       return {
         isValid: false,
-        errors: [error.message]
+        errors: [error.message],
       };
     }
   }
@@ -79,87 +84,89 @@ class OpenCommandPaletteHandler {
       // Validate command
       const validationResult = await this.validateCommand(command);
       if (!validationResult.isValid) {
-        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Command validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
-      this.logger.info('Handling command', {
+      this.logger.info("Handling command", {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
         ideType: command.ideType,
-        searchTerm: command.searchTerm
+        searchTerm: command.searchTerm,
       });
 
       // Publish event
-      await this.eventBus.publish('ide.commandpalette.opening', {
+      await this.eventBus.publish("ide.commandpalette.opening", {
         commandId: command.commandId,
         userId: command.userId,
         ideType: command.ideType,
         searchTerm: command.searchTerm,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Get active IDE type if not specified
-      const ideType = command.ideType || await this.ideManager.getActiveIDEType();
+      const ideType =
+        command.ideType || (await this.ideManager.getActiveIDEType());
 
       // Use BrowserManager to open command palette
       const browserResult = await this.browserManager.openCommandPalette({
         ideType: ideType,
         searchTerm: command.searchTerm,
-        ...command.options
+        ...command.options,
       });
 
       // Use IDEAutomationService for additional IDE-specific operations
-      const automationResult = await this.ideAutomationService.openCommandPalette({
-        ideType: ideType,
-        searchTerm: command.searchTerm,
-        ...command.options
-      });
+      const automationResult =
+        await this.ideAutomationService.openCommandPalette({
+          ideType: ideType,
+          searchTerm: command.searchTerm,
+          ...command.options,
+        });
 
       const result = {
-        success: true,
         commandId: command.commandId,
         ideType: ideType,
         searchTerm: command.searchTerm,
         browserResult: browserResult,
         automationResult: automationResult,
-        message: `Successfully opened command palette${command.searchTerm ? ` with search term: ${command.searchTerm}` : ''}`,
+        message: `Successfully opened command palette${command.searchTerm ? ` with search term: ${command.searchTerm}` : ""}`,
         metadata: {
           handlerId: this.handlerId,
           executionTime: new Date(),
-          options: options
-        }
+          options: options,
+        },
       };
 
       // Publish success event
-      await this.eventBus.publish('ide.commandpalette.opened', {
+      await this.eventBus.publish("ide.commandpalette.opened", {
         commandId: command.commandId,
         userId: command.userId,
         ideType: ideType,
         searchTerm: command.searchTerm,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info('Command handled successfully', {
+      this.logger.info("Command handled successfully", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        result: result
+        result: result,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Command handling failed:', error);
+      this.logger.error("Command handling failed:", error);
 
       // Publish failure event
-      await this.eventBus.publish('ide.commandpalette.open.failed', {
+      await this.eventBus.publish("ide.commandpalette.open.failed", {
         commandId: command.commandId,
         userId: command.userId,
         ideType: command.ideType,
         searchTerm: command.searchTerm,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -173,11 +180,16 @@ class OpenCommandPaletteHandler {
   getMetadata() {
     return {
       id: this.handlerId,
-      type: 'OpenCommandPaletteHandler',
-      dependencies: ['ideAutomationService', 'browserManager', 'ideManager', 'eventBus'],
-      supportedCommands: ['OpenCommandPaletteCommand']
+      type: "OpenCommandPaletteHandler",
+      dependencies: [
+        "ideAutomationService",
+        "browserManager",
+        "ideManager",
+        "eventBus",
+      ],
+      supportedCommands: ["OpenCommandPaletteCommand"],
     };
   }
 }
 
-module.exports = OpenCommandPaletteHandler; 
+module.exports = OpenCommandPaletteHandler;

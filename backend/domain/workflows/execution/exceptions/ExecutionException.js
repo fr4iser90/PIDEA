@@ -9,7 +9,7 @@
 class ExecutionException extends Error {
   constructor(message, cause = null, context = {}) {
     super(message);
-    this.name = 'ExecutionException';
+    this.name = "ExecutionException";
     this.cause = cause;
     this.context = context;
     this.timestamp = new Date();
@@ -17,7 +17,7 @@ class ExecutionException extends Error {
     this.workflowName = context.workflowName || null;
     this.stepIndex = context.stepIndex || null;
     this.stepName = context.stepName || null;
-    
+
     // Ensure proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ExecutionException);
@@ -37,7 +37,7 @@ class ExecutionException extends Error {
       stepIndex: this.stepIndex,
       stepName: this.stepName,
       timestamp: this.timestamp,
-      context: this.context
+      context: this.context,
     };
   }
 
@@ -49,7 +49,7 @@ class ExecutionException extends Error {
     return {
       ...this.getSummary(),
       stack: this.stack,
-      cause: this.cause ? this.cause.message : null
+      cause: this.cause ? this.cause.message : null,
     };
   }
 }
@@ -60,7 +60,7 @@ class ExecutionException extends Error {
 class StrategyExecutionException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'StrategyExecutionException';
+    this.name = "StrategyExecutionException";
     this.strategyName = context.strategyName || null;
     this.strategyType = context.strategyType || null;
   }
@@ -73,7 +73,7 @@ class StrategyExecutionException extends ExecutionException {
     return {
       ...super.getSummary(),
       strategyName: this.strategyName,
-      strategyType: this.strategyType
+      strategyType: this.strategyType,
     };
   }
 }
@@ -84,7 +84,7 @@ class StrategyExecutionException extends ExecutionException {
 class StepExecutionException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'StepExecutionException';
+    this.name = "StepExecutionException";
     this.stepType = context.stepType || null;
     this.stepMetadata = context.stepMetadata || null;
     this.attemptNumber = context.attemptNumber || 1;
@@ -100,7 +100,7 @@ class StepExecutionException extends ExecutionException {
       ...super.getSummary(),
       stepType: this.stepType,
       attemptNumber: this.attemptNumber,
-      maxAttempts: this.maxAttempts
+      maxAttempts: this.maxAttempts,
     };
   }
 
@@ -126,10 +126,10 @@ class StepExecutionException extends ExecutionException {
 class ExecutionTimeoutException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ExecutionTimeoutException';
+    this.name = "ExecutionTimeoutException";
     this.timeout = context.timeout || 0;
     this.elapsedTime = context.elapsedTime || 0;
-    this.timeoutType = context.timeoutType || 'execution'; // execution, step, resource
+    this.timeoutType = context.timeoutType || "execution"; // execution, step, resource
   }
 
   /**
@@ -141,7 +141,7 @@ class ExecutionTimeoutException extends ExecutionException {
       ...super.getSummary(),
       timeout: this.timeout,
       elapsedTime: this.elapsedTime,
-      timeoutType: this.timeoutType
+      timeoutType: this.timeoutType,
     };
   }
 }
@@ -152,7 +152,7 @@ class ExecutionTimeoutException extends ExecutionException {
 class ResourceException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ResourceException';
+    this.name = "ResourceException";
     this.resourceType = context.resourceType || null; // memory, cpu, network, disk
     this.requiredAmount = context.requiredAmount || 0;
     this.availableAmount = context.availableAmount || 0;
@@ -169,7 +169,7 @@ class ResourceException extends ExecutionException {
       resourceType: this.resourceType,
       requiredAmount: this.requiredAmount,
       availableAmount: this.availableAmount,
-      resourceId: this.resourceId
+      resourceId: this.resourceId,
     };
   }
 }
@@ -180,7 +180,7 @@ class ResourceException extends ExecutionException {
 class DependencyException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'DependencyException';
+    this.name = "DependencyException";
     this.dependencyType = context.dependencyType || null; // step, resource, service
     this.dependencyId = context.dependencyId || null;
     this.missingDependencies = context.missingDependencies || [];
@@ -197,7 +197,7 @@ class DependencyException extends ExecutionException {
       dependencyType: this.dependencyType,
       dependencyId: this.dependencyId,
       missingDependencies: this.missingDependencies,
-      circularDependencies: this.circularDependencies
+      circularDependencies: this.circularDependencies,
     };
   }
 }
@@ -208,7 +208,7 @@ class DependencyException extends ExecutionException {
 class ValidationException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ValidationException';
+    this.name = "ValidationException";
     this.validationType = context.validationType || null; // workflow, step, context, input
     this.validationErrors = context.validationErrors || [];
     this.validationWarnings = context.validationWarnings || [];
@@ -223,7 +223,7 @@ class ValidationException extends ExecutionException {
       ...super.getSummary(),
       validationType: this.validationType,
       validationErrors: this.validationErrors,
-      validationWarnings: this.validationWarnings
+      validationWarnings: this.validationWarnings,
     };
   }
 }
@@ -234,7 +234,7 @@ class ValidationException extends ExecutionException {
 class OptimizationException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'OptimizationException';
+    this.name = "OptimizationException";
     this.optimizationType = context.optimizationType || null; // step_combination, reordering, parallel, resource
     this.optimizationData = context.optimizationData || {};
     this.optimizationRisks = context.optimizationRisks || [];
@@ -248,7 +248,7 @@ class OptimizationException extends ExecutionException {
     return {
       ...super.getSummary(),
       optimizationType: this.optimizationType,
-      optimizationRisks: this.optimizationRisks
+      optimizationRisks: this.optimizationRisks,
     };
   }
 }
@@ -259,7 +259,7 @@ class OptimizationException extends ExecutionException {
 class CacheException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'CacheException';
+    this.name = "CacheException";
     this.cacheType = context.cacheType || null; // result, step, resource
     this.cacheKey = context.cacheKey || null;
     this.cacheOperation = context.cacheOperation || null; // get, set, invalidate
@@ -278,7 +278,7 @@ class CacheException extends ExecutionException {
       cacheKey: this.cacheKey,
       cacheOperation: this.cacheOperation,
       cacheSize: this.cacheSize,
-      maxCacheSize: this.maxCacheSize
+      maxCacheSize: this.maxCacheSize,
     };
   }
 }
@@ -289,7 +289,7 @@ class CacheException extends ExecutionException {
 class MonitoringException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'MonitoringException';
+    this.name = "MonitoringException";
     this.monitoringType = context.monitoringType || null; // metrics, alerts, performance
     this.metricName = context.metricName || null;
     this.alertType = context.alertType || null;
@@ -308,7 +308,7 @@ class MonitoringException extends ExecutionException {
       metricName: this.metricName,
       alertType: this.alertType,
       threshold: this.threshold,
-      currentValue: this.currentValue
+      currentValue: this.currentValue,
     };
   }
 }
@@ -319,7 +319,7 @@ class MonitoringException extends ExecutionException {
 class QueueException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'QueueException';
+    this.name = "QueueException";
     this.queueType = context.queueType || null; // execution, priority, retry
     this.queueSize = context.queueSize || 0;
     this.maxQueueSize = context.maxQueueSize || 0;
@@ -338,7 +338,7 @@ class QueueException extends ExecutionException {
       queueSize: this.queueSize,
       maxQueueSize: this.maxQueueSize,
       queueOperation: this.queueOperation,
-      priority: this.priority
+      priority: this.priority,
     };
   }
 }
@@ -349,7 +349,7 @@ class QueueException extends ExecutionException {
 class SchedulerException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'SchedulerException';
+    this.name = "SchedulerException";
     this.schedulerType = context.schedulerType || null; // priority, round_robin, fair
     this.schedulingAlgorithm = context.schedulingAlgorithm || null;
     this.scheduleTime = context.scheduleTime || null;
@@ -368,7 +368,7 @@ class SchedulerException extends ExecutionException {
       schedulingAlgorithm: this.schedulingAlgorithm,
       scheduleTime: this.scheduleTime,
       estimatedDuration: this.estimatedDuration,
-      actualDuration: this.actualDuration
+      actualDuration: this.actualDuration,
     };
   }
 }
@@ -379,7 +379,7 @@ class SchedulerException extends ExecutionException {
 class ContextException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ContextException';
+    this.name = "ContextException";
     this.contextType = context.contextType || null; // workflow, step, execution
     this.missingData = context.missingData || [];
     this.invalidData = context.invalidData || [];
@@ -396,7 +396,7 @@ class ContextException extends ExecutionException {
       contextType: this.contextType,
       missingData: this.missingData,
       invalidData: this.invalidData,
-      dataType: this.dataType
+      dataType: this.dataType,
     };
   }
 }
@@ -407,7 +407,7 @@ class ContextException extends ExecutionException {
 class ResultException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ResultException';
+    this.name = "ResultException";
     this.resultType = context.resultType || null; // success, failure, partial
     this.expectedResult = context.expectedResult || null;
     this.actualResult = context.actualResult || null;
@@ -424,7 +424,7 @@ class ResultException extends ExecutionException {
       resultType: this.resultType,
       expectedResult: this.expectedResult,
       actualResult: this.actualResult,
-      resultValidation: this.resultValidation
+      resultValidation: this.resultValidation,
     };
   }
 }
@@ -435,7 +435,7 @@ class ResultException extends ExecutionException {
 class ExternalServiceException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ExternalServiceException';
+    this.name = "ExternalServiceException";
     this.serviceName = context.serviceName || null;
     this.serviceEndpoint = context.serviceEndpoint || null;
     this.serviceResponse = context.serviceResponse || null;
@@ -455,7 +455,7 @@ class ExternalServiceException extends ExecutionException {
       serviceEndpoint: this.serviceEndpoint,
       retryable: this.retryable,
       retryCount: this.retryCount,
-      maxRetries: this.maxRetries
+      maxRetries: this.maxRetries,
     };
   }
 
@@ -481,7 +481,7 @@ class ExternalServiceException extends ExecutionException {
 class ConfigurationException extends ExecutionException {
   constructor(message, cause = null, context = {}) {
     super(message, cause, context);
-    this.name = 'ConfigurationException';
+    this.name = "ConfigurationException";
     this.configType = context.configType || null; // engine, strategy, resource, monitoring
     this.configKey = context.configKey || null;
     this.configValue = context.configValue || null;
@@ -499,7 +499,7 @@ class ConfigurationException extends ExecutionException {
       configType: this.configType,
       configKey: this.configKey,
       expectedType: this.expectedType,
-      actualType: this.actualType
+      actualType: this.actualType,
     };
   }
 }
@@ -685,36 +685,44 @@ class ExecutionExceptionFactory {
     }
 
     // Determine exception type based on error message or context
-    const message = error.message || 'Unknown execution error';
-    
-    if (message.includes('timeout') || message.includes('timed out')) {
+    const message = error.message || "Unknown execution error";
+
+    if (message.includes("timeout") || message.includes("timed out")) {
       return this.createTimeoutException(message, error, context);
     }
-    
-    if (message.includes('resource') || message.includes('memory') || message.includes('cpu')) {
+
+    if (
+      message.includes("resource") ||
+      message.includes("memory") ||
+      message.includes("cpu")
+    ) {
       return this.createResourceException(message, error, context);
     }
-    
-    if (message.includes('dependency') || message.includes('depends')) {
+
+    if (message.includes("dependency") || message.includes("depends")) {
       return this.createDependencyException(message, error, context);
     }
-    
-    if (message.includes('validation') || message.includes('invalid')) {
+
+    if (message.includes("validation") || message.includes("invalid")) {
       return this.createValidationException(message, error, context);
     }
-    
-    if (message.includes('cache') || message.includes('cached')) {
+
+    if (message.includes("cache") || message.includes("cached")) {
       return this.createCacheException(message, error, context);
     }
-    
-    if (message.includes('service') || message.includes('api') || message.includes('http')) {
+
+    if (
+      message.includes("service") ||
+      message.includes("api") ||
+      message.includes("http")
+    ) {
       return this.createExternalServiceException(message, error, context);
     }
-    
-    if (message.includes('config') || message.includes('configuration')) {
+
+    if (message.includes("config") || message.includes("configuration")) {
       return this.createConfigurationException(message, error, context);
     }
-    
+
     // Default to base execution exception
     return new ExecutionException(message, error, context);
   }
@@ -737,5 +745,5 @@ module.exports = {
   ResultException,
   ExternalServiceException,
   ConfigurationException,
-  ExecutionExceptionFactory
-}; 
+  ExecutionExceptionFactory,
+};

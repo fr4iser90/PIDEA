@@ -92,7 +92,6 @@ describe('PideaAgentBranchComponent', () => {
     it('handles successful pull operation', async () => {
       const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully pulled changes',
         changes: ['file1.js', 'file2.js']
       });
@@ -137,7 +136,6 @@ describe('PideaAgentBranchComponent', () => {
     it('handles successful merge operation', async () => {
       const { mergePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       mergePideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Successfully merged changes',
         mergedFiles: ['file1.js', 'file2.js']
       });
@@ -182,7 +180,6 @@ describe('PideaAgentBranchComponent', () => {
     it('handles successful compare operation', async () => {
       const { comparePideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       comparePideaAgentBranch.mockResolvedValue({
-        success: true,
         differences: [
           { file: 'file1.js', status: 'modified' },
           { file: 'file2.js', status: 'added' }
@@ -303,7 +300,7 @@ describe('PideaAgentBranchComponent', () => {
     it('handles API response errors', async () => {
       const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockResolvedValue({
-        success: false,
+       
         error: 'API error message'
       });
 
@@ -327,7 +324,6 @@ describe('PideaAgentBranchComponent', () => {
     it('calls onStatusUpdate with correct status', async () => {
       const { pullPideaAgentBranch } = require('@/infrastructure/repositories/ChatRepository');
       pullPideaAgentBranch.mockResolvedValue({
-        success: true,
         message: 'Success',
         status: 'up-to-date'
       });

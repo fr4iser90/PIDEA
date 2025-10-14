@@ -3,12 +3,14 @@
  * Specialized service for memory usage analysis orchestration
  */
 
-const Logger = require('@logging/Logger');
-const { MemoryAnalysisStep } = require('@domain/steps/categories/analysis/performance');
+const Logger = require("@logging/Logger");
+const {
+  MemoryAnalysisStep,
+} = require("@domain/steps/categories/analysis/performance");
 
 class MemoryAnalysisService {
   constructor() {
-    this.logger = new Logger('MemoryAnalysisService');
+    this.logger = new Logger("MemoryAnalysisService");
     this.memoryStep = new MemoryAnalysisStep();
   }
 
@@ -22,22 +24,23 @@ class MemoryAnalysisService {
    */
   async executeMemoryAnalysis(params) {
     try {
-      this.logger.info('Starting memory usage analysis', { projectId: params.projectId });
+      this.logger.info("Starting memory usage analysis", {
+        projectId: params.projectId,
+      });
 
       const result = await this.memoryStep.execute(params);
 
-      this.logger.info('Memory analysis completed', { 
+      this.logger.info("Memory analysis completed", {
         projectId: params.projectId,
         issuesFound: result.issues?.length || 0,
-        memoryUsage: result.metrics?.memoryUsage || 0
+        memoryUsage: result.metrics?.memoryUsage || 0,
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('Memory analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Memory analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -49,13 +52,18 @@ class MemoryAnalysisService {
    */
   getConfiguration() {
     return {
-      name: 'Memory Usage Analyzer',
-      version: '1.0.0',
-      description: 'Memory usage patterns and optimization analysis',
-      metrics: ['heap-usage', 'garbage-collection', 'memory-leaks', 'bundle-size'],
-      severityLevels: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+      name: "Memory Usage Analyzer",
+      version: "1.0.0",
+      description: "Memory usage patterns and optimization analysis",
+      metrics: [
+        "heap-usage",
+        "garbage-collection",
+        "memory-leaks",
+        "bundle-size",
+      ],
+      severityLevels: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     };
   }
 }
 
-module.exports = MemoryAnalysisService; 
+module.exports = MemoryAnalysisService;

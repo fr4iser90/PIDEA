@@ -1,20 +1,20 @@
 /**
  * Build Templates Module
  */
-const { TEMPLATE_CATEGORIES } = require('./constants');
+const { TEMPLATE_CATEGORIES } = require("./constants");
 
 class BuildTemplates {
-    /**
-     * Get build script templates
-     * @returns {Object} Build templates
-     */
-    static getTemplates() {
-        return {
-            webpackBuild: {
-                name: 'Webpack Build Script',
-                description: 'Build application using Webpack',
-                category: TEMPLATE_CATEGORIES.BUILD,
-                template: `#!/bin/bash
+  /**
+   * Get build script templates
+   * @returns {Object} Build templates
+   */
+  static getTemplates() {
+    return {
+      webpackBuild: {
+        name: "Webpack Build Script",
+        description: "Build application using Webpack",
+        category: TEMPLATE_CATEGORIES.BUILD,
+        template: `#!/bin/bash
 # Webpack Build Script
 echo "Starting Webpack build..."
 
@@ -45,18 +45,18 @@ else
     echo "Build failed!"
     exit 1
 fi`,
-                variables: {
-                    NODE_ENV: 'production',
-                    BUILD_DIR: 'dist'
-                },
-                outputs: ['dist/', 'build/']
-            },
+        variables: {
+          NODE_ENV: "production",
+          BUILD_DIR: "dist",
+        },
+        outputs: ["dist/", "build/"],
+      },
 
-            viteBuild: {
-                name: 'Vite Build Script',
-                description: 'Build application using Vite',
-                category: TEMPLATE_CATEGORIES.BUILD,
-                template: `#!/bin/bash
+      viteBuild: {
+        name: "Vite Build Script",
+        description: "Build application using Vite",
+        category: TEMPLATE_CATEGORIES.BUILD,
+        template: `#!/bin/bash
 # Vite Build Script
 echo "Starting Vite build..."
 
@@ -92,18 +92,18 @@ else
     echo "Build failed!"
     exit 1
 fi`,
-                variables: {
-                    NODE_ENV: 'production',
-                    BUILD_DIR: 'dist'
-                },
-                outputs: ['dist/']
-            },
+        variables: {
+          NODE_ENV: "production",
+          BUILD_DIR: "dist",
+        },
+        outputs: ["dist/"],
+      },
 
-            rollupBuild: {
-                name: 'Rollup Build Script',
-                description: 'Build application using Rollup',
-                category: TEMPLATE_CATEGORIES.BUILD,
-                template: `#!/bin/bash
+      rollupBuild: {
+        name: "Rollup Build Script",
+        description: "Build application using Rollup",
+        category: TEMPLATE_CATEGORIES.BUILD,
+        template: `#!/bin/bash
 # Rollup Build Script
 echo "Starting Rollup build..."
 
@@ -133,18 +133,18 @@ else
     echo "Build failed!"
     exit 1
 fi`,
-                variables: {
-                    NODE_ENV: 'production',
-                    BUILD_DIR: 'dist'
-                },
-                outputs: ['dist/']
-            },
+        variables: {
+          NODE_ENV: "production",
+          BUILD_DIR: "dist",
+        },
+        outputs: ["dist/"],
+      },
 
-            dockerBuild: {
-                name: 'Docker Build Script',
-                description: 'Build Docker image',
-                category: TEMPLATE_CATEGORIES.BUILD,
-                template: `#!/bin/bash
+      dockerBuild: {
+        name: "Docker Build Script",
+        description: "Build Docker image",
+        category: TEMPLATE_CATEGORIES.BUILD,
+        template: `#!/bin/bash
 # Docker Build Script
 echo "Starting Docker build..."
 
@@ -191,15 +191,15 @@ else
     echo "Docker build failed!"
     exit 1
 fi`,
-                variables: {
-                    IMAGE_NAME: 'myapp',
-                    IMAGE_TAG: 'latest',
-                    DOCKERFILE: 'Dockerfile'
-                },
-                outputs: ['docker-image']
-            }
-        };
-    }
+        variables: {
+          IMAGE_NAME: "myapp",
+          IMAGE_TAG: "latest",
+          DOCKERFILE: "Dockerfile",
+        },
+        outputs: ["docker-image"],
+      },
+    };
+  }
 }
 
-module.exports = BuildTemplates; 
+module.exports = BuildTemplates;

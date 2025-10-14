@@ -1,12 +1,12 @@
 /**
  * Request Analytics Service
- * 
+ *
  * Backend request analytics and monitoring for performance insights,
  * bottleneck detection, and system health monitoring.
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('RequestAnalyticsService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("RequestAnalyticsService");
 
 class RequestAnalyticsService {
   constructor(options = {}) {
@@ -21,22 +21,22 @@ class RequestAnalyticsService {
       totalResponseTime: 0,
       peakConcurrentRequests: 0,
       currentConcurrentRequests: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
-    
+
     // Performance thresholds
     this.thresholds = {
       slowRequest: options.slowRequest || 1000, // 1 second
       errorRate: options.errorRate || 0.05, // 5%
-      concurrentLimit: options.concurrentLimit || 50
+      concurrentLimit: options.concurrentLimit || 50,
     };
-    
+
     // Alerts
     this.alerts = [];
     this.maxAlerts = options.maxAlerts || 100;
-    
+
     // Export configuration
-    this.exportFormats = ['json', 'csv'];
+    this.exportFormats = ["json", "csv"];
   }
 
   /**
@@ -48,9 +48,9 @@ class RequestAnalyticsService {
   trackRequest(req, res, next) {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
-    const userId = req.user?.id || 'anonymous';
+    const userId = req.user?.id || "anonymous";
     const endpoint = `${req.method} ${req.path}`;
-    
+
     // Track request start
     const request = {
       id: requestId,
@@ -59,62 +59,76 @@ class RequestAnalyticsService {
       method: req.method,
       path: req.path,
       startTime,
-      status: 'pending',
+      status: "pending",
       responseTime: null,
       success: null,
       error: null,
-      userAgent: req.get('User-Agent'),
-      ip: req.ip
+      userAgent: req.get("User-Agent"),
+      ip: req.ip,
     };
-    
+
     this.requests.set(requestId, request);
     this.systemMetrics.totalRequests++;
     this.systemMetrics.currentConcurrentRequests++;
-    
+
     // Update peak concurrent requests
-    if (this.systemMetrics.currentConcurrentRequests > this.systemMetrics.peakConcurrentRequests) {
-      this.systemMetrics.peakConcurrentRequests = this.systemMetrics.currentConcurrentRequests;
+    if (
+      this.systemMetrics.currentConcurrentRequests >
+      this.systemMetrics.peakConcurrentRequests
+    ) {
+      this.systemMetrics.peakConcurrentRequests =
+        this.systemMetrics.currentConcurrentRequests;
     }
-    
+
     // Update endpoint and user stats
-    this.updateEndpointStats(endpoint, 'start');
-    this.updateUserStats(userId, 'start');
-    
+    this.updateEndpointStats(endpoint, "start");
+    this.updateUserStats(userId, "start");
+
     // Check for high concurrent requests
     this.checkConcurrentRequests();
-    
+
     // Override response methods to track completion
     const originalSend = res.send;
     const originalJson = res.json;
     const originalStatus = res.status;
-    
+
     let responseSent = false;
     let responseStatus = 200;
-    
-    res.status = function(code) {
+
+    res.status = function (code) {
       responseStatus = code;
       return originalStatus.call(this, code);
     };
-    
-    res.send = function(data) {
+
+    res.send = function (data) {
       if (!responseSent) {
         responseSent = true;
-        this.trackResponseCompletion(requestId, responseStatus < 400, Date.now() - startTime, data);
+        this.trackResponseCompletion(
+          requestId,
+          responseStatus < 400,
+          Date.now() - startTime,
+          data,
+        );
       }
       return originalSend.call(this, data);
     };
-    
-    res.json = function(data) {
+
+    res.json = function (data) {
       if (!responseSent) {
         responseSent = true;
-        this.trackResponseCompletion(requestId, responseStatus < 400, Date.now() - startTime, data);
+        this.trackResponseCompletion(
+          requestId,
+          responseStatus < 400,
+          Date.now() - startTime,
+          data,
+        );
       }
       return originalJson.call(this, data);
     };
-    
+
     // Bind tracking method to response object
     res.trackResponseCompletion = this.trackResponseCompletion.bind(this);
-    
+
     next();
   }
 
@@ -131,13 +145,13 @@ class RequestAnalyticsService {
       logger.warn(`Request not found for completion tracking: ${requestId}`);
       return;
     }
-    
-    request.status = 'completed';
+
+    request.status = "completed";
     request.responseTime = responseTime;
     request.success = success;
     request.endTime = Date.now();
     request.responseStatus = success ? 200 : 500;
-    
+
     if (success) {
       request.result = result;
       this.systemMetrics.successfulRequests++;
@@ -145,21 +159,23 @@ class RequestAnalyticsService {
       request.error = result;
       this.systemMetrics.failedRequests++;
     }
-    
+
     this.systemMetrics.totalResponseTime += responseTime;
-    this.systemMetrics.averageResponseTime = 
+    this.systemMetrics.averageResponseTime =
       this.systemMetrics.totalResponseTime / this.systemMetrics.totalRequests;
-    
+
     this.systemMetrics.currentConcurrentRequests--;
-    
+
     // Update endpoint and user stats
-    this.updateEndpointStats(request.endpoint, 'complete', success);
-    this.updateUserStats(request.userId, 'complete', success);
-    
+    this.updateEndpointStats(request.endpoint, "complete", success);
+    this.updateUserStats(request.userId, "complete", success);
+
     // Check for performance issues
     this.checkPerformanceIssues(request);
-    
-    logger.debug(`Request completed: ${requestId}, success: ${success}, time: ${responseTime}ms`);
+
+    logger.debug(
+      `Request completed: ${requestId}, success: ${success}, time: ${responseTime}ms`,
+    );
   }
 
   /**
@@ -177,18 +193,18 @@ class RequestAnalyticsService {
         averageResponseTime: 0,
         totalResponseTime: 0,
         lastRequest: null,
-        slowRequests: 0
+        slowRequests: 0,
       });
     }
-    
+
     const stats = this.endpointStats.get(endpoint);
-    
+
     switch (action) {
-      case 'start':
+      case "start":
         stats.totalRequests++;
         stats.lastRequest = Date.now();
         break;
-      case 'complete':
+      case "complete":
         if (success) {
           stats.successfulRequests++;
         } else {
@@ -196,7 +212,7 @@ class RequestAnalyticsService {
         }
         break;
     }
-    
+
     this.endpointStats.set(endpoint, stats);
   }
 
@@ -215,18 +231,18 @@ class RequestAnalyticsService {
         averageResponseTime: 0,
         totalResponseTime: 0,
         lastRequest: null,
-        endpoints: new Set()
+        endpoints: new Set(),
       });
     }
-    
+
     const stats = this.userStats.get(userId);
-    
+
     switch (action) {
-      case 'start':
+      case "start":
         stats.totalRequests++;
         stats.lastRequest = Date.now();
         break;
-      case 'complete':
+      case "complete":
         if (success) {
           stats.successfulRequests++;
         } else {
@@ -234,7 +250,7 @@ class RequestAnalyticsService {
         }
         break;
     }
-    
+
     this.userStats.set(userId, stats);
   }
 
@@ -245,22 +261,23 @@ class RequestAnalyticsService {
   checkPerformanceIssues(request) {
     // Check for slow requests
     if (request.responseTime > this.thresholds.slowRequest) {
-      this.createAlert('slow_request', {
+      this.createAlert("slow_request", {
         requestId: request.id,
         endpoint: request.endpoint,
         responseTime: request.responseTime,
-        threshold: this.thresholds.slowRequest
+        threshold: this.thresholds.slowRequest,
       });
     }
-    
+
     // Check for high error rate
-    const errorRate = this.systemMetrics.failedRequests / this.systemMetrics.totalRequests;
+    const errorRate =
+      this.systemMetrics.failedRequests / this.systemMetrics.totalRequests;
     if (errorRate > this.thresholds.errorRate) {
-      this.createAlert('high_error_rate', {
+      this.createAlert("high_error_rate", {
         errorRate: errorRate.toFixed(4),
         threshold: this.thresholds.errorRate,
         totalRequests: this.systemMetrics.totalRequests,
-        failedRequests: this.systemMetrics.failedRequests
+        failedRequests: this.systemMetrics.failedRequests,
       });
     }
   }
@@ -269,10 +286,13 @@ class RequestAnalyticsService {
    * Check concurrent requests
    */
   checkConcurrentRequests() {
-    if (this.systemMetrics.currentConcurrentRequests > this.thresholds.concurrentLimit) {
-      this.createAlert('high_concurrent_requests', {
+    if (
+      this.systemMetrics.currentConcurrentRequests >
+      this.thresholds.concurrentLimit
+    ) {
+      this.createAlert("high_concurrent_requests", {
         current: this.systemMetrics.currentConcurrentRequests,
-        limit: this.thresholds.concurrentLimit
+        limit: this.thresholds.concurrentLimit,
       });
     }
   }
@@ -288,16 +308,16 @@ class RequestAnalyticsService {
       type,
       data,
       timestamp: new Date().toISOString(),
-      severity: this.getAlertSeverity(type)
+      severity: this.getAlertSeverity(type),
     };
-    
+
     this.alerts.unshift(alert);
-    
+
     // Keep only recent alerts
     if (this.alerts.length > this.maxAlerts) {
       this.alerts = this.alerts.slice(0, this.maxAlerts);
     }
-    
+
     logger.warn(`Performance alert: ${type}`, data);
   }
 
@@ -308,12 +328,12 @@ class RequestAnalyticsService {
    */
   getAlertSeverity(type) {
     const severityMap = {
-      slow_request: 'warning',
-      high_error_rate: 'critical',
-      high_concurrent_requests: 'warning'
+      slow_request: "warning",
+      high_error_rate: "critical",
+      high_concurrent_requests: "warning",
     };
-    
-    return severityMap[type] || 'info';
+
+    return severityMap[type] || "info";
   }
 
   /**
@@ -322,22 +342,27 @@ class RequestAnalyticsService {
    */
   analyzePerformance() {
     const uptime = Date.now() - this.systemMetrics.startTime;
-    const successRate = this.systemMetrics.totalRequests > 0 
-      ? (this.systemMetrics.successfulRequests / this.systemMetrics.totalRequests * 100).toFixed(2)
-      : 0;
-    
+    const successRate =
+      this.systemMetrics.totalRequests > 0
+        ? (
+            (this.systemMetrics.successfulRequests /
+              this.systemMetrics.totalRequests) *
+            100
+          ).toFixed(2)
+        : 0;
+
     return {
       system: {
         ...this.systemMetrics,
         uptime,
         successRate: `${successRate}%`,
         averageResponseTime: Math.round(this.systemMetrics.averageResponseTime),
-        requestsPerSecond: this.calculateRequestsPerSecond()
+        requestsPerSecond: this.calculateRequestsPerSecond(),
       },
       endpoints: this.getEndpointAnalysis(),
       users: this.getUserAnalysis(),
       alerts: this.getAlerts(),
-      bottlenecks: this.detectBottlenecks()
+      bottlenecks: this.detectBottlenecks(),
     };
   }
 
@@ -347,7 +372,9 @@ class RequestAnalyticsService {
    */
   calculateRequestsPerSecond() {
     const uptime = (Date.now() - this.systemMetrics.startTime) / 1000;
-    return uptime > 0 ? (this.systemMetrics.totalRequests / uptime).toFixed(2) : 0;
+    return uptime > 0
+      ? (this.systemMetrics.totalRequests / uptime).toFixed(2)
+      : 0;
   }
 
   /**
@@ -356,21 +383,23 @@ class RequestAnalyticsService {
    */
   getEndpointAnalysis() {
     const analysis = {};
-    
+
     for (const [endpoint, data] of this.endpointStats.entries()) {
-      const successRate = data.totalRequests > 0 
-        ? (data.successfulRequests / data.totalRequests * 100).toFixed(2)
-        : 0;
-      
+      const successRate =
+        data.totalRequests > 0
+          ? ((data.successfulRequests / data.totalRequests) * 100).toFixed(2)
+          : 0;
+
       analysis[endpoint] = {
         ...data,
         successRate: `${successRate}%`,
-        slowRequestRate: data.totalRequests > 0 
-          ? (data.slowRequests / data.totalRequests * 100).toFixed(2)
-          : 0
+        slowRequestRate:
+          data.totalRequests > 0
+            ? ((data.slowRequests / data.totalRequests) * 100).toFixed(2)
+            : 0,
       };
     }
-    
+
     return analysis;
   }
 
@@ -380,19 +409,20 @@ class RequestAnalyticsService {
    */
   getUserAnalysis() {
     const analysis = {};
-    
+
     for (const [userId, data] of this.userStats.entries()) {
-      const successRate = data.totalRequests > 0 
-        ? (data.successfulRequests / data.totalRequests * 100).toFixed(2)
-        : 0;
-      
+      const successRate =
+        data.totalRequests > 0
+          ? ((data.successfulRequests / data.totalRequests) * 100).toFixed(2)
+          : 0;
+
       analysis[userId] = {
         ...data,
         successRate: `${successRate}%`,
-        endpoints: Array.from(data.endpoints)
+        endpoints: Array.from(data.endpoints),
       };
     }
-    
+
     return analysis;
   }
 
@@ -410,32 +440,32 @@ class RequestAnalyticsService {
    */
   detectBottlenecks() {
     const bottlenecks = [];
-    
+
     // Check for slow endpoints
     for (const [endpoint, stats] of this.endpointStats.entries()) {
       if (stats.averageResponseTime > this.thresholds.slowRequest) {
         bottlenecks.push({
-          type: 'slow_endpoint',
+          type: "slow_endpoint",
           endpoint,
           averageResponseTime: stats.averageResponseTime,
-          threshold: this.thresholds.slowRequest
+          threshold: this.thresholds.slowRequest,
         });
       }
     }
-    
+
     // Check for high error rate endpoints
     for (const [endpoint, stats] of this.endpointStats.entries()) {
       const errorRate = stats.failedRequests / stats.totalRequests;
       if (errorRate > this.thresholds.errorRate) {
         bottlenecks.push({
-          type: 'high_error_rate_endpoint',
+          type: "high_error_rate_endpoint",
           endpoint,
           errorRate: errorRate.toFixed(4),
-          threshold: this.thresholds.errorRate
+          threshold: this.thresholds.errorRate,
         });
       }
     }
-    
+
     return bottlenecks;
   }
 
@@ -448,12 +478,16 @@ class RequestAnalyticsService {
       performance: this.analyzePerformance(),
       requests: {
         total: this.requests.size,
-        pending: Array.from(this.requests.values()).filter(r => r.status === 'pending').length,
-        completed: Array.from(this.requests.values()).filter(r => r.status === 'completed').length
+        pending: Array.from(this.requests.values()).filter(
+          (r) => r.status === "pending",
+        ).length,
+        completed: Array.from(this.requests.values()).filter(
+          (r) => r.status === "completed",
+        ).length,
       },
       recentRequests: this.getRecentRequests(50),
       slowRequests: this.getSlowRequests(),
-      failedRequests: this.getFailedRequests()
+      failedRequests: this.getFailedRequests(),
     };
   }
 
@@ -464,9 +498,7 @@ class RequestAnalyticsService {
    */
   getRecentRequests(limit = 50) {
     const requests = Array.from(this.requests.values());
-    return requests
-      .sort((a, b) => b.startTime - a.startTime)
-      .slice(0, limit);
+    return requests.sort((a, b) => b.startTime - a.startTime).slice(0, limit);
   }
 
   /**
@@ -475,7 +507,9 @@ class RequestAnalyticsService {
    */
   getSlowRequests() {
     return Array.from(this.requests.values())
-      .filter(r => r.responseTime && r.responseTime > this.thresholds.slowRequest)
+      .filter(
+        (r) => r.responseTime && r.responseTime > this.thresholds.slowRequest,
+      )
       .sort((a, b) => b.responseTime - a.responseTime);
   }
 
@@ -485,7 +519,7 @@ class RequestAnalyticsService {
    */
   getFailedRequests() {
     return Array.from(this.requests.values())
-      .filter(r => r.success === false)
+      .filter((r) => r.success === false)
       .sort((a, b) => b.endTime - a.endTime);
   }
 
@@ -494,19 +528,19 @@ class RequestAnalyticsService {
    * @param {string} format - Export format
    * @returns {string} Exported report
    */
-  exportReport(format = 'json') {
+  exportReport(format = "json") {
     if (!this.exportFormats.includes(format)) {
       throw new Error(`Unsupported export format: ${format}`);
     }
-    
+
     const data = {
       analytics: this.getAnalytics(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
-    if (format === 'json') {
+
+    if (format === "json") {
       return JSON.stringify(data, null, 2);
-    } else if (format === 'csv') {
+    } else if (format === "csv") {
       return this.convertToCSV(data);
     }
   }
@@ -518,16 +552,16 @@ class RequestAnalyticsService {
    */
   convertToCSV(data) {
     const requests = data.analytics.recentRequests;
-    if (!requests.length) return '';
-    
-    const headers = Object.keys(requests[0]).join(',');
-    const rows = requests.map(req => 
-      Object.values(req).map(val => 
-        typeof val === 'string' ? `"${val}"` : val
-      ).join(',')
+    if (!requests.length) return "";
+
+    const headers = Object.keys(requests[0]).join(",");
+    const rows = requests.map((req) =>
+      Object.values(req)
+        .map((val) => (typeof val === "string" ? `"${val}"` : val))
+        .join(","),
     );
-    
-    return [headers, ...rows].join('\n');
+
+    return [headers, ...rows].join("\n");
   }
 
   /**
@@ -562,10 +596,10 @@ class RequestAnalyticsService {
       totalResponseTime: 0,
       peakConcurrentRequests: 0,
       currentConcurrentRequests: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
-    
-    logger.info('Request analytics statistics reset');
+
+    logger.info("Request analytics statistics reset");
   }
 
   /**
@@ -576,12 +610,12 @@ class RequestAnalyticsService {
     this.endpointStats.clear();
     this.userStats.clear();
     this.alerts = [];
-    
-    logger.info('RequestAnalyticsService destroyed');
+
+    logger.info("RequestAnalyticsService destroyed");
   }
 }
 
 // Create singleton instance
 const requestAnalyticsService = new RequestAnalyticsService();
 
-module.exports = requestAnalyticsService; 
+module.exports = requestAnalyticsService;

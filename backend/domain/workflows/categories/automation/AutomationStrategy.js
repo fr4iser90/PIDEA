@@ -3,7 +3,7 @@
  * Defines different automation strategies for task execution
  */
 class AutomationStrategy {
-  constructor(name, description = '') {
+  constructor(name, description = "") {
     this._name = name;
     this._description = description;
   }
@@ -31,7 +31,7 @@ class AutomationStrategy {
    * @returns {Promise<Object>} Execution result
    */
   async execute(task, context) {
-    throw new Error('execute method must be implemented by subclass');
+    throw new Error("execute method must be implemented by subclass");
   }
 
   /**
@@ -41,7 +41,7 @@ class AutomationStrategy {
    * @returns {Promise<boolean>} True if can handle
    */
   async canHandle(task, context) {
-    throw new Error('canHandle method must be implemented by subclass');
+    throw new Error("canHandle method must be implemented by subclass");
   }
 
   /**
@@ -52,9 +52,9 @@ class AutomationStrategy {
     return {
       name: this._name,
       description: this._description,
-      type: this.constructor.name
+      type: this.constructor.name,
     };
   }
 }
 
-module.exports = AutomationStrategy; 
+module.exports = AutomationStrategy;

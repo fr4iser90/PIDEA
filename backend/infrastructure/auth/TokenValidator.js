@@ -1,8 +1,8 @@
-const Token = require('@domain/value-objects/Token');
-const TokenHash = require('@domain/value-objects/TokenHash');
-const TokenHasher = require('./TokenHasher');
-const Logger = require('@logging/Logger');
-const logger = new Logger('TokenValidator');
+const Token = require("@domain/value-objects/Token");
+const TokenHash = require("@domain/value-objects/TokenHash");
+const TokenHasher = require("./TokenHasher");
+const Logger = require("@logging/Logger");
+const logger = new Logger("TokenValidator");
 
 /**
  * TokenValidator - Infrastructure Layer
@@ -11,74 +11,81 @@ const logger = new Logger('TokenValidator');
 class TokenValidator {
   constructor(tokenHasher = null) {
     this._tokenHasher = tokenHasher || new TokenHasher();
-    
+
     // TokenValidator initialization logs removed for cleaner output
   }
 
   // Core validation operations
   validateToken(fullToken, storedPrefix, storedHash = null) {
     if (!fullToken) {
-      logger.warn('❌ Token validation failed: no token provided');
-      return { isValid: false, reason: 'No token provided' };
+      logger.warn("❌ Token validation failed: no token provided");
+      return { isValid: false, reason: "No token provided" };
     }
 
     try {
       // Basic token format validation
       const tokenVO = new Token(fullToken);
-      
+
       // Check if token is expired
       if (tokenVO.isExpired()) {
-        logger.warn('❌ Token validation failed: token expired', {
+        logger.warn("❌ Token validation failed: token expired", {
           tokenLength: fullToken.length,
-          expirationTime: tokenVO.getExpirationTime()
+          expirationTime: tokenVO.getExpirationTime(),
         });
-        return { isValid: false, reason: 'Token expired' };
+        return { isValid: false, reason: "Token expired" };
       }
 
       // SECURE TOKEN VALIDATION - Hash is REQUIRED
       if (!storedHash) {
-        logger.warn('❌ Token validation failed: no hash stored', {
-          tokenLength: fullToken.length
+        logger.warn("❌ Token validation failed: no hash stored", {
+          tokenLength: fullToken.length,
         });
-        return { isValid: false, reason: 'No token hash stored - session invalid' };
+        return {
+          isValid: false,
+          reason: "No token hash stored - session invalid",
+        };
       }
 
       // Validate token against stored hash
-      const isValidHash = this._tokenHasher.validateToken(fullToken, storedHash);
+      const isValidHash = this._tokenHasher.validateToken(
+        fullToken,
+        storedHash,
+      );
       if (!isValidHash) {
-        logger.warn('❌ Token validation failed: invalid hash', {
+        logger.warn("❌ Token validation failed: invalid hash", {
           tokenLength: fullToken.length,
-          hashLength: storedHash.length
+          hashLength: storedHash.length,
         });
-        return { isValid: false, reason: 'Invalid token hash' };
+        return { isValid: false, reason: "Invalid token hash" };
       }
 
-      logger.debug('✅ Hash validation successful');
+      logger.debug("✅ Hash validation successful");
 
       // Validate prefix match (for quick lookup)
       if (storedPrefix && !fullToken.startsWith(storedPrefix)) {
-        logger.warn('❌ Token validation failed: prefix mismatch', {
+        logger.warn("❌ Token validation failed: prefix mismatch", {
           tokenPrefix: tokenVO.prefix,
-          storedPrefix: storedPrefix
+          storedPrefix: storedPrefix,
         });
-        return { isValid: false, reason: 'Token prefix mismatch' };
+        return { isValid: false, reason: "Token prefix mismatch" };
       }
 
-      logger.info('✅ Token validation successful', {
+      logger.info("✅ Token validation successful", {
         tokenLength: fullToken.length,
         userId: tokenVO.getUserId(),
-        isExpired: tokenVO.isExpired()
+        isExpired: tokenVO.isExpired(),
       });
 
       return {
         isValid: true,
         userId: tokenVO.getUserId(),
         expirationTime: tokenVO.getExpirationTime(),
-        tokenInfo: tokenVO.toJSON()
+        tokenInfo: tokenVO.toJSON(),
       };
-
     } catch (error) {
-      logger.error('❌ Token validation failed with error', { error: error.message });
+      logger.error("❌ Token validation failed with error", {
+        error: error.message,
+      });
       return { isValid: false, reason: `Validation error: ${error.message}` };
     }
   }
@@ -86,24 +93,24 @@ class TokenValidator {
   // Validate session token
   validateSessionToken(fullToken, session) {
     if (!fullToken || !session) {
-      return { isValid: false, reason: 'Token or session not provided' };
+      return { isValid: false, reason: "Token or session not provided" };
     }
 
     try {
       // Check if session is active
       if (!session.isActive()) {
-        logger.warn('❌ Session validation failed: session inactive', {
+        logger.warn("❌ Session validation failed: session inactive", {
           sessionId: session.id,
-          userId: session.userId
+          userId: session.userId,
         });
-        return { isValid: false, reason: 'Session inactive' };
+        return { isValid: false, reason: "Session inactive" };
       }
 
       // Validate token against session
       const validationResult = this.validateToken(
         fullToken,
         session.accessTokenStart,
-        session.accessTokenHash
+        session.accessTokenHash,
       );
 
       if (!validationResult.isValid) {
@@ -111,88 +118,105 @@ class TokenValidator {
       }
 
       // Additional session-specific validations
-      if (validationResult.userId && validationResult.userId !== session.userId) {
-        logger.warn('❌ Session validation failed: user ID mismatch', {
+      if (
+        validationResult.userId &&
+        validationResult.userId !== session.userId
+      ) {
+        logger.warn("❌ Session validation failed: user ID mismatch", {
           tokenUserId: validationResult.userId,
-          sessionUserId: session.userId
+          sessionUserId: session.userId,
         });
-        return { isValid: false, reason: 'User ID mismatch' };
+        return { isValid: false, reason: "User ID mismatch" };
       }
 
-      logger.info('✅ Session token validation successful', {
+      logger.info("✅ Session token validation successful", {
         sessionId: session.id,
         userId: session.userId,
-        tokenLength: fullToken.length
+        tokenLength: fullToken.length,
       });
 
       return {
         isValid: true,
         session: session,
         userId: validationResult.userId,
-        expirationTime: validationResult.expirationTime
+        expirationTime: validationResult.expirationTime,
       };
-
     } catch (error) {
-      logger.error('❌ Session token validation failed with error', { error: error.message });
-      return { isValid: false, reason: `Session validation error: ${error.message}` };
+      logger.error("❌ Session token validation failed with error", {
+        error: error.message,
+      });
+      return {
+        isValid: false,
+        reason: `Session validation error: ${error.message}`,
+      };
     }
   }
 
   // Validate refresh token
   validateRefreshToken(refreshToken, session) {
     if (!refreshToken || !session) {
-      return { isValid: false, reason: 'Refresh token or session not provided' };
+      return {
+        isValid: false,
+        reason: "Refresh token or session not provided",
+      };
     }
 
     try {
       // Check if session is active
       if (!session.isActive()) {
-        logger.warn('❌ Refresh token validation failed: session inactive', {
+        logger.warn("❌ Refresh token validation failed: session inactive", {
           sessionId: session.id,
-          userId: session.userId
+          userId: session.userId,
         });
-        return { isValid: false, reason: 'Session inactive' };
+        return { isValid: false, reason: "Session inactive" };
       }
 
       // Validate refresh token format
       if (refreshToken.length < 10) {
-        logger.warn('❌ Refresh token validation failed: invalid format', {
-          tokenLength: refreshToken.length
+        logger.warn("❌ Refresh token validation failed: invalid format", {
+          tokenLength: refreshToken.length,
         });
-        return { isValid: false, reason: 'Invalid refresh token format' };
+        return { isValid: false, reason: "Invalid refresh token format" };
       }
 
       // Compare refresh tokens
-      const isValidRefresh = this._tokenHasher.compareTokens(refreshToken, session.refreshToken);
+      const isValidRefresh = this._tokenHasher.compareTokens(
+        refreshToken,
+        session.refreshToken,
+      );
       if (!isValidRefresh) {
-        logger.warn('❌ Refresh token validation failed: token mismatch', {
+        logger.warn("❌ Refresh token validation failed: token mismatch", {
           sessionId: session.id,
-          userId: session.userId
+          userId: session.userId,
         });
-        return { isValid: false, reason: 'Invalid refresh token' };
+        return { isValid: false, reason: "Invalid refresh token" };
       }
 
-      logger.info('✅ Refresh token validation successful', {
+      logger.info("✅ Refresh token validation successful", {
         sessionId: session.id,
-        userId: session.userId
+        userId: session.userId,
       });
 
       return {
         isValid: true,
         session: session,
-        userId: session.userId
+        userId: session.userId,
       };
-
     } catch (error) {
-      logger.error('❌ Refresh token validation failed with error', { error: error.message });
-      return { isValid: false, reason: `Refresh validation error: ${error.message}` };
+      logger.error("❌ Refresh token validation failed with error", {
+        error: error.message,
+      });
+      return {
+        isValid: false,
+        reason: `Refresh validation error: ${error.message}`,
+      };
     }
   }
 
   // Batch validation
   validateTokens(tokens, sessions) {
     if (!Array.isArray(tokens) || !Array.isArray(sessions)) {
-      throw new Error('Tokens and sessions must be arrays');
+      throw new Error("Tokens and sessions must be arrays");
     }
 
     const results = [];
@@ -202,33 +226,33 @@ class TokenValidator {
       try {
         const session = sessions[i];
         const result = this.validateSessionToken(tokens[i], session);
-        
+
         results.push({
           index: i,
           success: result.isValid,
-          data: result
+          data: result,
         });
 
         if (!result.isValid) {
           errors.push({
             index: i,
-            success: false,
-            error: result.reason
+           
+            error: result.reason,
           });
         }
       } catch (error) {
         errors.push({
           index: i,
-          success: false,
-          error: error.message
+         
+          error: error.message,
         });
       }
     }
 
-    logger.info('🔐 Batch token validation completed', {
+    logger.info("🔐 Batch token validation completed", {
       total: tokens.length,
-      successful: results.filter(r => r.success).length,
-      failed: errors.length
+      successful: results.filter((r) => r.success).length,
+      failed: errors.length,
     });
 
     return { results, errors };
@@ -240,12 +264,14 @@ class TokenValidator {
   }
 
   // Configuration
-  get tokenHasher() { return this._tokenHasher; }
+  get tokenHasher() {
+    return this._tokenHasher;
+  }
 
   setTokenHasher(tokenHasher) {
     this._tokenHasher = tokenHasher;
-    logger.info('🔐 TokenValidator hasher updated');
+    logger.info("🔐 TokenValidator hasher updated");
   }
 }
 
-module.exports = TokenValidator; 
+module.exports = TokenValidator;

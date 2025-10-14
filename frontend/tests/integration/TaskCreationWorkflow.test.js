@@ -62,7 +62,6 @@ describe('TaskCreationWorkflow Integration', () => {
       // Mock successful workflow start
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'test-workflow-123',
-        success: true,
         status: 'started',
         chatResult: { messageId: 'chat-123' },
         autoFinishResult: { sessionId: 'session-123' }
@@ -238,7 +237,6 @@ describe('TaskCreationWorkflow Integration', () => {
       // Test retry functionality
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'test-workflow-123',
-        success: true,
         status: 'started'
       });
 
@@ -254,13 +252,11 @@ describe('TaskCreationWorkflow Integration', () => {
       // Mock successful workflow start
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'test-workflow-123',
-        success: true,
         status: 'started'
       });
 
       // Mock cancellation
       mockTaskCreationService.cancelWorkflow.mockResolvedValue({
-        success: true,
         message: 'Workflow cancelled successfully'
       });
 
@@ -432,7 +428,6 @@ describe('TaskCreationWorkflow Integration', () => {
     test('should emit progress events during workflow execution', async () => {
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'event-test-123',
-        success: true,
         status: 'started'
       });
 
@@ -477,7 +472,6 @@ describe('TaskCreationWorkflow Integration', () => {
         .mockRejectedValueOnce(new Error('Network disconnected'))
         .mockResolvedValueOnce({
           workflowId: 'recovery-test-123',
-          success: true,
           status: 'started'
         });
 
@@ -525,7 +519,6 @@ describe('TaskCreationWorkflow Integration', () => {
       // Mock workflow start success but status check failure
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'partial-failure-123',
-        success: true,
         status: 'started'
       });
 
@@ -587,7 +580,6 @@ describe('TaskCreationWorkflow Integration', () => {
     test('should handle multiple rapid form submissions gracefully', async () => {
       mockTaskCreationService.startTaskCreationWorkflow.mockResolvedValue({
         workflowId: 'rapid-test-123',
-        success: true,
         status: 'started'
       });
 

@@ -1,11 +1,11 @@
 /**
  * User Data Generator
- * 
+ *
  * Generates test user data for database testing.
  * Provides utilities for creating realistic user records.
  */
 
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 /**
  * Generate test user data
@@ -16,9 +16,9 @@ const crypto = require('crypto');
 function generateUsers(count = 1, options = {}) {
   const {
     startId = 1,
-    roles = ['user', 'admin', 'moderator'],
+    roles = ["user", "admin", "moderator"],
     activeRatio = 0.8,
-    emailDomain = 'example.com'
+    emailDomain = "example.com",
   } = options;
 
   const users = [];
@@ -41,7 +41,7 @@ function generateUsers(count = 1, options = {}) {
       created_at: createdAt,
       updated_at: updatedAt,
       is_active: isActive,
-      role
+      role,
     });
   }
 
@@ -53,8 +53,10 @@ function generateUsers(count = 1, options = {}) {
  * @returns {string} Password hash
  */
 function generatePasswordHash() {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync('testpassword', salt, 1000, 64, 'sha512').toString('hex');
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto
+    .pbkdf2Sync("testpassword", salt, 1000, 64, "sha512")
+    .toString("hex");
   return `$2b$10$${salt}${hash}`;
 }
 
@@ -65,10 +67,13 @@ function generatePasswordHash() {
  */
 function generateRandomDate(minDate = null) {
   const now = new Date();
-  const start = minDate ? new Date(minDate) : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
+  const start = minDate
+    ? new Date(minDate)
+    : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
   const end = now;
 
-  const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
+  const randomTime =
+    start.getTime() + Math.random() * (end.getTime() - start.getTime());
   return new Date(randomTime).toISOString();
 }
 
@@ -88,8 +93,8 @@ function generateUser(properties = {}) {
  */
 function generateAdminUser() {
   return generateUser({
-    role: 'admin',
-    is_active: true
+    role: "admin",
+    is_active: true,
   });
 }
 
@@ -99,7 +104,7 @@ function generateAdminUser() {
  */
 function generateInactiveUser() {
   return generateUser({
-    is_active: false
+    is_active: false,
   });
 }
 
@@ -111,7 +116,7 @@ function generateInactiveUser() {
 function generateUserWithRole(role) {
   return generateUser({
     role,
-    is_active: true
+    is_active: true,
   });
 }
 
@@ -120,5 +125,5 @@ module.exports = {
   generateUser,
   generateAdminUser,
   generateInactiveUser,
-  generateUserWithRole
+  generateUserWithRole,
 };

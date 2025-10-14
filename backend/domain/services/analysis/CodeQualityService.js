@@ -2,7 +2,13 @@
  * CodeQualityService - Domain service for code quality analysis
  */
 class CodeQualityService {
-  constructor(codeQualityAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
+  constructor(
+    codeQualityAnalyzer,
+    eventBus,
+    logger,
+    analysisOutputService,
+    analysisRepository,
+  ) {
     this.codeQualityAnalyzer = codeQualityAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
@@ -21,38 +27,51 @@ class CodeQualityService {
     try {
       this.logger.info(`Starting code quality analysis for project`);
 
-      const analysis = await this.codeQualityAnalyzer.analyzeCodeQuality(projectPath, options);
+      const analysis = await this.codeQualityAnalyzer.analyzeCodeQuality(
+        projectPath,
+        options,
+      );
 
       // Save to file ONLY if explicitly requested
       if (this.analysisOutputService && options.saveToFile !== false) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
-          projectId, 
-          'codeQuality', 
-          analysis
+          projectId,
+          "codeQuality",
+          analysis,
         );
-        
+
         // Save to database ONLY if explicitly requested
         if (this.analysisRepository && options.saveToDatabase !== false) {
-          const AnalysisResult = require('@entities/AnalysisResult');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+          const AnalysisResult = require("@entities/AnalysisResult");
+          const Logger = require("@logging/Logger");
+          const logger = new Logger("Logger");
           const analysisResult = AnalysisResult.create(
-            projectId, 
-            'codeQuality', 
-            analysis, 
-            fileResult.filepath
+            projectId,
+            "codeQuality",
+            analysis,
+            fileResult.filepath,
           );
           await this.analysisRepository.save(analysisResult);
         }
       }
 
       this.logger.info(`Code quality analysis completed for project`);
-      this.eventBus.emit('code-quality:analysis:completed', { projectPath, analysis, projectId });
+      this.eventBus.emit("code-quality:analysis:completed", {
+        projectPath,
+        analysis,
+        projectId,
+      });
 
       return analysis;
     } catch (error) {
-      this.logger.error(`Code quality analysis failed for ${projectPath}:`, error);
-      this.eventBus.emit('code-quality:analysis:failed', { projectPath, error: error.message });
+      this.logger.error(
+        `Code quality analysis failed for ${projectPath}:`,
+        error,
+      );
+      this.eventBus.emit("code-quality:analysis:failed", {
+        projectPath,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -78,7 +97,9 @@ const logger = new Logger('Logger');
    */
   async analyzeFormattingConfig(projectPath) {
     try {
-      return await this.codeQualityAnalyzer.analyzeFormattingConfig(projectPath);
+      return await this.codeQualityAnalyzer.analyzeFormattingConfig(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Formatting config analysis failed:`, error);
       throw error;
@@ -157,11 +178,11 @@ const logger = new Logger('Logger');
    * @returns {string} Quality level
    */
   getQualityLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -171,7 +192,7 @@ const logger = new Logger('Logger');
    */
   getCriticalIssues(analysis) {
     if (!analysis || !analysis.issues) return [];
-    return analysis.issues.filter(issue => issue.severity === 'critical');
+    return analysis.issues.filter((issue) => issue.severity === "critical");
   }
 
   /**
@@ -181,13 +202,15 @@ const logger = new Logger('Logger');
    */
   getQualitySummary(analysis) {
     if (!analysis) return {};
-    
+
     const issues = analysis.issues || [];
-    const criticalIssues = issues.filter(issue => issue.severity === 'critical');
-    const highIssues = issues.filter(issue => issue.severity === 'high');
-    const mediumIssues = issues.filter(issue => issue.severity === 'medium');
-    const lowIssues = issues.filter(issue => issue.severity === 'low');
-    
+    const criticalIssues = issues.filter(
+      (issue) => issue.severity === "critical",
+    );
+    const highIssues = issues.filter((issue) => issue.severity === "high");
+    const mediumIssues = issues.filter((issue) => issue.severity === "medium");
+    const lowIssues = issues.filter((issue) => issue.severity === "low");
+
     return {
       totalIssues: issues.length,
       criticalIssues: criticalIssues.length,
@@ -195,9 +218,9 @@ const logger = new Logger('Logger');
       mediumIssues: mediumIssues.length,
       lowIssues: lowIssues.length,
       overallScore: analysis.overallScore || 0,
-      qualityLevel: this.getQualityLevel(analysis.overallScore || 0)
+      qualityLevel: this.getQualityLevel(analysis.overallScore || 0),
     };
   }
 }
 
-module.exports = CodeQualityService; 
+module.exports = CodeQualityService;

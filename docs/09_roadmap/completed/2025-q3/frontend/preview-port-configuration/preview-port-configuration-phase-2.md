@@ -167,11 +167,11 @@ setCustomPort: async (port) => {
       }
       return { success: true };
     } else {
-      return { success: false, error: 'Invalid port' };
+      return { error: 'Invalid port' };
     }
   } catch (error) {
     logger.error('Failed to set custom port:', error);
-    return { success: false, error: 'Failed to set port' };
+    return { error: 'Failed to set port' };
   }
 },
 

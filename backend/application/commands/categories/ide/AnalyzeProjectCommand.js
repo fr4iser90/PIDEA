@@ -7,7 +7,7 @@ class AnalyzeProjectCommand {
   constructor(params = {}) {
     this.userId = params.userId;
     this.workspacePath = params.workspacePath;
-    this.analysisType = params.analysisType || 'full'; // full, quick, dependencies, structure
+    this.analysisType = params.analysisType || "full"; // full, quick, dependencies, structure
     this.includeCache = params.includeCache || true;
     this.options = params.options || {};
     this.timestamp = new Date();
@@ -28,25 +28,25 @@ class AnalyzeProjectCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.workspacePath && typeof this.workspacePath !== 'string') {
-      throw new Error('Workspace path must be a string');
+    if (this.workspacePath && typeof this.workspacePath !== "string") {
+      throw new Error("Workspace path must be a string");
     }
 
-    const validTypes = ['full', 'quick', 'dependencies', 'structure'];
+    const validTypes = ["full", "quick", "dependencies", "structure"];
     if (this.analysisType && !validTypes.includes(this.analysisType)) {
-      throw new Error(`Analysis type must be one of: ${validTypes.join(', ')}`);
+      throw new Error(`Analysis type must be one of: ${validTypes.join(", ")}`);
     }
 
-    if (typeof this.includeCache !== 'boolean') {
-      throw new Error('includeCache must be a boolean');
+    if (typeof this.includeCache !== "boolean") {
+      throw new Error("includeCache must be a boolean");
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -58,19 +58,19 @@ class AnalyzeProjectCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'AnalyzeProjectCommand',
+      type: "AnalyzeProjectCommand",
       userId: this.userId,
       workspacePath: this.workspacePath,
       analysisType: this.analysisType,
       includeCache: this.includeCache,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = AnalyzeProjectCommand; 
+module.exports = AnalyzeProjectCommand;

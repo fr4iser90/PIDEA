@@ -89,7 +89,6 @@ class CloudCostAnalysisStep extends BaseAnalysisStep {
     const optimizationRecommendations = await this.generateOptimizationRecommendations(costAnalysis, unusedResources);
     
     return {
-      success: true,
       data: {
         resourceAnalysis,
         costAnalysis,
@@ -129,7 +128,6 @@ class DeveloperExperienceAnalysisStep extends BaseAnalysisStep {
     const productivityMetrics = await this.calculateProductivityMetrics(environmentAnalysis, workflowAnalysis);
     
     return {
-      success: true,
       data: {
         environmentAnalysis,
         workflowAnalysis,

@@ -11,17 +11,17 @@ class LayerType {
     this.value = value;
   }
 
-  static DOMAIN = 'domain';
-  static APPLICATION = 'application';
-  static INFRASTRUCTURE = 'infrastructure';
-  static PRESENTATION = 'presentation';
+  static DOMAIN = "domain";
+  static APPLICATION = "application";
+  static INFRASTRUCTURE = "infrastructure";
+  static PRESENTATION = "presentation";
 
   static getAllTypes() {
     return [
       LayerType.DOMAIN,
       LayerType.APPLICATION,
       LayerType.INFRASTRUCTURE,
-      LayerType.PRESENTATION
+      LayerType.PRESENTATION,
     ];
   }
 
@@ -43,12 +43,13 @@ class LayerType {
 
   getDescription() {
     const descriptions = {
-      [LayerType.DOMAIN]: 'Core business logic and domain entities',
-      [LayerType.APPLICATION]: 'Application services and use cases',
-      [LayerType.INFRASTRUCTURE]: 'Database, external services, and technical concerns',
-      [LayerType.PRESENTATION]: 'User interface and API controllers'
+      [LayerType.DOMAIN]: "Core business logic and domain entities",
+      [LayerType.APPLICATION]: "Application services and use cases",
+      [LayerType.INFRASTRUCTURE]:
+        "Database, external services, and technical concerns",
+      [LayerType.PRESENTATION]: "User interface and API controllers",
     };
-    return descriptions[this.value] || 'Unknown layer type';
+    return descriptions[this.value] || "Unknown layer type";
   }
 
   getOrderIndex() {
@@ -56,7 +57,7 @@ class LayerType {
       [LayerType.DOMAIN]: 1,
       [LayerType.APPLICATION]: 2,
       [LayerType.INFRASTRUCTURE]: 3,
-      [LayerType.PRESENTATION]: 4
+      [LayerType.PRESENTATION]: 4,
     };
     return orderIndices[this.value] || 0;
   }
@@ -66,7 +67,10 @@ class LayerType {
       [LayerType.DOMAIN]: [],
       [LayerType.APPLICATION]: [LayerType.DOMAIN],
       [LayerType.INFRASTRUCTURE]: [LayerType.DOMAIN, LayerType.APPLICATION],
-      [LayerType.PRESENTATION]: [LayerType.APPLICATION, LayerType.INFRASTRUCTURE]
+      [LayerType.PRESENTATION]: [
+        LayerType.APPLICATION,
+        LayerType.INFRASTRUCTURE,
+      ],
     };
     return dependencies[this.value] || [];
   }
@@ -80,20 +84,30 @@ class LayerType {
 
   getTaskCategories() {
     const categories = {
-      [LayerType.DOMAIN]: ['domain', 'entity', 'value-object', 'service'],
-      [LayerType.APPLICATION]: ['application', 'service', 'handler', 'command'],
-      [LayerType.INFRASTRUCTURE]: ['infrastructure', 'repository', 'database', 'external'],
-      [LayerType.PRESENTATION]: ['presentation', 'controller', 'api', 'ui']
+      [LayerType.DOMAIN]: ["domain", "entity", "value-object", "service"],
+      [LayerType.APPLICATION]: ["application", "service", "handler", "command"],
+      [LayerType.INFRASTRUCTURE]: [
+        "infrastructure",
+        "repository",
+        "database",
+        "external",
+      ],
+      [LayerType.PRESENTATION]: ["presentation", "controller", "api", "ui"],
     };
     return categories[this.value] || [];
   }
 
   getTaskTypes() {
     const types = {
-      [LayerType.DOMAIN]: ['feature', 'refactor', 'analysis'],
-      [LayerType.APPLICATION]: ['feature', 'refactor', 'testing'],
-      [LayerType.INFRASTRUCTURE]: ['feature', 'refactor', 'testing', 'deployment'],
-      [LayerType.PRESENTATION]: ['feature', 'refactor', 'testing', 'ui']
+      [LayerType.DOMAIN]: ["feature", "refactor", "analysis"],
+      [LayerType.APPLICATION]: ["feature", "refactor", "testing"],
+      [LayerType.INFRASTRUCTURE]: [
+        "feature",
+        "refactor",
+        "testing",
+        "deployment",
+      ],
+      [LayerType.PRESENTATION]: ["feature", "refactor", "testing", "ui"],
     };
     return types[this.value] || [];
   }

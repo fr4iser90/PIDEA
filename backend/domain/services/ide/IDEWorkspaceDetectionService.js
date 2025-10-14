@@ -1,6 +1,5 @@
-
-const Logger = require('@logging/Logger');
-const logger = new Logger('IDEWorkspaceDetectionService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("IDEWorkspaceDetectionService");
 
 /**
  * IDE WORKSPACE DETECTION SERVICE
@@ -20,36 +19,41 @@ class IDEWorkspaceDetectionService {
    */
   async detectAllWorkspaces() {
     try {
-      logger.info('Starting workspace detection for all IDEs...');
-      
+      logger.info("Starting workspace detection for all IDEs...");
+
       // Verfügbare IDEs abrufen
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      
+
       if (availableIDEs.length === 0) {
-        logger.info('No IDEs available for workspace detection');
+        logger.info("No IDEs available for workspace detection");
         return this.detectionResults;
       }
-      
+
       // Filtere IDEs die bereits Detection-Ergebnisse haben
-      const idesWithoutResults = availableIDEs.filter(ide => !this.detectionResults.has(ide.port));
-      
+      const idesWithoutResults = availableIDEs.filter(
+        (ide) => !this.detectionResults.has(ide.port),
+      );
+
       if (idesWithoutResults.length === 0) {
-        logger.info('All IDEs already have detection results, skipping detection');
+        logger.info(
+          "All IDEs already have detection results, skipping detection",
+        );
         return this.detectionResults;
       }
-      
-      logger.info(`Found ${idesWithoutResults.length} IDEs for detection (${availableIDEs.length - idesWithoutResults.length} already have results)`);
-      
+
+      logger.info(
+        `Found ${idesWithoutResults.length} IDEs for detection (${availableIDEs.length - idesWithoutResults.length} already have results)`,
+      );
+
       // Nur für IDEs ohne Ergebnisse Workspace-Info sammeln
       for (const ide of idesWithoutResults) {
         await this.detectWorkspaceForIDE(ide.port);
       }
-      
-      logger.info('Workspace detection completed');
+
+      logger.info("Workspace detection completed");
       return this.detectionResults;
-      
     } catch (error) {
-      logger.error('Error during workspace detection:', error);
+      logger.error("Error during workspace detection:", error);
       throw error;
     }
   }
@@ -63,52 +67,51 @@ class IDEWorkspaceDetectionService {
       // Prüfe ob bereits Ergebnisse vorhanden sind
       if (this.detectionResults.has(port)) {
         const existingResult = this.detectionResults.get(port);
-        logger.info(`Port ${port}: Using existing detection result:`, existingResult.workspace || existingResult.error);
+        logger.info(
+          `Port ${port}: Using existing detection result:`,
+          existingResult.workspace || existingResult.error,
+        );
         return existingResult;
       }
-      
+
       logger.info(`Detecting workspace for IDE on port ${port}...`);
-      
+
       const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
-      
+
       if (workspaceInfo && workspaceInfo.workspace) {
         this.detectionResults.set(port, {
-          success: true,
           workspace: workspaceInfo.workspace,
           files: workspaceInfo.files.length,
-          gitStatus: workspaceInfo.gitStatus ? 'Available' : 'Not available',
+          gitStatus: workspaceInfo.gitStatus ? "Available" : "Not available",
           session: workspaceInfo.session,
-          timestamp: workspaceInfo.timestamp
+          timestamp: workspaceInfo.timestamp,
         });
-        
+
         logger.info(`Port ${port}: ${workspaceInfo.workspace}`);
-        
+
         // REMOVED: Automatic project creation - projects should only be created manually
         // await this.createProjectInDatabase(workspaceInfo.workspace, port);
-        
+
         return workspaceInfo;
-        
       } else {
         this.detectionResults.set(port, {
-          success: false,
-          error: 'No workspace info found'
+         
+          error: "No workspace info found",
         });
-        
+
         logger.info(`Port ${port}: No workspace info found`);
         return null;
       }
-      
     } catch (error) {
       this.detectionResults.set(port, {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       });
-      
+
       logger.info(`Port ${port}: ${error.message}`);
       throw error;
     }
   }
-
 
   /**
    * Detect ports from package.json files in the workspace
@@ -117,9 +120,9 @@ class IDEWorkspaceDetectionService {
    */
   async detectPortsFromPackageJson(workspacePath) {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      
+      const fs = require("fs");
+      const path = require("path");
+
       const result = {
         frontendPort: null,
         backendPort: null,
@@ -127,63 +130,98 @@ class IDEWorkspaceDetectionService {
         devCommand: null,
         startCommand: null,
         buildCommand: null,
-        testCommand: null
+        testCommand: null,
       };
 
       // Check root package.json
-      const rootPackagePath = path.join(workspacePath, 'package.json');
+      const rootPackagePath = path.join(workspacePath, "package.json");
       if (fs.existsSync(rootPackagePath)) {
-        const rootPackage = JSON.parse(fs.readFileSync(rootPackagePath, 'utf8'));
-        const rootPorts = this.extractPortsFromScripts(rootPackage.scripts || {});
-        
+        const rootPackage = JSON.parse(
+          fs.readFileSync(rootPackagePath, "utf8"),
+        );
+        const rootPorts = this.extractPortsFromScripts(
+          rootPackage.scripts || {},
+        );
+
         // Root package.json usually contains workspace scripts
         if (rootPorts.devPort) result.frontendPort = rootPorts.devPort;
         if (rootPorts.startPort) result.backendPort = rootPorts.startPort;
-        
+
         // Extract commands
-        if (rootPackage.scripts?.dev) result.devCommand = rootPackage.scripts.dev;
-        if (rootPackage.scripts?.start) result.startCommand = rootPackage.scripts.start;
-        if (rootPackage.scripts?.build) result.buildCommand = rootPackage.scripts.build;
-        if (rootPackage.scripts?.test) result.testCommand = rootPackage.scripts.test;
+        if (rootPackage.scripts?.dev)
+          result.devCommand = rootPackage.scripts.dev;
+        if (rootPackage.scripts?.start)
+          result.startCommand = rootPackage.scripts.start;
+        if (rootPackage.scripts?.build)
+          result.buildCommand = rootPackage.scripts.build;
+        if (rootPackage.scripts?.test)
+          result.testCommand = rootPackage.scripts.test;
       }
 
       // Check frontend package.json
-      const frontendPackagePath = path.join(workspacePath, 'frontend', 'package.json');
+      const frontendPackagePath = path.join(
+        workspacePath,
+        "frontend",
+        "package.json",
+      );
       if (fs.existsSync(frontendPackagePath)) {
-        const frontendPackage = JSON.parse(fs.readFileSync(frontendPackagePath, 'utf8'));
-        const frontendPorts = this.extractPortsFromScripts(frontendPackage.scripts || {});
-        
+        const frontendPackage = JSON.parse(
+          fs.readFileSync(frontendPackagePath, "utf8"),
+        );
+        const frontendPorts = this.extractPortsFromScripts(
+          frontendPackage.scripts || {},
+        );
+
         if (frontendPorts.devPort) result.frontendPort = frontendPorts.devPort;
-        if (frontendPorts.startPort) result.frontendPort = frontendPorts.startPort;
-        
+        if (frontendPorts.startPort)
+          result.frontendPort = frontendPorts.startPort;
+
         // Update commands if not already set
-        if (!result.devCommand && frontendPackage.scripts?.dev) result.devCommand = frontendPackage.scripts.dev;
-        if (!result.startCommand && frontendPackage.scripts?.start) result.startCommand = frontendPackage.scripts.start;
-        if (!result.buildCommand && frontendPackage.scripts?.build) result.buildCommand = frontendPackage.scripts.build;
-        if (!result.testCommand && frontendPackage.scripts?.test) result.testCommand = frontendPackage.scripts.test;
+        if (!result.devCommand && frontendPackage.scripts?.dev)
+          result.devCommand = frontendPackage.scripts.dev;
+        if (!result.startCommand && frontendPackage.scripts?.start)
+          result.startCommand = frontendPackage.scripts.start;
+        if (!result.buildCommand && frontendPackage.scripts?.build)
+          result.buildCommand = frontendPackage.scripts.build;
+        if (!result.testCommand && frontendPackage.scripts?.test)
+          result.testCommand = frontendPackage.scripts.test;
       }
 
       // Check backend package.json
-      const backendPackagePath = path.join(workspacePath, 'backend', 'package.json');
+      const backendPackagePath = path.join(
+        workspacePath,
+        "backend",
+        "package.json",
+      );
       if (fs.existsSync(backendPackagePath)) {
-        const backendPackage = JSON.parse(fs.readFileSync(backendPackagePath, 'utf8'));
-        const backendPorts = this.extractPortsFromScripts(backendPackage.scripts || {});
-        
+        const backendPackage = JSON.parse(
+          fs.readFileSync(backendPackagePath, "utf8"),
+        );
+        const backendPorts = this.extractPortsFromScripts(
+          backendPackage.scripts || {},
+        );
+
         if (backendPorts.devPort) result.backendPort = backendPorts.devPort;
         if (backendPorts.startPort) result.backendPort = backendPorts.startPort;
-        
+
         // Update commands if not already set
-        if (!result.devCommand && backendPackage.scripts?.dev) result.devCommand = backendPackage.scripts.dev;
-        if (!result.startCommand && backendPackage.scripts?.start) result.startCommand = backendPackage.scripts.start;
-        if (!result.buildCommand && backendPackage.scripts?.build) result.buildCommand = backendPackage.scripts.build;
-        if (!result.testCommand && backendPackage.scripts?.test) result.testCommand = backendPackage.scripts.test;
+        if (!result.devCommand && backendPackage.scripts?.dev)
+          result.devCommand = backendPackage.scripts.dev;
+        if (!result.startCommand && backendPackage.scripts?.start)
+          result.startCommand = backendPackage.scripts.start;
+        if (!result.buildCommand && backendPackage.scripts?.build)
+          result.buildCommand = backendPackage.scripts.build;
+        if (!result.testCommand && backendPackage.scripts?.test)
+          result.testCommand = backendPackage.scripts.test;
       }
 
       // Check for database port in docker-compose or other config files
-      const dockerComposePath = path.join(workspacePath, 'docker-compose.yml');
+      const dockerComposePath = path.join(workspacePath, "docker-compose.yml");
       if (fs.existsSync(dockerComposePath)) {
-        const dockerComposeContent = fs.readFileSync(dockerComposePath, 'utf8');
-        const dbPortMatch = dockerComposeContent.match(/ports:\s*-\s*"(\d+):\d+"/);
+        const dockerComposeContent = fs.readFileSync(dockerComposePath, "utf8");
+        const dbPortMatch = dockerComposeContent.match(
+          /ports:\s*-\s*"(\d+):\d+"/,
+        );
         if (dbPortMatch) {
           result.databasePort = parseInt(dbPortMatch[1]);
         }
@@ -191,9 +229,8 @@ class IDEWorkspaceDetectionService {
 
       logger.info(`Port detection completed for ${workspacePath}`);
       return result;
-
     } catch (error) {
-      logger.error('Error detecting ports from package.json:', error.message);
+      logger.error("Error detecting ports from package.json:", error.message);
       return {
         frontendPort: null,
         backendPort: null,
@@ -201,7 +238,7 @@ class IDEWorkspaceDetectionService {
         devCommand: null,
         startCommand: null,
         buildCommand: null,
-        testCommand: null
+        testCommand: null,
       };
     }
   }
@@ -214,7 +251,7 @@ class IDEWorkspaceDetectionService {
   extractPortsFromScripts(scripts) {
     const result = {
       devPort: null,
-      startPort: null
+      startPort: null,
     };
 
     for (const [scriptName, scriptCommand] of Object.entries(scripts)) {
@@ -226,18 +263,24 @@ class IDEWorkspaceDetectionService {
         /-p\s+(\d+)/i,
         /port\s*=\s*(\d+)/i,
         /--port=(\d+)/i,
-        /:(\d+)/i  // For URLs like localhost:3000
+        /:(\d+)/i, // For URLs like localhost:3000
       ];
 
       for (const pattern of portPatterns) {
         const match = scriptCommand.match(pattern);
         if (match) {
           const port = parseInt(match[1]);
-          
+
           // Determine which port this is based on script name
-          if (scriptName.toLowerCase().includes('dev') || scriptName.toLowerCase().includes('frontend')) {
+          if (
+            scriptName.toLowerCase().includes("dev") ||
+            scriptName.toLowerCase().includes("frontend")
+          ) {
             result.devPort = port;
-          } else if (scriptName.toLowerCase().includes('start') || scriptName.toLowerCase().includes('backend')) {
+          } else if (
+            scriptName.toLowerCase().includes("start") ||
+            scriptName.toLowerCase().includes("backend")
+          ) {
             result.startPort = port;
           } else {
             // Default to dev port if script name doesn't give us a clue
@@ -295,7 +338,11 @@ class IDEWorkspaceDetectionService {
    */
   async executeTerminalCommand(port, command, outputFile = null) {
     try {
-      const result = await this.ideManager.executeTerminalCommand(port, command, outputFile);
+      const result = await this.ideManager.executeTerminalCommand(
+        port,
+        command,
+        outputFile,
+      );
       return result;
     } catch (error) {
       logger.error(`Error executing terminal command for port ${port}:`, error);
@@ -315,14 +362,17 @@ class IDEWorkspaceDetectionService {
    */
   getDetectionStats() {
     const results = Array.from(this.detectionResults.values());
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+
     return {
       total: this.detectionResults.size,
       successful,
       failed,
-      successRate: this.detectionResults.size > 0 ? (successful / this.detectionResults.size) * 100 : 0
+      successRate:
+        this.detectionResults.size > 0
+          ? (successful / this.detectionResults.size) * 100
+          : 0,
     };
   }
 
@@ -331,7 +381,7 @@ class IDEWorkspaceDetectionService {
    */
   clearDetectionResults() {
     this.detectionResults.clear();
-    logger.info('Detection results cleared');
+    logger.info("Detection results cleared");
   }
 
   /**
@@ -342,9 +392,9 @@ class IDEWorkspaceDetectionService {
       ideManagerAvailable: !!this.ideManager,
       fileDetectorAvailable: !!this.ideManager?.fileDetector,
       detectionResultsCount: this.detectionResults.size,
-      stats: this.getDetectionStats()
+      stats: this.getDetectionStats(),
     };
   }
 }
 
-module.exports = IDEWorkspaceDetectionService; 
+module.exports = IDEWorkspaceDetectionService;

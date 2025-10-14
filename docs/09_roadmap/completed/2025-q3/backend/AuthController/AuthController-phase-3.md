@@ -25,7 +25,7 @@ Need to add the following methods to `AuthApplicationService.js`:
 ```javascript
 // ❌ Direct domain entity access
 res.json({
-  success: true,
+ 
   data: {
     user: req.user.toJSON() // ❌ Direct domain entity access
   }
@@ -37,7 +37,7 @@ res.json({
 // ✅ Use application service
 const result = await this.authApplicationService.getUserProfile(req.user.id);
 res.json({
-  success: true,
+ 
   data: {
     user: result.data.user
   }
@@ -57,7 +57,7 @@ res.json({
 const profileData = { email, currentPassword, newPassword };
 const result = await this.authApplicationService.updateUserProfile(req.user.id, profileData);
 res.json({
-  success: true,
+ 
   data: {
     user: result.data.user
   }
@@ -76,7 +76,7 @@ const sessions = await this.authService.getUserSessions(req.user.id);
 // ✅ Use application service
 const result = await this.authApplicationService.getUserSessions(req.user.id);
 res.json({
-  success: true,
+ 
   data: {
     sessions: result.data.sessions
   }

@@ -2,34 +2,34 @@
  * QueryMonitor - Query performance tracking and analysis
  * Provides detailed query execution monitoring and performance analysis
  */
-const EventEmitter = require('events');
-const Logger = require('@logging/Logger');
+const EventEmitter = require("events");
+const Logger = require("@logging/Logger");
 
 class QueryMonitor extends EventEmitter {
   constructor(databaseConnection, options = {}) {
     super();
-    
+
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('QueryMonitor');
+    this.logger = new Logger("QueryMonitor");
     this.enabled = options.enabled !== false;
     this.trackExecutionPlans = options.trackExecutionPlans || false;
     this.maxQueryHistory = options.maxQueryHistory || 10000;
-    
+
     // Query tracking
     this.activeQueries = new Map();
     this.queryHistory = [];
     this.queryStats = new Map();
     this.executionPlans = new Map();
-    
+
     // Performance thresholds
     this.thresholds = {
       slowQuery: options.slowQueryThreshold || 1000,
       verySlowQuery: options.verySlowQueryThreshold || 5000,
       highMemoryUsage: options.highMemoryUsageThreshold || 100 * 1024 * 1024, // 100MB
-      ...options.thresholds
+      ...options.thresholds,
     };
-    
-    this.logger.info('QueryMonitor initialized');
+
+    this.logger.info("QueryMonitor initialized");
   }
 
   /**
@@ -37,20 +37,20 @@ class QueryMonitor extends EventEmitter {
    */
   start() {
     if (!this.enabled) {
-      this.logger.info('Query monitoring disabled');
+      this.logger.info("Query monitoring disabled");
       return;
     }
 
-    this.logger.info('Starting query monitoring');
-    this.emit('started');
+    this.logger.info("Starting query monitoring");
+    this.emit("started");
   }
 
   /**
    * Stop query monitoring
    */
   stop() {
-    this.logger.info('Query monitoring stopped');
-    this.emit('stopped');
+    this.logger.info("Query monitoring stopped");
+    this.emit("stopped");
   }
 
   /**
@@ -66,7 +66,7 @@ class QueryMonitor extends EventEmitter {
 
     const startTime = process.hrtime.bigint();
     const startMemory = process.memoryUsage();
-    
+
     const queryInfo = {
       queryId,
       query: this.sanitizeQuery(query),
@@ -74,12 +74,12 @@ class QueryMonitor extends EventEmitter {
       databaseType,
       startTime,
       startMemory,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.activeQueries.set(queryId, queryInfo);
-    
-    this.emit('queryStarted', queryInfo);
+
+    this.emit("queryStarted", queryInfo);
     return queryInfo;
   }
 
@@ -101,10 +101,10 @@ class QueryMonitor extends EventEmitter {
 
     const endTime = process.hrtime.bigint();
     const endMemory = process.memoryUsage();
-    
+
     const executionTime = Number(endTime - queryInfo.startTime) / 1000000; // Convert to milliseconds
     const memoryDelta = endMemory.heapUsed - queryInfo.startMemory.heapUsed;
-    
+
     const performanceData = {
       ...queryInfo,
       executionTime,
@@ -113,22 +113,22 @@ class QueryMonitor extends EventEmitter {
       rowsReturned: result?.rows?.length || 0,
       error: error?.message || null,
       success: !error,
-      endTime: new Date().toISOString()
+      endTime: new Date().toISOString(),
     };
 
     // Store in history
     this.addToHistory(performanceData);
-    
+
     // Update statistics
     this.updateStats(performanceData);
-    
+
     // Check for performance issues
     this.checkPerformanceIssues(performanceData);
-    
+
     // Clean up active query
     this.activeQueries.delete(queryId);
-    
-    this.emit('queryEnded', performanceData);
+
+    this.emit("queryEnded", performanceData);
     return performanceData;
   }
 
@@ -143,10 +143,10 @@ class QueryMonitor extends EventEmitter {
     this.executionPlans.set(queryId, {
       queryId,
       plan,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
-    this.emit('executionPlanTracked', { queryId, plan });
+    this.emit("executionPlanTracked", { queryId, plan });
   }
 
   /**
@@ -155,7 +155,7 @@ class QueryMonitor extends EventEmitter {
    */
   addToHistory(performanceData) {
     this.queryHistory.push(performanceData);
-    
+
     // Limit history size
     if (this.queryHistory.length > this.maxQueryHistory) {
       this.queryHistory.shift();
@@ -168,7 +168,7 @@ class QueryMonitor extends EventEmitter {
    */
   updateStats(performanceData) {
     const queryKey = this.getQueryKey(performanceData.query);
-    
+
     if (!this.queryStats.has(queryKey)) {
       this.queryStats.set(queryKey, {
         query: performanceData.query,
@@ -178,10 +178,10 @@ class QueryMonitor extends EventEmitter {
         minTime: Infinity,
         maxTime: 0,
         errorCount: 0,
-        lastExecuted: null
+        lastExecuted: null,
       });
     }
-    
+
     const stats = this.queryStats.get(queryKey);
     stats.count++;
     stats.totalTime += performanceData.executionTime;
@@ -189,7 +189,7 @@ class QueryMonitor extends EventEmitter {
     stats.minTime = Math.min(stats.minTime, performanceData.executionTime);
     stats.maxTime = Math.max(stats.maxTime, performanceData.executionTime);
     stats.lastExecuted = performanceData.timestamp;
-    
+
     if (!performanceData.success) {
       stats.errorCount++;
     }
@@ -201,47 +201,47 @@ class QueryMonitor extends EventEmitter {
    */
   checkPerformanceIssues(performanceData) {
     const issues = [];
-    
+
     // Check execution time
     if (performanceData.executionTime > this.thresholds.verySlowQuery) {
       issues.push({
-        type: 'very_slow_query',
-        severity: 'critical',
+        type: "very_slow_query",
+        severity: "critical",
         message: `Query took ${performanceData.executionTime}ms (threshold: ${this.thresholds.verySlowQuery}ms)`,
-        data: performanceData
+        data: performanceData,
       });
     } else if (performanceData.executionTime > this.thresholds.slowQuery) {
       issues.push({
-        type: 'slow_query',
-        severity: 'warning',
+        type: "slow_query",
+        severity: "warning",
         message: `Query took ${performanceData.executionTime}ms (threshold: ${this.thresholds.slowQuery}ms)`,
-        data: performanceData
+        data: performanceData,
       });
     }
-    
+
     // Check memory usage
     if (performanceData.memoryDelta > this.thresholds.highMemoryUsage) {
       issues.push({
-        type: 'high_memory_usage',
-        severity: 'warning',
+        type: "high_memory_usage",
+        severity: "warning",
         message: `Query used ${Math.round(performanceData.memoryDelta / 1024 / 1024)}MB memory`,
-        data: performanceData
+        data: performanceData,
       });
     }
-    
+
     // Check for errors
     if (!performanceData.success) {
       issues.push({
-        type: 'query_error',
-        severity: 'error',
+        type: "query_error",
+        severity: "error",
         message: `Query failed: ${performanceData.error}`,
-        data: performanceData
+        data: performanceData,
       });
     }
-    
+
     // Emit issues
-    issues.forEach(issue => {
-      this.emit('performanceIssue', issue);
+    issues.forEach((issue) => {
+      this.emit("performanceIssue", issue);
       this.logger.warn(`Performance issue: ${issue.message}`);
     });
   }
@@ -256,13 +256,16 @@ class QueryMonitor extends EventEmitter {
       const queryKey = this.getQueryKey(query);
       return this.queryStats.get(queryKey) || null;
     }
-    
+
     // Overall statistics
     const allStats = Array.from(this.queryStats.values());
     const totalQueries = allStats.reduce((sum, stats) => sum + stats.count, 0);
     const totalTime = allStats.reduce((sum, stats) => sum + stats.totalTime, 0);
-    const totalErrors = allStats.reduce((sum, stats) => sum + stats.errorCount, 0);
-    
+    const totalErrors = allStats.reduce(
+      (sum, stats) => sum + stats.errorCount,
+      0,
+    );
+
     return {
       totalQueries,
       totalTime,
@@ -270,7 +273,7 @@ class QueryMonitor extends EventEmitter {
       errorRate: totalQueries > 0 ? (totalErrors / totalQueries) * 100 : 0,
       activeQueries: this.activeQueries.size,
       uniqueQueries: this.queryStats.size,
-      historySize: this.queryHistory.length
+      historySize: this.queryHistory.length,
     };
   }
 
@@ -282,13 +285,13 @@ class QueryMonitor extends EventEmitter {
    */
   getRecentHistory(limit = 100, filter = null) {
     let history = this.queryHistory;
-    
+
     if (filter) {
-      history = history.filter(query => 
-        query.query.toLowerCase().includes(filter.toLowerCase())
+      history = history.filter((query) =>
+        query.query.toLowerCase().includes(filter.toLowerCase()),
       );
     }
-    
+
     return history
       .slice(-limit)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -301,7 +304,7 @@ class QueryMonitor extends EventEmitter {
    */
   getSlowQueries(limit = 50) {
     return this.queryHistory
-      .filter(query => query.executionTime > this.thresholds.slowQuery)
+      .filter((query) => query.executionTime > this.thresholds.slowQuery)
       .sort((a, b) => b.executionTime - a.executionTime)
       .slice(0, limit);
   }
@@ -335,8 +338,8 @@ class QueryMonitor extends EventEmitter {
    */
   getQueryKey(query) {
     return query
-      .replace(/\s+/g, ' ')
-      .replace(/\$\d+/g, '?')
+      .replace(/\s+/g, " ")
+      .replace(/\$\d+/g, "?")
       .trim()
       .toLowerCase();
   }
@@ -347,10 +350,7 @@ class QueryMonitor extends EventEmitter {
    * @returns {string} Sanitized query
    */
   sanitizeQuery(query) {
-    return query
-      .replace(/\s+/g, ' ')
-      .trim()
-      .substring(0, 500); // Limit length
+    return query.replace(/\s+/g, " ").trim().substring(0, 500); // Limit length
   }
 
   /**
@@ -360,7 +360,7 @@ class QueryMonitor extends EventEmitter {
     this.queryHistory = [];
     this.queryStats.clear();
     this.executionPlans.clear();
-    this.logger.info('Query history cleared');
+    this.logger.info("Query history cleared");
   }
 
   /**
@@ -368,27 +368,33 @@ class QueryMonitor extends EventEmitter {
    * @param {string} format - Export format ('json', 'csv')
    * @returns {string} Exported data
    */
-  exportData(format = 'json') {
+  exportData(format = "json") {
     const data = {
       stats: this.getStats(),
       history: this.queryHistory,
-      executionPlans: Array.from(this.executionPlans.values())
+      executionPlans: Array.from(this.executionPlans.values()),
     };
-    
-    if (format === 'csv') {
+
+    if (format === "csv") {
       // Simple CSV export
-      const headers = ['timestamp', 'query', 'executionTime', 'success', 'error'];
-      const rows = this.queryHistory.map(query => [
+      const headers = [
+        "timestamp",
+        "query",
+        "executionTime",
+        "success",
+        "error",
+      ];
+      const rows = this.queryHistory.map((query) => [
         query.timestamp,
         query.query,
         query.executionTime,
         query.success,
-        query.error || ''
+        query.error || "",
       ]);
-      
-      return [headers, ...rows].map(row => row.join(',')).join('\n');
+
+      return [headers, ...rows].map((row) => row.join(",")).join("\n");
     }
-    
+
     return JSON.stringify(data, null, 2);
   }
 }

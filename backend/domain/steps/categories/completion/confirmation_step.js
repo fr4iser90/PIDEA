@@ -3,36 +3,36 @@
  * Handles task confirmation and validation
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const AITextDetector = require('@services/chat/AITextDetector');
-const logger = new Logger('confirmation_step');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const AITextDetector = require("@services/chat/AITextDetector");
+const logger = new Logger("confirmation_step");
 
 // Step configuration
 const config = {
-  name: 'confirmation_step',
-  type: 'completion',
-  category: 'completion',
-  description: 'Handle task confirmation and validation',
-  version: '1.0.0',
-  dependencies: ['TaskRepository', 'TerminalService'],
+  name: "confirmation_step",
+  type: "completion",
+  category: "completion",
+  description: "Handle task confirmation and validation",
+  version: "1.0.0",
+  dependencies: ["TaskRepository", "TerminalService"],
   settings: {
     includeAutoConfirmation: true,
     includeQualityCheck: true,
-    timeout: 30000
+    timeout: 30000,
   },
   validation: {
-    required: ['projectId'],
-    optional: ['workspacePath', 'taskId']
-  }
+    required: ["projectId"],
+    optional: ["workspacePath", "taskId"],
+  },
 };
 
 class ConfirmationStep {
   constructor() {
-    this.name = 'ConfirmationStep';
-    this.description = 'Handle task confirmation and validation';
-    this.category = 'completion';
-    this.version = '1.0.0';
+    this.name = "ConfirmationStep";
+    this.description = "Handle task confirmation and validation";
+    this.category = "completion";
+    this.version = "1.0.0";
   }
 
   static getConfig() {
@@ -41,38 +41,58 @@ class ConfirmationStep {
 
   async execute(context) {
     try {
-      logger.info('Starting ConfirmationStep execution');
-      
+      logger.info("Starting ConfirmationStep execution");
+
       // Get services from context (fallback to application context)
-      const browserManager = context.browserManager || context.getService?.('browserManager') || global.application?.browserManager;
-      const idePortManager = context.idePortManager || context.getService?.('idePortManager') || global.application?.idePortManager;
-      
+      const browserManager =
+        context.browserManager ||
+        context.getService?.("browserManager") ||
+        global.application?.browserManager;
+      const idePortManager =
+        context.idePortManager ||
+        context.getService?.("idePortManager") ||
+        global.application?.idePortManager;
+
       if (!browserManager) {
-        logger.warn('BrowserManager not available, using fallback confirmation');
+        logger.warn(
+          "BrowserManager not available, using fallback confirmation",
+        );
         return {
-          success: true,
-          message: 'Confirmation skipped - BrowserManager not available',
-          data: { confirmed: true, reason: 'service_unavailable' }
+          message: "Confirmation skipped - BrowserManager not available",
+          data: { confirmed: true, reason: "service_unavailable" },
         };
       }
 
-      const { taskId, maxAttempts = 3, timeout = null, autoContinueThreshold = 0.8, onlyIfResponseReceived = false } = context;
-      
-      // Use centralized timeout configuration
-      const TimeoutConfig = require('@config/timeout-config');
-      const actualTimeout = timeout ? TimeoutConfig.getTimeout('WORKFLOW', timeout) : TimeoutConfig.getTimeout('WORKFLOW', 'CONFIRMATION');
+      const {
+        taskId,
+        maxAttempts = 3,
+        timeout = null,
+        autoContinueThreshold = 0.8,
+        onlyIfResponseReceived = false,
+      } = context;
 
-      logger.info(`Starting AI confirmation process for task: ${taskId || 'unknown'}`);
+      // Use centralized timeout configuration
+      const TimeoutConfig = require("@config/timeout-config");
+      const actualTimeout = timeout
+        ? TimeoutConfig.getTimeout("WORKFLOW", timeout)
+        : TimeoutConfig.getTimeout("WORKFLOW", "CONFIRMATION");
+
+      logger.info(
+        `Starting AI confirmation process for task: ${taskId || "unknown"}`,
+      );
 
       // Check if we should only proceed if AI response was received
       if (onlyIfResponseReceived) {
-        const previousStepResult = context.previousStepResult || context.getService?.('stepRegistry')?.getLastStepResult?.();
+        const previousStepResult =
+          context.previousStepResult ||
+          context.getService?.("stepRegistry")?.getLastStepResult?.();
         if (!previousStepResult?.data?.aiResponse) {
-          logger.info('Skipping confirmation - no AI response received from previous step');
+          logger.info(
+            "Skipping confirmation - no AI response received from previous step",
+          );
           return {
-            success: true,
-            message: 'Confirmation skipped - no AI response',
-            data: { confirmed: true, reason: 'no_ai_response' }
+            message: "Confirmation skipped - no AI response",
+            data: { confirmed: true, reason: "no_ai_response" },
           };
         }
       }
@@ -86,119 +106,150 @@ class ConfirmationStep {
       }
 
       // Initialize AITextDetector for proper response waiting with IDE-specific selectors
-      const ideType = await browserManager.detectIDEType(browserManager.getCurrentPort());
-      const ideVersion = await browserManager.detectIDEVersion(browserManager.getCurrentPort());
-      const ideSelectors = await browserManager.getIDESelectors(ideType, ideVersion);
+      const ideType = await browserManager.detectIDEType(
+        browserManager.getCurrentPort(),
+      );
+      const ideVersion = await browserManager.detectIDEVersion(
+        browserManager.getCurrentPort(),
+      );
+      const ideSelectors = await browserManager.getIDESelectors(
+        ideType,
+        ideVersion,
+      );
       const aiTextDetector = new AITextDetector(ideSelectors);
       const page = await browserManager.getPage();
-      
+
       if (!page) {
-        throw new Error('No browser page available for AI response detection');
+        throw new Error("No browser page available for AI response detection");
       }
 
       let attempts = 0;
       const maxAttemptsValue = maxAttempts || 3;
-      
+
       while (attempts < maxAttemptsValue) {
         attempts++;
         logger.info(`AI confirmation attempt ${attempts}/${maxAttemptsValue}`);
-        
+
         try {
           // Send confirmation question to IDE (like IDESendMessageStep)
-          const confirmationQuestion = this.getConfirmationQuestion(attempts, context);
-          const result = await browserManager.typeMessage(confirmationQuestion, true);
-          
+          const confirmationQuestion = this.getConfirmationQuestion(
+            attempts,
+            context,
+          );
+          const result = await browserManager.typeMessage(
+            confirmationQuestion,
+            true,
+          );
+
           if (!result) {
-            throw new Error('Failed to send confirmation question to IDE');
+            throw new Error("Failed to send confirmation question to IDE");
           }
-          
+
           // Wait for AI to process the confirmation question using proper AI response detection
-          logger.info('⏳ Waiting for AI to process confirmation question...');
-          
+          logger.info("⏳ Waiting for AI to process confirmation question...");
+
           // Use proper AI response waiting instead of simple timeout
-          let aiResponse = '';
+          let aiResponse = "";
           try {
-            const aiResponseResult = await aiTextDetector.waitForAIResponse(page, {
-              timeout: 60000, // 1 minute timeout for confirmation
-              checkInterval: 2000, // Check every 2 seconds
-              maxStableChecks: 20 // More conservative for confirmation
-            });
-            
+            const aiResponseResult = await aiTextDetector.waitForAIResponse(
+              page,
+              {
+                timeout: 60000, // 1 minute timeout for confirmation
+                checkInterval: 2000, // Check every 2 seconds
+                maxStableChecks: 20, // More conservative for confirmation
+              },
+            );
+
             if (aiResponseResult.success) {
               aiResponse = aiResponseResult.response;
-              logger.info(`📝 Extracted AI response (${aiResponse.length} chars) with confidence: ${aiResponseResult.completion?.confidence || 0}`);
+              logger.info(
+                `📝 Extracted AI response (${aiResponse.length} chars) with confidence: ${aiResponseResult.completion?.confidence || 0}`,
+              );
             } else {
-              logger.warn('AI response waiting failed, trying simple extraction');
+              logger.warn(
+                "AI response waiting failed, trying simple extraction",
+              );
               aiResponse = await aiTextDetector.extractLatestAIResponse(page);
             }
           } catch (error) {
-            logger.warn('Could not extract AI response, continuing with next attempt:', error.message);
+            logger.warn(
+              "Could not extract AI response, continuing with next attempt:",
+              error.message,
+            );
             continue;
           }
-          
+
           // Analyze the AI response for completion confirmation
-          const confirmationScore = this.analyzeConfirmationResponse(aiResponse);
-          
-              logger.info(`AI confirmation result:`, {
-              question: confirmationQuestion,
-              response: aiResponse.substring(0, 100) + '...',
-              score: confirmationScore,
-              threshold: autoContinueThreshold
-            });
-          
+          const confirmationScore =
+            this.analyzeConfirmationResponse(aiResponse);
+
+          logger.info(`AI confirmation result:`, {
+            question: confirmationQuestion,
+            response: aiResponse.substring(0, 100) + "...",
+            score: confirmationScore,
+            threshold: autoContinueThreshold,
+          });
+
           if (confirmationScore >= autoContinueThreshold) {
-            logger.info(`✅ Task confirmed by AI with confidence: ${confirmationScore.toFixed(2)}`);
+            logger.info(
+              `✅ Task confirmed by AI with confidence: ${confirmationScore.toFixed(2)}`,
+            );
             return {
-              success: true,
-              message: 'Task confirmed by AI',
+             
+              message: "Task confirmed by AI",
               data: {
                 confirmed: true,
                 confidence: confirmationScore,
                 question: confirmationQuestion,
                 response: aiResponse,
-                attempts: attempts
-              }
+                attempts: attempts,
+              },
             };
           }
-          
-          logger.info(`⚠️ AI response ambiguous (confidence: ${confirmationScore.toFixed(2)}), retrying...`);
-          
+
+          logger.info(
+            `⚠️ AI response ambiguous (confidence: ${confirmationScore.toFixed(2)}), retrying...`,
+          );
         } catch (error) {
-          logger.error(`AI confirmation attempt ${attempts} failed:`, error.message);
+          logger.error(
+            `AI confirmation attempt ${attempts} failed:`,
+            error.message,
+          );
         }
-        
+
         // Wait before next attempt
         if (attempts < maxAttemptsValue) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
       }
-      
-      logger.warn(`❌ AI confirmation failed after ${maxAttemptsValue} attempts`);
+
+      logger.warn(
+        `❌ AI confirmation failed after ${maxAttemptsValue} attempts`,
+      );
       return {
-        success: false,
-        message: 'AI confirmation failed',
+       
+        message: "AI confirmation failed",
         data: {
           confirmed: false,
-          attempts: maxAttemptsValue
-        }
+          attempts: maxAttemptsValue,
+        },
       };
-
     } catch (error) {
-      logger.error('Error in ConfirmationStep:', error);
+      logger.error("Error in ConfirmationStep:", error);
       return {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       };
     }
   }
 
   analyzeConfirmationResponse(response) {
-    if (!response || typeof response !== 'string') {
+    if (!response || typeof response !== "string") {
       return 0;
     }
-    
+
     const lowerResponse = response.toLowerCase();
-    
+
     // Check for completion status patterns
     const completionPatterns = [
       /completed/i,
@@ -206,83 +257,83 @@ class ConfirmationStep {
       /done/i,
       /ready/i,
       /successful/i,
-      /\[passed\]/i
+      /\[passed\]/i,
     ];
-    
+
     // Check for partial completion patterns
     const partialPatterns = [
       /partially completed/i,
       /almost done/i,
       /mostly complete/i,
-      /in progress/i
+      /in progress/i,
     ];
-    
+
     // Check for need human patterns
     const needHumanPatterns = [
       /need human/i,
       /requires human/i,
       /user input/i,
       /manual intervention/i,
-      /\[failed\]/i
+      /\[failed\]/i,
     ];
-    
+
     // Calculate confidence score
     let score = 0;
-    
+
     // Check for explicit completion
-    if (completionPatterns.some(pattern => pattern.test(lowerResponse))) {
+    if (completionPatterns.some((pattern) => pattern.test(lowerResponse))) {
       score += 0.8;
     }
-    
+
     // Check for partial completion
-    if (partialPatterns.some(pattern => pattern.test(lowerResponse))) {
+    if (partialPatterns.some((pattern) => pattern.test(lowerResponse))) {
       score += 0.4;
     }
-    
+
     // Check for need human
-    if (needHumanPatterns.some(pattern => pattern.test(lowerResponse))) {
+    if (needHumanPatterns.some((pattern) => pattern.test(lowerResponse))) {
       score += 0.2;
     }
-    
+
     // Check for test results
     const testMatch = lowerResponse.match(/\[(passed|failed)\]\s*(\d+)%/i);
     if (testMatch) {
       const testStatus = testMatch[1];
       const testPercentage = parseInt(testMatch[2]);
-      
-      if (testStatus === 'passed' && testPercentage >= 80) {
+
+      if (testStatus === "passed" && testPercentage >= 80) {
         score += 0.3;
-      } else if (testStatus === 'failed') {
+      } else if (testStatus === "failed") {
         score -= 0.2;
       }
     }
-    
+
     // Check for response length and quality
     if (response.length > 50) {
       score += 0.1;
     }
-    
+
     // Normalize score to 0-1 range
     return Math.min(Math.max(score, 0), 1);
   }
 
   getConfirmationQuestion(attempt, context = {}) {
     const { task, projectId } = context;
-    const taskTitle = task?.title || 'the task';
-    const taskDescription = task?.description || '';
-    
+    const taskTitle = task?.title || "the task";
+    const taskDescription = task?.description || "";
+
     const questions = [
       `Have you completed the task "${taskTitle}" for project ${projectId}? Please respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`,
       `Task status check for "${taskTitle}" in project ${projectId}: Are you finished? Respond with: completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`,
-      `Please confirm completion status for task "${taskTitle}" (${projectId}): completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`
+      `Please confirm completion status for task "${taskTitle}" (${projectId}): completed/partially completed/need human. Also include test results: [PASSED] or [FAILED] with percentage.`,
     ];
-    
+
     return questions[attempt % questions.length];
   }
 
   validateContext(context) {
     if (!context.projectId) {
-      throw new Error('Project ID is required');
+      throw new Error("Project ID is required");
     }
   }
 }
@@ -293,5 +344,5 @@ const stepInstance = new ConfirmationStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

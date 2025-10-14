@@ -360,7 +360,7 @@ class VersionBumpStep {
   async execute(context) {
     // Analyze changes and bump version
     const result = await this.bumpVersion(context);
-    return { success: true, newVersion: result.version };
+    return { newVersion: result.version };
   }
 }
 
@@ -411,8 +411,7 @@ class VersionAnalysisStep {
     const changes = await this.analyzeChanges(context);
     const impact = this.calculateImpact(changes);
     
-    return { 
-      success: true, 
+    return {  
       changes: changes, 
       impact: impact,
       suggestedBumpType: this.suggestBumpType(impact)

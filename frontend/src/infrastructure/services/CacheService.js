@@ -723,7 +723,7 @@ export class CacheService {
       
       // Ensure we return an array
       const data = Array.isArray(cachedResult) ? cachedResult : [];
-      return { success: true, data: data };
+      return { data: data };
     }
     
     // Import apiCall dynamically to avoid circular dependencies
@@ -750,7 +750,7 @@ export class CacheService {
       return result;
     } catch (error) {
       logger.error('Failed to fetch IDE data:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -766,7 +766,7 @@ export class CacheService {
     const cachedResult = this.get(cacheKey);
     if (cachedResult) {
       logger.info('Using cached Git data');
-      return { success: true, data: cachedResult };
+      return { data: cachedResult };
     }
     
     // Import apiCall dynamically
@@ -787,7 +787,7 @@ export class CacheService {
       return result;
     } catch (error) {
       logger.error('Failed to fetch Git data:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -802,7 +802,7 @@ export class CacheService {
     const cachedResult = this.get(cacheKey);
     if (cachedResult) {
       logger.info('Using cached Chat data');
-      return { success: true, data: cachedResult };
+      return { data: cachedResult };
     }
     
     // Import apiCall dynamically
@@ -820,7 +820,7 @@ export class CacheService {
       return result;
     } catch (error) {
       logger.error('Failed to fetch Chat data:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
@@ -835,7 +835,7 @@ export class CacheService {
     const cachedResult = this.get(cacheKey);
     if (cachedResult) {
       logger.info('Using cached Task data');
-      return { success: true, data: cachedResult };
+      return { data: cachedResult };
     }
     
     // Import apiCall dynamically
@@ -845,12 +845,12 @@ export class CacheService {
       // Get projectId from port
       const ideResponse = await apiCall('/api/interfaces/available-ides');
       if (!ideResponse.success) {
-        return { success: false, error: 'Failed to get IDE data' };
+        return { error: 'Failed to get IDE data' };
       }
       
       const ide = ideResponse.data.find(i => i.port === port);
       if (!ide) {
-        return { success: false, error: 'IDE not found' };
+        return { error: 'IDE not found' };
       }
       
       const projectId = ide.workspacePath.split('/').pop(); // Get project name from path
@@ -866,7 +866,7 @@ export class CacheService {
       return result;
     } catch (error) {
       logger.error('Failed to fetch Task data:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 

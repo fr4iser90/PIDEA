@@ -31,7 +31,7 @@ this.logger.info('GitBranchHandler: GitBranchCommand completed successfully', {
 });
 
 return {
-  success: true,
+ 
   branches,
   result: branches.all,
   timestamp: new Date()
@@ -124,7 +124,7 @@ return branches;
 ```javascript
 // GitBranchHandler should return:
 {
-  success: true,
+ 
   branches: {
     local: ["main", "pidea-agent", "feature/..."],
     remote: ["main", "pidea-agent", "origin/..."],
@@ -136,7 +136,7 @@ return branches;
 
 // GitGetBranchesStep should return:
 {
-  success: true,
+ 
   result: {
     local: ["main", "pidea-agent", "feature/..."],
     remote: ["main", "pidea-agent", "origin/..."],

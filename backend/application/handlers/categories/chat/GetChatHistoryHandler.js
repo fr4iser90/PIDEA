@@ -1,12 +1,17 @@
-const GetChatHistoryQuery = require('@application/queries/GetChatHistoryQuery');
-const ChatMessage = require('@entities/ChatMessage');
+const GetChatHistoryQuery = require("@application/queries/GetChatHistoryQuery");
+const ChatMessage = require("@entities/ChatMessage");
 
-const IDETypes = require('@services/ide/IDETypes');
-const Logger = require('@logging/Logger');
-const logger = new Logger('ChatHistoryHandler');
+const IDETypes = require("@services/ide/IDETypes");
+const Logger = require("@logging/Logger");
+const logger = new Logger("ChatHistoryHandler");
 
 class GetChatHistoryHandler {
-  constructor(chatRepository, ideManager = null, serviceRegistry = null, chatCacheService = null) {
+  constructor(
+    chatRepository,
+    ideManager = null,
+    serviceRegistry = null,
+    chatCacheService = null,
+  ) {
     this.chatRepository = chatRepository;
     this.ideManager = ideManager;
     this.serviceRegistry = serviceRegistry;
@@ -17,13 +22,24 @@ class GetChatHistoryHandler {
    * EINZIGE METHODE - Holt Chat-Historie (Datenbank + IDE)
    */
   async handle(query) {
-    const { userId, port, limit = 50, offset = 0, includeUserData = false } = query;
+    const {
+      userId,
+      port,
+      limit = 50,
+      offset = 0,
+      includeUserData = false,
+    } = query;
 
     logger.info(`🔍 Getting chat history for port ${port}, user ${userId}`);
 
     // 1. Get messages from database
-    const dbMessages = await this.chatRepository.getMessagesByPort(port, userId);
-    logger.info(`📊 Found ${dbMessages.length} messages in database for port ${port}`);
+    const dbMessages = await this.chatRepository.getMessagesByPort(
+      port,
+      userId,
+    );
+    logger.info(
+      `📊 Found ${dbMessages.length} messages in database for port ${port}`,
+    );
 
     // 2. Get live messages from IDE (with caching)
     let liveMessages = [];
@@ -32,28 +48,39 @@ class GetChatHistoryHandler {
       if (this.chatCacheService) {
         const cachedMessages = await this.chatCacheService.getChatHistory(port);
         if (cachedMessages && cachedMessages.length > 0) {
-          logger.info(`📋 Using cached chat for port ${port}: ${cachedMessages.length} messages`);
+          logger.info(
+            `📋 Using cached chat for port ${port}: ${cachedMessages.length} messages`,
+          );
           liveMessages = cachedMessages;
         } else {
           // Cache miss - extract live and cache it
           const ideService = await this.getIDEServiceForPort(port);
-          if (ideService && typeof ideService.extractChatHistory === 'function') {
+          if (
+            ideService &&
+            typeof ideService.extractChatHistory === "function"
+          ) {
             logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
             liveMessages = await ideService.extractChatHistory(port);
-            logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
-            
+            logger.info(
+              `✅ Extracted ${liveMessages.length} live messages from IDE`,
+            );
+
             // Cache the extracted messages
             await this.chatCacheService.setChatHistory(port, liveMessages);
-            logger.info(`💾 Cached ${liveMessages.length} messages for port ${port}`);
+            logger.info(
+              `💾 Cached ${liveMessages.length} messages for port ${port}`,
+            );
           }
         }
       } else {
         // Fallback: direct extraction without cache
         const ideService = await this.getIDEServiceForPort(port);
-        if (ideService && typeof ideService.extractChatHistory === 'function') {
+        if (ideService && typeof ideService.extractChatHistory === "function") {
           logger.info(`📝 Extracting live chat from IDE on port ${port}...`);
           liveMessages = await ideService.extractChatHistory(port);
-          logger.info(`✅ Extracted ${liveMessages.length} live messages from IDE`);
+          logger.info(
+            `✅ Extracted ${liveMessages.length} live messages from IDE`,
+          );
         }
       }
     } catch (error) {
@@ -63,7 +90,7 @@ class GetChatHistoryHandler {
     // 3. Combine and sort all messages
     const allMessages = [...dbMessages, ...liveMessages];
     allMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
+
     // 4. Apply pagination
     let paginatedMessages = allMessages;
     if (offset) {
@@ -73,13 +100,17 @@ class GetChatHistoryHandler {
       paginatedMessages = paginatedMessages.slice(0, limit);
     }
 
-    logger.info(`📤 Returning ${paginatedMessages.length} total messages for port ${port}`);
+    logger.info(
+      `📤 Returning ${paginatedMessages.length} total messages for port ${port}`,
+    );
 
     return {
       port: port,
-      messages: paginatedMessages.map(m => this.sanitizeMessage(m, includeUserData)),
+      messages: paginatedMessages.map((m) =>
+        this.sanitizeMessage(m, includeUserData),
+      ),
       totalCount: paginatedMessages.length,
-      hasMore: paginatedMessages.length >= limit
+      hasMore: paginatedMessages.length >= limit,
     };
   }
 
@@ -89,14 +120,16 @@ class GetChatHistoryHandler {
   async getIDEServiceForPort(port) {
     try {
       if (!this.ideManager) {
-        logger.info('No IDE manager available');
+        logger.info("No IDE manager available");
         return null;
       }
 
       // Get available IDEs
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      const targetIDE = availableIDEs[port] || Object.values(availableIDEs).find(ide => ide.port === port);
-      
+      const targetIDE =
+        availableIDEs[port] ||
+        Object.values(availableIDEs).find((ide) => ide.port === port);
+
       if (!targetIDE) {
         logger.warn(`❌ No IDE found for port ${port}`);
         return null;
@@ -117,10 +150,10 @@ class GetChatHistoryHandler {
       // Get the appropriate service from registry
       if (this.serviceRegistry) {
         let service = null;
-        
+
         // All IDE services removed - using interfaceManager instead
-        service = this.serviceRegistry.getService('interfaceManager');
-        
+        service = this.serviceRegistry.getService("interfaceManager");
+
         if (service) {
           logger.info(`✅ Found IDE service: ${service.constructor.name}`);
           return service;
@@ -129,7 +162,6 @@ class GetChatHistoryHandler {
 
       logger.warn(`❌ No IDE service found for type ${ideType}`);
       return null;
-
     } catch (error) {
       logger.error(`❌ Error getting IDE service for port ${port}:`, error);
       return null;
@@ -138,14 +170,15 @@ class GetChatHistoryHandler {
 
   sanitizeMessage(message, includeUserData) {
     if (!message) return null;
-    
+
     const sanitized = {
       id: message.id || message._id || Date.now() + Math.random(),
-      content: message.content || message.message || '',
-      sender: message.sender || message.user || 'unknown',
-      type: message.type || 'text',
-      timestamp: message.timestamp || message.created_at || new Date().toISOString(),
-      port: message.port || null
+      content: message.content || message.message || "",
+      sender: message.sender || message.user || "unknown",
+      type: message.type || "text",
+      timestamp:
+        message.timestamp || message.created_at || new Date().toISOString(),
+      port: message.port || null,
     };
 
     if (includeUserData && message.metadata) {
@@ -156,4 +189,4 @@ class GetChatHistoryHandler {
   }
 }
 
-module.exports = GetChatHistoryHandler; 
+module.exports = GetChatHistoryHandler;

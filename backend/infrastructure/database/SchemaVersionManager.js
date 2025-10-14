@@ -1,19 +1,19 @@
 /**
  * Schema Version Manager - Schema Versioning Implementation
- * 
+ *
  * Provides schema versioning capabilities for database evolution
  * Tracks schema changes, validates migrations, and supports rollbacks
  */
 
-const crypto = require('crypto');
-const fs = require('fs').promises;
-const path = require('path');
-const Logger = require('@logging/Logger');
+const crypto = require("crypto");
+const fs = require("fs").promises;
+const path = require("path");
+const Logger = require("@logging/Logger");
 
 class SchemaVersionManager {
   constructor(databaseConnection) {
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('SchemaVersionManager');
+    this.logger = new Logger("SchemaVersionManager");
   }
 
   /**
@@ -26,7 +26,14 @@ class SchemaVersionManager {
    * @param {Object} metadata - Additional metadata
    * @returns {Promise<string>} Version record ID
    */
-  async recordSchemaVersion(version, description, migrationFile, userId = 'system', rollbackSql = null, metadata = {}) {
+  async recordSchemaVersion(
+    version,
+    description,
+    migrationFile,
+    userId = "system",
+    rollbackSql = null,
+    metadata = {},
+  ) {
     try {
       // Calculate checksum of the migration file
       const checksum = await this.calculateFileChecksum(migrationFile);
@@ -38,7 +45,7 @@ class SchemaVersionManager {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      const versionId = require('uuid').v4();
+      const versionId = require("uuid").v4();
       await this.databaseConnection.execute(sql, [
         versionId,
         version,
@@ -48,14 +55,13 @@ class SchemaVersionManager {
         new Date().toISOString(),
         userId,
         rollbackSql,
-        JSON.stringify(metadata)
+        JSON.stringify(metadata),
       ]);
 
       this.logger.debug(`Schema version recorded: ${version}`);
       return versionId;
-
     } catch (error) {
-      this.logger.error('Error recording schema version:', error);
+      this.logger.error("Error recording schema version:", error);
       throw new Error(`Failed to record schema version: ${error.message}`);
     }
   }
@@ -77,8 +83,8 @@ class SchemaVersionManager {
       `;
 
       const rows = await this.databaseConnection.query(sql, [limit, offset]);
-      
-      return rows.map(row => ({
+
+      return rows.map((row) => ({
         id: row.id,
         version: row.version,
         description: row.description,
@@ -87,11 +93,10 @@ class SchemaVersionManager {
         appliedAt: row.applied_at,
         appliedBy: row.applied_by,
         rollbackSql: row.rollback_sql,
-        metadata: JSON.parse(row.metadata)
+        metadata: JSON.parse(row.metadata),
       }));
-
     } catch (error) {
-      this.logger.error('Error getting schema versions:', error);
+      this.logger.error("Error getting schema versions:", error);
       throw new Error(`Failed to get schema versions: ${error.message}`);
     }
   }
@@ -110,9 +115,8 @@ class SchemaVersionManager {
 
       const rows = await this.databaseConnection.query(sql);
       return rows.length > 0 ? rows[0].version : null;
-
     } catch (error) {
-      this.logger.error('Error getting current schema version:', error);
+      this.logger.error("Error getting current schema version:", error);
       throw new Error(`Failed to get current schema version: ${error.message}`);
     }
   }
@@ -125,7 +129,12 @@ class SchemaVersionManager {
    * @param {string} userId - User performing the validation
    * @returns {Promise<string>} Validation record ID
    */
-  async validateSchemaVersion(version, validationType, result, userId = 'system') {
+  async validateSchemaVersion(
+    version,
+    validationType,
+    result,
+    userId = "system",
+  ) {
     try {
       const sql = `
         INSERT INTO schema_validations (
@@ -134,8 +143,8 @@ class SchemaVersionManager {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      const validationId = require('uuid').v4();
-      const status = result.success ? 'passed' : 'failed';
+      const validationId = require("uuid").v4();
+      const status = result.success ? "passed" : "failed";
 
       await this.databaseConnection.execute(sql, [
         validationId,
@@ -145,14 +154,15 @@ class SchemaVersionManager {
         JSON.stringify(result),
         new Date().toISOString(),
         userId,
-        JSON.stringify({})
+        JSON.stringify({}),
       ]);
 
-      this.logger.debug(`Schema validation recorded: ${version} - ${validationType} - ${status}`);
+      this.logger.debug(
+        `Schema validation recorded: ${version} - ${validationType} - ${status}`,
+      );
       return validationId;
-
     } catch (error) {
-      this.logger.error('Error validating schema version:', error);
+      this.logger.error("Error validating schema version:", error);
       throw new Error(`Failed to validate schema version: ${error.message}`);
     }
   }
@@ -173,8 +183,8 @@ class SchemaVersionManager {
       `;
 
       const rows = await this.databaseConnection.query(sql, [version]);
-      
-      return rows.map(row => ({
+
+      return rows.map((row) => ({
         id: row.id,
         version: row.version,
         validationType: row.validation_type,
@@ -182,11 +192,10 @@ class SchemaVersionManager {
         result: JSON.parse(row.result),
         validatedAt: row.validated_at,
         validatedBy: row.validated_by,
-        metadata: JSON.parse(row.metadata)
+        metadata: JSON.parse(row.metadata),
       }));
-
     } catch (error) {
-      this.logger.error('Error getting schema validations:', error);
+      this.logger.error("Error getting schema validations:", error);
       throw new Error(`Failed to get schema validations: ${error.message}`);
     }
   }
@@ -197,7 +206,7 @@ class SchemaVersionManager {
    * @param {string} userId - User performing the rollback
    * @returns {Promise<boolean>} Success status
    */
-  async rollbackToVersion(targetVersion, userId = 'system') {
+  async rollbackToVersion(targetVersion, userId = "system") {
     try {
       // Get all versions after the target version
       const sql = `
@@ -222,17 +231,16 @@ class SchemaVersionManager {
       await this.recordSchemaVersion(
         `rollback-${Date.now()}`,
         `Rollback to version ${targetVersion}`,
-        'rollback',
+        "rollback",
         userId,
         null,
-        { targetVersion, rolledBackVersions: rows.map(r => r.version) }
+        { targetVersion, rolledBackVersions: rows.map((r) => r.version) },
       );
 
       this.logger.debug(`Rollback completed to version: ${targetVersion}`);
       return true;
-
     } catch (error) {
-      this.logger.error('Error rolling back schema version:', error);
+      this.logger.error("Error rolling back schema version:", error);
       throw new Error(`Failed to rollback schema version: ${error.message}`);
     }
   }
@@ -244,10 +252,9 @@ class SchemaVersionManager {
   async validateSchemaIntegrity() {
     try {
       const result = {
-        success: true,
         errors: [],
         warnings: [],
-        checks: {}
+        checks: {},
       };
 
       // Check if all tables exist
@@ -267,17 +274,18 @@ class SchemaVersionManager {
       result.checks.noOrphanedRecords = orphanCheck;
 
       // Determine overall success
-      result.success = Object.values(result.checks).every(check => check.success);
+      result.success = Object.values(result.checks).every(
+        (check) => check.success,
+      );
 
       return result;
-
     } catch (error) {
-      this.logger.error('Error validating schema integrity:', error);
+      this.logger.error("Error validating schema integrity:", error);
       return {
-        success: false,
+       
         errors: [error.message],
         warnings: [],
-        checks: {}
+        checks: {},
       };
     }
   }
@@ -314,11 +322,10 @@ class SchemaVersionManager {
 
       return {
         ...stats,
-        ...validationStats
+        ...validationStats,
       };
-
     } catch (error) {
-      this.logger.error('Error getting schema statistics:', error);
+      this.logger.error("Error getting schema statistics:", error);
       throw new Error(`Failed to get schema statistics: ${error.message}`);
     }
   }
@@ -330,11 +337,10 @@ class SchemaVersionManager {
    */
   async calculateFileChecksum(filePath) {
     try {
-      const content = await fs.readFile(filePath, 'utf8');
-      return crypto.createHash('sha256').update(content).digest('hex');
-
+      const content = await fs.readFile(filePath, "utf8");
+      return crypto.createHash("sha256").update(content).digest("hex");
     } catch (error) {
-      this.logger.error('Error calculating file checksum:', error);
+      this.logger.error("Error calculating file checksum:", error);
       throw new Error(`Failed to calculate file checksum: ${error.message}`);
     }
   }
@@ -346,11 +352,23 @@ class SchemaVersionManager {
   async validateTablesExist() {
     try {
       const expectedTables = [
-        'tasks', 'projects', 'users', 'analysis', 'user_sessions',
-        'queue_history', 'workflow_type_detection', 'ide_configurations',
-        'playwright_configs', 'project_interfaces', 'event_store',
-        'event_store_snapshots', 'soft_delete_metadata', 'schema_versions',
-        'schema_validations', 'audit_trail', 'audit_trail_summary'
+        "tasks",
+        "projects",
+        "users",
+        "analysis",
+        "user_sessions",
+        "queue_history",
+        "workflow_type_detection",
+        "ide_configurations",
+        "playwright_configs",
+        "project_interfaces",
+        "event_store",
+        "event_store_snapshots",
+        "soft_delete_metadata",
+        "schema_versions",
+        "schema_validations",
+        "audit_trail",
+        "audit_trail_summary",
       ];
 
       const sql = `
@@ -359,20 +377,21 @@ class SchemaVersionManager {
       `;
 
       const rows = await this.databaseConnection.query(sql);
-      const existingTables = rows.map(row => row.table_name);
+      const existingTables = rows.map((row) => row.table_name);
 
-      const missingTables = expectedTables.filter(table => !existingTables.includes(table));
+      const missingTables = expectedTables.filter(
+        (table) => !existingTables.includes(table),
+      );
 
       return {
         success: missingTables.length === 0,
         missingTables,
-        existingTables: existingTables.length
+        existingTables: existingTables.length,
       };
-
     } catch (error) {
       return {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       };
     }
   }
@@ -389,18 +408,16 @@ class SchemaVersionManager {
       `;
 
       const rows = await this.databaseConnection.query(sql);
-      const existingIndexes = rows.map(row => row.indexname);
+      const existingIndexes = rows.map((row) => row.indexname);
 
       return {
-        success: true,
         totalIndexes: existingIndexes.length,
-        indexes: existingIndexes
+        indexes: existingIndexes,
       };
-
     } catch (error) {
       return {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       };
     }
   }
@@ -418,22 +435,20 @@ class SchemaVersionManager {
       `;
 
       const rows = await this.databaseConnection.query(sql);
-      const constraints = rows.map(row => ({
+      const constraints = rows.map((row) => ({
         name: row.constraint_name,
         table: row.table_name,
-        type: row.constraint_type
+        type: row.constraint_type,
       }));
 
       return {
-        success: true,
         totalConstraints: constraints.length,
-        constraints
+        constraints,
       };
-
     } catch (error) {
       return {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       };
     }
   }
@@ -453,9 +468,9 @@ class SchemaVersionManager {
         WHERE t.id IS NULL
       `);
       checks.push({
-        name: 'orphaned_task_sessions',
+        name: "orphaned_task_sessions",
         count: taskSessionCheck[0].count,
-        success: taskSessionCheck[0].count === 0
+        success: taskSessionCheck[0].count === 0,
       });
 
       // Check for orphaned analysis steps
@@ -465,23 +480,22 @@ class SchemaVersionManager {
         WHERE a.id IS NULL
       `);
       checks.push({
-        name: 'orphaned_analysis_steps',
+        name: "orphaned_analysis_steps",
         count: analysisStepCheck[0].count,
-        success: analysisStepCheck[0].count === 0
+        success: analysisStepCheck[0].count === 0,
       });
 
-      const hasOrphans = checks.some(check => !check.success);
+      const hasOrphans = checks.some((check) => !check.success);
 
       return {
         success: !hasOrphans,
         checks,
-        totalOrphans: checks.reduce((sum, check) => sum + check.count, 0)
+        totalOrphans: checks.reduce((sum, check) => sum + check.count, 0),
       };
-
     } catch (error) {
       return {
-        success: false,
-        error: error.message
+       
+        error: error.message,
       };
     }
   }

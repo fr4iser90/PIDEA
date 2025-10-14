@@ -4,12 +4,12 @@
  * Implements step classification logic for parallel execution optimization
  */
 
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class StepClassifier {
   constructor(options = {}) {
-    this.logger = options.logger || new ServiceLogger('StepClassifier');
-    
+    this.logger = options.logger || new ServiceLogger("StepClassifier");
+
     // Critical steps that must be executed sequentially
     this.criticalStepPatterns = [
       /IDE.*Step$/i,
@@ -20,9 +20,9 @@ class StepClassifier {
       /Testing.*Step$/i,
       /Deployment.*Step$/i,
       /Create.*Step$/i,
-      /Execute.*Step$/i
+      /Execute.*Step$/i,
     ];
-    
+
     // Non-critical steps that can be executed in parallel
     this.nonCriticalStepPatterns = [
       /Get.*Step$/i,
@@ -30,38 +30,38 @@ class StepClassifier {
       /Retrieve.*Step$/i,
       /Load.*Step$/i,
       /Read.*Step$/i,
-      /Query.*Step$/i
+      /Query.*Step$/i,
     ];
-    
+
     // Explicit critical step names
     this.explicitCriticalSteps = [
-      'IDESendMessageStep',
-      'CreateChatStep',
-      'TaskExecutionStep',
-      'WorkflowExecutionStep',
-      'AnalysisExecutionStep',
-      'RefactoringStep',
-      'TestingStep',
-      'DeploymentStep',
-      'CreateProjectStep',
-      'CreateUserStep',
-      'ExecuteCommandStep',
-      'ExecuteWorkflowStep'
+      "IDESendMessageStep",
+      "CreateChatStep",
+      "TaskExecutionStep",
+      "WorkflowExecutionStep",
+      "AnalysisExecutionStep",
+      "RefactoringStep",
+      "TestingStep",
+      "DeploymentStep",
+      "CreateProjectStep",
+      "CreateUserStep",
+      "ExecuteCommandStep",
+      "ExecuteWorkflowStep",
     ];
-    
+
     // Explicit non-critical step names
     this.explicitNonCriticalSteps = [
-      'GetChatHistoryStep',
-      'GitGetStatusStep',
-      'GitGetCurrentBranchStep',
-      'GetProjectInfoStep',
-      'GetUserPreferencesStep',
-      'GetSystemStatusStep',
-      'FetchUserDataStep',
-      'RetrieveProjectDataStep',
-      'LoadConfigurationStep',
-      'ReadFileStep',
-      'QueryDatabaseStep'
+      "GetChatHistoryStep",
+      "GitGetStatusStep",
+      "GitGetCurrentBranchStep",
+      "GetProjectInfoStep",
+      "GetUserPreferencesStep",
+      "GetSystemStatusStep",
+      "FetchUserDataStep",
+      "RetrieveProjectDataStep",
+      "LoadConfigurationStep",
+      "ReadFileStep",
+      "QueryDatabaseStep",
     ];
   }
 
@@ -73,9 +73,9 @@ class StepClassifier {
    */
   classifySteps(stepNames, context = {}) {
     try {
-      this.logger.info('Classifying steps for parallel execution', {
+      this.logger.info("Classifying steps for parallel execution", {
         totalSteps: stepNames.length,
-        context: this.getContextSummary(context)
+        context: this.getContextSummary(context),
       });
 
       const criticalSteps = [];
@@ -96,19 +96,19 @@ class StepClassifier {
         classification: {
           criticalCount: criticalSteps.length,
           nonCriticalCount: nonCriticalSteps.length,
-          parallelizationRatio: nonCriticalSteps.length / stepNames.length
-        }
+          parallelizationRatio: nonCriticalSteps.length / stepNames.length,
+        },
       };
 
-      this.logger.info('Step classification completed', {
+      this.logger.info("Step classification completed", {
         critical: criticalSteps.length,
         nonCritical: nonCriticalSteps.length,
-        parallelizationRatio: `${(result.classification.parallelizationRatio * 100).toFixed(1)}%`
+        parallelizationRatio: `${(result.classification.parallelizationRatio * 100).toFixed(1)}%`,
       });
 
       return result;
     } catch (error) {
-      this.logger.error('Step classification failed:', error.message);
+      this.logger.error("Step classification failed:", error.message);
       // Fallback to all critical (sequential execution)
       return {
         critical: stepNames,
@@ -117,9 +117,9 @@ class StepClassifier {
         classification: {
           criticalCount: stepNames.length,
           nonCriticalCount: 0,
-          parallelizationRatio: 0
+          parallelizationRatio: 0,
         },
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -134,46 +134,57 @@ class StepClassifier {
     try {
       // 1. Check explicit critical steps
       if (this.explicitCriticalSteps.includes(stepName)) {
-        this.logger.debug(`Step "${stepName}" classified as critical (explicit list)`);
+        this.logger.debug(
+          `Step "${stepName}" classified as critical (explicit list)`,
+        );
         return true;
       }
 
       // 2. Check explicit non-critical steps
       if (this.explicitNonCriticalSteps.includes(stepName)) {
-        this.logger.debug(`Step "${stepName}" classified as non-critical (explicit list)`);
+        this.logger.debug(
+          `Step "${stepName}" classified as non-critical (explicit list)`,
+        );
         return false;
       }
 
       // 3. Check critical patterns
-      const matchesCriticalPattern = this.criticalStepPatterns.some(pattern => 
-        pattern.test(stepName)
+      const matchesCriticalPattern = this.criticalStepPatterns.some((pattern) =>
+        pattern.test(stepName),
       );
-      
+
       if (matchesCriticalPattern) {
-        this.logger.debug(`Step "${stepName}" classified as critical (pattern match)`);
+        this.logger.debug(
+          `Step "${stepName}" classified as critical (pattern match)`,
+        );
         return true;
       }
 
       // 4. Check non-critical patterns
-      const matchesNonCriticalPattern = this.nonCriticalStepPatterns.some(pattern => 
-        pattern.test(stepName)
+      const matchesNonCriticalPattern = this.nonCriticalStepPatterns.some(
+        (pattern) => pattern.test(stepName),
       );
-      
+
       if (matchesNonCriticalPattern) {
-        this.logger.debug(`Step "${stepName}" classified as non-critical (pattern match)`);
+        this.logger.debug(
+          `Step "${stepName}" classified as non-critical (pattern match)`,
+        );
         return false;
       }
 
       // 5. Check context-based classification
       if (this.isWorkflowContext(context)) {
-        this.logger.debug(`Step "${stepName}" classified as critical (workflow context)`);
+        this.logger.debug(
+          `Step "${stepName}" classified as critical (workflow context)`,
+        );
         return true;
       }
 
       // 6. Default to non-critical for unknown steps
-      this.logger.debug(`Step "${stepName}" classified as non-critical (default)`);
+      this.logger.debug(
+        `Step "${stepName}" classified as non-critical (default)`,
+      );
       return false;
-
     } catch (error) {
       this.logger.error(`Error classifying step "${stepName}":`, error.message);
       // Default to critical for safety
@@ -187,12 +198,14 @@ class StepClassifier {
    * @returns {boolean} True if workflow context
    */
   isWorkflowContext(context) {
-    return !!(context.workflowId || 
-             context.taskId || 
-             context.analysisId ||
-             context.executionMode === 'workflow' ||
-             context.isWorkflowExecution ||
-             context.sequentialRequired);
+    return !!(
+      context.workflowId ||
+      context.taskId ||
+      context.analysisId ||
+      context.executionMode === "workflow" ||
+      context.isWorkflowExecution ||
+      context.sequentialRequired
+    );
   }
 
   /**
@@ -207,7 +220,7 @@ class StepClassifier {
       hasAnalysisId: !!context.analysisId,
       executionMode: context.executionMode,
       isWorkflowExecution: context.isWorkflowExecution,
-      sequentialRequired: context.sequentialRequired
+      sequentialRequired: context.sequentialRequired,
     };
   }
 
@@ -220,7 +233,7 @@ class StepClassifier {
       this.criticalStepPatterns.push(pattern);
       this.logger.info(`Added critical pattern: ${pattern}`);
     } else {
-      throw new Error('Pattern must be a RegExp');
+      throw new Error("Pattern must be a RegExp");
     }
   }
 
@@ -233,7 +246,7 @@ class StepClassifier {
       this.nonCriticalStepPatterns.push(pattern);
       this.logger.info(`Added non-critical pattern: ${pattern}`);
     } else {
-      throw new Error('Pattern must be a RegExp');
+      throw new Error("Pattern must be a RegExp");
     }
   }
 
@@ -242,7 +255,10 @@ class StepClassifier {
    * @param {string} stepName - Step name to add
    */
   addCriticalStep(stepName) {
-    if (typeof stepName === 'string' && !this.explicitCriticalSteps.includes(stepName)) {
+    if (
+      typeof stepName === "string" &&
+      !this.explicitCriticalSteps.includes(stepName)
+    ) {
       this.explicitCriticalSteps.push(stepName);
       this.logger.info(`Added critical step: ${stepName}`);
     }
@@ -253,7 +269,10 @@ class StepClassifier {
    * @param {string} stepName - Step name to add
    */
   addNonCriticalStep(stepName) {
-    if (typeof stepName === 'string' && !this.explicitNonCriticalSteps.includes(stepName)) {
+    if (
+      typeof stepName === "string" &&
+      !this.explicitNonCriticalSteps.includes(stepName)
+    ) {
       this.explicitNonCriticalSteps.push(stepName);
       this.logger.info(`Added non-critical step: ${stepName}`);
     }
@@ -269,8 +288,11 @@ class StepClassifier {
       nonCriticalPatterns: this.nonCriticalStepPatterns.length,
       explicitCriticalSteps: this.explicitCriticalSteps.length,
       explicitNonCriticalSteps: this.explicitNonCriticalSteps.length,
-      totalPatterns: this.criticalStepPatterns.length + this.nonCriticalStepPatterns.length,
-      totalExplicitSteps: this.explicitCriticalSteps.length + this.explicitNonCriticalSteps.length
+      totalPatterns:
+        this.criticalStepPatterns.length + this.nonCriticalStepPatterns.length,
+      totalExplicitSteps:
+        this.explicitCriticalSteps.length +
+        this.explicitNonCriticalSteps.length,
     };
   }
 
@@ -287,49 +309,49 @@ class StepClassifier {
       /Testing.*Step$/i,
       /Deployment.*Step$/i,
       /Create.*Step$/i,
-      /Execute.*Step$/i
+      /Execute.*Step$/i,
     ];
-    
+
     this.nonCriticalStepPatterns = [
       /Get.*Step$/i,
       /Fetch.*Step$/i,
       /Retrieve.*Step$/i,
       /Load.*Step$/i,
       /Read.*Step$/i,
-      /Query.*Step$/i
-    ];
-    
-    this.explicitCriticalSteps = [
-      'IDESendMessageStep',
-      'CreateChatStep',
-      'TaskExecutionStep',
-      'WorkflowExecutionStep',
-      'AnalysisExecutionStep',
-      'RefactoringStep',
-      'TestingStep',
-      'DeploymentStep',
-      'CreateProjectStep',
-      'CreateUserStep',
-      'ExecuteCommandStep',
-      'ExecuteWorkflowStep'
-    ];
-    
-    this.explicitNonCriticalSteps = [
-      'GetChatHistoryStep',
-      'GitGetStatusStep',
-      'GitGetCurrentBranchStep',
-      'GetProjectInfoStep',
-      'GetUserPreferencesStep',
-      'GetSystemStatusStep',
-      'FetchUserDataStep',
-      'RetrieveProjectDataStep',
-      'LoadConfigurationStep',
-      'ReadFileStep',
-      'QueryDatabaseStep'
+      /Query.*Step$/i,
     ];
 
-    this.logger.info('StepClassifier reset to default configuration');
+    this.explicitCriticalSteps = [
+      "IDESendMessageStep",
+      "CreateChatStep",
+      "TaskExecutionStep",
+      "WorkflowExecutionStep",
+      "AnalysisExecutionStep",
+      "RefactoringStep",
+      "TestingStep",
+      "DeploymentStep",
+      "CreateProjectStep",
+      "CreateUserStep",
+      "ExecuteCommandStep",
+      "ExecuteWorkflowStep",
+    ];
+
+    this.explicitNonCriticalSteps = [
+      "GetChatHistoryStep",
+      "GitGetStatusStep",
+      "GitGetCurrentBranchStep",
+      "GetProjectInfoStep",
+      "GetUserPreferencesStep",
+      "GetSystemStatusStep",
+      "FetchUserDataStep",
+      "RetrieveProjectDataStep",
+      "LoadConfigurationStep",
+      "ReadFileStep",
+      "QueryDatabaseStep",
+    ];
+
+    this.logger.info("StepClassifier reset to default configuration");
   }
 }
 
-module.exports = StepClassifier; 
+module.exports = StepClassifier;

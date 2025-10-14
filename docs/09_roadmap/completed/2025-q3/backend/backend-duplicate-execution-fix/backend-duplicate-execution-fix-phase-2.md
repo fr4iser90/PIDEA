@@ -230,21 +230,21 @@ async getSessionChatHistory(sessionId, userId, options = {}) {
 ```javascript
 // ❌ REMOVE: Redundant validation
 if (!context.userId) {
-  return { success: false, error: 'User ID is required', stepId };
+  return { error: 'User ID is required', stepId };
 }
 if (!context.sessionId && !context.port) {
-  return { success: false, error: 'Either Session ID or Port is required', stepId };
+  return { error: 'Either Session ID or Port is required', stepId };
 }
 if (context.sessionId && (typeof context.sessionId !== 'string' || context.sessionId.trim().length === 0)) {
-  return { success: false, error: 'Session ID must be a non-empty string', stepId };
+  return { error: 'Session ID must be a non-empty string', stepId };
 }
 
 // ✅ KEEP: Simplified validation
 if (!context.userId) {
-  return { success: false, error: 'User ID is required', stepId };
+  return { error: 'User ID is required', stepId };
 }
 if (!context.sessionId && !context.port) {
-  return { success: false, error: 'Either Session ID or Port is required', stepId };
+  return { error: 'Either Session ID or Port is required', stepId };
 }
 ```
 
@@ -297,7 +297,6 @@ describe('Chat Service Integration', () => {
     const service = new WebChatApplicationService();
     const mockStepRegistry = {
       executeStep: jest.fn().mockResolvedValue({
-        success: true,
         result: { data: { messages: [] } }
       })
     };

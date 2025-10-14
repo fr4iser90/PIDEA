@@ -1,6 +1,6 @@
 /**
  * Task Data Generator
- * 
+ *
  * Generates test task data for database testing.
  * Provides utilities for creating realistic task records.
  */
@@ -17,9 +17,9 @@ function generateTasks(count = 1, options = {}) {
     projectIds = [1, 2, 3],
     assignedToIds = [1, 2, 3],
     createdByIds = [1, 2, 3],
-    statuses = ['pending', 'in_progress', 'completed', 'cancelled'],
-    priorities = ['low', 'medium', 'high', 'urgent'],
-    titlePrefix = 'Test Task'
+    statuses = ["pending", "in_progress", "completed", "cancelled"],
+    priorities = ["low", "medium", "high", "urgent"],
+    titlePrefix = "Test Task",
   } = options;
 
   const tasks = [];
@@ -29,8 +29,10 @@ function generateTasks(count = 1, options = {}) {
     const title = `${titlePrefix} ${id}`;
     const description = generateTaskDescription();
     const projectId = projectIds[Math.floor(Math.random() * projectIds.length)];
-    const assignedTo = assignedToIds[Math.floor(Math.random() * assignedToIds.length)];
-    const createdBy = createdByIds[Math.floor(Math.random() * createdByIds.length)];
+    const assignedTo =
+      assignedToIds[Math.floor(Math.random() * assignedToIds.length)];
+    const createdBy =
+      createdByIds[Math.floor(Math.random() * createdByIds.length)];
     const createdAt = generateRandomDate();
     const updatedAt = generateRandomDate(createdAt);
     const status = statuses[Math.floor(Math.random() * statuses.length)];
@@ -48,7 +50,7 @@ function generateTasks(count = 1, options = {}) {
       updated_at: updatedAt,
       status,
       priority,
-      due_date: dueDate
+      due_date: dueDate,
     });
   }
 
@@ -61,16 +63,16 @@ function generateTasks(count = 1, options = {}) {
  */
 function generateTaskDescription() {
   const descriptions = [
-    'A test task for database testing',
-    'Another test task for database testing',
-    'A third test task for database testing',
-    'Test task with comprehensive testing scenarios',
-    'Database testing task with multiple components',
-    'Test task for performance validation',
-    'Database testing task with audit trails',
-    'Test task for migration testing',
-    'Database testing task with error handling',
-    'Test task for cross-database compatibility'
+    "A test task for database testing",
+    "Another test task for database testing",
+    "A third test task for database testing",
+    "Test task with comprehensive testing scenarios",
+    "Database testing task with multiple components",
+    "Test task for performance validation",
+    "Database testing task with audit trails",
+    "Test task for migration testing",
+    "Database testing task with error handling",
+    "Test task for cross-database compatibility",
   ];
 
   return descriptions[Math.floor(Math.random() * descriptions.length)];
@@ -83,7 +85,9 @@ function generateTaskDescription() {
  */
 function generateDueDate(createdAt) {
   const created = new Date(createdAt);
-  const dueDate = new Date(created.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000); // 0-30 days from creation
+  const dueDate = new Date(
+    created.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000,
+  ); // 0-30 days from creation
   return dueDate.toISOString();
 }
 
@@ -94,10 +98,13 @@ function generateDueDate(createdAt) {
  */
 function generateRandomDate(minDate = null) {
   const now = new Date();
-  const start = minDate ? new Date(minDate) : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
+  const start = minDate
+    ? new Date(minDate)
+    : new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
   const end = now;
 
-  const randomTime = start.getTime() + Math.random() * (end.getTime() - start.getTime());
+  const randomTime =
+    start.getTime() + Math.random() * (end.getTime() - start.getTime());
   return new Date(randomTime).toISOString();
 }
 
@@ -117,8 +124,8 @@ function generateTask(properties = {}) {
  */
 function generatePendingTask() {
   return generateTask({
-    status: 'pending',
-    priority: 'medium'
+    status: "pending",
+    priority: "medium",
   });
 }
 
@@ -128,8 +135,8 @@ function generatePendingTask() {
  */
 function generateInProgressTask() {
   return generateTask({
-    status: 'in_progress',
-    priority: 'high'
+    status: "in_progress",
+    priority: "high",
   });
 }
 
@@ -139,8 +146,8 @@ function generateInProgressTask() {
  */
 function generateCompletedTask() {
   return generateTask({
-    status: 'completed',
-    priority: 'low'
+    status: "completed",
+    priority: "low",
   });
 }
 
@@ -150,8 +157,8 @@ function generateCompletedTask() {
  */
 function generateHighPriorityTask() {
   return generateTask({
-    status: 'in_progress',
-    priority: 'high'
+    status: "in_progress",
+    priority: "high",
   });
 }
 
@@ -161,8 +168,8 @@ function generateHighPriorityTask() {
  */
 function generateUrgentTask() {
   return generateTask({
-    status: 'pending',
-    priority: 'urgent'
+    status: "pending",
+    priority: "urgent",
   });
 }
 
@@ -174,7 +181,7 @@ function generateUrgentTask() {
 function generateTaskForProject(projectId) {
   return generateTask({
     project_id: projectId,
-    status: 'pending'
+    status: "pending",
   });
 }
 
@@ -186,7 +193,7 @@ function generateTaskForProject(projectId) {
 function generateTaskForUser(userId) {
   return generateTask({
     assigned_to: userId,
-    status: 'pending'
+    status: "pending",
   });
 }
 
@@ -198,7 +205,7 @@ function generateTaskForUser(userId) {
 function generateTaskWithStatus(status) {
   return generateTask({
     status,
-    priority: 'medium'
+    priority: "medium",
   });
 }
 
@@ -209,8 +216,8 @@ function generateTaskWithStatus(status) {
  */
 function generateTaskWithPriority(priority) {
   return generateTask({
-    status: 'pending',
-    priority
+    status: "pending",
+    priority,
   });
 }
 
@@ -225,5 +232,5 @@ module.exports = {
   generateTaskForProject,
   generateTaskForUser,
   generateTaskWithStatus,
-  generateTaskWithPriority
+  generateTaskWithPriority,
 };

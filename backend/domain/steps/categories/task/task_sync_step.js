@@ -4,37 +4,37 @@
  * No resource-intensive workspace scanning!
  */
 
-const StepBuilder = require('../../StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs');
-const path = require('path');
-const logger = new Logger('task_sync_step');
+const StepBuilder = require("../../StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs");
+const path = require("path");
+const logger = new Logger("task_sync_step");
 
 // Step configuration
 const config = {
-  name: 'task_sync_step',
-  type: 'task',
-  category: 'task',
-  description: 'Sync task content from file using existing task system',
-  version: '2.0.0',
-  dependencies: ['taskRepository', 'contentHashService'],
+  name: "task_sync_step",
+  type: "task",
+  category: "task",
+  description: "Sync task content from file using existing task system",
+  version: "2.0.0",
+  dependencies: ["taskRepository", "contentHashService"],
   settings: {
     includeTimeout: true,
     includeRetry: true,
-    timeout: 10000 // Much faster - no workspace scanning
+    timeout: 10000, // Much faster - no workspace scanning
   },
   validation: {
-    required: ['taskId'],
-    optional: ['projectId', 'userId']
-  }
+    required: ["taskId"],
+    optional: ["projectId", "userId"],
+  },
 };
 
 class TaskSyncStep {
   constructor() {
-    this.name = 'TaskSyncStep';
-    this.description = 'Sync task content from file using existing task system';
-    this.category = 'task';
-    this.dependencies = ['taskRepository', 'contentHashService'];
+    this.name = "TaskSyncStep";
+    this.description = "Sync task content from file using existing task system";
+    this.category = "task";
+    this.dependencies = ["taskRepository", "contentHashService"];
   }
 
   static getConfig() {
@@ -44,101 +44,125 @@ class TaskSyncStep {
   async execute(context = {}) {
     const config = TaskSyncStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔧 Executing ${this.name}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       const { taskId, projectId, userId, workspacePath } = context;
-      
+
       logger.info(`📁 Syncing task: ${taskId}`);
       logger.info(`🔍 [TaskSyncStep] Context values:`, {
         taskId,
         projectId,
         userId,
         workspacePath,
-        contextKeys: Object.keys(context)
+        contextKeys: Object.keys(context),
       });
-      
+
       // Get services
-      const taskRepository = context.getService('taskRepository');
-      const contentHashService = context.getService('contentHashService');
-      const taskService = context.getService('taskService');
-      
+      const taskRepository = context.getService("taskRepository");
+      const contentHashService = context.getService("contentHashService");
+      const taskService = context.getService("taskService");
+
       if (!taskRepository) {
-        throw new Error('TaskRepository not available in context');
+        throw new Error("TaskRepository not available in context");
       }
-      
+
       if (!taskService) {
-        throw new Error('TaskService not available in context');
+        throw new Error("TaskService not available in context");
       }
-      
+
       // MANUAL TASK SYNC - Detect file and sync values to EXISTING task
-      logger.info(`🔍 [TaskSyncStep] Detecting manual task file for EXISTING task: ${taskId}`);
-        
-        if (!workspacePath) {
-        logger.error(`❌ [TaskSyncStep] No workspace path provided - REQUIRED for manual task sync`);
-        throw new Error('Workspace path is required for manual task sync');
+      logger.info(
+        `🔍 [TaskSyncStep] Detecting manual task file for EXISTING task: ${taskId}`,
+      );
+
+      if (!workspacePath) {
+        logger.error(
+          `❌ [TaskSyncStep] No workspace path provided - REQUIRED for manual task sync`,
+        );
+        throw new Error("Workspace path is required for manual task sync");
       }
-      
+
       logger.info(`🔍 [TaskSyncStep] Context available:`, {
         hasPreviousSteps: !!context.previousSteps,
         previousStepsCount: context.previousSteps?.length || 0,
         hasWorkspacePath: !!context.workspacePath,
-        hasTaskId: !!context.taskId
+        hasTaskId: !!context.taskId,
       });
-      
+
       // Get existing task from DB FIRST!
       const existingTask = await taskRepository.findById(taskId);
       if (!existingTask) {
-        logger.error(`❌ [TaskSyncStep] Task ${taskId} not found in DB - cannot sync`);
+        logger.error(
+          `❌ [TaskSyncStep] Task ${taskId} not found in DB - cannot sync`,
+        );
         throw new Error(`Task ${taskId} not found in database`);
       }
-      
+
       // Find existing task file in workspace (not new files!)
-      const detectedFile = await this.findExistingTaskFile(workspacePath, existingTask);
+      const detectedFile = await this.findExistingTaskFile(
+        workspacePath,
+        existingTask,
+      );
       if (!detectedFile) {
-        logger.error(`❌ [TaskSyncStep] No existing task file found in workspace - REQUIRED for sync`);
-        throw new Error('Existing task file is required for sync');
+        logger.error(
+          `❌ [TaskSyncStep] No existing task file found in workspace - REQUIRED for sync`,
+        );
+        throw new Error("Existing task file is required for sync");
       }
-      
+
       const taskFilePath = detectedFile.path;
       const fileContent = await this.readTaskFile(taskFilePath);
-      const newContentHash = await contentHashService.generateContentHash(fileContent);
-      
-      logger.info(`📄 [TaskSyncStep] Detected manual task file: ${taskFilePath}`);
-      
+      const newContentHash =
+        await contentHashService.generateContentHash(fileContent);
+
+      logger.info(
+        `📄 [TaskSyncStep] Detected manual task file: ${taskFilePath}`,
+      );
+
       // Parse task content to extract structured data
-      const parsedTask = await this.parseTaskContent(fileContent, contentHashService);
-      
+      const parsedTask = await this.parseTaskContent(
+        fileContent,
+        contentHashService,
+      );
+
       // Sync values from file to EXISTING task - NO FALLBACKS!
-      logger.info(`🔄 [TaskSyncStep] Syncing manual task values from file to EXISTING task: ${taskId}`);
-      const syncedTask = await this.syncManualTaskFromContent(existingTask, fileContent, parsedTask, newContentHash, projectId, userId);
+      logger.info(
+        `🔄 [TaskSyncStep] Syncing manual task values from file to EXISTING task: ${taskId}`,
+      );
+      const syncedTask = await this.syncManualTaskFromContent(
+        existingTask,
+        fileContent,
+        parsedTask,
+        newContentHash,
+        projectId,
+        userId,
+      );
       await taskRepository.update(taskId, syncedTask);
-      
+
       logger.info(`✅ Manual task synced successfully to EXISTING task`);
-      
+
       return {
-        success: true,
-        message: 'Manual task synced from file to existing task',
+        message: "Manual task synced from file to existing task",
         data: {
           taskId,
           syncedTask: syncedTask,
           contentHash: newContentHash,
           filePath: taskFilePath,
-          isManualSync: true
-        }
+          isManualSync: true,
+        },
       };
-      
     } catch (error) {
-      logger.error('❌ Failed to synchronize task:', error);
-      
+      logger.error("❌ Failed to synchronize task:", error);
+
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }
@@ -150,8 +174,10 @@ class TaskSyncStep {
    */
   async readTaskFile(filePath) {
     try {
-      const content = await fs.promises.readFile(filePath, 'utf8');
-      logger.info(`📖 Read task file: ${path.basename(filePath)} (${content.length} chars)`);
+      const content = await fs.promises.readFile(filePath, "utf8");
+      logger.info(
+        `📖 Read task file: ${path.basename(filePath)} (${content.length} chars)`,
+      );
       return content;
     } catch (error) {
       logger.error(`❌ Error reading task file ${filePath}:`, error);
@@ -167,17 +193,30 @@ class TaskSyncStep {
    * @param {string} contentHash - Content hash
    * @returns {Promise<Object>} Updated task object
    */
-  async updateTaskFromContent(task, content, parsedTask, contentHash, projectId, userId) {
+  async updateTaskFromContent(
+    task,
+    content,
+    parsedTask,
+    contentHash,
+    projectId,
+    userId,
+  ) {
     try {
       // Validate required fields from parsed content - NO FALLBACKS!
       if (!parsedTask.type) {
-        throw new Error('Task file must contain ## Type: field - NO FALLBACKS ALLOWED');
+        throw new Error(
+          "Task file must contain ## Type: field - NO FALLBACKS ALLOWED",
+        );
       }
       if (!parsedTask.status) {
-        throw new Error('Task file must contain ## Status: field - NO FALLBACKS ALLOWED');
+        throw new Error(
+          "Task file must contain ## Status: field - NO FALLBACKS ALLOWED",
+        );
       }
       if (!parsedTask.priority) {
-        throw new Error('Task file must contain ## Priority: field - NO FALLBACKS ALLOWED');
+        throw new Error(
+          "Task file must contain ## Priority: field - NO FALLBACKS ALLOWED",
+        );
       }
 
       // Update task with new content - ONLY use file values
@@ -189,8 +228,8 @@ class TaskSyncStep {
         contentHash: contentHash,
         projectId: projectId,
         userId: userId,
-        type: parsedTask.type,        // ← NUR Datei-Werte!
-        status: parsedTask.status,    // ← NUR Datei-Werte!
+        type: parsedTask.type, // ← NUR Datei-Werte!
+        status: parsedTask.status, // ← NUR Datei-Werte!
         priority: parsedTask.priority, // ← NUR Datei-Werte!
         lastSyncedAt: new Date().toISOString(),
         metadata: {
@@ -201,21 +240,20 @@ class TaskSyncStep {
           steps: parsedTask.steps || [],
           requirements: parsedTask.requirements || [],
           acceptanceCriteria: parsedTask.acceptanceCriteria || [],
-          syncedAt: new Date().toISOString()
-        }
+          syncedAt: new Date().toISOString(),
+        },
       };
-      
+
       logger.info(`📝 Updated task object:`, {
         id: updatedTask.id,
         title: updatedTask.title,
         contentHash: updatedTask.contentHash,
-        filePath: updatedTask.filePath
+        filePath: updatedTask.filePath,
       });
-      
+
       return updatedTask;
-      
     } catch (error) {
-      logger.error('❌ Error updating task from content:', error);
+      logger.error("❌ Error updating task from content:", error);
       throw error;
     }
   }
@@ -230,21 +268,36 @@ class TaskSyncStep {
    * @param {string} userId - User ID
    * @returns {Object} Updated task object
    */
-  async syncManualTaskFromContent(existingTask, fileContent, parsedTask, newContentHash, projectId, userId) {
+  async syncManualTaskFromContent(
+    existingTask,
+    fileContent,
+    parsedTask,
+    newContentHash,
+    projectId,
+    userId,
+  ) {
     try {
-      logger.info(`🔄 [TaskSyncStep] Syncing manual task from content - NO FALLBACKS!`);
-      
+      logger.info(
+        `🔄 [TaskSyncStep] Syncing manual task from content - NO FALLBACKS!`,
+      );
+
       // Validate required fields from parsed content - NO FALLBACKS!
-      if (!parsedTask.type || parsedTask.type.trim() === '') {
-        throw new Error('Task file must contain valid type field - NO FALLBACKS ALLOWED');
+      if (!parsedTask.type || parsedTask.type.trim() === "") {
+        throw new Error(
+          "Task file must contain valid type field - NO FALLBACKS ALLOWED",
+        );
       }
-      if (!parsedTask.status || parsedTask.status.trim() === '') {
-        throw new Error('Task file must contain valid status field - NO FALLBACKS ALLOWED');
+      if (!parsedTask.status || parsedTask.status.trim() === "") {
+        throw new Error(
+          "Task file must contain valid status field - NO FALLBACKS ALLOWED",
+        );
       }
-      if (!parsedTask.priority || parsedTask.priority.trim() === '') {
-        throw new Error('Task file must contain valid priority field - NO FALLBACKS ALLOWED');
+      if (!parsedTask.priority || parsedTask.priority.trim() === "") {
+        throw new Error(
+          "Task file must contain valid priority field - NO FALLBACKS ALLOWED",
+        );
       }
-      
+
       // Update task with parsed content - NO FALLBACKS!
       const updatedTask = {
         ...existingTask,
@@ -260,9 +313,9 @@ class TaskSyncStep {
         steps: parsedTask.steps || [],
         requirements: parsedTask.requirements || [],
         acceptanceCriteria: parsedTask.acceptanceCriteria || [],
-        syncedAt: new Date().toISOString()
+        syncedAt: new Date().toISOString(),
       };
-      
+
       logger.info(`📝 Updated task object:`, {
         id: updatedTask.id,
         title: updatedTask.title,
@@ -271,13 +324,14 @@ class TaskSyncStep {
         priority: updatedTask.priority,
         contentHash: updatedTask.contentHash,
         hasContent: !!updatedTask.description,
-        contentLength: updatedTask.description ? updatedTask.description.length : 0
+        contentLength: updatedTask.description
+          ? updatedTask.description.length
+          : 0,
       });
-      
+
       return updatedTask;
-      
     } catch (error) {
-      logger.error('❌ Error syncing manual task from content:', error);
+      logger.error("❌ Error syncing manual task from content:", error);
       throw error;
     }
   }
@@ -289,57 +343,89 @@ class TaskSyncStep {
    * @param {string} filename - Filename for fallback title
    * @returns {Object} Parsed task data
    */
-  async parseTaskContent(content, contentHashService, filename = '') {
+  async parseTaskContent(content, contentHashService, filename = "") {
     try {
       // Extract title from first line
       const titleMatch = content.match(/^#\s+(.+)$/m);
-      const title = titleMatch ? titleMatch[1].trim() : filename.replace('.md', '');
+      const title = titleMatch
+        ? titleMatch[1].trim()
+        : filename.replace(".md", "");
 
       // Extract priority - USING MANUAL TASK SYNC LOGIC!
-      let priority = 'medium'; // Default from path structure
-      
+      let priority = "medium"; // Default from path structure
+
       // Extract priority from file path (EXACT SAME AS ManualTasksImportService!)
-      const filePath = filename || '';
-      if (filePath.includes('/pending/medium/') || filePath.includes('/medium/')) {
-        priority = 'medium';
-      } else if (filePath.includes('/pending/high/') || filePath.includes('/high/')) {
-        priority = 'high';
-      } else if (filePath.includes('/pending/low/') || filePath.includes('/low/')) {
-        priority = 'low';
-      } else if (filePath.includes('/pending/critical/') || filePath.includes('/critical/')) {
-        priority = 'critical';
+      const filePath = filename || "";
+      if (
+        filePath.includes("/pending/medium/") ||
+        filePath.includes("/medium/")
+      ) {
+        priority = "medium";
+      } else if (
+        filePath.includes("/pending/high/") ||
+        filePath.includes("/high/")
+      ) {
+        priority = "high";
+      } else if (
+        filePath.includes("/pending/low/") ||
+        filePath.includes("/low/")
+      ) {
+        priority = "low";
+      } else if (
+        filePath.includes("/pending/critical/") ||
+        filePath.includes("/critical/")
+      ) {
+        priority = "critical";
       }
-      
+
       if (content) {
         // Look for priority in content (EXACT SAME AS ManualTasksImportService!)
-        const priorityMatch = content.match(/priority[:\s]+(high|medium|low|critical)/i);
+        const priorityMatch = content.match(
+          /priority[:\s]+(high|medium|low|critical)/i,
+        );
         if (priorityMatch) {
           priority = priorityMatch[1].toLowerCase();
         }
         // Look for priority indicators in content (more comprehensive)
-        else if (content.includes('**Priority**: High') || content.includes('Priority: High') || content.includes('🔥 High')) {
-          priority = 'high';
-        } else if (content.includes('**Priority**: Medium') || content.includes('Priority: Medium') || content.includes('⚡ Medium')) {
-          priority = 'medium';
-        } else if (content.includes('**Priority**: Low') || content.includes('Priority: Low') || content.includes('📝 Low')) {
-          priority = 'low';
-        } else if (content.includes('**Priority**: Critical') || content.includes('Priority: Critical') || content.includes('🚨 Critical')) {
-          priority = 'critical';
+        else if (
+          content.includes("**Priority**: High") ||
+          content.includes("Priority: High") ||
+          content.includes("🔥 High")
+        ) {
+          priority = "high";
+        } else if (
+          content.includes("**Priority**: Medium") ||
+          content.includes("Priority: Medium") ||
+          content.includes("⚡ Medium")
+        ) {
+          priority = "medium";
+        } else if (
+          content.includes("**Priority**: Low") ||
+          content.includes("Priority: Low") ||
+          content.includes("📝 Low")
+        ) {
+          priority = "low";
+        } else if (
+          content.includes("**Priority**: Critical") ||
+          content.includes("Priority: Critical") ||
+          content.includes("🚨 Critical")
+        ) {
+          priority = "critical";
         }
       }
 
       // All manual tasks from roadmap/features should be 'documentation' type
-      let type = 'documentation';
-      
+      let type = "documentation";
+
       // Extract status - USING MANUAL TASK SYNC LOGIC! (EXACT SAME AS ManualTasksImportService!)
       let status;
-      
+
       if (content) {
         // Extract status from markdown content using content hash service (EXACT SAME!)
         status = await contentHashService.extractStatusFromContent(content);
       } else {
         // Fallback to pending if no content available
-        status = 'pending';
+        status = "pending";
       }
 
       const parsed = {
@@ -351,22 +437,21 @@ class TaskSyncStep {
         steps: [],
         requirements: [],
         acceptanceCriteria: [],
-        metadata: {}
+        metadata: {},
       };
-      
+
       logger.info(`📋 Parsed task content (MANUAL SYNC LOGIC):`, {
         title: parsed.title,
         status: parsed.status,
         priority: parsed.priority,
         type: parsed.type,
         stepsCount: parsed.steps.length,
-        requirementsCount: parsed.requirements.length
+        requirementsCount: parsed.requirements.length,
       });
-      
+
       return parsed;
-      
     } catch (error) {
-      logger.error('❌ Error parsing task content:', error);
+      logger.error("❌ Error parsing task content:", error);
       return {
         title: null,
         description: null,
@@ -376,7 +461,7 @@ class TaskSyncStep {
         steps: [],
         requirements: [],
         acceptanceCriteria: [],
-        metadata: {}
+        metadata: {},
       };
     }
   }
@@ -389,27 +474,31 @@ class TaskSyncStep {
    */
   async findExistingTaskFile(workspacePath, existingTask) {
     try {
-      logger.info(`🔍 [TaskSyncStep] Finding existing task file for task: ${existingTask.id}`);
-      
+      logger.info(
+        `🔍 [TaskSyncStep] Finding existing task file for task: ${existingTask.id}`,
+      );
+
       // Search for task files in the roadmap directory
-      const roadmapDir = path.join(workspacePath, 'docs/09_roadmap');
-      
+      const roadmapDir = path.join(workspacePath, "docs/09_roadmap");
+
       // Get all .md files recursively
       const allFiles = await this.getAllMarkdownFiles(roadmapDir);
-      logger.info(`📁 Found ${allFiles.length} markdown files in ${roadmapDir}`);
-      
+      logger.info(
+        `📁 Found ${allFiles.length} markdown files in ${roadmapDir}`,
+      );
+
       // Find the NEWEST file (most recently created/modified)
       let newestFile = null;
       let newestTime = 0;
-      
+
       for (const filePath of allFiles) {
         const filename = path.basename(filePath).toLowerCase();
-        
+
         // Only consider index files
-        if (filename.endsWith('-index.md')) {
+        if (filename.endsWith("-index.md")) {
           const stats = await fs.promises.stat(filePath);
           const fileTime = stats.mtime.getTime();
-          
+
           if (fileTime > newestTime) {
             newestTime = fileTime;
             newestFile = {
@@ -417,22 +506,28 @@ class TaskSyncStep {
               name: path.basename(filePath),
               size: stats.size,
               modified: stats.mtime,
-              type: 'newest_file_detection'
+              type: "newest_file_detection",
             };
           }
         }
       }
-      
+
       if (newestFile) {
-        logger.info(`✅ [TaskSyncStep] Found newest index file: ${newestFile.path}`);
+        logger.info(
+          `✅ [TaskSyncStep] Found newest index file: ${newestFile.path}`,
+        );
         return newestFile;
       }
-      
-      logger.error(`❌ [TaskSyncStep] No index file found for task: ${existingTask.id}`);
+
+      logger.error(
+        `❌ [TaskSyncStep] No index file found for task: ${existingTask.id}`,
+      );
       return null;
-      
     } catch (error) {
-      logger.error('❌ [TaskSyncStep] Error finding existing task file:', error);
+      logger.error(
+        "❌ [TaskSyncStep] Error finding existing task file:",
+        error,
+      );
       throw error;
     }
   }
@@ -444,18 +539,18 @@ class TaskSyncStep {
    */
   async getAllMarkdownFiles(dir) {
     const files = [];
-    
+
     try {
       const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
-        
+
         if (entry.isDirectory()) {
           // Recursively search subdirectories
           const subFiles = await this.getAllMarkdownFiles(fullPath);
           files.push(...subFiles);
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        } else if (entry.isFile() && entry.name.endsWith(".md")) {
           // Add .md files to the list
           files.push(fullPath);
         }
@@ -463,7 +558,7 @@ class TaskSyncStep {
     } catch (error) {
       logger.debug(`Cannot read directory ${dir}: ${error.message}`);
     }
-    
+
     return files;
   }
 
@@ -475,78 +570,113 @@ class TaskSyncStep {
    */
   async detectNewTaskFile(workspacePath, taskId, context = {}) {
     try {
-      logger.info(`🔍 [TaskSyncStep] Starting new task file detection for task: ${taskId}`);
+      logger.info(
+        `🔍 [TaskSyncStep] Starting new task file detection for task: ${taskId}`,
+      );
       logger.info(`🔍 [TaskSyncStep] Workspace path: ${workspacePath}`);
-      
+
       // Get beforeSnapshot from workflow context (created by file_snapshot_step)
       const beforeSnapshot = this.getBeforeSnapshotFromContext(context);
-      
+
       if (!beforeSnapshot) {
-        logger.error('❌ [TaskSyncStep] No beforeSnapshot found - CANNOT detect new files');
-        throw new Error('File snapshot is required for new file detection');
+        logger.error(
+          "❌ [TaskSyncStep] No beforeSnapshot found - CANNOT detect new files",
+        );
+        throw new Error("File snapshot is required for new file detection");
       }
-      
-      logger.info(`📸 [TaskSyncStep] Before snapshot contains ${beforeSnapshot.size} files`);
-      
+
+      logger.info(
+        `📸 [TaskSyncStep] Before snapshot contains ${beforeSnapshot.size} files`,
+      );
+
       // Get current snapshot of files
       const currentSnapshot = await this.getFileSnapshot(workspacePath);
-      logger.info(`📸 [TaskSyncStep] Current snapshot contains ${currentSnapshot.size} files`);
-      
+      logger.info(
+        `📸 [TaskSyncStep] Current snapshot contains ${currentSnapshot.size} files`,
+      );
+
       // Find NEW files (files that exist now but didn't exist before)
       const newFiles = this.findNewFiles(beforeSnapshot, currentSnapshot);
-      
-      logger.info(`🔍 [TaskSyncStep] Found ${newFiles.length} new files since workflow start`);
-      
+
+      logger.info(
+        `🔍 [TaskSyncStep] Found ${newFiles.length} new files since workflow start`,
+      );
+
       if (newFiles.length === 0) {
-        logger.warn(`⚠️ [TaskSyncStep] No new files detected - this might indicate the task file already existed`);
-        logger.info(`🔍 [TaskSyncStep] Current files:`, Array.from(currentSnapshot).slice(0, 5));
-        logger.info(`🔍 [TaskSyncStep] Before files:`, Array.from(beforeSnapshot).slice(0, 5));
+        logger.warn(
+          `⚠️ [TaskSyncStep] No new files detected - this might indicate the task file already existed`,
+        );
+        logger.info(
+          `🔍 [TaskSyncStep] Current files:`,
+          Array.from(currentSnapshot).slice(0, 5),
+        );
+        logger.info(
+          `🔍 [TaskSyncStep] Before files:`,
+          Array.from(beforeSnapshot).slice(0, 5),
+        );
       }
-      
+
       // Check each new file to see if it's a task file
       for (const filePath of newFiles) {
-        logger.info(`🔍 [TaskSyncStep] Checking new file: ${path.basename(filePath)}`);
-        
+        logger.info(
+          `🔍 [TaskSyncStep] Checking new file: ${path.basename(filePath)}`,
+        );
+
         try {
-          const content = await fs.promises.readFile(filePath, 'utf8');
-          logger.info(`📖 [TaskSyncStep] Read file content: ${content.length} characters`);
-          
+          const content = await fs.promises.readFile(filePath, "utf8");
+          logger.info(
+            `📖 [TaskSyncStep] Read file content: ${content.length} characters`,
+          );
+
           // Check if file contains task-like content using filename patterns
           const isTaskFile = this.isTaskFileByFilename(filePath);
-          logger.info(`🔍 [TaskSyncStep] File ${path.basename(filePath)} isTaskFileByFilename: ${isTaskFile}`);
-          
+          logger.info(
+            `🔍 [TaskSyncStep] File ${path.basename(filePath)} isTaskFileByFilename: ${isTaskFile}`,
+          );
+
           if (isTaskFile) {
             const stats = await fs.promises.stat(filePath);
-            logger.info(`📄 [TaskSyncStep] Found new task file: ${path.basename(filePath)}`);
+            logger.info(
+              `📄 [TaskSyncStep] Found new task file: ${path.basename(filePath)}`,
+            );
             logger.info(`📄 [TaskSyncStep] File details:`, {
               path: filePath,
               size: stats.size,
               modified: stats.mtime,
-              contentLength: content.length
+              contentLength: content.length,
             });
-            
+
             return {
               path: filePath,
               name: path.basename(filePath),
               size: stats.size,
               modified: stats.mtime,
-              type: 'new_file_detection'
+              type: "new_file_detection",
             };
           }
         } catch (error) {
-          logger.warn(`⚠️ [TaskSyncStep] Error reading file ${filePath}:`, error.message);
+          logger.warn(
+            `⚠️ [TaskSyncStep] Error reading file ${filePath}:`,
+            error.message,
+          );
           // Skip files that can't be read
         }
       }
-      
-      logger.error(`❌ [TaskSyncStep] No new task file detected for task ${taskId} - REQUIRED`);
-      logger.error(`❌ [TaskSyncStep] New files found:`, newFiles.map(f => path.basename(f)));
-      logger.error(`❌ [TaskSyncStep] Task file pattern: files ending with '-index.md'`);
-      
+
+      logger.error(
+        `❌ [TaskSyncStep] No new task file detected for task ${taskId} - REQUIRED`,
+      );
+      logger.error(
+        `❌ [TaskSyncStep] New files found:`,
+        newFiles.map((f) => path.basename(f)),
+      );
+      logger.error(
+        `❌ [TaskSyncStep] Task file pattern: files ending with '-index.md'`,
+      );
+
       throw new Error(`No new task file detected for task ${taskId}`);
-      
     } catch (error) {
-      logger.error('❌ [TaskSyncStep] Error detecting new task file:', error);
+      logger.error("❌ [TaskSyncStep] Error detecting new task file:", error);
       throw error;
     }
   }
@@ -559,66 +689,85 @@ class TaskSyncStep {
   getBeforeSnapshotFromContext(context) {
     // Look for file_snapshot_step result in previousSteps
     if (context.previousSteps && Array.isArray(context.previousSteps)) {
-      logger.info('🔍 [TaskSyncStep] Searching through previousSteps:', {
+      logger.info("🔍 [TaskSyncStep] Searching through previousSteps:", {
         stepCount: context.previousSteps.length,
-        stepNames: context.previousSteps.map(s => s.step?.name || s.name || 'unknown')
+        stepNames: context.previousSteps.map(
+          (s) => s.step?.name || s.name || "unknown",
+        ),
       });
-      
+
       for (const step of context.previousSteps) {
         const stepName = step.step?.name || step.name;
-        logger.info('🔍 [TaskSyncStep] Checking step:', {
+        logger.info("🔍 [TaskSyncStep] Checking step:", {
           stepName: stepName,
           hasResult: !!step.result,
           hasSuccess: !!step.result?.success,
           hasData: !!step.result?.data,
           hasSnapshot: !!step.result?.data?.snapshot,
-          resultKeys: step.result ? Object.keys(step.result) : 'no result',
-          dataKeys: step.result?.data ? Object.keys(step.result.data) : 'no data'
+          resultKeys: step.result ? Object.keys(step.result) : "no result",
+          dataKeys: step.result?.data
+            ? Object.keys(step.result.data)
+            : "no data",
         });
-        
+
         // Check if this is the file_snapshot_step (multiple possible names)
-        const isFileSnapshotStep = stepName === 'file_snapshot_step' || 
-                                   stepName === 'create-file-snapshot' ||
-                                   step.step?.step === 'file_snapshot_step';
-        
+        const isFileSnapshotStep =
+          stepName === "file_snapshot_step" ||
+          stepName === "create-file-snapshot" ||
+          step.step?.step === "file_snapshot_step";
+
         if (isFileSnapshotStep && step.result?.success) {
-          logger.info('🔍 [TaskSyncStep] Found file snapshot step, checking data structure...');
-          
+          logger.info(
+            "🔍 [TaskSyncStep] Found file snapshot step, checking data structure...",
+          );
+
           // Try different possible data structures
           let snapshot = null;
-          
+
           // Structure 1: step.result.data.snapshot
           if (step.result.data?.snapshot) {
             snapshot = step.result.data.snapshot;
-            logger.info('✅ [TaskSyncStep] Found snapshot in step.result.data.snapshot');
+            logger.info(
+              "✅ [TaskSyncStep] Found snapshot in step.result.data.snapshot",
+            );
           }
           // Structure 2: step.result.result.data.snapshot (StepRegistry wraps the result)
           else if (step.result.result?.data?.snapshot) {
             snapshot = step.result.result.data.snapshot;
-            logger.info('✅ [TaskSyncStep] Found snapshot in step.result.result.data.snapshot');
+            logger.info(
+              "✅ [TaskSyncStep] Found snapshot in step.result.result.data.snapshot",
+            );
           }
           // Structure 3: step.result.data (snapshot is the data itself)
-          else if (step.result.data && typeof step.result.data === 'object' && step.result.data.size !== undefined) {
+          else if (
+            step.result.data &&
+            typeof step.result.data === "object" &&
+            step.result.data.size !== undefined
+          ) {
             snapshot = step.result.data;
-            logger.info('✅ [TaskSyncStep] Found snapshot as step.result.data');
+            logger.info("✅ [TaskSyncStep] Found snapshot as step.result.data");
           }
-          
+
           if (snapshot) {
-            logger.info('✅ [TaskSyncStep] File snapshot found successfully', {
+            logger.info("✅ [TaskSyncStep] File snapshot found successfully", {
               snapshotType: typeof snapshot,
               snapshotSize: snapshot.size,
-              snapshotConstructor: snapshot.constructor.name
+              snapshotConstructor: snapshot.constructor.name,
             });
             return snapshot;
           } else {
-            logger.warn('⚠️ [TaskSyncStep] File snapshot step found but no snapshot data detected');
+            logger.warn(
+              "⚠️ [TaskSyncStep] File snapshot step found but no snapshot data detected",
+            );
           }
         }
       }
     }
-    
-    logger.error('❌ [TaskSyncStep] No file snapshot found in previousSteps - REQUIRED for task sync');
-    throw new Error('File snapshot is required for task synchronization');
+
+    logger.error(
+      "❌ [TaskSyncStep] No file snapshot found in previousSteps - REQUIRED for task sync",
+    );
+    throw new Error("File snapshot is required for task synchronization");
   }
 
   /**
@@ -628,14 +777,14 @@ class TaskSyncStep {
    */
   async getFileSnapshot(workspacePath) {
     const fileSet = new Set();
-    
+
     const searchDirs = [
       workspacePath,
-      path.join(workspacePath, 'docs'),
-      path.join(workspacePath, 'tasks'),
-      path.join(workspacePath, 'docs/09_roadmap')
+      path.join(workspacePath, "docs"),
+      path.join(workspacePath, "tasks"),
+      path.join(workspacePath, "docs/09_roadmap"),
     ];
-    
+
     for (const searchDir of searchDirs) {
       try {
         await this.searchDirectoryRecursively(searchDir, fileSet);
@@ -643,7 +792,7 @@ class TaskSyncStep {
         logger.debug(`Skipping directory: ${searchDir} - ${error.message}`);
       }
     }
-    
+
     return fileSet;
   }
 
@@ -654,15 +803,17 @@ class TaskSyncStep {
    */
   async searchDirectoryRecursively(dirPath, fileSet) {
     try {
-      const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
-      
+      const entries = await fs.promises.readdir(dirPath, {
+        withFileTypes: true,
+      });
+
       for (const entry of entries) {
         const fullPath = path.join(dirPath, entry.name);
-        
+
         if (entry.isDirectory()) {
           // Recursively search subdirectories
           await this.searchDirectoryRecursively(fullPath, fileSet);
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        } else if (entry.isFile() && entry.name.endsWith(".md")) {
           // Add .md files to the set
           fileSet.add(fullPath);
         }
@@ -681,13 +832,13 @@ class TaskSyncStep {
    */
   findNewFiles(beforeSnapshot, currentSnapshot) {
     const newFiles = [];
-    
+
     for (const filePath of currentSnapshot) {
       if (!beforeSnapshot.has(filePath)) {
         newFiles.push(filePath);
       }
     }
-    
+
     return newFiles;
   }
 
@@ -698,9 +849,9 @@ class TaskSyncStep {
    */
   isTaskFileByFilename(filePath) {
     const filename = path.basename(filePath);
-    
+
     // ONLY use index files for task sync - not implementation, phase, or summary files
-    return filename.endsWith('-index.md');
+    return filename.endsWith("-index.md");
   }
 
   /**
@@ -712,7 +863,7 @@ class TaskSyncStep {
     // Use the same detection logic as ManualTasksImportService
     // Check for task file patterns in filename (passed via content parameter)
     // This is a simplified version - in practice we should check the actual filename
-    
+
     // For now, check if content contains typical task structure
     const taskPatterns = [
       /# .*Implementation/i,
@@ -720,11 +871,11 @@ class TaskSyncStep {
       /## Description/i,
       /## Requirements/i,
       /## Steps/i,
-      /## Acceptance Criteria/i
+      /## Acceptance Criteria/i,
     ];
-    
-    const matches = taskPatterns.filter(pattern => pattern.test(content));
-    
+
+    const matches = taskPatterns.filter((pattern) => pattern.test(content));
+
     // Consider it a task file if it has at least 2 task patterns
     return matches.length >= 2;
   }
@@ -740,11 +891,19 @@ class TaskSyncStep {
    * @param {string} userId - User ID
    * @returns {Promise<Object>} New task object
    */
-  async createNewTaskFromContent(taskId, content, parsedTask, contentHash, filePath, projectId, userId) {
+  async createNewTaskFromContent(
+    taskId,
+    content,
+    parsedTask,
+    contentHash,
+    filePath,
+    projectId,
+    userId,
+  ) {
     try {
       const newTask = {
         id: taskId,
-        title: parsedTask.title || 'New Task',
+        title: parsedTask.title || "New Task",
         description: parsedTask.description || content,
         content: content,
         contentHash: contentHash,
@@ -756,7 +915,7 @@ class TaskSyncStep {
         status: parsedTask.status,
         priority: parsedTask.priority,
         type: parsedTask.type,
-        category: 'manual',
+        category: "manual",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         metadata: {
@@ -768,28 +927,27 @@ class TaskSyncStep {
           acceptanceCriteria: parsedTask.acceptanceCriteria || [],
           syncedAt: new Date().toISOString(),
           sourceFile: path.basename(filePath),
-          sourcePath: filePath
-        }
+          sourcePath: filePath,
+        },
       };
-      
+
       logger.info(`📝 Created new task object:`, {
         id: newTask.id,
         title: newTask.title,
         filePath: newTask.filePath,
-        contentHash: newTask.contentHash
+        contentHash: newTask.contentHash,
       });
-      
+
       return newTask;
-      
     } catch (error) {
-      logger.error('❌ Error creating new task from content:', error);
+      logger.error("❌ Error creating new task from content:", error);
       throw error;
     }
   }
 
   validateContext(context) {
     if (!context.taskId) {
-      throw new Error('Task ID is required');
+      throw new Error("Task ID is required");
     }
   }
 }
@@ -800,5 +958,5 @@ const stepInstance = new TaskSyncStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

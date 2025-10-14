@@ -826,7 +826,7 @@ const customStep = {
   execute: async (context) => {
     console.log('Executing custom refactoring...');
     // Step implementation
-    return { success: true, changes: [] };
+    return { changes: [] };
   }
 };
 

@@ -1,16 +1,16 @@
-const ETagService = require('@domain/services/shared/ETagService');
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const ETagService = require("@domain/services/shared/ETagService");
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * ETagMiddleware - Handles ETag validation and conditional requests
- * 
+ *
  * This middleware validates ETags from requests and returns 304 Not Modified
  * when data hasn't changed, reducing bandwidth usage significantly.
  */
 class ETagMiddleware {
   constructor() {
-    this.logger = new ServiceLogger('ETagMiddleware');
+    this.logger = new ServiceLogger("ETagMiddleware");
     this.etagService = new ETagService();
   }
 
@@ -24,7 +24,7 @@ class ETagMiddleware {
     return async (req, res, next) => {
       try {
         // Skip ETag validation for non-GET requests
-        if (req.method !== 'GET') {
+        if (req.method !== "GET") {
           return next();
         }
 
@@ -34,37 +34,37 @@ class ETagMiddleware {
           return next();
         }
 
-        this.logger.info('Processing conditional request:', {
+        this.logger.info("Processing conditional request:", {
           url: req.url,
           method: req.method,
-          requestETag: requestETag.substring(0, 20) + '...'
+          requestETag: requestETag.substring(0, 20) + "...",
         });
 
         // Generate current data and ETag
         const { data, etag } = await dataGenerator(req, res);
-        
+
         if (!etag) {
-          this.logger.warn('No ETag generated, skipping conditional request');
+          this.logger.warn("No ETag generated, skipping conditional request");
           return next();
         }
 
         // Check if ETags match
         if (this.etagService.validateETag(requestETag, etag)) {
-          this.logger.info('ETags match, sending 304 Not Modified');
+          this.logger.info("ETags match, sending 304 Not Modified");
           this.etagService.sendNotModified(res, etag);
           return;
         }
 
         // ETags don't match, continue with normal response
-        this.logger.info('ETags don\'t match, proceeding with full response');
-        
+        this.logger.info("ETags don't match, proceeding with full response");
+
         // Store ETag for response headers
         req.currentETag = etag;
         req.responseData = data;
-        
+
         next();
       } catch (error) {
-        this.logger.error('ETag middleware error:', error);
+        this.logger.error("ETag middleware error:", error);
         // Continue with normal request processing on error
         next();
       }
@@ -79,13 +79,13 @@ class ETagMiddleware {
   createAnalysisHistoryMiddleware(historyProvider) {
     return this.createMiddleware(async (req, res) => {
       const { projectId } = req.params;
-      
+
       // Get analysis history
       const history = await historyProvider(projectId);
-      
+
       // Generate ETag for history
       const etag = this.etagService.generateHistoryETag(history, projectId);
-      
+
       return { data: history, etag };
     });
   }
@@ -99,13 +99,17 @@ class ETagMiddleware {
   createAnalysisDataMiddleware(dataProvider, analysisType) {
     return this.createMiddleware(async (req, res) => {
       const { projectId } = req.params;
-      
+
       // Get analysis data
       const data = await dataProvider(projectId, analysisType);
-      
+
       // Generate ETag for analysis data
-      const etag = this.etagService.generateAnalysisETag(data, projectId, analysisType);
-      
+      const etag = this.etagService.generateAnalysisETag(
+        data,
+        projectId,
+        analysisType,
+      );
+
       return { data, etag };
     });
   }
@@ -118,13 +122,13 @@ class ETagMiddleware {
   createMetricsMiddleware(metricsProvider) {
     return this.createMiddleware(async (req, res) => {
       const { projectId } = req.params;
-      
+
       // Get metrics data
       const data = await metricsProvider(projectId);
-      
+
       // Generate ETag for metrics
       const etag = this.etagService.generateMetricsETag(data, projectId);
-      
+
       return { data, etag };
     });
   }
@@ -137,14 +141,14 @@ class ETagMiddleware {
   createChartsMiddleware(chartsProvider) {
     return this.createMiddleware(async (req, res) => {
       const { projectId } = req.params;
-      const { type = 'trends' } = req.query;
-      
+      const { type = "trends" } = req.query;
+
       // Get charts data
       const data = await chartsProvider(projectId, type);
-      
+
       // Generate ETag for charts
       const etag = this.etagService.generateChartsETag(data, projectId, type);
-      
+
       return { data, etag };
     });
   }
@@ -172,7 +176,7 @@ class ETagMiddleware {
   skipIf(condition) {
     return (req, res, next) => {
       if (condition(req, res)) {
-        this.logger.info('Skipping ETag validation based on condition');
+        this.logger.info("Skipping ETag validation based on condition");
         return next();
       }
       next();
@@ -186,10 +190,10 @@ class ETagMiddleware {
   forceRefresh() {
     return (req, res, next) => {
       // Remove conditional headers to force fresh response
-      delete req.headers['if-none-match'];
-      delete req.headers['if-match'];
-      
-      this.logger.info('Forced cache refresh - removed conditional headers');
+      delete req.headers["if-none-match"];
+      delete req.headers["if-match"];
+
+      this.logger.info("Forced cache refresh - removed conditional headers");
       next();
     };
   }
@@ -199,13 +203,15 @@ class ETagMiddleware {
    * @param {string} paramName - Parameter name (default: '_t')
    * @returns {Function} Express middleware function
    */
-  cacheBust(paramName = '_t') {
+  cacheBust(paramName = "_t") {
     return (req, res, next) => {
       if (req.query[paramName]) {
-        this.logger.info(`Cache busting with parameter: ${paramName}=${req.query[paramName]}`);
+        this.logger.info(
+          `Cache busting with parameter: ${paramName}=${req.query[paramName]}`,
+        );
         // Remove conditional headers when cache busting
-        delete req.headers['if-none-match'];
-        delete req.headers['if-match'];
+        delete req.headers["if-none-match"];
+        delete req.headers["if-match"];
       }
       next();
     };
@@ -218,26 +224,26 @@ class ETagMiddleware {
   logMetrics() {
     return (req, res, next) => {
       const startTime = Date.now();
-      
+
       // Log response metrics
-      res.on('finish', () => {
+      res.on("finish", () => {
         const duration = Date.now() - startTime;
         const status = res.statusCode;
         const etagHit = status === 304;
-        
-        this.logger.info('ETag performance metrics:', {
+
+        this.logger.info("ETag performance metrics:", {
           url: req.url,
           method: req.method,
           statusCode: status,
           duration: `${duration}ms`,
           etagHit,
-          bandwidthSaved: etagHit ? '100%' : '0%'
+          bandwidthSaved: etagHit ? "100%" : "0%",
         });
       });
-      
+
       next();
     };
   }
 }
 
-module.exports = ETagMiddleware; 
+module.exports = ETagMiddleware;

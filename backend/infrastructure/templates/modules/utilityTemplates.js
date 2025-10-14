@@ -1,20 +1,20 @@
 /**
  * Utility Templates Module
  */
-const { TEMPLATE_CATEGORIES } = require('./constants');
+const { TEMPLATE_CATEGORIES } = require("./constants");
 
 class UtilityTemplates {
-    /**
-     * Get utility script templates
-     * @returns {Object} Utility templates
-     */
-    static getTemplates() {
-        return {
-            logAnalyzer: {
-                name: 'Log Analyzer Script',
-                description: 'Analyze application logs',
-                category: TEMPLATE_CATEGORIES.UTILITY,
-                template: `#!/bin/bash
+  /**
+   * Get utility script templates
+   * @returns {Object} Utility templates
+   */
+  static getTemplates() {
+    return {
+      logAnalyzer: {
+        name: "Log Analyzer Script",
+        description: "Analyze application logs",
+        category: TEMPLATE_CATEGORIES.UTILITY,
+        template: `#!/bin/bash
 # Log Analyzer Script
 echo "Analyzing logs..."
 
@@ -60,19 +60,19 @@ find "$LOG_DIR" -name "$LOG_PATTERN" -exec grep -i "error" {} \; | sort | uniq -
 
 echo "Log analysis completed!"
 echo "Report saved to: $OUTPUT_FILE"`,
-                variables: {
-                    LOG_DIR: './logs',
-                    LOG_PATTERN: '*.log',
-                    OUTPUT_FILE: 'log-analysis.txt'
-                },
-                outputs: ['log-analysis-report']
-            },
+        variables: {
+          LOG_DIR: "./logs",
+          LOG_PATTERN: "*.log",
+          OUTPUT_FILE: "log-analysis.txt",
+        },
+        outputs: ["log-analysis-report"],
+      },
 
-            fileCleaner: {
-                name: 'File Cleaner Script',
-                description: 'Clean up temporary and unnecessary files',
-                category: TEMPLATE_CATEGORIES.UTILITY,
-                template: `#!/bin/bash
+      fileCleaner: {
+        name: "File Cleaner Script",
+        description: "Clean up temporary and unnecessary files",
+        category: TEMPLATE_CATEGORIES.UTILITY,
+        template: `#!/bin/bash
 # File Cleaner Script
 echo "Cleaning up files..."
 
@@ -109,14 +109,14 @@ for pattern in "\${patterns[@]}"; do
 done
 
 echo "File cleanup completed!"`,
-                variables: {
-                    CLEAN_PATTERNS: '*.tmp,*.temp,*.log,*.cache,.DS_Store,Thumbs.db',
-                    DRY_RUN: 'false'
-                },
-                outputs: ['cleanup-report']
-            }
-        };
-    }
+        variables: {
+          CLEAN_PATTERNS: "*.tmp,*.temp,*.log,*.cache,.DS_Store,Thumbs.db",
+          DRY_RUN: "false",
+        },
+        outputs: ["cleanup-report"],
+      },
+    };
+  }
 }
 
-module.exports = UtilityTemplates; 
+module.exports = UtilityTemplates;

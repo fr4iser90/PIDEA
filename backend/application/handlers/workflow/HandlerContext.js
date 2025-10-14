@@ -1,6 +1,6 @@
 /**
  * HandlerContext - Shared context for handler execution
- * 
+ *
  * This class provides a shared context for handler execution,
  * containing request data, response object, shared data, and metadata.
  * It follows the same patterns as the existing WorkflowContext.
@@ -21,12 +21,12 @@ class HandlerContext {
     this.metadata = new Map();
     this.createdAt = new Date();
     this.options = options;
-    
+
     // Initialize with default metadata
-    this.setMetadata('createdAt', this.createdAt);
-    this.setMetadata('handlerId', handlerId);
-    this.setMetadata('requestType', request?.type || 'unknown');
-    this.setMetadata('taskId', request?.taskId || null);
+    this.setMetadata("createdAt", this.createdAt);
+    this.setMetadata("handlerId", handlerId);
+    this.setMetadata("requestType", request?.type || "unknown");
+    this.setMetadata("taskId", request?.taskId || null);
   }
 
   /**
@@ -171,8 +171,8 @@ class HandlerContext {
    * @returns {*} Option value or default
    */
   getOption(key, defaultValue = null) {
-    return this.options && this.options.hasOwnProperty(key) 
-      ? this.options[key] 
+    return this.options && this.options.hasOwnProperty(key)
+      ? this.options[key]
       : defaultValue;
   }
 
@@ -198,7 +198,7 @@ class HandlerContext {
       this.request,
       this.response,
       this.handlerId,
-      { ...this.options }
+      { ...this.options },
     );
 
     // Copy existing data
@@ -232,7 +232,7 @@ class HandlerContext {
       metadata: this.getAllMetadata(),
       options: this.options,
       createdAt: this.createdAt,
-      age: this.getAge()
+      age: this.getAge(),
     };
   }
 
@@ -243,13 +243,13 @@ class HandlerContext {
   getSummary() {
     return {
       handlerId: this.handlerId,
-      requestType: this.getMetadata('requestType'),
-      taskId: this.getMetadata('taskId'),
+      requestType: this.getMetadata("requestType"),
+      taskId: this.getMetadata("taskId"),
       age: this.getAge(),
       dataKeys: Array.from(this.data.keys()),
-      metadataKeys: Array.from(this.metadata.keys())
+      metadataKeys: Array.from(this.metadata.keys()),
     };
   }
 }
 
-module.exports = HandlerContext; 
+module.exports = HandlerContext;

@@ -1,16 +1,16 @@
-const crypto = require('crypto');
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const crypto = require("crypto");
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 /**
  * ETagService - Handles ETag generation and validation for HTTP caching
- * 
+ *
  * This service generates unique ETags for analysis data to enable efficient
  * HTTP caching and reduce bandwidth usage by 80%+ for repeated requests.
  */
 class ETagService {
   constructor() {
-    this.logger = new ServiceLogger('ETagService');
+    this.logger = new ServiceLogger("ETagService");
   }
 
   /**
@@ -24,36 +24,42 @@ class ETagService {
     try {
       // Create a hash of the data content
       const dataString = JSON.stringify(data);
-      const contentHash = crypto.createHash('sha256').update(dataString).digest('hex');
-      
+      const contentHash = crypto
+        .createHash("sha256")
+        .update(dataString)
+        .digest("hex");
+
       // Include type and projectId in ETag for better uniqueness
       const etagComponents = [contentHash.substring(0, 16)];
-      
+
       if (type) {
         etagComponents.push(type);
       }
-      
+
       if (projectId) {
         etagComponents.push(projectId);
       }
-      
+
       // NEVER add timestamps to ETags - they should be stable for same data
       // ETags should only change when the actual data content changes
-      const etag = etagComponents.join('-');
-      
+      const etag = etagComponents.join("-");
+
       this.logger.info(`Generated ETag for ${type}:`, {
         type,
         projectId,
         dataSize: dataString.length,
-        etag: etag.substring(0, 20) + '...',
-        hasTimestamp: false
+        etag: etag.substring(0, 20) + "...",
+        hasTimestamp: false,
       });
-      
+
       return etag;
     } catch (error) {
-      this.logger.error('Failed to generate ETag:', error);
+      this.logger.error("Failed to generate ETag:", error);
       // Fallback to content-based ETag without timestamp
-      const fallbackHash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
+      const fallbackHash = crypto
+        .createHash("sha256")
+        .update(JSON.stringify(data))
+        .digest("hex");
       return `fallback-${fallbackHash.substring(0, 16)}`;
     }
   }
@@ -76,13 +82,17 @@ class ETagService {
         // Include summary data if available
         summary: analysisData.summary || analysisData.report,
         // Include metadata
-        metadata: analysisData.metadata || {}
+        metadata: analysisData.metadata || {},
       };
-      
+
       return this.generateETag(etagData, `analysis-${analysisType}`, projectId);
     } catch (error) {
-      this.logger.error('Failed to generate analysis ETag:', error);
-      return this.generateETag(analysisData, `analysis-${analysisType}`, projectId);
+      this.logger.error("Failed to generate analysis ETag:", error);
+      return this.generateETag(
+        analysisData,
+        `analysis-${analysisType}`,
+        projectId,
+      );
     }
   }
 
@@ -97,20 +107,30 @@ class ETagService {
       // Create a lightweight representation for ETag
       const etagData = {
         count: historyData.length,
-        types: [...new Set(historyData.map(item => item.type || item.analysisType))],
-        latestTimestamp: historyData.length > 0 ? 
-          Math.max(...historyData.map(item => new Date(item.timestamp || item.createdAt).getTime())) : 0,
+        types: [
+          ...new Set(historyData.map((item) => item.type || item.analysisType)),
+        ],
+        latestTimestamp:
+          historyData.length > 0
+            ? Math.max(
+                ...historyData.map((item) =>
+                  new Date(item.timestamp || item.createdAt).getTime(),
+                ),
+              )
+            : 0,
         projectId,
         // Include the actual data hash for stability
-        dataHash: crypto.createHash('sha256')
+        dataHash: crypto
+          .createHash("sha256")
           .update(JSON.stringify(historyData))
-          .digest('hex').substring(0, 8)
+          .digest("hex")
+          .substring(0, 8),
       };
-      
-      return this.generateETag(etagData, 'analysis-history', projectId);
+
+      return this.generateETag(etagData, "analysis-history", projectId);
     } catch (error) {
-      this.logger.error('Failed to generate history ETag:', error);
-      return this.generateETag(historyData, 'analysis-history', projectId);
+      this.logger.error("Failed to generate history ETag:", error);
+      return this.generateETag(historyData, "analysis-history", projectId);
     }
   }
 
@@ -121,7 +141,7 @@ class ETagService {
    * @returns {string} ETag value
    */
   generateMetricsETag(metricsData, projectId) {
-    return this.generateETag(metricsData, 'analysis-metrics', projectId);
+    return this.generateETag(metricsData, "analysis-metrics", projectId);
   }
 
   /**
@@ -132,7 +152,11 @@ class ETagService {
    * @returns {string} ETag value
    */
   generateChartsETag(chartsData, projectId, chartType) {
-    return this.generateETag(chartsData, `analysis-charts-${chartType}`, projectId);
+    return this.generateETag(
+      chartsData,
+      `analysis-charts-${chartType}`,
+      projectId,
+    );
   }
 
   /**
@@ -144,32 +168,34 @@ class ETagService {
   validateETag(etag, currentETag) {
     if (!etag || !currentETag) {
       // No ETag provided by client, so validation fails (but this is normal for first request)
-      this.logger.info('ETag validation: No ETag provided by client (normal for first request)');
+      this.logger.info(
+        "ETag validation: No ETag provided by client (normal for first request)",
+      );
       return false;
     }
-    
+
     // Remove quotes if present (HTTP standard)
-    const cleanETag = etag.replace(/^["']|["']$/g, '');
-    const cleanCurrentETag = currentETag.replace(/^["']|["']$/g, '');
-    
+    const cleanETag = etag.replace(/^["']|["']$/g, "");
+    const cleanCurrentETag = currentETag.replace(/^["']|["']$/g, "");
+
     const isValid = cleanETag === cleanCurrentETag;
-    
+
     // DEBUG: Log the actual ETags for comparison
-    this.logger.info('🔍 ETag comparison:', {
+    this.logger.info("🔍 ETag comparison:", {
       originalRequestETag: etag,
       originalCurrentETag: currentETag,
       cleanRequestETag: cleanETag,
       cleanCurrentETag: cleanCurrentETag,
       isValid,
-      hasRequestETag: !!etag
+      hasRequestETag: !!etag,
     });
-    
+
     if (isValid) {
-      this.logger.info('✅ ETag validation: ETags match, data unchanged');
+      this.logger.info("✅ ETag validation: ETags match, data unchanged");
     } else {
-      this.logger.info('❌ ETag validation: ETags differ, data changed');
+      this.logger.info("❌ ETag validation: ETags differ, data changed");
     }
-    
+
     return isValid;
   }
 
@@ -179,7 +205,7 @@ class ETagService {
    * @returns {string|null} ETag value or null
    */
   extractETagFromRequest(req) {
-    return req.headers['if-none-match'] || req.headers['if-match'] || null;
+    return req.headers["if-none-match"] || req.headers["if-match"] || null;
   }
 
   /**
@@ -192,32 +218,32 @@ class ETagService {
     const {
       maxAge = 300, // 5 minutes default
       mustRevalidate = true,
-      isPublic = false
+      isPublic = false,
     } = options;
 
     // Set ETag header
-    res.set('ETag', `"${etag}"`);
-    
+    res.set("ETag", `"${etag}"`);
+
     // Set cache control headers
     let cacheControl = [];
-    
+
     if (isPublic) {
-      cacheControl.push('public');
+      cacheControl.push("public");
     } else {
-      cacheControl.push('private');
+      cacheControl.push("private");
     }
-    
+
     cacheControl.push(`max-age=${maxAge}`);
-    
+
     if (mustRevalidate) {
-      cacheControl.push('must-revalidate');
+      cacheControl.push("must-revalidate");
     }
-    
-    res.set('Cache-Control', cacheControl.join(', '));
-    
-    this.logger.info('Set ETag headers:', {
-      etag: etag.substring(0, 20) + '...',
-      cacheControl: cacheControl.join(', ')
+
+    res.set("Cache-Control", cacheControl.join(", "));
+
+    this.logger.info("Set ETag headers:", {
+      etag: etag.substring(0, 20) + "...",
+      cacheControl: cacheControl.join(", "),
     });
   }
 
@@ -227,10 +253,10 @@ class ETagService {
    * @param {string} etag - ETag value
    */
   sendNotModified(res, etag) {
-    res.set('ETag', `"${etag}"`);
+    res.set("ETag", `"${etag}"`);
     res.status(304).end();
-    
-    this.logger.info('Sent 304 Not Modified response');
+
+    this.logger.info("Sent 304 Not Modified response");
   }
 
   /**
@@ -251,12 +277,12 @@ class ETagService {
    * @param {string} additionalKey - Additional key component
    * @returns {string} Cache key
    */
-  getCacheKey(type, projectId, additionalKey = '') {
+  getCacheKey(type, projectId, additionalKey = "") {
     const components = [type, projectId];
     if (additionalKey) {
       components.push(additionalKey);
     }
-    return components.join(':');
+    return components.join(":");
   }
 
   /**
@@ -266,20 +292,20 @@ class ETagService {
    */
   parseETag(etag) {
     try {
-      const cleanETag = etag.replace(/^["']|["']$/g, '');
-      const parts = cleanETag.split('-');
-      
+      const cleanETag = etag.replace(/^["']|["']$/g, "");
+      const parts = cleanETag.split("-");
+
       return {
         hash: parts[0],
         type: parts[1],
         projectId: parts[2],
-        timestamp: parts[3] ? parseInt(parts[3], 36) : null
+        timestamp: parts[3] ? parseInt(parts[3], 36) : null,
       };
     } catch (error) {
-      this.logger.error('Failed to parse ETag:', error);
+      this.logger.error("Failed to parse ETag:", error);
       return null;
     }
   }
 }
 
-module.exports = ETagService; 
+module.exports = ETagService;

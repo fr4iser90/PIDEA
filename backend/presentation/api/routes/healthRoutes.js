@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 /**
  * Health Routes - Professional RESTful API Design
- * 
+ *
  * This module provides a clean, modular approach to health check endpoints
  * including system status, environment information, and database connectivity.
  */
@@ -22,15 +22,15 @@ class HealthRoutes {
     // ========================================
     // HEALTH CHECK ROUTES - System Monitoring
     // ========================================
-    
+
     // Health check (public endpoint)
-    app.get('/api/health', (req, res) => {
+    app.get("/api/health", (req, res) => {
       res.success({
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          environment: this.autoSecurityManager.getEnvironment(),
-          database: this.databaseConnection.getType()
-        });
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        environment: this.autoSecurityManager.getEnvironment(),
+        database: this.databaseConnection.getType(),
+      });
     });
   }
 }

@@ -1,4 +1,4 @@
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 /**
  * CommandBus - Handles command execution and routing
  * Implements the Command Bus pattern for CQRS architecture
@@ -7,7 +7,7 @@ class CommandBus {
   constructor() {
     this.handlers = new Map();
     this.middleware = [];
-    this.logger = new ServiceLogger('CommandBus');
+    this.logger = new ServiceLogger("CommandBus");
   }
 
   /**
@@ -16,10 +16,10 @@ class CommandBus {
    * @param {Object} handler - Command handler instance
    */
   register(commandName, handler) {
-    if (!handler || typeof handler.handle !== 'function') {
+    if (!handler || typeof handler.handle !== "function") {
       throw new Error(`Invalid handler for command: ${commandName}`);
     }
-    
+
     this.handlers.set(commandName, handler);
     this.logger.info(`Registered handler for command: ${commandName}`);
   }
@@ -37,7 +37,10 @@ class CommandBus {
       // Apply middleware
       let processedCommandData = commandData;
       for (const middleware of this.middleware) {
-        processedCommandData = await middleware(commandName, processedCommandData);
+        processedCommandData = await middleware(
+          commandName,
+          processedCommandData,
+        );
       }
 
       // Get handler
@@ -48,13 +51,13 @@ class CommandBus {
 
       // Execute handler
       const result = await handler.handle(processedCommandData);
-      
+
       this.logger.info(`Command executed successfully: ${commandName}`);
       return result;
     } catch (error) {
       this.logger.error(`Command execution failed: ${commandName}`, {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       throw error;
     }
@@ -65,8 +68,8 @@ class CommandBus {
    * @param {Function} middleware - Middleware function
    */
   use(middleware) {
-    if (typeof middleware !== 'function') {
-      throw new Error('Middleware must be a function');
+    if (typeof middleware !== "function") {
+      throw new Error("Middleware must be a function");
     }
     this.middleware.push(middleware);
   }
@@ -105,4 +108,4 @@ class CommandBus {
   }
 }
 
-module.exports = CommandBus; 
+module.exports = CommandBus;

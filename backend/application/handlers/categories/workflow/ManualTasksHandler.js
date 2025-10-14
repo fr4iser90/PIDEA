@@ -1,20 +1,20 @@
-const fs = require('fs').promises;
-const fsSync = require('fs');
-const path = require('path');
+const fs = require("fs").promises;
+const fsSync = require("fs");
+const path = require("path");
 
 // Mock marked for Jest compatibility
 let marked;
 try {
-  const markedModule = require('marked');
+  const markedModule = require("marked");
   marked = markedModule.marked || markedModule;
 } catch (error) {
   // Fallback for Jest environment
   marked = (text) => text;
 }
-const crypto = require('crypto');
-const Task = require('@entities/Task');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const crypto = require("crypto");
+const Task = require("@entities/Task");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * Handler for managing manual tasks from markdown files
@@ -25,7 +25,7 @@ class ManualTasksHandler {
     // getWorkspacePath: function that returns the current workspace root path
     this.getWorkspacePath = getWorkspacePath || (() => process.cwd());
     this.taskRepository = taskRepository;
-    this.allowedExtensions = ['.md', '.markdown'];
+    this.allowedExtensions = [".md", ".markdown"];
     this.cache = new Map();
     this.cacheTimeout = 60000; // 1 minute cache
   }
@@ -33,17 +33,17 @@ class ManualTasksHandler {
   getFeaturesDir() {
     // Always resolve from the current workspace root
     const workspaceRoot = this.getWorkspacePath();
-    
+
     if (!workspaceRoot) {
-      logger.error('Workspace path is undefined');
-      throw new Error('Workspace path is not available');
+      logger.error("Workspace path is undefined");
+      throw new Error("Workspace path is not available");
     }
-    
+
     logger.info(`Workspace root: ${workspaceRoot}`);
     // ✅ FIXED: Use new status-based structure instead of old tasks structure
-    const featuresDir = path.resolve(workspaceRoot, 'docs/09_roadmap');
+    const featuresDir = path.resolve(workspaceRoot, "docs/09_roadmap");
     logger.info(`Features directory resolved: ${featuresDir}`);
-    
+
     return featuresDir;
   }
 
@@ -55,17 +55,17 @@ class ManualTasksHandler {
   async getManualTasks(req, res) {
     try {
       const projectId = req.params.projectId || req.query.projectId;
-      
+
       if (!this.taskRepository) {
         return res.status(500).json({
-          success: false,
-          error: 'Task repository not available'
+         
+          error: "Task repository not available",
         });
       }
 
       // Get tasks from database (already imported by TaskController)
       const tasks = await this.taskRepository.findByProject(projectId);
-      
+
       // Return ALL tasks - no filtering
       const manualTasks = tasks;
 
@@ -74,36 +74,35 @@ class ManualTasksHandler {
         // First sort by category
         const aCategory = a.category;
         const bCategory = b.category;
-        
+
         if (aCategory !== bCategory) {
           return aCategory.localeCompare(bCategory);
         }
-        
+
         // Then by priority
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         const aPriority = priorityOrder[a.priority] || 0;
         const bPriority = priorityOrder[b.priority] || 0;
-        
+
         if (aPriority !== bPriority) {
           return bPriority - aPriority;
         }
-        
+
         // Finally by title
         return a.title.localeCompare(b.title);
       });
 
       logger.info(`Found ${tasks.length} manual tasks from database`);
-      
+
       res.json({
-        success: true,
         data: tasks,
-        count: tasks.length
+        count: tasks.length,
       });
     } catch (error) {
-      logger.error('Error getting manual tasks:', error);
+      logger.error("Error getting manual tasks:", error);
       res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve manual tasks'
+       
+        error: "Failed to retrieve manual tasks",
       });
     }
   }
@@ -117,41 +116,41 @@ class ManualTasksHandler {
     try {
       const { taskId } = req.params;
       const projectId = req.params.projectId || req.query.projectId;
-      
+
       if (!taskId) {
         return res.status(400).json({
-          success: false,
-          error: 'Task ID parameter is required'
+         
+          error: "Task ID parameter is required",
         });
       }
 
       if (!this.taskRepository) {
         return res.status(500).json({
-          success: false,
-          error: 'Task repository not available'
+         
+          error: "Task repository not available",
         });
       }
 
       // Get task from database
       const task = await this.taskRepository.findById(taskId);
-      
+
       if (!task) {
         return res.status(404).json({
-          success: false,
-          error: 'Task not found'
+         
+          error: "Task not found",
         });
       }
 
       // Parse metadata to extract content and details
       let parsedMetadata = {};
       try {
-        parsedMetadata = JSON.parse(task.metadata || '{}');
+        parsedMetadata = JSON.parse(task.metadata || "{}");
       } catch (error) {
-        logger.warn('Failed to parse task metadata:', error.message);
+        logger.warn("Failed to parse task metadata:", error.message);
       }
 
       // Convert markdown content to HTML
-      const content = parsedMetadata.content || task.description || '';
+      const content = parsedMetadata.content || task.description || "";
       const htmlContent = this.convertMarkdownToHtml(content);
 
       const taskDetails = {
@@ -165,27 +164,29 @@ class ManualTasksHandler {
         htmlContent: htmlContent,
         metadata: task.metadata,
         // ✅ FIXED: Add new status-based path structure
-        filePath: parsedMetadata.newPath || parsedMetadata.sourcePath || this.generateStatusBasedPath(task),
+        filePath:
+          parsedMetadata.newPath ||
+          parsedMetadata.sourcePath ||
+          this.generateStatusBasedPath(task),
         sourceFile: parsedMetadata.sourceFile,
         sourcePath: parsedMetadata.sourcePath,
         steps: parsedMetadata.steps || [],
         requirements: parsedMetadata.requirements || [],
         acceptanceCriteria: parsedMetadata.acceptanceCriteria || [],
         createdAt: task.createdAt,
-        updatedAt: task.updatedAt
+        updatedAt: task.updatedAt,
       };
 
       logger.info(`Successfully retrieved task details for: ${task.title}`);
-      
+
       res.json({
-        success: true,
-        data: taskDetails
+        data: taskDetails,
       });
     } catch (error) {
-      logger.error('Error getting task details:', error);
+      logger.error("Error getting task details:", error);
       res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve task details'
+       
+        error: "Failed to retrieve task details",
       });
     }
   }
@@ -198,19 +199,23 @@ class ManualTasksHandler {
   validateFilename(filename) {
     // Normalize path to prevent path traversal
     const normalizedPath = path.normalize(filename);
-    
+
     // Check for path traversal attempts
-    if (normalizedPath.includes('..') || normalizedPath.startsWith('/') || normalizedPath.startsWith('\\')) {
+    if (
+      normalizedPath.includes("..") ||
+      normalizedPath.startsWith("/") ||
+      normalizedPath.startsWith("\\")
+    ) {
       logger.warn(`Path traversal attempt detected: ${filename}`);
       return null;
     }
-    
+
     // Only allow alphanumeric, hyphens, underscores, and dots
     if (!/^[a-zA-Z0-9._-]+$/.test(normalizedPath)) {
       logger.warn(`Invalid filename characters: ${filename}`);
       return null;
     }
-    
+
     return normalizedPath;
   }
 
@@ -231,17 +236,20 @@ class ManualTasksHandler {
    * @returns {Object} - Extracted metadata
    */
   extractTaskMetadata(content, filename) {
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     const metadata = {
-      title: path.parse(filename).name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      priority: 'medium',
+      title: path
+        .parse(filename)
+        .name.replace(/-/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase()),
+      priority: "medium",
       estimatedTime: null,
-      status: 'pending'
+      status: "pending",
     };
 
     // Extract title from first heading
     for (const line of lines) {
-      if (line.startsWith('# ')) {
+      if (line.startsWith("# ")) {
         metadata.title = line.substring(2).trim();
         break;
       }
@@ -260,7 +268,9 @@ class ManualTasksHandler {
     }
 
     // Extract status
-    const statusMatch = content.match(/status[:\s]+(pending|in-progress|completed|blocked)/i);
+    const statusMatch = content.match(
+      /status[:\s]+(pending|in-progress|completed|blocked)/i,
+    );
     if (statusMatch) {
       metadata.status = statusMatch[1].toLowerCase();
     }
@@ -280,12 +290,12 @@ class ManualTasksHandler {
         breaks: true,
         gfm: true,
         sanitize: false, // We trust our content
-        smartLists: true
+        smartLists: true,
       });
 
       return marked(markdown);
     } catch (error) {
-      logger.error('Error converting markdown to HTML:', error);
+      logger.error("Error converting markdown to HTML:", error);
       return `<p>Error rendering markdown: ${error.message}</p>`;
     }
   }
@@ -305,7 +315,7 @@ class ManualTasksHandler {
     const data = await fetchFunction();
     this.cache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return data;
@@ -316,14 +326,14 @@ class ManualTasksHandler {
    */
   clearCache() {
     this.cache.clear();
-    logger.info('Cache cleared');
+    logger.info("Cache cleared");
   }
 
   /**
    * Sync manual tasks to repository (now handled by TaskController)
    */
   async syncManualTasksToRepository() {
-    logger.info('Sync is now handled by TaskController - skipping');
+    logger.info("Sync is now handled by TaskController - skipping");
     return;
   }
 
@@ -339,24 +349,27 @@ class ManualTasksHandler {
       const fullPath = path.join(dir, entry);
       if (fsSync.statSync(fullPath).isDirectory()) {
         this._walk(fullPath, files);
-      } else if (fullPath.endsWith('.md')) {
+      } else if (fullPath.endsWith(".md")) {
         files.push(fullPath);
       }
     }
   }
 
   _generateId(filePath, content) {
-    return crypto.createHash('sha1').update(filePath + this._hashContent(content)).digest('hex');
+    return crypto
+      .createHash("sha1")
+      .update(filePath + this._hashContent(content))
+      .digest("hex");
   }
 
   _hashContent(content) {
-    return crypto.createHash('sha1').update(content).digest('hex');
+    return crypto.createHash("sha1").update(content).digest("hex");
   }
 
   _extractTitle(content, filePath) {
     const match = content.match(/^#\s+(.+)/m);
     if (match) return match[1].trim();
-    return path.basename(filePath, '.md');
+    return path.basename(filePath, ".md");
   }
 
   /**
@@ -366,35 +379,39 @@ class ManualTasksHandler {
    */
   generateStatusBasedPath(task) {
     try {
-      const status = task.status?.value || task.status || 'pending';
-      const priority = task.priority?.value || task.priority || 'medium';
-      const category = task.category || 'general';
-      
+      const status = task.status?.value || task.status || "pending";
+      const priority = task.priority?.value || task.priority || "medium";
+      const category = task.category || "general";
+
       // Convert title to task name (kebab-case)
-      const taskName = task.title.toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
+      const taskName = task.title
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
 
       // Generate path based on status
-      if (status === 'completed') {
+      if (status === "completed") {
         // For completed tasks, use quarter-based organization
         const quarter = this.getCurrentQuarter();
         return `docs/09_roadmap/completed/${quarter}/${category}/${taskName}/`;
-      } else if (status === 'in-progress') {
+      } else if (status === "in-progress") {
         return `docs/09_roadmap/in-progress/${priority}/${category}/${taskName}/`;
-      } else if (status === 'blocked') {
+      } else if (status === "blocked") {
         return `docs/09_roadmap/blocked/${priority}/${category}/${taskName}/`;
-      } else if (status === 'cancelled') {
+      } else if (status === "cancelled") {
         return `docs/09_roadmap/cancelled/${priority}/${category}/${taskName}/`;
       } else {
         // Default to pending
         return `docs/09_roadmap/pending/${priority}/${category}/${taskName}/`;
       }
     } catch (error) {
-      logger.error(`❌ Failed to generate new path for ${task.title}:`, error.message);
-      return `docs/09_roadmap/pending/medium/${task.category || 'general'}/${task.title?.toLowerCase().replace(/\s+/g, '-')}/`;
+      logger.error(
+        `❌ Failed to generate new path for ${task.title}:`,
+        error.message,
+      );
+      return `docs/09_roadmap/pending/medium/${task.category || "general"}/${task.title?.toLowerCase().replace(/\s+/g, "-")}/`;
     }
   }
 
@@ -406,15 +423,15 @@ class ManualTasksHandler {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 0-based to 1-based
-    
+
     let quarter;
-    if (month <= 3) quarter = 'q1';
-    else if (month <= 6) quarter = 'q2';
-    else if (month <= 9) quarter = 'q3';
-    else quarter = 'q4';
-    
+    if (month <= 3) quarter = "q1";
+    else if (month <= 6) quarter = "q2";
+    else if (month <= 9) quarter = "q3";
+    else quarter = "q4";
+
     return `${year}-${quarter}`;
   }
 }
 
-module.exports = ManualTasksHandler; 
+module.exports = ManualTasksHandler;

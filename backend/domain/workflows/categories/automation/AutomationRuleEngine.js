@@ -2,9 +2,9 @@
  * AutomationRuleEngine - Rule engine for automation rules
  * Processes automation rules and determines automation levels
  */
-const AutomationRule = require('./AutomationRule');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const AutomationRule = require("./AutomationRule");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class AutomationRuleEngine {
   constructor(options = {}) {
@@ -21,7 +21,8 @@ class AutomationRuleEngine {
    */
   addRule(rule) {
     try {
-      const automationRule = rule instanceof AutomationRule ? rule : AutomationRule.fromJSON(rule);
+      const automationRule =
+        rule instanceof AutomationRule ? rule : AutomationRule.fromJSON(rule);
       this.rules.set(automationRule.id, automationRule);
       this.logger.info(`Added rule: ${automationRule.name}`);
     } catch (error) {
@@ -64,7 +65,7 @@ class AutomationRuleEngine {
    * @returns {Array<AutomationRule>} Array of enabled rules
    */
   getEnabledRules() {
-    return this.getRules().filter(rule => rule.enabled);
+    return this.getRules().filter((rule) => rule.enabled);
   }
 
   /**
@@ -73,7 +74,7 @@ class AutomationRuleEngine {
    * @returns {Array<AutomationRule>} Array of rules with specified priority
    */
   getRulesByPriority(priority) {
-    return this.getRules().filter(rule => rule.priority === priority);
+    return this.getRules().filter((rule) => rule.priority === priority);
   }
 
   /**
@@ -87,8 +88,9 @@ class AutomationRuleEngine {
       this.logger.info(`Evaluating rules for task ${task.id}`);
 
       // Get enabled rules sorted by priority (highest first)
-      const enabledRules = this.getEnabledRules()
-        .sort((a, b) => b.priority - a.priority);
+      const enabledRules = this.getEnabledRules().sort(
+        (a, b) => b.priority - a.priority,
+      );
 
       if (enabledRules.length === 0) {
         this.logger.info(`No enabled rules found`);
@@ -99,7 +101,7 @@ class AutomationRuleEngine {
       if (this.enableRuleCaching) {
         const cacheKey = this._generateCacheKey(task, context);
         const cached = this.ruleCache.get(cacheKey);
-        if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
           this.logger.info(`Using cached result: ${cached.automationLevel}`);
           return cached.automationLevel;
         }
@@ -109,43 +111,48 @@ class AutomationRuleEngine {
       for (const rule of enabledRules) {
         try {
           const matches = await rule.evaluateConditions(task, context);
-          
+
           if (matches) {
             this.logger.info(`Rule matched: ${rule.name}`);
-            
+
             // Execute rule actions
             const actionResults = await rule.executeActions(task, context);
-            
+
             // Find automation level action
-            const automationLevelAction = actionResults.find(result => 
-              result.actionType === 'set_automation_level' && result.success
+            const automationLevelAction = actionResults.find(
+              (result) =>
+                result.actionType === "set_automation_level" && result.success,
             );
-            
+
             if (automationLevelAction) {
               const automationLevel = automationLevelAction.result;
-              
+
               // Cache result if enabled
               if (this.enableRuleCaching) {
                 const cacheKey = this._generateCacheKey(task, context);
                 this.ruleCache.set(cacheKey, {
                   automationLevel,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
                 });
               }
-              
-              this.logger.info(`Rule ${rule.name} set automation level to: ${automationLevel}`);
+
+              this.logger.info(
+                `Rule ${rule.name} set automation level to: ${automationLevel}`,
+              );
               return automationLevel;
             }
           }
         } catch (error) {
-          this.logger.error(`Error evaluating rule ${rule.name}:`, error.message);
+          this.logger.error(
+            `Error evaluating rule ${rule.name}:`,
+            error.message,
+          );
           // Continue with next rule
         }
       }
 
       this.logger.info(`No rules matched`);
       return null;
-
     } catch (error) {
       this.logger.error(`Error evaluating rules:`, error.message);
       return null;
@@ -245,7 +252,7 @@ class AutomationRuleEngine {
    */
   loadRules(rules) {
     this.clearRules();
-    
+
     for (const ruleData of rules) {
       try {
         this.addRule(ruleData);
@@ -253,7 +260,7 @@ class AutomationRuleEngine {
         this.logger.error(`Failed to load rule:`, error.message);
       }
     }
-    
+
     this.logger.info(`Loaded ${this.rules.size} rules`);
   }
 
@@ -262,7 +269,7 @@ class AutomationRuleEngine {
    * @returns {Array} Array of rule data
    */
   exportRules() {
-    return this.getRules().map(rule => rule.toJSON());
+    return this.getRules().map((rule) => rule.toJSON());
   }
 
   /**
@@ -272,7 +279,7 @@ class AutomationRuleEngine {
   getStatistics() {
     const allRules = this.getRules();
     const enabledRules = this.getEnabledRules();
-    
+
     const priorityStats = {};
     for (const rule of allRules) {
       const priority = rule.priority;
@@ -285,7 +292,7 @@ class AutomationRuleEngine {
       disabledRules: allRules.length - enabledRules.length,
       priorityStats,
       cacheEnabled: this.enableRuleCaching,
-      cacheSize: this.ruleCache.size
+      cacheSize: this.ruleCache.size,
     };
   }
 
@@ -303,7 +310,7 @@ class AutomationRuleEngine {
   cleanExpiredCache() {
     const now = Date.now();
     for (const [key, value] of this.ruleCache.entries()) {
-      if ((now - value.timestamp) >= this.cacheTimeout) {
+      if (now - value.timestamp >= this.cacheTimeout) {
         this.ruleCache.delete(key);
       }
     }
@@ -317,7 +324,7 @@ class AutomationRuleEngine {
    */
   _generateCacheKey(task, context) {
     const taskKey = `${task.id}_${task.type?.value}_${task.priority?.value}`;
-    const contextKey = `${context.get('userId')}_${context.get('projectId')}`;
+    const contextKey = `${context.get("userId")}_${context.get("projectId")}`;
     return `${taskKey}_${contextKey}`;
   }
 
@@ -327,56 +334,64 @@ class AutomationRuleEngine {
   createDefaultRules() {
     // Rule 1: High priority tasks should be manual
     const highPriorityRule = AutomationRule.createAutomationLevelRule(
-      'High Priority Manual',
-      'manual',
-      [{
-        type: 'task_field',
-        field: 'priority',
-        operator: 'equals',
-        value: 'high'
-      }]
+      "High Priority Manual",
+      "manual",
+      [
+        {
+          type: "task_field",
+          field: "priority",
+          operator: "equals",
+          value: "high",
+        },
+      ],
     );
     highPriorityRule.setPriority(100);
     this.addRule(highPriorityRule);
 
     // Rule 2: Security tasks should be assisted
     const securityRule = AutomationRule.createAutomationLevelRule(
-      'Security Assisted',
-      'assisted',
-      [{
-        type: 'task_field',
-        field: 'type',
-        operator: 'equals',
-        value: 'security'
-      }]
+      "Security Assisted",
+      "assisted",
+      [
+        {
+          type: "task_field",
+          field: "type",
+          operator: "equals",
+          value: "security",
+        },
+      ],
     );
     securityRule.setPriority(90);
     this.addRule(securityRule);
 
     // Rule 3: Deployment tasks should be manual
     const deploymentRule = AutomationRule.createAutomationLevelRule(
-      'Deployment Manual',
-      'manual',
-      [{
-        type: 'task_field',
-        field: 'type',
-        operator: 'equals',
-        value: 'deployment'
-      }]
+      "Deployment Manual",
+      "manual",
+      [
+        {
+          type: "task_field",
+          field: "type",
+          operator: "equals",
+          value: "deployment",
+        },
+      ],
     );
     deploymentRule.setPriority(80);
     this.addRule(deploymentRule);
 
     // Rule 4: Documentation tasks can be fully automated
     const documentationRule = AutomationRule.createAutomationLevelRule(
-      'Documentation Full Auto',
-      'full_auto',
-      [{
-        type: 'task_field',
-        field: 'type',
-        operator: 'equals',
-        value: 'documentation'
-      }]
+      "Documentation Full Auto",
+      "full_auto",
+      [
+        {
+          type: "task_field",
+          field: "type",
+          operator: "equals",
+          value: "documentation",
+        },
+      ],
     );
     documentationRule.setPriority(70);
     this.addRule(documentationRule);
@@ -385,4 +400,4 @@ class AutomationRuleEngine {
   }
 }
 
-module.exports = AutomationRuleEngine; 
+module.exports = AutomationRuleEngine;

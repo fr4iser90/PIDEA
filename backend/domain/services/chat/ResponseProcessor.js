@@ -4,12 +4,12 @@
  * Replaces the old AITextDetector with better completion detection
  */
 
-const ServiceLogger = require('@logging/ServiceLogger');
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class ResponseProcessor {
   constructor(selectors) {
     this.selectors = selectors;
-    this.logger = new ServiceLogger('ResponseProcessor');
+    this.logger = new ServiceLogger("ResponseProcessor");
   }
 
   /**
@@ -20,16 +20,28 @@ class ResponseProcessor {
   async detectAITyping(page) {
     try {
       // Check for generating indicator using JSON selector
-      
+
       // Check for typing indicators using JSON selectors
-      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.loadingIndicator) {
+      if (
+        this.selectors &&
+        this.selectors.chatSelectors &&
+        this.selectors.chatSelectors.loadingIndicator
+      ) {
         try {
-          const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
+          const elements = await page.$$(
+            this.selectors.chatSelectors.loadingIndicator,
+          );
           if (elements.length > 0) {
             for (const element of elements) {
               const text = await element.textContent();
               const isVisible = await element.isVisible();
-              if (isVisible && text && (text.includes('Generating') || text.includes('Typing') || text.includes('Thinking'))) {
+              if (
+                isVisible &&
+                text &&
+                (text.includes("Generating") ||
+                  text.includes("Typing") ||
+                  text.includes("Thinking"))
+              ) {
                 this.logger.debug(`🔍 Found typing indicator: "${text}"`);
                 return true;
               }
@@ -39,11 +51,17 @@ class ResponseProcessor {
           // Skip if selector fails
         }
       }
-      
+
       // Check for typing indicators using thinkingIndicator from JSON
-      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.thinkingIndicator) {
+      if (
+        this.selectors &&
+        this.selectors.chatSelectors &&
+        this.selectors.chatSelectors.thinkingIndicator
+      ) {
         try {
-          const elements = await page.$$(this.selectors.chatSelectors.thinkingIndicator);
+          const elements = await page.$$(
+            this.selectors.chatSelectors.thinkingIndicator,
+          );
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
@@ -57,11 +75,17 @@ class ResponseProcessor {
           // Skip if selector fails
         }
       }
-      
+
       // Additional check using alternative selectors from JSON
-      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.loadingIndicator) {
+      if (
+        this.selectors &&
+        this.selectors.chatSelectors &&
+        this.selectors.chatSelectors.loadingIndicator
+      ) {
         try {
-          const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
+          const elements = await page.$$(
+            this.selectors.chatSelectors.loadingIndicator,
+          );
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
@@ -75,11 +99,10 @@ class ResponseProcessor {
           // Skip if selector fails
         }
       }
-      
+
       // If no typing indicators found, AI is not typing
       this.logger.debug(`🔍 No typing indicators found - AI not typing`);
       return false;
-      
     } catch (error) {
       this.logger.error(`⚠️ Error detecting AI typing: ${error.message}`);
       return false;
@@ -93,37 +116,50 @@ class ResponseProcessor {
    */
   async extractAIResponse(page) {
     try {
-      this.logger.info('🔍 ResponseProcessor.extractAIResponse called');
-      this.logger.info('🔍 ResponseProcessor selectors:', {
+      this.logger.info("🔍 ResponseProcessor.extractAIResponse called");
+      this.logger.info("🔍 ResponseProcessor selectors:", {
         hasSelectors: !!this.selectors,
         selectorKeys: this.selectors ? Object.keys(this.selectors) : [],
         hasChatSelectors: !!this.selectors?.chatSelectors,
-        chatSelectorKeys: this.selectors?.chatSelectors ? Object.keys(this.selectors.chatSelectors) : [],
+        chatSelectorKeys: this.selectors?.chatSelectors
+          ? Object.keys(this.selectors.chatSelectors)
+          : [],
         aiMessages: this.selectors?.chatSelectors?.aiMessages,
-        messagesContainer: this.selectors?.chatSelectors?.messagesContainer
+        messagesContainer: this.selectors?.chatSelectors?.messagesContainer,
       });
-      
+
       // Try multiple strategies to find the AI response
       const responseStrategies = [
         // Strategy 1: Direct AI message selectors
         async () => {
-          this.logger.info('🔍 Strategy 1: Looking for AI messages with selector:', this.selectors?.chatSelectors?.aiMessages);
-          const messages = await page.$$(this.selectors.chatSelectors.aiMessages);
-          this.logger.info(`🔍 Strategy 1: Found ${messages.length} AI message elements`);
+          this.logger.info(
+            "🔍 Strategy 1: Looking for AI messages with selector:",
+            this.selectors?.chatSelectors?.aiMessages,
+          );
+          const messages = await page.$$(
+            this.selectors.chatSelectors.aiMessages,
+          );
+          this.logger.info(
+            `🔍 Strategy 1: Found ${messages.length} AI message elements`,
+          );
           if (messages.length > 0) {
             const lastMessage = messages[messages.length - 1];
             const text = await lastMessage.textContent();
-            this.logger.info(`🔍 Strategy 1: Last message text length: ${text?.length || 0}`);
+            this.logger.info(
+              `🔍 Strategy 1: Last message text length: ${text?.length || 0}`,
+            );
             return text; // Let main loop validate
           }
           return null;
         },
-        
+
         // Strategy 2: Look for markdown containers using JSON selector
         async () => {
           // Use the aiMessages selector as it points to the markdown container
           if (this.selectors.chatSelectors.aiMessages) {
-            const elements = await page.$$(this.selectors.chatSelectors.aiMessages);
+            const elements = await page.$$(
+              this.selectors.chatSelectors.aiMessages,
+            );
             if (elements.length > 0) {
               const lastElement = elements[elements.length - 1];
               const text = await lastElement.textContent();
@@ -132,11 +168,13 @@ class ResponseProcessor {
           }
           return null;
         },
-        
-        // Strategy 3: Look for content using messagesContainer from JSON  
+
+        // Strategy 3: Look for content using messagesContainer from JSON
         async () => {
           if (this.selectors.chatSelectors.messagesContainer) {
-            const elements = await page.$$(this.selectors.chatSelectors.messagesContainer);
+            const elements = await page.$$(
+              this.selectors.chatSelectors.messagesContainer,
+            );
             if (elements.length > 0) {
               const lastElement = elements[elements.length - 1];
               const text = await lastElement.textContent();
@@ -145,9 +183,8 @@ class ResponseProcessor {
           }
           return null;
         },
-        
       ];
-      
+
       // Try each strategy until we find a response
       for (const strategy of responseStrategies) {
         try {
@@ -155,19 +192,22 @@ class ResponseProcessor {
           if (response && response.trim().length > 0) {
             // Additional validation: check if it's a valid AI response
             if (this.isValidAIResponse(response)) {
-              this.logger.info(`✅ Valid AI response found: ${response.length} chars`);
+              this.logger.info(
+                `✅ Valid AI response found: ${response.length} chars`,
+              );
               return response.trim();
             } else {
-              this.logger.info(`🚫 Invalid response filtered out: ${response.substring(0, 50)}...`);
+              this.logger.info(
+                `🚫 Invalid response filtered out: ${response.substring(0, 50)}...`,
+              );
             }
           }
         } catch (error) {
           continue;
         }
       }
-      
+
       return null;
-      
     } catch (error) {
       this.logger.error(`⚠️ Error extracting AI response: ${error.message}`);
       return null;
@@ -185,18 +225,18 @@ class ResponseProcessor {
     }
 
     const trimmed = text.trim().toLowerCase();
-    
+
     // Filter out common error messages and system messages
     // BUT NOT test results like "[FAILED] 0%" which are valid AI responses
     const errorPatterns = [
-      'timeout',
-      'connection error',
-      'network error',
-      'extension host unresponsive',
-      'extension host has stopped responding',
-      'reload window'
+      "timeout",
+      "connection error",
+      "network error",
+      "extension host unresponsive",
+      "extension host has stopped responding",
+      "reload window",
     ];
-    
+
     // Check for specific error patterns (not test results)
     for (const pattern of errorPatterns) {
       if (trimmed.includes(pattern)) {
@@ -204,18 +244,18 @@ class ResponseProcessor {
         return false;
       }
     }
-    
+
     // Don't filter out "failed" if it's part of a test result like "[FAILED] 0%"
-    if (trimmed.includes('failed') && !trimmed.includes('[failed]')) {
+    if (trimmed.includes("failed") && !trimmed.includes("[failed]")) {
       this.logger.debug(`🚫 Filtered out error message: failed`);
       return false;
     }
-    
+
     // Valid AI responses should be longer and contain actual content
     if (trimmed.length < 20) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -231,19 +271,25 @@ class ResponseProcessor {
       // Check if AI is still typing/working - if yes, not complete
       const isTyping = await this.detectAITyping(page);
       if (isTyping) {
-        this.logger.info('⌨️ AI still typing - not complete');
+        this.logger.info("⌨️ AI still typing - not complete");
         return false;
       }
-      
+
       // Check for loading indicators - if visible, not complete
-      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.loadingIndicator) {
+      if (
+        this.selectors &&
+        this.selectors.chatSelectors &&
+        this.selectors.chatSelectors.loadingIndicator
+      ) {
         try {
-          const elements = await page.$$(this.selectors.chatSelectors.loadingIndicator);
+          const elements = await page.$$(
+            this.selectors.chatSelectors.loadingIndicator,
+          );
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
               if (isVisible) {
-                this.logger.info('⏳ Loading indicator visible - not complete');
+                this.logger.info("⏳ Loading indicator visible - not complete");
                 return false;
               }
             }
@@ -252,16 +298,24 @@ class ResponseProcessor {
           // Skip if selector fails
         }
       }
-      
+
       // Check for thinking indicators - if visible, not complete
-      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.thinkingIndicator) {
+      if (
+        this.selectors &&
+        this.selectors.chatSelectors &&
+        this.selectors.chatSelectors.thinkingIndicator
+      ) {
         try {
-          const elements = await page.$$(this.selectors.chatSelectors.thinkingIndicator);
+          const elements = await page.$$(
+            this.selectors.chatSelectors.thinkingIndicator,
+          );
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
               if (isVisible) {
-                this.logger.info('🤔 Thinking indicator visible - not complete');
+                this.logger.info(
+                  "🤔 Thinking indicator visible - not complete",
+                );
                 return false;
               }
             }
@@ -270,68 +324,106 @@ class ResponseProcessor {
           // Skip if selector fails
         }
       }
-      
+
       // Check for completion indicators - if visible, response is complete!
-      if (this.selectors && this.selectors.chatSelectors && this.selectors.chatSelectors.completionIndicator) {
+      if (
+        this.selectors &&
+        this.selectors.chatSelectors &&
+        this.selectors.chatSelectors.completionIndicator
+      ) {
         try {
-          this.logger.info(`🔍 Debug: Checking completion indicator with selector: ${this.selectors.chatSelectors.completionIndicator}`);
-          const elements = await page.$$(this.selectors.chatSelectors.completionIndicator);
-          this.logger.info(`🔍 Debug: Found ${elements.length} completion indicator elements`);
-          
+          this.logger.info(
+            `🔍 Debug: Checking completion indicator with selector: ${this.selectors.chatSelectors.completionIndicator}`,
+          );
+          const elements = await page.$$(
+            this.selectors.chatSelectors.completionIndicator,
+          );
+          this.logger.info(
+            `🔍 Debug: Found ${elements.length} completion indicator elements`,
+          );
+
           if (elements.length > 0) {
             for (const element of elements) {
               const isVisible = await element.isVisible();
               const text = await element.textContent();
-              this.logger.info(`🔍 Debug: Completion indicator - text: "${text}", visible: ${isVisible}`);
-              if (isVisible && text && (text.includes('Review Changes') || text.includes('Review') || text.includes('Apply') || text.includes('Undo') || text.includes('codicon-review'))) {
-                this.logger.info('✅ Completion indicator visible with correct text - response is complete!');
+              this.logger.info(
+                `🔍 Debug: Completion indicator - text: "${text}", visible: ${isVisible}`,
+              );
+              if (
+                isVisible &&
+                text &&
+                (text.includes("Review Changes") ||
+                  text.includes("Review") ||
+                  text.includes("Apply") ||
+                  text.includes("Undo") ||
+                  text.includes("codicon-review"))
+              ) {
+                this.logger.info(
+                  "✅ Completion indicator visible with correct text - response is complete!",
+                );
                 return true;
               }
             }
           }
         } catch (error) {
-          this.logger.info(`🔍 Debug: Completion indicator selector failed: ${error.message}`);
+          this.logger.info(
+            `🔍 Debug: Completion indicator selector failed: ${error.message}`,
+          );
         }
       }
-      
+
       // Check for hidden completion indicators (monaco-progress-container done)
       try {
-        const hiddenDoneElements = await page.$$('.monaco-progress-container.done');
-        this.logger.info(`🔍 Debug: Found ${hiddenDoneElements.length} hidden done elements`);
-        
+        const hiddenDoneElements = await page.$$(
+          ".monaco-progress-container.done",
+        );
+        this.logger.info(
+          `🔍 Debug: Found ${hiddenDoneElements.length} hidden done elements`,
+        );
+
         if (hiddenDoneElements.length > 0) {
           for (const element of hiddenDoneElements) {
             const isVisible = await element.isVisible();
-            const classes = await element.getAttribute('class');
-            this.logger.info(`🔍 Debug: Hidden done element - classes: "${classes}", visible: ${isVisible}`);
-            
+            const classes = await element.getAttribute("class");
+            this.logger.info(
+              `🔍 Debug: Hidden done element - classes: "${classes}", visible: ${isVisible}`,
+            );
+
             // If we have hidden done elements, it might indicate completion
-            if (!isVisible && classes && classes.includes('done')) {
-              this.logger.info('✅ Hidden completion indicator found - response might be complete!');
+            if (!isVisible && classes && classes.includes("done")) {
+              this.logger.info(
+                "✅ Hidden completion indicator found - response might be complete!",
+              );
               // Don't return true immediately, but log it for debugging
             }
           }
         }
       } catch (error) {
-        this.logger.info(`🔍 Debug: Hidden completion indicator check failed: ${error.message}`);
+        this.logger.info(
+          `🔍 Debug: Hidden completion indicator check failed: ${error.message}`,
+        );
       }
-      
+
       // Check if text has stopped growing and is substantial
-      if (currentText && currentText.length > 100 && currentText.length === lastLength) {
+      if (
+        currentText &&
+        currentText.length > 100 &&
+        currentText.length === lastLength
+      ) {
         // First check if this is an error message - don't consider error messages as complete responses
         const trimmed = currentText.trim().toLowerCase();
         const errorPatterns = [
-          'reload window',
-          'failed',
-          'timeout',
-          'connection error',
-          'network error',
-          'error occurred',
-          'an error',
-          'error:',
-          'error -'
+          "reload window",
+          "failed",
+          "timeout",
+          "connection error",
+          "network error",
+          "error occurred",
+          "an error",
+          "error:",
+          "error -",
         ];
-        
+
         // If text contains error patterns, it's not a valid AI response
         for (const pattern of errorPatterns) {
           if (trimmed.includes(pattern)) {
@@ -339,38 +431,50 @@ class ResponseProcessor {
             return false; // Don't consider error messages as complete
           }
         }
-        
+
         // Additional checks for completion
-        const hasCompletionKeywords = ['completed', 'done', 'finished', 'fertig', 'success'].some(keyword => 
-          trimmed.includes(keyword)
-        );
-        
-        const hasCodeBlocks = currentText.includes('```');
+        const hasCompletionKeywords = [
+          "completed",
+          "done",
+          "finished",
+          "fertig",
+          "success",
+        ].some((keyword) => trimmed.includes(keyword));
+
+        const hasCodeBlocks = currentText.includes("```");
         const hasSubstantialContent = currentText.length > 200;
-        
+
         // More lenient completion detection - if we have substantial content, consider it complete
         // This prevents the infinite loop issue
         if (hasSubstantialContent) {
           // Check if this is a JSON response - if so, consider it complete when stable
-          const hasJsonStructure = currentText.includes('{') && currentText.includes('"recommendedType"') && currentText.includes('"factors"');
-          
+          const hasJsonStructure =
+            currentText.includes("{") &&
+            currentText.includes('"recommendedType"') &&
+            currentText.includes('"factors"');
+
           if (hasJsonStructure) {
-            this.logger.info('📝 JSON response stable and substantial - appears complete');
+            this.logger.info(
+              "📝 JSON response stable and substantial - appears complete",
+            );
             return true;
           }
-          
-          this.logger.info('📝 Text stable and substantial - appears complete');
+
+          this.logger.info("📝 Text stable and substantial - appears complete");
           return true;
         }
-        
-        this.logger.info('📝 Text stable but not substantial enough - continuing to wait');
+
+        this.logger.info(
+          "📝 Text stable but not substantial enough - continuing to wait",
+        );
         return false; // Not complete yet
       }
-      
+
       return false;
-      
     } catch (error) {
-      this.logger.error(`⚠️ Error detecting response completion: ${error.message}`);
+      this.logger.error(
+        `⚠️ Error detecting response completion: ${error.message}`,
+      );
       return false;
     }
   }
@@ -392,9 +496,11 @@ class ResponseProcessor {
       for (const block of codeBlocks) {
         try {
           // Extract code content
-          let codeText = '';
+          let codeText = "";
           if (this.selectors.chatSelectors.codeBlockContent) {
-            const contentElements = await block.$$(this.selectors.chatSelectors.codeBlockContent);
+            const contentElements = await block.$$(
+              this.selectors.chatSelectors.codeBlockContent,
+            );
             if (contentElements.length > 0) {
               codeText = await contentElements[0].textContent();
             } else {
@@ -408,11 +514,17 @@ class ResponseProcessor {
           let language = null;
           if (this.selectors.chatSelectors.codeBlockLanguage) {
             try {
-              const langElements = await block.$$(this.selectors.chatSelectors.codeBlockLanguage);
+              const langElements = await block.$$(
+                this.selectors.chatSelectors.codeBlockLanguage,
+              );
               if (langElements.length > 0) {
                 const langElement = langElements[0];
-                const className = await langElement.getAttribute('class');
-                language = className ? className.match(/javascript|python|java|typescript|json|html|css|sql|bash|sh/i)?.[0] : null;
+                const className = await langElement.getAttribute("class");
+                language = className
+                  ? className.match(
+                      /javascript|python|java|typescript|json|html|css|sql|bash|sh/i,
+                    )?.[0]
+                  : null;
               }
             } catch (error) {
               // Skip language detection if it fails
@@ -422,8 +534,8 @@ class ResponseProcessor {
           if (codeText && codeText.trim()) {
             blocks.push({
               content: codeText.trim(),
-              language: language || 'text',
-              type: 'codeBlock'
+              language: language || "text",
+              type: "codeBlock",
             });
           }
         } catch (error) {
@@ -450,11 +562,11 @@ class ResponseProcessor {
         this.selectors?.terminalBlocks,
         'pre[class*="bash"]',
         'pre[class*="shell"]',
-        'pre[class*="terminal"]'
+        'pre[class*="terminal"]',
       ].filter(Boolean);
 
       const terminalBlocks = [];
-      
+
       for (const selector of selectors) {
         try {
           const elements = await page.$$(selector);
@@ -463,7 +575,7 @@ class ResponseProcessor {
             if (content && content.trim()) {
               terminalBlocks.push({
                 content: content.trim(),
-                type: 'terminal'
+                type: "terminal",
               });
             }
           }
@@ -474,7 +586,9 @@ class ResponseProcessor {
 
       return terminalBlocks;
     } catch (error) {
-      this.logger.error(`⚠️ Error extracting terminal blocks: ${error.message}`);
+      this.logger.error(
+        `⚠️ Error extracting terminal blocks: ${error.message}`,
+      );
       return [];
     }
   }
@@ -489,25 +603,25 @@ class ResponseProcessor {
       const selectors = [
         this.selectors?.fileReferences,
         'span[title*="."]',
-        'a[href*="."]'
+        'a[href*="."]',
       ].filter(Boolean);
 
       const fileRefs = [];
-      
+
       for (const selector of selectors) {
         try {
           const elements = await page.$$(selector);
           for (const element of elements) {
             const content = await element.textContent();
-            const title = await element.getAttribute('title');
-            const href = await element.getAttribute('href');
-            
-            if (content && content.includes('.')) {
+            const title = await element.getAttribute("title");
+            const href = await element.getAttribute("href");
+
+            if (content && content.includes(".")) {
               fileRefs.push({
                 content: content.trim(),
-                title: title || '',
-                href: href || '',
-                type: 'file'
+                title: title || "",
+                href: href || "",
+                type: "file",
               });
             }
           }
@@ -518,7 +632,9 @@ class ResponseProcessor {
 
       return fileRefs;
     } catch (error) {
-      this.logger.error(`⚠️ Error extracting file references: ${error.message}`);
+      this.logger.error(
+        `⚠️ Error extracting file references: ${error.message}`,
+      );
       return [];
     }
   }
@@ -534,23 +650,23 @@ class ResponseProcessor {
         this.selectors?.urls,
         'a[href^="http"]',
         'a[href^="https"]',
-        'a[href^="ftp"]'
+        'a[href^="ftp"]',
       ].filter(Boolean);
 
       const urls = [];
-      
+
       for (const selector of selectors) {
         try {
           const elements = await page.$$(selector);
           for (const element of elements) {
-            const href = await element.getAttribute('href');
+            const href = await element.getAttribute("href");
             const text = await element.textContent();
-            
-            if (href && (href.startsWith('http') || href.startsWith('ftp'))) {
+
+            if (href && (href.startsWith("http") || href.startsWith("ftp"))) {
               urls.push({
                 url: href,
                 text: text || href,
-                type: 'url'
+                type: "url",
               });
             }
           }
@@ -579,21 +695,45 @@ class ResponseProcessor {
         sql: [],
         yaml: [],
         dockerfile: [],
-        env: []
+        env: [],
       };
 
       const typeSelectors = {
-        json: [this.selectors?.jsonBlocks, 'pre[class*="json"]', 'code[class*="json"]'],
-        css: [this.selectors?.cssBlocks, 'pre[class*="css"]', 'code[class*="css"]'],
-        sql: [this.selectors?.sqlBlocks, 'pre[class*="sql"]', 'code[class*="sql"]'],
-        yaml: [this.selectors?.yamlBlocks, 'pre[class*="yaml"]', 'code[class*="yaml"]'],
-        dockerfile: [this.selectors?.dockerBlocks, 'pre[class*="dockerfile"]', 'code[class*="dockerfile"]'],
-        env: [this.selectors?.envBlocks, 'pre[class*="env"]', 'code[class*="env"]']
+        json: [
+          this.selectors?.jsonBlocks,
+          'pre[class*="json"]',
+          'code[class*="json"]',
+        ],
+        css: [
+          this.selectors?.cssBlocks,
+          'pre[class*="css"]',
+          'code[class*="css"]',
+        ],
+        sql: [
+          this.selectors?.sqlBlocks,
+          'pre[class*="sql"]',
+          'code[class*="sql"]',
+        ],
+        yaml: [
+          this.selectors?.yamlBlocks,
+          'pre[class*="yaml"]',
+          'code[class*="yaml"]',
+        ],
+        dockerfile: [
+          this.selectors?.dockerBlocks,
+          'pre[class*="dockerfile"]',
+          'code[class*="dockerfile"]',
+        ],
+        env: [
+          this.selectors?.envBlocks,
+          'pre[class*="env"]',
+          'code[class*="env"]',
+        ],
       };
 
       for (const [type, selectors] of Object.entries(typeSelectors)) {
         const filteredSelectors = selectors.filter(Boolean);
-        
+
         for (const selector of filteredSelectors) {
           try {
             const elements = await page.$$(selector);
@@ -602,7 +742,7 @@ class ResponseProcessor {
               if (content && content.trim()) {
                 dataTypes[type].push({
                   content: content.trim(),
-                  type: type
+                  type: type,
                 });
               }
             }
@@ -614,7 +754,9 @@ class ResponseProcessor {
 
       return dataTypes;
     } catch (error) {
-      this.logger.error(`⚠️ Error extracting structured data: ${error.message}`);
+      this.logger.error(
+        `⚠️ Error extracting structured data: ${error.message}`,
+      );
       return { json: [], css: [], sql: [], yaml: [], dockerfile: [], env: [] };
     }
   }
@@ -630,10 +772,9 @@ class ResponseProcessor {
       const tables = [];
 
       // Extract lists
-      const listSelectors = [
-        this.selectors?.lists,
-        'ul', 'ol', 'li'
-      ].filter(Boolean);
+      const listSelectors = [this.selectors?.lists, "ul", "ol", "li"].filter(
+        Boolean,
+      );
 
       for (const selector of listSelectors) {
         try {
@@ -643,8 +784,8 @@ class ResponseProcessor {
             if (content && content.trim()) {
               lists.push({
                 content: content.trim(),
-                tagName: await element.evaluate(el => el.tagName),
-                type: 'list'
+                tagName: await element.evaluate((el) => el.tagName),
+                type: "list",
               });
             }
           }
@@ -656,7 +797,10 @@ class ResponseProcessor {
       // Extract tables
       const tableSelectors = [
         this.selectors?.tables,
-        'table', 'tr', 'td', 'th'
+        "table",
+        "tr",
+        "td",
+        "th",
       ].filter(Boolean);
 
       for (const selector of tableSelectors) {
@@ -667,8 +811,8 @@ class ResponseProcessor {
             if (content && content.trim()) {
               tables.push({
                 content: content.trim(),
-                tagName: await element.evaluate(el => el.tagName),
-                type: 'table'
+                tagName: await element.evaluate((el) => el.tagName),
+                type: "table",
               });
             }
           }
@@ -679,7 +823,9 @@ class ResponseProcessor {
 
       return { lists, tables };
     } catch (error) {
-      this.logger.error(`⚠️ Error extracting lists and tables: ${error.message}`);
+      this.logger.error(
+        `⚠️ Error extracting lists and tables: ${error.message}`,
+      );
       return { lists: [], tables: [] };
     }
   }
@@ -693,7 +839,7 @@ class ResponseProcessor {
     try {
       const selectors = [
         this.selectors?.inlineCode,
-        this.selectors?.codeSpans
+        this.selectors?.codeSpans,
       ].filter(Boolean);
 
       if (selectors.length === 0) {
@@ -701,18 +847,18 @@ class ResponseProcessor {
       }
 
       const inlineCodeBlocks = [];
-      
+
       for (const selector of selectors) {
         try {
           const elements = await page.$$(selector);
-          
+
           for (const element of elements) {
             try {
               const codeText = await element.textContent();
               if (codeText && codeText.trim()) {
                 inlineCodeBlocks.push({
                   content: codeText.trim(),
-                  type: 'inlineCode'
+                  type: "inlineCode",
                 });
               }
             } catch (error) {
@@ -727,8 +873,9 @@ class ResponseProcessor {
       }
 
       // Remove duplicates based on content
-      const uniqueInlineCode = inlineCodeBlocks.filter((item, index, array) => 
-        array.findIndex(other => other.content === item.content) === index
+      const uniqueInlineCode = inlineCodeBlocks.filter(
+        (item, index, array) =>
+          array.findIndex((other) => other.content === item.content) === index,
       );
 
       return uniqueInlineCode;
@@ -748,48 +895,65 @@ class ResponseProcessor {
     const {
       timeout = 300000, // 5 minutes default
       checkInterval = 2000, // Check every 2 seconds
-      maxStableChecks = 50 // Much more conservative than old 3!
+      maxStableChecks = 50, // Much more conservative than old 3!
     } = options;
-    
-    this.logger.info('⏳ Waiting for AI response to start...');
-    
+
+    this.logger.info("⏳ Waiting for AI response to start...");
+
     let stableCheckCount = 0;
     const startTime = Date.now();
-    
+
     // Wait for response to start appearing
     await page.waitForTimeout(3000);
-    
+
     // Wait for response to complete
-    let responseText = '';
+    let responseText = "";
     let lastLength = 0;
-    
+
     while (Date.now() - startTime < timeout) {
       try {
         // Get the latest response text using enhanced extraction
         const currentText = await this.extractAIResponse(page);
-        
+
         if (currentText && currentText.length > lastLength) {
           responseText = currentText;
           lastLength = currentText.length;
           stableCheckCount = 0; // Reset stable count when text grows
-          this.logger.info(`📝 Response growing: ${currentText.length} characters`);
-        } else if (currentText && currentText.length === lastLength && currentText.length > 0) {
+          this.logger.info(
+            `📝 Response growing: ${currentText.length} characters`,
+          );
+        } else if (
+          currentText &&
+          currentText.length === lastLength &&
+          currentText.length > 0
+        ) {
           stableCheckCount++;
-          this.logger.info(`⏸️ Response stable (${stableCheckCount}/${maxStableChecks})`);
-          
+          this.logger.info(
+            `⏸️ Response stable (${stableCheckCount}/${maxStableChecks})`,
+          );
+
           // Check for code blocks during stable checks
           try {
             const codeBlocks = await this.extractCodeBlocks(page);
             if (codeBlocks.length > 0) {
-              this.logger.info(`📦 Found ${codeBlocks.length} code blocks during stable check`);
-              
+              this.logger.info(
+                `📦 Found ${codeBlocks.length} code blocks during stable check`,
+              );
+
               // Only reset stable count if code blocks are actually growing
-              if (!this.lastCodeBlockCount || codeBlocks.length > this.lastCodeBlockCount) {
-                this.logger.info(`📦 Code blocks growing (${this.lastCodeBlockCount || 0} → ${codeBlocks.length}) - AI still working!`);
+              if (
+                !this.lastCodeBlockCount ||
+                codeBlocks.length > this.lastCodeBlockCount
+              ) {
+                this.logger.info(
+                  `📦 Code blocks growing (${this.lastCodeBlockCount || 0} → ${codeBlocks.length}) - AI still working!`,
+                );
                 stableCheckCount = 0; // Reset stable count - AI is still working!
                 this.lastCodeBlockCount = codeBlocks.length;
               } else {
-                this.logger.info(`📦 Code blocks stable at ${codeBlocks.length} - not resetting stable count`);
+                this.logger.info(
+                  `📦 Code blocks stable at ${codeBlocks.length} - not resetting stable count`,
+                );
                 this.lastCodeBlockCount = codeBlocks.length;
               }
             } else {
@@ -797,88 +961,117 @@ class ResponseProcessor {
               this.logger.info(`📦 No code blocks found - text-only response`);
             }
           } catch (error) {
-            this.logger.info(`📦 Code block detection failed: ${error.message}`);
+            this.logger.info(
+              `📦 Code block detection failed: ${error.message}`,
+            );
           }
-          
+
           // Only check for completion AFTER we have enough stable checks
-          if (stableCheckCount >= 3) { // Require at least 3 stable checks
-            const isComplete = await this.detectResponseComplete(page, currentText, lastLength);
-            
+          if (stableCheckCount >= 3) {
+            // Require at least 3 stable checks
+            const isComplete = await this.detectResponseComplete(
+              page,
+              currentText,
+              lastLength,
+            );
+
             if (isComplete) {
-              this.logger.info('✅ Response appears to be complete after stable checks');
+              this.logger.info(
+                "✅ Response appears to be complete after stable checks",
+              );
               break;
             }
           }
-          
+
           // Enhanced completion detection with multiple fallback strategies
           if (stableCheckCount >= 4) {
             // Strategy 1: Check for JSON completion (for AI version analysis)
-            const hasJsonStructure = currentText.includes('{') && currentText.includes('"recommendedType"') && currentText.includes('"factors"');
+            const hasJsonStructure =
+              currentText.includes("{") &&
+              currentText.includes('"recommendedType"') &&
+              currentText.includes('"factors"');
             if (hasJsonStructure && currentText.length > 200) {
-              this.logger.info('✅ JSON response detected and stable - considering complete');
+              this.logger.info(
+                "✅ JSON response detected and stable - considering complete",
+              );
               break;
             }
-            
+
             // Strategy 2: Check for substantial content with natural endings
             const hasNaturalEnding = currentText.match(/\.\s*$|!$|\?$|```\s*$/);
             if (currentText.length > 300 && hasNaturalEnding) {
-              this.logger.info('✅ Response has natural ending and is substantial - considering complete');
+              this.logger.info(
+                "✅ Response has natural ending and is substantial - considering complete",
+              );
               break;
             }
-            
+
             // Strategy 3: Check for code blocks completion
             const codeBlockCount = (currentText.match(/```/g) || []).length;
-            if (codeBlockCount > 0 && codeBlockCount % 2 === 0 && currentText.length > 200) {
-              this.logger.info('✅ Code blocks appear complete - considering complete');
+            if (
+              codeBlockCount > 0 &&
+              codeBlockCount % 2 === 0 &&
+              currentText.length > 200
+            ) {
+              this.logger.info(
+                "✅ Code blocks appear complete - considering complete",
+              );
               break;
             }
           }
-          
+
           // Additional check: if response is substantial and stable for a reasonable time, consider it complete
           if (stableCheckCount >= 15 && currentText.length > 500) {
-            this.logger.info('✅ Response substantial and stable for 15 checks - considering complete');
+            this.logger.info(
+              "✅ Response substantial and stable for 15 checks - considering complete",
+            );
             break;
           }
-          
+
           // Force continue after max stable checks
           if (stableCheckCount >= maxStableChecks) {
-            this.logger.info(`⏰ Max stable checks reached (${maxStableChecks}), forcing continuation`);
+            this.logger.info(
+              `⏰ Max stable checks reached (${maxStableChecks}), forcing continuation`,
+            );
             break;
           }
         } else if (!currentText) {
           // No response found yet, wait a bit longer
         }
-        
+
         // Only then check for typing indicators
         const isTyping = await this.detectAITyping(page);
-        
+
         if (isTyping) {
-          this.logger.info('⌨️ AI is actively typing...');
+          this.logger.info("⌨️ AI is actively typing...");
           stableCheckCount = 0; // Reset stable count when typing
           await page.waitForTimeout(2000);
           continue;
         }
-        
+
         await page.waitForTimeout(checkInterval);
-        
       } catch (error) {
-        this.logger.error(`⚠️ Error while waiting for response: ${error.message}`);
+        this.logger.error(
+          `⚠️ Error while waiting for response: ${error.message}`,
+        );
         await page.waitForTimeout(2000);
       }
     }
-    
+
     if (responseText.length === 0) {
-      this.logger.warn('⚠️ No response received');
+      this.logger.warn("⚠️ No response received");
       return {
-        success: false,
-        response: '',
+       
+        response: "",
         duration: Date.now() - startTime,
         stable: false,
         codeBlocks: [],
-        inlineCode: []
+        inlineCode: [],
       };
     } else {
-      this.logger.info(`📥 Received response (${responseText.length} characters)`);
+      this.logger.info(
+        `📥 Received response (${responseText.length} characters)`,
+      );
     }
 
     // Extract and log ALL elements
@@ -889,7 +1082,7 @@ class ResponseProcessor {
     let urls = [];
     let structuredData = {};
     let listsAndTables = {};
-    
+
     try {
       // Extract code blocks
       codeBlocks = await this.extractCodeBlocks(page);
@@ -897,10 +1090,12 @@ class ResponseProcessor {
         this.logger.info(`📝 Found ${codeBlocks.length} code blocks:`);
         codeBlocks.forEach((block, index) => {
           this.logger.info(`📦 Code Block ${index + 1} (${block.language}):`);
-          this.logger.info(`📄 ${block.content.substring(0, 100)}${block.content.length > 100 ? '...' : ''}`);
+          this.logger.info(
+            `📄 ${block.content.substring(0, 100)}${block.content.length > 100 ? "..." : ""}`,
+          );
         });
       } else {
-        this.logger.info('⚪ No code blocks found');
+        this.logger.info("⚪ No code blocks found");
       }
 
       // Extract inline code
@@ -911,7 +1106,7 @@ class ResponseProcessor {
           this.logger.info(`📄 Inline Code ${index + 1}: \`${code.content}\``);
         });
       } else {
-        this.logger.info('⚪ No inline code found');
+        this.logger.info("⚪ No inline code found");
       }
 
       // Extract terminal blocks
@@ -919,10 +1114,12 @@ class ResponseProcessor {
       if (terminalBlocks.length > 0) {
         this.logger.info(`🖥️ Found ${terminalBlocks.length} terminal blocks:`);
         terminalBlocks.forEach((block, index) => {
-          this.logger.info(`💻 Terminal ${index + 1}: ${block.content.substring(0, 100)}${block.content.length > 100 ? '...' : ''}`);
+          this.logger.info(
+            `💻 Terminal ${index + 1}: ${block.content.substring(0, 100)}${block.content.length > 100 ? "..." : ""}`,
+          );
         });
       } else {
-        this.logger.info('⚪ No terminal blocks found');
+        this.logger.info("⚪ No terminal blocks found");
       }
 
       // Extract file references
@@ -933,7 +1130,7 @@ class ResponseProcessor {
           this.logger.info(`📄 File ${index + 1}: ${file.content}`);
         });
       } else {
-        this.logger.info('⚪ No file references found');
+        this.logger.info("⚪ No file references found");
       }
 
       // Extract URLs
@@ -944,7 +1141,7 @@ class ResponseProcessor {
           this.logger.info(`🌐 URL ${index + 1}: ${url.url}`);
         });
       } else {
-        this.logger.info('⚪ No URLs found');
+        this.logger.info("⚪ No URLs found");
       }
 
       // Extract structured data
@@ -954,11 +1151,13 @@ class ResponseProcessor {
         this.logger.info(`📊 Found ${totalStructured} structured data blocks:`);
         Object.entries(structuredData).forEach(([type, blocks]) => {
           if (blocks.length > 0) {
-            this.logger.info(`📋 ${type.toUpperCase()}: ${blocks.length} blocks`);
+            this.logger.info(
+              `📋 ${type.toUpperCase()}: ${blocks.length} blocks`,
+            );
           }
         });
       } else {
-        this.logger.info('⚪ No structured data found');
+        this.logger.info("⚪ No structured data found");
       }
 
       // Extract lists and tables
@@ -966,15 +1165,16 @@ class ResponseProcessor {
       const totalLists = listsAndTables.lists.length;
       const totalTables = listsAndTables.tables.length;
       if (totalLists > 0 || totalTables > 0) {
-        this.logger.info(`📋 Found ${totalLists} lists and ${totalTables} tables`);
+        this.logger.info(
+          `📋 Found ${totalLists} lists and ${totalTables} tables`,
+        );
       } else {
-        this.logger.info('⚪ No lists or tables found');
+        this.logger.info("⚪ No lists or tables found");
       }
-
     } catch (error) {
       this.logger.error(`⚠️ Error extracting elements: ${error.message}`);
     }
-    
+
     return {
       success: responseText.length > 0,
       response: responseText,
@@ -986,7 +1186,7 @@ class ResponseProcessor {
       fileReferences: fileReferences,
       urls: urls,
       structuredData: structuredData,
-      listsAndTables: listsAndTables
+      listsAndTables: listsAndTables,
     };
   }
 }

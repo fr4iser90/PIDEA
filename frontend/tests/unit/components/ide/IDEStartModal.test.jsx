@@ -47,19 +47,16 @@ describe('IDEStartModal Component', () => {
     mockApiCall.mockImplementation((url) => {
       if (url === '/api/interfaces/available-ides') {
         return Promise.resolve({
-          success: true,
           data: { ides: [] }
         });
       }
       if (url === '/api/ide/detect-workspace-paths') {
         return Promise.resolve({
-          success: true,
           data: { paths: ['/test/workspace1', '/test/workspace2'] }
         });
       }
       if (url === '/api/ide/start') {
         return Promise.resolve({
-          success: true,
           data: { port: 9222, ideType: 'cursor' }
         });
       }
@@ -295,11 +292,11 @@ describe('IDEStartModal Component', () => {
     mockApiCall.mockImplementation((url) => {
       if (url === '/api/ide/start') {
         return Promise.resolve({
-          success: false,
+         
           error: 'Failed to start IDE'
         });
       }
-      return Promise.resolve({ success: true, data: {} });
+      return Promise.resolve({ data: {} });
     });
     
     render(
@@ -366,10 +363,10 @@ describe('IDEStartModal Component', () => {
     mockApiCall.mockImplementation((url) => {
       if (url === '/api/ide/start') {
         return new Promise(resolve => 
-          setTimeout(() => resolve({ success: true, data: {} }), 100)
+          setTimeout(() => resolve({ data: {} }), 100)
         );
       }
-      return Promise.resolve({ success: true, data: {} });
+      return Promise.resolve({ data: {} });
     });
     
     render(

@@ -1,12 +1,18 @@
 /**
  * Cleanup Tasks - Professional Task Management
- * 
+ *
  * This module provides a clean, modular approach to cleanup tasks
  * including session cleanup, secret cleanup, and IDE cleanup.
  */
 
 class CleanupTasks {
-  constructor(autoSecurityManager, authService, taskSessionRepository, ideManager, logger) {
+  constructor(
+    autoSecurityManager,
+    authService,
+    taskSessionRepository,
+    ideManager,
+    logger,
+  ) {
     this.autoSecurityManager = autoSecurityManager;
     this.authService = authService;
     this.taskSessionRepository = taskSessionRepository;
@@ -18,7 +24,7 @@ class CleanupTasks {
    * Setup all cleanup tasks
    */
   setupCleanupTasks() {
-    this.logger.info('Setting up cleanup tasks...');
+    this.logger.info("Setting up cleanup tasks...");
 
     // ========================================
     // SESSION CLEANUP - Session Management
@@ -40,14 +46,16 @@ class CleanupTasks {
     // ========================================
     this.setupIDECleanup();
 
-    this.logger.info('Cleanup tasks setup complete');
+    this.logger.info("Cleanup tasks setup complete");
   }
 
   setupSessionCleanup() {
     // DISABLED: Session cleanup was causing sessions to be deleted immediately after login
     // This was causing the "redirect to login on refresh" issue
-    this.logger.info('Session cleanup DISABLED to prevent immediate session deletion');
-    
+    this.logger.info(
+      "Session cleanup DISABLED to prevent immediate session deletion",
+    );
+
     // Original code (commented out):
     // const sessionCleanupInterval = this.autoSecurityManager.getConfig().session?.cleanupInterval || 900000;
     // setInterval(async () => {
@@ -61,41 +69,49 @@ class CleanupTasks {
   }
 
   setupSecretCleanup() {
-    const secretsCleanupInterval = this.autoSecurityManager.getConfig().security?.cleanupInterval || 86400000;
+    const secretsCleanupInterval =
+      this.autoSecurityManager.getConfig().security?.cleanupInterval ||
+      86400000;
     setInterval(async () => {
       try {
         await this.autoSecurityManager.cleanupOldSecrets();
-        this.logger.info('Cleaned up old secrets');
+        this.logger.info("Cleaned up old secrets");
       } catch (error) {
-        this.logger.error('Failed to cleanup old secrets:', error);
+        this.logger.error("Failed to cleanup old secrets:", error);
       }
     }, secretsCleanupInterval);
   }
 
   setupTaskSessionCleanup() {
-    const taskSessionCleanupInterval = this.autoSecurityManager.getConfig().taskSession?.cleanupInterval || 21600000;
+    const taskSessionCleanupInterval =
+      this.autoSecurityManager.getConfig().taskSession?.cleanupInterval ||
+      21600000;
     setInterval(async () => {
       try {
         if (this.taskSessionRepository) {
           await this.taskSessionRepository.cleanupOldSessions(7); // Keep sessions for 7 days
-          this.logger.info('Cleaned up old Auto-Finish sessions');
+          this.logger.info("Cleaned up old Auto-Finish sessions");
         }
       } catch (error) {
-        this.logger.error('Failed to cleanup old Auto-Finish sessions:', error);
+        this.logger.error("Failed to cleanup old Auto-Finish sessions:", error);
       }
     }, taskSessionCleanupInterval);
   }
 
   setupIDECleanup() {
-    const cleanupInterval = this.autoSecurityManager.getConfig().ide?.cleanupInterval || 30000;
+    const cleanupInterval =
+      this.autoSecurityManager.getConfig().ide?.cleanupInterval || 30000;
     setInterval(async () => {
       try {
-        if (this.ideManager && typeof this.ideManager.cleanupStaleIDEs === 'function') {
+        if (
+          this.ideManager &&
+          typeof this.ideManager.cleanupStaleIDEs === "function"
+        ) {
           await this.ideManager.cleanupStaleIDEs();
           // Silent cleanup - no logging here, IDEManager handles it
         }
       } catch (error) {
-        this.logger.error('Failed to cleanup stale IDE entries:', error);
+        this.logger.error("Failed to cleanup stale IDE entries:", error);
       }
     }, cleanupInterval);
   }

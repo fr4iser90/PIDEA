@@ -2,11 +2,11 @@
  * AutoTestFixController - Controller for auto test fix system
  * Handles API endpoints for automated test correction and coverage improvement
  */
-const AutoTestFixSystem = require('@services/auto-test/AutoTestFixSystem');
-const TestCorrectionCommand = require('@commands/categories/management/TestCorrectionCommand');
-const fs = require('fs'); // Added for fs.existsSync
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const AutoTestFixSystem = require("@services/auto-test/AutoTestFixSystem");
+const TestCorrectionCommand = require("@commands/categories/management/TestCorrectionCommand");
+const fs = require("fs"); // Added for fs.existsSync
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class AutoTestFixController {
   constructor(dependencies = {}) {
@@ -40,21 +40,23 @@ class AutoTestFixController {
         ...otherOptions
       } = req.body;
 
-      this.logger.info('Executing auto test fix', {
+      this.logger.info("Executing auto test fix", {
         projectId,
         userId,
         projectPath,
         clearExisting,
         stopOnError,
         loadExistingTasks,
-        taskStatus
+        taskStatus,
       });
 
       // Validate project path
       const validatedProjectPath = projectPath || process.cwd();
-      
+
       if (!fs.existsSync(validatedProjectPath)) {
-        return res.badRequest('Project path does not exist: ${validatedProjectPath}');
+        return res.badRequest(
+          "Project path does not exist: ${validatedProjectPath}",
+        );
       }
 
       // Execute workflow
@@ -66,17 +68,18 @@ class AutoTestFixController {
         stopOnError,
         loadExistingTasks, // Pass the new option
         taskStatus, // Pass the status filter
-        ...otherOptions
+        ...otherOptions,
       });
 
       return res.success({
         sessionId: result.sessionId,
-        message: loadExistingTasks ? 'Processing existing tasks' : 'Generated and processing new tasks',
-        result: result
+        message: loadExistingTasks
+          ? "Processing existing tasks"
+          : "Generated and processing new tasks",
+        result: result,
       });
-
     } catch (error) {
-      this.logger.error('Auto test fix execution failed:', error.message);
+      this.logger.error("Auto test fix execution failed:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -91,31 +94,29 @@ class AutoTestFixController {
       const { options = {} } = req.body;
       const projectId = req.params.projectId;
 
-      this.logger.info('Analyzing project tests', {
+      this.logger.info("Analyzing project tests", {
         projectId,
-        options
+        options,
       });
 
       // Validate request
       if (!projectId) {
-        return res.badRequest('projectId is required');
+        return res.badRequest("projectId is required");
       }
 
       // Analyze project tests
       const result = await this.autoTestFixSystem.analyzeProjectTests(
-        options.projectPath || process.cwd()
+        options.projectPath || process.cwd(),
       );
 
-      this.logger.info('Project test analysis completed', {
+      this.logger.info("Project test analysis completed", {
         totalIssues: result.totalIssues,
-        hasIssues: result.hasIssues
+        hasIssues: result.hasIssues,
       });
 
-      return res.success({result: result
-      });
-
+      return res.success({ result: result });
     } catch (error) {
-      this.logger.error('Project test analysis failed:', error.message);
+      this.logger.error("Project test analysis failed:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -130,19 +131,17 @@ class AutoTestFixController {
       const { sessionId } = req.params;
       const projectId = req.params.projectId;
 
-      this.logger.info('Getting session status', {
+      this.logger.info("Getting session status", {
         sessionId,
-        projectId
+        projectId,
       });
 
       // Get session status
       const status = this.autoTestFixSystem.getSessionStatus(sessionId);
 
-      return res.success({status: status
-      });
-
+      return res.success({ status: status });
     } catch (error) {
-      this.logger.error('Failed to get session status:', error.message);
+      this.logger.error("Failed to get session status:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -157,20 +156,17 @@ class AutoTestFixController {
       const { sessionId } = req.params;
       const projectId = req.params.projectId;
 
-      this.logger.info('Cancelling session', {
+      this.logger.info("Cancelling session", {
         sessionId,
-        projectId
+        projectId,
       });
 
       // Cancel session
       const success = this.autoTestFixSystem.cancelSession(sessionId);
 
-      return res.success({cancelled: success,
-        sessionId: sessionId
-      });
-
+      return res.success({ cancelled: success, sessionId: sessionId });
     } catch (error) {
-      this.logger.error('Failed to cancel session:', error.message);
+      this.logger.error("Failed to cancel session:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -184,21 +180,29 @@ class AutoTestFixController {
     try {
       const projectId = req.params.projectId;
 
-      this.logger.info('Getting auto test fix statistics', {
-        projectId
+      this.logger.info("Getting auto test fix statistics", {
+        projectId,
       });
 
       // Get statistics from active sessions
-      const activeSessions = Array.from(this.autoTestFixSystem.activeSessions.values());
-      
+      const activeSessions = Array.from(
+        this.autoTestFixSystem.activeSessions.values(),
+      );
+
       // Get task statistics from database
       const projectTasks = await this.taskRepository.findByProject(projectId, {
-        type: 'testing'
+        type: "testing",
       });
 
-      const completedTasks = projectTasks.filter(task => task.status?.value === 'completed');
-      const failedTasks = projectTasks.filter(task => task.status?.value === 'failed');
-      const pendingTasks = projectTasks.filter(task => task.status?.value === 'pending');
+      const completedTasks = projectTasks.filter(
+        (task) => task.status?.value === "completed",
+      );
+      const failedTasks = projectTasks.filter(
+        (task) => task.status?.value === "failed",
+      );
+      const pendingTasks = projectTasks.filter(
+        (task) => task.status?.value === "pending",
+      );
 
       const stats = {
         activeSessions: activeSessions.length,
@@ -209,16 +213,14 @@ class AutoTestFixController {
           total: projectTasks.length,
           completed: completedTasks.length,
           failed: failedTasks.length,
-          pending: pendingTasks.length
+          pending: pendingTasks.length,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
-      return res.success({stats: stats
-      });
-
+      return res.success({ stats: stats });
     } catch (error) {
-      this.logger.error('Failed to get statistics:', error.message);
+      this.logger.error("Failed to get statistics:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -233,17 +235,17 @@ class AutoTestFixController {
       const projectId = req.params.projectId;
       const { status, limit = 50, offset = 0 } = req.query;
 
-      this.logger.info('Getting auto test tasks', {
+      this.logger.info("Getting auto test tasks", {
         projectId,
         status,
         limit,
-        offset
+        offset,
       });
 
       // Get tasks from database with filtering
       const tasks = await this.taskRepository.findByProject(projectId, {
-        type: 'testing',
-        status: status
+        type: "testing",
+        status: status,
       });
 
       // Apply pagination
@@ -255,12 +257,11 @@ class AutoTestFixController {
           total: tasks.length,
           limit: parseInt(limit),
           offset: parseInt(offset),
-          hasMore: offset + limit < tasks.length
-        }
+          hasMore: offset + limit < tasks.length,
+        },
       });
-
     } catch (error) {
-      this.logger.error('Failed to get auto test tasks:', error.message);
+      this.logger.error("Failed to get auto test tasks:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -274,16 +275,16 @@ class AutoTestFixController {
     try {
       const { projectId, taskId } = req.params;
 
-      this.logger.info('Getting auto test task details', {
+      this.logger.info("Getting auto test task details", {
         projectId,
-        taskId
+        taskId,
       });
 
       // Get task from database
       const task = await this.taskRepository.findById(taskId);
-      
+
       if (!task || !task.belongsToProject(projectId)) {
-        return res.notFound('Auto test task not found');
+        return res.notFound("Auto test task not found");
       }
 
       // Get execution history if available
@@ -291,11 +292,10 @@ class AutoTestFixController {
 
       return res.success({
         task: task,
-        executionHistory: executionHistory
+        executionHistory: executionHistory,
       });
-
     } catch (error) {
-      this.logger.error('Failed to get auto test task details:', error.message);
+      this.logger.error("Failed to get auto test task details:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -310,36 +310,37 @@ class AutoTestFixController {
       const { projectId, taskId } = req.params;
       const userId = req.user?.id;
 
-      this.logger.info('Retrying auto test task', {
+      this.logger.info("Retrying auto test task", {
         projectId,
         taskId,
-        userId
+        userId,
       });
 
       // Get task from database
       const task = await this.taskRepository.findById(taskId);
-      
+
       if (!task || !task.belongsToProject(projectId)) {
-        return res.notFound('Auto test task not found');
+        return res.notFound("Auto test task not found");
       }
 
       // Reset task status and retry
-      task.updateStatus('pending');
+      task.updateStatus("pending");
       task.clearExecutionHistory();
       await this.taskRepository.save(task);
 
       // Execute task again
-              // Task execution now handled by WorkflowController
-        const execution = { message: 'Task execution moved to WorkflowController' };
+      // Task execution now handled by WorkflowController
+      const execution = {
+        message: "Task execution moved to WorkflowController",
+      };
 
       return res.success({
         task: task,
         execution: execution,
-        message: 'Auto test task retry initiated'
+        message: "Auto test task retry initiated",
       });
-
     } catch (error) {
-      this.logger.error('Failed to retry auto test task:', error.message);
+      this.logger.error("Failed to retry auto test task:", error.message);
 
       return res.error(error.message, 500);
     }
@@ -355,31 +356,30 @@ class AutoTestFixController {
       const userId = req.user?.id;
       const { status } = req.query;
 
-      this.logger.info('Loading existing tasks', {
+      this.logger.info("Loading existing tasks", {
         projectId,
         userId,
-        status
+        status,
       });
 
       // Load existing tasks
       const tasks = await this.autoTestFixSystem.loadExistingTasks({
         projectId,
         userId,
-        status: status || null
+        status: status || null,
       });
 
       return res.success({
         tasks: tasks,
         count: tasks.length,
-        message: `Loaded ${tasks.length} existing tasks from database`
+        message: `Loaded ${tasks.length} existing tasks from database`,
       });
-
     } catch (error) {
-      this.logger.error('Failed to load existing tasks:', error.message);
+      this.logger.error("Failed to load existing tasks:", error.message);
 
       return res.error(error.message, 500);
     }
   }
 }
 
-module.exports = AutoTestFixController; 
+module.exports = AutoTestFixController;

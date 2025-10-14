@@ -3,13 +3,13 @@
  * Handler for analyzing project structure
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class AnalyzeProjectHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class AnalyzeProjectHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,8 +40,8 @@ class AnalyzeProjectHandler {
       this.logger.info(`Handling command`);
 
       // Validate command
-      if (!command || command.type !== 'AnalyzeProjectCommand') {
-        throw new Error('Invalid command type for AnalyzeProjectHandler');
+      if (!command || command.type !== "AnalyzeProjectCommand") {
+        throw new Error("Invalid command type for AnalyzeProjectHandler");
       }
 
       // Analyze project
@@ -49,37 +49,35 @@ class AnalyzeProjectHandler {
         ...command.options,
         analysisType: command.analysisType,
         includeCache: command.includeCache,
-        workspacePath: command.workspacePath
+        workspacePath: command.workspacePath,
       });
 
       // Publish success event
-      await this.eventBus.publish('project.analyzed', {
+      await this.eventBus.publish("project.analyzed", {
         commandId: command.commandId,
         userId: command.userId,
         analysisType: command.analysisType,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info(`Project analyzed successfully`);
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to analyze project:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('project.analysis.failed', {
+      await this.eventBus.publish("project.analysis.failed", {
         commandId: command.commandId,
         userId: command.userId,
         analysisType: command.analysisType,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -92,12 +90,12 @@ class AnalyzeProjectHandler {
    */
   getInfo() {
     return {
-      name: 'AnalyzeProjectHandler',
-      version: '1.0.0',
-      description: 'Handles IDE project analysis operations',
-      supportedCommands: ['AnalyzeProjectCommand']
+      name: "AnalyzeProjectHandler",
+      version: "1.0.0",
+      description: "Handles IDE project analysis operations",
+      supportedCommands: ["AnalyzeProjectCommand"],
     };
   }
 }
 
-module.exports = AnalyzeProjectHandler; 
+module.exports = AnalyzeProjectHandler;

@@ -2,14 +2,14 @@
  * WorkflowRepository
  * Service for managing workflow persistence and operations
  */
-const { v4: uuidv4 } = require('uuid');
-const ServiceLogger = require('@logging/ServiceLogger');
+const { v4: uuidv4 } = require("uuid");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class WorkflowRepository {
   constructor(workflowExecutionRepository, workflowMetricsRepository) {
     this.executionRepository = workflowExecutionRepository;
     this.metricsRepository = workflowMetricsRepository;
-    this.logger = new ServiceLogger('WorkflowRepository');
+    this.logger = new ServiceLogger("WorkflowRepository");
   }
 
   /**
@@ -19,35 +19,41 @@ class WorkflowRepository {
    */
   async saveExecution(execution) {
     try {
-      this.logger.info('WorkflowRepository: Saving workflow execution', {
+      this.logger.info("WorkflowRepository: Saving workflow execution", {
         executionId: execution.executionId,
         workflowId: execution.workflowId,
-        workflowName: execution.workflowName
+        workflowName: execution.workflowName,
       });
 
       // Save execution
       const savedExecution = await this.executionRepository.create(execution);
-      
+
       // Record initial metrics
       await this.recordExecutionMetrics(savedExecution.execution_id, {
-        metricName: 'execution_started',
+        metricName: "execution_started",
         metricValue: 1,
-        metricUnit: 'count',
-        metricType: 'performance',
-        metricCategory: 'execution_status',
-        metadata: { status: 'started' }
+        metricUnit: "count",
+        metricType: "performance",
+        metricCategory: "execution_status",
+        metadata: { status: "started" },
       });
 
-      this.logger.info('WorkflowRepository: Workflow execution saved successfully', {
-        executionId: savedExecution.execution_id
-      });
+      this.logger.info(
+        "WorkflowRepository: Workflow execution saved successfully",
+        {
+          executionId: savedExecution.execution_id,
+        },
+      );
 
       return savedExecution;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to save workflow execution', {
-        executionId: execution.executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to save workflow execution",
+        {
+          executionId: execution.executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to save workflow execution: ${error.message}`);
     }
   }
@@ -60,57 +66,66 @@ class WorkflowRepository {
    */
   async updateExecution(executionId, updates) {
     try {
-      this.logger.info('WorkflowRepository: Updating workflow execution', {
+      this.logger.info("WorkflowRepository: Updating workflow execution", {
         executionId,
-        updates: Object.keys(updates)
+        updates: Object.keys(updates),
       });
 
-      const updatedExecution = await this.executionRepository.update(executionId, updates);
-      
+      const updatedExecution = await this.executionRepository.update(
+        executionId,
+        updates,
+      );
+
       // Record completion metrics if execution completed
-      if (updates.status === 'completed' && updates.actualDuration) {
+      if (updates.status === "completed" && updates.actualDuration) {
         await this.recordExecutionMetrics(executionId, {
-          metricName: 'execution_duration',
+          metricName: "execution_duration",
           metricValue: updates.actualDuration,
-          metricUnit: 'milliseconds',
-          metricType: 'performance',
-          metricCategory: 'execution_time',
-          metadata: { status: 'completed' }
+          metricUnit: "milliseconds",
+          metricType: "performance",
+          metricCategory: "execution_time",
+          metadata: { status: "completed" },
         });
 
         await this.recordExecutionMetrics(executionId, {
-          metricName: 'execution_completed',
+          metricName: "execution_completed",
           metricValue: 1,
-          metricUnit: 'count',
-          metricType: 'performance',
-          metricCategory: 'execution_status',
-          metadata: { status: 'completed' }
+          metricUnit: "count",
+          metricType: "performance",
+          metricCategory: "execution_status",
+          metadata: { status: "completed" },
         });
       }
 
       // Record failure metrics if execution failed
-      if (updates.status === 'failed') {
+      if (updates.status === "failed") {
         await this.recordExecutionMetrics(executionId, {
-          metricName: 'execution_failed',
+          metricName: "execution_failed",
           metricValue: 1,
-          metricUnit: 'count',
-          metricType: 'performance',
-          metricCategory: 'execution_status',
-          metadata: { status: 'failed', error: updates.errorData }
+          metricUnit: "count",
+          metricType: "performance",
+          metricCategory: "execution_status",
+          metadata: { status: "failed", error: updates.errorData },
         });
       }
 
-      this.logger.info('WorkflowRepository: Workflow execution updated successfully', {
-        executionId,
-        status: updates.status
-      });
+      this.logger.info(
+        "WorkflowRepository: Workflow execution updated successfully",
+        {
+          executionId,
+          status: updates.status,
+        },
+      );
 
       return updatedExecution;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to update workflow execution', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to update workflow execution",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to update workflow execution: ${error.message}`);
     }
   }
@@ -125,24 +140,28 @@ class WorkflowRepository {
     try {
       const metricData = {
         executionId,
-        ...metric
+        ...metric,
       };
 
-      const recordedMetric = await this.metricsRepository.recordMetric(metricData);
-      
-      this.logger.debug('WorkflowRepository: Metric recorded', {
+      const recordedMetric =
+        await this.metricsRepository.recordMetric(metricData);
+
+      this.logger.debug("WorkflowRepository: Metric recorded", {
         executionId,
         metricName: metric.metricName,
-        metricValue: metric.metricValue
+        metricValue: metric.metricValue,
       });
 
       return recordedMetric;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to record execution metrics', {
-        executionId,
-        metricName: metric.metricName,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to record execution metrics",
+        {
+          executionId,
+          metricName: metric.metricName,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to record execution metrics: ${error.message}`);
     }
   }
@@ -154,36 +173,44 @@ class WorkflowRepository {
    */
   async getExecutionWithMetrics(executionId) {
     try {
-      this.logger.debug('WorkflowRepository: Getting execution with metrics', {
-        executionId
+      this.logger.debug("WorkflowRepository: Getting execution with metrics", {
+        executionId,
       });
 
-      const execution = await this.executionRepository.findByExecutionId(executionId);
+      const execution =
+        await this.executionRepository.findByExecutionId(executionId);
       if (!execution) {
-        this.logger.warn('WorkflowRepository: Execution not found', {
-          executionId
+        this.logger.warn("WorkflowRepository: Execution not found", {
+          executionId,
         });
         return null;
       }
 
-      const metrics = await this.metricsRepository.getMetricsForExecution(executionId);
-      
+      const metrics =
+        await this.metricsRepository.getMetricsForExecution(executionId);
+
       const result = {
         ...execution,
-        metrics
+        metrics,
       };
 
-      this.logger.debug('WorkflowRepository: Execution with metrics retrieved', {
-        executionId,
-        metricsCount: metrics.length
-      });
+      this.logger.debug(
+        "WorkflowRepository: Execution with metrics retrieved",
+        {
+          executionId,
+          metricsCount: metrics.length,
+        },
+      );
 
       return result;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to get execution with metrics', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to get execution with metrics",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get execution with metrics: ${error.message}`);
     }
   }
@@ -195,29 +222,34 @@ class WorkflowRepository {
    */
   async getExecutionStatistics(filters = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Getting execution statistics', {
-        filters
+      this.logger.debug("WorkflowRepository: Getting execution statistics", {
+        filters,
       });
 
-      const executionStats = await this.executionRepository.getStatistics(filters);
-      const aggregatedMetrics = await this.metricsRepository.getAggregatedMetrics(filters);
-      
+      const executionStats =
+        await this.executionRepository.getStatistics(filters);
+      const aggregatedMetrics =
+        await this.metricsRepository.getAggregatedMetrics(filters);
+
       const result = {
         executions: executionStats,
-        metrics: aggregatedMetrics
+        metrics: aggregatedMetrics,
       };
 
-      this.logger.debug('WorkflowRepository: Execution statistics retrieved', {
+      this.logger.debug("WorkflowRepository: Execution statistics retrieved", {
         totalExecutions: executionStats.total_executions,
-        metricsCount: aggregatedMetrics.length
+        metricsCount: aggregatedMetrics.length,
       });
 
       return result;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to get execution statistics', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to get execution statistics",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get execution statistics: ${error.message}`);
     }
   }
@@ -230,25 +262,36 @@ class WorkflowRepository {
    */
   async findExecutionsByWorkflowId(workflowId, options = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Finding executions by workflow ID', {
-        workflowId,
-        options
-      });
+      this.logger.debug(
+        "WorkflowRepository: Finding executions by workflow ID",
+        {
+          workflowId,
+          options,
+        },
+      );
 
-      const executions = await this.executionRepository.findByWorkflowId(workflowId, options);
-      
-      this.logger.debug('WorkflowRepository: Executions found by workflow ID', {
+      const executions = await this.executionRepository.findByWorkflowId(
         workflowId,
-        count: executions.length
+        options,
+      );
+
+      this.logger.debug("WorkflowRepository: Executions found by workflow ID", {
+        workflowId,
+        count: executions.length,
       });
 
       return executions;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to find executions by workflow ID', {
-        workflowId,
-        error: error.message
-      });
-      throw new Error(`Failed to find executions by workflow ID: ${error.message}`);
+      this.logger.error(
+        "WorkflowRepository: Failed to find executions by workflow ID",
+        {
+          workflowId,
+          error: error.message,
+        },
+      );
+      throw new Error(
+        `Failed to find executions by workflow ID: ${error.message}`,
+      );
     }
   }
 
@@ -259,23 +302,26 @@ class WorkflowRepository {
    */
   async findExecutionsByTaskId(taskId) {
     try {
-      this.logger.debug('WorkflowRepository: Finding executions by task ID', {
-        taskId
+      this.logger.debug("WorkflowRepository: Finding executions by task ID", {
+        taskId,
       });
 
       const executions = await this.executionRepository.findByTaskId(taskId);
-      
-      this.logger.debug('WorkflowRepository: Executions found by task ID', {
+
+      this.logger.debug("WorkflowRepository: Executions found by task ID", {
         taskId,
-        count: executions.length
+        count: executions.length,
       });
 
       return executions;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to find executions by task ID', {
-        taskId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to find executions by task ID",
+        {
+          taskId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to find executions by task ID: ${error.message}`);
     }
   }
@@ -288,24 +334,30 @@ class WorkflowRepository {
    */
   async findExecutionsByUserId(userId, options = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Finding executions by user ID', {
+      this.logger.debug("WorkflowRepository: Finding executions by user ID", {
         userId,
-        options
+        options,
       });
 
-      const executions = await this.executionRepository.findByUserId(userId, options);
-      
-      this.logger.debug('WorkflowRepository: Executions found by user ID', {
+      const executions = await this.executionRepository.findByUserId(
         userId,
-        count: executions.length
+        options,
+      );
+
+      this.logger.debug("WorkflowRepository: Executions found by user ID", {
+        userId,
+        count: executions.length,
       });
 
       return executions;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to find executions by user ID', {
-        userId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to find executions by user ID",
+        {
+          userId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to find executions by user ID: ${error.message}`);
     }
   }
@@ -318,24 +370,30 @@ class WorkflowRepository {
    */
   async findExecutionsByStatus(status, options = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Finding executions by status', {
+      this.logger.debug("WorkflowRepository: Finding executions by status", {
         status,
-        options
+        options,
       });
 
-      const executions = await this.executionRepository.findByStatus(status, options);
-      
-      this.logger.debug('WorkflowRepository: Executions found by status', {
+      const executions = await this.executionRepository.findByStatus(
         status,
-        count: executions.length
+        options,
+      );
+
+      this.logger.debug("WorkflowRepository: Executions found by status", {
+        status,
+        count: executions.length,
       });
 
       return executions;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to find executions by status', {
-        status,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to find executions by status",
+        {
+          status,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to find executions by status: ${error.message}`);
     }
   }
@@ -347,32 +405,41 @@ class WorkflowRepository {
    */
   async deleteExecution(executionId) {
     try {
-      this.logger.info('WorkflowRepository: Deleting workflow execution', {
-        executionId
+      this.logger.info("WorkflowRepository: Deleting workflow execution", {
+        executionId,
       });
 
       // Delete metrics first (due to foreign key constraints)
       await this.metricsRepository.deleteMetricsForExecution(executionId);
-      
+
       // Delete execution
       const success = await this.executionRepository.delete(executionId);
-      
+
       if (success) {
-        this.logger.info('WorkflowRepository: Workflow execution deleted successfully', {
-          executionId
-        });
+        this.logger.info(
+          "WorkflowRepository: Workflow execution deleted successfully",
+          {
+            executionId,
+          },
+        );
       } else {
-        this.logger.warn('WorkflowRepository: Workflow execution not found for deletion', {
-          executionId
-        });
+        this.logger.warn(
+          "WorkflowRepository: Workflow execution not found for deletion",
+          {
+            executionId,
+          },
+        );
       }
 
       return success;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to delete workflow execution', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to delete workflow execution",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to delete workflow execution: ${error.message}`);
     }
   }
@@ -384,25 +451,30 @@ class WorkflowRepository {
    */
   async cleanupOldExecutions(daysOld = 30) {
     try {
-      this.logger.info('WorkflowRepository: Cleaning up old executions', {
-        daysOld
+      this.logger.info("WorkflowRepository: Cleaning up old executions", {
+        daysOld,
       });
 
-      const deletedExecutions = await this.executionRepository.cleanupOldExecutions(daysOld);
-      const deletedMetrics = await this.metricsRepository.cleanupOldMetrics(daysOld);
-      
-      this.logger.info('WorkflowRepository: Cleanup completed', {
+      const deletedExecutions =
+        await this.executionRepository.cleanupOldExecutions(daysOld);
+      const deletedMetrics =
+        await this.metricsRepository.cleanupOldMetrics(daysOld);
+
+      this.logger.info("WorkflowRepository: Cleanup completed", {
         deletedExecutions,
         deletedMetrics,
-        daysOld
+        daysOld,
       });
 
       return deletedExecutions;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to cleanup old executions', {
-        daysOld,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to cleanup old executions",
+        {
+          daysOld,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to cleanup old executions: ${error.message}`);
     }
   }
@@ -415,24 +487,30 @@ class WorkflowRepository {
    */
   async getMetricsForExecution(executionId, options = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Getting metrics for execution', {
+      this.logger.debug("WorkflowRepository: Getting metrics for execution", {
         executionId,
-        options
+        options,
       });
 
-      const metrics = await this.metricsRepository.getMetricsForExecution(executionId, options);
-      
-      this.logger.debug('WorkflowRepository: Metrics retrieved for execution', {
+      const metrics = await this.metricsRepository.getMetricsForExecution(
         executionId,
-        count: metrics.length
+        options,
+      );
+
+      this.logger.debug("WorkflowRepository: Metrics retrieved for execution", {
+        executionId,
+        count: metrics.length,
       });
 
       return metrics;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to get metrics for execution', {
-        executionId,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to get metrics for execution",
+        {
+          executionId,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get metrics for execution: ${error.message}`);
     }
   }
@@ -444,22 +522,26 @@ class WorkflowRepository {
    */
   async getAggregatedMetrics(filters = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Getting aggregated metrics', {
-        filters
+      this.logger.debug("WorkflowRepository: Getting aggregated metrics", {
+        filters,
       });
 
-      const metrics = await this.metricsRepository.getAggregatedMetrics(filters);
-      
-      this.logger.debug('WorkflowRepository: Aggregated metrics retrieved', {
-        count: metrics.length
+      const metrics =
+        await this.metricsRepository.getAggregatedMetrics(filters);
+
+      this.logger.debug("WorkflowRepository: Aggregated metrics retrieved", {
+        count: metrics.length,
       });
 
       return metrics;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to get aggregated metrics', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to get aggregated metrics",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get aggregated metrics: ${error.message}`);
     }
   }
@@ -471,22 +553,26 @@ class WorkflowRepository {
    */
   async getMetricsStatistics(filters = {}) {
     try {
-      this.logger.debug('WorkflowRepository: Getting metrics statistics', {
-        filters
+      this.logger.debug("WorkflowRepository: Getting metrics statistics", {
+        filters,
       });
 
-      const statistics = await this.metricsRepository.getMetricsStatistics(filters);
-      
-      this.logger.debug('WorkflowRepository: Metrics statistics retrieved', {
-        totalMetrics: statistics.total_metrics
+      const statistics =
+        await this.metricsRepository.getMetricsStatistics(filters);
+
+      this.logger.debug("WorkflowRepository: Metrics statistics retrieved", {
+        totalMetrics: statistics.total_metrics,
       });
 
       return statistics;
     } catch (error) {
-      this.logger.error('WorkflowRepository: Failed to get metrics statistics', {
-        filters,
-        error: error.message
-      });
+      this.logger.error(
+        "WorkflowRepository: Failed to get metrics statistics",
+        {
+          filters,
+          error: error.message,
+        },
+      );
       throw new Error(`Failed to get metrics statistics: ${error.message}`);
     }
   }
@@ -500,4 +586,4 @@ class WorkflowRepository {
   }
 }
 
-module.exports = WorkflowRepository; 
+module.exports = WorkflowRepository;

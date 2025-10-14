@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 /**
  * ProjectAutomationSettings - Project-level automation settings
  * Manages project-specific automation configuration and preferences
@@ -7,7 +7,8 @@ const logger = new Logger('Logger');
 class ProjectAutomationSettings {
   constructor(dependencies = {}) {
     this.projectRepository = dependencies.projectRepository;
-    this.automationPreferencesRepository = dependencies.automationPreferencesRepository;
+    this.automationPreferencesRepository =
+      dependencies.automationPreferencesRepository;
     this.logger = dependencies.logger || console;
     this.cache = new Map();
     this.cacheTimeout = 600000; // 10 minutes
@@ -22,7 +23,9 @@ class ProjectAutomationSettings {
    */
   async setProjectSetting(projectId, automationLevel, options = {}) {
     try {
-      this.logger.info(`Setting automation for project ${projectId}: ${automationLevel}`);
+      this.logger.info(
+        `Setting automation for project ${projectId}: ${automationLevel}`,
+      );
 
       const setting = {
         projectId,
@@ -31,13 +34,13 @@ class ProjectAutomationSettings {
         preferences: options.preferences || {},
         rules: options.rules || [],
         exceptions: options.exceptions || [],
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(projectId, {
         data: setting,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
@@ -53,13 +56,16 @@ class ProjectAutomationSettings {
           automationPreferences: setting.preferences,
           automationRules: setting.rules,
           automationExceptions: setting.exceptions,
-          lastAutomationUpdate: new Date()
+          lastAutomationUpdate: new Date(),
         });
       }
 
       return setting;
     } catch (error) {
-      this.logger.error(`Failed to set setting for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to set setting for project ${projectId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -73,14 +79,17 @@ class ProjectAutomationSettings {
     try {
       // Check cache first
       const cached = this.cache.get(projectId);
-      if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+      if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
         return cached.data;
       }
 
       // Load from database
       let setting = null;
       if (this.automationPreferencesRepository) {
-        setting = await this.automationPreferencesRepository.getProjectSetting(projectId);
+        setting =
+          await this.automationPreferencesRepository.getProjectSetting(
+            projectId,
+          );
       }
 
       // Fallback to project metadata
@@ -90,11 +99,13 @@ class ProjectAutomationSettings {
           setting = {
             projectId,
             automationLevel: project.metadata.automationLevel,
-            confidenceThreshold: project.metadata.automationConfidenceThreshold || 0.8,
+            confidenceThreshold:
+              project.metadata.automationConfidenceThreshold || 0.8,
             preferences: project.metadata.automationPreferences || {},
             rules: project.metadata.automationRules || [],
             exceptions: project.metadata.automationExceptions || [],
-            updatedAt: project.metadata.lastAutomationUpdate || project.updatedAt
+            updatedAt:
+              project.metadata.lastAutomationUpdate || project.updatedAt,
           };
         }
       }
@@ -103,13 +114,16 @@ class ProjectAutomationSettings {
       if (setting) {
         this.cache.set(projectId, {
           data: setting,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
 
       return setting;
     } catch (error) {
-      this.logger.error(`Failed to get setting for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to get setting for project ${projectId}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -149,24 +163,36 @@ class ProjectAutomationSettings {
 
       const updatedSetting = {
         ...setting,
-        rules: [...setting.rules, { ...rule, id: rule.id || Date.now().toString(), createdAt: new Date() }],
-        updatedAt: new Date()
+        rules: [
+          ...setting.rules,
+          {
+            ...rule,
+            id: rule.id || Date.now().toString(),
+            createdAt: new Date(),
+          },
+        ],
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(projectId, {
         data: updatedSetting,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.saveProjectSetting(updatedSetting);
+        await this.automationPreferencesRepository.saveProjectSetting(
+          updatedSetting,
+        );
       }
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`Failed to add rule for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to add rule for project ${projectId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -186,24 +212,29 @@ class ProjectAutomationSettings {
 
       const updatedSetting = {
         ...setting,
-        rules: setting.rules.filter(rule => rule.id !== ruleId),
-        updatedAt: new Date()
+        rules: setting.rules.filter((rule) => rule.id !== ruleId),
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(projectId, {
         data: updatedSetting,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.saveProjectSetting(updatedSetting);
+        await this.automationPreferencesRepository.saveProjectSetting(
+          updatedSetting,
+        );
       }
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`Failed to remove rule for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to remove rule for project ${projectId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -223,24 +254,36 @@ class ProjectAutomationSettings {
 
       const updatedSetting = {
         ...setting,
-        exceptions: [...setting.exceptions, { ...exception, id: exception.id || Date.now().toString(), createdAt: new Date() }],
-        updatedAt: new Date()
+        exceptions: [
+          ...setting.exceptions,
+          {
+            ...exception,
+            id: exception.id || Date.now().toString(),
+            createdAt: new Date(),
+          },
+        ],
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(projectId, {
         data: updatedSetting,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.saveProjectSetting(updatedSetting);
+        await this.automationPreferencesRepository.saveProjectSetting(
+          updatedSetting,
+        );
       }
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`Failed to add exception for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to add exception for project ${projectId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -260,24 +303,31 @@ class ProjectAutomationSettings {
 
       const updatedSetting = {
         ...setting,
-        exceptions: setting.exceptions.filter(exception => exception.id !== exceptionId),
-        updatedAt: new Date()
+        exceptions: setting.exceptions.filter(
+          (exception) => exception.id !== exceptionId,
+        ),
+        updatedAt: new Date(),
       };
 
       // Update cache
       this.cache.set(projectId, {
         data: updatedSetting,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Persist to database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.saveProjectSetting(updatedSetting);
+        await this.automationPreferencesRepository.saveProjectSetting(
+          updatedSetting,
+        );
       }
 
       return updatedSetting;
     } catch (error) {
-      this.logger.error(`Failed to remove exception for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to remove exception for project ${projectId}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -296,7 +346,9 @@ class ProjectAutomationSettings {
 
       // Remove from database
       if (this.automationPreferencesRepository) {
-        await this.automationPreferencesRepository.deleteProjectSetting(projectId);
+        await this.automationPreferencesRepository.deleteProjectSetting(
+          projectId,
+        );
       }
 
       // Clear from project metadata
@@ -307,13 +359,16 @@ class ProjectAutomationSettings {
           automationPreferences: null,
           automationRules: null,
           automationExceptions: null,
-          lastAutomationUpdate: new Date()
+          lastAutomationUpdate: new Date(),
         });
       }
 
       return true;
     } catch (error) {
-      this.logger.error(`Failed to delete setting for project ${projectId}:`, error.message);
+      this.logger.error(
+        `Failed to delete setting for project ${projectId}:`,
+        error.message,
+      );
       return false;
     }
   }
@@ -329,9 +384,11 @@ class ProjectAutomationSettings {
         return [];
       }
 
-      return await this.automationPreferencesRepository.getAllProjectSettings(options);
+      return await this.automationPreferencesRepository.getAllProjectSettings(
+        options,
+      );
     } catch (error) {
-      this.logger.error('Failed to get all project settings:', error.message);
+      this.logger.error("Failed to get all project settings:", error.message);
       return [];
     }
   }
@@ -347,9 +404,14 @@ class ProjectAutomationSettings {
         return [];
       }
 
-      return await this.automationPreferencesRepository.getProjectsByAutomationLevel(automationLevel);
+      return await this.automationPreferencesRepository.getProjectsByAutomationLevel(
+        automationLevel,
+      );
     } catch (error) {
-      this.logger.error(`Failed to get projects by automation level ${automationLevel}:`, error.message);
+      this.logger.error(
+        `Failed to get projects by automation level ${automationLevel}:`,
+        error.message,
+      );
       return [];
     }
   }
@@ -376,14 +438,16 @@ class ProjectAutomationSettings {
   getCacheStats() {
     const now = Date.now();
     const entries = Array.from(this.cache.entries());
-    const validEntries = entries.filter(([_, value]) => (now - value.timestamp) < this.cacheTimeout);
+    const validEntries = entries.filter(
+      ([_, value]) => now - value.timestamp < this.cacheTimeout,
+    );
     const expiredEntries = entries.length - validEntries.length;
 
     return {
       totalEntries: entries.length,
       validEntries: validEntries.length,
       expiredEntries,
-      cacheTimeout: this.cacheTimeout
+      cacheTimeout: this.cacheTimeout,
     };
   }
 
@@ -393,11 +457,11 @@ class ProjectAutomationSettings {
   cleanExpiredCache() {
     const now = Date.now();
     for (const [projectId, value] of this.cache.entries()) {
-      if ((now - value.timestamp) >= this.cacheTimeout) {
+      if (now - value.timestamp >= this.cacheTimeout) {
         this.cache.delete(projectId);
       }
     }
   }
 }
 
-module.exports = ProjectAutomationSettings; 
+module.exports = ProjectAutomationSettings;

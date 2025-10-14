@@ -60,7 +60,6 @@ jest.mock('@/infrastructure/stores/selectors/ProjectSelectors', () => ({
 jest.mock('@/application/services/TaskReviewService', () => {
   return jest.fn().mockImplementation(() => ({
     executeTaskReviewWorkflow: jest.fn().mockResolvedValue({
-      success: true,
       message: 'Review completed successfully for 2 tasks',
       data: { 
         summary: { completedTasks: 2, totalTasks: 2 },
@@ -71,7 +70,6 @@ jest.mock('@/application/services/TaskReviewService', () => {
       }
     }),
     validateTaskStatus: jest.fn().mockResolvedValue({
-      success: true,
       validTasks: [
         { id: 'task-1', title: 'Backend Task', status: { value: 'pending' } },
         { id: 'task-3', title: 'Database Task', status: { value: 'pending' } }
@@ -97,7 +95,6 @@ describe('Task Review Sync Workflow E2E', () => {
     
     // Mock successful sync response
     apiCall.mockResolvedValue({
-      success: true,
       data: { 
         importedCount: 3,
         statusValidation: {
@@ -242,8 +239,7 @@ describe('Task Review Sync Workflow E2E', () => {
       // Mock delayed sync response
       apiCall.mockImplementation(() => 
         new Promise(resolve => 
-          setTimeout(() => resolve({ 
-            success: true, 
+          setTimeout(() => resolve({  
             data: { importedCount: 3 } 
           }), 100)
         )
@@ -271,7 +267,6 @@ describe('Task Review Sync Workflow E2E', () => {
       mockTaskReviewService.executeTaskReviewWorkflow.mockImplementation(() => 
         new Promise(resolve => 
           setTimeout(() => resolve({
-            success: true,
             message: 'Review completed',
             data: { summary: { completedTasks: 1, totalTasks: 1 } }
           }), 100)

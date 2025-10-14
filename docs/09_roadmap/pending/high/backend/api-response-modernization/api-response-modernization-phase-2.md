@@ -33,14 +33,14 @@ Update all frontend services and repositories to handle flat API responses witho
 ```javascript
 // Backend response
 {
-  success: true,
+ 
   data: { /* actual data */ },
   timestamp: "2025-10-14T02:46:06.000Z"
 }
 
 // Error response
 {
-  success: false,
+ 
   error: "Error message",
   details: { /* error details */ }
 }
@@ -77,7 +77,7 @@ async call(endpoint, options = {}, projectId = null) {
     return data;
     
   } catch (error) {
-    return { success: false, error: error.message };
+    return { error: error.message };
   }
 }
 ```

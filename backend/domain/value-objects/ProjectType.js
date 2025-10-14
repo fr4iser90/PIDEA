@@ -3,19 +3,19 @@
  * Manages project types with detection and business logic
  */
 class ProjectType {
-  static MONOREPO = 'monorepo';
-  static SINGLE_REPO = 'single_repo';
-  static MICROSERVICES = 'microservices';
-  static FRONTEND = 'frontend';
-  static BACKEND = 'backend';
-  static FULLSTACK = 'fullstack';
-  static MOBILE = 'mobile';
-  static DESKTOP = 'desktop';
-  static LIBRARY = 'library';
-  static API = 'api';
-  static CLI = 'cli';
-  static PLUGIN = 'plugin';
-  static UNKNOWN = 'unknown';
+  static MONOREPO = "monorepo";
+  static SINGLE_REPO = "single_repo";
+  static MICROSERVICES = "microservices";
+  static FRONTEND = "frontend";
+  static BACKEND = "backend";
+  static FULLSTACK = "fullstack";
+  static MOBILE = "mobile";
+  static DESKTOP = "desktop";
+  static LIBRARY = "library";
+  static API = "api";
+  static CLI = "cli";
+  static PLUGIN = "plugin";
+  static UNKNOWN = "unknown";
 
   constructor(type) {
     this._validate(type);
@@ -79,10 +79,7 @@ class ProjectType {
   }
 
   requiresFrontendStrategy() {
-    return [
-      ProjectType.FRONTEND,
-      ProjectType.FULLSTACK
-    ].includes(this._value);
+    return [ProjectType.FRONTEND, ProjectType.FULLSTACK].includes(this._value);
   }
 
   requiresBackendStrategy() {
@@ -90,58 +87,86 @@ class ProjectType {
       ProjectType.BACKEND,
       ProjectType.FULLSTACK,
       ProjectType.API,
-      ProjectType.MICROSERVICES
+      ProjectType.MICROSERVICES,
     ].includes(this._value);
   }
 
   requiresMonorepoStrategy() {
-    return [
-      ProjectType.MONOREPO
-    ].includes(this._value);
+    return [ProjectType.MONOREPO].includes(this._value);
   }
 
   requiresMicroservicesStrategy() {
-    return [
-      ProjectType.MICROSERVICES
-    ].includes(this._value);
+    return [ProjectType.MICROSERVICES].includes(this._value);
   }
 
   getDefaultStrategies() {
     const strategyMap = {
-      [ProjectType.MONOREPO]: ['MonorepoStrategy'],
-      [ProjectType.SINGLE_REPO]: ['SingleRepoStrategy'],
-      [ProjectType.MICROSERVICES]: ['MicroservicesStrategy'],
-      [ProjectType.FRONTEND]: ['FrontendStrategy'],
-      [ProjectType.BACKEND]: ['BackendStrategy'],
-      [ProjectType.FULLSTACK]: ['FullStackStrategy'],
-      [ProjectType.MOBILE]: ['MobileStrategy'],
-      [ProjectType.DESKTOP]: ['DesktopStrategy'],
-      [ProjectType.LIBRARY]: ['SingleRepoStrategy'],
-      [ProjectType.API]: ['BackendStrategy'],
-      [ProjectType.CLI]: ['SingleRepoStrategy'],
-      [ProjectType.PLUGIN]: ['SingleRepoStrategy'],
-      [ProjectType.UNKNOWN]: ['SingleRepoStrategy']
+      [ProjectType.MONOREPO]: ["MonorepoStrategy"],
+      [ProjectType.SINGLE_REPO]: ["SingleRepoStrategy"],
+      [ProjectType.MICROSERVICES]: ["MicroservicesStrategy"],
+      [ProjectType.FRONTEND]: ["FrontendStrategy"],
+      [ProjectType.BACKEND]: ["BackendStrategy"],
+      [ProjectType.FULLSTACK]: ["FullStackStrategy"],
+      [ProjectType.MOBILE]: ["MobileStrategy"],
+      [ProjectType.DESKTOP]: ["DesktopStrategy"],
+      [ProjectType.LIBRARY]: ["SingleRepoStrategy"],
+      [ProjectType.API]: ["BackendStrategy"],
+      [ProjectType.CLI]: ["SingleRepoStrategy"],
+      [ProjectType.PLUGIN]: ["SingleRepoStrategy"],
+      [ProjectType.UNKNOWN]: ["SingleRepoStrategy"],
     };
-    return strategyMap[this._value] || ['SingleRepoStrategy'];
+    return strategyMap[this._value] || ["SingleRepoStrategy"];
   }
 
   getDefaultTemplates() {
     const templateMap = {
-      [ProjectType.MONOREPO]: ['monorepo-analysis', 'monorepo-build', 'monorepo-deploy'],
-      [ProjectType.SINGLE_REPO]: ['basic-analysis', 'basic-build', 'basic-test'],
-      [ProjectType.MICROSERVICES]: ['microservices-analysis', 'microservices-deploy', 'microservices-test'],
-      [ProjectType.FRONTEND]: ['frontend-analysis', 'frontend-build', 'frontend-test'],
-      [ProjectType.BACKEND]: ['backend-analysis', 'backend-build', 'backend-test'],
-      [ProjectType.FULLSTACK]: ['fullstack-analysis', 'fullstack-build', 'fullstack-deploy'],
-      [ProjectType.MOBILE]: ['mobile-analysis', 'mobile-build', 'mobile-test'],
-      [ProjectType.DESKTOP]: ['desktop-analysis', 'desktop-build', 'desktop-test'],
-      [ProjectType.LIBRARY]: ['library-analysis', 'library-build', 'library-test'],
-      [ProjectType.API]: ['api-analysis', 'api-build', 'api-test'],
-      [ProjectType.CLI]: ['cli-analysis', 'cli-build', 'cli-test'],
-      [ProjectType.PLUGIN]: ['plugin-analysis', 'plugin-build', 'plugin-test'],
-      [ProjectType.UNKNOWN]: ['basic-analysis', 'basic-build']
+      [ProjectType.MONOREPO]: [
+        "monorepo-analysis",
+        "monorepo-build",
+        "monorepo-deploy",
+      ],
+      [ProjectType.SINGLE_REPO]: [
+        "basic-analysis",
+        "basic-build",
+        "basic-test",
+      ],
+      [ProjectType.MICROSERVICES]: [
+        "microservices-analysis",
+        "microservices-deploy",
+        "microservices-test",
+      ],
+      [ProjectType.FRONTEND]: [
+        "frontend-analysis",
+        "frontend-build",
+        "frontend-test",
+      ],
+      [ProjectType.BACKEND]: [
+        "backend-analysis",
+        "backend-build",
+        "backend-test",
+      ],
+      [ProjectType.FULLSTACK]: [
+        "fullstack-analysis",
+        "fullstack-build",
+        "fullstack-deploy",
+      ],
+      [ProjectType.MOBILE]: ["mobile-analysis", "mobile-build", "mobile-test"],
+      [ProjectType.DESKTOP]: [
+        "desktop-analysis",
+        "desktop-build",
+        "desktop-test",
+      ],
+      [ProjectType.LIBRARY]: [
+        "library-analysis",
+        "library-build",
+        "library-test",
+      ],
+      [ProjectType.API]: ["api-analysis", "api-build", "api-test"],
+      [ProjectType.CLI]: ["cli-analysis", "cli-build", "cli-test"],
+      [ProjectType.PLUGIN]: ["plugin-analysis", "plugin-build", "plugin-test"],
+      [ProjectType.UNKNOWN]: ["basic-analysis", "basic-build"],
     };
-    return templateMap[this._value] || ['basic-analysis'];
+    return templateMap[this._value] || ["basic-analysis"];
   }
 
   getComplexityScore() {
@@ -158,7 +183,7 @@ class ProjectType {
       [ProjectType.CLI]: 2,
       [ProjectType.PLUGIN]: 2,
       [ProjectType.SINGLE_REPO]: 1,
-      [ProjectType.UNKNOWN]: 1
+      [ProjectType.UNKNOWN]: 1,
     };
     return complexityMap[this._value] || 1;
   }
@@ -177,7 +202,7 @@ class ProjectType {
       ProjectType.API,
       ProjectType.CLI,
       ProjectType.PLUGIN,
-      ProjectType.UNKNOWN
+      ProjectType.UNKNOWN,
     ];
 
     if (!validTypes.includes(type)) {
@@ -202,22 +227,45 @@ class ProjectType {
       return new ProjectType(ProjectType.UNKNOWN);
     }
 
-    const fileNames = files.map(f => f.toLowerCase());
-    const hasPackageJson = fileNames.some(f => f.includes('package.json'));
-    const hasLernaJson = fileNames.some(f => f.includes('lerna.json'));
-    const hasYarnWorkspaces = fileNames.some(f => f.includes('yarn.lock')) && fileNames.some(f => f.includes('workspaces'));
-    const hasDockerCompose = fileNames.some(f => f.includes('docker-compose'));
-    const hasKubernetes = fileNames.some(f => f.includes('kubernetes') || f.includes('k8s'));
-    const hasReact = fileNames.some(f => f.includes('react') || f.includes('jsx') || f.includes('tsx'));
-    const hasVue = fileNames.some(f => f.includes('vue'));
-    const hasAngular = fileNames.some(f => f.includes('angular'));
-    const hasExpress = fileNames.some(f => f.includes('express'));
-    const hasFastify = fileNames.some(f => f.includes('fastify'));
-    const hasNestJS = fileNames.some(f => f.includes('nest'));
-    const hasMobile = fileNames.some(f => f.includes('react-native') || f.includes('flutter') || f.includes('ios') || f.includes('android'));
-    const hasDesktop = fileNames.some(f => f.includes('electron') || f.includes('tauri'));
-    const hasCLI = fileNames.some(f => f.includes('bin/') || f.includes('cli') || f.includes('command'));
-    const hasAPI = fileNames.some(f => f.includes('api/') || f.includes('routes/') || f.includes('controllers/'));
+    const fileNames = files.map((f) => f.toLowerCase());
+    const hasPackageJson = fileNames.some((f) => f.includes("package.json"));
+    const hasLernaJson = fileNames.some((f) => f.includes("lerna.json"));
+    const hasYarnWorkspaces =
+      fileNames.some((f) => f.includes("yarn.lock")) &&
+      fileNames.some((f) => f.includes("workspaces"));
+    const hasDockerCompose = fileNames.some((f) =>
+      f.includes("docker-compose"),
+    );
+    const hasKubernetes = fileNames.some(
+      (f) => f.includes("kubernetes") || f.includes("k8s"),
+    );
+    const hasReact = fileNames.some(
+      (f) => f.includes("react") || f.includes("jsx") || f.includes("tsx"),
+    );
+    const hasVue = fileNames.some((f) => f.includes("vue"));
+    const hasAngular = fileNames.some((f) => f.includes("angular"));
+    const hasExpress = fileNames.some((f) => f.includes("express"));
+    const hasFastify = fileNames.some((f) => f.includes("fastify"));
+    const hasNestJS = fileNames.some((f) => f.includes("nest"));
+    const hasMobile = fileNames.some(
+      (f) =>
+        f.includes("react-native") ||
+        f.includes("flutter") ||
+        f.includes("ios") ||
+        f.includes("android"),
+    );
+    const hasDesktop = fileNames.some(
+      (f) => f.includes("electron") || f.includes("tauri"),
+    );
+    const hasCLI = fileNames.some(
+      (f) => f.includes("bin/") || f.includes("cli") || f.includes("command"),
+    );
+    const hasAPI = fileNames.some(
+      (f) =>
+        f.includes("api/") ||
+        f.includes("routes/") ||
+        f.includes("controllers/"),
+    );
     const hasFrontend = hasReact || hasVue || hasAngular;
     const hasBackend = hasExpress || hasFastify || hasNestJS || hasAPI;
 
@@ -279,9 +327,9 @@ class ProjectType {
       ProjectType.API,
       ProjectType.CLI,
       ProjectType.PLUGIN,
-      ProjectType.UNKNOWN
+      ProjectType.UNKNOWN,
     ];
   }
 }
 
-module.exports = ProjectType; 
+module.exports = ProjectType;

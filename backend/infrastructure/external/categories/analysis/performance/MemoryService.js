@@ -1,21 +1,21 @@
 /**
  * MemoryService - Infrastructure Layer
  * Memory monitoring and analysis service
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Memory performance monitoring and analysis
  */
 
-const Logger = require('@logging/Logger');
-const os = require('os');
-const { exec } = require('child_process');
-const { promisify } = require('util');
+const Logger = require("@logging/Logger");
+const os = require("os");
+const { exec } = require("child_process");
+const { promisify } = require("util");
 
 const execAsync = promisify(exec);
 
 class MemoryService {
   constructor() {
-    this.logger = new Logger('MemoryService');
+    this.logger = new Logger("MemoryService");
     this.baseUrl = process.env.MEMORY_API_URL;
     this.apiKey = process.env.MEMORY_API_KEY;
     this.timeout = parseInt(process.env.MEMORY_TIMEOUT) || 30000;
@@ -23,36 +23,37 @@ class MemoryService {
 
   async analyze(params) {
     try {
-      this.logger.info('Starting memory analysis', { projectId: params.projectId });
-      
+      this.logger.info("Starting memory analysis", {
+        projectId: params.projectId,
+      });
+
       const { projectPath, config = {} } = config;
       const memoryConfig = {
         ...config,
         duration: config.duration || 60, // seconds
         interval: config.interval || 5, // seconds
-        includeProcesses: config.includeProcesses !== false
+        includeProcesses: config.includeProcesses !== false,
       };
 
       const result = await this.analyzeMemoryUsage(projectPath, memoryConfig);
-      
-      this.logger.info('Memory analysis completed successfully', { 
+
+      this.logger.info("Memory analysis completed successfully", {
         projectId: params.projectId,
-        samples: result.samples?.length || 0 
+        samples: result.samples?.length || 0,
       });
 
       return {
-        success: true,
         data: result,
         metadata: {
-          scanner: 'memory',
+          scanner: "memory",
           timestamp: new Date().toISOString(),
-          config: memoryConfig
-        }
+          config: memoryConfig,
+        },
       };
     } catch (error) {
-      this.logger.error('Memory analysis failed', { 
-        projectId: params.projectId, 
-        error: error.message 
+      this.logger.error("Memory analysis failed", {
+        projectId: params.projectId,
+        error: error.message,
       });
       throw error;
     }
@@ -61,29 +62,31 @@ class MemoryService {
   async analyzeMemoryUsage(projectPath, config) {
     const samples = [];
     const startTime = Date.now();
-    const endTime = startTime + (config.duration * 1000);
+    const endTime = startTime + config.duration * 1000;
 
     while (Date.now() < endTime) {
       const sample = await this.collectMemorySample(projectPath, config);
       samples.push(sample);
-      
+
       // Wait for next interval
-      await new Promise(resolve => setTimeout(resolve, config.interval * 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, config.interval * 1000),
+      );
     }
 
     return {
       samples: samples,
       summary: this.calculateMemorySummary(samples),
-      recommendations: this.generateMemoryRecommendations(samples)
+      recommendations: this.generateMemoryRecommendations(samples),
     };
   }
 
   async collectMemorySample(projectPath, config) {
     const timestamp = new Date().toISOString();
-    
+
     // System memory info
     const systemMemory = this.getSystemMemoryInfo();
-    
+
     // Process memory info (if enabled)
     let processMemory = null;
     if (config.includeProcesses) {
@@ -94,7 +97,7 @@ class MemoryService {
       timestamp: timestamp,
       system: systemMemory,
       processes: processMemory,
-      projectPath: projectPath
+      projectPath: projectPath,
     };
   }
 
@@ -109,7 +112,7 @@ class MemoryService {
       free: freeMem,
       used: usedMem,
       usagePercent: usagePercent,
-      available: freeMem
+      available: freeMem,
     };
   }
 
@@ -125,14 +128,16 @@ class MemoryService {
           processMemory.push({
             pid: process.pid,
             name: process.name,
-            memory: memoryInfo
+            memory: memoryInfo,
           });
         }
       }
 
       return processMemory;
     } catch (error) {
-      this.logger.warn('Failed to get process memory info', { error: error.message });
+      this.logger.warn("Failed to get process memory info", {
+        error: error.message,
+      });
       return [];
     }
   }
@@ -140,17 +145,21 @@ class MemoryService {
   async findProjectProcesses(projectPath) {
     try {
       // Find processes that might be related to the project
-      const { stdout } = await execAsync('ps aux', { timeout: 10000 });
-      const lines = stdout.split('\n');
+      const { stdout } = await execAsync("ps aux", { timeout: 10000 });
+      const lines = stdout.split("\n");
       const processes = [];
 
       for (const line of lines) {
-        if (line.includes(projectPath) || line.includes('node') || line.includes('npm')) {
+        if (
+          line.includes(projectPath) ||
+          line.includes("node") ||
+          line.includes("npm")
+        ) {
           const parts = line.trim().split(/\s+/);
           if (parts.length >= 2) {
             processes.push({
               pid: parseInt(parts[1]),
-              name: parts[10] || parts[0]
+              name: parts[10] || parts[0],
             });
           }
         }
@@ -158,24 +167,29 @@ class MemoryService {
 
       return processes;
     } catch (error) {
-      this.logger.warn('Failed to find project processes', { error: error.message });
+      this.logger.warn("Failed to find project processes", {
+        error: error.message,
+      });
       return [];
     }
   }
 
   async getProcessMemory(pid) {
     try {
-      const { stdout } = await execAsync(`ps -p ${pid} -o pid,rss,vsz,pcpu --no-headers`, { timeout: 5000 });
+      const { stdout } = await execAsync(
+        `ps -p ${pid} -o pid,rss,vsz,pcpu --no-headers`,
+        { timeout: 5000 },
+      );
       const parts = stdout.trim().split(/\s+/);
-      
+
       if (parts.length >= 4) {
         return {
           rss: parseInt(parts[1]) * 1024, // Convert KB to bytes
           vsz: parseInt(parts[2]) * 1024, // Convert KB to bytes
-          cpu: parseFloat(parts[3])
+          cpu: parseFloat(parts[3]),
         };
       }
-      
+
       return null;
     } catch (error) {
       return null;
@@ -188,31 +202,37 @@ class MemoryService {
         averageUsage: 0,
         peakUsage: 0,
         lowUsage: 0,
-        trend: 'stable'
+        trend: "stable",
       };
     }
 
-    const usagePercentages = samples.map(s => s.system.usagePercent);
-    const averageUsage = usagePercentages.reduce((a, b) => a + b, 0) / usagePercentages.length;
+    const usagePercentages = samples.map((s) => s.system.usagePercent);
+    const averageUsage =
+      usagePercentages.reduce((a, b) => a + b, 0) / usagePercentages.length;
     const peakUsage = Math.max(...usagePercentages);
     const lowUsage = Math.min(...usagePercentages);
 
     // Calculate trend
-    const firstHalf = usagePercentages.slice(0, Math.floor(usagePercentages.length / 2));
-    const secondHalf = usagePercentages.slice(Math.floor(usagePercentages.length / 2));
+    const firstHalf = usagePercentages.slice(
+      0,
+      Math.floor(usagePercentages.length / 2),
+    );
+    const secondHalf = usagePercentages.slice(
+      Math.floor(usagePercentages.length / 2),
+    );
     const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
     const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-    
-    let trend = 'stable';
-    if (secondAvg > firstAvg + 5) trend = 'increasing';
-    else if (secondAvg < firstAvg - 5) trend = 'decreasing';
+
+    let trend = "stable";
+    if (secondAvg > firstAvg + 5) trend = "increasing";
+    else if (secondAvg < firstAvg - 5) trend = "decreasing";
 
     return {
       averageUsage: averageUsage,
       peakUsage: peakUsage,
       lowUsage: lowUsage,
       trend: trend,
-      samples: samples.length
+      samples: samples.length,
     };
   }
 
@@ -222,37 +242,42 @@ class MemoryService {
 
     if (summary.averageUsage > 80) {
       recommendations.push({
-        type: 'warning',
-        message: 'High memory usage detected. Consider optimizing memory usage or increasing available memory.',
-        severity: 'high'
+        type: "warning",
+        message:
+          "High memory usage detected. Consider optimizing memory usage or increasing available memory.",
+        severity: "high",
       });
     }
 
     if (summary.peakUsage > 90) {
       recommendations.push({
-        type: 'critical',
-        message: 'Critical memory usage detected. Immediate action required to prevent system instability.',
-        severity: 'critical'
+        type: "critical",
+        message:
+          "Critical memory usage detected. Immediate action required to prevent system instability.",
+        severity: "critical",
       });
     }
 
-    if (summary.trend === 'increasing') {
+    if (summary.trend === "increasing") {
       recommendations.push({
-        type: 'info',
-        message: 'Memory usage is trending upward. Monitor for potential memory leaks.',
-        severity: 'medium'
+        type: "info",
+        message:
+          "Memory usage is trending upward. Monitor for potential memory leaks.",
+        severity: "medium",
       });
     }
 
     if (samples.length > 0) {
       const processMemory = samples[samples.length - 1].processes || [];
-      const highMemoryProcesses = processMemory.filter(p => p.memory.rss > 100 * 1024 * 1024); // 100MB
-      
+      const highMemoryProcesses = processMemory.filter(
+        (p) => p.memory.rss > 100 * 1024 * 1024,
+      ); // 100MB
+
       if (highMemoryProcesses.length > 0) {
         recommendations.push({
-          type: 'optimization',
-          message: `High memory processes detected: ${highMemoryProcesses.map(p => p.name).join(', ')}`,
-          severity: 'medium'
+          type: "optimization",
+          message: `High memory processes detected: ${highMemoryProcesses.map((p) => p.name).join(", ")}`,
+          severity: "medium",
         });
       }
     }
@@ -262,14 +287,14 @@ class MemoryService {
 
   async getConfiguration() {
     return {
-      name: 'Memory Monitoring Service',
-      version: '1.0.0',
-      capabilities: ['memory-monitoring', 'process-tracking', 'trend-analysis'],
+      name: "Memory Monitoring Service",
+      version: "1.0.0",
+      capabilities: ["memory-monitoring", "process-tracking", "trend-analysis"],
       configuration: {
         baseUrl: this.baseUrl,
         timeout: this.timeout,
-        hasApiKey: !!this.apiKey
-      }
+        hasApiKey: !!this.apiKey,
+      },
     };
   }
 
@@ -277,18 +302,18 @@ class MemoryService {
     try {
       const systemMemory = this.getSystemMemoryInfo();
       return {
-        status: 'healthy',
+        status: "healthy",
         systemMemory: systemMemory,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
 }
 
-module.exports = MemoryService; 
+module.exports = MemoryService;

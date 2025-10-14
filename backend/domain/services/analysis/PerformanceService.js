@@ -2,7 +2,13 @@
  * PerformanceService - Domain service for performance analysis
  */
 class PerformanceService {
-  constructor(performanceAnalyzer, eventBus, logger, analysisOutputService, analysisRepository) {
+  constructor(
+    performanceAnalyzer,
+    eventBus,
+    logger,
+    analysisOutputService,
+    analysisRepository,
+  ) {
     this.performanceAnalyzer = performanceAnalyzer;
     this.eventBus = eventBus || { emit: () => {} };
     this.logger = logger || { info: () => {}, error: () => {}, warn: () => {} };
@@ -22,47 +28,63 @@ class PerformanceService {
       this.logger.info(`Starting performance analysis for project`);
 
       // Check for existing recent analysis
-      const existingAnalysis = await this.checkExistingAnalysis(projectId, 'performance');
+      const existingAnalysis = await this.checkExistingAnalysis(
+        projectId,
+        "performance",
+      );
       if (existingAnalysis && !options.forceRefresh) {
-        const shouldSkip = await this.shouldSkipAnalysis(existingAnalysis, 'performance');
+        const shouldSkip = await this.shouldSkipAnalysis(
+          existingAnalysis,
+          "performance",
+        );
         if (shouldSkip) {
           this.logger.info(`Recent performance analysis found, skipping`);
           return existingAnalysis.data || existingAnalysis.result_data;
         }
       }
 
-      const analysis = await this.performanceAnalyzer.analyzePerformance(projectPath, options);
+      const analysis = await this.performanceAnalyzer.analyzePerformance(
+        projectPath,
+        options,
+      );
 
       // Save to file
       if (this.analysisOutputService) {
         const fileResult = await this.analysisOutputService.saveAnalysisResult(
-          projectId, 
-          'performance', 
-          analysis
+          projectId,
+          "performance",
+          analysis,
         );
-        
+
         // Save to database
         if (this.analysisRepository) {
-          const AnalysisResult = require('@entities/AnalysisResult');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+          const AnalysisResult = require("@entities/AnalysisResult");
+          const Logger = require("@logging/Logger");
+          const logger = new Logger("Logger");
           const analysisResult = AnalysisResult.create(
-            projectId, 
-            'performance', 
-            analysis, 
-            fileResult.filepath
+            projectId,
+            "performance",
+            analysis,
+            fileResult.filepath,
           );
           await this.analysisRepository.save(analysisResult);
         }
       }
 
       this.logger.info(`Performance analysis completed for project`);
-      this.eventBus.emit('performance:analysis:completed', { projectPath, analysis, projectId });
+      this.eventBus.emit("performance:analysis:completed", {
+        projectPath,
+        analysis,
+        projectId,
+      });
 
       return analysis;
     } catch (error) {
       this.logger.error(`Performance analysis failed:`, error.message);
-      this.eventBus.emit('performance:analysis:failed', { projectPath, error: error.message });
+      this.eventBus.emit("performance:analysis:failed", {
+        projectPath,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -74,7 +96,9 @@ const logger = new Logger('Logger');
    */
   async analyzeBuildPerformance(projectPath) {
     try {
-      return await this.performanceAnalyzer.analyzeBuildPerformance(projectPath);
+      return await this.performanceAnalyzer.analyzeBuildPerformance(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Build performance analysis failed:`, error);
       throw error;
@@ -102,7 +126,9 @@ const logger = new Logger('Logger');
    */
   async analyzeRuntimePerformance(projectPath) {
     try {
-      return await this.performanceAnalyzer.analyzeRuntimePerformance(projectPath);
+      return await this.performanceAnalyzer.analyzeRuntimePerformance(
+        projectPath,
+      );
     } catch (error) {
       this.logger.error(`Runtime performance analysis failed:`, error);
       throw error;
@@ -144,7 +170,9 @@ const logger = new Logger('Logger');
    */
   async generateRecommendations(analysis) {
     try {
-      return await this.performanceAnalyzer.generatePerformanceRecommendations(analysis);
+      return await this.performanceAnalyzer.generatePerformanceRecommendations(
+        analysis,
+      );
     } catch (error) {
       this.logger.error(`Performance recommendation generation failed:`, error);
       throw error;
@@ -167,11 +195,11 @@ const logger = new Logger('Logger');
    * @returns {string} Performance level
    */
   getPerformanceLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -181,7 +209,7 @@ const logger = new Logger('Logger');
    */
   getCriticalIssues(analysis) {
     if (!analysis || !analysis.issues) return [];
-    return analysis.issues.filter(issue => issue.severity === 'critical');
+    return analysis.issues.filter((issue) => issue.severity === "critical");
   }
 
   /**
@@ -191,13 +219,15 @@ const logger = new Logger('Logger');
    */
   getPerformanceSummary(analysis) {
     if (!analysis) return {};
-    
+
     const issues = analysis.issues || [];
-    const criticalIssues = issues.filter(issue => issue.severity === 'critical');
-    const highIssues = issues.filter(issue => issue.severity === 'high');
-    const mediumIssues = issues.filter(issue => issue.severity === 'medium');
-    const lowIssues = issues.filter(issue => issue.severity === 'low');
-    
+    const criticalIssues = issues.filter(
+      (issue) => issue.severity === "critical",
+    );
+    const highIssues = issues.filter((issue) => issue.severity === "high");
+    const mediumIssues = issues.filter((issue) => issue.severity === "medium");
+    const lowIssues = issues.filter((issue) => issue.severity === "low");
+
     return {
       totalIssues: issues.length,
       criticalIssues: criticalIssues.length,
@@ -205,7 +235,9 @@ const logger = new Logger('Logger');
       mediumIssues: mediumIssues.length,
       lowIssues: lowIssues.length,
       overallScore: analysis.performanceScore || 0,
-      performanceLevel: this.getPerformanceLevel(analysis.performanceScore || 0)
+      performanceLevel: this.getPerformanceLevel(
+        analysis.performanceScore || 0,
+      ),
     };
   }
 
@@ -238,8 +270,12 @@ const logger = new Logger('Logger');
   async checkExistingAnalysis(projectId, analysisType) {
     try {
       if (!this.analysisRepository) return null;
-      
-      const existingAnalyses = await this.analysisRepository.findByProjectIdAndType(projectId, analysisType);
+
+      const existingAnalyses =
+        await this.analysisRepository.findByProjectIdAndType(
+          projectId,
+          analysisType,
+        );
       return existingAnalyses.length > 0 ? existingAnalyses[0] : null;
     } catch (error) {
       this.logger.warn(`Failed to check existing analysis:`, error.message);
@@ -257,18 +293,24 @@ const logger = new Logger('Logger');
     if (!existingAnalysis) return false;
 
     // Check if analysis is recent (within last 2 hours for performance)
-    const lastUpdate = new Date(existingAnalysis.timestamp || existingAnalysis.created_at);
+    const lastUpdate = new Date(
+      existingAnalysis.timestamp || existingAnalysis.created_at,
+    );
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    
+
     if (lastUpdate > twoHoursAgo) {
-      this.logger.info(`Analysis is recent (${analysisType}), considering skip`);
+      this.logger.info(
+        `Analysis is recent (${analysisType}), considering skip`,
+      );
       return true;
     }
 
     // Check if analysis is older than 24 hours (force refresh)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     if (lastUpdate < oneDayAgo) {
-      this.logger.info(`Analysis is older than 24 hours (${analysisType}), forcing refresh`);
+      this.logger.info(
+        `Analysis is older than 24 hours (${analysisType}), forcing refresh`,
+      );
       return false;
     }
 
@@ -276,4 +318,4 @@ const logger = new Logger('Logger');
   }
 }
 
-module.exports = PerformanceService; 
+module.exports = PerformanceService;

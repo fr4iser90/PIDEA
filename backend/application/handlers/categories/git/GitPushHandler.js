@@ -3,8 +3,8 @@
  * Handler for pushing changes to remote Git repository
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitPushHandler {
@@ -18,19 +18,22 @@ class GitPushHandler {
       // Validate command
       command.validate();
 
-      const { projectPath, branch, remote, setUpstream } = command.getCommandData();
+      const { projectPath, branch, remote, setUpstream } =
+        command.getCommandData();
 
-      this.logger.info('GitPushHandler: Executing git push', {
+      this.logger.info("GitPushHandler: Executing git push", {
         projectPath,
         branch,
         remote,
-        setUpstream
+        setUpstream,
       });
 
       // Get current branch if not specified
       let currentBranch = branch;
       if (!currentBranch) {
-        const branchResult = await execAsync('git branch --show-current', { cwd: projectPath });
+        const branchResult = await execAsync("git branch --show-current", {
+          cwd: projectPath,
+        });
         currentBranch = branchResult.stdout.trim();
       }
 
@@ -43,35 +46,33 @@ class GitPushHandler {
       // Execute git push command
       const result = await execAsync(pushCommand, { cwd: projectPath });
 
-      this.logger.info('GitPushHandler: Git push completed successfully', {
-        branch: currentBranch,
-        remote,
-        setUpstream,
-        result: result.stdout
-      });
-
-      return {
-        success: true,
+      this.logger.info("GitPushHandler: Git push completed successfully", {
         branch: currentBranch,
         remote,
         setUpstream,
         result: result.stdout,
-        timestamp: new Date()
-      };
-
-    } catch (error) {
-      this.logger.error('GitPushHandler: Git push failed', {
-        error: error.message,
-        command: command.getCommandData()
       });
 
       return {
-        success: false,
+        branch: currentBranch,
+        remote,
+        setUpstream,
+        result: result.stdout,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      this.logger.error("GitPushHandler: Git push failed", {
         error: error.message,
-        timestamp: new Date()
+        command: command.getCommandData(),
+      });
+
+      return {
+       
+        error: error.message,
+        timestamp: new Date(),
       };
     }
   }
 }
 
-module.exports = GitPushHandler; 
+module.exports = GitPushHandler;

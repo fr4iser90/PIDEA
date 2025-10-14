@@ -47,7 +47,7 @@ const context = new GitWorkflowContext({
 });
 
 const result = await manager.createBranch(context);
-// Returns: { success: true, branchName: 'feature/add-user-authentication', ... }
+// Returns: { branchName: 'feature/add-user-authentication', ... }
 ```
 
 ##### executeWorkflow(context)
@@ -73,7 +73,7 @@ const context = new GitWorkflowContext({
 });
 
 const result = await manager.executeWorkflow(context);
-// Returns: { success: true, taskMode: 'workflow-execution', ... }
+// Returns: { taskMode: 'workflow-execution', ... }
 ```
 
 ##### completeWorkflow(context)
@@ -96,7 +96,7 @@ const context = new GitWorkflowContext({
 });
 
 const result = await manager.completeWorkflow(context);
-// Returns: { success: true, status: 'completed', ... }
+// Returns: { status: 'completed', ... }
 ```
 
 ##### createPullRequest(context)
@@ -119,7 +119,7 @@ const context = new GitWorkflowContext({
 });
 
 const result = await manager.createPullRequest(context);
-// Returns: { success: true, prUrl: 'https://github.com/...', ... }
+// Returns: { prUrl: 'https://github.com/...', ... }
 ```
 
 ### GitWorkflowContext

@@ -1,9 +1,9 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * StreamingPort Entity
- * 
+ *
  * Manages streaming state for a specific IDE port with performance tracking
  * and port lifecycle management. Replaces session-based approach with
  * simpler port-based architecture.
@@ -11,7 +11,7 @@ const logger = new Logger('Logger');
 class StreamingPort {
   constructor(port, options = {}) {
     this.port = port;
-    this.status = 'inactive'; // inactive, starting, active, paused, stopped, error
+    this.status = "inactive"; // inactive, starting, active, paused, stopped, error
     this.createdAt = new Date();
     this.startedAt = null;
     this.stoppedAt = null;
@@ -19,20 +19,20 @@ class StreamingPort {
     this.frameCount = 0;
     this.errorCount = 0;
     this.lastError = null;
-    
+
     // Configuration
     this.fps = options.fps !== undefined ? options.fps : 10;
     this.quality = options.quality !== undefined ? options.quality : 0.8;
-    this.format = options.format || 'jpeg';
+    this.format = options.format || "jpeg";
     this.maxFrameSize = options.maxFrameSize || 50 * 1024; // 50KB
     this.enableRegionDetection = options.enableRegionDetection || false;
-    
+
     // Performance metrics
     this.averageFrameSize = 0;
     this.averageLatency = 0;
     this.bandwidthUsage = 0;
     this.memoryUsage = 0;
-    
+
     // Validation
     this.validate();
   }
@@ -42,19 +42,24 @@ class StreamingPort {
    * @throws {Error} If validation fails
    */
   validate() {
-    if (!this.port || typeof this.port !== 'number' || this.port < 1 || this.port > 65535) {
-      throw new Error('Valid port number (1-65535) is required');
+    if (
+      !this.port ||
+      typeof this.port !== "number" ||
+      this.port < 1 ||
+      this.port > 65535
+    ) {
+      throw new Error("Valid port number (1-65535) is required");
     }
-    
+
     if (this.fps < 1 || this.fps > 60) {
-      throw new Error('FPS must be between 1 and 60');
+      throw new Error("FPS must be between 1 and 60");
     }
-    
+
     if (this.quality < 0.1 || this.quality > 1.0) {
-      throw new Error('Quality must be between 0.1 and 1.0');
+      throw new Error("Quality must be between 0.1 and 1.0");
     }
-    
-    if (!['jpeg', 'webp'].includes(this.format)) {
+
+    if (!["jpeg", "webp"].includes(this.format)) {
       throw new Error('Format must be either "jpeg" or "webp"');
     }
   }
@@ -63,16 +68,16 @@ class StreamingPort {
    * Start streaming for this port
    */
   start() {
-    if (this.status === 'active') {
+    if (this.status === "active") {
       throw new Error(`Port ${this.port} is already streaming`);
     }
-    
-    this.status = 'starting';
+
+    this.status = "starting";
     this.startedAt = new Date();
     this.frameCount = 0;
     this.errorCount = 0;
     this.lastError = null;
-    
+
     logger.info(`Started streaming for port ${this.port}`);
   }
 
@@ -80,13 +85,13 @@ class StreamingPort {
    * Stop streaming for this port
    */
   stop() {
-    if (this.status === 'stopped') {
+    if (this.status === "stopped") {
       throw new Error(`Port ${this.port} is already stopped`);
     }
-    
-    this.status = 'stopped';
+
+    this.status = "stopped";
     this.stoppedAt = new Date();
-    
+
     logger.info(`Stopped streaming for port ${this.port}`);
   }
 
@@ -94,11 +99,11 @@ class StreamingPort {
    * Pause streaming for this port
    */
   pause() {
-    if (this.status !== 'active') {
+    if (this.status !== "active") {
       throw new Error(`Port ${this.port} is not active and cannot be paused`);
     }
-    
-    this.status = 'paused';
+
+    this.status = "paused";
     logger.info(`Paused streaming for port ${this.port}`);
   }
 
@@ -106,11 +111,11 @@ class StreamingPort {
    * Resume streaming for this port
    */
   resume() {
-    if (this.status !== 'paused') {
+    if (this.status !== "paused") {
       throw new Error(`Port ${this.port} is not paused and cannot be resumed`);
     }
-    
-    this.status = 'active';
+
+    this.status = "active";
     logger.info(`Resumed streaming for port ${this.port}`);
   }
 
@@ -122,17 +127,21 @@ class StreamingPort {
   updateFrame(frameSize, latency) {
     this.frameCount++;
     this.lastFrameAt = new Date();
-    
+
     // Update average frame size
-    this.averageFrameSize = (this.averageFrameSize * (this.frameCount - 1) + frameSize) / this.frameCount;
-    
+    this.averageFrameSize =
+      (this.averageFrameSize * (this.frameCount - 1) + frameSize) /
+      this.frameCount;
+
     // Update average latency
-    this.averageLatency = (this.averageLatency * (this.frameCount - 1) + latency) / this.frameCount;
-    
+    this.averageLatency =
+      (this.averageLatency * (this.frameCount - 1) + latency) / this.frameCount;
+
     // Update bandwidth usage (bytes per second)
     if (this.startedAt) {
       const duration = (Date.now() - this.startedAt.getTime()) / 1000;
-      this.bandwidthUsage = (this.frameCount * this.averageFrameSize) / duration;
+      this.bandwidthUsage =
+        (this.frameCount * this.averageFrameSize) / duration;
     }
   }
 
@@ -143,8 +152,8 @@ class StreamingPort {
   error(error) {
     this.errorCount++;
     this.lastError = error;
-    this.status = 'error';
-    
+    this.status = "error";
+
     logger.error(`Error for port ${this.port}:`, error);
   }
 
@@ -156,7 +165,7 @@ class StreamingPort {
     if (!this.startedAt) {
       return 0;
     }
-    
+
     const endTime = this.stoppedAt || new Date();
     return endTime.getTime() - this.startedAt.getTime();
   }
@@ -177,8 +186,9 @@ class StreamingPort {
     if (!this.lastFrameAt || !this.startedAt) {
       return 0;
     }
-    
-    const timeSinceStart = (this.lastFrameAt.getTime() - this.startedAt.getTime()) / 1000;
+
+    const timeSinceStart =
+      (this.lastFrameAt.getTime() - this.startedAt.getTime()) / 1000;
     return timeSinceStart > 0 ? this.frameCount / timeSinceStart : 0;
   }
 
@@ -187,7 +197,7 @@ class StreamingPort {
    * @returns {boolean} Whether port is actively streaming
    */
   isActive() {
-    return this.status === 'active';
+    return this.status === "active";
   }
 
   /**
@@ -195,7 +205,7 @@ class StreamingPort {
    * @returns {boolean} Whether port is paused
    */
   isPaused() {
-    return this.status === 'paused';
+    return this.status === "paused";
   }
 
   /**
@@ -203,7 +213,7 @@ class StreamingPort {
    * @returns {boolean} Whether port is stopped
    */
   isStopped() {
-    return this.status === 'stopped';
+    return this.status === "stopped";
   }
 
   /**
@@ -211,7 +221,7 @@ class StreamingPort {
    * @returns {boolean} Whether port has errors
    */
   hasErrors() {
-    return this.status === 'error';
+    return this.status === "error";
   }
 
   /**
@@ -229,7 +239,9 @@ class StreamingPort {
       bandwidthUsage: Math.round(this.bandwidthUsage),
       currentFPS: Math.round(this.getCurrentFPS() * 100) / 100,
       duration: this.getDurationSeconds(),
-      uptime: this.startedAt ? Math.floor((Date.now() - this.startedAt.getTime()) / 1000) : 0
+      uptime: this.startedAt
+        ? Math.floor((Date.now() - this.startedAt.getTime()) / 1000)
+        : 0,
     };
   }
 
@@ -257,7 +269,7 @@ class StreamingPort {
       averageLatency: this.averageLatency,
       bandwidthUsage: this.bandwidthUsage,
       memoryUsage: this.memoryUsage,
-      stats: this.getStats()
+      stats: this.getStats(),
     };
   }
 
@@ -272,9 +284,9 @@ class StreamingPort {
       quality: data.quality,
       format: data.format,
       maxFrameSize: data.maxFrameSize,
-      enableRegionDetection: data.enableRegionDetection
+      enableRegionDetection: data.enableRegionDetection,
     });
-    
+
     port.status = data.status;
     port.createdAt = new Date(data.createdAt);
     port.startedAt = data.startedAt ? new Date(data.startedAt) : null;
@@ -287,9 +299,9 @@ class StreamingPort {
     port.averageLatency = data.averageLatency || 0;
     port.bandwidthUsage = data.bandwidthUsage || 0;
     port.memoryUsage = data.memoryUsage || 0;
-    
+
     return port;
   }
 }
 
-module.exports = StreamingPort; 
+module.exports = StreamingPort;

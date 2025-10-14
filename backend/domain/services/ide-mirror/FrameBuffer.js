@@ -1,9 +1,9 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 /**
  * FrameBuffer Service
- * 
+ *
  * Manages frame buffering for streaming sessions with memory management,
  * frame prioritization, and cleanup mechanisms.
  */
@@ -15,7 +15,7 @@ class FrameBuffer {
     this.currentBufferSize = 0;
     this.frameCount = 0;
     this.totalFramesProcessed = 0;
-    
+
     // Performance tracking
     this.stats = {
       totalFramesAdded: 0,
@@ -23,13 +23,13 @@ class FrameBuffer {
       totalMemoryUsed: 0,
       averageFrameSize: 0,
       bufferOverflows: 0,
-      cleanupOperations: 0
+      cleanupOperations: 0,
     };
-    
+
     // Cleanup interval
     this.cleanupInterval = null;
     this.cleanupIntervalMs = options.cleanupIntervalMs || 30000; // 30 seconds
-    
+
     this.startCleanupInterval();
   }
 
@@ -42,11 +42,11 @@ class FrameBuffer {
   addFrame(sessionId, frame) {
     try {
       if (!sessionId || !frame) {
-        throw new Error('Session ID and frame are required');
+        throw new Error("Session ID and frame are required");
       }
 
       if (!frame.data || !Buffer.isBuffer(frame.data)) {
-        throw new Error('Frame must contain valid buffer data');
+        throw new Error("Frame must contain valid buffer data");
       }
 
       const frameSize = frame.data.length;
@@ -54,10 +54,10 @@ class FrameBuffer {
         data: frame.data,
         timestamp: frame.timestamp || Date.now(),
         size: frameSize,
-        format: frame.format || 'webp',
+        format: frame.format || "webp",
         quality: frame.quality || 0.8,
         frameNumber: frame.frameNumber || this.getNextFrameNumber(sessionId),
-        metadata: frame.metadata || {}
+        metadata: frame.metadata || {},
       };
 
       // Initialize session buffer if needed
@@ -66,15 +66,17 @@ class FrameBuffer {
       }
 
       const sessionBuffer = this.buffers.get(sessionId);
-      
+
       // Check if adding this frame would exceed limits
       if (this.wouldExceedLimits(sessionId, frameSize)) {
         this.performCleanup(sessionId);
-        
+
         // If still too large after cleanup, reject frame
         if (this.wouldExceedLimits(sessionId, frameSize)) {
           this.stats.bufferOverflows++;
-          logger.warn(`Buffer overflow for session ${sessionId}, frame rejected`);
+          logger.warn(
+            `Buffer overflow for session ${sessionId}, frame rejected`,
+          );
           return false;
         }
       }
@@ -90,9 +92,11 @@ class FrameBuffer {
       this.updateAverageFrameSize(frameSize);
 
       return true;
-
     } catch (error) {
-      logger.error(`Error adding frame for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error adding frame for session ${sessionId}:`,
+        error.message,
+      );
       return false;
     }
   }
@@ -110,9 +114,11 @@ class FrameBuffer {
       }
 
       return sessionBuffer[sessionBuffer.length - 1];
-
     } catch (error) {
-      logger.error(`Error getting latest frame for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error getting latest frame for session ${sessionId}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -132,9 +138,11 @@ class FrameBuffer {
 
       const startIndex = Math.max(0, sessionBuffer.length - count);
       return sessionBuffer.slice(startIndex);
-
     } catch (error) {
-      logger.error(`Error getting recent frames for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error getting recent frames for session ${sessionId}:`,
+        error.message,
+      );
       return [];
     }
   }
@@ -152,10 +160,14 @@ class FrameBuffer {
         return null;
       }
 
-      return sessionBuffer.find(frame => frame.frameNumber === frameNumber) || null;
-
+      return (
+        sessionBuffer.find((frame) => frame.frameNumber === frameNumber) || null
+      );
     } catch (error) {
-      logger.error(`Error getting frame by number for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error getting frame by number for session ${sessionId}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -169,19 +181,26 @@ class FrameBuffer {
     try {
       const sessionBuffer = this.buffers.get(sessionId);
       if (sessionBuffer) {
-        const removedSize = sessionBuffer.reduce((sum, frame) => sum + frame.size, 0);
+        const removedSize = sessionBuffer.reduce(
+          (sum, frame) => sum + frame.size,
+          0,
+        );
         this.currentBufferSize -= removedSize;
         this.frameCount -= sessionBuffer.length;
         this.stats.totalFramesRemoved += sessionBuffer.length;
-        
+
         this.buffers.delete(sessionId);
-        logger.info(`Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`);
+        logger.info(
+          `Cleared buffer for session ${sessionId}, freed ${removedSize} bytes`,
+        );
         return true;
       }
       return false;
-
     } catch (error) {
-      logger.error(`Error clearing buffer for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error clearing buffer for session ${sessionId}:`,
+        error.message,
+      );
       return false;
     }
   }
@@ -203,9 +222,8 @@ class FrameBuffer {
 
       logger.info(`Cleared all buffers, ${clearedCount} sessions affected`);
       return clearedCount;
-
     } catch (error) {
-      logger.error('Error clearing all buffers:', error.message);
+      logger.error("Error clearing all buffers:", error.message);
       return 0;
     }
   }
@@ -237,14 +255,18 @@ class FrameBuffer {
         this.frameCount -= removedCount;
         this.stats.totalFramesRemoved += removedCount;
         this.stats.cleanupOperations++;
-        
-        logger.info(`Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`);
+
+        logger.info(
+          `Cleanup for session ${sessionId}: removed ${removedCount} frames, freed ${removedSize} bytes`,
+        );
       }
 
       return removedCount;
-
     } catch (error) {
-      logger.error(`Error during cleanup for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error during cleanup for session ${sessionId}:`,
+        error.message,
+      );
       return 0;
     }
   }
@@ -258,7 +280,7 @@ class FrameBuffer {
   wouldExceedLimits(sessionId, frameSize) {
     const sessionBuffer = this.buffers.get(sessionId);
     const currentSessionFrames = sessionBuffer ? sessionBuffer.length : 0;
-    
+
     return (
       this.currentBufferSize + frameSize > this.maxBufferSize ||
       currentSessionFrames >= this.maxFramesPerSession
@@ -275,8 +297,10 @@ class FrameBuffer {
     if (!sessionBuffer || sessionBuffer.length === 0) {
       return 1;
     }
-    
-    const maxFrameNumber = Math.max(...sessionBuffer.map(frame => frame.frameNumber || 0));
+
+    const maxFrameNumber = Math.max(
+      ...sessionBuffer.map((frame) => frame.frameNumber || 0),
+    );
     return maxFrameNumber + 1;
   }
 
@@ -286,7 +310,8 @@ class FrameBuffer {
    */
   updateAverageFrameSize(frameSize) {
     const alpha = 0.1; // Smoothing factor
-    this.stats.averageFrameSize = this.stats.averageFrameSize * (1 - alpha) + frameSize * alpha;
+    this.stats.averageFrameSize =
+      this.stats.averageFrameSize * (1 - alpha) + frameSize * alpha;
   }
 
   /**
@@ -315,11 +340,12 @@ class FrameBuffer {
       }
 
       if (totalRemoved > 0) {
-        logger.info(`Periodic cleanup completed: removed ${totalRemoved} frames`);
+        logger.info(
+          `Periodic cleanup completed: removed ${totalRemoved} frames`,
+        );
       }
-
     } catch (error) {
-      logger.error('Error during periodic cleanup:', error.message);
+      logger.error("Error during periodic cleanup:", error.message);
     }
   }
 
@@ -330,8 +356,10 @@ class FrameBuffer {
   getStats() {
     const sessionCount = this.buffers.size;
     const totalFrames = this.frameCount;
-    const memoryUsageMB = Math.round(this.currentBufferSize / (1024 * 1024) * 100) / 100;
-    const averageFrameSizeKB = Math.round(this.stats.averageFrameSize / 1024 * 100) / 100;
+    const memoryUsageMB =
+      Math.round((this.currentBufferSize / (1024 * 1024)) * 100) / 100;
+    const averageFrameSizeKB =
+      Math.round((this.stats.averageFrameSize / 1024) * 100) / 100;
 
     return {
       sessionCount,
@@ -342,7 +370,7 @@ class FrameBuffer {
       maxBufferSize: this.maxBufferSize,
       maxFramesPerSession: this.maxFramesPerSession,
       totalFramesProcessed: this.totalFramesProcessed,
-      ...this.stats
+      ...this.stats,
     };
   }
 
@@ -358,8 +386,12 @@ class FrameBuffer {
         return null;
       }
 
-      const totalSize = sessionBuffer.reduce((sum, frame) => sum + frame.size, 0);
-      const averageSize = sessionBuffer.length > 0 ? totalSize / sessionBuffer.length : 0;
+      const totalSize = sessionBuffer.reduce(
+        (sum, frame) => sum + frame.size,
+        0,
+      );
+      const averageSize =
+        sessionBuffer.length > 0 ? totalSize / sessionBuffer.length : 0;
 
       return {
         sessionId,
@@ -367,11 +399,13 @@ class FrameBuffer {
         totalSize,
         averageFrameSize: Math.round(averageSize),
         oldestFrame: sessionBuffer[0]?.timestamp,
-        newestFrame: sessionBuffer[sessionBuffer.length - 1]?.timestamp
+        newestFrame: sessionBuffer[sessionBuffer.length - 1]?.timestamp,
       };
-
     } catch (error) {
-      logger.error(`Error getting stats for session ${sessionId}:`, error.message);
+      logger.error(
+        `Error getting stats for session ${sessionId}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -386,7 +420,7 @@ class FrameBuffer {
       totalMemoryUsed: 0,
       averageFrameSize: 0,
       bufferOverflows: 0,
-      cleanupOperations: 0
+      cleanupOperations: 0,
     };
     this.totalFramesProcessed = 0;
   }
@@ -399,9 +433,9 @@ class FrameBuffer {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
     }
-    
+
     this.clearAllBuffers();
   }
 }
 
-module.exports = FrameBuffer; 
+module.exports = FrameBuffer;

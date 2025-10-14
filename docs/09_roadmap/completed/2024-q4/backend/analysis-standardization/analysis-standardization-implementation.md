@@ -87,7 +87,7 @@
 ### Target Structure for All Analysis Steps:
 ```javascript
 {
-  success: true,
+ 
   result: {
     issues: [
       {

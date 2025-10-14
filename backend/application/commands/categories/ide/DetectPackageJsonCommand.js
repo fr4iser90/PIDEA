@@ -28,24 +28,24 @@ class DetectPackageJsonCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.workspacePath && typeof this.workspacePath !== 'string') {
-      throw new Error('Workspace path must be a string');
+    if (this.workspacePath && typeof this.workspacePath !== "string") {
+      throw new Error("Workspace path must be a string");
     }
 
-    if (typeof this.detectDevServer !== 'boolean') {
-      throw new Error('detectDevServer must be a boolean');
+    if (typeof this.detectDevServer !== "boolean") {
+      throw new Error("detectDevServer must be a boolean");
     }
 
-    if (typeof this.analyzeScripts !== 'boolean') {
-      throw new Error('analyzeScripts must be a boolean');
+    if (typeof this.analyzeScripts !== "boolean") {
+      throw new Error("analyzeScripts must be a boolean");
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -57,19 +57,19 @@ class DetectPackageJsonCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'DetectPackageJsonCommand',
+      type: "DetectPackageJsonCommand",
       userId: this.userId,
       workspacePath: this.workspacePath,
       detectDevServer: this.detectDevServer,
       analyzeScripts: this.analyzeScripts,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = DetectPackageJsonCommand; 
+module.exports = DetectPackageJsonCommand;

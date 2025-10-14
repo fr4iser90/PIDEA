@@ -13,7 +13,7 @@ class GitStatusCommand {
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
     return true;
   }
@@ -23,9 +23,9 @@ class GitStatusCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       porcelain: this.porcelain,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 }
 
-module.exports = GitStatusCommand; 
+module.exports = GitStatusCommand;

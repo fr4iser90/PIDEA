@@ -18,11 +18,11 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static bumpVersion(params) {
-    return new VersionManagementCommand('bumpVersion', {
+    return new VersionManagementCommand("bumpVersion", {
       task: params.task,
       projectPath: params.projectPath,
       bumpType: params.bumpType,
-      context: params.context || {}
+      context: params.context || {},
     });
   }
 
@@ -32,8 +32,8 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static getCurrentVersion(params) {
-    return new VersionManagementCommand('getCurrentVersion', {
-      projectPath: params.projectPath
+    return new VersionManagementCommand("getCurrentVersion", {
+      projectPath: params.projectPath,
     });
   }
 
@@ -43,8 +43,8 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static getVersionHistory(params) {
-    return new VersionManagementCommand('getVersionHistory', {
-      filters: params.filters || {}
+    return new VersionManagementCommand("getVersionHistory", {
+      filters: params.filters || {},
     });
   }
 
@@ -54,8 +54,8 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static validateVersion(params) {
-    return new VersionManagementCommand('validateVersion', {
-      version: params.version
+    return new VersionManagementCommand("validateVersion", {
+      version: params.version,
     });
   }
 
@@ -65,9 +65,9 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static compareVersions(params) {
-    return new VersionManagementCommand('compareVersions', {
+    return new VersionManagementCommand("compareVersions", {
       version1: params.version1,
-      version2: params.version2
+      version2: params.version2,
     });
   }
 
@@ -77,10 +77,10 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static determineBumpType(params) {
-    return new VersionManagementCommand('determineBumpType', {
+    return new VersionManagementCommand("determineBumpType", {
       task: params.task,
       projectPath: params.projectPath,
-      context: params.context || {}
+      context: params.context || {},
     });
   }
 
@@ -90,7 +90,7 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static getLatestVersion(params = {}) {
-    return new VersionManagementCommand('getLatestVersion', params);
+    return new VersionManagementCommand("getLatestVersion", params);
   }
 
   /**
@@ -99,8 +99,8 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static updateConfiguration(params) {
-    return new VersionManagementCommand('updateConfiguration', {
-      config: params.config
+    return new VersionManagementCommand("updateConfiguration", {
+      config: params.config,
     });
   }
 
@@ -110,10 +110,10 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static getAIAnalysis(params = {}) {
-    return new VersionManagementCommand('getAIAnalysis', {
+    return new VersionManagementCommand("getAIAnalysis", {
       task: params.task,
       projectPath: params.projectPath,
-      context: params.context || {}
+      context: params.context || {},
     });
   }
 
@@ -123,11 +123,11 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static performDryRun(params = {}) {
-    return new VersionManagementCommand('performDryRun', {
+    return new VersionManagementCommand("performDryRun", {
       task: params.task,
       projectPath: params.projectPath,
       bumpType: params.bumpType,
-      context: params.context || {}
+      context: params.context || {},
     });
   }
 
@@ -137,7 +137,7 @@ class VersionManagementCommand {
    * @returns {VersionManagementCommand} Command instance
    */
   static getConfiguration(params = {}) {
-    return new VersionManagementCommand('getConfiguration', params);
+    return new VersionManagementCommand("getConfiguration", params);
   }
 
   /**
@@ -150,83 +150,90 @@ class VersionManagementCommand {
 
     // Common validations
     if (!this.type) {
-      errors.push('Command type is required');
+      errors.push("Command type is required");
     }
 
     if (!this.id) {
-      errors.push('Command ID is required');
+      errors.push("Command ID is required");
     }
 
     // Type-specific validations
     switch (this.type) {
-      case 'bumpVersion':
+      case "bumpVersion":
         if (!this.projectPath) {
-          errors.push('Project path is required for bump version command');
+          errors.push("Project path is required for bump version command");
         }
-        if (this.bumpType && !['major', 'minor', 'patch'].includes(this.bumpType)) {
-          errors.push('Bump type must be major, minor, or patch');
+        if (
+          this.bumpType &&
+          !["major", "minor", "patch"].includes(this.bumpType)
+        ) {
+          errors.push("Bump type must be major, minor, or patch");
         }
         // Task is now optional - AI can auto-detect changes
         break;
 
-      case 'getCurrentVersion':
+      case "getCurrentVersion":
         if (!this.projectPath) {
-          errors.push('Project path is required for get current version command');
+          errors.push(
+            "Project path is required for get current version command",
+          );
         }
         break;
 
-      case 'validateVersion':
+      case "validateVersion":
         if (!this.version) {
-          errors.push('Version is required for validate version command');
+          errors.push("Version is required for validate version command");
         }
-        if (this.version && typeof this.version !== 'string') {
-          errors.push('Version must be a string');
+        if (this.version && typeof this.version !== "string") {
+          errors.push("Version must be a string");
         }
         break;
 
-      case 'compareVersions':
+      case "compareVersions":
         if (!this.version1) {
-          errors.push('Version1 is required for compare versions command');
+          errors.push("Version1 is required for compare versions command");
         }
         if (!this.version2) {
-          errors.push('Version2 is required for compare versions command');
+          errors.push("Version2 is required for compare versions command");
         }
-        if (this.version1 && typeof this.version1 !== 'string') {
-          errors.push('Version1 must be a string');
+        if (this.version1 && typeof this.version1 !== "string") {
+          errors.push("Version1 must be a string");
         }
-        if (this.version2 && typeof this.version2 !== 'string') {
-          errors.push('Version2 must be a string');
+        if (this.version2 && typeof this.version2 !== "string") {
+          errors.push("Version2 must be a string");
         }
         break;
 
-      case 'determineBumpType':
+      case "determineBumpType":
         if (!this.task) {
-          errors.push('Task is required for determine bump type command');
+          errors.push("Task is required for determine bump type command");
         }
         if (!this.projectPath) {
-          errors.push('Project path is required for determine bump type command');
+          errors.push(
+            "Project path is required for determine bump type command",
+          );
         }
         break;
 
-      case 'getAIAnalysis':
+      case "getAIAnalysis":
         if (!this.projectPath) {
-          errors.push('Project path is required for get AI analysis command');
+          errors.push("Project path is required for get AI analysis command");
         }
-        if (this.task && typeof this.task !== 'string') {
-          errors.push('Task must be a string');
+        if (this.task && typeof this.task !== "string") {
+          errors.push("Task must be a string");
         }
-        if (this.projectPath && typeof this.projectPath !== 'string') {
-          errors.push('Project path must be a string');
+        if (this.projectPath && typeof this.projectPath !== "string") {
+          errors.push("Project path must be a string");
         }
         // Task is now optional - AI can auto-detect changes
         break;
 
-      case 'updateConfiguration':
+      case "updateConfiguration":
         if (!this.config) {
-          errors.push('Config is required for update configuration command');
+          errors.push("Config is required for update configuration command");
         }
-        if (this.config && typeof this.config !== 'object') {
-          errors.push('Config must be an object');
+        if (this.config && typeof this.config !== "object") {
+          errors.push("Config must be an object");
         }
         break;
     }
@@ -234,7 +241,7 @@ class VersionManagementCommand {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -247,7 +254,7 @@ class VersionManagementCommand {
       id: this.id,
       type: this.type,
       timestamp: this.timestamp,
-      data: this.getData()
+      data: this.getData(),
     };
   }
 
@@ -273,7 +280,7 @@ class VersionManagementCommand {
       id: this.id,
       type: this.type,
       timestamp: this.timestamp,
-      data: this.getData()
+      data: this.getData(),
     });
   }
 
@@ -302,7 +309,7 @@ class VersionManagementCommand {
   clone(newData = {}) {
     return new VersionManagementCommand(this.type, {
       ...this.getData(),
-      ...newData
+      ...newData,
     });
   }
 
@@ -311,7 +318,8 @@ class VersionManagementCommand {
    * @param {number} maxAge - Maximum age in milliseconds
    * @returns {boolean} True if expired
    */
-  isExpired(maxAge = 300000) { // 5 minutes default
+  isExpired(maxAge = 300000) {
+    // 5 minutes default
     return Date.now() - this.timestamp.getTime() > maxAge;
   }
 

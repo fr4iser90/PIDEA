@@ -1,5 +1,5 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class CDPWorkspaceDetector {
   constructor(browserManager, packageJsonAnalyzer) {
@@ -11,15 +11,15 @@ class CDPWorkspaceDetector {
     try {
       const page = await this.browserManager.getPage();
       if (!page) {
-        logger.info('No page available for CDP');
+        logger.info("No page available for CDP");
         return null;
       }
 
       // Use CDP to get file system info
       const client = await page.context().newCDPSession(page);
-      
+
       // Get workspace info from CDP
-      const workspaceInfo = await client.send('Runtime.evaluate', {
+      const workspaceInfo = await client.send("Runtime.evaluate", {
         expression: `
           (() => {
             // Try to get workspace from various sources
@@ -47,22 +47,23 @@ class CDPWorkspaceDetector {
             
             return workspace;
           })()
-        `
+        `,
       });
 
       if (workspaceInfo.result?.value?.path) {
         const workspacePath = workspaceInfo.result.value.path;
-        logger.info('CDP workspace path:', workspacePath);
-        
+        logger.info("CDP workspace path:", workspacePath);
+
         // Now analyze package.json in this path
-        return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
+        return await this.packageJsonAnalyzer.analyzePackageJsonInPath(
+          workspacePath,
+        );
       }
 
-      logger.info('No workspace path found via CDP');
+      logger.info("No workspace path found via CDP");
       return null;
-
     } catch (error) {
-      logger.error('CDP error:', error.message);
+      logger.error("CDP error:", error.message);
       return null;
     }
   }

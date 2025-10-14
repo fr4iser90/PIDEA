@@ -498,7 +498,6 @@ class DatabaseOptimizationController {
       const result = await this.databaseOptimizationService.performOptimization(options);
 
       res.json({
-        success: true,
         data: result,
         message: 'Database optimization completed successfully'
       });
@@ -510,7 +509,7 @@ class DatabaseOptimizationController {
       });
 
       res.status(500).json({
-        success: false,
+       
         error: error.message,
         message: 'Database optimization failed'
       });
@@ -531,7 +530,6 @@ class DatabaseOptimizationController {
       const recommendations = await this.databaseOptimizationService.getOptimizationRecommendations();
 
       res.json({
-        success: true,
         data: recommendations,
         message: 'Optimization recommendations retrieved successfully'
       });
@@ -543,7 +541,7 @@ class DatabaseOptimizationController {
       });
 
       res.status(500).json({
-        success: false,
+       
         error: error.message,
         message: 'Failed to get optimization recommendations'
       });
@@ -564,7 +562,6 @@ class DatabaseOptimizationController {
       const status = await this.databaseOptimizationService.getOptimizationStatus();
 
       res.json({
-        success: true,
         data: status,
         message: 'Optimization status retrieved successfully'
       });
@@ -576,7 +573,7 @@ class DatabaseOptimizationController {
       });
 
       res.status(500).json({
-        success: false,
+       
         error: error.message,
         message: 'Failed to get optimization status'
       });

@@ -1,45 +1,45 @@
 /**
  * Pattern Analysis Step - Architecture Analysis Step
  * Analyzes code patterns and design patterns
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Specialized code pattern analysis for design patterns and architectural patterns
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('pattern_analysis_step');
+const logger = new Logger("pattern_analysis_step");
 
 // Step configuration
 const config = {
-  name: 'PatternAnalysisStep',
-  type: 'analysis',
-  description: 'Analyzes code patterns and design patterns',
-  category: 'analysis',
-  subcategory: 'architecture',
-  version: '1.0.0',
+  name: "PatternAnalysisStep",
+  type: "analysis",
+  description: "Analyzes code patterns and design patterns",
+  category: "analysis",
+  subcategory: "architecture",
+  version: "1.0.0",
   dependencies: [],
   settings: {
     timeout: 30000,
     includeCreational: true,
     includeStructural: true,
-    includeBehavioral: true
+    includeBehavioral: true,
   },
   validation: {
-    requiredFiles: ['package.json'],
-    supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
-  }
+    requiredFiles: ["package.json"],
+    supportedProjects: ["nodejs", "react", "vue", "angular", "express", "nest"],
+  },
 };
 
 class PatternAnalysisStep {
   constructor() {
-    this.name = 'PatternAnalysisStep';
-    this.description = 'Analyzes code patterns and design patterns';
-    this.category = 'analysis';
-    this.subcategory = 'architecture';
+    this.name = "PatternAnalysisStep";
+    this.description = "Analyzes code patterns and design patterns";
+    this.category = "analysis";
+    this.subcategory = "architecture";
     this.dependencies = [];
   }
 
@@ -50,22 +50,22 @@ class PatternAnalysisStep {
   async execute(context = {}) {
     const config = PatternAnalysisStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`⚡ Executing PatternAnalysisStep...`);
-      
+
       // Validate context
       this.validateContext(context);
 
       const projectPath = context.projectPath;
-      
+
       logger.info(`🎯 Starting pattern analysis for: ${projectPath}`);
 
       // Execute pattern analysis
       const patternAnalysis = await this.analyzeCodePatterns(projectPath, {
         includeCreational: context.includeCreational !== false,
         includeStructural: context.includeStructural !== false,
-        includeBehavioral: context.includeBehavioral !== false
+        includeBehavioral: context.includeBehavioral !== false,
       });
 
       // Clean and format result
@@ -88,32 +88,34 @@ class PatternAnalysisStep {
 
       // Generate documentation if requested
       if (context.includeDocumentation !== false) {
-        cleanResult.documentation = await this.createDocumentation(cleanResult, projectPath, context);
+        cleanResult.documentation = await this.createDocumentation(
+          cleanResult,
+          projectPath,
+          context,
+        );
       }
 
       logger.info(`✅ Pattern analysis completed successfully`);
 
       return {
-        success: true,
         result: cleanResult,
         metadata: {
           stepName: "PatternAnalysisStep",
           projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
-
     } catch (error) {
       logger.error(`❌ Pattern analysis failed: ${error.message}`);
-      
+
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
           stepName: "PatternAnalysisStep",
           projectPath: context.projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
     }
   }
@@ -132,7 +134,7 @@ class PatternAnalysisStep {
       // ANALYZE ALL FILES - NO LIMITS!
       for (const file of jsFiles) {
         try {
-          const content = await fs.readFile(file, 'utf8');
+          const content = await fs.readFile(file, "utf8");
           const filePatterns = this.detectCodePatterns(content, file);
           patterns.push(...filePatterns);
         } catch (error) {
@@ -150,7 +152,7 @@ class PatternAnalysisStep {
       const patternScore = this.calculatePatternScore({
         patterns: uniquePatterns.length,
         categories: Object.keys(categorizedPatterns).length,
-        files: jsFiles.length
+        files: jsFiles.length,
       });
 
       return {
@@ -159,19 +161,19 @@ class PatternAnalysisStep {
         metrics: {
           totalFiles: jsFiles.length,
           patternsDetected: uniquePatterns.length,
-          categoriesFound: Object.keys(categorizedPatterns).length
+          categoriesFound: Object.keys(categorizedPatterns).length,
         },
         score: patternScore,
-        level: this.getPatternLevel(patternScore)
+        level: this.getPatternLevel(patternScore),
       };
     } catch (error) {
       logger.error(`Code pattern analysis failed: ${error.message}`);
-      return { 
-        patterns: [], 
+      return {
+        patterns: [],
         categorized: {},
         metrics: {},
         score: 0,
-        level: 'unknown'
+        level: "unknown",
       };
     }
   }
@@ -188,205 +190,226 @@ class PatternAnalysisStep {
     // ARCHITECTURAL PATTERNS (like OLD version)
     if (this.hasMVCStructure(content, filePath)) {
       patterns.push({
-        type: 'architectural',
-        name: 'MVC Pattern',
-        confidence: 'high',
+        type: "architectural",
+        name: "MVC Pattern",
+        confidence: "high",
         file: path.relative(process.cwd(), filePath),
-        description: 'Model-View-Controller architecture detected',
-        category: 'architectural'
+        description: "Model-View-Controller architecture detected",
+        category: "architectural",
       });
     }
 
     if (this.hasLayeredArchitecture(content, filePath)) {
       patterns.push({
-        type: 'architectural',
-        name: 'Layered Architecture',
-        confidence: 'medium',
+        type: "architectural",
+        name: "Layered Architecture",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Multi-layer architecture detected',
-        category: 'architectural'
+        description: "Multi-layer architecture detected",
+        category: "architectural",
       });
     }
 
     if (this.hasMicroservicesStructure(content, filePath)) {
       patterns.push({
-        type: 'architectural',
-        name: 'Microservices',
-        confidence: 'medium',
+        type: "architectural",
+        name: "Microservices",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Microservices architecture detected',
-        category: 'architectural'
+        description: "Microservices architecture detected",
+        category: "architectural",
       });
     }
 
     if (this.hasMonorepoStructure(content, filePath)) {
       patterns.push({
-        type: 'architectural',
-        name: 'Monorepo',
-        confidence: 'high',
+        type: "architectural",
+        name: "Monorepo",
+        confidence: "high",
         file: path.relative(process.cwd(), filePath),
-        description: 'Monorepo structure detected',
-        category: 'architectural'
+        description: "Monorepo structure detected",
+        category: "architectural",
       });
     }
 
     // Creational Patterns
-    if (content.includes('getInstance') || content.includes('instance')) {
+    if (content.includes("getInstance") || content.includes("instance")) {
       patterns.push({
-        type: 'creational',
-        name: 'Singleton Pattern',
-        confidence: 'medium',
+        type: "creational",
+        name: "Singleton Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Singleton pattern usage detected',
-        category: 'creational'
+        description: "Singleton pattern usage detected",
+        category: "creational",
       });
     }
 
-    if (content.includes('create') && content.includes('factory')) {
+    if (content.includes("create") && content.includes("factory")) {
       patterns.push({
-        type: 'creational',
-        name: 'Factory Pattern',
-        confidence: 'medium',
+        type: "creational",
+        name: "Factory Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Factory pattern usage detected',
-        category: 'creational'
+        description: "Factory pattern usage detected",
+        category: "creational",
       });
     }
 
-    if (content.includes('new') && content.includes('Builder')) {
+    if (content.includes("new") && content.includes("Builder")) {
       patterns.push({
-        type: 'creational',
-        name: 'Builder Pattern',
-        confidence: 'medium',
+        type: "creational",
+        name: "Builder Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Builder pattern usage detected',
-        category: 'creational'
+        description: "Builder pattern usage detected",
+        category: "creational",
       });
     }
 
     // Structural Patterns
-    if (content.includes('extends') || content.includes('class') && content.includes('implements')) {
+    if (
+      content.includes("extends") ||
+      (content.includes("class") && content.includes("implements"))
+    ) {
       patterns.push({
-        type: 'structural',
-        name: 'Inheritance Pattern',
-        confidence: 'high',
+        type: "structural",
+        name: "Inheritance Pattern",
+        confidence: "high",
         file: path.relative(process.cwd(), filePath),
-        description: 'Inheritance pattern usage detected',
-        category: 'structural'
+        description: "Inheritance pattern usage detected",
+        category: "structural",
       });
     }
 
-    if (content.includes('composition') || content.includes('compose')) {
+    if (content.includes("composition") || content.includes("compose")) {
       patterns.push({
-        type: 'structural',
-        name: 'Composition Pattern',
-        confidence: 'medium',
+        type: "structural",
+        name: "Composition Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Composition pattern usage detected',
-        category: 'structural'
+        description: "Composition pattern usage detected",
+        category: "structural",
       });
     }
 
-    if (content.includes('adapter') || content.includes('adapt')) {
+    if (content.includes("adapter") || content.includes("adapt")) {
       patterns.push({
-        type: 'structural',
-        name: 'Adapter Pattern',
-        confidence: 'medium',
+        type: "structural",
+        name: "Adapter Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Adapter pattern usage detected',
-        category: 'structural'
+        description: "Adapter pattern usage detected",
+        category: "structural",
       });
     }
 
-    if (content.includes('decorator') || content.includes('decorate')) {
+    if (content.includes("decorator") || content.includes("decorate")) {
       patterns.push({
-        type: 'structural',
-        name: 'Decorator Pattern',
-        confidence: 'medium',
+        type: "structural",
+        name: "Decorator Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Decorator pattern usage detected',
-        category: 'structural'
+        description: "Decorator pattern usage detected",
+        category: "structural",
       });
     }
 
     // Behavioral Patterns
-    if (content.includes('addEventListener') || content.includes('on(') || content.includes('emit(')) {
+    if (
+      content.includes("addEventListener") ||
+      content.includes("on(") ||
+      content.includes("emit(")
+    ) {
       patterns.push({
-        type: 'behavioral',
-        name: 'Observer Pattern',
-        confidence: 'high',
+        type: "behavioral",
+        name: "Observer Pattern",
+        confidence: "high",
         file: path.relative(process.cwd(), filePath),
-        description: 'Observer pattern usage detected',
-        category: 'behavioral'
+        description: "Observer pattern usage detected",
+        category: "behavioral",
       });
     }
 
-    if (content.includes('strategy') || (content.includes('function') && content.includes('switch'))) {
+    if (
+      content.includes("strategy") ||
+      (content.includes("function") && content.includes("switch"))
+    ) {
       patterns.push({
-        type: 'behavioral',
-        name: 'Strategy Pattern',
-        confidence: 'medium',
+        type: "behavioral",
+        name: "Strategy Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Strategy pattern usage detected',
-        category: 'behavioral'
+        description: "Strategy pattern usage detected",
+        category: "behavioral",
       });
     }
 
-    if (content.includes('command') || content.includes('execute')) {
+    if (content.includes("command") || content.includes("execute")) {
       patterns.push({
-        type: 'behavioral',
-        name: 'Command Pattern',
-        confidence: 'medium',
+        type: "behavioral",
+        name: "Command Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Command pattern usage detected',
-        category: 'behavioral'
+        description: "Command pattern usage detected",
+        category: "behavioral",
       });
     }
 
-    if (content.includes('state') && content.includes('transition')) {
+    if (content.includes("state") && content.includes("transition")) {
       patterns.push({
-        type: 'behavioral',
-        name: 'State Pattern',
-        confidence: 'medium',
+        type: "behavioral",
+        name: "State Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'State pattern usage detected',
-        category: 'behavioral'
+        description: "State pattern usage detected",
+        category: "behavioral",
       });
     }
 
     // Repository Pattern
-    if (content.includes('repository') || content.includes('findBy') || content.includes('save(')) {
+    if (
+      content.includes("repository") ||
+      content.includes("findBy") ||
+      content.includes("save(")
+    ) {
       patterns.push({
-        type: 'structural',
-        name: 'Repository Pattern',
-        confidence: 'medium',
+        type: "structural",
+        name: "Repository Pattern",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Repository pattern usage detected',
-        category: 'structural'
+        description: "Repository pattern usage detected",
+        category: "structural",
       });
     }
 
     // Dependency Injection
-    if (content.includes('inject') || content.includes('dependency') || content.includes('DI')) {
+    if (
+      content.includes("inject") ||
+      content.includes("dependency") ||
+      content.includes("DI")
+    ) {
       patterns.push({
-        type: 'structural',
-        name: 'Dependency Injection',
-        confidence: 'medium',
+        type: "structural",
+        name: "Dependency Injection",
+        confidence: "medium",
         file: path.relative(process.cwd(), filePath),
-        description: 'Dependency injection pattern usage detected',
-        category: 'structural'
+        description: "Dependency injection pattern usage detected",
+        category: "structural",
       });
     }
 
     // Module Pattern
-    if (content.includes('module.exports') || content.includes('export default')) {
+    if (
+      content.includes("module.exports") ||
+      content.includes("export default")
+    ) {
       patterns.push({
-        type: 'structural',
-        name: 'Module Pattern',
-        confidence: 'high',
+        type: "structural",
+        name: "Module Pattern",
+        confidence: "high",
         file: path.relative(process.cwd(), filePath),
-        description: 'Module pattern usage detected',
-        category: 'structural'
+        description: "Module pattern usage detected",
+        category: "structural",
       });
     }
 
@@ -397,10 +420,19 @@ class PatternAnalysisStep {
    * Check for MVC structure (like OLD version)
    */
   hasMVCStructure(content, filePath) {
-    const hasModels = content.includes('model') || content.includes('entity') || content.includes('Model');
-    const hasViews = content.includes('view') || content.includes('component') || content.includes('View');
-    const hasControllers = content.includes('controller') || content.includes('handler') || content.includes('Controller');
-    
+    const hasModels =
+      content.includes("model") ||
+      content.includes("entity") ||
+      content.includes("Model");
+    const hasViews =
+      content.includes("view") ||
+      content.includes("component") ||
+      content.includes("View");
+    const hasControllers =
+      content.includes("controller") ||
+      content.includes("handler") ||
+      content.includes("Controller");
+
     return hasModels && hasViews && hasControllers;
   }
 
@@ -408,11 +440,17 @@ class PatternAnalysisStep {
    * Check for layered architecture (like OLD version)
    */
   hasLayeredArchitecture(content, filePath) {
-    const layerIndicators = ['presentation', 'business', 'data', 'infrastructure', 'domain'];
-    const layerCount = layerIndicators.filter(indicator => 
-      content.includes(indicator)
+    const layerIndicators = [
+      "presentation",
+      "business",
+      "data",
+      "infrastructure",
+      "domain",
+    ];
+    const layerCount = layerIndicators.filter((indicator) =>
+      content.includes(indicator),
     ).length;
-    
+
     return layerCount >= 3;
   }
 
@@ -420,10 +458,12 @@ class PatternAnalysisStep {
    * Check for microservices structure (like OLD version)
    */
   hasMicroservicesStructure(content, filePath) {
-    const hasServices = content.includes('service') || content.includes('Service');
-    const hasIndependentConfigs = content.includes('config') || content.includes('Config');
+    const hasServices =
+      content.includes("service") || content.includes("Service");
+    const hasIndependentConfigs =
+      content.includes("config") || content.includes("Config");
     const hasMultipleServices = (content.match(/service/gi) || []).length > 2;
-    
+
     return hasServices && hasIndependentConfigs && hasMultipleServices;
   }
 
@@ -431,10 +471,12 @@ class PatternAnalysisStep {
    * Check for monorepo structure (like OLD version)
    */
   hasMonorepoStructure(content, filePath) {
-    const hasPackages = content.includes('packages') || content.includes('apps');
+    const hasPackages =
+      content.includes("packages") || content.includes("apps");
     const hasMultipleApps = (content.match(/app/gi) || []).length > 1;
-    const hasWorkspace = content.includes('workspace') || content.includes('lerna');
-    
+    const hasWorkspace =
+      content.includes("workspace") || content.includes("lerna");
+
     return hasPackages || hasMultipleApps || hasWorkspace;
   }
 
@@ -445,20 +487,21 @@ class PatternAnalysisStep {
    */
   aggregatePatterns(patterns) {
     const patternMap = new Map();
-    
-    patterns.forEach(pattern => {
+
+    patterns.forEach((pattern) => {
       const key = pattern.name;
       if (patternMap.has(key)) {
         const existing = patternMap.get(key);
         existing.files = existing.files || [];
         existing.files.push(pattern.file);
-        existing.confidence = existing.confidence === 'high' ? 'high' : pattern.confidence;
+        existing.confidence =
+          existing.confidence === "high" ? "high" : pattern.confidence;
         existing.count = (existing.count || 1) + 1;
       } else {
         patternMap.set(key, {
           ...pattern,
           files: pattern.file ? [pattern.file] : [],
-          count: 1
+          count: 1,
         });
       }
     });
@@ -476,10 +519,10 @@ class PatternAnalysisStep {
       creational: [],
       structural: [],
       behavioral: [],
-      architectural: []
+      architectural: [],
     };
 
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       if (categorized[pattern.category]) {
         categorized[pattern.category].push(pattern);
       } else {
@@ -497,7 +540,7 @@ class PatternAnalysisStep {
    */
   calculatePatternScore(data) {
     const { patterns, categories, files } = data;
-    
+
     // Base score starts at 50
     let score = 50;
 
@@ -523,11 +566,11 @@ class PatternAnalysisStep {
    * @returns {string} Pattern level
    */
   getPatternLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -537,10 +580,11 @@ class PatternAnalysisStep {
    */
   async getJavaScriptFiles(projectPath) {
     const allFiles = await this.getAllFiles(projectPath);
-    return allFiles.filter(file => 
-      /\.(js|jsx|ts|tsx)$/i.test(file) && 
-      !file.includes('node_modules') &&  // SKIP node_modules (correct!)
-      !file.includes('.git')             // SKIP .git (correct!)
+    return allFiles.filter(
+      (file) =>
+        /\.(js|jsx|ts|tsx)$/i.test(file) &&
+        !file.includes("node_modules") && // SKIP node_modules (correct!)
+        !file.includes(".git"), // SKIP .git (correct!)
     );
   }
 
@@ -551,18 +595,22 @@ class PatternAnalysisStep {
    */
   async getAllFiles(dir) {
     const files = [];
-    
+
     try {
       const items = await fs.readdir(dir);
-      
+
       for (const item of items) {
         const fullPath = path.join(dir, item);
         const stat = await fs.stat(fullPath);
-        
+
         if (stat.isDirectory()) {
           // SKIP node_modules and .git (correct!)
-          if (!item.startsWith('.') && item !== 'node_modules' && item !== '.git') {
-            files.push(...await this.getAllFiles(fullPath));
+          if (
+            !item.startsWith(".") &&
+            item !== "node_modules" &&
+            item !== ".git"
+          ) {
+            files.push(...(await this.getAllFiles(fullPath)));
           }
         } else {
           files.push(fullPath);
@@ -571,7 +619,7 @@ class PatternAnalysisStep {
     } catch (error) {
       // Directory doesn't exist or can't be read
     }
-    
+
     return files;
   }
 
@@ -585,8 +633,8 @@ class PatternAnalysisStep {
       ...result,
       timestamp: new Date().toISOString(),
       step: PatternAnalysisStep,
-      category: 'architecture',
-      subcategory: 'pattern'
+      category: "architecture",
+      subcategory: "pattern",
     };
   }
 
@@ -596,7 +644,7 @@ class PatternAnalysisStep {
    */
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required for pattern analysis');
+      throw new Error("Project path is required for pattern analysis");
     }
   }
 
@@ -618,15 +666,18 @@ class PatternAnalysisStep {
    */
   calculateConfidence(result) {
     const { patterns, categorized, metrics } = result;
-    
+
     if (!patterns || !categorized || !metrics) return 0;
-    
+
     // Higher confidence with more patterns
     const patternConfidence = Math.min(patterns.length * 5, 60);
-    
+
     // Additional confidence for category diversity
-    const categoryConfidence = Math.min(Object.keys(categorized).length * 10, 40);
-    
+    const categoryConfidence = Math.min(
+      Object.keys(categorized).length * 10,
+      40,
+    );
+
     return Math.min(patternConfidence + categoryConfidence, 100);
   }
 
@@ -637,67 +688,78 @@ class PatternAnalysisStep {
    */
   generateIssues(result) {
     const issues = [];
-    
+
     // Check for low pattern score
     if (result.score < 70) {
       issues.push({
-        type: 'low-pattern-score',
-        title: 'Low Pattern Analysis Score',
+        type: "low-pattern-score",
+        title: "Low Pattern Analysis Score",
         description: `Pattern analysis score of ${result.score}% indicates poor pattern implementation`,
-        severity: 'medium',
-        priority: 'medium',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        location: 'pattern-analysis',
-        suggestion: 'Improve pattern implementation and follow design pattern best practices'
+        severity: "medium",
+        priority: "medium",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        location: "pattern-analysis",
+        suggestion:
+          "Improve pattern implementation and follow design pattern best practices",
       });
     }
 
     // Check for missing design patterns
     if (result.patterns && result.patterns.length < 3) {
       issues.push({
-        type: 'insufficient-patterns',
-        title: 'Insufficient Design Patterns',
+        type: "insufficient-patterns",
+        title: "Insufficient Design Patterns",
         description: `Only ${result.patterns.length} design patterns detected, insufficient for good architecture`,
-        severity: 'medium',
-        priority: 'medium',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        location: 'pattern-analysis',
-        suggestion: 'Implement more design patterns to improve code organization and maintainability'
+        severity: "medium",
+        priority: "medium",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        location: "pattern-analysis",
+        suggestion:
+          "Implement more design patterns to improve code organization and maintainability",
       });
     }
 
     // Check for anti-patterns
-    if (result.patterns && result.patterns.some(pattern => pattern.type === 'anti-pattern')) {
+    if (
+      result.patterns &&
+      result.patterns.some((pattern) => pattern.type === "anti-pattern")
+    ) {
       issues.push({
-        type: 'anti-patterns-detected',
-        title: 'Anti-Patterns Detected',
-        description: 'Anti-patterns found in the codebase',
-        severity: 'high',
-        priority: 'high',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        location: 'pattern-analysis',
-        suggestion: 'Refactor code to remove anti-patterns and improve code quality'
+        type: "anti-patterns-detected",
+        title: "Anti-Patterns Detected",
+        description: "Anti-patterns found in the codebase",
+        severity: "high",
+        priority: "high",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        location: "pattern-analysis",
+        suggestion:
+          "Refactor code to remove anti-patterns and improve code quality",
       });
     }
 
     // Check for missing architectural patterns
-    const hasArchitecturalPatterns = result.patterns && result.patterns.some(pattern => 
-      pattern.category === 'architectural' || pattern.type === 'architectural'
-    );
+    const hasArchitecturalPatterns =
+      result.patterns &&
+      result.patterns.some(
+        (pattern) =>
+          pattern.category === "architectural" ||
+          pattern.type === "architectural",
+      );
     if (!hasArchitecturalPatterns) {
       issues.push({
-        type: 'missing-architectural-patterns',
-        title: 'Missing Architectural Patterns',
-        description: 'No architectural patterns detected in the codebase',
-        severity: 'high',
-        priority: 'high',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        location: 'pattern-analysis',
-        suggestion: 'Implement architectural patterns (MVC, DDD, CQRS, etc.) for better organization'
+        type: "missing-architectural-patterns",
+        title: "Missing Architectural Patterns",
+        description: "No architectural patterns detected in the codebase",
+        severity: "high",
+        priority: "high",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        location: "pattern-analysis",
+        suggestion:
+          "Implement architectural patterns (MVC, DDD, CQRS, etc.) for better organization",
       });
     }
 
@@ -711,60 +773,60 @@ class PatternAnalysisStep {
    */
   generateRecommendations(result) {
     const recommendations = [];
-    
+
     // Check for low analysis score
     if (result.score < 80) {
       recommendations.push({
-        type: 'improve-score',
-        title: 'Improve Analysis Score',
+        type: "improve-score",
+        title: "Improve Analysis Score",
         description: `Current score of ${result.score}% can be improved`,
-        priority: 'medium',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        action: 'Implement best practices to improve analysis score',
-        impact: 'Better code quality and maintainability'
+        priority: "medium",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        action: "Implement best practices to improve analysis score",
+        impact: "Better code quality and maintainability",
       });
     }
 
     // Check for missing patterns
     if (result.patterns && result.patterns.length < 3) {
       recommendations.push({
-        type: 'add-patterns',
-        title: 'Add More Design Patterns',
-        description: 'Consider implementing additional design patterns',
-        priority: 'medium',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        action: 'Research and implement appropriate design patterns',
-        impact: 'Improved code organization and maintainability'
+        type: "add-patterns",
+        title: "Add More Design Patterns",
+        description: "Consider implementing additional design patterns",
+        priority: "medium",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        action: "Research and implement appropriate design patterns",
+        impact: "Improved code organization and maintainability",
       });
     }
 
     // Check for security improvements
     if (result.vulnerabilities && result.vulnerabilities.length > 0) {
       recommendations.push({
-        type: 'security-improvements',
-        title: 'Address Security Vulnerabilities',
+        type: "security-improvements",
+        title: "Address Security Vulnerabilities",
         description: `${result.vulnerabilities.length} vulnerabilities found`,
-        priority: 'high',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        action: 'Review and fix identified security vulnerabilities',
-        impact: 'Enhanced security posture'
+        priority: "high",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        action: "Review and fix identified security vulnerabilities",
+        impact: "Enhanced security posture",
       });
     }
 
     // Check for performance improvements
     if (result.metrics && result.metrics.performanceScore < 80) {
       recommendations.push({
-        type: 'performance-improvements',
-        title: 'Improve Performance',
-        description: 'Performance analysis indicates room for improvement',
-        priority: 'medium',
-        category: 'architecture',
-        source: 'PatternAnalysisStep',
-        action: 'Optimize code for better performance',
-        impact: 'Faster execution and better user experience'
+        type: "performance-improvements",
+        title: "Improve Performance",
+        description: "Performance analysis indicates room for improvement",
+        priority: "medium",
+        category: "architecture",
+        source: "PatternAnalysisStep",
+        action: "Optimize code for better performance",
+        impact: "Faster execution and better user experience",
       });
     }
 
@@ -778,77 +840,87 @@ class PatternAnalysisStep {
    */
   async generateTasks(result, context) {
     const tasks = [];
-    const projectId = context.projectId || 'default-project';
-    
+    const projectId = context.projectId || "default-project";
+
     // Create main improvement task
     const mainTask = {
       id: `pattern-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${PatternAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${PatternAnalysisStep} analysis`,
-      type: 'improvement',
-      category: 'architecture',
-      priority: 'medium',
-      status: 'pending',
+      type: "improvement",
+      category: "architecture",
+      priority: "medium",
+      status: "pending",
       projectId: projectId,
       metadata: {
-        source: 'PatternAnalysisStep',
+        source: "PatternAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations ? result.recommendations.length : 0
+        recommendations: result.recommendations
+          ? result.recommendations.length
+          : 0,
       },
       estimatedHours: 4,
-      phase: 'improvement',
-      stage: 'planning'
+      phase: "improvement",
+      stage: "planning",
     };
-    
+
     tasks.push(mainTask);
-    
+
     // Create subtasks for critical issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "critical")
+    ) {
       const criticalTask = {
         id: `pattern-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${PatternAnalysisStep}`,
-        description: 'Address critical issues identified in analysis',
-        type: 'fix',
-        category: 'architecture',
-        priority: 'critical',
-        status: 'pending',
+        description: "Address critical issues identified in analysis",
+        type: "fix",
+        category: "architecture",
+        priority: "critical",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'PatternAnalysisStep',
-          issues: result.issues.filter(issue => issue.severity === 'critical')
+          source: "PatternAnalysisStep",
+          issues: result.issues.filter(
+            (issue) => issue.severity === "critical",
+          ),
         },
         estimatedHours: 4,
-        phase: 'critical-fixes',
-        stage: 'implementation'
+        phase: "critical-fixes",
+        stage: "implementation",
       };
       tasks.push(criticalTask);
     }
-    
+
     // Create subtasks for high priority issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "high")
+    ) {
       const highTask = {
         id: `pattern-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${PatternAnalysisStep}`,
-        description: 'Address high priority issues identified in analysis',
-        type: 'fix',
-        category: 'architecture',
-        priority: 'high',
-        status: 'pending',
+        description: "Address high priority issues identified in analysis",
+        type: "fix",
+        category: "architecture",
+        priority: "high",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'PatternAnalysisStep',
-          issues: result.issues.filter(issue => issue.severity === 'high')
+          source: "PatternAnalysisStep",
+          issues: result.issues.filter((issue) => issue.severity === "high"),
         },
         estimatedHours: 3,
-        phase: 'high-fixes',
-        stage: 'implementation'
+        phase: "high-fixes",
+        stage: "implementation",
       };
       tasks.push(highTask);
     }
-    
+
     return tasks;
   }
 
@@ -859,30 +931,30 @@ class PatternAnalysisStep {
    */
   calculateEstimatedHours(result) {
     let totalHours = 2; // Base hours for improvement
-    
+
     if (result.issues) {
-      result.issues.forEach(issue => {
+      result.issues.forEach((issue) => {
         switch (issue.severity) {
-          case 'critical':
+          case "critical":
             totalHours += 2;
             break;
-          case 'high':
+          case "high":
             totalHours += 1.5;
             break;
-          case 'medium':
+          case "medium":
             totalHours += 1;
             break;
-          case 'low':
+          case "low":
             totalHours += 0.5;
             break;
         }
       });
     }
-    
+
     if (result.recommendations) {
       totalHours += result.recommendations.length * 0.5;
     }
-    
+
     return Math.round(totalHours * 10) / 10; // Round to 1 decimal place
   }
 
@@ -895,24 +967,32 @@ class PatternAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, 'docs', 'analysis', 'architecture', 'pattern-analysis-step');
-    
+    const docsDir = path.join(
+      projectPath,
+      "docs",
+      "analysis",
+      "architecture",
+      "pattern-analysis-step",
+    );
+
     // Ensure directory exists
     try {
       await fs.mkdir(docsDir, { recursive: true });
     } catch (error) {
       // Directory might already exist, continue
     }
-    
-    
+
     // Create implementation file
-    const implementationDoc = await this.createImplementationDoc(result, docsDir);
+    const implementationDoc = await this.createImplementationDoc(
+      result,
+      docsDir,
+    );
     docs.push(implementationDoc);
-    
+
     // Create analysis report
     const analysisReport = await this.createAnalysisReport(result, docsDir);
     docs.push(analysisReport);
-    
+
     return docs;
   }
 
@@ -923,8 +1003,8 @@ class PatternAnalysisStep {
    * @returns {Object} Implementation document
    */
   async createImplementationDoc(result, docsDir) {
-    const docPath = path.join(docsDir, 'pattern-analysis-implementation.md');
-    
+    const docPath = path.join(docsDir, "pattern-analysis-implementation.md");
+
     const content = `# Pattern Analysis Implementation
 
 ## 📋 Analysis Overview
@@ -932,7 +1012,7 @@ class PatternAnalysisStep {
 - **Category**: architecture
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
-- **Level**: ${result.level || 'unknown'}
+- **Level**: ${result.level || "unknown"}
 
 ## 📊 Analysis Results
 - **Total Patterns Detected**: ${result.metrics?.patternsDetected || 0}
@@ -940,23 +1020,23 @@ class PatternAnalysisStep {
 - **Files Analyzed**: ${result.metrics?.totalFiles || 0}
 
 ## 🎯 Key Findings
-${result.patterns ? result.patterns.map(pattern => `- **${pattern.name}**: ${pattern.description}`).join('\n') : '- No patterns detected'}
+${result.patterns ? result.patterns.map((pattern) => `- **${pattern.name}**: ${pattern.description}`).join("\n") : "- No patterns detected"}
 
 ## 📝 Recommendations
-${result.recommendations ? result.recommendations.map(rec => `- **${rec.title}**: ${rec.description}`).join('\n') : '- No recommendations'}
+${result.recommendations ? result.recommendations.map((rec) => `- **${rec.title}**: ${rec.description}`).join("\n") : "- No recommendations"}
 
 ## 🔧 Implementation Tasks
-${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join('\n') : '- No tasks generated'}
+${result.tasks ? result.tasks.map((task) => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join("\n") : "- No tasks generated"}
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'implementation',
-      title: 'Pattern Analysis Implementation',
+      type: "implementation",
+      title: "Pattern Analysis Implementation",
       path: docPath,
-      category: 'architecture',
-      source: PatternAnalysisStep
+      category: "architecture",
+      source: PatternAnalysisStep,
     };
   }
 
@@ -967,18 +1047,26 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
    * @returns {Object} Analysis report
    */
   async createAnalysisReport(result, docsDir) {
-    const docPath = path.join(docsDir, 'pattern-analysis-report.md');
-    
+    const docPath = path.join(docsDir, "pattern-analysis-report.md");
+
     const content = `# Pattern Analysis Report
 
 ## 📊 Executive Summary
-Pattern analysis completed with a score of ${result.score || 0}% (${result.level || 'unknown'} level).
+Pattern analysis completed with a score of ${result.score || 0}% (${result.level || "unknown"} level).
 
 ## 🔍 Detailed Analysis
-${result.categorized ? Object.entries(result.categorized).map(([category, patterns]) => `
+${
+  result.categorized
+    ? Object.entries(result.categorized)
+        .map(
+          ([category, patterns]) => `
 ### ${category.charAt(0).toUpperCase() + category.slice(1)} Patterns
-${patterns.map(pattern => `- ${pattern.name}: ${pattern.description}`).join('\n')}
-`).join('\n') : 'No categorized patterns found'}
+${patterns.map((pattern) => `- ${pattern.name}: ${pattern.description}`).join("\n")}
+`,
+        )
+        .join("\n")
+    : "No categorized patterns found"
+}
 
 ## 📈 Metrics
 - **Pattern Coverage**: ${result.metrics?.patternsDetected || 0} patterns detected
@@ -989,14 +1077,14 @@ ${patterns.map(pattern => `- ${pattern.name}: ${pattern.description}`).join('\n'
 Based on the analysis, consider implementing additional design patterns to improve code quality and maintainability.
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'report',
-      title: 'Pattern Analysis Report',
+      type: "report",
+      title: "Pattern Analysis Report",
       path: docPath,
-      category: 'architecture',
-      source: PatternAnalysisStep
+      category: "architecture",
+      source: PatternAnalysisStep,
     };
   }
 }
@@ -1007,5 +1095,5 @@ const stepInstance = new PatternAnalysisStep();
 // Export in StepRegistry format
 module.exports = {
   config: PatternAnalysisStep.getConfig(),
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

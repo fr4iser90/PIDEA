@@ -240,7 +240,6 @@ describe('Chat Service Integration', () => {
     const service = new WebChatApplicationService();
     const mockStepRegistry = {
       executeStep: jest.fn().mockResolvedValue({
-        success: true,
         result: { data: { messages: [] } }
       })
     };

@@ -2,15 +2,15 @@
  * PerformanceSchema - Database performance optimization schema
  * Provides performance optimization schema management and utilities
  */
-const Logger = require('@logging/Logger');
+const Logger = require("@logging/Logger");
 
 class PerformanceSchema {
   constructor(databaseConnection) {
     this.db = databaseConnection;
-    this.logger = new Logger('PerformanceSchema');
+    this.logger = new Logger("PerformanceSchema");
     this.schemaCache = new Map();
     this.optimizationRules = new Map();
-    
+
     this.initializeOptimizationRules();
   }
 
@@ -18,48 +18,48 @@ class PerformanceSchema {
    * Initialize performance optimization rules
    */
   initializeOptimizationRules() {
-    this.optimizationRules.set('index_optimization', {
-      description: 'Optimize database indexes for better performance',
+    this.optimizationRules.set("index_optimization", {
+      description: "Optimize database indexes for better performance",
       rules: [
-        'Create indexes on frequently queried columns',
-        'Use composite indexes for multi-column queries',
-        'Remove unused indexes',
-        'Consider partial indexes for filtered queries'
+        "Create indexes on frequently queried columns",
+        "Use composite indexes for multi-column queries",
+        "Remove unused indexes",
+        "Consider partial indexes for filtered queries",
       ],
-      impact: 'high'
+      impact: "high",
     });
 
-    this.optimizationRules.set('query_optimization', {
-      description: 'Optimize database queries for better performance',
+    this.optimizationRules.set("query_optimization", {
+      description: "Optimize database queries for better performance",
       rules: [
-        'Use specific column names instead of SELECT *',
-        'Add appropriate WHERE clauses',
-        'Use JOINs instead of subqueries when possible',
-        'Limit result sets with LIMIT clause'
+        "Use specific column names instead of SELECT *",
+        "Add appropriate WHERE clauses",
+        "Use JOINs instead of subqueries when possible",
+        "Limit result sets with LIMIT clause",
       ],
-      impact: 'medium'
+      impact: "medium",
     });
 
-    this.optimizationRules.set('partition_optimization', {
-      description: 'Optimize table partitioning for better performance',
+    this.optimizationRules.set("partition_optimization", {
+      description: "Optimize table partitioning for better performance",
       rules: [
-        'Partition large tables by date ranges',
-        'Use appropriate partitioning strategies',
-        'Maintain partition statistics',
-        'Archive old partitions'
+        "Partition large tables by date ranges",
+        "Use appropriate partitioning strategies",
+        "Maintain partition statistics",
+        "Archive old partitions",
       ],
-      impact: 'high'
+      impact: "high",
     });
 
-    this.optimizationRules.set('materialized_view_optimization', {
-      description: 'Optimize materialized views for better performance',
+    this.optimizationRules.set("materialized_view_optimization", {
+      description: "Optimize materialized views for better performance",
       rules: [
-        'Create materialized views for complex queries',
-        'Schedule regular refreshes',
-        'Use appropriate refresh strategies',
-        'Monitor view usage'
+        "Create materialized views for complex queries",
+        "Schedule regular refreshes",
+        "Use appropriate refresh strategies",
+        "Monitor view usage",
       ],
-      impact: 'medium'
+      impact: "medium",
     });
   }
 
@@ -70,31 +70,34 @@ class PerformanceSchema {
    */
   async createPerformanceSchema(options = {}) {
     try {
-      this.logger.info('Creating performance optimization schema', { options });
-      
-      const schemaName = options.schemaName || 'performance_optimization';
+      this.logger.info("Creating performance optimization schema", { options });
+
+      const schemaName = options.schemaName || "performance_optimization";
       const tables = await this.createPerformanceTables(schemaName, options);
       const indexes = await this.createPerformanceIndexes(schemaName, options);
       const views = await this.createPerformanceViews(schemaName, options);
-      
+
       const result = {
         schemaName,
         tables,
         indexes,
         views,
         createdAt: new Date().toISOString(),
-        status: 'active'
+        status: "active",
       };
-      
+
       // Cache the schema
       this.schemaCache.set(schemaName, result);
-      
-      this.logger.info('Performance optimization schema created successfully', { schemaName });
-      
+
+      this.logger.info("Performance optimization schema created successfully", {
+        schemaName,
+      });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Performance schema creation failed', { error: error.message });
+      this.logger.error("Performance schema creation failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -107,10 +110,12 @@ class PerformanceSchema {
    */
   async createPerformanceTables(schemaName, options) {
     try {
-      this.logger.debug('Creating performance optimization tables', { schemaName });
-      
+      this.logger.debug("Creating performance optimization tables", {
+        schemaName,
+      });
+
       const tables = [];
-      
+
       // Performance metrics table
       const performanceMetricsTable = `
         CREATE TABLE IF NOT EXISTS ${schemaName}.performance_metrics (
@@ -122,10 +127,10 @@ class PerformanceSchema {
           metadata JSONB
         )
       `;
-      
+
       await this.db.execute(performanceMetricsTable);
-      tables.push('performance_metrics');
-      
+      tables.push("performance_metrics");
+
       // Query performance table
       const queryPerformanceTable = `
         CREATE TABLE IF NOT EXISTS ${schemaName}.query_performance (
@@ -140,10 +145,10 @@ class PerformanceSchema {
           metadata JSONB
         )
       `;
-      
+
       await this.db.execute(queryPerformanceTable);
-      tables.push('query_performance');
-      
+      tables.push("query_performance");
+
       // Index usage table
       const indexUsageTable = `
         CREATE TABLE IF NOT EXISTS ${schemaName}.index_usage (
@@ -156,10 +161,10 @@ class PerformanceSchema {
           metadata JSONB
         )
       `;
-      
+
       await this.db.execute(indexUsageTable);
-      tables.push('index_usage');
-      
+      tables.push("index_usage");
+
       // Optimization recommendations table
       const optimizationRecommendationsTable = `
         CREATE TABLE IF NOT EXISTS ${schemaName}.optimization_recommendations (
@@ -174,10 +179,10 @@ class PerformanceSchema {
           metadata JSONB
         )
       `;
-      
+
       await this.db.execute(optimizationRecommendationsTable);
-      tables.push('optimization_recommendations');
-      
+      tables.push("optimization_recommendations");
+
       // Performance alerts table
       const performanceAlertsTable = `
         CREATE TABLE IF NOT EXISTS ${schemaName}.performance_alerts (
@@ -192,19 +197,20 @@ class PerformanceSchema {
           metadata JSONB
         )
       `;
-      
+
       await this.db.execute(performanceAlertsTable);
-      tables.push('performance_alerts');
-      
-      this.logger.debug('Performance optimization tables created', { 
-        schemaName, 
-        count: tables.length 
+      tables.push("performance_alerts");
+
+      this.logger.debug("Performance optimization tables created", {
+        schemaName,
+        count: tables.length,
       });
-      
+
       return tables;
-      
     } catch (error) {
-      this.logger.error('Failed to create performance tables', { error: error.message });
+      this.logger.error("Failed to create performance tables", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -217,78 +223,81 @@ class PerformanceSchema {
    */
   async createPerformanceIndexes(schemaName, options) {
     try {
-      this.logger.debug('Creating performance optimization indexes', { schemaName });
-      
+      this.logger.debug("Creating performance optimization indexes", {
+        schemaName,
+      });
+
       const indexes = [];
-      
+
       // Performance metrics indexes
       const performanceMetricsIndexes = [
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_metrics_metric_name ON ${schemaName}.performance_metrics (metric_name)`,
-        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_metrics_timestamp ON ${schemaName}.performance_metrics (timestamp)`
+        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_metrics_timestamp ON ${schemaName}.performance_metrics (timestamp)`,
       ];
-      
+
       for (const indexSQL of performanceMetricsIndexes) {
         await this.db.execute(indexSQL);
         indexes.push(indexSQL);
       }
-      
+
       // Query performance indexes
       const queryPerformanceIndexes = [
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_query_performance_query_hash ON ${schemaName}.query_performance (query_hash)`,
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_query_performance_execution_time ON ${schemaName}.query_performance (execution_time_ms)`,
-        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_query_performance_timestamp ON ${schemaName}.query_performance (timestamp)`
+        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_query_performance_timestamp ON ${schemaName}.query_performance (timestamp)`,
       ];
-      
+
       for (const indexSQL of queryPerformanceIndexes) {
         await this.db.execute(indexSQL);
         indexes.push(indexSQL);
       }
-      
+
       // Index usage indexes
       const indexUsageIndexes = [
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_index_usage_index_name ON ${schemaName}.index_usage (index_name)`,
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_index_usage_table_name ON ${schemaName}.index_usage (table_name)`,
-        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_index_usage_last_used ON ${schemaName}.index_usage (last_used)`
+        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_index_usage_last_used ON ${schemaName}.index_usage (last_used)`,
       ];
-      
+
       for (const indexSQL of indexUsageIndexes) {
         await this.db.execute(indexSQL);
         indexes.push(indexSQL);
       }
-      
+
       // Optimization recommendations indexes
       const optimizationRecommendationsIndexes = [
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_optimization_recommendations_type ON ${schemaName}.optimization_recommendations (recommendation_type)`,
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_optimization_recommendations_priority ON ${schemaName}.optimization_recommendations (priority)`,
-        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_optimization_recommendations_status ON ${schemaName}.optimization_recommendations (status)`
+        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_optimization_recommendations_status ON ${schemaName}.optimization_recommendations (status)`,
       ];
-      
+
       for (const indexSQL of optimizationRecommendationsIndexes) {
         await this.db.execute(indexSQL);
         indexes.push(indexSQL);
       }
-      
+
       // Performance alerts indexes
       const performanceAlertsIndexes = [
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_alerts_alert_type ON ${schemaName}.performance_alerts (alert_type)`,
         `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_alerts_severity ON ${schemaName}.performance_alerts (severity)`,
-        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_alerts_timestamp ON ${schemaName}.performance_alerts (timestamp)`
+        `CREATE INDEX IF NOT EXISTS idx_${schemaName}_performance_alerts_timestamp ON ${schemaName}.performance_alerts (timestamp)`,
       ];
-      
+
       for (const indexSQL of performanceAlertsIndexes) {
         await this.db.execute(indexSQL);
         indexes.push(indexSQL);
       }
-      
-      this.logger.debug('Performance optimization indexes created', { 
-        schemaName, 
-        count: indexes.length 
+
+      this.logger.debug("Performance optimization indexes created", {
+        schemaName,
+        count: indexes.length,
       });
-      
+
       return indexes;
-      
     } catch (error) {
-      this.logger.error('Failed to create performance indexes', { error: error.message });
+      this.logger.error("Failed to create performance indexes", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -301,10 +310,12 @@ class PerformanceSchema {
    */
   async createPerformanceViews(schemaName, options) {
     try {
-      this.logger.debug('Creating performance optimization views', { schemaName });
-      
+      this.logger.debug("Creating performance optimization views", {
+        schemaName,
+      });
+
       const views = [];
-      
+
       // Performance summary view
       const performanceSummaryView = `
         CREATE OR REPLACE VIEW ${schemaName}.performance_summary AS
@@ -320,10 +331,10 @@ class PerformanceSchema {
         GROUP BY DATE(timestamp), metric_name
         ORDER BY date DESC, metric_name
       `;
-      
+
       await this.db.execute(performanceSummaryView);
-      views.push('performance_summary');
-      
+      views.push("performance_summary");
+
       // Query performance summary view
       const queryPerformanceSummaryView = `
         CREATE OR REPLACE VIEW ${schemaName}.query_performance_summary AS
@@ -341,10 +352,10 @@ class PerformanceSchema {
         GROUP BY DATE(timestamp), database_type
         ORDER BY date DESC, database_type
       `;
-      
+
       await this.db.execute(queryPerformanceSummaryView);
-      views.push('query_performance_summary');
-      
+      views.push("query_performance_summary");
+
       // Index usage summary view
       const indexUsageSummaryView = `
         CREATE OR REPLACE VIEW ${schemaName}.index_usage_summary AS
@@ -359,10 +370,10 @@ class PerformanceSchema {
         GROUP BY table_name, index_name
         ORDER BY total_usage DESC
       `;
-      
+
       await this.db.execute(indexUsageSummaryView);
-      views.push('index_usage_summary');
-      
+      views.push("index_usage_summary");
+
       // Optimization recommendations summary view
       const optimizationRecommendationsSummaryView = `
         CREATE OR REPLACE VIEW ${schemaName}.optimization_recommendations_summary AS
@@ -378,19 +389,20 @@ class PerformanceSchema {
         GROUP BY recommendation_type, priority, status
         ORDER BY priority DESC, recommendation_count DESC
       `;
-      
+
       await this.db.execute(optimizationRecommendationsSummaryView);
-      views.push('optimization_recommendations_summary');
-      
-      this.logger.debug('Performance optimization views created', { 
-        schemaName, 
-        count: views.length 
+      views.push("optimization_recommendations_summary");
+
+      this.logger.debug("Performance optimization views created", {
+        schemaName,
+        count: views.length,
       });
-      
+
       return views;
-      
     } catch (error) {
-      this.logger.error('Failed to create performance views', { error: error.message });
+      this.logger.error("Failed to create performance views", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -406,7 +418,7 @@ class PerformanceSchema {
       if (this.schemaCache.has(schemaName)) {
         return this.schemaCache.get(schemaName);
       }
-      
+
       // Query database for schema information
       const query = `
         SELECT 
@@ -417,29 +429,30 @@ class PerformanceSchema {
         WHERE table_schema = $1
         ORDER BY table_name
       `;
-      
+
       const result = await this.db.execute(query, [schemaName]);
-      
+
       if (result.rows.length === 0) {
         return null;
       }
-      
+
       const schema = {
         schemaName,
-        tables: result.rows.map(row => ({
+        tables: result.rows.map((row) => ({
           name: row.table_name,
-          type: row.table_type
+          type: row.table_type,
         })),
-        status: 'active'
+        status: "active",
       };
-      
+
       // Cache the schema
       this.schemaCache.set(schemaName, schema);
-      
+
       return schema;
-      
     } catch (error) {
-      this.logger.error('Failed to get performance schema', { error: error.message });
+      this.logger.error("Failed to get performance schema", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -451,31 +464,34 @@ class PerformanceSchema {
    */
   async dropPerformanceSchema(schemaName) {
     try {
-      this.logger.info('Dropping performance schema', { schemaName });
-      
+      this.logger.info("Dropping performance schema", { schemaName });
+
       const schema = await this.getPerformanceSchema(schemaName);
       if (!schema) {
         throw new Error(`Performance schema ${schemaName} not found`);
       }
-      
+
       const dropSQL = `DROP SCHEMA IF EXISTS ${schemaName} CASCADE`;
       await this.db.execute(dropSQL);
-      
+
       // Remove from cache
       this.schemaCache.delete(schemaName);
-      
+
       const result = {
         schemaName,
         droppedAt: new Date().toISOString(),
-        status: 'dropped'
+        status: "dropped",
       };
-      
-      this.logger.info('Performance schema dropped successfully', { schemaName });
-      
+
+      this.logger.info("Performance schema dropped successfully", {
+        schemaName,
+      });
+
       return result;
-      
     } catch (error) {
-      this.logger.error('Performance schema drop failed', { error: error.message });
+      this.logger.error("Performance schema drop failed", {
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -496,7 +512,7 @@ class PerformanceSchema {
     return {
       totalSchemas: this.schemaCache.size,
       optimizationRules: Array.from(this.optimizationRules.keys()),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -505,7 +521,7 @@ class PerformanceSchema {
    */
   clearCache() {
     this.schemaCache.clear();
-    this.logger.info('Performance schema cache cleared');
+    this.logger.info("Performance schema cache cleared");
   }
 }
 

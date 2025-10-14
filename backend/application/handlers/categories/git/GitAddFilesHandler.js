@@ -3,8 +3,8 @@
  * Handler for adding files to Git staging area
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitAddFilesHandler {
@@ -20,40 +20,38 @@ class GitAddFilesHandler {
 
       const { projectPath, files } = command.getCommandData();
 
-      this.logger.info('GitAddFilesHandler: Executing git add', {
+      this.logger.info("GitAddFilesHandler: Executing git add", {
         projectPath,
-        files
+        files,
       });
 
       // Execute git add command
       const addCommand = `git add ${files}`;
       const result = await execAsync(addCommand, { cwd: projectPath });
 
-      this.logger.info('GitAddFilesHandler: Git add completed successfully', {
-        files,
-        result: result.stdout
-      });
-
-      return {
-        success: true,
+      this.logger.info("GitAddFilesHandler: Git add completed successfully", {
         files,
         result: result.stdout,
-        timestamp: new Date()
-      };
-
-    } catch (error) {
-      this.logger.error('GitAddFilesHandler: Git add failed', {
-        error: error.message,
-        command: command.getCommandData()
       });
 
       return {
-        success: false,
+        files,
+        result: result.stdout,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      this.logger.error("GitAddFilesHandler: Git add failed", {
         error: error.message,
-        timestamp: new Date()
+        command: command.getCommandData(),
+      });
+
+      return {
+       
+        error: error.message,
+        timestamp: new Date(),
       };
     }
   }
 }
 
-module.exports = GitAddFilesHandler; 
+module.exports = GitAddFilesHandler;

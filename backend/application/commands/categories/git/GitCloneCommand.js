@@ -8,9 +8,9 @@ class GitCloneCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitclonecommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
+
     this.url = params.url;
     this.targetPath = params.targetPath;
     this.branch = params.branch;
@@ -21,14 +21,14 @@ class GitCloneCommand {
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     if (!this.url) {
-      throw new Error('Repository URL is required');
+      throw new Error("Repository URL is required");
     }
     if (!this.targetPath) {
-      throw new Error('Target path is required');
+      throw new Error("Target path is required");
     }
     return true;
   }
@@ -38,7 +38,7 @@ class GitCloneCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       url: this.url,
       targetPath: this.targetPath,
       branch: this.branch,

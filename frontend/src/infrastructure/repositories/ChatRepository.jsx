@@ -57,7 +57,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -82,7 +81,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -104,7 +102,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -127,7 +124,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -153,7 +149,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -175,7 +170,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -197,7 +191,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -219,7 +212,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {
@@ -241,7 +233,6 @@ export default class ChatRepository {
 
       if (response.success) {
         return {
-          success: true,
           data: response.data
         };
       } else {

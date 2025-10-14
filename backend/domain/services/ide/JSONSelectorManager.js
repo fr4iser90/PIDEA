@@ -3,14 +3,15 @@
  * NO FALLBACKS - Only real data from JSON files
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const Logger = require('@logging/Logger');
-const logger = new Logger('JSONSelectorManager');
+const fs = require("fs").promises;
+const path = require("path");
+const Logger = require("@logging/Logger");
+const logger = new Logger("JSONSelectorManager");
 
 class JSONSelectorManager {
   constructor(options = {}) {
-    this.selectorsPath = options.selectorsPath || path.join(__dirname, '../../../selectors');
+    this.selectorsPath =
+      options.selectorsPath || path.join(__dirname, "../../../selectors");
     this.logger = options.logger || logger;
   }
 
@@ -21,47 +22,79 @@ class JSONSelectorManager {
    * @returns {Promise<Object>} Selectors object
    */
   async getSelectors(ideType, version) {
-    this.logger.info(`JSONSelectorManager.getSelectors() - Called with ideType: ${ideType}, version: ${version}`);
-    
+    this.logger.info(
+      `JSONSelectorManager.getSelectors() - Called with ideType: ${ideType}, version: ${version}`,
+    );
+
     if (!ideType || !version) {
-      this.logger.error(`JSONSelectorManager.getSelectors() - Missing parameters: ideType=${ideType}, version=${version}`);
-      throw new Error(`IDE type and version are required. Got: ideType=${ideType}, version=${version}`);
+      this.logger.error(
+        `JSONSelectorManager.getSelectors() - Missing parameters: ideType=${ideType}, version=${version}`,
+      );
+      throw new Error(
+        `IDE type and version are required. Got: ideType=${ideType}, version=${version}`,
+      );
     }
 
     try {
-      const selectorPath = path.join(this.selectorsPath, ideType, `${version}.json`);
-      this.logger.info(`JSONSelectorManager: Looking for selectors at: ${selectorPath}`);
-      
+      const selectorPath = path.join(
+        this.selectorsPath,
+        ideType,
+        `${version}.json`,
+      );
+      this.logger.info(
+        `JSONSelectorManager: Looking for selectors at: ${selectorPath}`,
+      );
+
       // Check if file exists
       try {
         await fs.access(selectorPath);
         this.logger.info(`JSONSelectorManager: File exists: ${selectorPath}`);
       } catch (error) {
         const availableVersions = await this.getAvailableVersions(ideType);
-        this.logger.error(`JSONSelectorManager: File not found: ${selectorPath}`);
-        this.logger.error(`JSONSelectorManager: Available versions: ${availableVersions.join(', ')}`);
-        throw new Error(`Version ${version} not found for IDE type ${ideType}. Available versions: ${availableVersions.join(', ')}`);
+        this.logger.error(
+          `JSONSelectorManager: File not found: ${selectorPath}`,
+        );
+        this.logger.error(
+          `JSONSelectorManager: Available versions: ${availableVersions.join(", ")}`,
+        );
+        throw new Error(
+          `Version ${version} not found for IDE type ${ideType}. Available versions: ${availableVersions.join(", ")}`,
+        );
       }
 
       // Read and parse JSON file
       this.logger.info(`JSONSelectorManager: Reading file: ${selectorPath}`);
-      const content = await fs.readFile(selectorPath, 'utf8');
-      this.logger.info(`JSONSelectorManager: File content length: ${content.length}`);
-      
+      const content = await fs.readFile(selectorPath, "utf8");
+      this.logger.info(
+        `JSONSelectorManager: File content length: ${content.length}`,
+      );
+
       const selectorsData = JSON.parse(content);
-      this.logger.info(`JSONSelectorManager: Parsed JSON data keys: ${Object.keys(selectorsData).join(', ')}`);
+      this.logger.info(
+        `JSONSelectorManager: Parsed JSON data keys: ${Object.keys(selectorsData).join(", ")}`,
+      );
 
       // Extract selectors from the structure (return full structure)
       const selectors = selectorsData;
-      this.logger.info(`JSONSelectorManager: Final selectors keys: ${Object.keys(selectors).join(', ')}`);
-      this.logger.info(`JSONSelectorManager: Final selectors type: ${typeof selectors}`);
-      this.logger.info(`JSONSelectorManager: Final selectors userMessages: ${selectors.chatSelectors?.userMessages || 'NOT_FOUND'}`);
+      this.logger.info(
+        `JSONSelectorManager: Final selectors keys: ${Object.keys(selectors).join(", ")}`,
+      );
+      this.logger.info(
+        `JSONSelectorManager: Final selectors type: ${typeof selectors}`,
+      );
+      this.logger.info(
+        `JSONSelectorManager: Final selectors userMessages: ${selectors.chatSelectors?.userMessages || "NOT_FOUND"}`,
+      );
 
-      this.logger.info(`JSONSelectorManager: Successfully loaded selectors for ${ideType} version ${version} from ${selectorPath}`);
+      this.logger.info(
+        `JSONSelectorManager: Successfully loaded selectors for ${ideType} version ${version} from ${selectorPath}`,
+      );
       return selectors;
-
     } catch (error) {
-      this.logger.error(`JSONSelectorManager: Error loading selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(
+        `JSONSelectorManager: Error loading selectors for ${ideType} version ${version}:`,
+        error.message,
+      );
       this.logger.error(`JSONSelectorManager: Error stack:`, error.stack);
       this.logger.error(`JSONSelectorManager: Full error:`, error);
       throw error;
@@ -76,7 +109,7 @@ class JSONSelectorManager {
   async getAvailableVersions(ideType) {
     try {
       const idePath = path.join(this.selectorsPath, ideType);
-      
+
       // Check if directory exists
       try {
         await fs.access(idePath);
@@ -87,13 +120,13 @@ class JSONSelectorManager {
       // Read directory and filter JSON files
       const files = await fs.readdir(idePath);
       const versions = files
-        .filter(file => file.endsWith('.json'))
-        .map(file => file.replace('.json', ''))
+        .filter((file) => file.endsWith(".json"))
+        .map((file) => file.replace(".json", ""))
         .sort((a, b) => {
           // Simple version comparison (basic semantic versioning)
-          const aParts = a.split('.').map(Number);
-          const bParts = b.split('.').map(Number);
-          
+          const aParts = a.split(".").map(Number);
+          const bParts = b.split(".").map(Number);
+
           for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
             const aPart = aParts[i] || 0;
             const bPart = bParts[i] || 0;
@@ -105,9 +138,11 @@ class JSONSelectorManager {
         });
 
       return versions;
-
     } catch (error) {
-      this.logger.error(`Error getting available versions for ${ideType}:`, error.message);
+      this.logger.error(
+        `Error getting available versions for ${ideType}:`,
+        error.message,
+      );
       return [];
     }
   }
@@ -121,7 +156,7 @@ class JSONSelectorManager {
    */
   async saveSelectors(ideType, version, selectors) {
     if (!ideType || !version || !selectors) {
-      throw new Error('IDE type, version, and selectors are required');
+      throw new Error("IDE type, version, and selectors are required");
     }
 
     try {
@@ -139,24 +174,31 @@ class JSONSelectorManager {
           version: version,
           ideType: ideType,
           savedAt: new Date().toISOString(),
-          totalSelectors: this.countSelectors(selectors)
-        }
+          totalSelectors: this.countSelectors(selectors),
+        },
       };
 
       // Write JSON file
-      await fs.writeFile(selectorPath, JSON.stringify(selectorsWithMetadata, null, 2), 'utf8');
+      await fs.writeFile(
+        selectorPath,
+        JSON.stringify(selectorsWithMetadata, null, 2),
+        "utf8",
+      );
 
-      this.logger.info(`Saved selectors for ${ideType} version ${version} to ${selectorPath}`);
-      
+      this.logger.info(
+        `Saved selectors for ${ideType} version ${version} to ${selectorPath}`,
+      );
+
       return {
-        success: true,
         message: `Selectors saved for ${ideType} version ${version}`,
         path: selectorPath,
-        selectorsCount: this.countSelectors(selectors)
+        selectorsCount: this.countSelectors(selectors),
       };
-
     } catch (error) {
-      this.logger.error(`Error saving selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(
+        `Error saving selectors for ${ideType} version ${version}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -169,12 +211,16 @@ class JSONSelectorManager {
    */
   async deleteSelectors(ideType, version) {
     if (!ideType || !version) {
-      throw new Error('IDE type and version are required');
+      throw new Error("IDE type and version are required");
     }
 
     try {
-      const selectorPath = path.join(this.selectorsPath, ideType, `${version}.json`);
-      
+      const selectorPath = path.join(
+        this.selectorsPath,
+        ideType,
+        `${version}.json`,
+      );
+
       // Check if file exists
       try {
         await fs.access(selectorPath);
@@ -185,16 +231,19 @@ class JSONSelectorManager {
       // Delete file
       await fs.unlink(selectorPath);
 
-      this.logger.info(`Deleted selectors for ${ideType} version ${version} from ${selectorPath}`);
-      
-      return {
-        success: true,
-        message: `Selectors deleted for ${ideType} version ${version}`,
-        path: selectorPath
-      };
+      this.logger.info(
+        `Deleted selectors for ${ideType} version ${version} from ${selectorPath}`,
+      );
 
+      return {
+        message: `Selectors deleted for ${ideType} version ${version}`,
+        path: selectorPath,
+      };
     } catch (error) {
-      this.logger.error(`Error deleting selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(
+        `Error deleting selectors for ${ideType} version ${version}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -207,7 +256,10 @@ class JSONSelectorManager {
   countSelectors(selectors) {
     let count = 0;
     for (const category in selectors) {
-      if (typeof selectors[category] === 'object' && selectors[category] !== null) {
+      if (
+        typeof selectors[category] === "object" &&
+        selectors[category] !== null
+      ) {
         count += Object.keys(selectors[category]).length;
       }
     }
@@ -221,12 +273,15 @@ class JSONSelectorManager {
   async getAllIDETypes() {
     try {
       const ideTypes = {};
-      
+
       // Read selectors directory
       const files = await fs.readdir(this.selectorsPath);
-      const directories = files.filter(file => {
+      const directories = files.filter((file) => {
         const filePath = path.join(this.selectorsPath, file);
-        return fs.stat(filePath).then(stat => stat.isDirectory()).catch(() => false);
+        return fs
+          .stat(filePath)
+          .then((stat) => stat.isDirectory())
+          .catch(() => false);
       });
 
       for (const dir of directories) {
@@ -237,9 +292,8 @@ class JSONSelectorManager {
       }
 
       return ideTypes;
-
     } catch (error) {
-      this.logger.error('Error getting all IDE types:', error.message);
+      this.logger.error("Error getting all IDE types:", error.message);
       return {};
     }
   }
@@ -253,21 +307,26 @@ class JSONSelectorManager {
   async validateSelectors(ideType, version) {
     try {
       const selectors = await this.getSelectors(ideType, version);
-      
+
       // Basic validation - check if it has required structure
-      if (!selectors || typeof selectors !== 'object') {
+      if (!selectors || typeof selectors !== "object") {
         return false;
       }
 
       // Check for at least one selector category
-      const hasSelectors = Object.values(selectors).some(category => 
-        typeof category === 'object' && category !== null && Object.keys(category).length > 0
+      const hasSelectors = Object.values(selectors).some(
+        (category) =>
+          typeof category === "object" &&
+          category !== null &&
+          Object.keys(category).length > 0,
       );
 
       return hasSelectors;
-
     } catch (error) {
-      this.logger.error(`Error validating selectors for ${ideType} version ${version}:`, error.message);
+      this.logger.error(
+        `Error validating selectors for ${ideType} version ${version}:`,
+        error.message,
+      );
       return false;
     }
   }
@@ -279,22 +338,24 @@ class JSONSelectorManager {
   async getStats() {
     try {
       const allTypes = await this.getAllIDETypes();
-      const totalVersions = Object.values(allTypes).reduce((sum, versions) => sum + versions.length, 0);
-      
+      const totalVersions = Object.values(allTypes).reduce(
+        (sum, versions) => sum + versions.length,
+        0,
+      );
+
       return {
         selectorsPath: this.selectorsPath,
         totalIDETypes: Object.keys(allTypes).length,
         totalVersions: totalVersions,
         ideTypes: allTypes,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
-      this.logger.error('Error getting stats:', error.message);
+      this.logger.error("Error getting stats:", error.message);
       return {
         selectorsPath: this.selectorsPath,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

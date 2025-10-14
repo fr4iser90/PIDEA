@@ -1,34 +1,33 @@
-
 /**
  * BaseIDE - Common IDE functionality
  * Provides shared functionality and utilities for all IDE implementations
  */
-const IDEInterface = require('./IDEInterface');
-const IDETypes = require('./IDETypes');
+const IDEInterface = require("./IDEInterface");
+const IDETypes = require("./IDETypes");
 
 class BaseIDE extends IDEInterface {
-  constructor(browserManager, ideManager, eventBus = null, ideType = 'cursor') {
+  constructor(browserManager, ideManager, eventBus = null, ideType = "cursor") {
     super();
-    
+
     this.browserManager = browserManager;
     this.ideManager = ideManager;
     this.eventBus = eventBus;
     this.ideType = ideType;
-    
+
     // Initialize common services
     this.terminalMonitor = null;
     this.packageJsonAnalyzer = null;
     this.workspacePathDetector = null;
     this.chatHistoryExtractor = null;
-    
+
     // Status tracking
     this.isInitialized = false;
     this.lastError = null;
     this.lastActivity = null;
-    
+
     // Initialize common services
     this.initializeCommonServices();
-    
+
     // Set up event listeners
     this.setupEventListeners();
   }
@@ -39,17 +38,26 @@ class BaseIDE extends IDEInterface {
   initializeCommonServices() {
     try {
       // Import common services
-      const TerminalMonitor = require('../terminal/TerminalMonitor');
-      const PackageJsonAnalyzer = require('../dev-server/PackageJsonAnalyzer');
-      const WorkspacePathDetector = require('../workspace/WorkspacePathDetector');
-      const ChatHistoryExtractor = require('../chat/ChatHistoryExtractor');
-      
+      const TerminalMonitor = require("../terminal/TerminalMonitor");
+      const PackageJsonAnalyzer = require("../dev-server/PackageJsonAnalyzer");
+      const WorkspacePathDetector = require("../workspace/WorkspacePathDetector");
+      const ChatHistoryExtractor = require("../chat/ChatHistoryExtractor");
+
       // Initialize services
-      this.terminalMonitor = new TerminalMonitor(this.browserManager, this.eventBus);
+      this.terminalMonitor = new TerminalMonitor(
+        this.browserManager,
+        this.eventBus,
+      );
       this.packageJsonAnalyzer = new PackageJsonAnalyzer(this.eventBus);
-      this.workspacePathDetector = new WorkspacePathDetector(this.browserManager, this.ideManager);
-      this.chatHistoryExtractor = new ChatHistoryExtractor(this.browserManager, this.ideType);
-      
+      this.workspacePathDetector = new WorkspacePathDetector(
+        this.browserManager,
+        this.ideManager,
+      );
+      this.chatHistoryExtractor = new ChatHistoryExtractor(
+        this.browserManager,
+        this.ideType,
+      );
+
       logger.info(`Common services initialized for ${this.ideType}`);
     } catch (error) {
       logger.error(`Failed to initialize common services:`, error);
@@ -62,15 +70,19 @@ class BaseIDE extends IDEInterface {
    */
   setupEventListeners() {
     if (this.eventBus) {
-      this.eventBus.subscribe('activeIDEChanged', async (eventData) => {
+      this.eventBus.subscribe("activeIDEChanged", async (eventData) => {
         logger.info(`IDE changed for ${this.ideType}, resetting cache`);
-        
+
         // Switch browser connection to new IDE
         if (eventData.port) {
           try {
-            logger.info(`Switching browser connection to port: ${eventData.port}`);
+            logger.info(
+              `Switching browser connection to port: ${eventData.port}`,
+            );
             await this.browserManager.switchToPort(eventData.port);
-            logger.info(`Successfully switched browser connection to port: ${eventData.port}`);
+            logger.info(
+              `Successfully switched browser connection to port: ${eventData.port}`,
+            );
           } catch (error) {
             logger.error(`Failed to switch browser connection:`, error.message);
           }
@@ -85,19 +97,19 @@ class BaseIDE extends IDEInterface {
    * @param {string} context - Error context
    * @returns {Object} Error result
    */
-  handleError(error, context = '') {
+  handleError(error, context = "") {
     this.lastError = error;
     this.lastActivity = new Date();
-    
+
     const errorResult = {
-      success: false,
+     
       error: error.message,
       context: context,
       ideType: this.ideType,
       timestamp: new Date(),
-      stack: error.stack
+      stack: error.stack,
     };
-    
+
     logger.error(`Error in ${context}:`, error);
     return errorResult;
   }
@@ -111,10 +123,10 @@ class BaseIDE extends IDEInterface {
     const logData = {
       ideType: this.ideType,
       timestamp: new Date(),
-      ...data
+      ...data,
     };
-    
-          logger.info(`${message}`);
+
+    logger.info(`${message}`);
   }
 
   /**
@@ -124,19 +136,19 @@ class BaseIDE extends IDEInterface {
    */
   updateStatus(status, data = {}) {
     this.lastActivity = new Date();
-    
+
     const statusData = {
       status,
       ideType: this.ideType,
       timestamp: new Date(),
-      ...data
+      ...data,
     };
-    
+
     this.log(`Status updated: ${status}`, statusData);
-    
+
     // Emit status change event if event bus is available
     if (this.eventBus) {
-      this.eventBus.emit('ideStatusChanged', statusData);
+      this.eventBus.emit("ideStatusChanged", statusData);
     }
   }
 
@@ -186,7 +198,7 @@ class BaseIDE extends IDEInterface {
       }
       return null;
     } catch (error) {
-      this.handleError(error, 'detectWorkspacePath');
+      this.handleError(error, "detectWorkspacePath");
       return null;
     }
   }
@@ -202,7 +214,7 @@ class BaseIDE extends IDEInterface {
       }
       return null;
     } catch (error) {
-      this.handleError(error, 'monitorTerminalOutput');
+      this.handleError(error, "monitorTerminalOutput");
       return null;
     }
   }
@@ -215,11 +227,13 @@ class BaseIDE extends IDEInterface {
   async detectDevServerFromPackageJson(workspacePath = null) {
     try {
       if (this.packageJsonAnalyzer) {
-        return await this.packageJsonAnalyzer.analyzePackageJsonInPath(workspacePath);
+        return await this.packageJsonAnalyzer.analyzePackageJsonInPath(
+          workspacePath,
+        );
       }
       return null;
     } catch (error) {
-      this.handleError(error, 'detectDevServerFromPackageJson');
+      this.handleError(error, "detectDevServerFromPackageJson");
       return null;
     }
   }
@@ -233,21 +247,24 @@ class BaseIDE extends IDEInterface {
     try {
       if (this.chatHistoryExtractor) {
         // Use requested port if provided, otherwise get current port
-        const targetPort = requestedPort || this.browserManager.getCurrentPort();
+        const targetPort =
+          requestedPort || this.browserManager.getCurrentPort();
         if (!targetPort) {
-          throw new Error('No target port available for version detection');
+          throw new Error("No target port available for version detection");
         }
-        
+
         const version = await this.versionDetector.detectVersion(targetPort);
         if (!version) {
-          throw new Error(`Version detection failed for port ${targetPort}. Version is required for ${this.ideType}.`);
+          throw new Error(
+            `Version detection failed for port ${targetPort}. Version is required for ${this.ideType}.`,
+          );
         }
-        
+
         return await this.chatHistoryExtractor.extractChatHistory(version);
       }
       return [];
     } catch (error) {
-      this.handleError(error, 'getChatHistory');
+      this.handleError(error, "getChatHistory");
       return [];
     }
   }
@@ -263,7 +280,7 @@ class BaseIDE extends IDEInterface {
       }
       return null;
     } catch (error) {
-      this.handleError(error, 'getPage');
+      this.handleError(error, "getPage");
       return null;
     }
   }
@@ -279,34 +296,34 @@ class BaseIDE extends IDEInterface {
     try {
       const page = await this.getPage();
       if (!page) {
-        throw new Error('No browser page available');
+        throw new Error("No browser page available");
       }
 
       let result = null;
-      
+
       switch (action) {
-        case 'click':
+        case "click":
           await page.click(selector, options);
-          result = { success: true, action: 'click', selector };
+          result = { action: "click", selector };
           break;
-        case 'type':
-          const text = options.text || '';
+        case "type":
+          const text = options.text || "";
           await page.type(selector, text, options);
-          result = { success: true, action: 'type', selector, text };
+          result = { action: "type", selector, text };
           break;
-        case 'focus':
+        case "focus":
           await page.focus(selector);
-          result = { success: true, action: 'focus', selector };
+          result = { action: "focus", selector };
           break;
-        case 'hover':
+        case "hover":
           await page.hover(selector);
-          result = { success: true, action: 'hover', selector };
+          result = { action: "hover", selector };
           break;
         default:
           throw new Error(`Unsupported action: ${action}`);
       }
 
-      this.updateStatus('interaction_completed', { action, selector });
+      this.updateStatus("interaction_completed", { action, selector });
       return result;
     } catch (error) {
       return this.handleError(error, `interact(${selector}, ${action})`);
@@ -321,26 +338,25 @@ class BaseIDE extends IDEInterface {
     try {
       const page = await this.getPage();
       if (!page) {
-        throw new Error('No browser page available');
+        throw new Error("No browser page available");
       }
 
       const dom = await page.evaluate(() => {
         return {
           title: document.title,
           url: window.location.href,
-          elements: document.querySelectorAll('*').length,
-          body: document.body.innerHTML.substring(0, 1000) // Limit size
+          elements: document.querySelectorAll("*").length,
+          body: document.body.innerHTML.substring(0, 1000), // Limit size
         };
       });
 
       return {
-        success: true,
         dom,
         ideType: this.ideType,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
-      return this.handleError(error, 'getDOM');
+      return this.handleError(error, "getDOM");
     }
   }
 
@@ -352,22 +368,21 @@ class BaseIDE extends IDEInterface {
    */
   async writeFile(filePath, content) {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      
+      const fs = require("fs");
+      const path = require("path");
+
       // Ensure directory exists
       const dir = path.dirname(filePath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      
+
       fs.writeFileSync(filePath, content);
-      
+
       return {
-        success: true,
         filePath,
         contentLength: content.length,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.handleError(error, `writeFile(${filePath})`);
@@ -381,22 +396,21 @@ class BaseIDE extends IDEInterface {
    */
   async readFile(filePath) {
     try {
-      const fs = require('fs');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-      
+      const fs = require("fs");
+      const Logger = require("@logging/Logger");
+      const logger = new Logger("Logger");
+
       if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);
       }
-      
-      const content = fs.readFileSync(filePath, 'utf8');
-      
+
+      const content = fs.readFileSync(filePath, "utf8");
+
       return {
-        success: true,
         filePath,
         content,
         contentLength: content.length,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
       return this.handleError(error, `readFile(${filePath})`);
@@ -411,9 +425,8 @@ const logger = new Logger('Logger');
     try {
       const isRunning = await this.detect();
       const metadata = this.getIDEMetadata();
-      
+
       return {
-        success: true,
         ideType: this.ideType,
         isRunning,
         isInitialized: this.isInitialized,
@@ -421,10 +434,10 @@ const logger = new Logger('Logger');
         lastError: this.lastError?.message || null,
         metadata,
         supportedFeatures: this.getSupportedFeatures(),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } catch (error) {
-      return this.handleError(error, 'getStatus');
+      return this.handleError(error, "getStatus");
     }
   }
 
@@ -434,7 +447,7 @@ const logger = new Logger('Logger');
    */
   async getVersion() {
     const metadata = this.getIDEMetadata();
-    return metadata?.version || 'unknown';
+    return metadata?.version || "unknown";
   }
 
   /**
@@ -444,7 +457,10 @@ const logger = new Logger('Logger');
    * @returns {Promise<Object>} Command result
    */
   async executeCommand(command, options = {}) {
-    return this.handleError(new Error('executeCommand not implemented'), 'executeCommand');
+    return this.handleError(
+      new Error("executeCommand not implemented"),
+      "executeCommand",
+    );
   }
 
   /**
@@ -452,7 +468,10 @@ const logger = new Logger('Logger');
    * @returns {Promise<string>} Workspace path
    */
   async getWorkspacePath() {
-    return this.handleError(new Error('getWorkspacePath not implemented'), 'getWorkspacePath');
+    return this.handleError(
+      new Error("getWorkspacePath not implemented"),
+      "getWorkspacePath",
+    );
   }
 
   /**
@@ -461,7 +480,10 @@ const logger = new Logger('Logger');
    * @returns {Promise<Object>} Switch result
    */
   async switchToPort(port) {
-    return this.handleError(new Error('switchToPort not implemented'), 'switchToPort');
+    return this.handleError(
+      new Error("switchToPort not implemented"),
+      "switchToPort",
+    );
   }
 
   /**
@@ -479,7 +501,10 @@ const logger = new Logger('Logger');
    * @returns {Promise<Object>} Message result
    */
   async sendMessage(message, options = {}) {
-    return this.handleError(new Error('sendMessage not implemented'), 'sendMessage');
+    return this.handleError(
+      new Error("sendMessage not implemented"),
+      "sendMessage",
+    );
   }
 
   /**
@@ -488,7 +513,10 @@ const logger = new Logger('Logger');
    * @returns {Promise<string|null>} User app URL
    */
   async getUserAppUrlForPort(port = null) {
-    return this.handleError(new Error('getUserAppUrlForPort not implemented'), 'getUserAppUrlForPort');
+    return this.handleError(
+      new Error("getUserAppUrlForPort not implemented"),
+      "getUserAppUrlForPort",
+    );
   }
 
   /**
@@ -498,7 +526,10 @@ const logger = new Logger('Logger');
    * @returns {Promise<Object>} Refactoring result
    */
   async applyRefactoring(filePath, refactoredCode) {
-    return this.handleError(new Error('applyRefactoring not implemented'), 'applyRefactoring');
+    return this.handleError(
+      new Error("applyRefactoring not implemented"),
+      "applyRefactoring",
+    );
   }
 
   /**
@@ -508,7 +539,7 @@ const logger = new Logger('Logger');
    * @returns {Promise<Object>} Task result
    */
   async sendTask(task, workspacePath = null) {
-    return this.handleError(new Error('sendTask not implemented'), 'sendTask');
+    return this.handleError(new Error("sendTask not implemented"), "sendTask");
   }
 
   /**
@@ -519,8 +550,11 @@ const logger = new Logger('Logger');
    * @returns {Promise<Object>} Auto mode result
    */
   async sendAutoModeTasks(tasks, projectAnalysis, workspacePath = null) {
-    return this.handleError(new Error('sendAutoModeTasks not implemented'), 'sendAutoModeTasks');
+    return this.handleError(
+      new Error("sendAutoModeTasks not implemented"),
+      "sendAutoModeTasks",
+    );
   }
 }
 
-module.exports = BaseIDE; 
+module.exports = BaseIDE;

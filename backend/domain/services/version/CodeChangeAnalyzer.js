@@ -3,16 +3,16 @@
  * Detects API changes, breaking changes, and code modifications
  */
 
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
 class CodeChangeAnalyzer {
   constructor(dependencies = {}) {
-    this.logger = new Logger('CodeChangeAnalyzer');
+    this.logger = new Logger("CodeChangeAnalyzer");
     this.fileSystemService = dependencies.fileSystemService;
     this.gitService = dependencies.gitService;
-    
+
     // Configuration
     this.config = {
       apiPatterns: [
@@ -21,15 +21,26 @@ class CodeChangeAnalyzer {
         /exports\.(\w+)\s*=/g,
         /public\s+(?:static\s+)?(?:async\s+)?(\w+)\s*\(/g,
         /def\s+(\w+)\s*\(/g,
-        /function\s+(\w+)\s*\(/g
+        /function\s+(\w+)\s*\(/g,
       ],
       breakingChangePatterns: [
         /remove|delete|deprecate|break|breaking/i,
         /rename|change.*signature|modify.*interface/i,
-        /update.*api|change.*method/i
+        /update.*api|change.*method/i,
       ],
-      fileExtensions: ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cs', '.php', '.rb', '.go'],
-      ...dependencies.config
+      fileExtensions: [
+        ".js",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".py",
+        ".java",
+        ".cs",
+        ".php",
+        ".rb",
+        ".go",
+      ],
+      ...dependencies.config,
     };
   }
 
@@ -41,7 +52,7 @@ class CodeChangeAnalyzer {
    */
   async analyzeCodeChanges(projectPath, context = {}) {
     try {
-      this.logger.info('Starting code change analysis', { projectPath });
+      this.logger.info("Starting code change analysis", { projectPath });
 
       const analysis = {
         hasBreakingChanges: false,
@@ -52,8 +63,8 @@ class CodeChangeAnalyzer {
         apiChanges: [],
         breakingChanges: [],
         confidence: 0.5,
-        factors: ['code-analysis'],
-        timestamp: new Date()
+        factors: ["code-analysis"],
+        timestamp: new Date(),
       };
 
       // Get modified files from git if available
@@ -61,7 +72,7 @@ class CodeChangeAnalyzer {
       analysis.modifiedFiles = modifiedFiles;
 
       if (modifiedFiles.length === 0) {
-        this.logger.warn('No modified files found for analysis');
+        this.logger.warn("No modified files found for analysis");
         return analysis;
       }
 
@@ -74,16 +85,17 @@ class CodeChangeAnalyzer {
       // Calculate overall confidence
       analysis.confidence = this.calculateConfidence(analysis);
 
-      this.logger.info('Code change analysis completed', {
+      this.logger.info("Code change analysis completed", {
         hasBreakingChanges: analysis.hasBreakingChanges,
         hasApiChanges: analysis.hasApiChanges,
-        modifiedFiles: analysis.modifiedFiles.length
+        modifiedFiles: analysis.modifiedFiles.length,
       });
 
       return analysis;
-
     } catch (error) {
-      this.logger.error('Code change analysis failed', { error: error.message });
+      this.logger.error("Code change analysis failed", {
+        error: error.message,
+      });
       return this.getFallbackAnalysis(error);
     }
   }
@@ -108,9 +120,10 @@ class CodeChangeAnalyzer {
 
       // Last resort: return empty array
       return [];
-
     } catch (error) {
-      this.logger.warn('Failed to get modified files', { error: error.message });
+      this.logger.warn("Failed to get modified files", {
+        error: error.message,
+      });
       return [];
     }
   }
@@ -135,13 +148,13 @@ class CodeChangeAnalyzer {
           hasNewFeatures: false,
           hasBugFixes: false,
           apiChanges: [],
-          breakingChanges: []
+          breakingChanges: [],
         };
       }
 
       // Read file content
-      const content = await fs.readFile(fullPath, 'utf8');
-      
+      const content = await fs.readFile(fullPath, "utf8");
+
       // Analyze file content
       const analysis = {
         hasBreakingChanges: false,
@@ -149,7 +162,7 @@ class CodeChangeAnalyzer {
         hasNewFeatures: false,
         hasBugFixes: false,
         apiChanges: [],
-        breakingChanges: []
+        breakingChanges: [],
       };
 
       // Detect API changes
@@ -167,16 +180,18 @@ class CodeChangeAnalyzer {
       analysis.hasBugFixes = this.detectBugFixes(content, filePath);
 
       return analysis;
-
     } catch (error) {
-      this.logger.warn('Failed to analyze file', { filePath, error: error.message });
+      this.logger.warn("Failed to analyze file", {
+        filePath,
+        error: error.message,
+      });
       return {
         hasBreakingChanges: false,
         hasApiChanges: false,
         hasNewFeatures: false,
         hasBugFixes: false,
         apiChanges: [],
-        breakingChanges: []
+        breakingChanges: [],
       };
     }
   }
@@ -196,10 +211,10 @@ class CodeChangeAnalyzer {
         let match;
         while ((match = pattern.exec(content)) !== null) {
           apiChanges.push({
-            type: 'export',
+            type: "export",
             name: match[1] || match[0],
             file: filePath,
-            line: this.getLineNumber(content, match.index)
+            line: this.getLineNumber(content, match.index),
           });
         }
       }
@@ -207,17 +222,23 @@ class CodeChangeAnalyzer {
       // Look for API-related comments
       const apiComments = content.match(/\/\*\*[\s\S]*?\*\//g) || [];
       for (const comment of apiComments) {
-        if (comment.includes('@api') || comment.includes('@public') || comment.includes('@deprecated')) {
+        if (
+          comment.includes("@api") ||
+          comment.includes("@public") ||
+          comment.includes("@deprecated")
+        ) {
           apiChanges.push({
-            type: 'api-comment',
+            type: "api-comment",
             content: comment.substring(0, 100),
-            file: filePath
+            file: filePath,
           });
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to detect API changes', { filePath, error: error.message });
+      this.logger.warn("Failed to detect API changes", {
+        filePath,
+        error: error.message,
+      });
     }
 
     return apiChanges;
@@ -238,10 +259,10 @@ class CodeChangeAnalyzer {
         const matches = content.match(pattern);
         if (matches) {
           breakingChanges.push({
-            type: 'breaking-change',
+            type: "breaking-change",
             pattern: pattern.source,
             matches: matches.length,
-            file: filePath
+            file: filePath,
           });
         }
       }
@@ -251,9 +272,9 @@ class CodeChangeAnalyzer {
       const deprecationMatches = content.match(deprecationPattern);
       if (deprecationMatches) {
         breakingChanges.push({
-          type: 'deprecation',
+          type: "deprecation",
           count: deprecationMatches.length,
-          file: filePath
+          file: filePath,
         });
       }
 
@@ -262,14 +283,16 @@ class CodeChangeAnalyzer {
       const todoMatches = content.match(todoPattern);
       if (todoMatches) {
         breakingChanges.push({
-          type: 'todo-breaking',
+          type: "todo-breaking",
           count: todoMatches.length,
-          file: filePath
+          file: filePath,
         });
       }
-
     } catch (error) {
-      this.logger.warn('Failed to detect breaking changes', { filePath, error: error.message });
+      this.logger.warn("Failed to detect breaking changes", {
+        filePath,
+        error: error.message,
+      });
     }
 
     return breakingChanges;
@@ -288,7 +311,7 @@ class CodeChangeAnalyzer {
         /add(?:ed)?\s+(?:new\s+)?(?:feature|functionality|method|class|api)/i,
         /implement(?:ed)?\s+(?:new\s+)?(?:feature|functionality)/i,
         /create(?:d)?\s+(?:new\s+)?(?:feature|functionality|api)/i,
-        /introduce(?:d)?\s+(?:new\s+)?(?:feature|functionality)/i
+        /introduce(?:d)?\s+(?:new\s+)?(?:feature|functionality)/i,
       ];
 
       for (const pattern of featurePatterns) {
@@ -298,9 +321,11 @@ class CodeChangeAnalyzer {
       }
 
       return false;
-
     } catch (error) {
-      this.logger.warn('Failed to detect new features', { filePath, error: error.message });
+      this.logger.warn("Failed to detect new features", {
+        filePath,
+        error: error.message,
+      });
       return false;
     }
   }
@@ -318,7 +343,7 @@ class CodeChangeAnalyzer {
         /fix(?:ed)?\s+(?:bug|issue|problem|error)/i,
         /resolve(?:d)?\s+(?:bug|issue|problem)/i,
         /correct(?:ed)?\s+(?:bug|issue|problem)/i,
-        /patch(?:ed)?\s+(?:bug|issue|problem)/i
+        /patch(?:ed)?\s+(?:bug|issue|problem)/i,
       ];
 
       for (const pattern of bugFixPatterns) {
@@ -328,9 +353,11 @@ class CodeChangeAnalyzer {
       }
 
       return false;
-
     } catch (error) {
-      this.logger.warn('Failed to detect bug fixes', { filePath, error: error.message });
+      this.logger.warn("Failed to detect bug fixes", {
+        filePath,
+        error: error.message,
+      });
       return false;
     }
   }
@@ -341,9 +368,12 @@ class CodeChangeAnalyzer {
    * @param {Object} fileAnalysis - File analysis
    */
   mergeFileAnalysis(analysis, fileAnalysis) {
-    analysis.hasBreakingChanges = analysis.hasBreakingChanges || fileAnalysis.hasBreakingChanges;
-    analysis.hasApiChanges = analysis.hasApiChanges || fileAnalysis.hasApiChanges;
-    analysis.hasNewFeatures = analysis.hasNewFeatures || fileAnalysis.hasNewFeatures;
+    analysis.hasBreakingChanges =
+      analysis.hasBreakingChanges || fileAnalysis.hasBreakingChanges;
+    analysis.hasApiChanges =
+      analysis.hasApiChanges || fileAnalysis.hasApiChanges;
+    analysis.hasNewFeatures =
+      analysis.hasNewFeatures || fileAnalysis.hasNewFeatures;
     analysis.hasBugFixes = analysis.hasBugFixes || fileAnalysis.hasBugFixes;
 
     analysis.apiChanges.push(...fileAnalysis.apiChanges);
@@ -379,7 +409,7 @@ class CodeChangeAnalyzer {
    * @returns {number} Line number
    */
   getLineNumber(content, index) {
-    return content.substring(0, index).split('\n').length;
+    return content.substring(0, index).split("\n").length;
   }
 
   /**
@@ -397,9 +427,9 @@ class CodeChangeAnalyzer {
       apiChanges: [],
       breakingChanges: [],
       confidence: 0.1,
-      factors: ['code-analysis-fallback'],
+      factors: ["code-analysis-fallback"],
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -409,13 +439,13 @@ class CodeChangeAnalyzer {
    */
   getHealthStatus() {
     return {
-      status: 'healthy',
+      status: "healthy",
       config: {
         apiPatterns: this.config.apiPatterns.length,
         breakingChangePatterns: this.config.breakingChangePatterns.length,
-        fileExtensions: this.config.fileExtensions
+        fileExtensions: this.config.fileExtensions,
       },
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 }

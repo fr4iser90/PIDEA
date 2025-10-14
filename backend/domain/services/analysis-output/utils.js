@@ -1,4 +1,4 @@
-const CONSTANTS = require('./constants');
+const CONSTANTS = require("./constants");
 
 /**
  * Format file size in human readable format
@@ -6,11 +6,11 @@ const CONSTANTS = require('./constants');
  * @returns {string} Formatted file size
  */
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
 /**
@@ -19,7 +19,10 @@ function formatFileSize(bytes) {
  * @returns {string} Formatted analysis type
  */
 function formatAnalysisType(type) {
-    return type.split(/(?=[A-Z])/).join(' ').replace(/^\w/, c => c.toUpperCase());
+  return type
+    .split(/(?=[A-Z])/)
+    .join(" ")
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 /**
@@ -28,15 +31,15 @@ function formatAnalysisType(type) {
  * @param {string} indent - Indentation string
  * @returns {string} Formatted tree string
  */
-function formatTree(structure, indent = '') {
-    let result = '';
-    for (const [name, children] of Object.entries(structure)) {
-        result += `${indent}${name}\n`;
-        if (children && typeof children === 'object') {
-            result += formatTree(children, indent + '  ');
-        }
+function formatTree(structure, indent = "") {
+  let result = "";
+  for (const [name, children] of Object.entries(structure)) {
+    result += `${indent}${name}\n`;
+    if (children && typeof children === "object") {
+      result += formatTree(children, indent + "  ");
     }
-    return result;
+  }
+  return result;
 }
 
 /**
@@ -45,7 +48,9 @@ function formatTree(structure, indent = '') {
  * @returns {number} Count of critical vulnerabilities
  */
 function countCriticalVulnerabilities(vulnerabilities) {
-    return vulnerabilities.filter(v => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.CRITICAL).length;
+  return vulnerabilities.filter(
+    (v) => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.CRITICAL,
+  ).length;
 }
 
 /**
@@ -54,7 +59,9 @@ function countCriticalVulnerabilities(vulnerabilities) {
  * @returns {number} Count of high vulnerabilities
  */
 function countHighVulnerabilities(vulnerabilities) {
-    return vulnerabilities.filter(v => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.HIGH).length;
+  return vulnerabilities.filter(
+    (v) => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.HIGH,
+  ).length;
 }
 
 /**
@@ -63,7 +70,9 @@ function countHighVulnerabilities(vulnerabilities) {
  * @returns {number} Count of medium vulnerabilities
  */
 function countMediumVulnerabilities(vulnerabilities) {
-    return vulnerabilities.filter(v => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.MEDIUM).length;
+  return vulnerabilities.filter(
+    (v) => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.MEDIUM,
+  ).length;
 }
 
 /**
@@ -72,7 +81,9 @@ function countMediumVulnerabilities(vulnerabilities) {
  * @returns {number} Count of low vulnerabilities
  */
 function countLowVulnerabilities(vulnerabilities) {
-    return vulnerabilities.filter(v => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.LOW).length;
+  return vulnerabilities.filter(
+    (v) => v.severity === CONSTANTS.VULNERABILITY_SEVERITIES.LOW,
+  ).length;
 }
 
 /**
@@ -81,12 +92,12 @@ function countLowVulnerabilities(vulnerabilities) {
  * @returns {number} Average coupling value
  */
 function calculateAverageCoupling(coupling) {
-    if (!coupling || Object.keys(coupling).length === 0) return 0;
-    
-    const values = Object.values(coupling).filter(v => typeof v === 'number');
-    if (values.length === 0) return 0;
-    
-    return values.reduce((sum, val) => sum + val, 0) / values.length;
+  if (!coupling || Object.keys(coupling).length === 0) return 0;
+
+  const values = Object.values(coupling).filter((v) => typeof v === "number");
+  if (values.length === 0) return 0;
+
+  return values.reduce((sum, val) => sum + val, 0) / values.length;
 }
 
 /**
@@ -95,12 +106,12 @@ function calculateAverageCoupling(coupling) {
  * @returns {number} Average cohesion value
  */
 function calculateAverageCohesion(cohesion) {
-    if (!cohesion || Object.keys(cohesion).length === 0) return 0;
-    
-    const values = Object.values(cohesion).filter(v => typeof v === 'number');
-    if (values.length === 0) return 0;
-    
-    return values.reduce((sum, val) => sum + val, 0) / values.length;
+  if (!cohesion || Object.keys(cohesion).length === 0) return 0;
+
+  const values = Object.values(cohesion).filter((v) => typeof v === "number");
+  if (values.length === 0) return 0;
+
+  return values.reduce((sum, val) => sum + val, 0) / values.length;
 }
 
 /**
@@ -109,25 +120,25 @@ function calculateAverageCohesion(cohesion) {
  * @returns {number} Complexity score
  */
 function calculateComplexityScore(architecture) {
-    let score = 0;
-    
-    if (architecture.patterns) score += architecture.patterns.length * 10;
-    if (architecture.layers) score += architecture.layers.length * 5;
-    if (architecture.modules) score += architecture.modules.length * 3;
-    if (architecture.antiPatterns) score += architecture.antiPatterns.length * 15;
-    
-    return score;
+  let score = 0;
+
+  if (architecture.patterns) score += architecture.patterns.length * 10;
+  if (architecture.layers) score += architecture.layers.length * 5;
+  if (architecture.modules) score += architecture.modules.length * 3;
+  if (architecture.antiPatterns) score += architecture.antiPatterns.length * 15;
+
+  return score;
 }
 
 module.exports = {
-    formatFileSize,
-    formatAnalysisType,
-    formatTree,
-    countCriticalVulnerabilities,
-    countHighVulnerabilities,
-    countMediumVulnerabilities,
-    countLowVulnerabilities,
-    calculateAverageCoupling,
-    calculateAverageCohesion,
-    calculateComplexityScore
-}; 
+  formatFileSize,
+  formatAnalysisType,
+  formatTree,
+  countCriticalVulnerabilities,
+  countHighVulnerabilities,
+  countMediumVulnerabilities,
+  countLowVulnerabilities,
+  calculateAverageCoupling,
+  calculateAverageCohesion,
+  calculateComplexityScore,
+};

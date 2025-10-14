@@ -1,24 +1,23 @@
-
 /**
  * VSCode IDE Starter
  * Starts VSCode IDE instances and manages VSCode-specific startup logic
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
+const { spawn } = require("child_process");
+const path = require("path");
 
 class VSCodeStarter {
   constructor() {
     this.config = {
-      name: 'VSCode',
-      executable: 'code',
+      name: "VSCode",
+      executable: "code",
       defaultArgs: [
-        '--remote-debugging-port=',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        "--remote-debugging-port=",
+        "--disable-web-security",
+        "--disable-features=VizDisplayCompositor",
       ],
       startupTimeout: 5000,
-      portRange: { start: 9232, end: 9241 }
+      portRange: { start: 9232, end: 9241 },
     };
   }
 
@@ -30,27 +29,33 @@ class VSCodeStarter {
    * @returns {Promise<Object>} IDE startup information
    */
   async startIDE(port, workspacePath = null, options = {}) {
-    logger.info('Starting VSCode IDE on port', port);
-    
+    logger.info("Starting VSCode IDE on port", port);
+
     // Validate port is in range
-    if (port < this.config.portRange.start || port > this.config.portRange.end) {
-      throw new Error(`Port ${port} is outside VSCode's allowed range ${this.config.portRange.start}-${this.config.portRange.end}`);
+    if (
+      port < this.config.portRange.start ||
+      port > this.config.portRange.end
+    ) {
+      throw new Error(
+        `Port ${port} is outside VSCode's allowed range ${this.config.portRange.start}-${this.config.portRange.end}`,
+      );
     }
 
     // Check if VSCode is installed
     const isInstalled = await this.isInstalled();
     if (!isInstalled) {
-      throw new Error('VSCode is not installed on this system');
+      throw new Error("VSCode is not installed on this system");
     }
 
     const args = [
       `--remote-debugging-port=${port}`,
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor'
+      "--disable-web-security",
+      "--disable-features=VizDisplayCompositor",
     ];
 
     // Add user data directory to avoid conflicts
-    const userDataDir = options.userDataDir || path.join(process.cwd(), 'vscode-data-' + port);
+    const userDataDir =
+      options.userDataDir || path.join(process.cwd(), "vscode-data-" + port);
     args.push(`--user-data-dir=${userDataDir}`);
 
     // Add workspace path if provided
@@ -64,66 +69,67 @@ class VSCodeStarter {
     }
 
     if (options.disableExtensions) {
-      args.push('--disable-extensions');
+      args.push("--disable-extensions");
     }
 
     if (options.verbose) {
-      args.push('--verbose');
+      args.push("--verbose");
     }
 
     if (options.newWindow) {
-      args.push('--new-window');
+      args.push("--new-window");
     }
 
     try {
       // Find VSCode executable
       const vscodeCommand = this.findVSCodeExecutable();
       if (!vscodeCommand) {
-        throw new Error('VSCode executable not found');
+        throw new Error("VSCode executable not found");
       }
 
       const process = spawn(vscodeCommand, args, {
         detached: true,
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: ["ignore", "pipe", "pipe"],
         env: {
           ...process.env,
-          ...options.env
-        }
+          ...options.env,
+        },
       });
 
       // Handle process events
-      process.stdout.on('data', (data) => {
+      process.stdout.on("data", (data) => {
         logger.info(`VSCode IDE ${port} stdout received`);
       });
 
-      process.stderr.on('data', (data) => {
+      process.stderr.on("data", (data) => {
         logger.info(`VSCode IDE ${port} stderr received`);
       });
 
-      process.on('close', (code) => {
+      process.on("close", (code) => {
         logger.info(`VSCode IDE ${port} process closed with code ${code}`);
       });
 
-      process.on('error', (error) => {
+      process.on("error", (error) => {
         logger.error(`VSCode IDE ${port} process error:`, error);
       });
 
       // Wait for VSCode to start (longer timeout than Cursor)
-      await new Promise(resolve => setTimeout(resolve, this.config.startupTimeout));
+      await new Promise((resolve) =>
+        setTimeout(resolve, this.config.startupTimeout),
+      );
 
       return {
         port: port,
         pid: process.pid,
-        status: 'starting',
-        ideType: 'vscode',
+        status: "starting",
+        ideType: "vscode",
         process: process,
         args: args,
         workspacePath: workspacePath,
-        userDataDir: userDataDir
+        userDataDir: userDataDir,
       };
-
     } catch (error) {
-      logger.error('Failed to start VSCode IDE:', error);
+      logger.error("Failed to start VSCode IDE:", error);
       throw error;
     }
   }
@@ -134,25 +140,25 @@ class VSCodeStarter {
    * @returns {Promise<Object>} Stop result
    */
   async stopIDE(port) {
-    logger.info('Stopping VSCode IDE on port', port);
-    
+    logger.info("Stopping VSCode IDE on port", port);
+
     try {
       // Find and kill VSCode processes on the specified port
-      const { exec } = require('child_process');
-      
+      const { exec } = require("child_process");
+
       return new Promise((resolve, reject) => {
         exec(`lsof -ti:${port}`, (error, stdout) => {
           if (error || !stdout.trim()) {
             resolve({
               port: port,
-              status: 'not_running',
-              ideType: 'vscode'
+              status: "not_running",
+              ideType: "vscode",
             });
             return;
           }
 
-          const pids = stdout.trim().split('\n');
-          const killPromises = pids.map(pid => {
+          const pids = stdout.trim().split("\n");
+          const killPromises = pids.map((pid) => {
             return new Promise((resolveKill) => {
               exec(`kill -TERM ${pid}`, (killError) => {
                 if (killError) {
@@ -166,15 +172,15 @@ class VSCodeStarter {
           Promise.all(killPromises).then(() => {
             resolve({
               port: port,
-              status: 'stopped',
-              ideType: 'vscode',
-              killedPids: pids
+              status: "stopped",
+              ideType: "vscode",
+              killedPids: pids,
             });
           });
         });
       });
     } catch (error) {
-      logger.error('Error stopping VSCode IDE:', error);
+      logger.error("Error stopping VSCode IDE:", error);
       throw error;
     }
   }
@@ -185,14 +191,14 @@ class VSCodeStarter {
    */
   async isInstalled() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('which', ['code'], { stdio: 'ignore' });
-      
-      process.on('close', (code) => {
+      const { spawn } = require("child_process");
+      const process = spawn("which", ["code"], { stdio: "ignore" });
+
+      process.on("close", (code) => {
         resolve(code === 0);
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(false);
       });
     });
@@ -204,23 +210,23 @@ class VSCodeStarter {
    */
   async getVersion() {
     return new Promise((resolve) => {
-      const { spawn } = require('child_process');
-      const process = spawn('code', ['--version'], { stdio: 'pipe' });
-      
-      let output = '';
-      process.stdout.on('data', (data) => {
+      const { spawn } = require("child_process");
+      const process = spawn("code", ["--version"], { stdio: "pipe" });
+
+      let output = "";
+      process.stdout.on("data", (data) => {
         output += data.toString();
       });
-      
-      process.on('close', (code) => {
+
+      process.on("close", (code) => {
         if (code === 0 && output.trim()) {
           resolve(output.trim());
         } else {
           resolve(null);
         }
       });
-      
-      process.on('error', () => {
+
+      process.on("error", () => {
         resolve(null);
       });
     });
@@ -231,14 +237,17 @@ class VSCodeStarter {
    * @returns {string|null} Path to VSCode executable or null if not found
    */
   findVSCodeExecutable() {
-    const { spawn } = require('child_process');
-    
+    const { spawn } = require("child_process");
+
     // Try common VSCode executable names
-    const possibleExecutables = ['code', 'code-insiders', 'vscode'];
-    
+    const possibleExecutables = ["code", "code-insiders", "vscode"];
+
     for (const executable of possibleExecutables) {
       try {
-        const result = require('child_process').execSync(`which ${executable}`, { encoding: 'utf8' });
+        const result = require("child_process").execSync(
+          `which ${executable}`,
+          { encoding: "utf8" },
+        );
         if (result.trim()) {
           return result.trim();
         }
@@ -246,26 +255,26 @@ class VSCodeStarter {
         // Continue to next executable
       }
     }
-    
+
     // Try common installation paths
     const commonPaths = [
-      '/usr/bin/code',
-      '/usr/local/bin/code',
-      '/opt/visual-studio-code/bin/code',
-      '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code'
+      "/usr/bin/code",
+      "/usr/local/bin/code",
+      "/opt/visual-studio-code/bin/code",
+      "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
     ];
-    
+
     for (const path of commonPaths) {
       try {
-        require('fs').accessSync(path, require('fs').constants.X_OK);
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+        require("fs").accessSync(path, require("fs").constants.X_OK);
+        const Logger = require("@logging/Logger");
+        const logger = new Logger("Logger");
         return path;
       } catch (error) {
         // Continue to next path
       }
     }
-    
+
     return null;
   }
 
@@ -285,13 +294,13 @@ const logger = new Logger('Logger');
     const isInstalled = await this.isInstalled();
     const version = isInstalled ? await this.getVersion() : null;
     const executablePath = this.findVSCodeExecutable();
-    
+
     return {
       isInstalled,
       version,
       executablePath,
       isValid: isInstalled && version !== null && executablePath !== null,
-      executable: this.config.executable
+      executable: this.config.executable,
     };
   }
 
@@ -301,12 +310,12 @@ const logger = new Logger('Logger');
    */
   getStartupOptions() {
     return {
-      userDataDir: 'Custom user data directory',
-      extensionsDir: 'Custom extensions directory',
-      disableExtensions: 'Disable all extensions',
-      verbose: 'Enable verbose logging',
-      newWindow: 'Open in new window',
-      env: 'Environment variables'
+      userDataDir: "Custom user data directory",
+      extensionsDir: "Custom extensions directory",
+      disableExtensions: "Disable all extensions",
+      verbose: "Enable verbose logging",
+      newWindow: "Open in new window",
+      env: "Environment variables",
     };
   }
 
@@ -323,9 +332,9 @@ const logger = new Logger('Logger');
       supportsAI: false, // VSCode doesn't have built-in AI like Cursor
       supportsCustomUserData: true,
       supportsCustomExtensions: true,
-      defaultPortRange: this.config.portRange
+      defaultPortRange: this.config.portRange,
     };
   }
 }
 
-module.exports = VSCodeStarter; 
+module.exports = VSCodeStarter;

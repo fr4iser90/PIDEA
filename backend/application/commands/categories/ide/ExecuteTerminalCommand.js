@@ -27,24 +27,31 @@ class ExecuteTerminalCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
     if (!this.command || this.command.trim().length === 0) {
-      throw new Error('Terminal command is required');
+      throw new Error("Terminal command is required");
     }
 
     if (this.command.length > 1000) {
-      throw new Error('Terminal command too long (max 1000 characters)');
+      throw new Error("Terminal command too long (max 1000 characters)");
     }
 
-    if (this.waitTime && (typeof this.waitTime !== 'number' || this.waitTime < 0 || this.waitTime > 30000)) {
-      throw new Error('Wait time must be a number between 0 and 30000 milliseconds');
+    if (
+      this.waitTime &&
+      (typeof this.waitTime !== "number" ||
+        this.waitTime < 0 ||
+        this.waitTime > 30000)
+    ) {
+      throw new Error(
+        "Wait time must be a number between 0 and 30000 milliseconds",
+      );
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -56,18 +63,18 @@ class ExecuteTerminalCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'ExecuteTerminalCommand',
+      type: "ExecuteTerminalCommand",
       userId: this.userId,
       command: this.command,
       waitTime: this.waitTime,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = ExecuteTerminalCommand; 
+module.exports = ExecuteTerminalCommand;

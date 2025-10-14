@@ -2,7 +2,7 @@
  * WorkflowExecutionRepository
  * Repository interface and implementation for workflow execution persistence
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Interface for workflow execution repository
@@ -14,7 +14,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Object>} Created execution
    */
   async create(execution) {
-    throw new Error('create method must be implemented');
+    throw new Error("create method must be implemented");
   }
 
   /**
@@ -23,7 +23,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Object|null>} Execution or null
    */
   async findByExecutionId(executionId) {
-    throw new Error('findByExecutionId method must be implemented');
+    throw new Error("findByExecutionId method must be implemented");
   }
 
   /**
@@ -33,7 +33,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Object>} Updated execution
    */
   async update(executionId, updates) {
-    throw new Error('update method must be implemented');
+    throw new Error("update method must be implemented");
   }
 
   /**
@@ -43,7 +43,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Array>} Executions
    */
   async findByWorkflowId(workflowId, options = {}) {
-    throw new Error('findByWorkflowId method must be implemented');
+    throw new Error("findByWorkflowId method must be implemented");
   }
 
   /**
@@ -52,7 +52,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Array>} Executions
    */
   async findByTaskId(taskId) {
-    throw new Error('findByTaskId method must be implemented');
+    throw new Error("findByTaskId method must be implemented");
   }
 
   /**
@@ -62,7 +62,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Array>} Executions
    */
   async findByUserId(userId, options = {}) {
-    throw new Error('findByUserId method must be implemented');
+    throw new Error("findByUserId method must be implemented");
   }
 
   /**
@@ -72,7 +72,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Array>} Executions
    */
   async findByStatus(status, options = {}) {
-    throw new Error('findByStatus method must be implemented');
+    throw new Error("findByStatus method must be implemented");
   }
 
   /**
@@ -81,7 +81,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<Object>} Statistics
    */
   async getStatistics(filters = {}) {
-    throw new Error('getStatistics method must be implemented');
+    throw new Error("getStatistics method must be implemented");
   }
 
   /**
@@ -90,7 +90,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<boolean>} Success status
    */
   async delete(executionId) {
-    throw new Error('delete method must be implemented');
+    throw new Error("delete method must be implemented");
   }
 
   /**
@@ -99,7 +99,7 @@ class WorkflowExecutionRepository {
    * @returns {Promise<number>} Number of deleted executions
    */
   async cleanupOldExecutions(daysOld = 30) {
-    throw new Error('cleanupOldExecutions method must be implemented');
+    throw new Error("cleanupOldExecutions method must be implemented");
   }
 }
 
@@ -110,7 +110,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
   constructor(databaseConnection) {
     super();
     this.db = databaseConnection;
-    this.tableName = 'workflow_executions';
+    this.tableName = "workflow_executions";
   }
 
   /**
@@ -132,15 +132,15 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       execution.executionId || `exec_${uuidv4()}`,
       execution.workflowId,
       execution.workflowName,
-      execution.workflowVersion || '1.0.0',
+      execution.workflowVersion || "1.0.0",
       execution.taskId,
       execution.userId,
-      execution.status || 'pending',
+      execution.status || "pending",
       execution.strategy,
       execution.priority || 1,
       execution.estimatedTime,
       execution.startTime || new Date(),
-      JSON.stringify(execution.metadata || {})
+      JSON.stringify(execution.metadata || {}),
     ];
 
     try {
@@ -183,7 +183,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
 
     // Build dynamic update query
     for (const [key, value] of Object.entries(updates)) {
-      if (key === 'resultData' || key === 'errorData' || key === 'metadata') {
+      if (key === "resultData" || key === "errorData" || key === "metadata") {
         setClause.push(`${this.toSnakeCase(key)} = $${paramIndex}`);
         values.push(JSON.stringify(value));
       } else {
@@ -197,7 +197,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
 
     const query = `
       UPDATE ${this.tableName} 
-      SET ${setClause.join(', ')}
+      SET ${setClause.join(", ")}
       WHERE execution_id = $${paramIndex}
       RETURNING *
     `;
@@ -239,7 +239,9 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       const result = await this.db.query(query, values);
       return result;
     } catch (error) {
-      throw new Error(`Failed to find workflow executions by workflow ID: ${error.message}`);
+      throw new Error(
+        `Failed to find workflow executions by workflow ID: ${error.message}`,
+      );
     }
   }
 
@@ -259,7 +261,9 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       const result = await this.db.query(query, [taskId]);
       return result;
     } catch (error) {
-      throw new Error(`Failed to find workflow executions by task ID: ${error.message}`);
+      throw new Error(
+        `Failed to find workflow executions by task ID: ${error.message}`,
+      );
     }
   }
 
@@ -292,7 +296,9 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       const result = await this.db.query(query, values);
       return result;
     } catch (error) {
-      throw new Error(`Failed to find workflow executions by user ID: ${error.message}`);
+      throw new Error(
+        `Failed to find workflow executions by user ID: ${error.message}`,
+      );
     }
   }
 
@@ -325,7 +331,9 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       const result = await this.db.query(query, values);
       return result;
     } catch (error) {
-      throw new Error(`Failed to find workflow executions by status: ${error.message}`);
+      throw new Error(
+        `Failed to find workflow executions by status: ${error.message}`,
+      );
     }
   }
 
@@ -335,7 +343,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
    * @returns {Promise<Object>} Statistics
    */
   async getStatistics(filters = {}) {
-    let whereClause = '';
+    let whereClause = "";
     const values = [];
     let paramIndex = 1;
 
@@ -346,13 +354,17 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
     }
 
     if (filters.status) {
-      whereClause += whereClause ? ` AND status = $${paramIndex}` : ` WHERE status = $${paramIndex}`;
+      whereClause += whereClause
+        ? ` AND status = $${paramIndex}`
+        : ` WHERE status = $${paramIndex}`;
       values.push(filters.status);
       paramIndex++;
     }
 
     if (filters.userId) {
-      whereClause += whereClause ? ` AND user_id = $${paramIndex}` : ` WHERE user_id = $${paramIndex}`;
+      whereClause += whereClause
+        ? ` AND user_id = $${paramIndex}`
+        : ` WHERE user_id = $${paramIndex}`;
       values.push(filters.userId);
       paramIndex++;
     }
@@ -375,7 +387,9 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       const result = await this.db.query(query, values);
       return result[0];
     } catch (error) {
-      throw new Error(`Failed to get workflow execution statistics: ${error.message}`);
+      throw new Error(
+        `Failed to get workflow execution statistics: ${error.message}`,
+      );
     }
   }
 
@@ -414,7 +428,9 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
       const result = await this.db.query(query);
       return result.length;
     } catch (error) {
-      throw new Error(`Failed to cleanup old workflow executions: ${error.message}`);
+      throw new Error(
+        `Failed to cleanup old workflow executions: ${error.message}`,
+      );
     }
   }
 
@@ -424,7 +440,7 @@ class PostgreSQLWorkflowExecutionRepository extends WorkflowExecutionRepository 
    * @returns {string} Converted string
    */
   toSnakeCase(str) {
-    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
   }
 }
 
@@ -444,10 +460,10 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
       executionId,
       workflowId: execution.workflowId,
       workflowName: execution.workflowName,
-      workflowVersion: execution.workflowVersion || '1.0.0',
+      workflowVersion: execution.workflowVersion || "1.0.0",
       taskId: execution.taskId,
       userId: execution.userId,
-      status: execution.status || 'pending',
+      status: execution.status || "pending",
       strategy: execution.strategy,
       priority: execution.priority || 1,
       estimatedTime: execution.estimatedTime,
@@ -458,7 +474,7 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
       errorData: execution.errorData,
       metadata: execution.metadata || {},
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.executions.set(executionId, executionRecord);
@@ -481,52 +497,55 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
 
   async findByWorkflowId(workflowId, options = {}) {
     const { limit = 50, offset = 0, status } = options;
-    
-    let executions = Array.from(this.executions.values())
-      .filter(exec => exec.workflowId === workflowId);
+
+    let executions = Array.from(this.executions.values()).filter(
+      (exec) => exec.workflowId === workflowId,
+    );
 
     if (status) {
-      executions = executions.filter(exec => exec.status === status);
+      executions = executions.filter((exec) => exec.status === status);
     }
 
     executions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
     return executions.slice(offset, offset + limit);
   }
 
   async findByTaskId(taskId) {
     return Array.from(this.executions.values())
-      .filter(exec => exec.taskId === taskId)
+      .filter((exec) => exec.taskId === taskId)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 
   async findByUserId(userId, options = {}) {
     const { limit = 50, offset = 0, status } = options;
-    
-    let executions = Array.from(this.executions.values())
-      .filter(exec => exec.userId === userId);
+
+    let executions = Array.from(this.executions.values()).filter(
+      (exec) => exec.userId === userId,
+    );
 
     if (status) {
-      executions = executions.filter(exec => exec.status === status);
+      executions = executions.filter((exec) => exec.status === status);
     }
 
     executions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
     return executions.slice(offset, offset + limit);
   }
 
   async findByStatus(status, options = {}) {
     const { limit = 50, offset = 0, workflowId } = options;
-    
-    let executions = Array.from(this.executions.values())
-      .filter(exec => exec.status === status);
+
+    let executions = Array.from(this.executions.values()).filter(
+      (exec) => exec.status === status,
+    );
 
     if (workflowId) {
-      executions = executions.filter(exec => exec.workflowId === workflowId);
+      executions = executions.filter((exec) => exec.workflowId === workflowId);
     }
 
     executions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
     return executions.slice(offset, offset + limit);
   }
 
@@ -534,39 +553,53 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
     let executions = Array.from(this.executions.values());
 
     if (filters.workflowId) {
-      executions = executions.filter(exec => exec.workflowId === filters.workflowId);
+      executions = executions.filter(
+        (exec) => exec.workflowId === filters.workflowId,
+      );
     }
 
     if (filters.status) {
-      executions = executions.filter(exec => exec.status === filters.status);
+      executions = executions.filter((exec) => exec.status === filters.status);
     }
 
     if (filters.userId) {
-      executions = executions.filter(exec => exec.userId === filters.userId);
+      executions = executions.filter((exec) => exec.userId === filters.userId);
     }
 
     const totalExecutions = executions.length;
-    const completedExecutions = executions.filter(exec => exec.status === 'completed').length;
-    const failedExecutions = executions.filter(exec => exec.status === 'failed').length;
-    const runningExecutions = executions.filter(exec => exec.status === 'running').length;
+    const completedExecutions = executions.filter(
+      (exec) => exec.status === "completed",
+    ).length;
+    const failedExecutions = executions.filter(
+      (exec) => exec.status === "failed",
+    ).length;
+    const runningExecutions = executions.filter(
+      (exec) => exec.status === "running",
+    ).length;
 
     const durations = executions
-      .filter(exec => exec.actualDuration)
-      .map(exec => exec.actualDuration);
+      .filter((exec) => exec.actualDuration)
+      .map((exec) => exec.actualDuration);
 
     const estimatedTimes = executions
-      .filter(exec => exec.estimatedTime)
-      .map(exec => exec.estimatedTime);
+      .filter((exec) => exec.estimatedTime)
+      .map((exec) => exec.estimatedTime);
 
     return {
       total_executions: totalExecutions,
       completed_executions: completedExecutions,
       failed_executions: failedExecutions,
       running_executions: runningExecutions,
-      average_duration: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : null,
+      average_duration:
+        durations.length > 0
+          ? durations.reduce((a, b) => a + b, 0) / durations.length
+          : null,
       min_duration: durations.length > 0 ? Math.min(...durations) : null,
       max_duration: durations.length > 0 ? Math.max(...durations) : null,
-      average_estimated_time: estimatedTimes.length > 0 ? estimatedTimes.reduce((a, b) => a + b, 0) / estimatedTimes.length : null
+      average_estimated_time:
+        estimatedTimes.length > 0
+          ? estimatedTimes.reduce((a, b) => a + b, 0) / estimatedTimes.length
+          : null,
     };
   }
 
@@ -580,8 +613,10 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
 
     let deletedCount = 0;
     for (const [executionId, execution] of this.executions.entries()) {
-      if (execution.createdAt < cutoffDate && 
-          ['completed', 'failed', 'cancelled'].includes(execution.status)) {
+      if (
+        execution.createdAt < cutoffDate &&
+        ["completed", "failed", "cancelled"].includes(execution.status)
+      ) {
         this.executions.delete(executionId);
         deletedCount++;
       }
@@ -594,5 +629,5 @@ class InMemoryWorkflowExecutionRepository extends WorkflowExecutionRepository {
 module.exports = {
   WorkflowExecutionRepository,
   PostgreSQLWorkflowExecutionRepository,
-  InMemoryWorkflowExecutionRepository
-}; 
+  InMemoryWorkflowExecutionRepository,
+};

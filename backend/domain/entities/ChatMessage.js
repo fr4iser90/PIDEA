@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class ChatMessage {
   constructor(id, content, sender, type, timestamp, metadata = {}) {
@@ -12,57 +12,81 @@ class ChatMessage {
   }
 
   // Getters
-  get id() { return this._id; }
-  get content() { return this._content; }
-  get sender() { return this._sender; }
-  get type() { return this._type; }
-  get timestamp() { return this._timestamp; }
-  get metadata() { return { ...this._metadata }; }
+  get id() {
+    return this._id;
+  }
+  get content() {
+    return this._content;
+  }
+  get sender() {
+    return this._sender;
+  }
+  get type() {
+    return this._type;
+  }
+  get timestamp() {
+    return this._timestamp;
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
 
   // Domain methods
   isUserMessage() {
-    return this._sender === 'user';
+    return this._sender === "user";
   }
 
   isAIMessage() {
-    return this._sender === 'assistant';
+    return this._sender === "assistant";
   }
 
   isCodeBlock() {
-    return this._type === 'code';
+    return this._type === "code";
   }
 
   getCleanContent() {
-    return this._content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    return this._content
+      .replace(/<[^>]*>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   // Business rules validation
   _validate() {
     if (!this._content || this._content.trim().length === 0) {
-      throw new Error('ChatMessage content cannot be empty');
+      throw new Error("ChatMessage content cannot be empty");
     }
-    if (!['user', 'assistant', 'system'].includes(this._sender)) {
-      throw new Error('ChatMessage sender must be either "user", "assistant" or "system"');
+    if (!["user", "assistant", "system"].includes(this._sender)) {
+      throw new Error(
+        'ChatMessage sender must be either "user", "assistant" or "system"',
+      );
     }
-    if (!['text', 'code', 'system', 'error'].includes(this._type)) {
-      throw new Error('ChatMessage type must be text, code, system, or error');
+    if (!["text", "code", "system", "error"].includes(this._type)) {
+      throw new Error("ChatMessage type must be text, code, system, or error");
     }
     if (!(this._timestamp instanceof Date)) {
-      throw new Error('ChatMessage timestamp must be a Date object');
+      throw new Error("ChatMessage timestamp must be a Date object");
     }
   }
 
   // Factory methods
-  static createUserMessage(content, type = 'text', metadata = {}) {
-    return new ChatMessage(null, content, 'user', type, new Date(), metadata);
+  static createUserMessage(content, type = "text", metadata = {}) {
+    return new ChatMessage(null, content, "user", type, new Date(), metadata);
   }
 
-  static createAIMessage(content, type = 'text', metadata = {}) {
-    return new ChatMessage(null, content, 'assistant', type, new Date(), metadata);
+  static createAIMessage(content, type = "text", metadata = {}) {
+    return new ChatMessage(
+      null,
+      content,
+      "assistant",
+      type,
+      new Date(),
+      metadata,
+    );
   }
 
-  static createSystemMessage(content, type = 'system', metadata = {}) {
-    return new ChatMessage(null, content, 'system', type, new Date(), metadata);
+  static createSystemMessage(content, type = "system", metadata = {}) {
+    return new ChatMessage(null, content, "system", type, new Date(), metadata);
   }
 
   // Serialization
@@ -73,7 +97,7 @@ class ChatMessage {
       sender: this._sender,
       type: this._type,
       timestamp: this._timestamp.toISOString(),
-      metadata: this._metadata
+      metadata: this._metadata,
     };
   }
 
@@ -84,7 +108,7 @@ class ChatMessage {
       data.sender,
       data.type,
       new Date(data.timestamp),
-      data.metadata
+      data.metadata,
     );
   }
 }

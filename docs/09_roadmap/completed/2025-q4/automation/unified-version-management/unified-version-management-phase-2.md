@@ -235,7 +235,6 @@ class VersionManagementService {
       });
       
       return {
-        success: true,
         currentVersion,
         newVersion,
         bumpType: determinedBumpType,

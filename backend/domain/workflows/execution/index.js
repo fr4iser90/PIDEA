@@ -1,40 +1,40 @@
 /**
  * Execution Module - Core Execution Engine Foundation
- * 
+ *
  * This module provides the core execution engine foundation for workflow management in PIDEA.
  * It includes execution engine, queue management, scheduling, context management, result handling,
  * execution strategies, and exception handling.
  */
 
 // Core Execution Engine
-const SequentialExecutionEngine = require('./SequentialExecutionEngine');
+const SequentialExecutionEngine = require("./SequentialExecutionEngine");
 
 // Execution Context and Results
-const ExecutionContext = require('./ExecutionContext');
-const ExecutionResult = require('./ExecutionResult');
+const ExecutionContext = require("./ExecutionContext");
+const ExecutionResult = require("./ExecutionResult");
 
 // Queue and Scheduling
-const ExecutionQueue = require('./ExecutionQueue');
-const ExecutionScheduler = require('./ExecutionScheduler');
+const ExecutionQueue = require("./ExecutionQueue");
+const ExecutionScheduler = require("./ExecutionScheduler");
 
 // Execution Strategies
-const BasicSequentialStrategy = require('./strategies/BasicSequentialStrategy');
-const SimpleSequentialStrategy = require('./strategies/SimpleSequentialStrategy');
+const BasicSequentialStrategy = require("./strategies/BasicSequentialStrategy");
+const SimpleSequentialStrategy = require("./strategies/SimpleSequentialStrategy");
 
 // Optimization and Resource Management Components
-const WorkflowOptimizer = require('./WorkflowOptimizer');
-const ResourceManager = require('./ResourceManager');
-const ExecutionCache = require('./ExecutionCache');
-const ExecutionMetrics = require('./ExecutionMetrics');
-const ExecutionPredictor = require('./ExecutionPredictor');
+const WorkflowOptimizer = require("./WorkflowOptimizer");
+const ResourceManager = require("./ResourceManager");
+const ExecutionCache = require("./ExecutionCache");
+const ExecutionMetrics = require("./ExecutionMetrics");
+const ExecutionPredictor = require("./ExecutionPredictor");
 
 // Optimization Subcomponents
-const StepOptimizer = require('./optimization/StepOptimizer');
-const WorkflowAnalyzer = require('./optimization/WorkflowAnalyzer');
+const StepOptimizer = require("./optimization/StepOptimizer");
+const WorkflowAnalyzer = require("./optimization/WorkflowAnalyzer");
 
 // Resource Management Subcomponents
-const ResourceAllocator = require('./resources/ResourceAllocator');
-const ResourceMonitor = require('./resources/ResourceMonitor');
+const ResourceAllocator = require("./resources/ResourceAllocator");
+const ResourceMonitor = require("./resources/ResourceMonitor");
 
 // Exceptions
 const {
@@ -44,15 +44,15 @@ const {
   ExecutionTimeoutException,
   ResourceException,
   DependencyException,
-  ValidationException
-} = require('./exceptions/ExecutionException');
+  ValidationException,
+} = require("./exceptions/ExecutionException");
 
 // Strategy Registry
 const strategyRegistry = new Map();
 
 // Register default strategies
-strategyRegistry.set('basic', BasicSequentialStrategy);
-strategyRegistry.set('simple', SimpleSequentialStrategy);
+strategyRegistry.set("basic", BasicSequentialStrategy);
+strategyRegistry.set("simple", SimpleSequentialStrategy);
 
 /**
  * Get execution strategy by name
@@ -128,34 +128,34 @@ function createExecutionScheduler(options = {}) {
 module.exports = {
   // Core Execution Engine
   SequentialExecutionEngine,
-  
+
   // Execution Context and Results
   ExecutionContext,
   ExecutionResult,
-  
+
   // Queue and Scheduling
   ExecutionQueue,
   ExecutionScheduler,
-  
+
   // Execution Strategies
   BasicSequentialStrategy,
   SimpleSequentialStrategy,
-  
+
   // Optimization and Resource Management Components
   WorkflowOptimizer,
   ResourceManager,
   ExecutionCache,
   ExecutionMetrics,
   ExecutionPredictor,
-  
+
   // Optimization Subcomponents
   StepOptimizer,
   WorkflowAnalyzer,
-  
+
   // Resource Management Subcomponents
   ResourceAllocator,
   ResourceMonitor,
-  
+
   // Exceptions
   ExecutionException,
   StrategyExecutionException,
@@ -164,7 +164,7 @@ module.exports = {
   ResourceException,
   DependencyException,
   ValidationException,
-  
+
   // Utility Functions
   getStrategy,
   registerStrategy,
@@ -173,5 +173,5 @@ module.exports = {
   createExecutionContext,
   createExecutionResult,
   createExecutionQueue,
-  createExecutionScheduler
-}; 
+  createExecutionScheduler,
+};

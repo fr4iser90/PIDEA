@@ -1,9 +1,9 @@
-const Logger = require('@logging/Logger');
-const logger = new Logger('SessionActivityService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("SessionActivityService");
 
 /**
  * SessionActivityService - Backend service for session activity tracking and management
- * 
+ *
  * Features:
  * - Session activity logging
  * - Activity-based session extension
@@ -16,22 +16,22 @@ class SessionActivityService {
     this.userSessionRepository = dependencies.userSessionRepository;
     this.eventBus = dependencies.eventBus;
     this.config = dependencies.config || {};
-    
+
     // Activity tracking configuration
     this.activityThreshold = this.config.activityThreshold || 30 * 1000; // 30 seconds
     this.sessionTimeout = this.config.sessionTimeout || 15 * 60 * 1000; // 15 minutes
     this.extensionThreshold = this.config.extensionThreshold || 5 * 60 * 1000; // 5 minutes
     this.maxExtensions = this.config.maxExtensions || 10; // Max extensions per session
-    
+
     // Activity storage
     this.activityCache = new Map(); // sessionId -> activity data
     this.extensionCounts = new Map(); // sessionId -> extension count
-    
+
     // Cleanup intervals
     this.cleanupInterval = null;
     this.analyticsInterval = null;
-    
-    logger.info('SessionActivityService initialized');
+
+    logger.info("SessionActivityService initialized");
   }
 
   /**
@@ -40,7 +40,7 @@ class SessionActivityService {
   start() {
     this.startCleanupTasks();
     this.startAnalyticsTasks();
-    logger.info('SessionActivityService started');
+    logger.info("SessionActivityService started");
   }
 
   /**
@@ -49,7 +49,7 @@ class SessionActivityService {
   stop() {
     this.stopCleanupTasks();
     this.stopAnalyticsTasks();
-    logger.info('SessionActivityService stopped');
+    logger.info("SessionActivityService stopped");
   }
 
   /**
@@ -58,45 +58,47 @@ class SessionActivityService {
   async recordActivity(sessionId, activityData = {}) {
     try {
       if (!sessionId) {
-        throw new Error('Session ID is required');
+        throw new Error("Session ID is required");
       }
 
       const now = Date.now();
       const activity = {
         sessionId,
         timestamp: now,
-        type: activityData.type || 'general',
+        type: activityData.type || "general",
         details: activityData.details || {},
         userAgent: activityData.userAgent,
         ipAddress: activityData.ipAddress,
-        duration: activityData.duration || 0
+        duration: activityData.duration || 0,
       };
 
       // Store in cache
       this.activityCache.set(sessionId, {
         ...this.activityCache.get(sessionId),
         lastActivity: now,
-        activityCount: (this.activityCache.get(sessionId)?.activityCount || 0) + 1,
-        totalDuration: (this.activityCache.get(sessionId)?.totalDuration || 0) + activity.duration
+        activityCount:
+          (this.activityCache.get(sessionId)?.activityCount || 0) + 1,
+        totalDuration:
+          (this.activityCache.get(sessionId)?.totalDuration || 0) +
+          activity.duration,
       });
 
       // Log activity
-      logger.debug('Activity recorded', {
+      logger.debug("Activity recorded", {
         sessionId,
         type: activity.type,
-        timestamp: new Date(now).toISOString()
+        timestamp: new Date(now).toISOString(),
       });
 
       // Emit activity event
-      this.eventBus?.emit('session-activity', activity);
+      this.eventBus?.emit("session-activity", activity);
 
       // Check if session should be extended
       await this.checkSessionExtension(sessionId);
 
       return activity;
-
     } catch (error) {
-      logger.error('Failed to record activity:', error);
+      logger.error("Failed to record activity:", error);
       throw error;
     }
   }
@@ -121,11 +123,14 @@ class SessionActivityService {
       const timeUntilExpiry = session.expiresAt.getTime() - Date.now();
 
       // Check if session is close to expiry and user is active
-      if (timeUntilExpiry <= this.extensionThreshold && timeSinceLastActivity <= this.activityThreshold) {
+      if (
+        timeUntilExpiry <= this.extensionThreshold &&
+        timeSinceLastActivity <= this.activityThreshold
+      ) {
         const extensionCount = this.extensionCounts.get(sessionId) || 0;
-        
+
         if (extensionCount < this.maxExtensions) {
-          await this.extendSession(sessionId, 'activity-based');
+          await this.extendSession(sessionId, "activity-based");
           return true;
         } else {
           logger.warn(`Session ${sessionId} has reached maximum extensions`);
@@ -133,9 +138,8 @@ class SessionActivityService {
       }
 
       return false;
-
     } catch (error) {
-      logger.error('Failed to check session extension:', error);
+      logger.error("Failed to check session extension:", error);
       return false;
     }
   }
@@ -143,7 +147,7 @@ class SessionActivityService {
   /**
    * Extend session based on activity
    */
-  async extendSession(sessionId, reason = 'manual') {
+  async extendSession(sessionId, reason = "manual") {
     try {
       const session = await this.userSessionRepository.findById(sessionId);
       if (!session) {
@@ -158,36 +162,35 @@ class SessionActivityService {
       // Update session
       session.expiresAt = newExpiresAt;
       session.updateLastActivity();
-      
+
       await this.userSessionRepository.save(session);
 
       // Update extension count
       const currentCount = this.extensionCounts.get(sessionId) || 0;
       this.extensionCounts.set(sessionId, currentCount + 1);
 
-      logger.info('Session extended', {
+      logger.info("Session extended", {
         sessionId,
         reason,
         newExpiryTime: newExpiresAt.toISOString(),
-        extensionCount: currentCount + 1
+        extensionCount: currentCount + 1,
       });
 
       // Emit session extended event
-      this.eventBus?.emit('session-extended', {
+      this.eventBus?.emit("session-extended", {
         sessionId,
         userId: session.userId,
         expiresAt: newExpiresAt,
-        reason
+        reason,
       });
 
       return {
         sessionId,
         expiresAt: newExpiresAt,
-        extensionCount: currentCount + 1
+        extensionCount: currentCount + 1,
       };
-
     } catch (error) {
-      logger.error('Failed to extend session:', error);
+      logger.error("Failed to extend session:", error);
       throw error;
     }
   }
@@ -199,7 +202,7 @@ class SessionActivityService {
     try {
       const activityData = this.activityCache.get(sessionId);
       const session = await this.userSessionRepository.findById(sessionId);
-      
+
       if (!session) {
         throw new Error(`Session ${sessionId} not found`);
       }
@@ -217,13 +220,14 @@ class SessionActivityService {
         sessionDuration,
         activityCount: activityData?.activityCount || 0,
         totalDuration: activityData?.totalDuration || 0,
-        lastActivity: activityData?.lastActivity ? new Date(activityData.lastActivity) : null,
+        lastActivity: activityData?.lastActivity
+          ? new Date(activityData.lastActivity)
+          : null,
         extensionCount,
-        isActive: timeUntilExpiry > 0
+        isActive: timeUntilExpiry > 0,
       };
-
     } catch (error) {
-      logger.error('Failed to get session activity stats:', error);
+      logger.error("Failed to get session activity stats:", error);
       throw error;
     }
   }
@@ -235,9 +239,9 @@ class SessionActivityService {
     try {
       const sessions = await this.userSessionRepository.findByUserId(userId);
       const cutoffTime = Date.now() - timeRange;
-      
-      const recentSessions = sessions.filter(session => 
-        session.createdAt.getTime() > cutoffTime
+
+      const recentSessions = sessions.filter(
+        (session) => session.createdAt.getTime() > cutoffTime,
       );
 
       let totalActivity = 0;
@@ -250,7 +254,7 @@ class SessionActivityService {
           totalActivity += activityData.activityCount || 0;
           totalDuration += activityData.totalDuration || 0;
         }
-        
+
         const extensionCount = this.extensionCounts.get(session.id) || 0;
         totalExtensions += extensionCount;
       }
@@ -262,12 +266,13 @@ class SessionActivityService {
         totalActivity,
         totalDuration,
         totalExtensions,
-        averageSessionDuration: recentSessions.length > 0 ? totalDuration / recentSessions.length : 0,
-        averageActivityPerSession: recentSessions.length > 0 ? totalActivity / recentSessions.length : 0
+        averageSessionDuration:
+          recentSessions.length > 0 ? totalDuration / recentSessions.length : 0,
+        averageActivityPerSession:
+          recentSessions.length > 0 ? totalActivity / recentSessions.length : 0,
       };
-
     } catch (error) {
-      logger.error('Failed to get user activity stats:', error);
+      logger.error("Failed to get user activity stats:", error);
       throw error;
     }
   }
@@ -284,30 +289,29 @@ class SessionActivityService {
       // Clean up activity cache
       for (const [sessionId, activityData] of this.activityCache.entries()) {
         const session = await this.userSessionRepository.findById(sessionId);
-        
+
         if (!session || session.expiresAt.getTime() < now) {
           this.activityCache.delete(sessionId);
           this.extensionCounts.delete(sessionId);
           cleanedActivity.push(sessionId);
-          
+
           if (session) {
             expiredSessions.push(sessionId);
           }
         }
       }
 
-      logger.info('Session cleanup completed', {
+      logger.info("Session cleanup completed", {
         expiredSessions: expiredSessions.length,
-        cleanedActivity: cleanedActivity.length
+        cleanedActivity: cleanedActivity.length,
       });
 
       return {
         expiredSessions,
-        cleanedActivity
+        cleanedActivity,
       };
-
     } catch (error) {
-      logger.error('Failed to cleanup expired sessions:', error);
+      logger.error("Failed to cleanup expired sessions:", error);
       throw error;
     }
   }
@@ -317,13 +321,16 @@ class SessionActivityService {
    */
   startCleanupTasks() {
     // Cleanup every 5 minutes
-    this.cleanupInterval = setInterval(async () => {
-      try {
-        await this.cleanupExpiredSessions();
-      } catch (error) {
-        logger.error('Cleanup task failed:', error);
-      }
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      async () => {
+        try {
+          await this.cleanupExpiredSessions();
+        } catch (error) {
+          logger.error("Cleanup task failed:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
   }
 
   /**
@@ -341,13 +348,16 @@ class SessionActivityService {
    */
   startAnalyticsTasks() {
     // Analytics every hour
-    this.analyticsInterval = setInterval(async () => {
-      try {
-        await this.generateAnalyticsReport();
-      } catch (error) {
-        logger.error('Analytics task failed:', error);
-      }
-    }, 60 * 60 * 1000);
+    this.analyticsInterval = setInterval(
+      async () => {
+        try {
+          await this.generateAnalyticsReport();
+        } catch (error) {
+          logger.error("Analytics task failed:", error);
+        }
+      },
+      60 * 60 * 1000,
+    );
   }
 
   /**
@@ -368,9 +378,12 @@ class SessionActivityService {
       const report = {
         timestamp: new Date().toISOString(),
         activeSessions: this.activityCache.size,
-        totalExtensions: Array.from(this.extensionCounts.values()).reduce((sum, count) => sum + count, 0),
+        totalExtensions: Array.from(this.extensionCounts.values()).reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
         averageActivityPerSession: 0,
-        topActiveSessions: []
+        topActiveSessions: [],
       };
 
       // Calculate average activity
@@ -378,25 +391,30 @@ class SessionActivityService {
       for (const activityData of this.activityCache.values()) {
         totalActivity += activityData.activityCount || 0;
       }
-      report.averageActivityPerSession = this.activityCache.size > 0 ? totalActivity / this.activityCache.size : 0;
+      report.averageActivityPerSession =
+        this.activityCache.size > 0
+          ? totalActivity / this.activityCache.size
+          : 0;
 
       // Get top active sessions
       const sessionActivities = Array.from(this.activityCache.entries())
-        .map(([sessionId, data]) => ({ sessionId, activityCount: data.activityCount || 0 }))
+        .map(([sessionId, data]) => ({
+          sessionId,
+          activityCount: data.activityCount || 0,
+        }))
         .sort((a, b) => b.activityCount - a.activityCount)
         .slice(0, 10);
 
       report.topActiveSessions = sessionActivities;
 
-      logger.info('Analytics report generated', report);
+      logger.info("Analytics report generated", report);
 
       // Emit analytics event
-      this.eventBus?.emit('session-analytics', report);
+      this.eventBus?.emit("session-analytics", report);
 
       return report;
-
     } catch (error) {
-      logger.error('Failed to generate analytics report:', error);
+      logger.error("Failed to generate analytics report:", error);
       throw error;
     }
   }
@@ -408,13 +426,16 @@ class SessionActivityService {
     return {
       isRunning: this.cleanupInterval !== null,
       activeSessions: this.activityCache.size,
-      totalExtensions: Array.from(this.extensionCounts.values()).reduce((sum, count) => sum + count, 0),
+      totalExtensions: Array.from(this.extensionCounts.values()).reduce(
+        (sum, count) => sum + count,
+        0,
+      ),
       config: {
         activityThreshold: this.activityThreshold,
         sessionTimeout: this.sessionTimeout,
         extensionThreshold: this.extensionThreshold,
-        maxExtensions: this.maxExtensions
-      }
+        maxExtensions: this.maxExtensions,
+      },
     };
   }
 
@@ -423,7 +444,7 @@ class SessionActivityService {
    */
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
-    
+
     if (newConfig.activityThreshold) {
       this.activityThreshold = newConfig.activityThreshold;
     }
@@ -437,7 +458,7 @@ class SessionActivityService {
       this.maxExtensions = newConfig.maxExtensions;
     }
 
-    logger.info('Configuration updated', newConfig);
+    logger.info("Configuration updated", newConfig);
   }
 
   /**
@@ -447,12 +468,8 @@ class SessionActivityService {
     this.stop();
     this.activityCache.clear();
     this.extensionCounts.clear();
-    logger.info('SessionActivityService destroyed');
+    logger.info("SessionActivityService destroyed");
   }
 }
 
 module.exports = SessionActivityService;
-
-
-
-

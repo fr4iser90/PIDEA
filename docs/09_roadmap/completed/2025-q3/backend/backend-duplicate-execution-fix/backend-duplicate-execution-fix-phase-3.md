@@ -229,7 +229,6 @@ class GitApplicationService {
       const currentBranch = await this.gitService.getCurrentBranch(projectPath); // 1st call
       
       return {
-        success: true,
         data: {
           status,
           currentBranch
@@ -249,7 +248,6 @@ class GitApplicationService {
       const currentBranch = await this.gitService.getCurrentBranch(projectPath); // 2nd call - DUPLICATE!
       
       return {
-        success: true,
         data: {
           branches,
           currentBranch
@@ -280,7 +278,6 @@ class GitApplicationService {
       const currentBranch = await this.gitService.getCurrentBranch(projectPath);
       
       return {
-        success: true,
         data: {
           status,
           currentBranch
@@ -300,7 +297,6 @@ class GitApplicationService {
       // currentBranch only loaded when needed, not automatically
       
       return {
-        success: true,
         data: {
           branches
         }
@@ -329,7 +325,6 @@ class GitApplicationService {
       ]);
 
       return {
-        success: true,
         data: {
           status,
           branches,
@@ -707,7 +702,6 @@ describe('Git Service Integration', () => {
     const service = new GitApplicationService();
     const mockStepRegistry = {
       executeStep: jest.fn().mockResolvedValue({
-        success: true,
         result: { currentBranch: 'main' }
       })
     };

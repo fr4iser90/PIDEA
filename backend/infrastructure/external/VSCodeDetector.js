@@ -1,8 +1,7 @@
-const net = require('net');
-const http = require('http');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
-
+const net = require("net");
+const http = require("http");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class VSCodeDetector {
   constructor() {
@@ -11,8 +10,13 @@ class VSCodeDetector {
   }
 
   async scanForVSCodeInstances() {
-    logger.info('Scanning for VSCode instances on ports', this.portRange.start, 'to', this.portRange.end);
-    
+    logger.info(
+      "Scanning for VSCode instances on ports",
+      this.portRange.start,
+      "to",
+      this.portRange.end,
+    );
+
     const availableVSCodeInstances = [];
     const promises = [];
 
@@ -21,64 +25,80 @@ class VSCodeDetector {
     }
 
     const results = await Promise.allSettled(promises);
-    
+
     results.forEach((result, index) => {
       const port = this.portRange.start + index;
-      if (result.status === 'fulfilled' && result.value) {
+      if (result.status === "fulfilled" && result.value) {
         availableVSCodeInstances.push({
           port: port,
-          status: 'running',
+          status: "running",
           url: `http://127.0.0.1:${port}`,
-          ideType: 'vscode'
+          ideType: "vscode",
         });
       }
     });
 
-    logger.info('Found', availableVSCodeInstances.length, 'running VSCode instances:', 
-      availableVSCodeInstances.map(ide => ({ port: ide.port, status: ide.status, url: ide.url })));
+    logger.info(
+      "Found",
+      availableVSCodeInstances.length,
+      "running VSCode instances:",
+      availableVSCodeInstances.map((ide) => ({
+        port: ide.port,
+        status: ide.status,
+        url: ide.url,
+      })),
+    );
     return availableVSCodeInstances;
   }
 
   async checkVSCodePort(port) {
     // HTTP-based detection: query /json/version endpoint
     return new Promise((resolve) => {
-      const req = http.get({ 
-        hostname: '127.0.0.1', 
-        port, 
-        path: '/json/version', 
-        timeout: this.scanTimeout 
-      }, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data);
-            // Check for VSCode-specific indicators
-            if (json.Browser && json.webSocketDebuggerUrl) {
-              // Check for VSCode-specific user agent patterns
-              const browserString = json.Browser.toLowerCase();
-              const userAgent = json['User-Agent'] || '';
-              
-              // VSCode indicators: "Code/" in browser or "Code/" in user agent
-              if (browserString.includes('code/') || 
-                  userAgent.toLowerCase().includes('code/') ||
-                  userAgent.toLowerCase().includes('electron')) {
-                logger.info(`Found VSCode on port ${port}:`, json.Browser);
-                resolve(true);
+      const req = http.get(
+        {
+          hostname: "127.0.0.1",
+          port,
+          path: "/json/version",
+          timeout: this.scanTimeout,
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            try {
+              const json = JSON.parse(data);
+              // Check for VSCode-specific indicators
+              if (json.Browser && json.webSocketDebuggerUrl) {
+                // Check for VSCode-specific user agent patterns
+                const browserString = json.Browser.toLowerCase();
+                const userAgent = json["User-Agent"] || "";
+
+                // VSCode indicators: "Code/" in browser or "Code/" in user agent
+                if (
+                  browserString.includes("code/") ||
+                  userAgent.toLowerCase().includes("code/") ||
+                  userAgent.toLowerCase().includes("electron")
+                ) {
+                  logger.info(`Found VSCode on port ${port}:`, json.Browser);
+                  resolve(true);
+                } else {
+                  logger.info(
+                    `Port ${port} has CDP but not VSCode:`,
+                    json.Browser,
+                  );
+                  resolve(false);
+                }
               } else {
-                logger.info(`Port ${port} has CDP but not VSCode:`, json.Browser);
                 resolve(false);
               }
-            } else {
+            } catch {
               resolve(false);
             }
-          } catch {
-            resolve(false);
-          }
-        });
-      });
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => {
+          });
+        },
+      );
+      req.on("error", () => resolve(false));
+      req.on("timeout", () => {
         req.destroy();
         resolve(false);
       });
@@ -87,15 +107,15 @@ class VSCodeDetector {
 
   async findAvailableVSCodePort() {
     const runningVSCodeInstances = await this.scanForVSCodeInstances();
-    const usedPorts = runningVSCodeInstances.map(ide => ide.port);
-    
+    const usedPorts = runningVSCodeInstances.map((ide) => ide.port);
+
     for (let port = this.portRange.start; port <= this.portRange.end; port++) {
       if (!usedPorts.includes(port)) {
         return port;
       }
     }
-    
-    throw new Error('No available ports in range 9232-9241 for VSCode');
+
+    throw new Error("No available ports in range 9232-9241 for VSCode");
   }
 
   async isVSCodePortAvailable(port) {
@@ -110,18 +130,18 @@ class VSCodeDetector {
         port,
         extensions: [],
         detected: false,
-        message: 'Extension detection not yet implemented'
+        message: "Extension detection not yet implemented",
       };
     } catch (error) {
-      logger.error('Error detecting VSCode extensions:', error);
+      logger.error("Error detecting VSCode extensions:", error);
       return {
         port,
         extensions: [],
         detected: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
 }
 
-module.exports = VSCodeDetector; 
+module.exports = VSCodeDetector;

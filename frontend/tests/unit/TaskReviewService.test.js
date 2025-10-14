@@ -64,11 +64,10 @@ describe('TaskReviewService', () => {
     const mockProjectPath = '/path/to/project';
 
     const mockSuccessResponse = {
-      success: true,
       data: {
         results: [
-          { taskId: '1', success: true, result: 'completed' },
-          { taskId: '2', success: true, result: 'completed' }
+          { taskId: '1', result: 'completed' },
+          { taskId: '2', result: 'completed' }
         ],
         summary: {
           totalTasks: 2,
@@ -108,7 +107,6 @@ describe('TaskReviewService', () => {
       );
 
       expect(result).toEqual({
-        success: true,
         data: mockSuccessResponse.data,
         message: 'Review completed for 2/2 tasks'
       });
@@ -122,7 +120,7 @@ describe('TaskReviewService', () => {
 
     it('handles API failure response', async () => {
       const mockFailureResponse = {
-        success: false,
+       
         error: 'Workflow execution failed'
       };
       mockApiCall.mockResolvedValue(mockFailureResponse);
@@ -190,10 +188,9 @@ describe('TaskReviewService', () => {
 
     it('handles missing summary data gracefully', async () => {
       const responseWithoutSummary = {
-        success: true,
         data: {
           results: [
-            { taskId: '1', success: true, result: 'completed' }
+            { taskId: '1', result: 'completed' }
           ]
         }
       };
@@ -281,13 +278,11 @@ describe('TaskReviewService', () => {
       };
 
       const mockApiResponse = {
-        success: true,
         content: 'Mock review plan content'
       };
 
       taskReviewService.ChatRepository.sendMessage = jest.fn().mockResolvedValue(mockApiResponse);
       taskReviewService.ChatRepository.apiCall = jest.fn().mockResolvedValue({
-        success: true,
         content: 'Mock prompt content'
       });
 
@@ -315,7 +310,6 @@ describe('TaskReviewService', () => {
 
       taskReviewService.taskWorkflowRepository.executeWorkflow = jest.fn().mockResolvedValue(mockWorkflowResult);
       taskReviewService.ChatRepository.apiCall = jest.fn().mockResolvedValue({
-        success: true,
         content: 'Mock execute prompt content'
       });
 

@@ -1,8 +1,8 @@
-const { defineConfig, devices } = require('@playwright/test');
+const { defineConfig, devices } = require("@playwright/test");
 
 /**
  * Playwright Test Configuration
- * 
+ *
  * This configuration provides project-specific test settings with:
  * - Multi-browser support (Chrome, Firefox, Safari)
  * - Screenshot and video recording on failure
@@ -11,61 +11,61 @@ const { defineConfig, devices } = require('@playwright/test');
  */
 module.exports = defineConfig({
   // Test directory
-  testDir: './tests',
-  
+  testDir: "./tests",
+
   // Global test timeout (30 seconds)
   timeout: 30000,
-  
+
   // Number of retries for failed tests
   retries: 2,
-  
+
   // Global test settings
   use: {
     // Base URL for tests (must be provided via environment)
     baseURL: process.env.TEST_BASE_URL,
-    
+
     // Screenshot settings
-    screenshot: 'only-on-failure',
-    
+    screenshot: "only-on-failure",
+
     // Video recording settings
-    video: 'retain-on-failure',
-    
+    video: "retain-on-failure",
+
     // Trace settings for debugging
-    trace: 'retain-on-failure',
-    
+    trace: "retain-on-failure",
+
     // Browser context options
     viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
-    
+
     // Action timeout
     actionTimeout: 10000,
-    
+
     // Navigation timeout
     navigationTimeout: 30000,
-    
+
     // Global NixOS Chromium path for ALL browsers
     launchOptions: {
-      executablePath: process.env.NIXOS_CHROMIUM_PATH || undefined
-    }
+      executablePath: process.env.NIXOS_CHROMIUM_PATH || undefined,
+    },
   },
-  
+
   // Test projects for different browsers
   projects: [
     {
-      name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
         // Additional Chrome-specific settings
         launchOptions: {
-          args: ['--no-sandbox', '--disable-gpu'], // NixOS compatible args
-          executablePath: process.env.NIXOS_CHROMIUM_PATH || undefined // Use NixOS Chromium if available
-        }
+          args: ["--no-sandbox", "--disable-gpu"], // NixOS compatible args
+          executablePath: process.env.NIXOS_CHROMIUM_PATH || undefined, // Use NixOS Chromium if available
+        },
       },
     },
     // Temporarily disable Firefox and WebKit on NixOS to avoid Chromium conflicts
     // {
     //   name: 'firefox',
-    //   use: { 
+    //   use: {
     //     ...devices['Desktop Firefox'],
     //     // Additional Firefox-specific settings
     //     launchOptions: {
@@ -77,7 +77,7 @@ module.exports = defineConfig({
     // },
     // {
     //   name: 'webkit',
-    //   use: { 
+    //   use: {
     //     ...devices['Desktop Safari'],
     //     // Additional Safari-specific settings
     //     launchOptions: {
@@ -86,40 +86,43 @@ module.exports = defineConfig({
     //   },
     // },
   ],
-  
+
   // Output directories
-  outputDir: './reports/test-results',
-  
+  outputDir: "./reports/test-results",
+
   // Reporter configuration
   reporter: [
-    ['html', { outputFolder: './reports/html-report' }],
-    ['json', { outputFile: './reports/test-results.json' }],
-    ['junit', { outputFile: './reports/test-results.xml' }],
-    ['list']
+    ["html", { outputFolder: "./reports/html-report" }],
+    ["json", { outputFile: "./reports/test-results.json" }],
+    ["junit", { outputFile: "./reports/test-results.xml" }],
+    ["list"],
   ],
-  
+
   // Global setup and teardown
-  globalSetup: require.resolve('./utils/global-setup.js'),
-  globalTeardown: require.resolve('./utils/global-teardown.js'),
-  
+  globalSetup: require.resolve("./utils/global-setup.js"),
+  globalTeardown: require.resolve("./utils/global-teardown.js"),
+
   // Test environment configuration
-  testMatch: 'tests/**/*.test.js',
-  
+  testMatch: "tests/**/*.test.js",
+
   // Ignore patterns
   testIgnore: [
-    '**/node_modules/**',
-    '**/coverage/**',
-    '**/dist/**',
-    '**/build/**',
-    '../unit/**', // Ignore Jest unit tests
-    '../../tests/unit/**' // Ignore Jest unit tests from parent directory
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/build/**",
+    "../unit/**", // Ignore Jest unit tests
+    "../../tests/unit/**", // Ignore Jest unit tests from parent directory
   ],
-  
+
   // Web server configuration (if needed)
-  webServer: process.env.START_SERVER === 'true' ? {
-    command: 'npm run dev',
-    port: 3000,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  } : undefined,
+  webServer:
+    process.env.START_SERVER === "true"
+      ? {
+          command: "npm run dev",
+          port: 3000,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120000,
+        }
+      : undefined,
 });

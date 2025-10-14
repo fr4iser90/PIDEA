@@ -76,9 +76,9 @@ class PlaywrightTestController {
     try {
       const { test, projectPath, options } = req.body;
       const result = await this.testService.executeTest(test, projectPath, options);
-      res.json({ success: true, result });
+      res.json({ result });
     } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 
@@ -86,9 +86,9 @@ class PlaywrightTestController {
     try {
       const { testId } = req.params;
       const results = await this.testService.getTestResults(testId);
-      res.json({ success: true, results });
+      res.json({ results });
     } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ error: error.message });
     }
   }
 }

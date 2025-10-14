@@ -1,27 +1,28 @@
 /**
  * Tech Stack Analysis Step - Orchestrator
  * Orchestrates all specialized tech stack analysis steps
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Orchestrator for all tech stack analysis steps using tech-stack/index.js
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const AnalysisTaskService = require('@services/analysis/AnalysisTaskService');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const AnalysisTaskService = require("@services/analysis/AnalysisTaskService");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('tech_stack_analysis_step');
+const logger = new Logger("tech_stack_analysis_step");
 
 // Step configuration
 const config = {
-  name: 'TechStackAnalysisOrchestrator',
-  type: 'analysis',
-  description: 'Orchestrates comprehensive tech stack analysis using specialized steps',
-  category: 'analysis',
-  subcategory: 'tech-stack',
-  version: '1.0.0',
+  name: "TechStackAnalysisOrchestrator",
+  type: "analysis",
+  description:
+    "Orchestrates comprehensive tech stack analysis using specialized steps",
+  category: "analysis",
+  subcategory: "tech-stack",
+  version: "1.0.0",
   dependencies: [],
   settings: {
     timeout: 90000, // 1.5 minutes for all tech stack steps
@@ -30,12 +31,12 @@ const config = {
     includeTool: true,
     includeVersion: true,
     includeCompatibility: true,
-    includeTrends: true
+    includeTrends: true,
   },
   validation: {
-    requiredFiles: ['package.json'],
-    supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
-  }
+    requiredFiles: ["package.json"],
+    supportedProjects: ["nodejs", "react", "vue", "angular", "express", "nest"],
+  },
 };
 
 class TechStackAnalysisOrchestrator extends StepBuilder {
@@ -51,18 +52,18 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
   async loadTechStackSteps() {
     try {
       this.techStackSteps = {
-        FrameworkTechStackStep: require('./tech-stack/FrameworkTechStackStep'),
-        LibraryTechStackStep: require('./tech-stack/LibraryTechStackStep'),
-        ToolTechStackStep: require('./tech-stack/ToolTechStackStep'),
-        VersionTechStackStep: require('./tech-stack/VersionTechStackStep')
+        FrameworkTechStackStep: require("./tech-stack/FrameworkTechStackStep"),
+        LibraryTechStackStep: require("./tech-stack/LibraryTechStackStep"),
+        ToolTechStackStep: require("./tech-stack/ToolTechStackStep"),
+        VersionTechStackStep: require("./tech-stack/VersionTechStackStep"),
       };
-      logger.info('✅ Tech stack steps loaded successfully', {
+      logger.info("✅ Tech stack steps loaded successfully", {
         stepCount: Object.keys(this.techStackSteps).length,
-        steps: Object.keys(this.techStackSteps)
+        steps: Object.keys(this.techStackSteps),
       });
       return true;
     } catch (error) {
-      logger.error('❌ Failed to load tech stack steps:', error.message);
+      logger.error("❌ Failed to load tech stack steps:", error.message);
       throw error;
     }
   }
@@ -72,23 +73,23 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
    */
   async execute(context) {
     try {
-      logger.info('🛠️ Starting comprehensive tech stack analysis...');
-      
+      logger.info("🛠️ Starting comprehensive tech stack analysis...");
+
       // Load tech stack steps
       await this.loadTechStackSteps();
-      
+
       const results = {
         summary: {
           totalSteps: 0,
           completedSteps: 0,
-          failedSteps: 0
+          failedSteps: 0,
         },
         details: {},
         // Standardized outputs only
         issues: [],
         recommendations: [],
         tasks: [],
-        documentation: []
+        documentation: [],
       };
 
       // Execute each tech stack step SEQUENTIALLY
@@ -96,22 +97,24 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
       for (let i = 0; i < stepNames.length; i++) {
         const stepName = stepNames[i];
         const stepModule = this.techStackSteps[stepName];
-        
+
         try {
-          logger.info(`🛠️ Executing ${stepName}... (${i + 1}/${stepNames.length})`);
-          
+          logger.info(
+            `🛠️ Executing ${stepName}... (${i + 1}/${stepNames.length})`,
+          );
+
           const stepResult = await stepModule.execute(context);
-          
+
           results.details[stepName] = {
             success: stepResult.success,
             issues: stepResult.issues || [],
             recommendations: stepResult.recommendations || [],
             tasks: stepResult.tasks || [],
             documentation: stepResult.documentation || [],
-            error: stepResult.error || null
+            error: stepResult.error || null,
           };
           results.summary.completedSteps++;
-          
+
           // Aggregate standardized outputs only
           if (stepResult.issues) {
             results.issues.push(...stepResult.issues);
@@ -125,14 +128,16 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
           if (stepResult.documentation) {
             results.documentation.push(...stepResult.documentation);
           }
-          
+
           // Also check stepResult.result for nested data
           if (stepResult.result) {
             if (stepResult.result.issues) {
               results.issues.push(...stepResult.result.issues);
             }
             if (stepResult.result.recommendations) {
-              results.recommendations.push(...stepResult.result.recommendations);
+              results.recommendations.push(
+                ...stepResult.result.recommendations,
+              );
             }
             if (stepResult.result.tasks) {
               results.tasks.push(...stepResult.result.tasks);
@@ -141,61 +146,61 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
               results.documentation.push(...stepResult.result.documentation);
             }
           }
-          
+
           logger.info(`✅ ${stepName} completed successfully`);
-          
         } catch (stepError) {
           logger.error(`❌ ${stepName} failed:`, stepError.message);
           results.summary.failedSteps++;
           results.details[stepName] = {
             error: stepError.message,
-            success: false
+           
           };
         }
-        
+
         results.summary.totalSteps++;
       }
 
       // Generate tech stack maturity score
-      const techStackMaturityScore = this.calculateTechStackMaturityScore(results);
+      const techStackMaturityScore =
+        this.calculateTechStackMaturityScore(results);
       results.summary.techStackMaturityScore = techStackMaturityScore;
 
-      logger.info('✅ Tech stack analysis completed successfully', {
+      logger.info("✅ Tech stack analysis completed successfully", {
         totalSteps: results.summary.totalSteps,
         completedSteps: results.summary.completedSteps,
         failedSteps: results.summary.failedSteps,
-        techStackMaturityScore: techStackMaturityScore
+        techStackMaturityScore: techStackMaturityScore,
       });
 
       // Generate tasks using unified task service
       const tasks = await this.taskService.createTasksFromAnalysis(
-        results, 
-        context, 
-        'TechStackAnalysisOrchestrator'
+        results,
+        context,
+        "TechStackAnalysisOrchestrator",
       );
       results.tasks = tasks;
 
       // Database saving is handled by WorkflowController
-      logger.info('📊 Tech stack analysis results ready for database save by WorkflowController');
+      logger.info(
+        "📊 Tech stack analysis results ready for database save by WorkflowController",
+      );
 
       return {
-        success: true,
         result: results,
         metadata: {
-          type: 'tech-stack-analysis',
-          category: 'tech-stack',
+          type: "tech-stack-analysis",
+          category: "tech-stack",
           stepsExecuted: results.summary.totalSteps,
           techStackMaturityScore: techStackMaturityScore,
-          tasksCreated: tasks.length
-        }
+          tasksCreated: tasks.length,
+        },
       };
-
     } catch (error) {
-      logger.error('❌ Tech stack analysis failed:', error.message);
+      logger.error("❌ Tech stack analysis failed:", error.message);
       return {
-        success: false,
+       
         error: error.message,
-        result: null
+        result: null,
       };
     }
   }
@@ -205,25 +210,25 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
    */
   calculateTechStackMaturityScore(results) {
     const { issues } = results;
-    
+
     let score = 100;
-    
+
     // Deduct points for tech stack issues
     if (issues && issues.length > 0) {
       const severityWeights = {
         critical: 10,
         high: 7,
         medium: 4,
-        low: 1
+        low: 1,
       };
-      
+
       const totalWeight = issues.reduce((sum, issue) => {
         return sum + (severityWeights[issue.severity] || 1);
       }, 0);
-      
+
       score -= totalWeight;
     }
-    
+
     return Math.max(0, Math.min(100, score));
   }
 }
@@ -234,5 +239,5 @@ const stepInstance = new TechStackAnalysisOrchestrator();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
-}; 
+  execute: async (context) => await stepInstance.execute(context),
+};

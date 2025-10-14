@@ -2,7 +2,7 @@
  * TestMetadata Entity - Test file metadata and status tracking
  * Tracks test file information, status, versioning, and legacy detection
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class TestMetadata {
   constructor(
@@ -10,8 +10,8 @@ class TestMetadata {
     filePath,
     fileName,
     testName,
-    status = 'unknown',
-    version = '1.0.0',
+    status = "unknown",
+    version = "1.0.0",
     isLegacy = false,
     lastRunAt = null,
     lastModifiedAt = null,
@@ -22,7 +22,7 @@ class TestMetadata {
     tags = [],
     metadata = {},
     createdAt = new Date(),
-    updatedAt = new Date()
+    updatedAt = new Date(),
   ) {
     this.id = id;
     this._filePath = filePath;
@@ -49,45 +49,83 @@ class TestMetadata {
   }
 
   // Getters
-  get filePath() { return this._filePath; }
-  get fileName() { return this._fileName; }
-  get testName() { return this._testName; }
-  get status() { return this._status; }
-  get version() { return this._version; }
-  get isLegacy() { return this._isLegacy; }
-  get lastRunAt() { return this._lastRunAt ? new Date(this._lastRunAt) : null; }
-  get lastModifiedAt() { return this._lastModifiedAt ? new Date(this._lastModifiedAt) : null; }
-  get executionCount() { return this._executionCount; }
-  get successCount() { return this._successCount; }
-  get failureCount() { return this._failureCount; }
-  get averageDuration() { return this._averageDuration; }
-  get tags() { return [...this._tags]; }
-  get metadata() { return { ...this._metadata }; }
-  get createdAt() { return new Date(this._createdAt); }
-  get updatedAt() { return new Date(this._updatedAt); }
-  get legacyScore() { return this._legacyScore; }
-  get complexityScore() { return this._complexityScore; }
-  get maintenanceScore() { return this._maintenanceScore; }
+  get filePath() {
+    return this._filePath;
+  }
+  get fileName() {
+    return this._fileName;
+  }
+  get testName() {
+    return this._testName;
+  }
+  get status() {
+    return this._status;
+  }
+  get version() {
+    return this._version;
+  }
+  get isLegacy() {
+    return this._isLegacy;
+  }
+  get lastRunAt() {
+    return this._lastRunAt ? new Date(this._lastRunAt) : null;
+  }
+  get lastModifiedAt() {
+    return this._lastModifiedAt ? new Date(this._lastModifiedAt) : null;
+  }
+  get executionCount() {
+    return this._executionCount;
+  }
+  get successCount() {
+    return this._successCount;
+  }
+  get failureCount() {
+    return this._failureCount;
+  }
+  get averageDuration() {
+    return this._averageDuration;
+  }
+  get tags() {
+    return [...this._tags];
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
+  get updatedAt() {
+    return new Date(this._updatedAt);
+  }
+  get legacyScore() {
+    return this._legacyScore;
+  }
+  get complexityScore() {
+    return this._complexityScore;
+  }
+  get maintenanceScore() {
+    return this._maintenanceScore;
+  }
 
   // Domain methods
   isPassing() {
-    return this._status === 'passing';
+    return this._status === "passing";
   }
 
   isFailing() {
-    return this._status === 'failing';
+    return this._status === "failing";
   }
 
   isSkipped() {
-    return this._status === 'skipped';
+    return this._status === "skipped";
   }
 
   isPending() {
-    return this._status === 'pending';
+    return this._status === "pending";
   }
 
   isUnknown() {
-    return this._status === 'unknown';
+    return this._status === "unknown";
   }
 
   hasBeenRun() {
@@ -129,7 +167,7 @@ class TestMetadata {
 
   // State transitions
   markAsPassing(duration = 0) {
-    this._status = 'passing';
+    this._status = "passing";
     this._lastRunAt = new Date();
     this._executionCount++;
     this._successCount++;
@@ -138,7 +176,7 @@ class TestMetadata {
   }
 
   markAsFailing(duration = 0, error = null) {
-    this._status = 'failing';
+    this._status = "failing";
     this._lastRunAt = new Date();
     this._executionCount++;
     this._failureCount++;
@@ -150,13 +188,13 @@ class TestMetadata {
   }
 
   markAsSkipped() {
-    this._status = 'skipped';
+    this._status = "skipped";
     this._lastRunAt = new Date();
     this._updatedAt = new Date();
   }
 
   markAsPending() {
-    this._status = 'pending';
+    this._status = "pending";
     this._updatedAt = new Date();
   }
 
@@ -222,32 +260,33 @@ class TestMetadata {
   // Utility methods
   _updateAverageDuration(duration) {
     if (duration > 0) {
-      const totalDuration = this._averageDuration * (this._executionCount - 1) + duration;
+      const totalDuration =
+        this._averageDuration * (this._executionCount - 1) + duration;
       this._averageDuration = totalDuration / this._executionCount;
     }
   }
 
   _validate() {
     if (!this._filePath) {
-      throw new Error('File path is required for TestMetadata');
+      throw new Error("File path is required for TestMetadata");
     }
     if (!this._fileName) {
-      throw new Error('File name is required for TestMetadata');
+      throw new Error("File name is required for TestMetadata");
     }
     if (!this._testName) {
-      throw new Error('Test name is required for TestMetadata');
+      throw new Error("Test name is required for TestMetadata");
     }
     if (this._executionCount < 0) {
-      throw new Error('Execution count cannot be negative');
+      throw new Error("Execution count cannot be negative");
     }
     if (this._successCount < 0) {
-      throw new Error('Success count cannot be negative');
+      throw new Error("Success count cannot be negative");
     }
     if (this._failureCount < 0) {
-      throw new Error('Failure count cannot be negative');
+      throw new Error("Failure count cannot be negative");
     }
     if (this._averageDuration < 0) {
-      throw new Error('Average duration cannot be negative');
+      throw new Error("Average duration cannot be negative");
     }
   }
 
@@ -272,7 +311,7 @@ class TestMetadata {
       updatedAt: this._updatedAt,
       legacyScore: this._legacyScore,
       complexityScore: this._complexityScore,
-      maintenanceScore: this._maintenanceScore
+      maintenanceScore: this._maintenanceScore,
     };
   }
 
@@ -294,11 +333,14 @@ class TestMetadata {
       data.tags,
       data.metadata,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
     );
-    if (typeof data.legacyScore === 'number') instance._legacyScore = data.legacyScore;
-    if (typeof data.complexityScore === 'number') instance._complexityScore = data.complexityScore;
-    if (typeof data.maintenanceScore === 'number') instance._maintenanceScore = data.maintenanceScore;
+    if (typeof data.legacyScore === "number")
+      instance._legacyScore = data.legacyScore;
+    if (typeof data.complexityScore === "number")
+      instance._complexityScore = data.complexityScore;
+    if (typeof data.maintenanceScore === "number")
+      instance._maintenanceScore = data.maintenanceScore;
     return instance;
   }
 
@@ -308,8 +350,8 @@ class TestMetadata {
       filePath,
       fileName,
       testName,
-      'unknown',
-      '1.0.0',
+      "unknown",
+      "1.0.0",
       false,
       null,
       null,
@@ -318,7 +360,7 @@ class TestMetadata {
       0,
       0,
       [],
-      metadata
+      metadata,
     );
   }
 
@@ -328,43 +370,45 @@ class TestMetadata {
   }
 
   isSameTest(other) {
-    return this._filePath === other._filePath && this._testName === other._testName;
+    return (
+      this._filePath === other._filePath && this._testName === other._testName
+    );
   }
 
   // Analytics methods
   getHealthScore() {
     let score = 100;
-    
+
     // Deduct points for failures
     if (this._failureCount > 0) {
       score -= (this._failureCount / this._executionCount) * 50;
     }
-    
+
     // Deduct points for legacy status
     if (this._isLegacy) {
       score -= this._legacyScore * 0.3;
     }
-    
+
     // Deduct points for high complexity
     if (this._complexityScore > 80) {
       score -= (this._complexityScore - 80) * 0.2;
     }
-    
+
     // Deduct points for maintenance needs
     if (this._maintenanceScore > 70) {
       score -= (this._maintenanceScore - 70) * 0.3;
     }
-    
+
     return Math.max(0, Math.round(score));
   }
 
   getPriority() {
     const healthScore = this.getHealthScore();
-    if (healthScore < 30) return 'critical';
-    if (healthScore < 60) return 'high';
-    if (healthScore < 80) return 'medium';
-    return 'low';
+    if (healthScore < 30) return "critical";
+    if (healthScore < 60) return "high";
+    if (healthScore < 80) return "medium";
+    return "low";
   }
 }
 
-module.exports = TestMetadata; 
+module.exports = TestMetadata;

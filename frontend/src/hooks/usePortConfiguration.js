@@ -55,7 +55,7 @@ export const usePortConfiguration = () => {
       if (!port || port === '') {
         setCustomPortState(null);
         setLastValidation({ isValid: false, error: null, port: null });
-        return { success: true, message: 'Port cleared' };
+        return { message: 'Port cleared' };
       }
 
       const portNum = parseInt(port, 10);
@@ -65,7 +65,7 @@ export const usePortConfiguration = () => {
         const errorMsg = 'Port must be between 1 and 65535';
         setError(errorMsg);
         setLastValidation({ isValid: false, error: errorMsg, port: portNum });
-        return { success: false, error: errorMsg };
+        return { error: errorMsg };
       }
 
       // For project ports, we don't need IDE range validation
@@ -75,14 +75,14 @@ export const usePortConfiguration = () => {
       setError(null);
       setLastValidation({ isValid: true, error: null, port: portNum });
       logger.info('Project port set successfully:', portNum);
-      return { success: true, port: portNum };
+      return { port: portNum };
       
     } catch (error) {
       logger.error('Failed to set custom port:', error);
       const errorMsg = 'Failed to set port';
       setError(errorMsg);
       setLastValidation({ isValid: false, error: errorMsg, port: null });
-      return { success: false, error: errorMsg };
+      return { error: errorMsg };
     } finally {
       setIsValidating(false);
     }
@@ -147,7 +147,7 @@ export const usePortConfiguration = () => {
       return { success: true };
     } catch (error) {
       logger.error('Error clearing custom port:', error);
-      return { success: false, error: 'Failed to clear port' };
+      return { error: 'Failed to clear port' };
     }
   }, []);
 

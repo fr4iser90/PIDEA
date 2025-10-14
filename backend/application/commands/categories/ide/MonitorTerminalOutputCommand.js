@@ -27,20 +27,34 @@ class MonitorTerminalOutputCommand {
    */
   validate() {
     if (!this.userId) {
-      throw new Error('User ID is required');
+      throw new Error("User ID is required");
     }
 
-    if (this.duration && (typeof this.duration !== 'number' || this.duration < 1000 || this.duration > 60000)) {
-      throw new Error('Duration must be a number between 1000 and 60000 milliseconds');
+    if (
+      this.duration &&
+      (typeof this.duration !== "number" ||
+        this.duration < 1000 ||
+        this.duration > 60000)
+    ) {
+      throw new Error(
+        "Duration must be a number between 1000 and 60000 milliseconds",
+      );
     }
 
-    if (this.interval && (typeof this.interval !== 'number' || this.interval < 100 || this.interval > 10000)) {
-      throw new Error('Interval must be a number between 100 and 10000 milliseconds');
+    if (
+      this.interval &&
+      (typeof this.interval !== "number" ||
+        this.interval < 100 ||
+        this.interval > 10000)
+    ) {
+      throw new Error(
+        "Interval must be a number between 100 and 10000 milliseconds",
+      );
     }
 
     // Validate options
-    if (this.options && typeof this.options !== 'object') {
-      throw new Error('Options must be an object');
+    if (this.options && typeof this.options !== "object") {
+      throw new Error("Options must be an object");
     }
   }
 
@@ -52,18 +66,18 @@ class MonitorTerminalOutputCommand {
    */
   async execute(context = {}, options = {}) {
     this.validate();
-    
+
     return {
       commandId: this.commandId,
-      type: 'MonitorTerminalOutputCommand',
+      type: "MonitorTerminalOutputCommand",
       userId: this.userId,
       duration: this.duration,
       interval: this.interval,
       options: { ...this.options, ...options },
       timestamp: this.timestamp,
-      status: 'pending'
+      status: "pending",
     };
   }
 }
 
-module.exports = MonitorTerminalOutputCommand; 
+module.exports = MonitorTerminalOutputCommand;

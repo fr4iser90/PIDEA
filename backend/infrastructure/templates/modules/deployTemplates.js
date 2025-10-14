@@ -1,20 +1,20 @@
 /**
  * Deploy Templates Module
  */
-const { TEMPLATE_CATEGORIES } = require('./constants');
+const { TEMPLATE_CATEGORIES } = require("./constants");
 
 class DeployTemplates {
-    /**
-     * Get deployment script templates
-     * @returns {Object} Deploy templates
-     */
-    static getTemplates() {
-        return {
-            dockerDeploy: {
-                name: 'Docker Deploy Script',
-                description: 'Deploy using Docker',
-                category: TEMPLATE_CATEGORIES.DEPLOY,
-                template: `#!/bin/bash
+  /**
+   * Get deployment script templates
+   * @returns {Object} Deploy templates
+   */
+  static getTemplates() {
+    return {
+      dockerDeploy: {
+        name: "Docker Deploy Script",
+        description: "Deploy using Docker",
+        category: TEMPLATE_CATEGORIES.DEPLOY,
+        template: `#!/bin/bash
 # Docker Deploy Script
 echo "Starting Docker deployment..."
 
@@ -64,20 +64,20 @@ else
     echo "Deployment failed!"
     exit 1
 fi`,
-                variables: {
-                    IMAGE_NAME: 'myapp',
-                    IMAGE_TAG: 'latest',
-                    CONTAINER_NAME: 'myapp',
-                    PORT: '3000'
-                },
-                outputs: ['deployment-status']
-            },
+        variables: {
+          IMAGE_NAME: "myapp",
+          IMAGE_TAG: "latest",
+          CONTAINER_NAME: "myapp",
+          PORT: "3000",
+        },
+        outputs: ["deployment-status"],
+      },
 
-            kubernetesDeploy: {
-                name: 'Kubernetes Deploy Script',
-                description: 'Deploy to Kubernetes',
-                category: TEMPLATE_CATEGORIES.DEPLOY,
-                template: `#!/bin/bash
+      kubernetesDeploy: {
+        name: "Kubernetes Deploy Script",
+        description: "Deploy to Kubernetes",
+        category: TEMPLATE_CATEGORIES.DEPLOY,
+        template: `#!/bin/bash
 # Kubernetes Deploy Script
 echo "Starting Kubernetes deployment..."
 
@@ -121,16 +121,16 @@ else
     echo "Kubernetes deployment failed!"
     exit 1
 fi`,
-                variables: {
-                    NAMESPACE: 'default',
-                    DEPLOYMENT_NAME: 'myapp',
-                    IMAGE_NAME: 'myapp',
-                    IMAGE_TAG: 'latest'
-                },
-                outputs: ['kubernetes-deployment-status']
-            }
-        };
-    }
+        variables: {
+          NAMESPACE: "default",
+          DEPLOYMENT_NAME: "myapp",
+          IMAGE_NAME: "myapp",
+          IMAGE_TAG: "latest",
+        },
+        outputs: ["kubernetes-deployment-status"],
+      },
+    };
+  }
 }
 
-module.exports = DeployTemplates; 
+module.exports = DeployTemplates;

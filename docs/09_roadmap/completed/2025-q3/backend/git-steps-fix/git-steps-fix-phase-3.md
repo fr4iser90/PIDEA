@@ -65,7 +65,7 @@ git branch -a | grep pidea-agent
 ```
 GitBranchHandler: ✅ Returns { local: [...], remote: [...], all: [...] }
 GitGetBranchesStep: ✅ Returns { result: { local: [...], remote: [...], all: [...] } }
-GitService: ✅ Returns { success: true, result: { local: [...], remote: [...], all: [...] } }
+GitService: ✅ Returns { result: { local: [...], remote: [...], all: [...] } }
 GitController: ✅ Extracts branchesResult.result.all correctly
 ```
 

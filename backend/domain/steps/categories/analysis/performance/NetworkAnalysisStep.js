@@ -1,45 +1,46 @@
 /**
  * Network Analysis Step - Performance Analysis Step
  * Analyzes network performance patterns and optimizations
- * 
+ *
  * Created: [RUN: date -u +"%Y-%m-%dT%H:%M:%S.000Z"]
  * Purpose: Specialized network performance analysis for build configurations and resource optimization
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('network_analysis_step');
+const logger = new Logger("network_analysis_step");
 
 // Step configuration
 const config = {
-  name: 'NetworkAnalysisStep',
-  type: 'analysis',
-  description: 'Analyzes network performance patterns and optimizations',
-  category: 'analysis',
-  subcategory: 'performance',
-  version: '1.0.0',
+  name: "NetworkAnalysisStep",
+  type: "analysis",
+  description: "Analyzes network performance patterns and optimizations",
+  category: "analysis",
+  subcategory: "performance",
+  version: "1.0.0",
   dependencies: [],
   settings: {
     timeout: 30000,
     includeBuildConfig: true,
     includeResourceUsage: true,
-    includeOptimizations: true
+    includeOptimizations: true,
   },
   validation: {
-    requiredFiles: ['package.json'],
-    supportedProjects: ['nodejs', 'react', 'vue', 'angular', 'express', 'nest']
-  }
+    requiredFiles: ["package.json"],
+    supportedProjects: ["nodejs", "react", "vue", "angular", "express", "nest"],
+  },
 };
 
 class NetworkAnalysisStep {
   constructor() {
-    this.name = 'NetworkAnalysisStep';
-    this.description = 'Analyzes network performance patterns and optimizations';
-    this.category = 'analysis';
-    this.subcategory = 'performance';
+    this.name = "NetworkAnalysisStep";
+    this.description =
+      "Analyzes network performance patterns and optimizations";
+    this.category = "analysis";
+    this.subcategory = "performance";
     this.dependencies = [];
   }
 
@@ -50,23 +51,28 @@ class NetworkAnalysisStep {
   async execute(context = {}) {
     const config = NetworkAnalysisStep.getConfig();
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`⚡ Executing NetworkAnalysisStep...`);
-      
+
       // Validate context
       this.validateContext(context);
 
       const projectPath = context.projectPath;
-      
-      logger.info(`🌐 Starting network performance analysis for: ${projectPath}`);
+
+      logger.info(
+        `🌐 Starting network performance analysis for: ${projectPath}`,
+      );
 
       // Execute network performance analysis
-      const networkAnalysis = await this.analyzeNetworkPerformance(projectPath, {
-        includeBuildConfig: context.includeBuildConfig !== false,
-        includeResourceUsage: context.includeResourceUsage !== false,
-        includeOptimizations: context.includeOptimizations !== false
-      });
+      const networkAnalysis = await this.analyzeNetworkPerformance(
+        projectPath,
+        {
+          includeBuildConfig: context.includeBuildConfig !== false,
+          includeResourceUsage: context.includeResourceUsage !== false,
+          includeOptimizations: context.includeOptimizations !== false,
+        },
+      );
 
       // Clean and format result
       const cleanResult = this.cleanResult(networkAnalysis);
@@ -88,32 +94,34 @@ class NetworkAnalysisStep {
 
       // Generate documentation if requested
       if (context.includeDocumentation !== false) {
-        cleanResult.documentation = await this.createDocumentation(cleanResult, projectPath, context);
+        cleanResult.documentation = await this.createDocumentation(
+          cleanResult,
+          projectPath,
+          context,
+        );
       }
 
       logger.info(`✅ Network performance analysis completed successfully`);
 
       return {
-        success: true,
         result: cleanResult,
         metadata: {
           stepName: "NetworkAnalysisStep",
           projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
-
     } catch (error) {
       logger.error(`❌ Network performance analysis failed: ${error.message}`);
-      
+
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
           stepName: "NetworkAnalysisStep",
           projectPath: context.projectPath,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
     }
   }
@@ -150,7 +158,7 @@ class NetworkAnalysisStep {
       const networkScore = this.calculateNetworkScore({
         metrics,
         bottlenecks: bottlenecks.length,
-        optimizations: optimizations.length
+        optimizations: optimizations.length,
       });
 
       return {
@@ -158,16 +166,16 @@ class NetworkAnalysisStep {
         optimizations,
         bottlenecks,
         score: networkScore,
-        level: this.getNetworkLevel(networkScore)
+        level: this.getNetworkLevel(networkScore),
       };
     } catch (error) {
       logger.error(`Network performance analysis failed: ${error.message}`);
-      return { 
-        metrics: {}, 
-        optimizations: [], 
+      return {
+        metrics: {},
+        optimizations: [],
         bottlenecks: [],
         score: 0,
-        level: 'unknown'
+        level: "unknown",
       };
     }
   }
@@ -185,18 +193,18 @@ class NetworkAnalysisStep {
 
       // Check for common build configuration files
       const buildFiles = [
-        'webpack.config.js',
-        'vite.config.js',
-        'rollup.config.js',
-        'babel.config.js',
-        'tsconfig.json',
-        'package.json'
+        "webpack.config.js",
+        "vite.config.js",
+        "rollup.config.js",
+        "babel.config.js",
+        "tsconfig.json",
+        "package.json",
       ];
 
       for (const buildFile of buildFiles) {
         const buildPath = path.join(projectPath, buildFile);
         try {
-          const content = await fs.readFile(buildPath, 'utf8');
+          const content = await fs.readFile(buildPath, "utf8");
           const analysis = this.analyzeBuildFile(buildFile, content);
           optimizations.push(...analysis.optimizations);
           bottlenecks.push(...analysis.bottlenecks);
@@ -230,29 +238,31 @@ class NetworkAnalysisStep {
       metrics.staticAssets = staticAssets.length;
 
       // Check for large assets
-      const largeAssets = staticAssets.filter(asset => 
-        asset.size > 1024 * 1024 // 1MB
+      const largeAssets = staticAssets.filter(
+        (asset) => asset.size > 1024 * 1024, // 1MB
       );
 
       if (largeAssets.length > 0) {
         bottlenecks.push({
-          type: 'network',
-          severity: 'medium',
+          type: "network",
+          severity: "medium",
           message: `${largeAssets.length} large static assets detected`,
-          suggestion: 'Optimize images and compress large files for better network performance'
+          suggestion:
+            "Optimize images and compress large files for better network performance",
         });
       }
 
       // Check for optimization opportunities
-      const imageFiles = staticAssets.filter(asset => 
-        /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(asset.path)
+      const imageFiles = staticAssets.filter((asset) =>
+        /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(asset.path),
       );
 
       if (imageFiles.length > 0) {
         optimizations.push({
-          type: 'network',
+          type: "network",
           message: `${imageFiles.length} image files detected`,
-          suggestion: 'Use modern image formats (WebP) and implement lazy loading for better network performance'
+          suggestion:
+            "Use modern image formats (WebP) and implement lazy loading for better network performance",
         });
       }
 
@@ -260,10 +270,11 @@ class NetworkAnalysisStep {
       const hasCdnConfig = await this.checkCdnConfiguration(projectPath);
       if (!hasCdnConfig) {
         bottlenecks.push({
-          type: 'network',
-          severity: 'low',
-          message: 'No CDN configuration detected',
-          suggestion: 'Consider using a CDN for static assets to improve network performance'
+          type: "network",
+          severity: "low",
+          message: "No CDN configuration detected",
+          suggestion:
+            "Consider using a CDN for static assets to improve network performance",
         });
       }
 
@@ -285,60 +296,62 @@ class NetworkAnalysisStep {
     const bottlenecks = [];
 
     switch (filename) {
-      case 'webpack.config.js':
-        if (content.includes('optimization')) {
+      case "webpack.config.js":
+        if (content.includes("optimization")) {
           optimizations.push({
-            type: 'network',
-            message: 'Webpack optimization configured',
-            suggestion: 'Review optimization settings for best network performance'
+            type: "network",
+            message: "Webpack optimization configured",
+            suggestion:
+              "Review optimization settings for best network performance",
           });
         }
-        
-        if (!content.includes('splitChunks')) {
+
+        if (!content.includes("splitChunks")) {
           bottlenecks.push({
-            type: 'network',
-            severity: 'medium',
+            type: "network",
+            severity: "medium",
             file: filename,
-            message: 'No code splitting configuration detected',
-            suggestion: 'Configure splitChunks for better caching and network performance'
+            message: "No code splitting configuration detected",
+            suggestion:
+              "Configure splitChunks for better caching and network performance",
           });
         }
 
-        if (content.includes('compression')) {
+        if (content.includes("compression")) {
           optimizations.push({
-            type: 'network',
-            message: 'Compression configured in webpack',
-            suggestion: 'Good for reducing network payload size'
+            type: "network",
+            message: "Compression configured in webpack",
+            suggestion: "Good for reducing network payload size",
           });
         }
         break;
 
-      case 'vite.config.js':
-        if (content.includes('build.rollupOptions')) {
+      case "vite.config.js":
+        if (content.includes("build.rollupOptions")) {
           optimizations.push({
-            type: 'network',
-            message: 'Vite build optimization configured',
-            suggestion: 'Review rollup options for best network performance'
+            type: "network",
+            message: "Vite build optimization configured",
+            suggestion: "Review rollup options for best network performance",
           });
         }
 
-        if (content.includes('build.assetsInlineLimit')) {
+        if (content.includes("build.assetsInlineLimit")) {
           optimizations.push({
-            type: 'network',
-            message: 'Asset inlining configured',
-            suggestion: 'Good for reducing HTTP requests'
+            type: "network",
+            message: "Asset inlining configured",
+            suggestion: "Good for reducing HTTP requests",
           });
         }
         break;
 
-      case 'tsconfig.json':
+      case "tsconfig.json":
         try {
           const config = JSON.parse(content);
           if (config.compilerOptions && config.compilerOptions.incremental) {
             optimizations.push({
-              type: 'network',
-              message: 'TypeScript incremental compilation enabled',
-              suggestion: 'Good for build performance and faster deployments'
+              type: "network",
+              message: "TypeScript incremental compilation enabled",
+              suggestion: "Good for build performance and faster deployments",
             });
           }
         } catch (error) {
@@ -346,14 +359,15 @@ class NetworkAnalysisStep {
         }
         break;
 
-      case 'package.json':
+      case "package.json":
         try {
           const config = JSON.parse(content);
           if (config.scripts && config.scripts.build) {
             optimizations.push({
-              type: 'network',
-              message: 'Build script configured',
-              suggestion: 'Ensure build process optimizes for network performance'
+              type: "network",
+              message: "Build script configured",
+              suggestion:
+                "Ensure build process optimizes for network performance",
             });
           }
         } catch (error) {
@@ -373,17 +387,21 @@ class NetworkAnalysisStep {
   async checkCdnConfiguration(projectPath) {
     try {
       const configFiles = [
-        'next.config.js',
-        'nuxt.config.js',
-        'vite.config.js',
-        'webpack.config.js'
+        "next.config.js",
+        "nuxt.config.js",
+        "vite.config.js",
+        "webpack.config.js",
       ];
 
       for (const configFile of configFiles) {
         const configPath = path.join(projectPath, configFile);
         try {
-          const content = await fs.readFile(configPath, 'utf8');
-          if (content.includes('cdn') || content.includes('assetPrefix') || content.includes('publicPath')) {
+          const content = await fs.readFile(configPath, "utf8");
+          if (
+            content.includes("cdn") ||
+            content.includes("assetPrefix") ||
+            content.includes("publicPath")
+          ) {
             return true;
           }
         } catch (error) {
@@ -404,8 +422,8 @@ class NetworkAnalysisStep {
    */
   async getStaticAssets(projectPath) {
     const assets = [];
-    const assetDirs = ['public', 'static', 'assets', 'images', 'media'];
-    
+    const assetDirs = ["public", "static", "assets", "images", "media"];
+
     for (const dir of assetDirs) {
       const assetPath = path.join(projectPath, dir);
       try {
@@ -416,7 +434,7 @@ class NetworkAnalysisStep {
             assets.push({
               path: file,
               size: stat.size,
-              relativePath: path.relative(projectPath, file)
+              relativePath: path.relative(projectPath, file),
             });
           } catch (error) {
             // Skip files that can't be stat'd
@@ -426,7 +444,7 @@ class NetworkAnalysisStep {
         // Directory doesn't exist
       }
     }
-    
+
     return assets;
   }
 
@@ -437,17 +455,21 @@ class NetworkAnalysisStep {
    */
   async getAllFiles(dir) {
     const files = [];
-    
+
     try {
       const items = await fs.readdir(dir);
-      
+
       for (const item of items) {
         const fullPath = path.join(dir, item);
         const stat = await fs.stat(fullPath);
-        
+
         if (stat.isDirectory()) {
-          if (!item.startsWith('.') && item !== 'node_modules' && item !== '.git') {
-            files.push(...await this.getAllFiles(fullPath));
+          if (
+            !item.startsWith(".") &&
+            item !== "node_modules" &&
+            item !== ".git"
+          ) {
+            files.push(...(await this.getAllFiles(fullPath)));
           }
         } else {
           files.push(fullPath);
@@ -456,7 +478,7 @@ class NetworkAnalysisStep {
     } catch (error) {
       // Directory doesn't exist or can't be read
     }
-    
+
     return files;
   }
 
@@ -467,7 +489,7 @@ class NetworkAnalysisStep {
    */
   calculateNetworkScore(data) {
     const { metrics, bottlenecks, optimizations } = data;
-    
+
     // Base score starts at 100
     let score = 100;
 
@@ -498,11 +520,11 @@ class NetworkAnalysisStep {
    * @returns {string} Performance level
    */
   getNetworkLevel(score) {
-    if (score >= 90) return 'excellent';
-    if (score >= 80) return 'good';
-    if (score >= 70) return 'fair';
-    if (score >= 60) return 'poor';
-    return 'critical';
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "good";
+    if (score >= 70) return "fair";
+    if (score >= 60) return "poor";
+    return "critical";
   }
 
   /**
@@ -515,8 +537,8 @@ class NetworkAnalysisStep {
       ...result,
       timestamp: new Date().toISOString(),
       step: NetworkAnalysisStep,
-      category: 'performance',
-      subcategory: 'network'
+      category: "performance",
+      subcategory: "network",
     };
   }
 
@@ -526,7 +548,9 @@ class NetworkAnalysisStep {
    */
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required for network performance analysis');
+      throw new Error(
+        "Project path is required for network performance analysis",
+      );
     }
   }
 
@@ -548,16 +572,16 @@ class NetworkAnalysisStep {
    */
   calculateConfidence(result) {
     const { metrics, bottlenecks, optimizations } = result;
-    
+
     if (!metrics || !bottlenecks || !optimizations) return 0;
-    
+
     // Higher confidence with more data points
     const dataPoints = bottlenecks.length + optimizations.length;
     const baseConfidence = Math.min(dataPoints * 5, 80);
-    
+
     // Additional confidence for comprehensive analysis
     const coverageBonus = metrics.buildFilesAnalyzed > 0 ? 20 : 0;
-    
+
     return Math.min(baseConfidence + coverageBonus, 100);
   }
 
@@ -568,49 +592,55 @@ class NetworkAnalysisStep {
    */
   generateIssues(result) {
     const issues = [];
-    
+
     // Check for low analysis score
     if (result.score < 70) {
       issues.push({
-        type: 'low-analysis-score',
-        title: 'Low Analysis Score',
+        type: "low-analysis-score",
+        title: "Low Analysis Score",
         description: `Analysis score of ${result.score}% indicates areas for improvement`,
-        severity: 'medium',
-        priority: 'medium',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        location: 'analysis-results',
-        suggestion: 'Improve analysis results by addressing identified issues'
+        severity: "medium",
+        priority: "medium",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        location: "analysis-results",
+        suggestion: "Improve analysis results by addressing identified issues",
       });
     }
 
     // Check for critical issues
-    if (result.vulnerabilities && result.vulnerabilities.some(v => v.severity === 'critical')) {
+    if (
+      result.vulnerabilities &&
+      result.vulnerabilities.some((v) => v.severity === "critical")
+    ) {
       issues.push({
-        type: 'critical-issues',
-        title: 'Critical Issues Detected',
-        description: 'Critical issues found in the analysis',
-        severity: 'critical',
-        priority: 'critical',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        location: 'analysis-results',
-        suggestion: 'Immediately address critical issues'
+        type: "critical-issues",
+        title: "Critical Issues Detected",
+        description: "Critical issues found in the analysis",
+        severity: "critical",
+        priority: "critical",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        location: "analysis-results",
+        suggestion: "Immediately address critical issues",
       });
     }
 
     // Check for high severity issues
-    if (result.vulnerabilities && result.vulnerabilities.some(v => v.severity === 'high')) {
+    if (
+      result.vulnerabilities &&
+      result.vulnerabilities.some((v) => v.severity === "high")
+    ) {
       issues.push({
-        type: 'high-issues',
-        title: 'High Severity Issues Detected',
-        description: 'High severity issues found in the analysis',
-        severity: 'high',
-        priority: 'high',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        location: 'analysis-results',
-        suggestion: 'Address high severity issues promptly'
+        type: "high-issues",
+        title: "High Severity Issues Detected",
+        description: "High severity issues found in the analysis",
+        severity: "high",
+        priority: "high",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        location: "analysis-results",
+        suggestion: "Address high severity issues promptly",
       });
     }
 
@@ -623,60 +653,60 @@ class NetworkAnalysisStep {
    */
   generateRecommendations(result) {
     const recommendations = [];
-    
+
     // Check for low analysis score
     if (result.score < 80) {
       recommendations.push({
-        type: 'improve-score',
-        title: 'Improve Analysis Score',
+        type: "improve-score",
+        title: "Improve Analysis Score",
         description: `Current score of ${result.score}% can be improved`,
-        priority: 'medium',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        action: 'Implement best practices to improve analysis score',
-        impact: 'Better code quality and maintainability'
+        priority: "medium",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        action: "Implement best practices to improve analysis score",
+        impact: "Better code quality and maintainability",
       });
     }
 
     // Check for missing patterns
     if (result.patterns && result.patterns.length < 3) {
       recommendations.push({
-        type: 'add-patterns',
-        title: 'Add More Design Patterns',
-        description: 'Consider implementing additional design patterns',
-        priority: 'medium',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        action: 'Research and implement appropriate design patterns',
-        impact: 'Improved code organization and maintainability'
+        type: "add-patterns",
+        title: "Add More Design Patterns",
+        description: "Consider implementing additional design patterns",
+        priority: "medium",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        action: "Research and implement appropriate design patterns",
+        impact: "Improved code organization and maintainability",
       });
     }
 
     // Check for security improvements
     if (result.vulnerabilities && result.vulnerabilities.length > 0) {
       recommendations.push({
-        type: 'security-improvements',
-        title: 'Address Security Vulnerabilities',
+        type: "security-improvements",
+        title: "Address Security Vulnerabilities",
         description: `${result.vulnerabilities.length} vulnerabilities found`,
-        priority: 'high',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        action: 'Review and fix identified security vulnerabilities',
-        impact: 'Enhanced security posture'
+        priority: "high",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        action: "Review and fix identified security vulnerabilities",
+        impact: "Enhanced security posture",
       });
     }
 
     // Check for performance improvements
     if (result.metrics && result.metrics.performanceScore < 80) {
       recommendations.push({
-        type: 'performance-improvements',
-        title: 'Improve Performance',
-        description: 'Performance analysis indicates room for improvement',
-        priority: 'medium',
-        category: 'performance',
-        source: 'NetworkAnalysisStep',
-        action: 'Optimize code for better performance',
-        impact: 'Faster execution and better user experience'
+        type: "performance-improvements",
+        title: "Improve Performance",
+        description: "Performance analysis indicates room for improvement",
+        priority: "medium",
+        category: "performance",
+        source: "NetworkAnalysisStep",
+        action: "Optimize code for better performance",
+        impact: "Faster execution and better user experience",
       });
     }
 
@@ -690,77 +720,87 @@ class NetworkAnalysisStep {
    */
   async generateTasks(result, context) {
     const tasks = [];
-    const projectId = context.projectId || 'default-project';
-    
+    const projectId = context.projectId || "default-project";
+
     // Create main improvement task
     const mainTask = {
       id: `network-analysis-step-improvement-${Date.now()}`,
       title: `Improve ${NetworkAnalysisStep} Results`,
       description: `Address issues and implement recommendations from ${NetworkAnalysisStep} analysis`,
-      type: 'improvement',
-      category: 'performance',
-      priority: 'medium',
-      status: 'pending',
+      type: "improvement",
+      category: "performance",
+      priority: "medium",
+      status: "pending",
       projectId: projectId,
       metadata: {
-        source: 'NetworkAnalysisStep',
+        source: "NetworkAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations ? result.recommendations.length : 0
+        recommendations: result.recommendations
+          ? result.recommendations.length
+          : 0,
       },
       estimatedHours: 4,
-      phase: 'improvement',
-      stage: 'planning'
+      phase: "improvement",
+      stage: "planning",
     };
-    
+
     tasks.push(mainTask);
-    
+
     // Create subtasks for critical issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'critical')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "critical")
+    ) {
       const criticalTask = {
         id: `network-analysis-step-critical-${Date.now()}`,
         title: `Fix Critical Issues from ${NetworkAnalysisStep}`,
-        description: 'Address critical issues identified in analysis',
-        type: 'fix',
-        category: 'performance',
-        priority: 'critical',
-        status: 'pending',
+        description: "Address critical issues identified in analysis",
+        type: "fix",
+        category: "performance",
+        priority: "critical",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'NetworkAnalysisStep',
-          issues: result.issues.filter(issue => issue.severity === 'critical')
+          source: "NetworkAnalysisStep",
+          issues: result.issues.filter(
+            (issue) => issue.severity === "critical",
+          ),
         },
         estimatedHours: 4,
-        phase: 'critical-fixes',
-        stage: 'implementation'
+        phase: "critical-fixes",
+        stage: "implementation",
       };
       tasks.push(criticalTask);
     }
-    
+
     // Create subtasks for high priority issues
-    if (result.issues && result.issues.some(issue => issue.severity === 'high')) {
+    if (
+      result.issues &&
+      result.issues.some((issue) => issue.severity === "high")
+    ) {
       const highTask = {
         id: `network-analysis-step-high-${Date.now()}`,
         title: `Fix High Priority Issues from ${NetworkAnalysisStep}`,
-        description: 'Address high priority issues identified in analysis',
-        type: 'fix',
-        category: 'performance',
-        priority: 'high',
-        status: 'pending',
+        description: "Address high priority issues identified in analysis",
+        type: "fix",
+        category: "performance",
+        priority: "high",
+        status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
         metadata: {
-          source: 'NetworkAnalysisStep',
-          issues: result.issues.filter(issue => issue.severity === 'high')
+          source: "NetworkAnalysisStep",
+          issues: result.issues.filter((issue) => issue.severity === "high"),
         },
         estimatedHours: 3,
-        phase: 'high-fixes',
-        stage: 'implementation'
+        phase: "high-fixes",
+        stage: "implementation",
       };
       tasks.push(highTask);
     }
-    
+
     return tasks;
   }
 
@@ -771,30 +811,30 @@ class NetworkAnalysisStep {
    */
   calculateEstimatedHours(result) {
     let totalHours = 2; // Base hours for improvement
-    
+
     if (result.issues) {
-      result.issues.forEach(issue => {
+      result.issues.forEach((issue) => {
         switch (issue.severity) {
-          case 'critical':
+          case "critical":
             totalHours += 2;
             break;
-          case 'high':
+          case "high":
             totalHours += 1.5;
             break;
-          case 'medium':
+          case "medium":
             totalHours += 1;
             break;
-          case 'low':
+          case "low":
             totalHours += 0.5;
             break;
         }
       });
     }
-    
+
     if (result.recommendations) {
       totalHours += result.recommendations.length * 0.5;
     }
-    
+
     return Math.round(totalHours * 10) / 10; // Round to 1 decimal place
   }
 
@@ -807,24 +847,32 @@ class NetworkAnalysisStep {
    */
   async createDocumentation(result, projectPath, context) {
     const docs = [];
-    const docsDir = path.join(projectPath, 'docs', 'analysis', 'performance', 'network-analysis-step');
-    
+    const docsDir = path.join(
+      projectPath,
+      "docs",
+      "analysis",
+      "performance",
+      "network-analysis-step",
+    );
+
     // Ensure directory exists
     try {
       await fs.mkdir(docsDir, { recursive: true });
     } catch (error) {
       // Directory might already exist, continue
     }
-    
-    
+
     // Create implementation file
-    const implementationDoc = await this.createImplementationDoc(result, docsDir);
+    const implementationDoc = await this.createImplementationDoc(
+      result,
+      docsDir,
+    );
     docs.push(implementationDoc);
-    
+
     // Create analysis report
     const analysisReport = await this.createAnalysisReport(result, docsDir);
     docs.push(analysisReport);
-    
+
     return docs;
   }
 
@@ -835,8 +883,8 @@ class NetworkAnalysisStep {
    * @returns {Object} Implementation document
    */
   async createImplementationDoc(result, docsDir) {
-    const docPath = path.join(docsDir, 'network-analysis-implementation.md');
-    
+    const docPath = path.join(docsDir, "network-analysis-implementation.md");
+
     const content = `# Network Performance Analysis Implementation
 
 ## 📋 Analysis Overview
@@ -844,7 +892,7 @@ class NetworkAnalysisStep {
 - **Category**: performance
 - **Analysis Date**: ${new Date().toISOString()}
 - **Score**: ${result.score || 0}%
-- **Level**: ${result.level || 'unknown'}
+- **Level**: ${result.level || "unknown"}
 
 ## 📊 Analysis Results
 - **Build Files**: ${result.metrics?.buildFilesAnalyzed || 0}
@@ -852,23 +900,23 @@ class NetworkAnalysisStep {
 - **Files Analyzed**: ${result.metrics?.totalFiles || 0}
 
 ## 🎯 Key Findings
-${result.bottlenecks ? result.bottlenecks.map(bottleneck => `- **${bottleneck.type}**: ${bottleneck.description}`).join('\n') : '- No bottlenecks detected'}
+${result.bottlenecks ? result.bottlenecks.map((bottleneck) => `- **${bottleneck.type}**: ${bottleneck.description}`).join("\n") : "- No bottlenecks detected"}
 
 ## 📝 Recommendations
-${result.recommendations ? result.recommendations.map(rec => `- **${rec.title}**: ${rec.description}`).join('\n') : '- No recommendations'}
+${result.recommendations ? result.recommendations.map((rec) => `- **${rec.title}**: ${rec.description}`).join("\n") : "- No recommendations"}
 
 ## 🔧 Implementation Tasks
-${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join('\n') : '- No tasks generated'}
+${result.tasks ? result.tasks.map((task) => `- **${task.title}**: ${task.description} (${task.estimatedHours}h)`).join("\n") : "- No tasks generated"}
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'implementation',
-      title: 'Network Performance Analysis Implementation',
+      type: "implementation",
+      title: "Network Performance Analysis Implementation",
       path: docPath,
-      category: 'performance',
-      source: NetworkAnalysisStep
+      category: "performance",
+      source: NetworkAnalysisStep,
     };
   }
 
@@ -879,21 +927,29 @@ ${result.tasks ? result.tasks.map(task => `- **${task.title}**: ${task.descripti
    * @returns {Object} Analysis report
    */
   async createAnalysisReport(result, docsDir) {
-    const docPath = path.join(docsDir, 'network-analysis-report.md');
-    
+    const docPath = path.join(docsDir, "network-analysis-report.md");
+
     const content = `# Network Performance Analysis Report
 
 ## 📊 Executive Summary
-Network performance analysis completed with a score of ${result.score || 0}% (${result.level || 'unknown'} level).
+Network performance analysis completed with a score of ${result.score || 0}% (${result.level || "unknown"} level).
 
 ## 🔍 Detailed Analysis
-${result.bottlenecks ? result.bottlenecks.map(bottleneck => `
+${
+  result.bottlenecks
+    ? result.bottlenecks
+        .map(
+          (bottleneck) => `
 ### ${bottleneck.type} Bottleneck
-- **File**: ${bottleneck.file || 'N/A'}
+- **File**: ${bottleneck.file || "N/A"}
 - **Description**: ${bottleneck.description}
 - **Severity**: ${bottleneck.severity}
 - **Suggestion**: ${bottleneck.suggestion}
-`).join('\n') : 'No bottlenecks found'}
+`,
+        )
+        .join("\n")
+    : "No bottlenecks found"
+}
 
 ## 📈 Metrics
 - **Build Files**: ${result.metrics?.buildFilesAnalyzed || 0} analyzed
@@ -904,14 +960,14 @@ ${result.bottlenecks ? result.bottlenecks.map(bottleneck => `
 Based on the analysis, consider optimizing network performance through better build configurations and asset optimization.
 `;
 
-    await fs.writeFile(docPath, content, 'utf8');
-    
+    await fs.writeFile(docPath, content, "utf8");
+
     return {
-      type: 'report',
-      title: 'Network Performance Analysis Report',
+      type: "report",
+      title: "Network Performance Analysis Report",
       path: docPath,
-      category: 'performance',
-      source: NetworkAnalysisStep
+      category: "performance",
+      source: NetworkAnalysisStep,
     };
   }
 }
@@ -922,5 +978,5 @@ const stepInstance = new NetworkAnalysisStep();
 // Export in StepRegistry format
 module.exports = {
   config,
-  execute: async (context) => await stepInstance.execute(context)
+  execute: async (context) => await stepInstance.execute(context),
 };

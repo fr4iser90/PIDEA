@@ -2,18 +2,18 @@
  * AutomationRule - Configurable automation rules
  * Defines rules for determining automation levels based on various conditions
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class AutomationRule {
   constructor(
     id = uuidv4(),
     name,
-    description = '',
+    description = "",
     conditions = [],
     actions = [],
     priority = 0,
     enabled = true,
-    metadata = {}
+    metadata = {},
   ) {
     this._id = id;
     this._name = name;
@@ -145,7 +145,7 @@ class AutomationRule {
       field: condition.field,
       operator: condition.operator,
       value: condition.value,
-      metadata: condition.metadata || {}
+      metadata: condition.metadata || {},
     });
     this._updatedAt = new Date();
   }
@@ -155,7 +155,9 @@ class AutomationRule {
    * @param {string} conditionId - Condition ID
    */
   removeCondition(conditionId) {
-    this._conditions = this._conditions.filter(condition => condition.id !== conditionId);
+    this._conditions = this._conditions.filter(
+      (condition) => condition.id !== conditionId,
+    );
     this._updatedAt = new Date();
   }
 
@@ -169,7 +171,7 @@ class AutomationRule {
       type: action.type,
       automationLevel: action.automationLevel,
       parameters: action.parameters || {},
-      metadata: action.metadata || {}
+      metadata: action.metadata || {},
     });
     this._updatedAt = new Date();
   }
@@ -179,7 +181,7 @@ class AutomationRule {
    * @param {string} actionId - Action ID
    */
   removeAction(actionId) {
-    this._actions = this._actions.filter(action => action.id !== actionId);
+    this._actions = this._actions.filter((action) => action.id !== actionId);
     this._updatedAt = new Date();
   }
 
@@ -232,15 +234,14 @@ class AutomationRule {
         results.push({
           actionId: action.id,
           actionType: action.type,
-          success: true,
-          result
+          result,
         });
       } catch (error) {
         results.push({
           actionId: action.id,
           actionType: action.type,
-          success: false,
-          error: error.message
+         
+          error: error.message,
         });
       }
     }
@@ -260,17 +261,21 @@ class AutomationRule {
 
     let actualValue;
     switch (type) {
-      case 'task_field':
+      case "task_field":
         actualValue = this._getTaskFieldValue(task, field);
         break;
-      case 'context_field':
+      case "context_field":
         actualValue = context.get(field);
         break;
-      case 'metadata_field':
+      case "metadata_field":
         actualValue = this._getMetadataFieldValue(task, field);
         break;
-      case 'custom_function':
-        actualValue = await this._executeCustomFunction(condition, task, context);
+      case "custom_function":
+        actualValue = await this._executeCustomFunction(
+          condition,
+          task,
+          context,
+        );
         break;
       default:
         return false;
@@ -287,15 +292,15 @@ class AutomationRule {
    */
   _getTaskFieldValue(task, field) {
     const fieldMap = {
-      'id': task.id,
-      'title': task.title,
-      'description': task.description,
-      'type': task.type?.value,
-      'priority': task.priority?.value,
-      'status': task.status?.value,
-      'projectId': task.projectId,
-      'createdAt': task.createdAt,
-      'updatedAt': task.updatedAt
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      type: task.type?.value,
+      priority: task.priority?.value,
+      status: task.status?.value,
+      projectId: task.projectId,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
     };
 
     return fieldMap[field] || null;
@@ -321,7 +326,7 @@ class AutomationRule {
    */
   async _executeCustomFunction(condition, task, context) {
     const { functionName, parameters } = condition;
-    
+
     // This would be extended with actual function implementations
     // For now, return a default value
     return null;
@@ -336,29 +341,33 @@ class AutomationRule {
    */
   _compareValues(actualValue, operator, expectedValue) {
     switch (operator) {
-      case 'equals':
+      case "equals":
         return actualValue === expectedValue;
-      case 'not_equals':
+      case "not_equals":
         return actualValue !== expectedValue;
-      case 'contains':
+      case "contains":
         return String(actualValue).includes(String(expectedValue));
-      case 'not_contains':
+      case "not_contains":
         return !String(actualValue).includes(String(expectedValue));
-      case 'greater_than':
+      case "greater_than":
         return Number(actualValue) > Number(expectedValue);
-      case 'less_than':
+      case "less_than":
         return Number(actualValue) < Number(expectedValue);
-      case 'greater_than_or_equal':
+      case "greater_than_or_equal":
         return Number(actualValue) >= Number(expectedValue);
-      case 'less_than_or_equal':
+      case "less_than_or_equal":
         return Number(actualValue) <= Number(expectedValue);
-      case 'in':
-        return Array.isArray(expectedValue) && expectedValue.includes(actualValue);
-      case 'not_in':
-        return Array.isArray(expectedValue) && !expectedValue.includes(actualValue);
-      case 'exists':
+      case "in":
+        return (
+          Array.isArray(expectedValue) && expectedValue.includes(actualValue)
+        );
+      case "not_in":
+        return (
+          Array.isArray(expectedValue) && !expectedValue.includes(actualValue)
+        );
+      case "exists":
         return actualValue !== null && actualValue !== undefined;
-      case 'not_exists':
+      case "not_exists":
         return actualValue === null || actualValue === undefined;
       default:
         return false;
@@ -376,13 +385,13 @@ class AutomationRule {
     const { type, automationLevel, parameters } = action;
 
     switch (type) {
-      case 'set_automation_level':
+      case "set_automation_level":
         return automationLevel;
-      case 'set_confidence_threshold':
+      case "set_confidence_threshold":
         return parameters.threshold || 0.8;
-      case 'require_confirmation':
+      case "require_confirmation":
         return parameters.required !== false;
-      case 'custom_action':
+      case "custom_action":
         return await this._executeCustomAction(action, task, context);
       default:
         throw new Error(`Unknown action type: ${type}`);
@@ -398,7 +407,7 @@ class AutomationRule {
    */
   async _executeCustomAction(action, task, context) {
     const { functionName, parameters } = action;
-    
+
     // This would be extended with actual function implementations
     // For now, return a default value
     return null;
@@ -408,20 +417,20 @@ class AutomationRule {
    * Validate rule
    */
   _validate() {
-    if (!this._name || typeof this._name !== 'string') {
-      throw new Error('Rule name is required and must be a string');
+    if (!this._name || typeof this._name !== "string") {
+      throw new Error("Rule name is required and must be a string");
     }
 
     if (this._priority < 0) {
-      throw new Error('Rule priority must be non-negative');
+      throw new Error("Rule priority must be non-negative");
     }
 
     if (!Array.isArray(this._conditions)) {
-      throw new Error('Rule conditions must be an array');
+      throw new Error("Rule conditions must be an array");
     }
 
     if (!Array.isArray(this._actions)) {
-      throw new Error('Rule actions must be an array');
+      throw new Error("Rule actions must be an array");
     }
   }
 
@@ -440,7 +449,7 @@ class AutomationRule {
       enabled: this._enabled,
       metadata: this._metadata,
       createdAt: this._createdAt.toISOString(),
-      updatedAt: this._updatedAt.toISOString()
+      updatedAt: this._updatedAt.toISOString(),
     };
   }
 
@@ -458,7 +467,7 @@ class AutomationRule {
       data.actions,
       data.priority,
       data.enabled,
-      data.metadata
+      data.metadata,
     );
   }
 
@@ -475,16 +484,18 @@ class AutomationRule {
       name,
       `Sets automation level to ${automationLevel}`,
       conditions,
-      [{
-        type: 'set_automation_level',
-        automationLevel,
-        parameters: {}
-      }],
+      [
+        {
+          type: "set_automation_level",
+          automationLevel,
+          parameters: {},
+        },
+      ],
       0,
       true,
-      { ruleType: 'automation_level' }
+      { ruleType: "automation_level" },
     );
   }
 }
 
-module.exports = AutomationRule; 
+module.exports = AutomationRule;

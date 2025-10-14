@@ -4,14 +4,14 @@
  * Replaces AnalysisResult, ProjectAnalysis, and TaskSuggestion entities
  * Based on analysis_steps structure with integrated recommendations
  */
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class Analysis {
   constructor(data = {}) {
     this.id = data.id || this.generateId();
     this.projectId = data.projectId;
     this.analysisType = data.analysisType; // 'security', 'code-quality', 'performance', 'architecture', 'layer-violations'
-    this.status = data.status || 'pending'; // 'pending', 'running', 'completed', 'failed', 'cancelled'
+    this.status = data.status || "pending"; // 'pending', 'running', 'completed', 'failed', 'cancelled'
     this.progress = data.progress || 0; // 0-100 percentage
     this.startedAt = data.startedAt || null;
     this.completedAt = data.completedAt || null;
@@ -22,23 +22,23 @@ class Analysis {
     this.timeout = data.timeout || 300000; // 5 minutes default
     this.retryCount = data.retryCount || 0;
     this.maxRetries = data.maxRetries || 2;
-    
+
     // Performance tracking
     this.memoryUsage = data.memoryUsage || null; // Memory usage in bytes
     this.executionTime = data.executionTime || null; // Execution time in milliseconds
     this.fileCount = data.fileCount || null; // Number of files processed
     this.lineCount = data.lineCount || null; // Number of lines processed
-    
+
     // Analysis metrics
     this.overallScore = data.overallScore || 0; // 0-100 score
     this.criticalIssuesCount = data.criticalIssuesCount || 0;
     this.warningsCount = data.warningsCount || 0;
     this.recommendationsCount = data.recommendationsCount || 0; // Quick count
-    
+
     // Timestamps
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
-    
+
     this._validate();
   }
 
@@ -54,16 +54,16 @@ class Analysis {
    */
   _validate() {
     if (!this.projectId) {
-      throw new Error('Project ID is required');
+      throw new Error("Project ID is required");
     }
     if (!this.analysisType) {
-      throw new Error('Analysis type is required');
+      throw new Error("Analysis type is required");
     }
     if (this.progress < 0 || this.progress > 100) {
-      throw new Error('Progress must be between 0 and 100');
+      throw new Error("Progress must be between 0 and 100");
     }
     if (this.overallScore < 0 || this.overallScore > 100) {
-      throw new Error('Overall score must be between 0 and 100');
+      throw new Error("Overall score must be between 0 and 100");
     }
   }
 
@@ -74,7 +74,7 @@ class Analysis {
     return new Analysis({
       projectId,
       analysisType,
-      ...options
+      ...options,
     });
   }
 
@@ -82,7 +82,7 @@ class Analysis {
    * Start analysis execution
    */
   start() {
-    this.status = 'running';
+    this.status = "running";
     this.startedAt = new Date();
     this.updatedAt = new Date();
     this.progress = 0;
@@ -93,25 +93,27 @@ class Analysis {
    * Complete analysis execution
    */
   complete(result, options = {}) {
-    this.status = 'completed';
+    this.status = "completed";
     this.completedAt = new Date();
     this.updatedAt = new Date();
     this.progress = 100;
     this.result = result;
     this.error = null;
-    
+
     // Update metrics from result
     if (result) {
       this.overallScore = result.overallScore || this.overallScore;
-      this.criticalIssuesCount = result.criticalIssuesCount || this.criticalIssuesCount;
+      this.criticalIssuesCount =
+        result.criticalIssuesCount || this.criticalIssuesCount;
       this.warningsCount = result.warningsCount || this.warningsCount;
-      this.recommendationsCount = result.recommendationsCount || this.recommendationsCount;
+      this.recommendationsCount =
+        result.recommendationsCount || this.recommendationsCount;
       this.executionTime = result.executionTime || this.executionTime;
       this.memoryUsage = result.memoryUsage || this.memoryUsage;
       this.fileCount = result.fileCount || this.fileCount;
       this.lineCount = result.lineCount || this.lineCount;
     }
-    
+
     // Apply additional options
     Object.assign(this, options);
   }
@@ -120,11 +122,11 @@ class Analysis {
    * Fail analysis execution
    */
   fail(error, options = {}) {
-    this.status = 'failed';
+    this.status = "failed";
     this.completedAt = new Date();
     this.updatedAt = new Date();
-    this.error = typeof error === 'string' ? error : JSON.stringify(error);
-    
+    this.error = typeof error === "string" ? error : JSON.stringify(error);
+
     // Apply additional options
     Object.assign(this, options);
   }
@@ -132,8 +134,8 @@ class Analysis {
   /**
    * Cancel analysis execution
    */
-  cancel(reason = 'Cancelled by user') {
-    this.status = 'cancelled';
+  cancel(reason = "Cancelled by user") {
+    this.status = "cancelled";
     this.completedAt = new Date();
     this.updatedAt = new Date();
     this.error = reason;
@@ -144,12 +146,12 @@ class Analysis {
    */
   updateProgress(progress, metadata = {}) {
     if (progress < 0 || progress > 100) {
-      throw new Error('Progress must be between 0 and 100');
+      throw new Error("Progress must be between 0 and 100");
     }
-    
+
     this.progress = progress;
     this.updatedAt = new Date();
-    
+
     // Update metadata
     if (metadata) {
       this.metadata = { ...this.metadata, ...metadata };
@@ -163,17 +165,17 @@ class Analysis {
     if (!this.result) {
       this.result = {};
     }
-    
+
     if (!this.result.recommendations) {
       this.result.recommendations = [];
     }
-    
+
     this.result.recommendations.push({
       id: uuidv4(),
       ...recommendation,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
-    
+
     this.recommendationsCount = this.result.recommendations.length;
     this.updatedAt = new Date();
   }
@@ -202,7 +204,7 @@ class Analysis {
       startedAt: this.startedAt,
       completedAt: this.completedAt,
       executionTime: this.executionTime,
-      createdAt: this.createdAt
+      createdAt: this.createdAt,
     };
   }
 
@@ -210,21 +212,21 @@ class Analysis {
    * Check if analysis is active
    */
   isActive() {
-    return ['pending', 'running'].includes(this.status);
+    return ["pending", "running"].includes(this.status);
   }
 
   /**
    * Check if analysis is completed
    */
   isCompleted() {
-    return this.status === 'completed';
+    return this.status === "completed";
   }
 
   /**
    * Check if analysis failed
    */
   isFailed() {
-    return ['failed', 'cancelled'].includes(this.status);
+    return ["failed", "cancelled"].includes(this.status);
   }
 
   /**
@@ -255,7 +257,7 @@ class Analysis {
       warnings_count: this.warningsCount,
       recommendations_count: this.recommendationsCount,
       created_at: this.createdAt,
-      updated_at: this.updatedAt
+      updated_at: this.updatedAt,
     };
   }
 
@@ -283,11 +285,13 @@ class Analysis {
       fileCount: data.file_count || data.fileCount,
       lineCount: data.line_count || data.lineCount,
       overallScore: data.overall_score || data.overallScore,
-      criticalIssuesCount: data.critical_issues_count || data.criticalIssuesCount,
+      criticalIssuesCount:
+        data.critical_issues_count || data.criticalIssuesCount,
       warningsCount: data.warnings_count || data.warningsCount,
-      recommendationsCount: data.recommendations_count || data.recommendationsCount,
+      recommendationsCount:
+        data.recommendations_count || data.recommendationsCount,
       createdAt: data.created_at || data.createdAt,
-      updatedAt: data.updated_at || data.updatedAt
+      updatedAt: data.updated_at || data.updatedAt,
     });
   }
 
@@ -310,7 +314,7 @@ class Analysis {
       criticalIssuesCount: analysisResult.criticalIssuesCount,
       warningsCount: analysisResult.warningsCount,
       recommendationsCount: analysisResult.recommendationsCount,
-      createdAt: analysisResult.createdAt
+      createdAt: analysisResult.createdAt,
     });
   }
 
@@ -322,7 +326,7 @@ class Analysis {
       id: projectAnalysis.id,
       projectId: projectAnalysis.projectId,
       analysisType: projectAnalysis.analysisType,
-      status: projectAnalysis.status || 'completed',
+      status: projectAnalysis.status || "completed",
       progress: 100, // ProjectAnalysis is always completed
       startedAt: projectAnalysis.startedAt,
       completedAt: projectAnalysis.completedAt,
@@ -334,9 +338,9 @@ class Analysis {
       warningsCount: projectAnalysis.warningsCount,
       recommendationsCount: projectAnalysis.recommendationsCount,
       createdAt: projectAnalysis.createdAt,
-      updatedAt: projectAnalysis.updatedAt
+      updatedAt: projectAnalysis.updatedAt,
     });
   }
 }
 
-module.exports = Analysis; 
+module.exports = Analysis;

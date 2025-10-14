@@ -1,4 +1,3 @@
-
 /**
  * Step Registry - Domain Layer
  * Manages atomic steps and provides step validation
@@ -6,37 +5,41 @@
  * Enhanced with parallel execution support for performance optimization
  */
 
-require('module-alias/register');
-const path = require('path');
-const fs = require('fs').promises;
-const { STANDARD_CATEGORIES, isValidCategory, getDefaultCategory } = require('../constants/Categories');
-const IStandardRegistry = require('../interfaces/IStandardRegistry');
-const ServiceLogger = require('@logging/ServiceLogger');
-const StepClassifier = require('./execution/StepClassifier');
-const ParallelExecutionEngine = require('./execution/ParallelExecutionEngine');
-const StepContextValidator = require('./validation/StepContextValidator');
+require("module-alias/register");
+const path = require("path");
+const fs = require("fs").promises;
+const {
+  STANDARD_CATEGORIES,
+  isValidCategory,
+  getDefaultCategory,
+} = require("../constants/Categories");
+const IStandardRegistry = require("../interfaces/IStandardRegistry");
+const ServiceLogger = require("@logging/ServiceLogger");
+const StepClassifier = require("./execution/StepClassifier");
+const ParallelExecutionEngine = require("./execution/ParallelExecutionEngine");
+const StepContextValidator = require("./validation/StepContextValidator");
 
 class StepRegistry {
   constructor(serviceRegistry = null) {
     this.steps = new Map();
     this.categories = new Map();
     this.executors = new Map();
-    this.logger = new ServiceLogger('StepRegistry');
+    this.logger = new ServiceLogger("StepRegistry");
     this.serviceRegistry = serviceRegistry;
-    
+
     // Initialize parallel execution components
     this.stepClassifier = new StepClassifier({ logger: this.logger });
-    this.parallelEngine = new ParallelExecutionEngine({ 
+    this.parallelEngine = new ParallelExecutionEngine({
       logger: this.logger,
-      stepRegistry: this
+      stepRegistry: this,
     });
-    
+
     // Initialize step context validator
     this.stepValidator = new StepContextValidator({
       logger: this.logger,
-      strictMode: true
+      strictMode: true,
     });
-    
+
     // Execution statistics
     this.executionStats = {
       totalExecutions: 0,
@@ -45,7 +48,7 @@ class StepRegistry {
       totalExecutionTime: 0,
       averageExecutionTime: 0,
       validationFailures: 0,
-      validationWarnings: 0
+      validationWarnings: 0,
     };
   }
 
@@ -59,16 +62,18 @@ class StepRegistry {
   async registerStep(name, config, category = null, executor = null) {
     try {
       // Use default category if not provided
-      const finalCategory = category || getDefaultCategory('step');
-      
+      const finalCategory = category || getDefaultCategory("step");
+
       // Validate category
       if (!isValidCategory(finalCategory)) {
-        throw new Error(`Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(', ')}`);
+        throw new Error(
+          `Invalid category: ${finalCategory}. Valid categories: ${Object.values(STANDARD_CATEGORIES).join(", ")}`,
+        );
       }
-      
+
       // Validate step configuration
       this.validateStepConfig(config);
-      
+
       // Check if step already exists
       if (this.steps.has(name)) {
         this.logger.warn(`⚠️ Step "${name}" already registered, updating...`);
@@ -78,17 +83,17 @@ class StepRegistry {
         existingStep.category = finalCategory;
         existingStep.executor = executor;
         existingStep.updatedAt = new Date();
-        existingStep.metadata.version = config.version || '1.0.0';
-        
+        existingStep.metadata.version = config.version || "1.0.0";
+
         // Update executor if provided
-        if (executor && typeof executor === 'function') {
+        if (executor && typeof executor === "function") {
           this.executors.set(name, executor);
         }
-        
+
         this.logger.info(`✅ Updated existing step "${name}"`);
         return true;
       }
-      
+
       // Store step configuration
       this.steps.set(name, {
         name,
@@ -96,16 +101,16 @@ class StepRegistry {
         category: finalCategory,
         executor,
         registeredAt: new Date(),
-        status: 'active',
+        status: "active",
         executionCount: 0,
         lastExecuted: null,
         metadata: {
-          type: 'step',
+          type: "step",
           category: finalCategory,
-          version: config.version || '1.0.0',
+          version: config.version || "1.0.0",
           isFrameworkStep: config.framework ? true : false,
-          framework: config.framework || null
-        }
+          framework: config.framework || null,
+        },
       });
 
       // Add to category
@@ -115,17 +120,24 @@ class StepRegistry {
       this.categories.get(finalCategory).add(name);
 
       // Store executor if provided
-      if (executor && typeof executor === 'function') {
+      if (executor && typeof executor === "function") {
         this.executors.set(name, executor);
       }
 
-      this.logger.debug(`✅ Registered step "${name}" in category "${finalCategory}"`);
+      this.logger.debug(
+        `✅ Registered step "${name}" in category "${finalCategory}"`,
+      );
       return true;
     } catch (error) {
       // Only log critical errors, skip configuration issues
-      if (error.message.includes('Invalid category') || error.message.includes('type" property')) {
+      if (
+        error.message.includes("Invalid category") ||
+        error.message.includes('type" property')
+      ) {
         // Move configuration issues to debug level instead of error
-        this.logger.debug(`⚠️ Skipped step registration "${name}" due to configuration issue: ${error.message}`);
+        this.logger.debug(
+          `⚠️ Skipped step registration "${name}" due to configuration issue: ${error.message}`,
+        );
         throw error; // Re-throw to skip logging
       }
       this.logger.error(`❌ Failed to register step "${name}":`, error.message);
@@ -138,53 +150,64 @@ class StepRegistry {
    */
   async loadStepsFromCategories() {
     try {
-      const categoriesDir = path.join(__dirname, 'categories');
-      
+      const categoriesDir = path.join(__dirname, "categories");
+
       // Check if categories directory exists
       try {
         await fs.access(categoriesDir);
       } catch {
-        this.logger.info('📁 Categories directory not found, trying alternative path...');
+        this.logger.info(
+          "📁 Categories directory not found, trying alternative path...",
+        );
         // Try alternative path for development
-        const altCategoriesDir = path.join(process.cwd(), 'domain', 'steps', 'categories');
+        const altCategoriesDir = path.join(
+          process.cwd(),
+          "domain",
+          "steps",
+          "categories",
+        );
         try {
           await fs.access(altCategoriesDir);
-          this.logger.info('📁 Found categories in alternative path');
+          this.logger.info("📁 Found categories in alternative path");
           const categories = await fs.readdir(altCategoriesDir);
-          
+
           for (const category of categories) {
             const categoryPath = path.join(altCategoriesDir, category);
             const categoryStats = await fs.stat(categoryPath);
-            
+
             if (categoryStats.isDirectory()) {
               await this.loadStepsFromCategory(category, categoryPath);
             }
           }
-          
-          this.logger.info(`📦 Loaded ${this.steps.size} steps from alternative categories path`);
+
+          this.logger.info(
+            `📦 Loaded ${this.steps.size} steps from alternative categories path`,
+          );
           return;
         } catch {
-          this.logger.info('📁 Creating categories directory...');
+          this.logger.info("📁 Creating categories directory...");
           await fs.mkdir(categoriesDir, { recursive: true });
           return;
         }
       }
 
       const categories = await fs.readdir(categoriesDir);
-      
+
       for (const category of categories) {
         const categoryPath = path.join(categoriesDir, category);
         const categoryStats = await fs.stat(categoryPath);
-        
+
         if (categoryStats.isDirectory()) {
           await this.loadStepsFromCategory(category, categoryPath);
         }
       }
 
       this.logger.info(`📦 Loaded ${this.steps.size} steps from categories`);
-      
     } catch (error) {
-      this.logger.error('❌ Failed to load steps from categories:', error.message);
+      this.logger.error(
+        "❌ Failed to load steps from categories:",
+        error.message,
+      );
       throw error;
     }
   }
@@ -197,35 +220,45 @@ class StepRegistry {
   async loadStepsFromCategory(category, categoryPath) {
     try {
       const files = await fs.readdir(categoryPath);
-      const jsFiles = files.filter(file => file.endsWith('.js'));
+      const jsFiles = files.filter((file) => file.endsWith(".js"));
       let loadedCount = 0;
 
       for (const file of jsFiles) {
         try {
           const stepPath = path.join(categoryPath, file);
           const stepModule = require(stepPath);
-          
+
           const config = stepModule.config || {};
           const executor = stepModule.execute || null;
-          const stepName = config.name || path.basename(file, '.js');
-          
+          const stepName = config.name || path.basename(file, ".js");
+
           await this.registerStep(stepName, config, category, executor);
           loadedCount++;
         } catch (error) {
           // Only log critical errors, skip configuration issues
-          if (error.message.includes('Invalid category') || error.message.includes('type" property')) {
+          if (
+            error.message.includes("Invalid category") ||
+            error.message.includes('type" property')
+          ) {
             // Skip logging known configuration issues - move to debug level
-            this.logger.debug(`⚠️ Skipped step "${file}" due to configuration issue: ${error.message}`);
+            this.logger.debug(
+              `⚠️ Skipped step "${file}" due to configuration issue: ${error.message}`,
+            );
             continue;
           }
-          this.logger.error(`❌ Failed to load step "${file}" from category "${category}": ${error.message}`);
+          this.logger.error(
+            `❌ Failed to load step "${file}" from category "${category}": ${error.message}`,
+          );
           this.logger.error(`❌ Full error stack: ${error.stack}`);
         }
       }
-      
+
       // Individual category logs removed for cleaner output
     } catch (error) {
-      this.logger.error(`❌ Failed to load category "${category}":`, error.message);
+      this.logger.error(
+        `❌ Failed to load category "${category}":`,
+        error.message,
+      );
     }
   }
 
@@ -235,8 +268,8 @@ class StepRegistry {
    */
   getStep(name) {
     // Remove category prefix if present (e.g., "chat/get_chat_history_step" -> "get_chat_history_step")
-    const stepName = name.includes('/') ? name.split('/').pop() : name;
-    
+    const stepName = name.includes("/") ? name.split("/").pop() : name;
+
     const step = this.steps.get(stepName);
     if (!step) {
       throw new Error(`Step "${stepName}" not found`);
@@ -250,7 +283,7 @@ class StepRegistry {
    */
   getStepsByCategory(category) {
     const stepNames = this.categories.get(category) || new Set();
-    return Array.from(stepNames).map(name => this.getStep(name));
+    return Array.from(stepNames).map((name) => this.getStep(name));
   }
 
   /**
@@ -270,8 +303,8 @@ class StepRegistry {
       executionStats: {
         validationFailures: this.executionStats.validationFailures,
         validationWarnings: this.executionStats.validationWarnings,
-        totalExecutions: this.executionStats.totalExecutions
-      }
+        totalExecutions: this.executionStats.totalExecutions,
+      },
     };
   }
 
@@ -288,11 +321,15 @@ class StepRegistry {
         isValid: false,
         errors: [`Step "${stepName}" not found`],
         warnings: [],
-        stepName
+        stepName,
       };
     }
 
-    return this.stepValidator.validateStepContext(step.category, stepName, context);
+    return this.stepValidator.validateStepContext(
+      step.category,
+      stepName,
+      context,
+    );
   }
 
   /**
@@ -304,27 +341,36 @@ class StepRegistry {
   async executeStep(name, context = {}, options = {}) {
     try {
       const step = this.getStep(name);
-      
-      if (step.status !== 'active') {
-        throw new Error(`Step "${step.name}" is not active (status: ${step.status})`);
+
+      if (step.status !== "active") {
+        throw new Error(
+          `Step "${step.name}" is not active (status: ${step.status})`,
+        );
       }
 
       // Validate step context before execution
-      const validationResult = this.stepValidator.validateStepContext(step.category, name, context);
+      const validationResult = this.stepValidator.validateStepContext(
+        step.category,
+        name,
+        context,
+      );
       if (!validationResult.isValid) {
         this.executionStats.validationFailures++;
         this.logger.error(`❌ Step context validation failed for "${name}":`, {
           errors: validationResult.errors,
-          missingFields: validationResult.missingFields
+          missingFields: validationResult.missingFields,
         });
-        throw new Error(`Step context validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Step context validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
       // Log validation warnings if any
       if (validationResult.warnings.length > 0) {
-        this.executionStats.validationWarnings += validationResult.warnings.length;
+        this.executionStats.validationWarnings +=
+          validationResult.warnings.length;
         this.logger.warn(`⚠️ Step context validation warnings for "${name}":`, {
-          warnings: validationResult.warnings
+          warnings: validationResult.warnings,
         });
       }
 
@@ -340,9 +386,9 @@ class StepRegistry {
       // Execute step
       this.logger.info(`🚀 Executing step "${step.name}"...`);
       const startTime = Date.now();
-      
+
       const result = await executor(enhancedContext, options);
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -353,41 +399,45 @@ class StepRegistry {
 
       // Check if step actually succeeded
       const stepSucceeded = result && result.success !== false && !result.error;
-      
+
       if (stepSucceeded) {
-        this.logger.info(`✅ Step "${step.name}" executed successfully in ${duration}ms`);
+        this.logger.info(
+          `✅ Step "${step.name}" executed successfully in ${duration}ms`,
+        );
         return {
-          success: true,
           result,
           duration,
           step: step.name,
           timestamp: new Date(),
-          executionMode: 'individual',
+          executionMode: "individual",
           validation: {
             passed: true,
-            warnings: validationResult.warnings
-          }
+            warnings: validationResult.warnings,
+          },
         };
       } else {
-        this.logger.error(`❌ Step "${step.name}" FAILED in ${duration}ms:`, result?.error || 'Unknown error');
+        this.logger.error(
+          `❌ Step "${step.name}" FAILED in ${duration}ms:`,
+          result?.error || "Unknown error",
+        );
         return {
-          success: false,
-          error: result?.error || 'Step execution failed',
+         
+          error: result?.error || "Step execution failed",
           result,
           duration,
           step: step.name,
           timestamp: new Date(),
-          executionMode: 'individual',
+          executionMode: "individual",
           validation: {
             passed: false,
-            error: result?.error || 'Step execution failed',
-            warnings: validationResult.warnings
-          }
+            error: result?.error || "Step execution failed",
+            warnings: validationResult.warnings,
+          },
         };
       }
     } catch (error) {
       this.logger.error(`❌ Failed to execute step "${name}":`, error.message);
-      
+
       // Update step statistics
       const step = this.steps.get(name);
       if (step) {
@@ -397,14 +447,14 @@ class StepRegistry {
       }
 
       return {
-        success: false,
+       
         error: error.message,
         step: name,
         timestamp: new Date(),
         validation: {
           passed: false,
-          error: error.message
-        }
+          error: error.message,
+        },
       };
     }
   }
@@ -418,27 +468,30 @@ class StepRegistry {
   isCriticalWorkflowStep(stepName, context) {
     // Critical workflow steps that must be sequential
     const criticalSteps = [
-      'IDESendMessageStep',
-      'CreateChatStep', 
-      'TaskExecutionStep',
-      'WorkflowExecutionStep',
-      'AnalysisExecutionStep',
-      'RefactoringStep',
-      'TestingStep',
-      'DeploymentStep'
+      "IDESendMessageStep",
+      "CreateChatStep",
+      "TaskExecutionStep",
+      "WorkflowExecutionStep",
+      "AnalysisExecutionStep",
+      "RefactoringStep",
+      "TestingStep",
+      "DeploymentStep",
     ];
-    
+
     // Check if step name contains critical keywords
-    const isCriticalByName = criticalSteps.some(critical => 
-      stepName.includes(critical) || stepName.toLowerCase().includes('workflow')
+    const isCriticalByName = criticalSteps.some(
+      (critical) =>
+        stepName.includes(critical) ||
+        stepName.toLowerCase().includes("workflow"),
     );
-    
+
     // Check if context indicates this is a workflow execution
-    const isWorkflowContext = context.workflowId || 
-                             context.taskId || 
-                             context.analysisId ||
-                             context.executionMode === 'workflow';
-    
+    const isWorkflowContext =
+      context.workflowId ||
+      context.taskId ||
+      context.analysisId ||
+      context.executionMode === "workflow";
+
     return isCriticalByName || isWorkflowContext;
   }
 
@@ -449,20 +502,24 @@ class StepRegistry {
    */
   enhanceContextWithServices(context) {
     const enhancedContext = { ...context };
-    
+
     // Add getService method to context
     enhancedContext.getService = (serviceName) => {
       if (!this.serviceRegistry) {
-        throw new Error(`Service "${serviceName}" not available - serviceRegistry not found`);
+        throw new Error(
+          `Service "${serviceName}" not available - serviceRegistry not found`,
+        );
       }
-      
+
       try {
         return this.serviceRegistry.getService(serviceName);
       } catch (error) {
-        throw new Error(`Service "${serviceName}" not found in DI container: ${error.message}`);
+        throw new Error(
+          `Service "${serviceName}" not found in DI container: ${error.message}`,
+        );
       }
     };
-    
+
     return enhancedContext;
   }
 
@@ -474,15 +531,18 @@ class StepRegistry {
    */
   async executeSteps(stepNames, context = {}, options = {}) {
     try {
-      this.logger.info('Starting step execution with parallel support', {
+      this.logger.info("Starting step execution with parallel support", {
         totalSteps: stepNames.length,
-        context: this.getContextSummary(context)
+        context: this.getContextSummary(context),
       });
 
       const startTime = Date.now();
 
       // 1. Classify steps
-      const { critical, nonCritical } = this.stepClassifier.classifySteps(stepNames, context);
+      const { critical, nonCritical } = this.stepClassifier.classifySteps(
+        stepNames,
+        context,
+      );
 
       const results = {
         successful: [],
@@ -490,18 +550,24 @@ class StepRegistry {
         total: stepNames.length,
         critical: { successful: [], failed: [] },
         parallel: { successful: [], failed: [] },
-        executionMode: 'hybrid',
+        executionMode: "hybrid",
         classification: {
           criticalCount: critical.length,
           nonCriticalCount: nonCritical.length,
-          parallelizationRatio: nonCritical.length / stepNames.length
-        }
+          parallelizationRatio: nonCritical.length / stepNames.length,
+        },
       };
 
       // 2. Execute critical steps sequentially
       if (critical.length > 0) {
-        this.logger.info(`Executing ${critical.length} critical steps sequentially`);
-        const criticalResults = await this.executeStepsSequential(critical, context, options);
+        this.logger.info(
+          `Executing ${critical.length} critical steps sequentially`,
+        );
+        const criticalResults = await this.executeStepsSequential(
+          critical,
+          context,
+          options,
+        );
         results.critical = criticalResults;
         results.successful.push(...criticalResults.successful);
         results.failed.push(...criticalResults.failed);
@@ -510,11 +576,17 @@ class StepRegistry {
 
       // 3. Execute non-critical steps in parallel
       if (nonCritical.length > 0) {
-        this.logger.info(`Executing ${nonCritical.length} non-critical steps in parallel`);
-        const parallelResults = await this.parallelEngine.executeStepsParallel(nonCritical, context, options);
-        
+        this.logger.info(
+          `Executing ${nonCritical.length} non-critical steps in parallel`,
+        );
+        const parallelResults = await this.parallelEngine.executeStepsParallel(
+          nonCritical,
+          context,
+          options,
+        );
+
         // Process parallel results
-        parallelResults.forEach(result => {
+        parallelResults.forEach((result) => {
           if (result.success) {
             results.parallel.successful.push(result);
             results.successful.push(result);
@@ -523,7 +595,7 @@ class StepRegistry {
             results.failed.push(result);
           }
         });
-        
+
         this.executionStats.parallelExecutions += nonCritical.length;
       }
 
@@ -533,23 +605,22 @@ class StepRegistry {
       // Update execution statistics
       this.updateExecutionStatistics(totalDuration);
 
-      this.logger.info('Step execution completed', {
+      this.logger.info("Step execution completed", {
         total: results.total,
         successful: results.successful.length,
         failed: results.failed.length,
         criticalSuccessful: results.critical.successful.length,
         parallelSuccessful: results.parallel.successful.length,
         totalDuration: `${totalDuration}ms`,
-        parallelizationRatio: `${(results.classification.parallelizationRatio * 100).toFixed(1)}%`
+        parallelizationRatio: `${(results.classification.parallelizationRatio * 100).toFixed(1)}%`,
       });
 
       return results;
-
     } catch (error) {
-      this.logger.error('Step execution failed:', error.message);
-      
+      this.logger.error("Step execution failed:", error.message);
+
       // Fallback to sequential execution
-      this.logger.warn('Falling back to sequential execution due to error');
+      this.logger.warn("Falling back to sequential execution due to error");
       return await this.executeStepsSequential(stepNames, context, options);
     }
   }
@@ -566,13 +637,13 @@ class StepRegistry {
       successful: [],
       failed: [],
       total: stepNames.length,
-      executionMode: 'sequential'
+      executionMode: "sequential",
     };
 
     for (const stepName of stepNames) {
       try {
         const result = await this.executeStep(stepName, context, options);
-        
+
         if (result.success) {
           results.successful.push(result);
         } else {
@@ -585,11 +656,11 @@ class StepRegistry {
         }
       } catch (error) {
         results.failed.push({
-          success: false,
+         
           error: error.message,
           step: stepName,
           timestamp: new Date(),
-          executionMode: 'sequential'
+          executionMode: "sequential",
         });
 
         if (options.stopOnError) {
@@ -608,10 +679,11 @@ class StepRegistry {
   updateExecutionStatistics(duration) {
     this.executionStats.totalExecutions++;
     this.executionStats.totalExecutionTime += duration;
-    
+
     if (this.executionStats.totalExecutions > 0) {
       this.executionStats.averageExecutionTime = Math.round(
-        this.executionStats.totalExecutionTime / this.executionStats.totalExecutions
+        this.executionStats.totalExecutionTime /
+          this.executionStats.totalExecutions,
       );
     }
   }
@@ -628,7 +700,7 @@ class StepRegistry {
       hasWorkflowId: !!context.workflowId,
       hasTaskId: !!context.taskId,
       executionMode: context.executionMode,
-      priority: context.priority
+      priority: context.priority,
     };
   }
 
@@ -639,12 +711,22 @@ class StepRegistry {
   getExecutionStatistics() {
     return {
       ...this.executionStats,
-      parallelizationRatio: this.executionStats.totalExecutions > 0 
-        ? (this.executionStats.parallelExecutions / this.executionStats.totalExecutions * 100).toFixed(2) + '%'
-        : '0%',
-      sequentialRatio: this.executionStats.totalExecutions > 0 
-        ? (this.executionStats.sequentialExecutions / this.executionStats.totalExecutions * 100).toFixed(2) + '%'
-        : '0%'
+      parallelizationRatio:
+        this.executionStats.totalExecutions > 0
+          ? (
+              (this.executionStats.parallelExecutions /
+                this.executionStats.totalExecutions) *
+              100
+            ).toFixed(2) + "%"
+          : "0%",
+      sequentialRatio:
+        this.executionStats.totalExecutions > 0
+          ? (
+              (this.executionStats.sequentialExecutions /
+                this.executionStats.totalExecutions) *
+              100
+            ).toFixed(2) + "%"
+          : "0%",
     };
   }
 
@@ -657,10 +739,10 @@ class StepRegistry {
       sequentialExecutions: 0,
       parallelExecutions: 0,
       totalExecutionTime: 0,
-      averageExecutionTime: 0
+      averageExecutionTime: 0,
     };
-    
-    this.logger.info('StepRegistry execution statistics reset');
+
+    this.logger.info("StepRegistry execution statistics reset");
   }
 
   /**
@@ -670,14 +752,14 @@ class StepRegistry {
    */
   async updateStep(name, newConfig) {
     const step = this.getStep(name);
-    
+
     // Validate new configuration
     this.validateStepConfig(newConfig);
-    
+
     // Update step
     step.config = { ...step.config, ...newConfig };
     step.updatedAt = new Date();
-    
+
     this.logger.info(`✅ Step "${name}" updated successfully`);
     return step;
   }
@@ -688,24 +770,24 @@ class StepRegistry {
    */
   removeStep(name) {
     const step = this.getStep(name);
-    
+
     // Remove from steps map
     this.steps.delete(name);
-    
+
     // Remove from category
     const category = step.category;
     if (this.categories.has(category)) {
       this.categories.get(category).delete(name);
-      
+
       // Remove empty category
       if (this.categories.get(category).size === 0) {
         this.categories.delete(category);
       }
     }
-    
+
     // Remove executor
     this.executors.delete(name);
-    
+
     this.logger.info(`🗑️ Step "${name}" removed successfully`);
     return true;
   }
@@ -715,8 +797,8 @@ class StepRegistry {
    * @param {Object} config - Step configuration
    */
   validateStepConfig(config) {
-    if (!config || typeof config !== 'object') {
-      throw new Error('Step configuration must be an object');
+    if (!config || typeof config !== "object") {
+      throw new Error("Step configuration must be an object");
     }
 
     if (!config.name) {
@@ -760,7 +842,7 @@ class StepRegistry {
     const step = this.getStep(name);
     step.status = status;
     step.updatedAt = new Date();
-    
+
     this.logger.info(`✅ Step "${name}" status set to "${status}"`);
     return step;
   }
@@ -778,7 +860,7 @@ class StepRegistry {
       lastExecuted: step.lastExecuted,
       lastDuration: step.lastDuration,
       lastError: step.lastError,
-      status: step.status
+      status: step.status,
     };
   }
 
@@ -789,9 +871,16 @@ class StepRegistry {
     return {
       totalSteps: this.steps.size,
       categories: this.categories.size,
-      activeSteps: Array.from(this.steps.values()).filter(s => s.status === 'active').length,
-      inactiveSteps: Array.from(this.steps.values()).filter(s => s.status === 'inactive').length,
-      totalExecutions: Array.from(this.steps.values()).reduce((sum, step) => sum + step.executionCount, 0)
+      activeSteps: Array.from(this.steps.values()).filter(
+        (s) => s.status === "active",
+      ).length,
+      inactiveSteps: Array.from(this.steps.values()).filter(
+        (s) => s.status === "inactive",
+      ).length,
+      totalExecutions: Array.from(this.steps.values()).reduce(
+        (sum, step) => sum + step.executionCount,
+        0,
+      ),
     };
   }
 
@@ -817,7 +906,7 @@ class StepRegistry {
   static buildFromCategory(category, name, params = {}) {
     const instance = new StepRegistry();
     const steps = instance.getStepsByCategory(category);
-    return steps.find(s => s.name === name) || null;
+    return steps.find((s) => s.name === name) || null;
   }
 
   /**
@@ -932,13 +1021,15 @@ class StepRegistry {
   static getExecutionHistory(name) {
     const instance = new StepRegistry();
     const step = instance.getStep(name);
-    return [{
-      step: step.name,
-      executionCount: step.executionCount,
-      lastExecuted: step.lastExecuted,
-      lastDuration: step.lastDuration,
-      lastError: step.lastError
-    }];
+    return [
+      {
+        step: step.name,
+        executionCount: step.executionCount,
+        lastExecuted: step.lastExecuted,
+        lastDuration: step.lastDuration,
+        lastError: step.lastError,
+      },
+    ];
   }
 
   /**
@@ -964,7 +1055,7 @@ class StepRegistry {
           name,
           framework: step.metadata.framework,
           category: step.category,
-          config: step.config
+          config: step.config,
         });
       }
     }
@@ -977,12 +1068,15 @@ class StepRegistry {
   getStepsByFramework(frameworkName) {
     const frameworkSteps = [];
     for (const [name, step] of this.steps) {
-      if (step.metadata.isFrameworkStep && step.metadata.framework === frameworkName) {
+      if (
+        step.metadata.isFrameworkStep &&
+        step.metadata.framework === frameworkName
+      ) {
         frameworkSteps.push({
           name,
           framework: step.metadata.framework,
           category: step.category,
-          config: step.config
+          config: step.config,
         });
       }
     }
@@ -1005,14 +1099,14 @@ class StepRegistry {
     const frameworkSteps = this.getFrameworkSteps().length;
     const categories = this.categories.size;
     const executors = this.executors.size;
-    
+
     return {
       totalSteps,
       frameworkSteps,
       categories,
       executors,
       healthScore: totalSteps > 0 ? 100 : 0,
-      isHealthy: totalSteps > 0 && executors > 0
+      isHealthy: totalSteps > 0 && executors > 0,
     };
   }
 
@@ -1025,7 +1119,7 @@ class StepRegistry {
     return {
       steps: Array.from(instance.steps.entries()),
       categories: Array.from(instance.categories.entries()),
-      executors: Array.from(instance.executors.keys())
+      executors: Array.from(instance.executors.keys()),
     };
   }
 
@@ -1036,28 +1130,30 @@ class StepRegistry {
    */
   static import(data) {
     const instance = new StepRegistry();
-    
+
     if (data.steps) {
       data.steps.forEach(([name, step]) => {
         instance.steps.set(name, step);
       });
     }
-    
+
     if (data.categories) {
       data.categories.forEach(([category, names]) => {
         instance.categories.set(category, new Set(names));
       });
     }
-    
+
     if (data.executors) {
-      data.executors.forEach(name => {
+      data.executors.forEach((name) => {
         // Note: Executors would need to be re-registered
-        this.logger.warn(`Executor for step "${name}" needs to be re-registered`);
+        this.logger.warn(
+          `Executor for step "${name}" needs to be re-registered`,
+        );
       });
     }
-    
+
     return true;
   }
 }
 
-module.exports = StepRegistry; 
+module.exports = StepRegistry;

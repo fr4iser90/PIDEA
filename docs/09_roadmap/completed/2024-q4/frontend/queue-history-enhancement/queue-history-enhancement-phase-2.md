@@ -65,14 +65,13 @@ class QueueController {
       const history = await this.historyService.getWorkflowHistory(filters, pagination);
       
       res.json({
-        success: true,
         data: history.items,
         pagination: history.pagination
       });
     } catch (error) {
       this.logger.error('Error fetching queue history:', error);
       res.status(400).json({
-        success: false,
+       
         error: error.message,
         code: error.constructor.name
       });
@@ -95,13 +94,12 @@ class QueueController {
       }
       
       res.json({
-        success: true,
         data: historyItem
       });
     } catch (error) {
       this.logger.error('Error fetching history item:', error);
       res.status(404).json({
-        success: false,
+       
         error: error.message,
         code: error.constructor.name
       });
@@ -120,14 +118,13 @@ class QueueController {
       const deletedCount = await this.historyService.cleanupOldHistory(retentionDays);
       
       res.json({
-        success: true,
         data: { deletedCount },
         message: `Successfully deleted ${deletedCount} history items`
       });
     } catch (error) {
       this.logger.error('Error deleting queue history:', error);
       res.status(400).json({
-        success: false,
+       
         error: error.message,
         code: error.constructor.name
       });
@@ -147,7 +144,6 @@ class QueueController {
       const detectedType = this.typeDetector.detecttaskMode(workflowData);
       
       res.json({
-        success: true,
         data: {
           type: detectedType,
           confidence: 1.0, // No fallbacks = 100% confidence
@@ -160,7 +156,7 @@ class QueueController {
     } catch (error) {
       this.logger.error('Error detecting workflow type:', error);
       res.status(400).json({
-        success: false,
+       
         error: error.message,
         code: error.constructor.name
       });
@@ -172,7 +168,6 @@ class QueueController {
       const types = this.typeDetector.getKnownTypes();
       
       res.json({
-        success: true,
         data: {
           types: Array.from(types),
           count: types.size,
@@ -182,7 +177,7 @@ class QueueController {
     } catch (error) {
       this.logger.error('Error fetching workflow types:', error);
       res.status(500).json({
-        success: false,
+       
         error: error.message,
         code: error.constructor.name
       });

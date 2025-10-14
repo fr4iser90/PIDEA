@@ -3,8 +3,8 @@
  * Handler for Clone a Git repository
  */
 
-const { exec } = require('child_process');
-const util = require('util');
+const { exec } = require("child_process");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 class GitCloneHandler {
@@ -20,9 +20,11 @@ class GitCloneHandler {
 
       const commandData = command.getCommandData();
 
-      this.logger.info('GitCloneHandler: Executing gitclonecommand', commandData);
+      this.logger.info(
+        "GitCloneHandler: Executing gitclonecommand",
+        commandData,
+      );
 
-      
       // Build clone command
       let cloneCommand = `git clone ${commandData.url} ${commandData.targetPath}`;
       if (commandData.branch) {
@@ -32,35 +34,36 @@ class GitCloneHandler {
         cloneCommand += ` --depth ${commandData.depth}`;
       }
       if (commandData.singleBranch) {
-        cloneCommand += ' --single-branch';
+        cloneCommand += " --single-branch";
       }
       if (commandData.recursive) {
-        cloneCommand += ' --recursive';
+        cloneCommand += " --recursive";
       }
 
       // Execute git clone command
       const result = await execAsync(cloneCommand);
 
-      this.logger.info('GitCloneHandler: GitCloneCommand completed successfully', {
-        result: result.stdout
-      });
+      this.logger.info(
+        "GitCloneHandler: GitCloneCommand completed successfully",
+        {
+          result: result.stdout,
+        },
+      );
 
       return {
-        success: true,
         result: result.stdout,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('GitCloneHandler: GitCloneCommand failed', {
+      this.logger.error("GitCloneHandler: GitCloneCommand failed", {
         error: error.message,
-        command: command.getCommandData()
+        command: command.getCommandData(),
       });
 
       return {
-        success: false,
+       
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     }
   }

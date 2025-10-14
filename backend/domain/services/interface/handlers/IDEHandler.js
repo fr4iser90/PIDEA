@@ -1,22 +1,22 @@
 /**
  * IDE Handler - IDE-specific interface management
- * 
+ *
  * Handles IDE-specific operations like start, stop, status, features,
  * configuration, selection, and version management.
  */
 
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class IDEHandler {
   constructor(dependencies = {}) {
-    this.logger = dependencies.logger || new ServiceLogger('IDEHandler');
+    this.logger = dependencies.logger || new ServiceLogger("IDEHandler");
     this.ideManager = dependencies.ideManager;
     this.eventBus = dependencies.eventBus;
     this.serviceRegistry = dependencies.serviceRegistry;
-    
+
     // IDE services - cursorIDEService, vscodeIDEService, windsurfIDEService removed, using interfaceManager instead
-    
+
     // IDE state
     this.activeIDEs = new Map(); // port -> IDE instance
     this.ideSelection = null;
@@ -31,17 +31,17 @@ class IDEHandler {
    */
   async createInterface(config, interfaceId) {
     try {
-      const { port, workspacePath, ideType = 'auto' } = config;
-      
+      const { port, workspacePath, ideType = "auto" } = config;
+
       this.logger.info(`Creating IDE interface: ${interfaceId}`, {
         port,
         workspacePath,
-        ideType
+        ideType,
       });
 
       // Start IDE
       const ideInstance = await this.startIDE(workspacePath, ideType, port);
-      
+
       // Store active IDE
       this.activeIDEs.set(port, {
         id: interfaceId,
@@ -49,22 +49,21 @@ class IDEHandler {
         workspacePath,
         ideType,
         instance: ideInstance,
-        status: 'running',
-        createdAt: new Date()
+        status: "running",
+        createdAt: new Date(),
       });
 
       return {
         id: interfaceId,
-        type: 'ide',
+        type: "ide",
         port,
         workspacePath,
         ideType,
-        status: 'running',
-        createdAt: new Date()
+        status: "running",
+        createdAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Failed to create IDE interface:', error);
+      this.logger.error("Failed to create IDE interface:", error);
       throw new Error(`Failed to create IDE interface: ${error.message}`);
     }
   }
@@ -76,22 +75,23 @@ class IDEHandler {
    * @param {number} port - IDE port
    * @returns {Promise<Object>} IDE startup information
    */
-  async startIDE(workspacePath, ideType = 'auto', port = null) {
+  async startIDE(workspacePath, ideType = "auto", port = null) {
     try {
       this.logger.info(`Starting IDE: ${ideType} at ${workspacePath}`);
 
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
-      const result = await this.ideManager.startIDE(workspacePath, ideType, { port });
-      
-      this.logger.info(`IDE started successfully on port ${result.port}`);
-      
-      return result;
+      const result = await this.ideManager.startIDE(workspacePath, ideType, {
+        port,
+      });
 
+      this.logger.info(`IDE started successfully on port ${result.port}`);
+
+      return result;
     } catch (error) {
-      this.logger.error('Failed to start IDE:', error);
+      this.logger.error("Failed to start IDE:", error);
       throw new Error(`Failed to start IDE: ${error.message}`);
     }
   }
@@ -106,20 +106,19 @@ class IDEHandler {
       this.logger.info(`Stopping IDE on port ${port}`);
 
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
       const result = await this.ideManager.stopIDE(port);
-      
+
       // Remove from active IDEs
       this.activeIDEs.delete(port);
-      
-      this.logger.info(`IDE stopped successfully on port ${port}`);
-      
-      return result;
 
+      this.logger.info(`IDE stopped successfully on port ${port}`);
+
+      return result;
     } catch (error) {
-      this.logger.error('Failed to stop IDE:', error);
+      this.logger.error("Failed to stop IDE:", error);
       throw new Error(`Failed to stop IDE: ${error.message}`);
     }
   }
@@ -132,25 +131,24 @@ class IDEHandler {
   async getIDEStatus(port) {
     try {
       const activeIDE = this.activeIDEs.get(port);
-      
+
       if (!activeIDE) {
         throw new Error(`IDE not found on port ${port}`);
       }
 
       // Get status from IDE Manager
       const status = await this.ideManager.getIDEStatus(port);
-      
+
       return {
         port,
         status: activeIDE.status,
         workspacePath: activeIDE.workspacePath,
         ideType: activeIDE.ideType,
         uptime: Date.now() - activeIDE.createdAt.getTime(),
-        ...status
+        ...status,
       };
-
     } catch (error) {
-      this.logger.error('Failed to get IDE status:', error);
+      this.logger.error("Failed to get IDE status:", error);
       throw new Error(`Failed to get IDE status: ${error.message}`);
     }
   }
@@ -162,22 +160,21 @@ class IDEHandler {
   async getAvailableIDEs() {
     try {
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
       const availableIDEs = await this.ideManager.getAvailableIDEs();
-      
-      return availableIDEs.map(ide => ({
+
+      return availableIDEs.map((ide) => ({
         port: ide.port,
-        type: ide.type || 'unknown',
-        name: this.getIDEDisplayName(ide.type || 'unknown'),
+        type: ide.type || "unknown",
+        name: this.getIDEDisplayName(ide.type || "unknown"),
         version: ide.version,
         workspacePath: ide.workspacePath,
-        status: ide.status
+        status: ide.status,
       }));
-
     } catch (error) {
-      this.logger.error('Failed to get available IDEs:', error);
+      this.logger.error("Failed to get available IDEs:", error);
       throw new Error(`Failed to get available IDEs: ${error.message}`);
     }
   }
@@ -189,15 +186,15 @@ class IDEHandler {
    */
   getIDEDisplayName(ideType) {
     const ideNames = {
-      'cursor': 'Cursor IDE',
-      'vscode': 'Visual Studio Code',
-      'windsurf': 'Windsurf IDE',
-      'jetbrains': 'JetBrains IDE',
-      'sublime': 'Sublime Text',
-      'unknown': 'Unknown IDE'
+      cursor: "Cursor IDE",
+      vscode: "Visual Studio Code",
+      windsurf: "Windsurf IDE",
+      jetbrains: "JetBrains IDE",
+      sublime: "Sublime Text",
+      unknown: "Unknown IDE",
     };
-    
-    return ideNames[ideType] || ideNames['unknown'];
+
+    return ideNames[ideType] || ideNames["unknown"];
   }
 
   /**
@@ -208,22 +205,21 @@ class IDEHandler {
   async getIDEFeatures(port) {
     try {
       const activeIDE = this.activeIDEs.get(port);
-      
+
       if (!activeIDE) {
         throw new Error(`IDE not found on port ${port}`);
       }
 
       // Get features based on IDE type
       const features = await this.getFeaturesForIDEType(activeIDE.ideType);
-      
+
       return {
         port,
         ideType: activeIDE.ideType,
-        features
+        features,
       };
-
     } catch (error) {
-      this.logger.error('Failed to get IDE features:', error);
+      this.logger.error("Failed to get IDE features:", error);
       throw new Error(`Failed to get IDE features: ${error.message}`);
     }
   }
@@ -240,33 +236,33 @@ class IDEHandler {
       fileExplorer: true,
       git: true,
       extensions: true,
-      debugging: true
+      debugging: true,
     };
 
     switch (ideType.toLowerCase()) {
-      case 'cursor':
+      case "cursor":
         return {
           ...baseFeatures,
           aiChat: true,
           codeGeneration: true,
-          refactoring: true
+          refactoring: true,
         };
-      
-      case 'vscode':
+
+      case "vscode":
         return {
           ...baseFeatures,
           marketplace: true,
           themes: true,
-          settings: true
+          settings: true,
         };
-      
-      case 'windsurf':
+
+      case "windsurf":
         return {
           ...baseFeatures,
           aiAssistance: true,
-          codeCompletion: true
+          codeCompletion: true,
         };
-      
+
       default:
         return baseFeatures;
     }
@@ -278,10 +274,10 @@ class IDEHandler {
    * @param {string} reason - Selection reason
    * @returns {Promise<Object>} Selection result
    */
-  async setIDESelection(port, reason = 'manual') {
+  async setIDESelection(port, reason = "manual") {
     try {
       const activeIDE = this.activeIDEs.get(port);
-      
+
       if (!activeIDE) {
         throw new Error(`IDE not found on port ${port}`);
       }
@@ -292,7 +288,7 @@ class IDEHandler {
         ideType: activeIDE.ideType,
         workspacePath: activeIDE.workspacePath,
         selectedAt: new Date(),
-        reason
+        reason,
       };
 
       // Add to history
@@ -301,7 +297,7 @@ class IDEHandler {
         ideType: activeIDE.ideType,
         workspacePath: activeIDE.workspacePath,
         selectedAt: new Date(),
-        reason
+        reason,
       });
 
       // Keep only last 10 selections
@@ -312,13 +308,11 @@ class IDEHandler {
       this.logger.info(`IDE selection set to port ${port}`, { reason });
 
       return {
-        success: true,
         selection: this.ideSelection,
-        previousSelection
+        previousSelection,
       };
-
     } catch (error) {
-      this.logger.error('Failed to set IDE selection:', error);
+      this.logger.error("Failed to set IDE selection:", error);
       throw new Error(`Failed to set IDE selection: ${error.message}`);
     }
   }
@@ -347,15 +341,14 @@ class IDEHandler {
   async getIDEVersion(port) {
     try {
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
       const version = await this.ideManager.detectIDEVersion(port);
-      
-      return version;
 
+      return version;
     } catch (error) {
-      this.logger.error('Failed to get IDE version:', error);
+      this.logger.error("Failed to get IDE version:", error);
       throw new Error(`Failed to get IDE version: ${error.message}`);
     }
   }
@@ -368,25 +361,24 @@ class IDEHandler {
   async getWorkspaceInfo(port) {
     try {
       const activeIDE = this.activeIDEs.get(port);
-      
+
       if (!activeIDE) {
         throw new Error(`IDE not found on port ${port}`);
       }
 
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
       const workspaceInfo = await this.ideManager.getWorkspaceInfo(port);
-      
+
       return {
         port,
         workspacePath: activeIDE.workspacePath,
-        ...workspaceInfo
+        ...workspaceInfo,
       };
-
     } catch (error) {
-      this.logger.error('Failed to get workspace info:', error);
+      this.logger.error("Failed to get workspace info:", error);
       throw new Error(`Failed to get workspace info: ${error.message}`);
     }
   }
@@ -400,26 +392,30 @@ class IDEHandler {
   async setWorkspacePath(port, workspacePath) {
     try {
       const activeIDE = this.activeIDEs.get(port);
-      
+
       if (!activeIDE) {
         throw new Error(`IDE not found on port ${port}`);
       }
 
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
-      const result = await this.ideManager.setWorkspacePath(port, workspacePath);
-      
+      const result = await this.ideManager.setWorkspacePath(
+        port,
+        workspacePath,
+      );
+
       // Update active IDE
       activeIDE.workspacePath = workspacePath;
-      
-      this.logger.info(`Workspace path set to ${workspacePath} for port ${port}`);
-      
-      return result;
 
+      this.logger.info(
+        `Workspace path set to ${workspacePath} for port ${port}`,
+      );
+
+      return result;
     } catch (error) {
-      this.logger.error('Failed to set workspace path:', error);
+      this.logger.error("Failed to set workspace path:", error);
       throw new Error(`Failed to set workspace path: ${error.message}`);
     }
   }
@@ -432,15 +428,14 @@ class IDEHandler {
   async detectWorkspacePaths(port) {
     try {
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
       const workspacePaths = await this.ideManager.detectWorkspacePaths(port);
-      
-      return workspacePaths;
 
+      return workspacePaths;
     } catch (error) {
-      this.logger.error('Failed to detect workspace paths:', error);
+      this.logger.error("Failed to detect workspace paths:", error);
       throw new Error(`Failed to detect workspace paths: ${error.message}`);
     }
   }
@@ -454,15 +449,14 @@ class IDEHandler {
   async monitorTerminal(port, options = {}) {
     try {
       if (!this.ideManager) {
-        throw new Error('IDE Manager not available');
+        throw new Error("IDE Manager not available");
       }
 
       const result = await this.ideManager.monitorTerminal(port, options);
-      
-      return result;
 
+      return result;
     } catch (error) {
-      this.logger.error('Failed to monitor terminal:', error);
+      this.logger.error("Failed to monitor terminal:", error);
       throw new Error(`Failed to monitor terminal: ${error.message}`);
     }
   }
@@ -476,7 +470,7 @@ class IDEHandler {
       activeIDEs: this.activeIDEs.size,
       selectionHistory: this.selectionHistory.length,
       currentSelection: this.ideSelection ? this.ideSelection.port : null,
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
   }
 
@@ -490,7 +484,10 @@ class IDEHandler {
         try {
           await this.stopIDE(port);
         } catch (error) {
-          this.logger.warn(`Failed to stop IDE on port ${port}:`, error.message);
+          this.logger.warn(
+            `Failed to stop IDE on port ${port}:`,
+            error.message,
+          );
         }
       }
 
@@ -499,10 +496,9 @@ class IDEHandler {
       this.ideSelection = null;
       this.selectionHistory = [];
 
-      this.logger.info('IDE Handler cleanup completed');
-
+      this.logger.info("IDE Handler cleanup completed");
     } catch (error) {
-      this.logger.error('Failed to cleanup IDE Handler:', error);
+      this.logger.error("Failed to cleanup IDE Handler:", error);
     }
   }
 }

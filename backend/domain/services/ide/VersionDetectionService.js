@@ -3,8 +3,8 @@
  * Provides automatic IDE version detection with CDP integration and validation
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('VersionDetectionService');
+const Logger = require("@logging/Logger");
+const logger = new Logger("VersionDetectionService");
 
 class VersionDetectionService {
   constructor(dependencies = {}) {
@@ -21,19 +21,21 @@ class VersionDetectionService {
    */
   initializeKnownVersions() {
     try {
-      const IDETypes = require('./IDETypes');
-      const ideTypes = ['cursor', 'vscode', 'windsurf'];
-      
-      ideTypes.forEach(ideType => {
+      const IDETypes = require("./IDETypes");
+      const ideTypes = ["cursor", "vscode", "windsurf"];
+
+      ideTypes.forEach((ideType) => {
         const metadata = IDETypes.getMetadata(ideType);
         if (metadata && metadata.availableVersions) {
           const versions = new Set(metadata.availableVersions);
           this.knownVersions.set(ideType, versions);
-          this.logger.info(`Initialized known versions for ${ideType}: ${Array.from(versions).join(', ')}`);
+          this.logger.info(
+            `Initialized known versions for ${ideType}: ${Array.from(versions).join(", ")}`,
+          );
         }
       });
     } catch (error) {
-      this.logger.error('Error initializing known versions:', error.message);
+      this.logger.error("Error initializing known versions:", error.message);
     }
   }
 
@@ -49,26 +51,33 @@ class VersionDetectionService {
       const cacheKey = `${ideType}:${port}`;
       const cached = this.cache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        this.logger.debug(`Using cached version for ${ideType} on port ${port}: ${cached.version}`);
+        this.logger.debug(
+          `Using cached version for ${ideType} on port ${port}: ${cached.version}`,
+        );
         return cached.result;
       }
 
       // Detect current version
       const currentVersion = await this.versionDetector.detectVersion(port);
       if (!currentVersion) {
-        throw new Error(`Failed to detect version for ${ideType} on port ${port}`);
+        throw new Error(
+          `Failed to detect version for ${ideType} on port ${port}`,
+        );
       }
 
       // Get known versions for this IDE type
       const knownVersions = this.knownVersions.get(ideType) || new Set();
-      
+
       // Compare with known versions
       const isNewVersion = !knownVersions.has(currentVersion);
       const isKnownVersion = knownVersions.has(currentVersion);
-      
+
       // Find compatible version (latest known version that might work)
-      const compatibleVersion = this.findCompatibleVersion(ideType, currentVersion);
-      
+      const compatibleVersion = this.findCompatibleVersion(
+        ideType,
+        currentVersion,
+      );
+
       const result = {
         currentVersion,
         isNewVersion,
@@ -77,21 +86,23 @@ class VersionDetectionService {
         knownVersions: Array.from(knownVersions),
         timestamp: new Date().toISOString(),
         port,
-        ideType
+        ideType,
       };
 
       // Cache the result
       this.cache.set(cacheKey, {
         version: currentVersion,
         result,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Don't log individual detections - will be logged in batch
       return result;
-
     } catch (error) {
-      this.logger.error(`Version detection failed for ${ideType} on port ${port}:`, error.message);
+      this.logger.error(
+        `Version detection failed for ${ideType} on port ${port}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -104,12 +115,12 @@ class VersionDetectionService {
    */
   async validateVersion(version, ideType) {
     try {
-      if (!version || typeof version !== 'string') {
+      if (!version || typeof version !== "string") {
         return {
           isValid: false,
-          error: 'Invalid version format',
+          error: "Invalid version format",
           version,
-          ideType
+          ideType,
         };
       }
 
@@ -118,9 +129,9 @@ class VersionDetectionService {
       if (!versionRegex.test(version)) {
         return {
           isValid: false,
-          error: 'Version does not match semantic versioning format',
+          error: "Version does not match semantic versioning format",
           version,
-          ideType
+          ideType,
         };
       }
 
@@ -133,16 +144,18 @@ class VersionDetectionService {
         isKnown,
         version,
         ideType,
-        knownVersions: Array.from(knownVersions)
+        knownVersions: Array.from(knownVersions),
       };
-
     } catch (error) {
-      this.logger.error(`Version validation failed for ${version} (${ideType}):`, error.message);
+      this.logger.error(
+        `Version validation failed for ${version} (${ideType}):`,
+        error.message,
+      );
       return {
         isValid: false,
         error: error.message,
         version,
-        ideType
+        ideType,
       };
     }
   }
@@ -156,46 +169,48 @@ class VersionDetectionService {
   async compareVersions(version1, version2) {
     try {
       if (!version1 || !version2) {
-        throw new Error('Both versions must be provided');
+        throw new Error("Both versions must be provided");
       }
 
-      const v1Parts = version1.split('.').map(Number);
-      const v2Parts = version2.split('.').map(Number);
+      const v1Parts = version1.split(".").map(Number);
+      const v2Parts = version2.split(".").map(Number);
 
       if (v1Parts.length !== 3 || v2Parts.length !== 3) {
-        throw new Error('Versions must be in format x.y.z');
+        throw new Error("Versions must be in format x.y.z");
       }
 
       // Compare major, minor, patch
       for (let i = 0; i < 3; i++) {
         if (v1Parts[i] > v2Parts[i]) {
           return {
-            result: 'greater',
+            result: "greater",
             version1,
             version2,
             difference: v1Parts[i] - v2Parts[i],
-            position: i === 0 ? 'major' : i === 1 ? 'minor' : 'patch'
+            position: i === 0 ? "major" : i === 1 ? "minor" : "patch",
           };
         } else if (v1Parts[i] < v2Parts[i]) {
           return {
-            result: 'less',
+            result: "less",
             version1,
             version2,
             difference: v2Parts[i] - v1Parts[i],
-            position: i === 0 ? 'major' : i === 1 ? 'minor' : 'patch'
+            position: i === 0 ? "major" : i === 1 ? "minor" : "patch",
           };
         }
       }
 
       return {
-        result: 'equal',
+        result: "equal",
         version1,
         version2,
-        difference: 0
+        difference: 0,
       };
-
     } catch (error) {
-      this.logger.error(`Version comparison failed for ${version1} vs ${version2}:`, error.message);
+      this.logger.error(
+        `Version comparison failed for ${version1} vs ${version2}:`,
+        error.message,
+      );
       throw error;
     }
   }
@@ -220,9 +235,9 @@ class VersionDetectionService {
 
       // Convert to array and sort by version (ascending order)
       const sortedVersions = Array.from(knownVersions).sort((a, b) => {
-        const aParts = a.split('.').map(Number);
-        const bParts = b.split('.').map(Number);
-        
+        const aParts = a.split(".").map(Number);
+        const bParts = b.split(".").map(Number);
+
         for (let i = 0; i < 3; i++) {
           if (aParts[i] !== bParts[i]) {
             return aParts[i] - bParts[i]; // Ascending order
@@ -232,12 +247,12 @@ class VersionDetectionService {
       });
 
       // Find the highest known version that is <= current version
-      const currentParts = currentVersion.split('.').map(Number);
+      const currentParts = currentVersion.split(".").map(Number);
       let compatibleVersion = null;
 
       for (let i = sortedVersions.length - 1; i >= 0; i--) {
-        const versionParts = sortedVersions[i].split('.').map(Number);
-        
+        const versionParts = sortedVersions[i].split(".").map(Number);
+
         // Check if this version is <= current version
         let isCompatible = true;
         for (let j = 0; j < 3; j++) {
@@ -246,7 +261,7 @@ class VersionDetectionService {
             break;
           }
         }
-        
+
         if (isCompatible) {
           compatibleVersion = sortedVersions[i];
           break;
@@ -255,9 +270,11 @@ class VersionDetectionService {
 
       // If no compatible version found, use the oldest known version
       return compatibleVersion || sortedVersions[0] || null;
-
     } catch (error) {
-      this.logger.error(`Error finding compatible version for ${ideType} ${currentVersion}:`, error.message);
+      this.logger.error(
+        `Error finding compatible version for ${ideType} ${currentVersion}:`,
+        error.message,
+      );
       return null;
     }
   }
@@ -272,15 +289,17 @@ class VersionDetectionService {
       if (!this.knownVersions.has(ideType)) {
         this.knownVersions.set(ideType, new Set());
       }
-      
+
       this.knownVersions.get(ideType).add(version);
       this.logger.info(`Added known version for ${ideType}: ${version}`);
-      
+
       // Clear cache for this IDE type
       this.clearCacheForIDE(ideType);
-      
     } catch (error) {
-      this.logger.error(`Error adding known version for ${ideType} ${version}:`, error.message);
+      this.logger.error(
+        `Error adding known version for ${ideType} ${version}:`,
+        error.message,
+      );
     }
   }
 
@@ -292,9 +311,9 @@ class VersionDetectionService {
   getKnownVersions(ideType) {
     const versions = this.knownVersions.get(ideType) || new Set();
     return Array.from(versions).sort((a, b) => {
-      const aParts = a.split('.').map(Number);
-      const bParts = b.split('.').map(Number);
-      
+      const aParts = a.split(".").map(Number);
+      const bParts = b.split(".").map(Number);
+
       for (let i = 0; i < 3; i++) {
         if (aParts[i] !== bParts[i]) {
           return bParts[i] - aParts[i]; // Descending order
@@ -315,9 +334,11 @@ class VersionDetectionService {
         keysToDelete.push(key);
       }
     }
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
-    this.logger.info(`Cleared cache for ${ideType} (${keysToDelete.length} entries)`);
+
+    keysToDelete.forEach((key) => this.cache.delete(key));
+    this.logger.info(
+      `Cleared cache for ${ideType} (${keysToDelete.length} entries)`,
+    );
   }
 
   /**
@@ -325,7 +346,7 @@ class VersionDetectionService {
    */
   clearCache() {
     this.cache.clear();
-    this.logger.info('Version detection cache cleared');
+    this.logger.info("Version detection cache cleared");
   }
 
   /**
@@ -336,15 +357,15 @@ class VersionDetectionService {
     return {
       size: this.cache.size,
       timeout: this.cacheTimeout,
-      entries: Array.from(this.cache.keys()).map(key => {
+      entries: Array.from(this.cache.keys()).map((key) => {
         const entry = this.cache.get(key);
         return {
           key,
           version: entry.version,
           timestamp: entry.timestamp,
-          age: Date.now() - entry.timestamp
+          age: Date.now() - entry.timestamp,
         };
-      })
+      }),
     };
   }
 
@@ -358,9 +379,9 @@ class VersionDetectionService {
       knownVersions: Object.fromEntries(
         Array.from(this.knownVersions.entries()).map(([ideType, versions]) => [
           ideType,
-          Array.from(versions)
-        ])
-      )
+          Array.from(versions),
+        ]),
+      ),
     };
   }
 }

@@ -2,10 +2,10 @@
  * TaskPriority - Value object for task priority
  */
 class TaskPriority {
-  static LOW = 'low';
-  static MEDIUM = 'medium';
-  static HIGH = 'high';
-  static CRITICAL = 'critical';
+  static LOW = "low";
+  static MEDIUM = "medium";
+  static HIGH = "high";
+  static CRITICAL = "critical";
 
   constructor(value = TaskPriority.MEDIUM) {
     if (!TaskPriority.isValid(value)) {
@@ -27,7 +27,7 @@ class TaskPriority {
       TaskPriority.LOW,
       TaskPriority.MEDIUM,
       TaskPriority.HIGH,
-      TaskPriority.CRITICAL
+      TaskPriority.CRITICAL,
     ].includes(priority);
   }
 
@@ -36,7 +36,7 @@ class TaskPriority {
       TaskPriority.LOW,
       TaskPriority.MEDIUM,
       TaskPriority.HIGH,
-      TaskPriority.CRITICAL
+      TaskPriority.CRITICAL,
     ];
   }
 
@@ -45,7 +45,7 @@ class TaskPriority {
       [TaskPriority.LOW]: 1,
       [TaskPriority.MEDIUM]: 2,
       [TaskPriority.HIGH]: 3,
-      [TaskPriority.CRITICAL]: 4
+      [TaskPriority.CRITICAL]: 4,
     };
     return weights[priority] || 0;
   }
@@ -55,4 +55,4 @@ class TaskPriority {
   }
 }
 
-module.exports = TaskPriority; 
+module.exports = TaskPriority;

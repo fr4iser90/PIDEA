@@ -1,17 +1,17 @@
 /**
  * Event Store - Event Sourcing Implementation
- * 
+ *
  * Provides event sourcing capabilities for domain aggregates
  * Stores events in chronological order and supports event replay
  */
 
-const { v4: uuidv4 } = require('uuid');
-const Logger = require('@logging/Logger');
+const { v4: uuidv4 } = require("uuid");
+const Logger = require("@logging/Logger");
 
 class EventStore {
   constructor(databaseConnection) {
     this.databaseConnection = databaseConnection;
-    this.logger = new Logger('EventStore');
+    this.logger = new Logger("EventStore");
   }
 
   /**
@@ -26,11 +26,20 @@ class EventStore {
    * @param {string} causationId - Causation ID for tracking event chains
    * @returns {Promise<string>} Event ID
    */
-  async storeEvent(aggregateId, aggregateType, eventType, eventData, metadata = {}, userId = 'system', correlationId = null, causationId = null) {
+  async storeEvent(
+    aggregateId,
+    aggregateType,
+    eventType,
+    eventData,
+    metadata = {},
+    userId = "system",
+    correlationId = null,
+    causationId = null,
+  ) {
     try {
       const eventId = uuidv4();
       const eventVersion = await this.getNextEventVersion(aggregateId);
-      
+
       const event = {
         id: eventId,
         aggregate_id: aggregateId,
@@ -43,7 +52,7 @@ class EventStore {
         timestamp: new Date().toISOString(),
         created_at: new Date().toISOString(),
         correlation_id: correlationId,
-        causation_id: causationId
+        causation_id: causationId,
       };
 
       const sql = `
@@ -66,14 +75,15 @@ class EventStore {
         event.timestamp,
         event.created_at,
         event.correlation_id,
-        event.causation_id
+        event.causation_id,
       ]);
 
-      this.logger.debug(`Event stored: ${eventType} for ${aggregateType}:${aggregateId}`);
+      this.logger.debug(
+        `Event stored: ${eventType} for ${aggregateType}:${aggregateId}`,
+      );
       return eventId;
-
     } catch (error) {
-      this.logger.error('Error storing event:', error);
+      this.logger.error("Error storing event:", error);
       throw new Error(`Failed to store event: ${error.message}`);
     }
   }
@@ -94,24 +104,24 @@ class EventStore {
         FROM event_store
         WHERE aggregate_id = ?
       `;
-      
+
       const params = [aggregateId];
 
       if (fromVersion > 0) {
-        sql += ' AND event_version >= ?';
+        sql += " AND event_version >= ?";
         params.push(fromVersion);
       }
 
       if (toVersion !== null) {
-        sql += ' AND event_version <= ?';
+        sql += " AND event_version <= ?";
         params.push(toVersion);
       }
 
-      sql += ' ORDER BY event_version ASC';
+      sql += " ORDER BY event_version ASC";
 
       const rows = await this.databaseConnection.query(sql, params);
-      
-      return rows.map(row => ({
+
+      return rows.map((row) => ({
         id: row.id,
         aggregateId: row.aggregate_id,
         aggregateType: row.aggregate_type,
@@ -123,11 +133,10 @@ class EventStore {
         timestamp: row.timestamp,
         createdAt: row.created_at,
         correlationId: row.correlation_id,
-        causationId: row.causation_id
+        causationId: row.causation_id,
       }));
-
     } catch (error) {
-      this.logger.error('Error getting events:', error);
+      this.logger.error("Error getting events:", error);
       throw new Error(`Failed to get events: ${error.message}`);
     }
   }
@@ -147,9 +156,8 @@ class EventStore {
 
       const rows = await this.databaseConnection.query(sql, [aggregateId]);
       return rows[0].next_version;
-
     } catch (error) {
-      this.logger.error('Error getting next event version:', error);
+      this.logger.error("Error getting next event version:", error);
       throw new Error(`Failed to get next event version: ${error.message}`);
     }
   }
@@ -162,7 +170,12 @@ class EventStore {
    * @param {Object} metadata - Additional metadata
    * @returns {Promise<string>} Snapshot ID
    */
-  async createSnapshot(aggregateId, aggregateType, snapshotData, metadata = {}) {
+  async createSnapshot(
+    aggregateId,
+    aggregateType,
+    snapshotData,
+    metadata = {},
+  ) {
     try {
       const snapshotId = uuidv4();
       const snapshotVersion = await this.getNextEventVersion(aggregateId);
@@ -181,14 +194,15 @@ class EventStore {
         snapshotVersion,
         JSON.stringify(snapshotData),
         JSON.stringify(metadata),
-        new Date().toISOString()
+        new Date().toISOString(),
       ]);
 
-      this.logger.debug(`Snapshot created for ${aggregateType}:${aggregateId} at version ${snapshotVersion}`);
+      this.logger.debug(
+        `Snapshot created for ${aggregateType}:${aggregateId} at version ${snapshotVersion}`,
+      );
       return snapshotId;
-
     } catch (error) {
-      this.logger.error('Error creating snapshot:', error);
+      this.logger.error("Error creating snapshot:", error);
       throw new Error(`Failed to create snapshot: ${error.message}`);
     }
   }
@@ -210,7 +224,7 @@ class EventStore {
       `;
 
       const rows = await this.databaseConnection.query(sql, [aggregateId]);
-      
+
       if (rows.length === 0) {
         return null;
       }
@@ -223,11 +237,10 @@ class EventStore {
         snapshotVersion: row.snapshot_version,
         snapshotData: JSON.parse(row.snapshot_data),
         metadata: JSON.parse(row.metadata),
-        createdAt: row.created_at
+        createdAt: row.created_at,
       };
-
     } catch (error) {
-      this.logger.error('Error getting latest snapshot:', error);
+      this.logger.error("Error getting latest snapshot:", error);
       throw new Error(`Failed to get latest snapshot: ${error.message}`);
     }
   }
@@ -249,9 +262,8 @@ class EventStore {
       }
 
       return state;
-
     } catch (error) {
-      this.logger.error('Error replaying events:', error);
+      this.logger.error("Error replaying events:", error);
       throw new Error(`Failed to replay events: ${error.message}`);
     }
   }
@@ -273,8 +285,8 @@ class EventStore {
       `;
 
       const rows = await this.databaseConnection.query(sql, [correlationId]);
-      
-      return rows.map(row => ({
+
+      return rows.map((row) => ({
         id: row.id,
         aggregateId: row.aggregate_id,
         aggregateType: row.aggregate_type,
@@ -286,12 +298,13 @@ class EventStore {
         timestamp: row.timestamp,
         createdAt: row.created_at,
         correlationId: row.correlation_id,
-        causationId: row.causation_id
+        causationId: row.causation_id,
       }));
-
     } catch (error) {
-      this.logger.error('Error getting events by correlation ID:', error);
-      throw new Error(`Failed to get events by correlation ID: ${error.message}`);
+      this.logger.error("Error getting events by correlation ID:", error);
+      throw new Error(
+        `Failed to get events by correlation ID: ${error.message}`,
+      );
     }
   }
 
@@ -314,9 +327,13 @@ class EventStore {
         LIMIT ? OFFSET ?
       `;
 
-      const rows = await this.databaseConnection.query(sql, [userId, limit, offset]);
-      
-      return rows.map(row => ({
+      const rows = await this.databaseConnection.query(sql, [
+        userId,
+        limit,
+        offset,
+      ]);
+
+      return rows.map((row) => ({
         id: row.id,
         aggregateId: row.aggregate_id,
         aggregateType: row.aggregate_type,
@@ -328,11 +345,10 @@ class EventStore {
         timestamp: row.timestamp,
         createdAt: row.created_at,
         correlationId: row.correlation_id,
-        causationId: row.causation_id
+        causationId: row.causation_id,
       }));
-
     } catch (error) {
-      this.logger.error('Error getting events by user ID:', error);
+      this.logger.error("Error getting events by user ID:", error);
       throw new Error(`Failed to get events by user ID: ${error.message}`);
     }
   }
@@ -357,9 +373,8 @@ class EventStore {
 
       const rows = await this.databaseConnection.query(sql);
       return rows[0];
-
     } catch (error) {
-      this.logger.error('Error getting event statistics:', error);
+      this.logger.error("Error getting event statistics:", error);
       throw new Error(`Failed to get event statistics: ${error.message}`);
     }
   }

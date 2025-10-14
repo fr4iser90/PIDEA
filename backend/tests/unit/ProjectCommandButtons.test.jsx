@@ -39,7 +39,6 @@ describe('ProjectCommandButtons', () => {
 
   test('renders command buttons', () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start',
         dev_command: 'npm run dev',
@@ -60,7 +59,6 @@ describe('ProjectCommandButtons', () => {
 
   test('loads project commands on mount', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start',
         dev_command: 'npm run dev'
@@ -76,14 +74,12 @@ describe('ProjectCommandButtons', () => {
 
   test('executes command when button is clicked', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start'
       }
     });
 
     mockApiRepository.executeProjectCommand.mockResolvedValue({
-      success: true,
       message: 'Command executed successfully'
     });
 
@@ -105,14 +101,12 @@ describe('ProjectCommandButtons', () => {
     });
 
     expect(defaultProps.onCommandExecute).toHaveBeenCalledWith('start', {
-      success: true,
       message: 'Command executed successfully'
     });
   });
 
   test('shows loading state during command execution', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start'
       }
@@ -139,14 +133,13 @@ describe('ProjectCommandButtons', () => {
 
   test('handles command execution error', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start'
       }
     });
 
     mockApiRepository.executeProjectCommand.mockResolvedValue({
-      success: false,
+     
       error: 'Command failed'
     });
 
@@ -166,7 +159,7 @@ describe('ProjectCommandButtons', () => {
 
   test('shows error message when loading commands fails', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: false,
+     
       error: 'Failed to load commands'
     });
 
@@ -179,7 +172,6 @@ describe('ProjectCommandButtons', () => {
 
   test('disables unavailable commands', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         // Only start command is available
         start_command: 'npm start'
@@ -212,14 +204,12 @@ describe('ProjectCommandButtons', () => {
 
   test('shows command status after execution', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start'
       }
     });
 
     mockApiRepository.executeProjectCommand.mockResolvedValue({
-      success: true,
       message: 'Server started successfully'
     });
 
@@ -239,14 +229,12 @@ describe('ProjectCommandButtons', () => {
 
   test('clears command status when clear button is clicked', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start'
       }
     });
 
     mockApiRepository.executeProjectCommand.mockResolvedValue({
-      success: true,
       message: 'Server started successfully'
     });
 
@@ -283,7 +271,6 @@ describe('ProjectCommandButtons', () => {
 
   test('applies custom className', () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {}
     });
 
@@ -302,7 +289,6 @@ describe('ProjectCommandButtons', () => {
 
   test('shows command icons', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start'
       }
@@ -321,7 +307,6 @@ describe('ProjectCommandButtons', () => {
 
   test('prevents multiple simultaneous executions', async () => {
     mockApiRepository.getProjectCommands.mockResolvedValue({
-      success: true,
       data: {
         start_command: 'npm start',
         dev_command: 'npm run dev'

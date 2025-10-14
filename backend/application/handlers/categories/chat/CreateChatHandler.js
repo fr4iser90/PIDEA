@@ -3,21 +3,21 @@
  * Handler for creating new chat sessions with IDE integration
  */
 
-const CreateChatCommand = require('@categories/chat/CreateChatCommand');
-const ChatSession = require('@entities/ChatSession');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const CreateChatCommand = require("@categories/chat/CreateChatCommand");
+const ChatSession = require("@entities/ChatSession");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class CreateChatHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.chatSessionService = dependencies.chatSessionService;
     this.ideManager = dependencies.ideManager;
     this.browserManager = dependencies.browserManager;
     this.eventBus = dependencies.eventBus;
     this.logger = dependencies.logger || logger;
-    
+
     this.handlerId = this.generateHandlerId();
   }
 
@@ -27,7 +27,12 @@ class CreateChatHandler {
    * @throws {Error} If dependencies are invalid
    */
   validateDependencies(dependencies) {
-    const required = ['chatSessionService', 'ideManager', 'eventBus', 'browserManager'];
+    const required = [
+      "chatSessionService",
+      "ideManager",
+      "eventBus",
+      "browserManager",
+    ];
     for (const dep of required) {
       if (!dependencies[dep]) {
         throw new Error(`Missing required dependency: ${dep}`);
@@ -50,10 +55,10 @@ class CreateChatHandler {
    */
   async getBrowserManager(port) {
     this.logger.info(`Using port: ${port}`);
-    
+
     // Ensure BrowserManager is connected to the correct port
     await this.browserManager.switchToPort(port);
-    
+
     return this.browserManager;
   }
 
@@ -69,82 +74,82 @@ class CreateChatHandler {
       // Validate command
       const validationResult = await this.validateCommand(command);
       if (!validationResult.isValid) {
-        throw new Error(`Command validation failed: ${validationResult.errors.join(', ')}`);
+        throw new Error(
+          `Command validation failed: ${validationResult.errors.join(", ")}`,
+        );
       }
 
-      this.logger.info('Creating chat session', {
+      this.logger.info("Creating chat session", {
         handlerId: this.handlerId,
         commandId: command.commandId,
         userId: command.userId,
-        title: command.title
+        title: command.title,
       });
 
       // Publish event
-      await this.eventBus.publish('chat.creating', {
+      await this.eventBus.publish("chat.creating", {
         commandId: command.commandId,
         userId: command.userId,
         title: command.title,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // First, click New Chat button in the IDE using BrowserManager
-      this.logger.info('Clicking New Chat button in IDE...');
+      this.logger.info("Clicking New Chat button in IDE...");
       const browserManager = await this.getBrowserManager(port);
       await browserManager.clickNewChat(); // This now throws on error instead of returning false
-      
-      this.logger.info('New Chat button clicked successfully');
-      
+
+      this.logger.info("New Chat button clicked successfully");
+
       // Wait a bit for the new chat to be ready
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Then create session using ChatSessionService
       const session = await this.chatSessionService.createSession(
         command.userId,
         command.title,
-        command.metadata
+        command.metadata,
       );
 
       // Publish success event
-      await this.eventBus.publish('chat.created', {
+      await this.eventBus.publish("chat.created", {
         commandId: command.commandId,
         userId: command.userId,
         sessionId: session.id,
         title: session.title,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info('Chat session created successfully', {
+      this.logger.info("Chat session created successfully", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        sessionId: session.id
+        sessionId: session.id,
       });
 
       return {
-        success: true,
         session: {
           id: session.id,
           title: session.title,
           userId: session.userId,
           status: session.status,
           createdAt: session.createdAt,
-          metadata: session.metadata
+          metadata: session.metadata,
         },
-        commandId: command.commandId
+        commandId: command.commandId,
       };
-
     } catch (error) {
-      this.logger.error('Failed to create chat session', {
+      this.logger.error("Failed to create chat session", {
         handlerId: this.handlerId,
         commandId: command.commandId,
-        error: error.message
+        error: error.message,
       });
 
       // Publish failure event
-      await this.eventBus.publish('chat.creation.failed', {
+      await this.eventBus.publish("chat.creation.failed", {
         commandId: command.commandId,
         userId: command.userId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -161,27 +166,27 @@ class CreateChatHandler {
     const warnings = [];
 
     if (!command.userId) {
-      errors.push('User ID is required');
+      errors.push("User ID is required");
     }
 
     if (!command.title || command.title.trim().length === 0) {
-      errors.push('Chat title is required');
+      errors.push("Chat title is required");
     }
 
     if (command.title && command.title.length > 200) {
-      errors.push('Chat title too long (max 200 characters)');
+      errors.push("Chat title too long (max 200 characters)");
     }
 
-    if (command.metadata && typeof command.metadata !== 'object') {
-      errors.push('Metadata must be an object');
+    if (command.metadata && typeof command.metadata !== "object") {
+      errors.push("Metadata must be an object");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 }
 
-module.exports = CreateChatHandler; 
+module.exports = CreateChatHandler;

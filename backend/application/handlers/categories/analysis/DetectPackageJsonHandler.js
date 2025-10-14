@@ -3,13 +3,13 @@
  * Handler for detecting package.json and dev server
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class DetectPackageJsonHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class DetectPackageJsonHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,8 +40,8 @@ class DetectPackageJsonHandler {
       this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
-      if (!command || command.type !== 'DetectPackageJsonCommand') {
-        throw new Error('Invalid command type for DetectPackageJsonHandler');
+      if (!command || command.type !== "DetectPackageJsonCommand") {
+        throw new Error("Invalid command type for DetectPackageJsonHandler");
       }
 
       // Detect package.json
@@ -49,35 +49,33 @@ class DetectPackageJsonHandler {
         ...command.options,
         detectDevServer: command.detectDevServer,
         analyzeScripts: command.analyzeScripts,
-        workspacePath: command.workspacePath
+        workspacePath: command.workspacePath,
       });
 
       // Publish success event
-      await this.eventBus.publish('package.json.detected', {
+      await this.eventBus.publish("package.json.detected", {
         commandId: command.commandId,
         userId: command.userId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info(`Package.json detected successfully`);
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to detect package.json:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('package.json.detection.failed', {
+      await this.eventBus.publish("package.json.detection.failed", {
         commandId: command.commandId,
         userId: command.userId,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -90,12 +88,12 @@ class DetectPackageJsonHandler {
    */
   getInfo() {
     return {
-      name: 'DetectPackageJsonHandler',
-      version: '1.0.0',
-      description: 'Handles IDE package.json detection operations',
-      supportedCommands: ['DetectPackageJsonCommand']
+      name: "DetectPackageJsonHandler",
+      version: "1.0.0",
+      description: "Handles IDE package.json detection operations",
+      supportedCommands: ["DetectPackageJsonCommand"],
     };
   }
 }
 
-module.exports = DetectPackageJsonHandler; 
+module.exports = DetectPackageJsonHandler;

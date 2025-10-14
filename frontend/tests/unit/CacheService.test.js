@@ -165,10 +165,10 @@ describe('CacheService', () => {
       const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
       apiCall.mockImplementation((url) => {
         if (url.includes('/tasks')) {
-          return Promise.resolve({ success: true, data: [{ id: 1, title: 'Task 1' }] });
+          return Promise.resolve({ data: [{ id: 1, title: 'Task 1' }] });
         }
         if (url.includes('/git/status')) {
-          return Promise.resolve({ success: true, data: { branch: 'main' } });
+          return Promise.resolve({ data: { branch: 'main' } });
         }
         return Promise.resolve({ success: false });
       });

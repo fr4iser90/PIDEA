@@ -44,7 +44,7 @@ describe('Cache Integration', () => {
     });
 
     it('should cache IDE switch results', () => {
-      const switchResult = { success: true, port: 9222 };
+      const switchResult = { port: 9222 };
       
       cacheService.set('switch_ide_9222', switchResult, 'ide', 'ide');
       
@@ -155,7 +155,7 @@ describe('Cache Integration', () => {
       const switchKey = `switch_ide_${port}`;
       
       // IDEStore caches switch result
-      const switchResult = { success: true, port };
+      const switchResult = { port };
       cacheService.set(switchKey, switchResult, 'ide', 'ide');
       
       // ChatRepository should be able to access same cache

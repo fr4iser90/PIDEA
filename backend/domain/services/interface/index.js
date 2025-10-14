@@ -1,19 +1,19 @@
 /**
  * Interface Services - Module Exports
- * 
+ *
  * This module provides exports for all interface-related services,
  * including the base interface, manager, factory, registry, and
  * specific interface implementations.
  */
 
 // Core Interface Classes
-const BaseInterface = require('./BaseInterface');
-const InterfaceManager = require('./InterfaceManager');
-const InterfaceFactory = require('./InterfaceFactory');
-const InterfaceRegistry = require('./InterfaceRegistry');
+const BaseInterface = require("./BaseInterface");
+const InterfaceManager = require("./InterfaceManager");
+const InterfaceFactory = require("./InterfaceFactory");
+const InterfaceRegistry = require("./InterfaceRegistry");
 
 // Specific Interface Implementations
-const IDEInterface = require('./IDEInterface');
+const IDEInterface = require("./IDEInterface");
 
 // Module exports
 module.exports = {
@@ -31,11 +31,11 @@ module.exports = {
     BaseInterface,
     InterfaceManager,
     InterfaceFactory,
-    InterfaceRegistry
+    InterfaceRegistry,
   },
 
   implementations: {
-    IDEInterface
+    IDEInterface,
   },
 
   // Factory function for creating interface manager with dependencies
@@ -56,24 +56,24 @@ module.exports = {
   // Utility function to get all available interface types
   getAvailableInterfaceTypes: () => {
     return [
-      'ide',
-      'editor',
-      'terminal',
-      'browser',
-      'file-system',
-      'database',
-      'api',
-      'websocket'
+      "ide",
+      "editor",
+      "terminal",
+      "browser",
+      "file-system",
+      "database",
+      "api",
+      "websocket",
     ];
   },
 
   // Utility function to validate interface configuration
   validateInterfaceConfig: (config) => {
-    if (typeof config !== 'object' || config === null) {
-      return { valid: false, error: 'Configuration must be an object' };
+    if (typeof config !== "object" || config === null) {
+      return { valid: false, error: "Configuration must be an object" };
     }
 
-    const requiredFields = ['name', 'type'];
+    const requiredFields = ["name", "type"];
     for (const field of requiredFields) {
       if (!config[field]) {
         return { valid: false, error: `Required field '${field}' is missing` };
@@ -81,5 +81,5 @@ module.exports = {
     }
 
     return { valid: true };
-  }
+  },
 };

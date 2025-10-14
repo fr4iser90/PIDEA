@@ -83,7 +83,6 @@ const securityData = {
   },
   details: {
     TrivySecurityStep: {
-      success: true,
       result: {
         vulnerabilities: [
           {

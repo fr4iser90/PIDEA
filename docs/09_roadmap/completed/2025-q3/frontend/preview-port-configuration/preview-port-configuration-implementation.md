@@ -399,7 +399,7 @@ setCustomPort: async (port) => {
     set({ customPort: port });
     return { success: true };
   }
-  return { success: false, error: 'Invalid port' };
+  return { error: 'Invalid port' };
 }
 ```
 

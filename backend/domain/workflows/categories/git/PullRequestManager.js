@@ -2,16 +2,16 @@
  * PullRequestManager - Manages pull request creation and operations
  * Handles automated pull request creation with templates and validation
  */
-const GitWorkflowException = require('./exceptions/GitWorkflowException');
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const GitWorkflowException = require("./exceptions/GitWorkflowException");
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class PullRequestManager {
   constructor(dependencies = {}) {
     this.gitService = dependencies.gitService;
     this.logger = dependencies.logger || console;
     this.eventBus = dependencies.eventBus;
-    
+
     // PR templates
     this.templates = {
       feature: this.getFeaturePRTemplate(),
@@ -19,9 +19,9 @@ class PullRequestManager {
       hotfix: this.getHotfixPRTemplate(),
       release: this.getReleasePRTemplate(),
       refactor: this.getRefactorPRTemplate(),
-      default: this.getDefaultPRTemplate()
+      default: this.getDefaultPRTemplate(),
     };
-    
+
     // Configuration
     this.config = {
       autoAssign: dependencies.autoAssign !== false,
@@ -29,8 +29,8 @@ class PullRequestManager {
       requireLabels: dependencies.requireLabels !== false,
       requireReviewers: dependencies.requireReviewers !== false,
       defaultReviewers: dependencies.defaultReviewers || [],
-      defaultLabels: dependencies.defaultLabels || ['automated'],
-      ...dependencies
+      defaultLabels: dependencies.defaultLabels || ["automated"],
+      ...dependencies,
     };
   }
 
@@ -42,11 +42,11 @@ class PullRequestManager {
    */
   async createPullRequest(projectPath, prData) {
     try {
-      this.logger.info('PullRequestManager: Creating pull request', {
+      this.logger.info("PullRequestManager: Creating pull request", {
         projectPath,
         title: prData.title,
         sourceBranch: prData.sourceBranch,
-        targetBranch: prData.targetBranch
+        targetBranch: prData.targetBranch,
       });
 
       // Validate PR data
@@ -54,8 +54,8 @@ class PullRequestManager {
       if (!validation.isValid) {
         throw GitWorkflowException.pullRequestCreationFailed(
           prData.title,
-          validation.errors.join(', '),
-          { projectPath }
+          validation.errors.join(", "),
+          { projectPath },
         );
       }
 
@@ -72,12 +72,11 @@ class PullRequestManager {
           description: enhancedPRData.description,
           labels: enhancedPRData.labels,
           reviewers: enhancedPRData.reviewers,
-          assignees: enhancedPRData.assignees
-        }
+          assignees: enhancedPRData.assignees,
+        },
       );
 
       const prResult = {
-        success: true,
         id: result.id,
         url: result.url,
         title: enhancedPRData.title,
@@ -86,38 +85,40 @@ class PullRequestManager {
         labels: enhancedPRData.labels,
         reviewers: enhancedPRData.reviewers,
         assignees: enhancedPRData.assignees,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Emit PR created event
       if (this.eventBus) {
-        this.eventBus.publish('pull_request.created', {
+        this.eventBus.publish("pull_request.created", {
           projectPath,
           prId: result.id,
           prData: prResult,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
 
-      this.logger.info('PullRequestManager: Pull request created successfully', {
-        projectPath,
-        prId: result.id,
-        url: result.url
-      });
+      this.logger.info(
+        "PullRequestManager: Pull request created successfully",
+        {
+          projectPath,
+          prId: result.id,
+          url: result.url,
+        },
+      );
 
       return prResult;
-
     } catch (error) {
-      this.logger.error('PullRequestManager: Failed to create pull request', {
+      this.logger.error("PullRequestManager: Failed to create pull request", {
         projectPath,
         title: prData.title,
-        error: error.message
+        error: error.message,
       });
 
       throw GitWorkflowException.pullRequestCreationFailed(
         prData.title,
         error.message,
-        { projectPath, originalError: error }
+        { projectPath, originalError: error },
       );
     }
   }
@@ -132,51 +133,60 @@ class PullRequestManager {
     const warnings = [];
 
     // Required fields
-    if (!prData.title || typeof prData.title !== 'string') {
-      errors.push('Pull request title is required and must be a string');
+    if (!prData.title || typeof prData.title !== "string") {
+      errors.push("Pull request title is required and must be a string");
     }
 
-    if (!prData.sourceBranch || typeof prData.sourceBranch !== 'string') {
-      errors.push('Source branch is required and must be a string');
+    if (!prData.sourceBranch || typeof prData.sourceBranch !== "string") {
+      errors.push("Source branch is required and must be a string");
     }
 
-    if (!prData.targetBranch || typeof prData.targetBranch !== 'string') {
-      errors.push('Target branch is required and must be a string');
+    if (!prData.targetBranch || typeof prData.targetBranch !== "string") {
+      errors.push("Target branch is required and must be a string");
     }
 
     // Title length validation
     if (prData.title && prData.title.length > 200) {
-      errors.push('Pull request title must be less than 200 characters');
+      errors.push("Pull request title must be less than 200 characters");
     }
 
     // Branch name validation
     if (prData.sourceBranch && !this.isValidBranchName(prData.sourceBranch)) {
-      errors.push('Invalid source branch name');
+      errors.push("Invalid source branch name");
     }
 
     if (prData.targetBranch && !this.isValidBranchName(prData.targetBranch)) {
-      errors.push('Invalid target branch name');
+      errors.push("Invalid target branch name");
     }
 
     // Description validation
-    if (this.config.requireDescription && (!prData.description || prData.description.trim().length === 0)) {
-      errors.push('Pull request description is required');
+    if (
+      this.config.requireDescription &&
+      (!prData.description || prData.description.trim().length === 0)
+    ) {
+      errors.push("Pull request description is required");
     }
 
     // Labels validation
-    if (this.config.requireLabels && (!prData.labels || prData.labels.length === 0)) {
-      errors.push('Pull request labels are required');
+    if (
+      this.config.requireLabels &&
+      (!prData.labels || prData.labels.length === 0)
+    ) {
+      errors.push("Pull request labels are required");
     }
 
     // Reviewers validation
-    if (this.config.requireReviewers && (!prData.reviewers || prData.reviewers.length === 0)) {
-      errors.push('Pull request reviewers are required');
+    if (
+      this.config.requireReviewers &&
+      (!prData.reviewers || prData.reviewers.length === 0)
+    ) {
+      errors.push("Pull request reviewers are required");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -192,14 +202,18 @@ class PullRequestManager {
     if (!enhanced.labels) {
       enhanced.labels = [...this.config.defaultLabels];
     } else {
-      enhanced.labels = [...new Set([...this.config.defaultLabels, ...enhanced.labels])];
+      enhanced.labels = [
+        ...new Set([...this.config.defaultLabels, ...enhanced.labels]),
+      ];
     }
 
     // Add default reviewers
     if (!enhanced.reviewers) {
       enhanced.reviewers = [...this.config.defaultReviewers];
     } else {
-      enhanced.reviewers = [...new Set([...this.config.defaultReviewers, ...enhanced.reviewers])];
+      enhanced.reviewers = [
+        ...new Set([...this.config.defaultReviewers, ...enhanced.reviewers]),
+      ];
     }
 
     // Auto-assign if enabled
@@ -209,7 +223,10 @@ class PullRequestManager {
 
     // Enhance description with template
     if (enhanced.description) {
-      enhanced.description = this.enhanceDescription(enhanced.description, enhanced);
+      enhanced.description = this.enhanceDescription(
+        enhanced.description,
+        enhanced,
+      );
     }
 
     return enhanced;
@@ -223,16 +240,16 @@ class PullRequestManager {
    */
   enhanceDescription(description, prData) {
     const template = this.getTemplateForPR(prData);
-    
+
     if (!template) {
       return description;
     }
 
     // Replace template placeholders
-    let enhanced = template.replace('{{description}}', description);
-    enhanced = enhanced.replace('{{sourceBranch}}', prData.sourceBranch);
-    enhanced = enhanced.replace('{{targetBranch}}', prData.targetBranch);
-    enhanced = enhanced.replace('{{timestamp}}', new Date().toISOString());
+    let enhanced = template.replace("{{description}}", description);
+    enhanced = enhanced.replace("{{sourceBranch}}", prData.sourceBranch);
+    enhanced = enhanced.replace("{{targetBranch}}", prData.targetBranch);
+    enhanced = enhanced.replace("{{timestamp}}", new Date().toISOString());
 
     return enhanced;
   }
@@ -257,23 +274,24 @@ class PullRequestManager {
     // Check labels first
     if (prData.labels) {
       for (const label of prData.labels) {
-        if (label.includes('feature')) return 'feature';
-        if (label.includes('bug') || label.includes('fix')) return 'bug';
-        if (label.includes('hotfix')) return 'hotfix';
-        if (label.includes('release')) return 'release';
-        if (label.includes('refactor')) return 'refactor';
+        if (label.includes("feature")) return "feature";
+        if (label.includes("bug") || label.includes("fix")) return "bug";
+        if (label.includes("hotfix")) return "hotfix";
+        if (label.includes("release")) return "release";
+        if (label.includes("refactor")) return "refactor";
       }
     }
 
     // Check title
     const title = prData.title.toLowerCase();
-    if (title.includes('feature') || title.includes('enhancement')) return 'feature';
-    if (title.includes('bug') || title.includes('fix')) return 'bug';
-    if (title.includes('hotfix')) return 'hotfix';
-    if (title.includes('release')) return 'release';
-    if (title.includes('refactor')) return 'refactor';
+    if (title.includes("feature") || title.includes("enhancement"))
+      return "feature";
+    if (title.includes("bug") || title.includes("fix")) return "bug";
+    if (title.includes("hotfix")) return "hotfix";
+    if (title.includes("release")) return "release";
+    if (title.includes("refactor")) return "refactor";
 
-    return 'default';
+    return "default";
   }
 
   /**
@@ -529,9 +547,9 @@ Closes #[issue-number]`;
       requireReviewers: this.config.requireReviewers,
       defaultReviewers: this.config.defaultReviewers,
       defaultLabels: this.config.defaultLabels,
-      templates: Object.keys(this.templates)
+      templates: Object.keys(this.templates),
     };
   }
 }
 
-module.exports = PullRequestManager; 
+module.exports = PullRequestManager;

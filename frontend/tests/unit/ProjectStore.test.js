@@ -95,7 +95,6 @@ describe('ProjectStore', () => {
       ];
 
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockProjects
       });
 
@@ -115,7 +114,7 @@ describe('ProjectStore', () => {
 
     it('should handle loading errors', async () => {
       mockApiCall.mockResolvedValue({
-        success: false,
+       
         error: 'Failed to load projects'
       });
 
@@ -169,7 +168,6 @@ describe('ProjectStore', () => {
       };
 
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockCreatedProject
       });
 
@@ -196,7 +194,7 @@ describe('ProjectStore', () => {
       };
 
       mockApiCall.mockResolvedValue({
-        success: false,
+       
         error: 'Failed to create project'
       });
 
@@ -252,7 +250,6 @@ describe('ProjectStore', () => {
       };
 
       mockApiCall.mockResolvedValue({
-        success: true,
         data: mockUpdatedProject
       });
 
@@ -273,7 +270,7 @@ describe('ProjectStore', () => {
       };
 
       mockApiCall.mockResolvedValue({
-        success: false,
+       
         error: 'Failed to update project'
       });
 
@@ -329,7 +326,7 @@ describe('ProjectStore', () => {
 
     it('should handle deletion errors', async () => {
       mockApiCall.mockResolvedValue({
-        success: false,
+       
         error: 'Failed to delete project'
       });
 

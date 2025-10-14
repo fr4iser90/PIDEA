@@ -1,13 +1,13 @@
 /**
  * IDEInterface - IDE-specific interface implementation
- * 
+ *
  * This interface extends BaseInterface to provide IDE-specific functionality,
  * including workspace management, port handling, and IDE-specific operations.
  * It serves as a concrete implementation for IDE interfaces.
  */
-const BaseInterface = require('./BaseInterface');
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const BaseInterface = require("./BaseInterface");
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class IDEInterface extends BaseInterface {
   /**
@@ -19,24 +19,24 @@ class IDEInterface extends BaseInterface {
    */
   constructor(interfaceId, interfaceType, config = {}, dependencies = {}) {
     super(interfaceId, interfaceType, config, dependencies);
-    
+
     // IDE-specific properties
     this.workspacePath = config.workspacePath || null;
     this.port = config.port || null;
-    this.ideType = config.ideType || 'unknown';
+    this.ideType = config.ideType || "unknown";
     this.processId = null;
     this.isConnected = false;
     this.lastHeartbeat = null;
-    
+
     // IDE-specific configuration
     this.ideConfig = {
       autoReconnect: config.autoReconnect !== false,
       heartbeatInterval: config.heartbeatInterval || 30000,
       connectionTimeout: config.connectionTimeout || 10000,
       maxRetries: config.maxRetries || 3,
-      ...config.ideConfig
+      ...config.ideConfig,
     };
-    
+
     // Initialize IDE-specific services
     this._initializeIDEServices();
   }
@@ -47,12 +47,12 @@ class IDEInterface extends BaseInterface {
    * @returns {void}
    */
   _initializeIDEServices() {
-    this.logger = this.dependencies.logger || new ServiceLogger('IDEInterface');
+    this.logger = this.dependencies.logger || new ServiceLogger("IDEInterface");
     this.browserManager = this.dependencies.browserManager || null;
     this.portManager = this.dependencies.portManager || null;
     this.workspaceService = this.dependencies.workspaceService || null;
     this.eventBus = this.dependencies.eventBus || null;
-    
+
     // Initialize heartbeat timer
     this.heartbeatTimer = null;
   }
@@ -64,37 +64,36 @@ class IDEInterface extends BaseInterface {
    */
   async initialize(config = {}) {
     try {
-      this.setStatus('initializing');
-      this._log('info', 'Initializing IDE interface', { config });
-      
+      this.setStatus("initializing");
+      this._log("info", "Initializing IDE interface", { config });
+
       // Merge configuration
       this.interfaceConfig = { ...this.interfaceConfig, ...config };
-      
+
       // Validate workspace path
       if (this.workspacePath) {
         await this._validateWorkspacePath();
       }
-      
+
       // Initialize port if provided
       if (this.port) {
         await this._initializePort();
       }
-      
+
       // Initialize IDE-specific components
       await this._initializeIDEComponents();
-      
-      this.setStatus('initialized');
-      this._log('info', 'IDE interface initialized successfully');
-      
-      this._publishEvent('ide.initialized', {
+
+      this.setStatus("initialized");
+      this._log("info", "IDE interface initialized successfully");
+
+      this._publishEvent("ide.initialized", {
         interfaceId: this.interfaceId,
         workspacePath: this.workspacePath,
         port: this.port,
-        ideType: this.ideType
+        ideType: this.ideType,
       });
-      
     } catch (error) {
-      this._handleError(error, 'initialize');
+      this._handleError(error, "initialize");
       throw error;
     }
   }
@@ -105,31 +104,30 @@ class IDEInterface extends BaseInterface {
    */
   async start() {
     try {
-      this.setStatus('starting');
-      this._log('info', 'Starting IDE interface');
-      
+      this.setStatus("starting");
+      this._log("info", "Starting IDE interface");
+
       // Start IDE-specific services
       await this._startIDEServices();
-      
+
       // Establish connection
       await this._establishConnection();
-      
+
       // Start heartbeat monitoring
       this._startHeartbeat();
-      
-      this.setStatus('running');
+
+      this.setStatus("running");
       this.isConnected = true;
-      this._log('info', 'IDE interface started successfully');
-      
-      this._publishEvent('ide.started', {
+      this._log("info", "IDE interface started successfully");
+
+      this._publishEvent("ide.started", {
         interfaceId: this.interfaceId,
         workspacePath: this.workspacePath,
         port: this.port,
-        ideType: this.ideType
+        ideType: this.ideType,
       });
-      
     } catch (error) {
-      this._handleError(error, 'start');
+      this._handleError(error, "start");
       throw error;
     }
   }
@@ -140,31 +138,30 @@ class IDEInterface extends BaseInterface {
    */
   async stop() {
     try {
-      this.setStatus('stopping');
-      this._log('info', 'Stopping IDE interface');
-      
+      this.setStatus("stopping");
+      this._log("info", "Stopping IDE interface");
+
       // Stop heartbeat monitoring
       this._stopHeartbeat();
-      
+
       // Disconnect from IDE
       await this._disconnect();
-      
+
       // Stop IDE-specific services
       await this._stopIDEServices();
-      
-      this.setStatus('stopped');
+
+      this.setStatus("stopped");
       this.isConnected = false;
-      this._log('info', 'IDE interface stopped successfully');
-      
-      this._publishEvent('ide.stopped', {
+      this._log("info", "IDE interface stopped successfully");
+
+      this._publishEvent("ide.stopped", {
         interfaceId: this.interfaceId,
         workspacePath: this.workspacePath,
         port: this.port,
-        ideType: this.ideType
+        ideType: this.ideType,
       });
-      
     } catch (error) {
-      this._handleError(error, 'stop');
+      this._handleError(error, "stop");
       throw error;
     }
   }
@@ -175,32 +172,31 @@ class IDEInterface extends BaseInterface {
    */
   async destroy() {
     try {
-      this.setStatus('destroying');
-      this._log('info', 'Destroying IDE interface');
-      
+      this.setStatus("destroying");
+      this._log("info", "Destroying IDE interface");
+
       // Stop if running
       if (this.isRunning()) {
         await this.stop();
       }
-      
+
       // Clean up resources
       await this._cleanupResources();
-      
+
       // Clear timers
       this._stopHeartbeat();
-      
-      this.setStatus('destroyed');
-      this._log('info', 'IDE interface destroyed successfully');
-      
-      this._publishEvent('ide.destroyed', {
+
+      this.setStatus("destroyed");
+      this._log("info", "IDE interface destroyed successfully");
+
+      this._publishEvent("ide.destroyed", {
         interfaceId: this.interfaceId,
         workspacePath: this.workspacePath,
         port: this.port,
-        ideType: this.ideType
+        ideType: this.ideType,
       });
-      
     } catch (error) {
-      this._handleError(error, 'destroy');
+      this._handleError(error, "destroy");
       throw error;
     }
   }
@@ -218,7 +214,7 @@ class IDEInterface extends BaseInterface {
       processId: this.processId,
       isConnected: this.isConnected,
       lastHeartbeat: this.lastHeartbeat,
-      ideConfig: this.ideConfig
+      ideConfig: this.ideConfig,
     };
   }
 
@@ -228,26 +224,25 @@ class IDEInterface extends BaseInterface {
    */
   async getWorkspaceInfo() {
     if (!this.workspacePath) {
-      throw new Error('No workspace path configured');
+      throw new Error("No workspace path configured");
     }
-    
+
     try {
       if (this.workspaceService) {
         return await this.workspaceService.getWorkspaceInfo(this.workspacePath);
       }
-      
+
       // Fallback to basic workspace info
       return {
         path: this.workspacePath,
         exists: true,
-        type: 'unknown',
-        lastModified: new Date()
+        type: "unknown",
+        lastModified: new Date(),
       };
-      
     } catch (error) {
-      this._log('error', 'Failed to get workspace info', {
+      this._log("error", "Failed to get workspace info", {
         workspacePath: this.workspacePath,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -261,39 +256,38 @@ class IDEInterface extends BaseInterface {
    */
   async executeCommand(command, options = {}) {
     if (!this.isConnected) {
-      throw new Error('IDE interface is not connected');
+      throw new Error("IDE interface is not connected");
     }
-    
+
     try {
-      this._log('info', 'Executing IDE command', { command, options });
-      
+      this._log("info", "Executing IDE command", { command, options });
+
       // Execute command through browser manager if available
       if (this.browserManager) {
         const result = await this.browserManager.executeCommand(command, {
           port: this.port,
           workspacePath: this.workspacePath,
-          ...options
+          ...options,
         });
-        
+
         this.updateActivity();
         return this._createSuccessResponse(result, { command, options });
       }
-      
+
       // Fallback implementation
       return this._createSuccessResponse(
         { command, executed: true, timestamp: new Date() },
-        { command, options }
+        { command, options },
       );
-      
     } catch (error) {
-      this._log('error', 'Failed to execute IDE command', {
+      this._log("error", "Failed to execute IDE command", {
         command,
-        error: error.message
+        error: error.message,
       });
       return this._createErrorResponse(
         `Failed to execute command: ${error.message}`,
-        'COMMAND_EXECUTION_FAILED',
-        { command, options }
+        "COMMAND_EXECUTION_FAILED",
+        { command, options },
       );
     }
   }
@@ -306,39 +300,38 @@ class IDEInterface extends BaseInterface {
    */
   async sendMessage(message, options = {}) {
     if (!this.isConnected) {
-      throw new Error('IDE interface is not connected');
+      throw new Error("IDE interface is not connected");
     }
-    
+
     try {
-      this._log('info', 'Sending message to IDE', { message, options });
-      
+      this._log("info", "Sending message to IDE", { message, options });
+
       // Send message through browser manager if available
       if (this.browserManager) {
         const result = await this.browserManager.sendMessage(message, {
           port: this.port,
           workspacePath: this.workspacePath,
-          ...options
+          ...options,
         });
-        
+
         this.updateActivity();
         return this._createSuccessResponse(result, { message, options });
       }
-      
+
       // Fallback implementation
       return this._createSuccessResponse(
         { message, sent: true, timestamp: new Date() },
-        { message, options }
+        { message, options },
       );
-      
     } catch (error) {
-      this._log('error', 'Failed to send message to IDE', {
+      this._log("error", "Failed to send message to IDE", {
         message,
-        error: error.message
+        error: error.message,
       });
       return this._createErrorResponse(
         `Failed to send message: ${error.message}`,
-        'MESSAGE_SEND_FAILED',
-        { message, options }
+        "MESSAGE_SEND_FAILED",
+        { message, options },
       );
     }
   }
@@ -350,19 +343,21 @@ class IDEInterface extends BaseInterface {
    */
   async _validateWorkspacePath() {
     if (!this.workspaceService) {
-      this._log('warn', 'No workspace service available for validation');
+      this._log("warn", "No workspace service available for validation");
       return;
     }
-    
+
     try {
-      const isValid = await this.workspaceService.validateWorkspacePath(this.workspacePath);
+      const isValid = await this.workspaceService.validateWorkspacePath(
+        this.workspacePath,
+      );
       if (!isValid) {
         throw new Error(`Invalid workspace path: ${this.workspacePath}`);
       }
     } catch (error) {
-      this._log('error', 'Workspace path validation failed', {
+      this._log("error", "Workspace path validation failed", {
         workspacePath: this.workspacePath,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -375,21 +370,21 @@ class IDEInterface extends BaseInterface {
    */
   async _initializePort() {
     if (!this.portManager) {
-      this._log('warn', 'No port manager available for port initialization');
+      this._log("warn", "No port manager available for port initialization");
       return;
     }
-    
+
     try {
       const portInfo = await this.portManager.initializePort(this.port, {
         interfaceId: this.interfaceId,
-        ideType: this.ideType
+        ideType: this.ideType,
       });
-      
-      this._log('info', 'Port initialized', { port: this.port, portInfo });
+
+      this._log("info", "Port initialized", { port: this.port, portInfo });
     } catch (error) {
-      this._log('error', 'Port initialization failed', {
+      this._log("error", "Port initialization failed", {
         port: this.port,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -402,16 +397,19 @@ class IDEInterface extends BaseInterface {
    */
   async _initializeIDEComponents() {
     // Initialize browser manager if available
-    if (this.browserManager && typeof this.browserManager.initialize === 'function') {
+    if (
+      this.browserManager &&
+      typeof this.browserManager.initialize === "function"
+    ) {
       await this.browserManager.initialize({
         port: this.port,
         workspacePath: this.workspacePath,
-        ideType: this.ideType
+        ideType: this.ideType,
       });
     }
-    
+
     // Initialize other IDE-specific components
-    this._log('info', 'IDE components initialized');
+    this._log("info", "IDE components initialized");
   }
 
   /**
@@ -421,12 +419,15 @@ class IDEInterface extends BaseInterface {
    */
   async _startIDEServices() {
     // Start browser manager if available
-    if (this.browserManager && typeof this.browserManager.start === 'function') {
+    if (
+      this.browserManager &&
+      typeof this.browserManager.start === "function"
+    ) {
       await this.browserManager.start();
     }
-    
+
     // Start other IDE-specific services
-    this._log('info', 'IDE services started');
+    this._log("info", "IDE services started");
   }
 
   /**
@@ -436,12 +437,12 @@ class IDEInterface extends BaseInterface {
    */
   async _stopIDEServices() {
     // Stop browser manager if available
-    if (this.browserManager && typeof this.browserManager.stop === 'function') {
+    if (this.browserManager && typeof this.browserManager.stop === "function") {
       await this.browserManager.stop();
     }
-    
+
     // Stop other IDE-specific services
-    this._log('info', 'IDE services stopped');
+    this._log("info", "IDE services stopped");
   }
 
   /**
@@ -452,21 +453,23 @@ class IDEInterface extends BaseInterface {
   async _establishConnection() {
     try {
       // Establish connection through browser manager if available
-      if (this.browserManager && typeof this.browserManager.connect === 'function') {
+      if (
+        this.browserManager &&
+        typeof this.browserManager.connect === "function"
+      ) {
         await this.browserManager.connect({
           port: this.port,
           workspacePath: this.workspacePath,
-          ideType: this.ideType
+          ideType: this.ideType,
         });
       }
-      
+
       this.isConnected = true;
       this.lastHeartbeat = new Date();
-      this._log('info', 'Connection established');
-      
+      this._log("info", "Connection established");
     } catch (error) {
-      this._log('error', 'Failed to establish connection', {
-        error: error.message
+      this._log("error", "Failed to establish connection", {
+        error: error.message,
       });
       throw error;
     }
@@ -480,16 +483,18 @@ class IDEInterface extends BaseInterface {
   async _disconnect() {
     try {
       // Disconnect through browser manager if available
-      if (this.browserManager && typeof this.browserManager.disconnect === 'function') {
+      if (
+        this.browserManager &&
+        typeof this.browserManager.disconnect === "function"
+      ) {
         await this.browserManager.disconnect();
       }
-      
+
       this.isConnected = false;
-      this._log('info', 'Disconnected from IDE');
-      
+      this._log("info", "Disconnected from IDE");
     } catch (error) {
-      this._log('error', 'Failed to disconnect', {
-        error: error.message
+      this._log("error", "Failed to disconnect", {
+        error: error.message,
       });
       // Don't throw error during disconnect
     }
@@ -504,13 +509,13 @@ class IDEInterface extends BaseInterface {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
     }
-    
+
     this.heartbeatTimer = setInterval(() => {
       this._performHeartbeat();
     }, this.ideConfig.heartbeatInterval);
-    
-    this._log('info', 'Heartbeat monitoring started', {
-      interval: this.ideConfig.heartbeatInterval
+
+    this._log("info", "Heartbeat monitoring started", {
+      interval: this.ideConfig.heartbeatInterval,
     });
   }
 
@@ -523,7 +528,7 @@ class IDEInterface extends BaseInterface {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
-      this._log('info', 'Heartbeat monitoring stopped');
+      this._log("info", "Heartbeat monitoring stopped");
     }
   }
 
@@ -535,21 +540,23 @@ class IDEInterface extends BaseInterface {
   _performHeartbeat() {
     try {
       // Perform heartbeat check through browser manager if available
-      if (this.browserManager && typeof this.browserManager.heartbeat === 'function') {
+      if (
+        this.browserManager &&
+        typeof this.browserManager.heartbeat === "function"
+      ) {
         this.browserManager.heartbeat({
           port: this.port,
-          workspacePath: this.workspacePath
+          workspacePath: this.workspacePath,
         });
       }
-      
+
       this.lastHeartbeat = new Date();
       this.updateActivity();
-      
     } catch (error) {
-      this._log('warn', 'Heartbeat check failed', {
-        error: error.message
+      this._log("warn", "Heartbeat check failed", {
+        error: error.message,
       });
-      
+
       // Handle connection loss
       if (this.ideConfig.autoReconnect) {
         this._attemptReconnection();
@@ -563,8 +570,8 @@ class IDEInterface extends BaseInterface {
    * @returns {void}
    */
   _attemptReconnection() {
-    this._log('info', 'Attempting to reconnect');
-    
+    this._log("info", "Attempting to reconnect");
+
     // Implement reconnection logic
     // This would typically involve retrying the connection
     // with exponential backoff
@@ -577,23 +584,26 @@ class IDEInterface extends BaseInterface {
    */
   async _cleanupResources() {
     // Clean up browser manager if available
-    if (this.browserManager && typeof this.browserManager.cleanup === 'function') {
+    if (
+      this.browserManager &&
+      typeof this.browserManager.cleanup === "function"
+    ) {
       await this.browserManager.cleanup();
     }
-    
+
     // Clean up port if available
     if (this.portManager && this.port) {
       try {
         await this.portManager.releasePort(this.port);
       } catch (error) {
-        this._log('warn', 'Failed to release port during cleanup', {
+        this._log("warn", "Failed to release port during cleanup", {
           port: this.port,
-          error: error.message
+          error: error.message,
         });
       }
     }
-    
-    this._log('info', 'Resources cleaned up');
+
+    this._log("info", "Resources cleaned up");
   }
 
   /**
@@ -604,18 +614,18 @@ class IDEInterface extends BaseInterface {
    * @returns {void}
    */
   _publishEvent(eventName, data) {
-    if (this.eventBus && typeof this.eventBus.publish === 'function') {
+    if (this.eventBus && typeof this.eventBus.publish === "function") {
       try {
         this.eventBus.publish(eventName, {
-          source: 'IDEInterface',
+          source: "IDEInterface",
           interfaceId: this.interfaceId,
           timestamp: new Date().toISOString(),
-          ...data
+          ...data,
         });
       } catch (error) {
-        this._log('warn', 'Failed to publish event', {
+        this._log("warn", "Failed to publish event", {
           eventName,
-          error: error.message
+          error: error.message,
         });
       }
     }

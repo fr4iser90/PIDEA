@@ -44,7 +44,7 @@ async syncManualTasks(req, res) {
     // Validate project access
     if (!projectId) {
       return res.status(400).json({
-        success: false,
+       
         error: 'Project ID is required'
       });
     }
@@ -53,14 +53,13 @@ async syncManualTasks(req, res) {
     const result = await this.performManualSync(projectId);
     
     res.json({
-      success: true,
       data: result,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     this.logger.error('Manual sync operation failed:', error);
     res.status(500).json({
-      success: false,
+     
       error: 'Manual sync operation failed',
       message: error.message
     });

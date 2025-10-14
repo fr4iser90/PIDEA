@@ -1,28 +1,28 @@
 /**
  * WorkflowController - REST API endpoints for workflow operations
  */
-const { validationResult } = require('express-validator');
-const { getStepRegistry } = require('@steps');
-const Logger = require('@logging/Logger');
+const { validationResult } = require("express-validator");
+const { getStepRegistry } = require("@steps");
+const Logger = require("@logging/Logger");
 
 class WorkflowController {
-    constructor(dependencies = {}) {
-        this.commandBus = dependencies.commandBus;
-        this.queryBus = dependencies.queryBus;
-        this.logger = dependencies.logger || new Logger('WorkflowController');
-        this.eventBus = dependencies.eventBus;
-        this.application = dependencies.application;
-        this.analysisRepository = dependencies.analysisRepository; // ← HIER das Repository speichern!
-        this.ideManager = dependencies.ideManager;
-        this.taskService = dependencies.taskService;
-        this.analysisApplicationService = dependencies.analysisApplicationService;
-        this.taskQueueStore = dependencies.taskQueueStore;
-        this.workflowLoaderService = dependencies.workflowLoaderService;
-        this.stepProgressService = dependencies.stepProgressService;
-        this.queueHistoryService = dependencies.queueHistoryService;
-    }
+  constructor(dependencies = {}) {
+    this.commandBus = dependencies.commandBus;
+    this.queryBus = dependencies.queryBus;
+    this.logger = dependencies.logger || new Logger("WorkflowController");
+    this.eventBus = dependencies.eventBus;
+    this.application = dependencies.application;
+    this.analysisRepository = dependencies.analysisRepository; // ← HIER das Repository speichern!
+    this.ideManager = dependencies.ideManager;
+    this.taskService = dependencies.taskService;
+    this.analysisApplicationService = dependencies.analysisApplicationService;
+    this.taskQueueStore = dependencies.taskQueueStore;
+    this.workflowLoaderService = dependencies.workflowLoaderService;
+    this.stepProgressService = dependencies.stepProgressService;
+    this.queueHistoryService = dependencies.queueHistoryService;
+  }
 
-    /**
+  /**
      * Execute workflow
      * POST /api/workflow/execute
      * 
@@ -1125,774 +1125,915 @@ class WorkflowController {
         }
     }
     */
-    /**
-     * Get workflow status
-     * GET /api/workflow/status
-     */
-    async getWorkflowStatus(req, res) {
-        try {
-            const { sessionId } = req.query;
-            const userId = req.user?.id;
+  /**
+   * Get workflow status
+   * GET /api/workflow/status
+   */
+  async getWorkflowStatus(req, res) {
+    try {
+      const { sessionId } = req.query;
+      const userId = req.user?.id;
 
-            const query = {
-                sessionId,
-                userId
-            };
+      const query = {
+        sessionId,
+        userId,
+      };
 
-            const result = await this.queryBus.execute('GetWorkflowStatusQuery', query);
+      const result = await this.queryBus.execute(
+        "GetWorkflowStatusQuery",
+        query,
+      );
 
-            this.logger.info('WorkflowController: Workflow status retrieved', {
-                sessionId,
-                userId
-            });
+      this.logger.info("WorkflowController: Workflow status retrieved", {
+        sessionId,
+        userId,
+      });
 
-            res.success(result.status
-            );
+      res.success(result.status);
+    } catch (error) {
+      this.logger.error("WorkflowController: Failed to get workflow status", {
+        sessionId: req.query.sessionId,
+        error: error.message,
+        userId: req.user?.id,
+      });
 
-        } catch (error) {
-            this.logger.error('WorkflowController: Failed to get workflow status', {
-                sessionId: req.query.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.error('Failed to get workflow status', 500, { details: error.message
-             });
-        }
+      res.error("Failed to get workflow status", 500, {
+        details: error.message,
+      });
     }
-    
-    /**
-     * Get workflow progress
-     * GET /api/workflow/progress
-     */
-    async getWorkflowProgress(req, res) {
-        try {
-            const { sessionId } = req.query;
-            const userId = req.user?.id;
+  }
 
-            const query = {
-                sessionId,
-                userId
-            };
+  /**
+   * Get workflow progress
+   * GET /api/workflow/progress
+   */
+  async getWorkflowProgress(req, res) {
+    try {
+      const { sessionId } = req.query;
+      const userId = req.user?.id;
 
-            const result = await this.queryBus.execute('GetWorkflowProgressQuery', query);
+      const query = {
+        sessionId,
+        userId,
+      };
 
-            this.logger.info('WorkflowController: Workflow progress retrieved', {
-                sessionId,
-                userId
-            });
+      const result = await this.queryBus.execute(
+        "GetWorkflowProgressQuery",
+        query,
+      );
 
-            res.success(result.progress
-            );
+      this.logger.info("WorkflowController: Workflow progress retrieved", {
+        sessionId,
+        userId,
+      });
 
-        } catch (error) {
-            this.logger.error('WorkflowController: Failed to get workflow progress', {
-                sessionId: req.query.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
+      res.success(result.progress);
+    } catch (error) {
+      this.logger.error("WorkflowController: Failed to get workflow progress", {
+        sessionId: req.query.sessionId,
+        error: error.message,
+        userId: req.user?.id,
+      });
 
-            res.error('Failed to get workflow progress', 500, { details: error.message
-             });
-        }
+      res.error("Failed to get workflow progress", 500, {
+        details: error.message,
+      });
+    }
+  }
+
+  /**
+   * Get workflow results
+   * GET /api/workflow/results
+   */
+  async getWorkflowResults(req, res) {
+    try {
+      const { sessionId } = req.query;
+      const userId = req.user?.id;
+
+      const query = {
+        sessionId,
+        userId,
+      };
+
+      const result = await this.queryBus.execute(
+        "GetWorkflowResultsQuery",
+        query,
+      );
+
+      this.logger.info("WorkflowController: Workflow results retrieved", {
+        sessionId,
+        userId,
+      });
+
+      res.success(result.results);
+    } catch (error) {
+      this.logger.error("WorkflowController: Failed to get workflow results", {
+        sessionId: req.query.sessionId,
+        error: error.message,
+        userId: req.user?.id,
+      });
+
+      res.error("Failed to get workflow results", 500, {
+        details: error.message,
+      });
+    }
+  }
+
+  /**
+   * Get workflow sessions
+   * GET /api/workflow/sessions
+   */
+  async getWorkflowSessions(req, res) {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        status,
+        workflow,
+        startDate,
+        endDate,
+      } = req.query;
+
+      const userId = req.user?.id;
+
+      const query = {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        filters: {
+          status,
+          workflow,
+          startDate,
+          endDate,
+        },
+        userId,
+      };
+
+      const result = await this.queryBus.execute(
+        "GetWorkflowSessionsQuery",
+        query,
+      );
+
+      this.logger.info("WorkflowController: Workflow sessions retrieved", {
+        count: result.sessions.length,
+        userId,
+      });
+
+      res.success({
+        data: {
+          sessions: result.sessions,
+          pagination: {
+            page: result.page,
+            limit: result.limit,
+            total: result.total,
+            pages: Math.ceil(result.total / result.limit),
+          },
+        },
+      });
+    } catch (error) {
+      this.logger.error("WorkflowController: Failed to get workflow sessions", {
+        error: error.message,
+        userId: req.user?.id,
+      });
+
+      res.error("Failed to get workflow sessions", 500, {
+        details: error.message,
+      });
+    }
+  }
+
+  /**
+   * Get workflow statistics
+   * GET /api/workflow/stats
+   */
+  async getWorkflowStats(req, res) {
+    try {
+      const { timeRange, workflow } = req.query;
+      const userId = req.user?.id;
+
+      const query = {
+        timeRange,
+        workflow,
+        userId,
+      };
+
+      const result = await this.queryBus.execute(
+        "GetWorkflowStatsQuery",
+        query,
+      );
+
+      this.logger.info("WorkflowController: Workflow statistics retrieved", {
+        userId,
+      });
+
+      res.success(result.stats);
+    } catch (error) {
+      this.logger.error(
+        "WorkflowController: Failed to get workflow statistics",
+        {
+          error: error.message,
+          userId: req.user?.id,
+        },
+      );
+
+      res.error("Failed to get workflow statistics", 500, {
+        details: error.message,
+      });
+    }
+  }
+
+  /**
+   * Stop workflow
+   * POST /api/workflow/stop
+   */
+  async stopWorkflow(req, res) {
+    try {
+      const { sessionId } = req.body;
+      const userId = req.user?.id;
+
+      this.logger.info("WorkflowController: Stopping workflow", {
+        sessionId,
+        userId,
+      });
+
+      // Emit stop event
+      if (this.eventBus) {
+        this.eventBus.publish("workflow:stopped", {
+          sessionId,
+          userId,
+        });
+      }
+
+      res.success({ message: "Workflow stopped successfully" });
+    } catch (error) {
+      this.logger.error("WorkflowController: Failed to stop workflow", {
+        sessionId: req.body.sessionId,
+        error: error.message,
+        userId: req.user?.id,
+      });
+
+      res.error("Failed to stop workflow", 500, { details: error.message });
+    }
+  }
+
+  /**
+   * Execute workflow steps from JSON configuration
+   */
+  async executeWorkflowSteps(
+    workflow,
+    taskData,
+    projectId,
+    userId,
+    workspacePath,
+    options,
+  ) {
+    const results = {
+      steps: [],
+      errors: [],
+      duration: 0,
+    };
+
+    const startTime = Date.now();
+    const workflowId = `workflow_${projectId}_${Date.now()}`;
+
+    // Get active IDE for workflow context
+    let activeIDE = null;
+    if (this.ideManager) {
+      try {
+        activeIDE = await this.ideManager.getActiveIDE();
+        this.logger.info(
+          "WorkflowController: Active IDE detected for workflow",
+          {
+            port: activeIDE?.port,
+            type: activeIDE?.type,
+          },
+        );
+      } catch (error) {
+        this.logger.warn(
+          "WorkflowController: Failed to get active IDE for workflow:",
+          error.message,
+        );
+      }
     }
 
-    /**
-     * Get workflow results
-     * GET /api/workflow/results
-     */
-    async getWorkflowResults(req, res) {
-        try {
-            const { sessionId } = req.query;
-            const userId = req.user?.id;
+    try {
+      this.logger.info("WorkflowController: Starting workflow execution", {
+        workflowName: workflow.name,
+        stepsCount: workflow.steps.length,
+        workflowId,
+      });
 
-            const query = {
-                sessionId,
-                userId
-            };
+      // Add workflow to queue if queue monitoring service is available
+      let queueItemId = null;
+      if (this.taskQueueStore) {
+        // Use central taskModes for type detection
+        const taskModes = require("@domain/constants/taskModes");
+        const taskMode = taskModes.getTypeFromName(workflow.name);
 
-            const result = await this.queryBus.execute('GetWorkflowResultsQuery', query);
-
-            this.logger.info('WorkflowController: Workflow results retrieved', {
-                sessionId,
-                userId
-            });
-
-            res.success(result.results
-            );
-
-        } catch (error) {
-            this.logger.error('WorkflowController: Failed to get workflow results', {
-                sessionId: req.query.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.error('Failed to get workflow results', 500, { details: error.message
-             });
-        }
-    }
-
-    /**
-     * Get workflow sessions
-     * GET /api/workflow/sessions
-     */
-    async getWorkflowSessions(req, res) {
-        try {
-            const {
-                page = 1,
-                limit = 20,
-                status,
-                workflow,
-                startDate,
-                endDate
-            } = req.query;
-
-            const userId = req.user?.id;
-
-            const query = {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                filters: {
-                    status,
-                    workflow,
-                    startDate,
-                    endDate
-                },
-                userId
-            };
-
-            const result = await this.queryBus.execute('GetWorkflowSessionsQuery', query);
-
-            this.logger.info('WorkflowController: Workflow sessions retrieved', {
-                count: result.sessions.length,
-                userId
-            });
-
-            res.success({
-                data: {
-                    sessions: result.sessions,
-                    pagination: {
-                        page: result.page,
-                        limit: result.limit,
-                        total: result.total,
-                        pages: Math.ceil(result.total / result.limit)
-                    }
-                }
-            });
-
-        } catch (error) {
-            this.logger.error('WorkflowController: Failed to get workflow sessions', {
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.error('Failed to get workflow sessions', 500, { details: error.message
-             });
-        }
-    }
-
-    /**
-     * Get workflow statistics
-     * GET /api/workflow/stats
-     */
-    async getWorkflowStats(req, res) {
-        try {
-            const { timeRange, workflow } = req.query;
-            const userId = req.user?.id;
-
-            const query = {
-                timeRange,
-                workflow,
-                userId
-            };
-
-            const result = await this.queryBus.execute('GetWorkflowStatsQuery', query);
-
-            this.logger.info('WorkflowController: Workflow statistics retrieved', {
-                userId
-            });
-
-            res.success(result.stats
-            );
-
-        } catch (error) {
-            this.logger.error('WorkflowController: Failed to get workflow statistics', {
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.error('Failed to get workflow statistics', 500, { details: error.message
-             });
-        }
-    }
-
-    /**
-     * Stop workflow
-     * POST /api/workflow/stop
-     */
-    async stopWorkflow(req, res) {
-        try {
-            const { sessionId } = req.body;
-            const userId = req.user?.id;
-
-            this.logger.info('WorkflowController: Stopping workflow', {
-                sessionId,
-                userId
-            });
-
-            // Emit stop event
-            if (this.eventBus) {
-                this.eventBus.publish('workflow:stopped', {
-                    sessionId,
-                    userId
-                });
-            }
-
-            res.success({message: 'Workflow stopped successfully'});
-
-        } catch (error) {
-            this.logger.error('WorkflowController: Failed to stop workflow', {
-                sessionId: req.body.sessionId,
-                error: error.message,
-                userId: req.user?.id
-            });
-
-            res.error('Failed to stop workflow', 500, { details: error.message
-             });
-        }
-    }
-
-    /**
-     * Execute workflow steps from JSON configuration
-     */
-    async executeWorkflowSteps(workflow, taskData, projectId, userId, workspacePath, options) {
-        const results = {
-            steps: [],
-            errors: [],
-            duration: 0
+        const queueItem = {
+          id: workflowId,
+          type: taskMode,
+          title: `${workflow.name} Workflow`,
+          description: `Executing ${workflow.steps.length} steps for project ${projectId}`,
+          status: "running",
+          progress: 0,
+          totalSteps: workflow.steps.length,
+          currentStep: 0,
+          steps: workflow.steps.map((step, index) => ({
+            id: `${workflowId}_step_${index}`,
+            name: step.name,
+            type: step.type,
+            status: "pending",
+            progress: 0,
+          })),
+          createdAt: new Date(),
+          startedAt: new Date(),
+          projectId,
+          userId,
         };
 
-        const startTime = Date.now();
-        const workflowId = `workflow_${projectId}_${Date.now()}`;
-
-        // Get active IDE for workflow context
-        let activeIDE = null;
-        if (this.ideManager) {
-            try {
-                activeIDE = await this.ideManager.getActiveIDE();
-                this.logger.info('WorkflowController: Active IDE detected for workflow', { 
-                    port: activeIDE?.port,
-                    type: activeIDE?.type 
-                });
-            } catch (error) {
-                this.logger.warn('WorkflowController: Failed to get active IDE for workflow:', error.message);
-            }
-        }
-
-        try {
-            this.logger.info('WorkflowController: Starting workflow execution', {
-                workflowName: workflow.name,
-                stepsCount: workflow.steps.length,
-                workflowId
-            });
-
-            // Add workflow to queue if queue monitoring service is available
-            let queueItemId = null;
-            if (this.taskQueueStore) {
-                // Use central taskModes for type detection
-                const taskModes = require('@domain/constants/taskModes');
-                const taskMode = taskModes.getTypeFromName(workflow.name);
-                
-                const queueItem = {
-                    id: workflowId,
-                    type: taskMode,
-                    title: `${workflow.name} Workflow`,
-                    description: `Executing ${workflow.steps.length} steps for project ${projectId}`,
-                    status: 'running',
-                    progress: 0,
-                    totalSteps: workflow.steps.length,
-                    currentStep: 0,
-                    steps: workflow.steps.map((step, index) => ({
-                        id: `${workflowId}_step_${index}`,
-                        name: step.name,
-                        type: step.type,
-                        status: 'pending',
-                        progress: 0
-                    })),
-                    createdAt: new Date(),
-                    startedAt: new Date(),
-                    projectId,
-                    userId
-                };
-
-                const addedItem = await this.taskQueueStore.addToQueue(projectId, userId, queueItem);
-                queueItemId = addedItem.id; // Speichere die Queue-Item-ID!
-                this.logger.info('WorkflowController: Added workflow to queue', { workflowId, queueItemId });
-
-                // Initialize step progress for the workflow
-                if (this.stepProgressService) {
-                    await this.stepProgressService.initializeTaskStepProgress(projectId, queueItemId, workflow.steps);
-                    this.logger.info('WorkflowController: Initialized step progress', { workflowId, queueItemId });
-                }
-            }
-
-            // 🔄 AUTOMATIC STATUS TRANSITION: Move task to in-progress before workflow execution
-            if (taskData && taskData.id && this.taskService) {
-                try {
-                    const task = await this.taskService.taskRepository.findById(taskData.id);
-                    if (task && task.status.value === 'pending') {
-                        this.logger.info('🔄 WorkflowController: Moving task to in-progress before workflow execution', { 
-                            taskId: taskData.id,
-                            workflowName: workflow.name 
-                        });
-                        await this.taskService.moveTaskToInProgress(taskData.id);
-                    }
-                } catch (error) {
-                    this.logger.error('❌ WorkflowController: Failed to move task to in-progress', {
-                        taskId: taskData.id,
-                        error: error.message
-                    });
-                }
-            }
-
-            for (let i = 0; i < workflow.steps.length; i++) {
-                const step = workflow.steps[i];
-                const stepStartTime = Date.now();
-                const stepId = `${workflowId}_step_${i}`;
-                
-                try {
-                    this.logger.info('WorkflowController: Executing step', {
-                        stepName: step.name,
-                        stepType: step.type,
-                        stepIndex: i + 1,
-                        totalSteps: workflow.steps.length
-                    });
-
-                    // Update queue with current step
-                    if (this.taskQueueStore && queueItemId) {
-                        await this.taskQueueStore.updateStepProgress(projectId, queueItemId, stepId, {
-                            status: 'running',
-                            progress: 0
-                        });
-                    }
-
-                    const stepResult = await this.executeStep(step, taskData, projectId, userId, workspacePath, options, activeIDE);
-                    
-                    const stepDuration = Date.now() - stepStartTime;
-                    const stepProgress = {
-                        name: step.name,
-                        type: step.type,
-                        success: stepResult.success,
-                        duration: stepDuration,
-                        data: stepResult.data,
-                        error: stepResult.error
-                    };
-
-                    results.steps.push(stepProgress);
-
-                    // Update queue with step completion
-                    if (this.taskQueueStore && queueItemId) {
-                        await this.taskQueueStore.updateStepProgress(projectId, queueItemId, stepId, {
-                            status: stepResult.success ? 'completed' : 'failed',
-                            progress: 100,
-                            result: stepProgress
-                        });
-
-                        // Update overall workflow progress
-                        const overallProgress = Math.round(((i + 1) / workflow.steps.length) * 100);
-                        await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
-                            progress: overallProgress,
-                            currentStep: i + 1
-                        });
-                    }
-
-                    if (!stepResult.success) {
-                        results.errors.push(`Step ${step.name} failed: ${stepResult.error}`);
-                        if (step.strict !== false) {
-                            break;
-                        }
-                    }
-
-                } catch (error) {
-                    this.logger.error('WorkflowController: Step execution failed', {
-                        stepName: step.name,
-                        error: error.message
-                    });
-
-                    const stepDuration = Date.now() - stepStartTime;
-                    const stepProgress = {
-                        name: step.name,
-                        type: step.type,
-                        duration: stepDuration,
-                        error: error.message
-                    };
-
-                    results.steps.push(stepProgress);
-
-                    // Update queue with step failure
-                    if (this.taskQueueStore && queueItemId) {
-                        await this.taskQueueStore.updateStepProgress(projectId, queueItemId, stepId, {
-                            status: 'failed',
-                            progress: 100,
-                            result: stepProgress
-                        });
-                    }
-
-                    results.errors.push(`Step ${step.name} failed: ${error.message}`);
-                    
-                    if (step.strict !== false) {
-                        break;
-                    }
-                }
-            }
-
-            // Update queue with workflow completion
-            if (this.taskQueueStore && queueItemId) {
-                await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
-                    status: results.success ? 'completed' : 'failed',
-                    progress: 100,
-                    completedAt: new Date()
-                });
-            }
-
-            // Add to queue history when workflow completes
-            if (this.queueHistoryService && queueItemId) {
-                try {
-                    const taskModes = require('@domain/constants/taskModes');
-                    const taskMode = taskModes.getTypeFromName(workflow.name);
-                    
-                    await this.queueHistoryService.persistWorkflowHistory({
-                        id: queueItemId,
-                        type: taskMode,
-                        status: results.success ? 'completed' : 'failed',
-                        createdAt: new Date(startTime),
-                        completedAt: new Date(),
-                        executionTimeMs: results.duration,
-                        userId: userId,
-                        metadata: {
-                            workflowName: workflow.name,
-                            totalSteps: workflow.steps.length,
-                            completedSteps: results.steps.filter(s => s.success).length,
-                            failedSteps: results.steps.filter(s => !s.success).length,
-                            errors: results.errors
-                        },
-                        stepsData: results.steps
-                    });
-                    
-                    this.logger.info('WorkflowController: Added workflow to history', { 
-                        workflowId, 
-                        queueItemId, 
-                        taskMode 
-                    });
-                } catch (error) {
-                    this.logger.error('WorkflowController: Failed to add workflow to history', {
-                        workflowId,
-                        queueItemId,
-                        error: error.message
-                    });
-                }
-            }
-
-            // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed ONLY if workflow was truly successful
-            // Check if workflow was successful AND no critical steps failed
-            const hasCriticalFailures = results.errors && results.errors.length > 0;
-            const isWorkflowTrulySuccessful = results.success && !hasCriticalFailures;
-            
-            if (isWorkflowTrulySuccessful && taskData && taskData.id && this.taskService) {
-                try {
-                    this.logger.info('🔄 WorkflowController: Moving task to completed after successful workflow', { 
-                        taskId: taskData.id,
-                        workflowName: workflow.name,
-                        errorsCount: results.errors ? results.errors.length : 0
-                    });
-                    await this.taskService.moveTaskToCompleted(taskData.id);
-                } catch (error) {
-                    this.logger.error('❌ WorkflowController: Failed to move task to completed', {
-                        taskId: taskData.id,
-                        error: error.message
-                    });
-                }
-            } else if (taskData && taskData.id) {
-                this.logger.warn('⚠️ WorkflowController: NOT moving task to completed due to workflow failures', {
-                    taskId: taskData.id,
-                    workflowName: workflow.name,
-                    success: results.success,
-                    errorsCount: results.errors ? results.errors.length : 0,
-                    hasCriticalFailures
-                });
-            }
-
-        } catch (error) {
-            this.logger.error('WorkflowController: Workflow execution failed', {
-                workflowName: workflow.name,
-                error: error.message
-            });
-            
-            results.errors.push(`Workflow execution failed: ${error.message}`);
-
-            // Update queue with workflow failure
-            if (this.taskQueueStore && queueItemId) {
-                await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
-                    status: 'failed',
-                    error: error.message,
-                    completedAt: new Date()
-                });
-            }
-        }
-
-        results.duration = Date.now() - startTime;
-
-        this.logger.info('WorkflowController: Workflow execution completed', {
-            workflowName: workflow.name,
-            success: results.success,
-            duration: results.duration,
-            stepsCompleted: results.steps.length,
-            errorsCount: results.errors.length,
-            workflowId
+        const addedItem = await this.taskQueueStore.addToQueue(
+          projectId,
+          userId,
+          queueItem,
+        );
+        queueItemId = addedItem.id; // Speichere die Queue-Item-ID!
+        this.logger.info("WorkflowController: Added workflow to queue", {
+          workflowId,
+          queueItemId,
         });
 
-        return results;
+        // Initialize step progress for the workflow
+        if (this.stepProgressService) {
+          await this.stepProgressService.initializeTaskStepProgress(
+            projectId,
+            queueItemId,
+            workflow.steps,
+          );
+          this.logger.info("WorkflowController: Initialized step progress", {
+            workflowId,
+            queueItemId,
+          });
+        }
+      }
+
+      // 🔄 AUTOMATIC STATUS TRANSITION: Move task to in-progress before workflow execution
+      if (taskData && taskData.id && this.taskService) {
+        try {
+          const task = await this.taskService.taskRepository.findById(
+            taskData.id,
+          );
+          if (task && task.status.value === "pending") {
+            this.logger.info(
+              "🔄 WorkflowController: Moving task to in-progress before workflow execution",
+              {
+                taskId: taskData.id,
+                workflowName: workflow.name,
+              },
+            );
+            await this.taskService.moveTaskToInProgress(taskData.id);
+          }
+        } catch (error) {
+          this.logger.error(
+            "❌ WorkflowController: Failed to move task to in-progress",
+            {
+              taskId: taskData.id,
+              error: error.message,
+            },
+          );
+        }
+      }
+
+      for (let i = 0; i < workflow.steps.length; i++) {
+        const step = workflow.steps[i];
+        const stepStartTime = Date.now();
+        const stepId = `${workflowId}_step_${i}`;
+
+        try {
+          this.logger.info("WorkflowController: Executing step", {
+            stepName: step.name,
+            stepType: step.type,
+            stepIndex: i + 1,
+            totalSteps: workflow.steps.length,
+          });
+
+          // Update queue with current step
+          if (this.taskQueueStore && queueItemId) {
+            await this.taskQueueStore.updateStepProgress(
+              projectId,
+              queueItemId,
+              stepId,
+              {
+                status: "running",
+                progress: 0,
+              },
+            );
+          }
+
+          const stepResult = await this.executeStep(
+            step,
+            taskData,
+            projectId,
+            userId,
+            workspacePath,
+            options,
+            activeIDE,
+          );
+
+          const stepDuration = Date.now() - stepStartTime;
+          const stepProgress = {
+            name: step.name,
+            type: step.type,
+            success: stepResult.success,
+            duration: stepDuration,
+            data: stepResult.data,
+            error: stepResult.error,
+          };
+
+          results.steps.push(stepProgress);
+
+          // Update queue with step completion
+          if (this.taskQueueStore && queueItemId) {
+            await this.taskQueueStore.updateStepProgress(
+              projectId,
+              queueItemId,
+              stepId,
+              {
+                status: stepResult.success ? "completed" : "failed",
+                progress: 100,
+                result: stepProgress,
+              },
+            );
+
+            // Update overall workflow progress
+            const overallProgress = Math.round(
+              ((i + 1) / workflow.steps.length) * 100,
+            );
+            await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
+              progress: overallProgress,
+              currentStep: i + 1,
+            });
+          }
+
+          if (!stepResult.success) {
+            results.errors.push(
+              `Step ${step.name} failed: ${stepResult.error}`,
+            );
+            if (step.strict !== false) {
+              break;
+            }
+          }
+        } catch (error) {
+          this.logger.error("WorkflowController: Step execution failed", {
+            stepName: step.name,
+            error: error.message,
+          });
+
+          const stepDuration = Date.now() - stepStartTime;
+          const stepProgress = {
+            name: step.name,
+            type: step.type,
+            duration: stepDuration,
+            error: error.message,
+          };
+
+          results.steps.push(stepProgress);
+
+          // Update queue with step failure
+          if (this.taskQueueStore && queueItemId) {
+            await this.taskQueueStore.updateStepProgress(
+              projectId,
+              queueItemId,
+              stepId,
+              {
+                status: "failed",
+                progress: 100,
+                result: stepProgress,
+              },
+            );
+          }
+
+          results.errors.push(`Step ${step.name} failed: ${error.message}`);
+
+          if (step.strict !== false) {
+            break;
+          }
+        }
+      }
+
+      // Update queue with workflow completion
+      if (this.taskQueueStore && queueItemId) {
+        await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
+          status: results.success ? "completed" : "failed",
+          progress: 100,
+          completedAt: new Date(),
+        });
+      }
+
+      // Add to queue history when workflow completes
+      if (this.queueHistoryService && queueItemId) {
+        try {
+          const taskModes = require("@domain/constants/taskModes");
+          const taskMode = taskModes.getTypeFromName(workflow.name);
+
+          await this.queueHistoryService.persistWorkflowHistory({
+            id: queueItemId,
+            type: taskMode,
+            status: results.success ? "completed" : "failed",
+            createdAt: new Date(startTime),
+            completedAt: new Date(),
+            executionTimeMs: results.duration,
+            userId: userId,
+            metadata: {
+              workflowName: workflow.name,
+              totalSteps: workflow.steps.length,
+              completedSteps: results.steps.filter((s) => s.success).length,
+              failedSteps: results.steps.filter((s) => !s.success).length,
+              errors: results.errors,
+            },
+            stepsData: results.steps,
+          });
+
+          this.logger.info("WorkflowController: Added workflow to history", {
+            workflowId,
+            queueItemId,
+            taskMode,
+          });
+        } catch (error) {
+          this.logger.error(
+            "WorkflowController: Failed to add workflow to history",
+            {
+              workflowId,
+              queueItemId,
+              error: error.message,
+            },
+          );
+        }
+      }
+
+      // 🔄 AUTOMATIC STATUS TRANSITION: Move task to completed ONLY if workflow was truly successful
+      // Check if workflow was successful AND no critical steps failed
+      const hasCriticalFailures = results.errors && results.errors.length > 0;
+      const isWorkflowTrulySuccessful = results.success && !hasCriticalFailures;
+
+      if (
+        isWorkflowTrulySuccessful &&
+        taskData &&
+        taskData.id &&
+        this.taskService
+      ) {
+        try {
+          this.logger.info(
+            "🔄 WorkflowController: Moving task to completed after successful workflow",
+            {
+              taskId: taskData.id,
+              workflowName: workflow.name,
+              errorsCount: results.errors ? results.errors.length : 0,
+            },
+          );
+          await this.taskService.moveTaskToCompleted(taskData.id);
+        } catch (error) {
+          this.logger.error(
+            "❌ WorkflowController: Failed to move task to completed",
+            {
+              taskId: taskData.id,
+              error: error.message,
+            },
+          );
+        }
+      } else if (taskData && taskData.id) {
+        this.logger.warn(
+          "⚠️ WorkflowController: NOT moving task to completed due to workflow failures",
+          {
+            taskId: taskData.id,
+            workflowName: workflow.name,
+            success: results.success,
+            errorsCount: results.errors ? results.errors.length : 0,
+            hasCriticalFailures,
+          },
+        );
+      }
+    } catch (error) {
+      this.logger.error("WorkflowController: Workflow execution failed", {
+        workflowName: workflow.name,
+        error: error.message,
+      });
+
+      results.errors.push(`Workflow execution failed: ${error.message}`);
+
+      // Update queue with workflow failure
+      if (this.taskQueueStore && queueItemId) {
+        await this.taskQueueStore.updateQueueItem(projectId, queueItemId, {
+          status: "failed",
+          error: error.message,
+          completedAt: new Date(),
+        });
+      }
     }
 
-    /**
-     * Execute individual workflow step using existing StepRegistry
-     */
-    async executeStep(step, taskData, projectId, userId, workspacePath, options, activeIDE = null) {
+    results.duration = Date.now() - startTime;
+
+    this.logger.info("WorkflowController: Workflow execution completed", {
+      workflowName: workflow.name,
+      success: results.success,
+      duration: results.duration,
+      stepsCompleted: results.steps.length,
+      errorsCount: results.errors.length,
+      workflowId,
+    });
+
+    return results;
+  }
+
+  /**
+   * Execute individual workflow step using existing StepRegistry
+   */
+  async executeStep(
+    step,
+    taskData,
+    projectId,
+    userId,
+    workspacePath,
+    options,
+    activeIDE = null,
+  ) {
+    try {
+      // Get StepRegistry
+      const { getStepRegistry } = require("@steps");
+      const stepRegistry = getStepRegistry();
+
+      // Get step name from step configuration
+      const stepName = step.step || step.type;
+
+      this.logger.info("WorkflowController: Executing step via StepRegistry", {
+        stepName,
+        stepType: step.type,
+      });
+
+      // Format prompt if needed
+      let stepOptions = {
+        projectPath: workspacePath,
+        projectId,
+        userId,
+        taskData,
+        activeIDE, // Add activeIDE to step context
+        ...step.options,
+        ...options,
+      };
+
+      // Format prompt for IDE steps
+      if (step.type === "ide_send_message_step") {
+        // If useTaskPrompt is true, use the actual task prompt from TaskService
+        if (step.options?.useTaskPrompt && taskData) {
+          // Use the existing TaskService from the application context
+          if (this.taskService) {
+            // Create a task object with the data
+            const task = {
+              id: taskData.id,
+              title: taskData.title,
+              description: taskData.description,
+              type: { value: taskData.type },
+              metadata: taskData.metadata || {},
+            };
+
+            // Check if this is a review workflow
+            if (options.taskMode === "task-review") {
+              const reviewPrompt = await this.taskService.buildTaskReviewPrompt(
+                task,
+                options,
+              );
+              stepOptions.message = reviewPrompt;
+            } else if (options.taskMode === "task-check-state") {
+              const checkStatePrompt =
+                await this.taskService.buildTaskCheckStatePrompt(task, options);
+              stepOptions.message = checkStatePrompt;
+            } else {
+              // Use the new smart prompt building method
+              const taskPrompt = await this.taskService.buildTaskPromptForStep(
+                task,
+                {
+                  ...options,
+                  stepName: step.name,
+                },
+              );
+              stepOptions.message = taskPrompt;
+            }
+          } else {
+            this.logger.error("TaskService not available for prompt building");
+            stepOptions.message = `Execute the following task:\n\n${taskData.title}\n\n${taskData.description || ""}`;
+          }
+        } else if (step.options?.message) {
+          // Fallback to template-based prompt
+          const WorkflowLoaderService = require("@domain/services/workflow/WorkflowLoaderService");
+          const workflowLoader = new WorkflowLoaderService();
+          await workflowLoader.loadWorkflows();
+
+          const formattedPrompt = workflowLoader.formatPromptForStep(
+            step,
+            taskData,
+          );
+          if (formattedPrompt) {
+            stepOptions.message = formattedPrompt;
+          }
+        }
+      }
+
+      // Execute step using existing StepRegistry
+      const result = await stepRegistry.executeStep(stepName, stepOptions);
+
+      this.logger.info("WorkflowController: Step executed successfully", {
+        stepName,
+        success: result.success,
+        hasData: !!result.data,
+        hasResult: !!result.result,
+        resultKeys: result.result ? Object.keys(result.result) : null,
+        stepType: step.type,
+      });
+
+      // Save analysis result to database if this is an analysis step and has results
+      if (
+        result.success &&
+        step.type === "analysis" &&
+        (result.data || result.result)
+      ) {
         try {
-            // Get StepRegistry
-            const { getStepRegistry } = require('@steps');
-            const stepRegistry = getStepRegistry();
-            
-            // Get step name from step configuration
-            const stepName = step.step || step.type;
-            
-            this.logger.info('WorkflowController: Executing step via StepRegistry', {
+          // Use the centralized analysis repository (handles both PostgreSQL and SQLite)
+          const analysisRepo = this.analysisRepository;
+
+          // DEBUG: Log repository availability
+          this.logger.info(
+            "WorkflowController: DEBUG - Analysis repository check",
+            {
+              hasAnalysisRepository: !!this.analysisRepository,
+              analysisRepositoryType: typeof this.analysisRepository,
+              stepName,
+              stepType: step.type,
+              hasResultData: !!result.data,
+            },
+          );
+
+          if (!analysisRepo) {
+            this.logger.warn(
+              "WorkflowController: Analysis repository not available, skipping database save",
+            );
+          } else {
+            const Analysis = require("@domain/entities/Analysis");
+
+            // Create new analysis entry with proper metadata
+            const analysis = Analysis.create(projectId, stepName, {
+              result: result.result || result.data,
+              metadata: {
                 stepName,
-                stepType: step.type
-            });
-            
-            // Format prompt if needed
-            let stepOptions = {
                 projectPath: workspacePath,
-                projectId,
-                userId,
-                taskData,
-                activeIDE, // Add activeIDE to step context
-                ...step.options,
-                ...options
-            };
+                workflowExecution: true,
+                executionMethod: "workflow",
+                timestamp: new Date().toISOString(),
+                executionTime: result.duration || null,
+                stepType: step.type,
+                stepOptions: Object.keys(stepOptions),
+              },
+            });
 
-            // Format prompt for IDE steps
-            if (step.type === 'ide_send_message_step') {
-                // If useTaskPrompt is true, use the actual task prompt from TaskService
-                if (step.options?.useTaskPrompt && taskData) {
-                    // Use the existing TaskService from the application context
-                    if (this.taskService) {
-                        // Create a task object with the data
-                        const task = {
-                            id: taskData.id,
-                            title: taskData.title,
-                            description: taskData.description,
-                            type: { value: taskData.type },
-                            metadata: taskData.metadata || {}
-                        };
-                        
-                        // Check if this is a review workflow
-                        if (options.taskMode === 'task-review') {
-                            const reviewPrompt = await this.taskService.buildTaskReviewPrompt(task, options);
-                            stepOptions.message = reviewPrompt;
-                        } else if (options.taskMode === 'task-check-state') {
-                            const checkStatePrompt = await this.taskService.buildTaskCheckStatePrompt(task, options);
-                            stepOptions.message = checkStatePrompt;
-                        } else {
-                            // Use the new smart prompt building method
-                            const taskPrompt = await this.taskService.buildTaskPromptForStep(task, {
-                                ...options,
-                                stepName: step.name
-                            });
-                            stepOptions.message = taskPrompt;
-                        }
-                    } else {
-                        this.logger.error('TaskService not available for prompt building');
-                        stepOptions.message = `Execute the following task:\n\n${taskData.title}\n\n${taskData.description || ''}`;
-                    }
-                } else if (step.options?.message) {
-                    // Fallback to template-based prompt
-                    const WorkflowLoaderService = require('@domain/services/workflow/WorkflowLoaderService');
-                    const workflowLoader = new WorkflowLoaderService();
-                    await workflowLoader.loadWorkflows();
-                    
-                    const formattedPrompt = workflowLoader.formatPromptForStep(step, taskData);
-                    if (formattedPrompt) {
-                        stepOptions.message = formattedPrompt;
-                    }
-                }
-            }
-            
-            // Execute step using existing StepRegistry
-            const result = await stepRegistry.executeStep(stepName, stepOptions);
-            
-            this.logger.info('WorkflowController: Step executed successfully', {
+            // Set as completed
+            analysis.status = "completed";
+            analysis.progress = 100;
+            analysis.completedAt = new Date();
+            analysis.executionTime = result.duration || null;
+
+            // Let the repository handle the database-specific logic
+            await analysisRepo.save(analysis);
+
+            this.logger.info(
+              "WorkflowController: Analysis result saved to database",
+              {
+                analysisId: analysis.id,
+                analysisType: stepName,
                 stepName,
-                success: result.success,
-                hasData: !!result.data,
-                hasResult: !!result.result,
-                resultKeys: result.result ? Object.keys(result.result) : null,
-                stepType: step.type
-            });
-            
-            // Save analysis result to database if this is an analysis step and has results
-            if (result.success && step.type === 'analysis' && (result.data || result.result)) {
-                try {
-                    // Use the centralized analysis repository (handles both PostgreSQL and SQLite)
-                    const analysisRepo = this.analysisRepository;
-                    
-                    // DEBUG: Log repository availability
-                    this.logger.info('WorkflowController: DEBUG - Analysis repository check', {
-                        hasAnalysisRepository: !!this.analysisRepository,
-                        analysisRepositoryType: typeof this.analysisRepository,
-                        stepName,
-                        stepType: step.type,
-                        hasResultData: !!result.data
-                    });
-                    
-                    if (!analysisRepo) {
-                        this.logger.warn('WorkflowController: Analysis repository not available, skipping database save');
-                    } else {
-                        const Analysis = require('@domain/entities/Analysis');
-                        
-                        // Create new analysis entry with proper metadata
-                        const analysis = Analysis.create(projectId, stepName, {
-                            result: result.result || result.data,
-                            metadata: {
-                                stepName,
-                                projectPath: workspacePath,
-                                workflowExecution: true,
-                                executionMethod: 'workflow',
-                                timestamp: new Date().toISOString(),
-                                executionTime: result.duration || null,
-                                stepType: step.type,
-                                stepOptions: Object.keys(stepOptions)
-                            }
-                        });
-                        
-                        // Set as completed
-                        analysis.status = 'completed';
-                        analysis.progress = 100;
-                        analysis.completedAt = new Date();
-                        analysis.executionTime = result.duration || null;
-                        
-                        // Let the repository handle the database-specific logic
-                        await analysisRepo.save(analysis);
-                        
-                        this.logger.info('WorkflowController: Analysis result saved to database', {
-                            analysisId: analysis.id,
-                            analysisType: stepName,
-                            stepName
-                        });
-                    }
-                } catch (dbError) {
-                    this.logger.warn('WorkflowController: Failed to save analysis result to database', {
-                        error: dbError.message,
-                        stepName,
-                        analysisType: stepName
-                    });
-                }
-            }
-            
-            // Save individual step results to database (for orchestrators that contain multiple steps)
-            if (result.success && result.result && result.result.details) {
-                try {
-                    const analysisRepo = this.analysisRepository;
-                    
-                    // DEBUG: Log repository availability for individual steps
-                    this.logger.info('WorkflowController: DEBUG - Individual steps repository check', {
-                        hasAnalysisRepository: !!this.analysisRepository,
-                        analysisRepositoryType: typeof this.analysisRepository,
-                        stepName: step.step || step.type,
-                        hasResultDetails: !!result.result.details,
-                        detailsCount: Object.keys(result.result.details || {}).length
-                    });
-                    
-                    if (!analysisRepo) {
-                        this.logger.warn('WorkflowController: Analysis repository not available, skipping individual step saves');
-                    } else {
-                        const Analysis = require('@domain/entities/Analysis');
-                        
-                        // Save each individual step result
-                        for (const [stepName, stepResult] of Object.entries(result.result.details)) {
-                            if (stepResult && stepResult.success) {
-                                const individualAnalysis = Analysis.create(projectId, stepName, {
-                                    result: stepResult,
-                                    metadata: {
-                                        stepName,
-                                        projectPath: workspacePath,
-                                        workflowExecution: true,
-                                        executionMethod: 'workflow',
-                                        parentStep: step.step || step.type,
-                                        timestamp: new Date().toISOString(),
-                                        executionTime: stepResult.duration || null,
-                                        stepType: 'individual'
-                                    }
-                                });
-                                
-                                // Set as completed
-                                individualAnalysis.status = 'completed';
-                                individualAnalysis.progress = 100;
-                                individualAnalysis.completedAt = new Date();
-                                individualAnalysis.executionTime = stepResult.duration || null;
-                                
-                                // Save to database
-                                await analysisRepo.save(individualAnalysis);
-                                
-                                this.logger.info('WorkflowController: Individual step result saved to database', {
-                                    analysisId: individualAnalysis.id,
-                                    analysisType: stepName,
-                                    parentStep: step.step || step.type
-                                });
-                            }
-                        }
-                    }
-                } catch (dbError) {
-                    this.logger.warn('WorkflowController: Failed to save individual step results to database', {
-                        error: dbError.message,
-                        stepName: step.step || step.type
-                    });
-                }
-            }
-            
-            return {
-                success: result.success,
-                data: result.data || result,
-                error: result.error
-            };
-            
-        } catch (error) {
-            this.logger.error('WorkflowController: Step execution failed', {
-                stepName: step.step || step.type,
-                error: error.message
-            });
-            
-            return {
-                error: error.message
-            };
+              },
+            );
+          }
+        } catch (dbError) {
+          this.logger.warn(
+            "WorkflowController: Failed to save analysis result to database",
+            {
+              error: dbError.message,
+              stepName,
+              analysisType: stepName,
+            },
+          );
         }
-    }
+      }
 
-    /**
-     * Health check endpoint
-     * GET /api/workflow/health
-     */
-    async healthCheck(req, res) {
+      // Save individual step results to database (for orchestrators that contain multiple steps)
+      if (result.success && result.result && result.result.details) {
         try {
-            res.success({message: 'Workflow service is healthy',
-                timestamp: new Date().toISOString()});
-        } catch (error) {
-            res.error('Workflow service is unhealthy', 500, { details: error.message
-             });
+          const analysisRepo = this.analysisRepository;
+
+          // DEBUG: Log repository availability for individual steps
+          this.logger.info(
+            "WorkflowController: DEBUG - Individual steps repository check",
+            {
+              hasAnalysisRepository: !!this.analysisRepository,
+              analysisRepositoryType: typeof this.analysisRepository,
+              stepName: step.step || step.type,
+              hasResultDetails: !!result.result.details,
+              detailsCount: Object.keys(result.result.details || {}).length,
+            },
+          );
+
+          if (!analysisRepo) {
+            this.logger.warn(
+              "WorkflowController: Analysis repository not available, skipping individual step saves",
+            );
+          } else {
+            const Analysis = require("@domain/entities/Analysis");
+
+            // Save each individual step result
+            for (const [stepName, stepResult] of Object.entries(
+              result.result.details,
+            )) {
+              if (stepResult && stepResult.success) {
+                const individualAnalysis = Analysis.create(
+                  projectId,
+                  stepName,
+                  {
+                    result: stepResult,
+                    metadata: {
+                      stepName,
+                      projectPath: workspacePath,
+                      workflowExecution: true,
+                      executionMethod: "workflow",
+                      parentStep: step.step || step.type,
+                      timestamp: new Date().toISOString(),
+                      executionTime: stepResult.duration || null,
+                      stepType: "individual",
+                    },
+                  },
+                );
+
+                // Set as completed
+                individualAnalysis.status = "completed";
+                individualAnalysis.progress = 100;
+                individualAnalysis.completedAt = new Date();
+                individualAnalysis.executionTime = stepResult.duration || null;
+
+                // Save to database
+                await analysisRepo.save(individualAnalysis);
+
+                this.logger.info(
+                  "WorkflowController: Individual step result saved to database",
+                  {
+                    analysisId: individualAnalysis.id,
+                    analysisType: stepName,
+                    parentStep: step.step || step.type,
+                  },
+                );
+              }
+            }
+          }
+        } catch (dbError) {
+          this.logger.warn(
+            "WorkflowController: Failed to save individual step results to database",
+            {
+              error: dbError.message,
+              stepName: step.step || step.type,
+            },
+          );
         }
+      }
+
+      return {
+        success: result.success,
+        data: result.data || result,
+        error: result.error,
+      };
+    } catch (error) {
+      this.logger.error("WorkflowController: Step execution failed", {
+        stepName: step.step || step.type,
+        error: error.message,
+      });
+
+      return {
+        error: error.message,
+      };
     }
+  }
+
+  /**
+   * Health check endpoint
+   * GET /api/workflow/health
+   */
+  async healthCheck(req, res) {
+    try {
+      res.success({
+        message: "Workflow service is healthy",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.error("Workflow service is unhealthy", 500, {
+        details: error.message,
+      });
+    }
+  }
 }
 
-module.exports = WorkflowController; 
+module.exports = WorkflowController;

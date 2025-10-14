@@ -3,13 +3,13 @@
  * Handler for restarting user applications
  */
 
-const Logger = require('@logging/Logger');
-const logger = new Logger('Logger');
+const Logger = require("@logging/Logger");
+const logger = new Logger("Logger");
 
 class RestartUserAppHandler {
   constructor(dependencies = {}) {
     this.validateDependencies(dependencies);
-    
+
     this.ideAutomationService = dependencies.ideAutomationService;
     this.eventBus = dependencies.eventBus;
     this.logger = logger;
@@ -22,10 +22,10 @@ class RestartUserAppHandler {
    */
   validateDependencies(dependencies) {
     if (!dependencies.ideAutomationService) {
-      throw new Error('IDEAutomationService is required');
+      throw new Error("IDEAutomationService is required");
     }
     if (!dependencies.eventBus) {
-      throw new Error('EventBus is required');
+      throw new Error("EventBus is required");
     }
   }
 
@@ -40,45 +40,45 @@ class RestartUserAppHandler {
       this.logger.info(`Handling command: ${command.commandId}`);
 
       // Validate command
-      if (!command || command.type !== 'RestartUserAppCommand') {
-        throw new Error('Invalid command type for RestartUserAppHandler');
+      if (!command || command.type !== "RestartUserAppCommand") {
+        throw new Error("Invalid command type for RestartUserAppHandler");
       }
 
       // Restart user app
       const result = await this.ideAutomationService.restartUserApp({
         ...command.options,
         appName: command.appName,
-        forceRestart: command.forceRestart
+        forceRestart: command.forceRestart,
       });
 
       // Publish success event
-      await this.eventBus.publish('terminal.app.restarted', {
+      await this.eventBus.publish("terminal.app.restarted", {
         commandId: command.commandId,
         userId: command.userId,
         appName: command.appName,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
-      this.logger.info(`User app restarted successfully: ${command.appName || 'default'}`);
+      this.logger.info(
+        `User app restarted successfully: ${command.appName || "default"}`,
+      );
 
       return {
-        success: true,
         commandId: command.commandId,
         result: result,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
     } catch (error) {
       this.logger.error(`Failed to restart user app:`, error);
 
       // Publish failure event
-      await this.eventBus.publish('terminal.app.restart.failed', {
+      await this.eventBus.publish("terminal.app.restart.failed", {
         commandId: command.commandId,
         userId: command.userId,
         appName: command.appName,
         error: error.message,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       throw error;
@@ -91,12 +91,12 @@ class RestartUserAppHandler {
    */
   getInfo() {
     return {
-      name: 'RestartUserAppHandler',
-      version: '1.0.0',
-      description: 'Handles IDE user app restart operations',
-      supportedCommands: ['RestartUserAppCommand']
+      name: "RestartUserAppHandler",
+      version: "1.0.0",
+      description: "Handles IDE user app restart operations",
+      supportedCommands: ["RestartUserAppCommand"],
     };
   }
 }
 
-module.exports = RestartUserAppHandler; 
+module.exports = RestartUserAppHandler;

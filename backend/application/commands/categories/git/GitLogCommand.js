@@ -8,9 +8,9 @@ class GitLogCommand {
     this.projectPath = params.projectPath;
     this.commandId = `gitlogcommand-${Date.now()}`;
     this.timestamp = new Date();
-    
+
     // Add specific parameters based on operation
-    
+
     this.limit = params.limit || 10;
     this.since = params.since;
     this.until = params.until;
@@ -20,9 +20,9 @@ class GitLogCommand {
 
   validate() {
     if (!this.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
-    
+
     return true;
   }
 
@@ -31,7 +31,7 @@ class GitLogCommand {
       commandId: this.commandId,
       projectPath: this.projectPath,
       timestamp: this.timestamp,
-      
+
       limit: this.limit,
       since: this.since,
       until: this.until,

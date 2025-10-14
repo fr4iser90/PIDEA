@@ -11,12 +11,12 @@ class GitWorkflowContext {
     this.timestamps = new Map();
     this.errors = [];
     this.warnings = [];
-    
+
     // Initialize with task data
     this.initializeFromTask();
-    
+
     // Set creation timestamp
-    this.timestamps.set('created', new Date());
+    this.timestamps.set("created", new Date());
   }
 
   /**
@@ -24,13 +24,19 @@ class GitWorkflowContext {
    */
   initializeFromTask() {
     if (this.task) {
-      this.set('taskId', this.task.id);
-      this.set('taskType', this.task.type?.value || 'unknown');
-      this.set('taskTitle', this.task.title || '');
-      this.set('taskDescription', this.task.description || '');
-      this.set('projectPath', this.task.metadata?.projectPath || this.baseContext.projectPath);
-      this.set('userId', this.task.metadata?.userId || this.baseContext.userId);
-      this.set('projectId', this.task.metadata?.projectId || this.baseContext.projectId);
+      this.set("taskId", this.task.id);
+      this.set("taskType", this.task.type?.value || "unknown");
+      this.set("taskTitle", this.task.title || "");
+      this.set("taskDescription", this.task.description || "");
+      this.set(
+        "projectPath",
+        this.task.metadata?.projectPath || this.baseContext.projectPath,
+      );
+      this.set("userId", this.task.metadata?.userId || this.baseContext.userId);
+      this.set(
+        "projectId",
+        this.task.metadata?.projectId || this.baseContext.projectId,
+      );
     }
   }
 
@@ -40,15 +46,15 @@ class GitWorkflowContext {
    * @param {*} value - Value to store
    * @param {string} category - Category (gitData, metadata, timestamps)
    */
-  set(key, value, category = 'gitData') {
+  set(key, value, category = "gitData") {
     switch (category) {
-      case 'gitData':
+      case "gitData":
         this.gitData.set(key, value);
         break;
-      case 'metadata':
+      case "metadata":
         this.metadata.set(key, value);
         break;
-      case 'timestamps':
+      case "timestamps":
         this.timestamps.set(key, new Date());
         break;
       default:
@@ -63,24 +69,27 @@ class GitWorkflowContext {
    * @param {*} defaultValue - Default value if not found
    * @returns {*} Stored value or default
    */
-  get(key, category = 'gitData', defaultValue = null) {
+  get(key, category = "gitData", defaultValue = null) {
     let value = null;
-    
+
     switch (category) {
-      case 'gitData':
+      case "gitData":
         value = this.gitData.get(key);
         break;
-      case 'metadata':
+      case "metadata":
         value = this.metadata.get(key);
         break;
-      case 'timestamps':
+      case "timestamps":
         value = this.timestamps.get(key);
         break;
       default:
         // Search in all categories
-        value = this.gitData.get(key) || this.metadata.get(key) || this.timestamps.get(key);
+        value =
+          this.gitData.get(key) ||
+          this.metadata.get(key) ||
+          this.timestamps.get(key);
     }
-    
+
     return value !== undefined ? value : defaultValue;
   }
 
@@ -90,16 +99,20 @@ class GitWorkflowContext {
    * @param {string} category - Category to search
    * @returns {boolean} True if key exists
    */
-  has(key, category = 'gitData') {
+  has(key, category = "gitData") {
     switch (category) {
-      case 'gitData':
+      case "gitData":
         return this.gitData.has(key);
-      case 'metadata':
+      case "metadata":
         return this.metadata.has(key);
-      case 'timestamps':
+      case "timestamps":
         return this.timestamps.has(key);
       default:
-        return this.gitData.has(key) || this.metadata.has(key) || this.timestamps.has(key);
+        return (
+          this.gitData.has(key) ||
+          this.metadata.has(key) ||
+          this.timestamps.has(key)
+        );
     }
   }
 
@@ -108,15 +121,15 @@ class GitWorkflowContext {
    * @param {string} key - Key to remove
    * @param {string} category - Category to remove from
    */
-  delete(key, category = 'gitData') {
+  delete(key, category = "gitData") {
     switch (category) {
-      case 'gitData':
+      case "gitData":
         this.gitData.delete(key);
         break;
-      case 'metadata':
+      case "metadata":
         this.metadata.delete(key);
         break;
-      case 'timestamps':
+      case "timestamps":
         this.timestamps.delete(key);
         break;
       default:
@@ -132,14 +145,14 @@ class GitWorkflowContext {
    * @param {string} baseBranch - Base branch
    * @param {Object} branchInfo - Additional branch information
    */
-  setBranchInfo(branchName, baseBranch = 'main', branchInfo = {}) {
-    this.set('branchName', branchName);
-    this.set('baseBranch', baseBranch);
-    this.set('branchCreated', true, 'timestamps');
-    this.set('branchInfo', {
+  setBranchInfo(branchName, baseBranch = "main", branchInfo = {}) {
+    this.set("branchName", branchName);
+    this.set("baseBranch", baseBranch);
+    this.set("branchCreated", true, "timestamps");
+    this.set("branchInfo", {
       name: branchName,
       base: baseBranch,
-      ...branchInfo
+      ...branchInfo,
     });
   }
 
@@ -150,16 +163,21 @@ class GitWorkflowContext {
    * @param {string} mergeStrategy - Merge strategy used
    * @param {Object} mergeInfo - Additional merge information
    */
-  setMergeInfo(sourceBranch, targetBranch, mergeStrategy = 'squash', mergeInfo = {}) {
-    this.set('mergeSource', sourceBranch);
-    this.set('mergeTarget', targetBranch);
-    this.set('mergeStrategy', mergeStrategy);
-    this.set('mergeCompleted', true, 'timestamps');
-    this.set('mergeInfo', {
+  setMergeInfo(
+    sourceBranch,
+    targetBranch,
+    mergeStrategy = "squash",
+    mergeInfo = {},
+  ) {
+    this.set("mergeSource", sourceBranch);
+    this.set("mergeTarget", targetBranch);
+    this.set("mergeStrategy", mergeStrategy);
+    this.set("mergeCompleted", true, "timestamps");
+    this.set("mergeInfo", {
       source: sourceBranch,
       target: targetBranch,
       strategy: mergeStrategy,
-      ...mergeInfo
+      ...mergeInfo,
     });
   }
 
@@ -171,15 +189,15 @@ class GitWorkflowContext {
    * @param {Object} prInfo - Additional PR information
    */
   setPullRequestInfo(prId, prTitle, prUrl, prInfo = {}) {
-    this.set('pullRequestId', prId);
-    this.set('pullRequestTitle', prTitle);
-    this.set('pullRequestUrl', prUrl);
-    this.set('pullRequestCreated', true, 'timestamps');
-    this.set('pullRequestInfo', {
+    this.set("pullRequestId", prId);
+    this.set("pullRequestTitle", prTitle);
+    this.set("pullRequestUrl", prUrl);
+    this.set("pullRequestCreated", true, "timestamps");
+    this.set("pullRequestInfo", {
       id: prId,
       title: prTitle,
       url: prUrl,
-      ...prInfo
+      ...prInfo,
     });
   }
 
@@ -190,13 +208,13 @@ class GitWorkflowContext {
    * @param {Object} reviewInfo - Additional review information
    */
   setReviewInfo(reviewId, reviewStatus, reviewInfo = {}) {
-    this.set('reviewId', reviewId);
-    this.set('reviewStatus', reviewStatus);
-    this.set('reviewCompleted', true, 'timestamps');
-    this.set('reviewInfo', {
+    this.set("reviewId", reviewId);
+    this.set("reviewStatus", reviewStatus);
+    this.set("reviewCompleted", true, "timestamps");
+    this.set("reviewInfo", {
       id: reviewId,
       status: reviewStatus,
-      ...reviewInfo
+      ...reviewInfo,
     });
   }
 
@@ -205,12 +223,12 @@ class GitWorkflowContext {
    * @param {Error} error - Error object
    * @param {string} phase - Workflow phase where error occurred
    */
-  addError(error, phase = 'unknown') {
+  addError(error, phase = "unknown") {
     this.errors.push({
       error: error.message || error,
       phase,
       timestamp: new Date(),
-      stack: error.stack
+      stack: error.stack,
     });
   }
 
@@ -219,11 +237,11 @@ class GitWorkflowContext {
    * @param {string} warning - Warning message
    * @param {string} phase - Workflow phase where warning occurred
    */
-  addWarning(warning, phase = 'unknown') {
+  addWarning(warning, phase = "unknown") {
     this.warnings.push({
       message: warning,
       phase,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -264,8 +282,8 @@ class GitWorkflowContext {
    * @returns {number} Duration in milliseconds
    */
   getDuration() {
-    const created = this.timestamps.get('created');
-    const completed = this.timestamps.get('completed') || new Date();
+    const created = this.timestamps.get("created");
+    const completed = this.timestamps.get("completed") || new Date();
     return completed.getTime() - created.getTime();
   }
 
@@ -273,8 +291,8 @@ class GitWorkflowContext {
    * Mark workflow as completed
    */
   markCompleted() {
-    this.timestamps.set('completed', new Date());
-    this.set('workflowCompleted', true);
+    this.timestamps.set("completed", new Date());
+    this.set("workflowCompleted", true);
   }
 
   /**
@@ -320,9 +338,9 @@ class GitWorkflowContext {
   getSummary() {
     return {
       task: {
-        id: this.get('taskId'),
-        type: this.get('taskType'),
-        title: this.get('taskTitle')
+        id: this.get("taskId"),
+        type: this.get("taskType"),
+        title: this.get("taskTitle"),
       },
       git: this.getGitData(),
       metadata: this.getMetadata(),
@@ -330,7 +348,7 @@ class GitWorkflowContext {
       errors: this.getErrors(),
       warnings: this.getWarnings(),
       duration: this.getDuration(),
-      completed: this.get('workflowCompleted', 'gitData', false)
+      completed: this.get("workflowCompleted", "gitData", false),
     };
   }
 
@@ -340,26 +358,26 @@ class GitWorkflowContext {
    */
   clone() {
     const cloned = new GitWorkflowContext(this.task, this.baseContext);
-    
+
     // Copy git data
     for (const [key, value] of this.gitData) {
       cloned.gitData.set(key, value);
     }
-    
+
     // Copy metadata
     for (const [key, value] of this.metadata) {
       cloned.metadata.set(key, value);
     }
-    
+
     // Copy timestamps
     for (const [key, value] of this.timestamps) {
       cloned.timestamps.set(key, value);
     }
-    
+
     // Copy errors and warnings
     cloned.errors = [...this.errors];
     cloned.warnings = [...this.warnings];
-    
+
     return cloned;
   }
 
@@ -379,16 +397,16 @@ class GitWorkflowContext {
    * @returns {Object} Validation result
    */
   validate() {
-    const requiredFields = ['taskId', 'projectPath'];
-    const missingFields = requiredFields.filter(field => !this.has(field));
-    
+    const requiredFields = ["taskId", "projectPath"];
+    const missingFields = requiredFields.filter((field) => !this.has(field));
+
     return {
       isValid: missingFields.length === 0,
       missingFields,
       hasErrors: this.hasErrors(),
-      hasWarnings: this.hasWarnings()
+      hasWarnings: this.hasWarnings(),
     };
   }
 }
 
-module.exports = GitWorkflowContext; 
+module.exports = GitWorkflowContext;

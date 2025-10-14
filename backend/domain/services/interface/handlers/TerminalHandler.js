@@ -1,20 +1,20 @@
 /**
  * Terminal Handler - Command Line Interface
- * 
+ *
  * Handles terminal interfaces for command execution.
  * Supports multiple shells and environments.
  */
 
-const Logger = require('@logging/Logger');
-const ServiceLogger = require('@logging/ServiceLogger');
+const Logger = require("@logging/Logger");
+const ServiceLogger = require("@logging/ServiceLogger");
 
 class TerminalHandler {
   constructor(dependencies = {}) {
-    this.logger = dependencies.logger || new ServiceLogger('TerminalHandler');
+    this.logger = dependencies.logger || new ServiceLogger("TerminalHandler");
     this.processManager = dependencies.processManager;
     this.eventBus = dependencies.eventBus;
     this.serviceRegistry = dependencies.serviceRegistry;
-    
+
     // Terminal state
     this.activeTerminals = new Map(); // terminalId -> terminal instance
     this.commandHistory = new Map(); // terminalId -> command history
@@ -29,16 +29,16 @@ class TerminalHandler {
   async createInterface(config, interfaceId) {
     try {
       const { shell, workingDirectory, environment, maxHistory } = config;
-      
+
       this.logger.info(`Creating Terminal interface: ${interfaceId}`, {
         shell,
         workingDirectory,
-        environment: Object.keys(environment || {}).length
+        environment: Object.keys(environment || {}).length,
       });
 
       // Initialize terminal session
       const terminalSession = await this.initializeTerminalSession(config);
-      
+
       // Store active terminal
       this.activeTerminals.set(interfaceId, {
         id: interfaceId,
@@ -47,21 +47,20 @@ class TerminalHandler {
         environment,
         maxHistory,
         session: terminalSession,
-        status: 'running',
-        createdAt: new Date()
+        status: "running",
+        createdAt: new Date(),
       });
 
       return {
         id: interfaceId,
-        type: 'terminal',
+        type: "terminal",
         shell,
         workingDirectory,
-        status: 'running',
-        createdAt: new Date()
+        status: "running",
+        createdAt: new Date(),
       };
-
     } catch (error) {
-      this.logger.error('Failed to create Terminal interface:', error);
+      this.logger.error("Failed to create Terminal interface:", error);
       throw new Error(`Failed to create Terminal interface: ${error.message}`);
     }
   }
@@ -74,26 +73,27 @@ class TerminalHandler {
   async initializeTerminalSession(config) {
     try {
       const { shell, workingDirectory, environment } = config;
-      
+
       this.logger.info(`Initializing ${shell} terminal in ${workingDirectory}`);
 
       if (!this.processManager) {
-        throw new Error('Process Manager not available');
+        throw new Error("Process Manager not available");
       }
 
       const session = await this.processManager.createTerminalSession({
         shell,
         workingDirectory,
-        environment
+        environment,
       });
-      
-      this.logger.info(`${shell} terminal initialized`);
-      
-      return session;
 
+      this.logger.info(`${shell} terminal initialized`);
+
+      return session;
     } catch (error) {
-      this.logger.error('Failed to initialize terminal session:', error);
-      throw new Error(`Failed to initialize terminal session: ${error.message}`);
+      this.logger.error("Failed to initialize terminal session:", error);
+      throw new Error(
+        `Failed to initialize terminal session: ${error.message}`,
+      );
     }
   }
 
@@ -106,37 +106,42 @@ class TerminalHandler {
   async executeCommand(terminalId, command) {
     try {
       const terminal = this.activeTerminals.get(terminalId);
-      
+
       if (!terminal) {
         throw new Error(`Terminal ${terminalId} not found`);
       }
 
-      this.logger.info(`Executing command in ${terminal.shell}`, { terminalId, command });
+      this.logger.info(`Executing command in ${terminal.shell}`, {
+        terminalId,
+        command,
+      });
 
-      const result = await this.processManager.executeCommand(terminal.session, command);
-      
+      const result = await this.processManager.executeCommand(
+        terminal.session,
+        command,
+      );
+
       // Store in history
       if (!this.commandHistory.has(terminalId)) {
         this.commandHistory.set(terminalId, []);
       }
-      
+
       const history = this.commandHistory.get(terminalId);
       history.push({
         command,
         output: result.output,
         exitCode: result.exitCode,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-      
+
       // Limit history size
       if (history.length > terminal.maxHistory) {
         history.splice(0, history.length - terminal.maxHistory);
       }
-      
-      return result;
 
+      return result;
     } catch (error) {
-      this.logger.error('Failed to execute command:', error);
+      this.logger.error("Failed to execute command:", error);
       throw new Error(`Failed to execute command: ${error.message}`);
     }
   }
@@ -158,13 +163,15 @@ class TerminalHandler {
   async getTerminalStatus(terminalId) {
     try {
       const terminal = this.activeTerminals.get(terminalId);
-      
+
       if (!terminal) {
         throw new Error(`Terminal ${terminalId} not found`);
       }
 
-      const status = await this.processManager.getTerminalStatus(terminal.session);
-      
+      const status = await this.processManager.getTerminalStatus(
+        terminal.session,
+      );
+
       return {
         terminalId,
         status: terminal.status,
@@ -172,11 +179,10 @@ class TerminalHandler {
         workingDirectory: terminal.workingDirectory,
         uptime: Date.now() - terminal.createdAt.getTime(),
         commandCount: this.commandHistory.get(terminalId)?.length || 0,
-        ...status
+        ...status,
       };
-
     } catch (error) {
-      this.logger.error('Failed to get terminal status:', error);
+      this.logger.error("Failed to get terminal status:", error);
       throw new Error(`Failed to get terminal status: ${error.message}`);
     }
   }
@@ -190,21 +196,23 @@ class TerminalHandler {
   async changeDirectory(terminalId, newDirectory) {
     try {
       const terminal = this.activeTerminals.get(terminalId);
-      
+
       if (!terminal) {
         throw new Error(`Terminal ${terminalId} not found`);
       }
 
-      const result = await this.executeCommand(terminalId, `cd "${newDirectory}"`);
-      
+      const result = await this.executeCommand(
+        terminalId,
+        `cd "${newDirectory}"`,
+      );
+
       if (result.exitCode === 0) {
         terminal.workingDirectory = newDirectory;
       }
-      
-      return result;
 
+      return result;
     } catch (error) {
-      this.logger.error('Failed to change directory:', error);
+      this.logger.error("Failed to change directory:", error);
       throw new Error(`Failed to change directory: ${error.message}`);
     }
   }
@@ -216,35 +224,35 @@ class TerminalHandler {
   getAvailableShells() {
     return [
       {
-        name: 'bash',
-        path: '/bin/bash',
+        name: "bash",
+        path: "/bin/bash",
         supported: true,
-        features: ['history', 'completion', 'aliases']
+        features: ["history", "completion", "aliases"],
       },
       {
-        name: 'zsh',
-        path: '/bin/zsh',
+        name: "zsh",
+        path: "/bin/zsh",
         supported: true,
-        features: ['history', 'completion', 'themes']
+        features: ["history", "completion", "themes"],
       },
       {
-        name: 'fish',
-        path: '/usr/bin/fish',
+        name: "fish",
+        path: "/usr/bin/fish",
         supported: true,
-        features: ['syntax-highlighting', 'auto-suggestions']
+        features: ["syntax-highlighting", "auto-suggestions"],
       },
       {
-        name: 'powershell',
-        path: 'powershell.exe',
+        name: "powershell",
+        path: "powershell.exe",
         supported: true,
-        features: ['objects', 'pipeline', 'modules']
+        features: ["objects", "pipeline", "modules"],
       },
       {
-        name: 'cmd',
-        path: 'cmd.exe',
+        name: "cmd",
+        path: "cmd.exe",
         supported: true,
-        features: ['batch', 'variables']
-      }
+        features: ["batch", "variables"],
+      },
     ];
   }
 
@@ -255,12 +263,18 @@ class TerminalHandler {
   getTerminalStats() {
     return {
       activeTerminals: this.activeTerminals.size,
-      totalCommands: Array.from(this.commandHistory.values()).reduce((total, history) => total + history.length, 0),
-      shells: Array.from(this.activeTerminals.values()).reduce((shells, terminal) => {
-        shells[terminal.shell] = (shells[terminal.shell] || 0) + 1;
-        return shells;
-      }, {}),
-      lastActivity: new Date()
+      totalCommands: Array.from(this.commandHistory.values()).reduce(
+        (total, history) => total + history.length,
+        0,
+      ),
+      shells: Array.from(this.activeTerminals.values()).reduce(
+        (shells, terminal) => {
+          shells[terminal.shell] = (shells[terminal.shell] || 0) + 1;
+          return shells;
+        },
+        {},
+      ),
+      lastActivity: new Date(),
     };
   }
 
@@ -274,7 +288,10 @@ class TerminalHandler {
         try {
           await this.processManager.closeTerminalSession(terminal.session);
         } catch (error) {
-          this.logger.warn(`Failed to close terminal ${terminalId}:`, error.message);
+          this.logger.warn(
+            `Failed to close terminal ${terminalId}:`,
+            error.message,
+          );
         }
       }
 
@@ -282,10 +299,9 @@ class TerminalHandler {
       this.activeTerminals.clear();
       this.commandHistory.clear();
 
-      this.logger.info('Terminal Handler cleanup completed');
-
+      this.logger.info("Terminal Handler cleanup completed");
     } catch (error) {
-      this.logger.error('Failed to cleanup Terminal Handler:', error);
+      this.logger.error("Failed to cleanup Terminal Handler:", error);
     }
   }
 }

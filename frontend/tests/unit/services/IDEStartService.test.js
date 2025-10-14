@@ -29,7 +29,6 @@ describe('IDEStartService', () => {
   describe('startIDE', () => {
     it('starts IDE with valid configuration', async () => {
       const mockResult = {
-        success: true,
         data: { port: 9222, ideType: 'cursor' }
       };
       
@@ -101,7 +100,7 @@ describe('IDEStartService', () => {
 
     it('handles API errors', async () => {
       mockApiCall.mockResolvedValue({
-        success: false,
+       
         error: 'API Error'
       });
       
@@ -126,7 +125,7 @@ describe('IDEStartService', () => {
 
     it('queues requests when already starting', async () => {
       mockApiCall.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ success: true, data: {} }), 100))
+        new Promise(resolve => setTimeout(() => resolve({ data: {} }), 100))
       );
       
       const config1 = { ideType: 'cursor', options: {} };
@@ -146,7 +145,6 @@ describe('IDEStartService', () => {
   describe('getAvailablePorts', () => {
     it('returns available ports for cursor', async () => {
       mockApiCall.mockResolvedValue({
-        success: true,
         data: { ides: [{ port: 9222 }, { port: 9223 }] }
       });
       
@@ -157,7 +155,6 @@ describe('IDEStartService', () => {
 
     it('returns available ports for vscode', async () => {
       mockApiCall.mockResolvedValue({
-        success: true,
         data: { ides: [{ port: 9232 }, { port: 9233 }] }
       });
       
@@ -180,7 +177,6 @@ describe('IDEStartService', () => {
       const mockPaths = ['/workspace1', '/workspace2'];
       
       mockApiCall.mockResolvedValue({
-        success: true,
         data: { paths: mockPaths }
       });
       

@@ -2,8 +2,8 @@
  * GeneratedScript Entity
  * Manages automatically generated scripts with comprehensive business logic
  */
-const { v4: uuidv4 } = require('uuid');
-const TaskType = require('@value-objects/TaskType');
+const { v4: uuidv4 } = require("uuid");
+const TaskType = require("@value-objects/TaskType");
 
 class GeneratedScript {
   constructor(
@@ -11,11 +11,11 @@ class GeneratedScript {
     name,
     content,
     type,
-    language = 'bash',
+    language = "bash",
     metadata = {},
     isActive = true,
     createdAt = new Date(),
-    updatedAt = new Date()
+    updatedAt = new Date(),
   ) {
     this._id = id;
     this._name = name;
@@ -33,7 +33,7 @@ class GeneratedScript {
     this._averageExecutionTime = 0;
     this._tags = [];
     this._category = null;
-    this._version = '1.0.0';
+    this._version = "1.0.0";
     this._dependencies = [];
     this._environment = {};
     this._parameters = [];
@@ -43,27 +43,69 @@ class GeneratedScript {
   }
 
   // Getters
-  get id() { return this._id; }
-  get name() { return this._name; }
-  get content() { return this._content; }
-  get type() { return this._type; }
-  get language() { return this._language; }
-  get metadata() { return { ...this._metadata }; }
-  get isActive() { return this._isActive; }
-  get createdAt() { return new Date(this._createdAt); }
-  get updatedAt() { return new Date(this._updatedAt); }
-  get executionCount() { return this._executionCount; }
-  get lastExecutedAt() { return this._lastExecutedAt ? new Date(this._lastExecutedAt) : null; }
-  get successCount() { return this._successCount; }
-  get failureCount() { return this._failureCount; }
-  get averageExecutionTime() { return this._averageExecutionTime; }
-  get tags() { return [...this._tags]; }
-  get category() { return this._category; }
-  get version() { return this._version; }
-  get dependencies() { return [...this._dependencies]; }
-  get environment() { return { ...this._environment }; }
-  get parameters() { return [...this._parameters]; }
-  get validationRules() { return [...this._validationRules]; }
+  get id() {
+    return this._id;
+  }
+  get name() {
+    return this._name;
+  }
+  get content() {
+    return this._content;
+  }
+  get type() {
+    return this._type;
+  }
+  get language() {
+    return this._language;
+  }
+  get metadata() {
+    return { ...this._metadata };
+  }
+  get isActive() {
+    return this._isActive;
+  }
+  get createdAt() {
+    return new Date(this._createdAt);
+  }
+  get updatedAt() {
+    return new Date(this._updatedAt);
+  }
+  get executionCount() {
+    return this._executionCount;
+  }
+  get lastExecutedAt() {
+    return this._lastExecutedAt ? new Date(this._lastExecutedAt) : null;
+  }
+  get successCount() {
+    return this._successCount;
+  }
+  get failureCount() {
+    return this._failureCount;
+  }
+  get averageExecutionTime() {
+    return this._averageExecutionTime;
+  }
+  get tags() {
+    return [...this._tags];
+  }
+  get category() {
+    return this._category;
+  }
+  get version() {
+    return this._version;
+  }
+  get dependencies() {
+    return [...this._dependencies];
+  }
+  get environment() {
+    return { ...this._environment };
+  }
+  get parameters() {
+    return [...this._parameters];
+  }
+  get validationRules() {
+    return [...this._validationRules];
+  }
 
   // Domain methods
   isActive() {
@@ -105,19 +147,19 @@ class GeneratedScript {
   }
 
   hasRequiredParameters() {
-    return this._parameters.some(param => param.required);
+    return this._parameters.some((param) => param.required);
   }
 
   getRequiredParameters() {
-    return this._parameters.filter(param => param.required);
+    return this._parameters.filter((param) => param.required);
   }
 
   getOptionalParameters() {
-    return this._parameters.filter(param => !param.required);
+    return this._parameters.filter((param) => !param.required);
   }
 
   getParameterByName(name) {
-    return this._parameters.find(param => param.name === name);
+    return this._parameters.find((param) => param.name === name);
   }
 
   hasDependencies() {
@@ -142,7 +184,8 @@ class GeneratedScript {
 
     // Update average execution time
     if (executionTime > 0) {
-      const totalTime = this._averageExecutionTime * (this._executionCount - 1) + executionTime;
+      const totalTime =
+        this._averageExecutionTime * (this._executionCount - 1) + executionTime;
       this._averageExecutionTime = totalTime / this._executionCount;
     }
   }
@@ -174,7 +217,7 @@ class GeneratedScript {
   }
 
   incrementVersion() {
-    const [major, minor, patch] = this._version.split('.').map(Number);
+    const [major, minor, patch] = this._version.split(".").map(Number);
     this._version = `${major}.${minor}.${patch + 1}`;
     this._updatedAt = new Date();
   }
@@ -191,19 +234,21 @@ class GeneratedScript {
   // Parameters management
   addParameter(parameter) {
     this._validateParameter(parameter);
-    
-    const existingIndex = this._parameters.findIndex(p => p.name === parameter.name);
+
+    const existingIndex = this._parameters.findIndex(
+      (p) => p.name === parameter.name,
+    );
     if (existingIndex >= 0) {
       this._parameters[existingIndex] = parameter;
     } else {
       this._parameters.push(parameter);
     }
-    
+
     this._updatedAt = new Date();
   }
 
   removeParameter(parameterName) {
-    const index = this._parameters.findIndex(p => p.name === parameterName);
+    const index = this._parameters.findIndex((p) => p.name === parameterName);
     if (index > -1) {
       this._parameters.splice(index, 1);
       this._updatedAt = new Date();
@@ -249,7 +294,7 @@ class GeneratedScript {
   }
 
   removeValidationRule(ruleName) {
-    const index = this._validationRules.findIndex(r => r.name === ruleName);
+    const index = this._validationRules.findIndex((r) => r.name === ruleName);
     if (index > -1) {
       this._validationRules.splice(index, 1);
       this._updatedAt = new Date();
@@ -305,14 +350,17 @@ class GeneratedScript {
   // Script execution preparation
   prepareForExecution(parameterValues = {}) {
     this._validateParameterValues(parameterValues);
-    
+
     let preparedContent = this._content;
-    
+
     // Replace parameters in script content
-    this._parameters.forEach(parameter => {
+    this._parameters.forEach((parameter) => {
       const value = parameterValues[parameter.name] || parameter.defaultValue;
       const placeholder = `{{${parameter.name}}}`;
-      preparedContent = preparedContent.replace(new RegExp(placeholder, 'g'), value);
+      preparedContent = preparedContent.replace(
+        new RegExp(placeholder, "g"),
+        value,
+      );
     });
 
     return {
@@ -326,64 +374,81 @@ class GeneratedScript {
         scriptId: this._id,
         scriptName: this._name,
         scriptVersion: this._version,
-        parameterValues
-      }
+        parameterValues,
+      },
     };
   }
 
   // Validation
   _validate() {
-    if (!this._name || typeof this._name !== 'string' || this._name.trim().length === 0) {
-      throw new Error('Script name is required and must be a non-empty string');
+    if (
+      !this._name ||
+      typeof this._name !== "string" ||
+      this._name.trim().length === 0
+    ) {
+      throw new Error("Script name is required and must be a non-empty string");
     }
 
-    if (!this._content || typeof this._content !== 'string' || this._content.trim().length === 0) {
-      throw new Error('Script content is required and must be a non-empty string');
+    if (
+      !this._content ||
+      typeof this._content !== "string" ||
+      this._content.trim().length === 0
+    ) {
+      throw new Error(
+        "Script content is required and must be a non-empty string",
+      );
     }
 
-    if (!this._language || typeof this._language !== 'string') {
-      throw new Error('Script language is required and must be a string');
+    if (!this._language || typeof this._language !== "string") {
+      throw new Error("Script language is required and must be a string");
     }
 
     if (this._executionCount < 0) {
-      throw new Error('Execution count cannot be negative');
+      throw new Error("Execution count cannot be negative");
     }
 
     if (this._successCount < 0 || this._failureCount < 0) {
-      throw new Error('Success and failure counts cannot be negative');
+      throw new Error("Success and failure counts cannot be negative");
     }
 
-    this._parameters.forEach(parameter => this._validateParameter(parameter));
-    this._validationRules.forEach(rule => this._validateRule(rule));
+    this._parameters.forEach((parameter) => this._validateParameter(parameter));
+    this._validationRules.forEach((rule) => this._validateRule(rule));
   }
 
   _validateParameter(parameter) {
-    if (!parameter.name || typeof parameter.name !== 'string') {
-      throw new Error('Parameter name is required and must be a string');
+    if (!parameter.name || typeof parameter.name !== "string") {
+      throw new Error("Parameter name is required and must be a string");
     }
 
-    if (parameter.type && !['string', 'number', 'boolean', 'array', 'object'].includes(parameter.type)) {
-      throw new Error('Invalid parameter type');
+    if (
+      parameter.type &&
+      !["string", "number", "boolean", "array", "object"].includes(
+        parameter.type,
+      )
+    ) {
+      throw new Error("Invalid parameter type");
     }
 
     if (parameter.required && parameter.defaultValue !== undefined) {
-      throw new Error('Required parameters cannot have default values');
+      throw new Error("Required parameters cannot have default values");
     }
   }
 
   _validateRule(rule) {
-    if (!rule.name || typeof rule.name !== 'string') {
-      throw new Error('Validation rule name is required and must be a string');
+    if (!rule.name || typeof rule.name !== "string") {
+      throw new Error("Validation rule name is required and must be a string");
     }
 
-    if (!rule.condition || typeof rule.condition !== 'function') {
-      throw new Error('Validation rule condition is required and must be a function');
+    if (!rule.condition || typeof rule.condition !== "function") {
+      throw new Error(
+        "Validation rule condition is required and must be a function",
+      );
     }
   }
 
   _validateParameterValues(parameterValues) {
     const requiredParameters = this.getRequiredParameters();
-    
+
     for (const parameter of requiredParameters) {
       if (!(parameter.name in parameterValues)) {
         throw new Error(`Required parameter '${parameter.name}' is missing`);
@@ -411,7 +476,9 @@ class GeneratedScript {
       createdAt: this._createdAt.toISOString(),
       updatedAt: this._updatedAt.toISOString(),
       executionCount: this._executionCount,
-      lastExecutedAt: this._lastExecutedAt ? this._lastExecutedAt.toISOString() : null,
+      lastExecutedAt: this._lastExecutedAt
+        ? this._lastExecutedAt.toISOString()
+        : null,
       successCount: this._successCount,
       failureCount: this._failureCount,
       averageExecutionTime: this._averageExecutionTime,
@@ -427,7 +494,7 @@ class GeneratedScript {
       isReliable: this.isReliable(),
       isUnreliable: this.isUnreliable(),
       hasBeenExecuted: this.hasBeenExecuted(),
-      requiresParameters: this.requiresParameters()
+      requiresParameters: this.requiresParameters(),
     };
   }
 
@@ -441,44 +508,37 @@ class GeneratedScript {
       data.metadata,
       data.isActive,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
     );
   }
 
-  static create(
+  static create(name, content, type, language = "bash", metadata = {}) {
+    return new GeneratedScript(null, name, content, type, language, metadata);
+  }
+
+  static createParameter(
     name,
-    content,
-    type,
-    language = 'bash',
-    metadata = {}
+    type = "string",
+    required = false,
+    defaultValue = undefined,
+    description = "",
   ) {
-    return new GeneratedScript(
-      null,
-      name,
-      content,
-      type,
-      language,
-      metadata
-    );
-  }
-
-  static createParameter(name, type = 'string', required = false, defaultValue = undefined, description = '') {
     return {
       name,
       type,
       required,
       defaultValue,
-      description
+      description,
     };
   }
 
-  static createValidationRule(name, condition, message = '') {
+  static createValidationRule(name, condition, message = "") {
     return {
       name,
       condition,
-      message
+      message,
     };
   }
 }
 
-module.exports = GeneratedScript; 
+module.exports = GeneratedScript;

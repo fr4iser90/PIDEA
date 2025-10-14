@@ -3,28 +3,28 @@
  * Replaces slow Mono/Single Repo Strategy containers with fast, cacheable step
  */
 
-const StepBuilder = require('@steps/StepBuilder');
-const Logger = require('@logging/Logger');
-const fs = require('fs').promises;
-const path = require('path');
+const StepBuilder = require("@steps/StepBuilder");
+const Logger = require("@logging/Logger");
+const fs = require("fs").promises;
+const path = require("path");
 
-const logger = new Logger('repository_type_analysis_step');
+const logger = new Logger("repository_type_analysis_step");
 
 // Step configuration
 const config = {
-  name: 'RepositoryTypeAnalysisStep',
-  type: 'analysis',
-  description: 'Fast repository type detection (monorepo vs single repo)',
-  category: 'analysis',
-  version: '1.0.0',
+  name: "RepositoryTypeAnalysisStep",
+  type: "analysis",
+  description: "Fast repository type detection (monorepo vs single repo)",
+  category: "analysis",
+  version: "1.0.0",
   dependencies: [],
   settings: {
     timeout: 5000, // 5 seconds max - should be much faster
     includeDetails: true,
     includeRecommendations: false,
     cacheTTL: 24 * 60 * 60, // 24 hours - very stable
-    analysisType: 'repository-type'
-  }
+    analysisType: "repository-type",
+  },
 };
 
 // Export config for StepRegistry
@@ -48,41 +48,44 @@ class RepositoryTypeAnalysisStep {
    */
   async execute(context = {}) {
     const step = StepBuilder.build(config, context);
-    
+
     try {
       logger.info(`🔍 Executing ${repository_type_analysis_step}...`);
-      
+
       // Validate context
       this.validateContext(context);
-      
+
       const projectPath = context.projectPath;
       const startTime = Date.now();
-      
+
       logger.debug(`📊 Starting repository type detection for: ${projectPath}`);
 
       // 1. Fast monorepo detection
       const isMonorepo = await this.detectMonorepo(projectPath);
-      
+
       // 2. Get repository type details
-      const repoType = isMonorepo ? 'monorepo' : 'single-repo';
-      const typeDetails = await this.getRepositoryTypeDetails(projectPath, isMonorepo);
-      
+      const repoType = isMonorepo ? "monorepo" : "single-repo";
+      const typeDetails = await this.getRepositoryTypeDetails(
+        projectPath,
+        isMonorepo,
+      );
+
       // 3. Get detection indicators
       const indicators = await this.getDetectionIndicators(projectPath);
-      
+
       // 4. Calculate confidence score
       const confidence = this.calculateConfidence(indicators);
-      
+
       // 5. Build result
       const result = {
         repositoryType: repoType,
         isMonorepo: isMonorepo,
         typeDetails: typeDetails,
-        detectionMethod: 'fast-scan',
+        detectionMethod: "fast-scan",
         confidence: confidence,
         indicators: indicators,
         detectionTime: Date.now() - startTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // 6. Add recommendations if requested
@@ -90,27 +93,32 @@ class RepositoryTypeAnalysisStep {
         result.recommendations = this.generateRecommendations(result);
       }
 
-      logger.info(`✅ ${repository_type_analysis_step} completed successfully in ${result.detectionTime}ms`);
-      logger.info(`📊 Repository type: ${repoType} (confidence: ${confidence}%)`);
+      logger.info(
+        `✅ ${repository_type_analysis_step} completed successfully in ${result.detectionTime}ms`,
+      );
+      logger.info(
+        `📊 Repository type: ${repoType} (confidence: ${confidence}%)`,
+      );
 
       return {
-        success: true,
         result: result,
         metadata: {
           stepName: "RepositoryTypeAnalysisStep",
           duration: result.detectionTime,
-          cacheTTL: this.settings.cacheTTL
-        }
+          cacheTTL: this.settings.cacheTTL,
+        },
       };
-
     } catch (error) {
-      logger.error(`❌ ${repository_type_analysis_step} failed:`, error.message);
+      logger.error(
+        `❌ ${repository_type_analysis_step} failed:`,
+        error.message,
+      );
       return {
-        success: false,
+       
         error: error.message,
         metadata: {
-          stepName: "RepositoryTypeAnalysisStep"
-        }
+          stepName: "RepositoryTypeAnalysisStep",
+        },
       };
     }
   }
@@ -121,7 +129,7 @@ class RepositoryTypeAnalysisStep {
    */
   validateContext(context) {
     if (!context.projectPath) {
-      throw new Error('Project path is required');
+      throw new Error("Project path is required");
     }
   }
 
@@ -134,10 +142,10 @@ class RepositoryTypeAnalysisStep {
     try {
       // Check for common monorepo indicators (fast file checks)
       const indicators = [
-        'lerna.json',
-        'nx.json', 
-        'rush.json',
-        'pnpm-workspace.yaml'
+        "lerna.json",
+        "nx.json",
+        "rush.json",
+        "pnpm-workspace.yaml",
       ];
 
       // Quick file existence checks
@@ -152,8 +160,10 @@ class RepositoryTypeAnalysisStep {
 
       // Check package.json for workspaces
       try {
-        const packageJsonPath = path.join(projectPath, 'package.json');
-        const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+        const packageJsonPath = path.join(projectPath, "package.json");
+        const packageJson = JSON.parse(
+          await fs.readFile(packageJsonPath, "utf8"),
+        );
         if (packageJson.workspaces || packageJson.private) {
           return true; // Has workspaces configuration
         }
@@ -162,13 +172,19 @@ class RepositoryTypeAnalysisStep {
       }
 
       // Check for common monorepo directory structures
-      const commonDirs = ['packages', 'apps', 'libs', 'services', 'frontend', 'backend'];
+      const commonDirs = [
+        "packages",
+        "apps",
+        "libs",
+        "services",
+        "frontend",
+        "backend",
+      ];
       const projectDirs = await this.getProjectDirectories(projectPath);
-      
-      return commonDirs.some(dir => projectDirs.includes(dir));
 
+      return commonDirs.some((dir) => projectDirs.includes(dir));
     } catch (error) {
-      logger.warn('Monorepo detection failed:', error.message);
+      logger.warn("Monorepo detection failed:", error.message);
       return false; // Default to single repo on error
     }
   }
@@ -187,8 +203,8 @@ class RepositoryTypeAnalysisStep {
         return await this.getSingleRepoDetails(projectPath);
       }
     } catch (error) {
-      logger.warn('Failed to get repository type details:', error.message);
-      return { type: 'unknown', error: error.message };
+      logger.warn("Failed to get repository type details:", error.message);
+      return { type: "unknown", error: error.message };
     }
   }
 
@@ -198,19 +214,21 @@ class RepositoryTypeAnalysisStep {
    * @returns {Promise<Object>} Monorepo details
    */
   async getMonorepoDetails(projectPath) {
-    const details = { type: 'monorepo' };
+    const details = { type: "monorepo" };
 
     // Detect monorepo tool
-    if (await this.fileExists(path.join(projectPath, 'lerna.json'))) {
-      details.tool = 'lerna';
-    } else if (await this.fileExists(path.join(projectPath, 'nx.json'))) {
-      details.tool = 'nx';
-    } else if (await this.fileExists(path.join(projectPath, 'rush.json'))) {
-      details.tool = 'rush';
-    } else if (await this.fileExists(path.join(projectPath, 'pnpm-workspace.yaml'))) {
-      details.tool = 'pnpm-workspaces';
+    if (await this.fileExists(path.join(projectPath, "lerna.json"))) {
+      details.tool = "lerna";
+    } else if (await this.fileExists(path.join(projectPath, "nx.json"))) {
+      details.tool = "nx";
+    } else if (await this.fileExists(path.join(projectPath, "rush.json"))) {
+      details.tool = "rush";
+    } else if (
+      await this.fileExists(path.join(projectPath, "pnpm-workspace.yaml"))
+    ) {
+      details.tool = "pnpm-workspaces";
     } else {
-      details.tool = 'yarn-workspaces';
+      details.tool = "yarn-workspaces";
     }
 
     // Get workspace directories
@@ -226,43 +244,47 @@ class RepositoryTypeAnalysisStep {
    * @returns {Promise<Object>} Single repo details
    */
   async getSingleRepoDetails(projectPath) {
-    const details = { type: 'single-repo' };
+    const details = { type: "single-repo" };
 
     try {
       // Detect project type from package.json
-      const packageJsonPath = path.join(projectPath, 'package.json');
-      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
-      
-      const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      const packageJsonPath = path.join(projectPath, "package.json");
+      const packageJson = JSON.parse(
+        await fs.readFile(packageJsonPath, "utf8"),
+      );
+
+      const dependencies = {
+        ...packageJson.dependencies,
+        ...packageJson.devDependencies,
+      };
 
       // Framework detection
       if (dependencies.react) {
-        details.framework = 'react';
+        details.framework = "react";
       } else if (dependencies.vue) {
-        details.framework = 'vue';
+        details.framework = "vue";
       } else if (dependencies.angular) {
-        details.framework = 'angular';
+        details.framework = "angular";
       } else if (dependencies.express) {
-        details.framework = 'express';
+        details.framework = "express";
       } else if (dependencies.koa) {
-        details.framework = 'koa';
+        details.framework = "koa";
       } else if (dependencies.fastify) {
-        details.framework = 'fastify';
+        details.framework = "fastify";
       } else if (dependencies.nest) {
-        details.framework = 'nestjs';
+        details.framework = "nestjs";
       } else if (dependencies.next) {
-        details.framework = 'nextjs';
+        details.framework = "nextjs";
       } else if (dependencies.nuxt) {
-        details.framework = 'nuxtjs';
+        details.framework = "nuxtjs";
       } else {
-        details.framework = 'unknown';
+        details.framework = "unknown";
       }
 
       details.packageManager = this.detectPackageManager(projectPath);
-      
     } catch (error) {
-      details.framework = 'unknown';
-      details.packageManager = 'unknown';
+      details.framework = "unknown";
+      details.packageManager = "unknown";
     }
 
     return details;
@@ -278,12 +300,17 @@ class RepositoryTypeAnalysisStep {
       monorepoFiles: [],
       workspaceDirs: [],
       packageManager: null,
-      hasPackageJson: false
+      hasPackageJson: false,
     };
 
     try {
       // Check for monorepo files
-      const monorepoFiles = ['lerna.json', 'nx.json', 'rush.json', 'pnpm-workspace.yaml'];
+      const monorepoFiles = [
+        "lerna.json",
+        "nx.json",
+        "rush.json",
+        "pnpm-workspace.yaml",
+      ];
       for (const file of monorepoFiles) {
         if (await this.fileExists(path.join(projectPath, file))) {
           indicators.monorepoFiles.push(file);
@@ -291,18 +318,28 @@ class RepositoryTypeAnalysisStep {
       }
 
       // Check for workspace directories
-      const workspaceDirs = ['packages', 'apps', 'libs', 'services', 'frontend', 'backend'];
+      const workspaceDirs = [
+        "packages",
+        "apps",
+        "libs",
+        "services",
+        "frontend",
+        "backend",
+      ];
       const projectDirs = await this.getProjectDirectories(projectPath);
-      indicators.workspaceDirs = workspaceDirs.filter(dir => projectDirs.includes(dir));
+      indicators.workspaceDirs = workspaceDirs.filter((dir) =>
+        projectDirs.includes(dir),
+      );
 
       // Check package manager
       indicators.packageManager = this.detectPackageManager(projectPath);
 
       // Check for package.json
-      indicators.hasPackageJson = await this.fileExists(path.join(projectPath, 'package.json'));
-
+      indicators.hasPackageJson = await this.fileExists(
+        path.join(projectPath, "package.json"),
+      );
     } catch (error) {
-      logger.warn('Failed to get detection indicators:', error.message);
+      logger.warn("Failed to get detection indicators:", error.message);
     }
 
     return indicators;
@@ -345,17 +382,18 @@ class RepositoryTypeAnalysisStep {
 
     if (result.isMonorepo) {
       recommendations.push({
-        type: 'monorepo-optimization',
-        title: 'Monorepo detected',
-        description: 'Consider using monorepo-specific tools for better performance',
-        priority: 'medium'
+        type: "monorepo-optimization",
+        title: "Monorepo detected",
+        description:
+          "Consider using monorepo-specific tools for better performance",
+        priority: "medium",
       });
     } else {
       recommendations.push({
-        type: 'single-repo-optimization', 
-        title: 'Single repository detected',
-        description: 'Consider modular architecture for better maintainability',
-        priority: 'low'
+        type: "single-repo-optimization",
+        title: "Single repository detected",
+        description: "Consider modular architecture for better maintainability",
+        priority: "low",
       });
     }
 
@@ -385,8 +423,8 @@ class RepositoryTypeAnalysisStep {
     try {
       const entries = await fs.readdir(projectPath, { withFileTypes: true });
       return entries
-        .filter(entry => entry.isDirectory === true)
-        .map(entry => entry.name);
+        .filter((entry) => entry.isDirectory === true)
+        .map((entry) => entry.name);
     } catch {
       return [];
     }
@@ -398,9 +436,16 @@ class RepositoryTypeAnalysisStep {
    * @returns {Promise<Array>} Workspace directories
    */
   async getWorkspaceDirectories(projectPath) {
-    const commonWorkspaceDirs = ['packages', 'apps', 'libs', 'services', 'frontend', 'backend'];
+    const commonWorkspaceDirs = [
+      "packages",
+      "apps",
+      "libs",
+      "services",
+      "frontend",
+      "backend",
+    ];
     const projectDirs = await this.getProjectDirectories(projectPath);
-    return projectDirs.filter(dir => commonWorkspaceDirs.includes(dir));
+    return projectDirs.filter((dir) => commonWorkspaceDirs.includes(dir));
   }
 
   /**
@@ -409,14 +454,14 @@ class RepositoryTypeAnalysisStep {
    * @returns {string} Package manager name
    */
   detectPackageManager(projectPath) {
-    if (this.fileExists(path.join(projectPath, 'yarn.lock'))) {
-      return 'yarn';
-    } else if (this.fileExists(path.join(projectPath, 'pnpm-lock.yaml'))) {
-      return 'pnpm';
-    } else if (this.fileExists(path.join(projectPath, 'package-lock.json'))) {
-      return 'npm';
+    if (this.fileExists(path.join(projectPath, "yarn.lock"))) {
+      return "yarn";
+    } else if (this.fileExists(path.join(projectPath, "pnpm-lock.yaml"))) {
+      return "pnpm";
+    } else if (this.fileExists(path.join(projectPath, "package-lock.json"))) {
+      return "npm";
     } else {
-      return 'unknown';
+      return "unknown";
     }
   }
 
@@ -432,7 +477,7 @@ class RepositoryTypeAnalysisStep {
 // Export both the class and the execute function for StepRegistry
 module.exports = RepositoryTypeAnalysisStep;
 module.exports.config = config;
-module.exports.execute = async function(context) {
+module.exports.execute = async function (context) {
   const step = new RepositoryTypeAnalysisStep();
   return await step.execute(context);
-}; 
+};
