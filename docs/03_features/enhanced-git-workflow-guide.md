@@ -49,9 +49,7 @@ const task = {
   title: 'Add user authentication',
   description: 'Implement user authentication system',
   type: { value: 'feature' },
-  metadata: {
-    projectPath: '/path/to/your/project'
-  }
+  projectPath: '/path/to/your/project'
 };
 
 // Execute the workflow
@@ -83,7 +81,7 @@ This will automatically:
 const featureTask = {
   title: 'Add payment processing',
   type: { value: 'feature' },
-  metadata: { projectPath: '/path/to/project' }
+  projectPath: '/path/to/project'
 };
 // Creates branch: feature/add-payment-processing → merges to pidea-ai-main
 
@@ -91,7 +89,7 @@ const featureTask = {
 const refactorTask = {
   title: 'Refactor database access layer',
   type: { value: 'refactor' },
-  metadata: { projectPath: '/path/to/project' }
+  projectPath: '/path/to/project'
 };
 // Creates branch: refactor/refactor-database-access-layer → merges to pidea-ai-main
 
@@ -99,7 +97,7 @@ const refactorTask = {
 const optimizationTask = {
   title: 'Optimize API response times',
   type: { value: 'optimization' },
-  metadata: { projectPath: '/path/to/project' }
+  projectPath: '/path/to/project'
 };
 // Creates branch: enhance/optimize-api-response-times → merges to pidea-ai-main
 ```
@@ -116,7 +114,7 @@ const optimizationTask = {
 const bugTask = {
   title: 'Fix login authentication bug',
   type: { value: 'bug' },
-  metadata: { projectPath: '/path/to/project' }
+  projectPath: '/path/to/project'
 };
 // Creates branch: fix/fix-login-authentication-bug → merges to main
 ```
@@ -134,7 +132,7 @@ const bugTask = {
 const unitTestTask = {
   title: 'Add unit tests for user service',
   type: { value: 'test_unit' },
-  metadata: { projectPath: '/path/to/project' }
+  projectPath: '/path/to/project'
 };
 // Creates branch: test-unit/add-unit-tests-for-user-service → merges to pidea-agent
 
@@ -142,7 +140,7 @@ const unitTestTask = {
 const integrationTestTask = {
   title: 'Integration tests for payment API',
   type: { value: 'test_integration' },
-  metadata: { projectPath: '/path/to/project' }
+  projectPath: '/path/to/project'
 };
 // Creates branch: test-integration/integration-tests-for-payment-api → merges to pidea-agent
 ```

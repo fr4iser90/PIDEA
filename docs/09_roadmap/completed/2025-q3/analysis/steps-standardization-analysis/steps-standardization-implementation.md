@@ -162,10 +162,8 @@ async generateTasks(result, context) {
     priority: 'medium',
     status: 'pending',
     projectId: projectId,
-      metadata: {
-      source: this.name,
-      score: result.score
-    },
+    source: this.name,
+    score: result.score,
     estimatedHours: 2,
     phase: 'improvement',
     stage: 'planning'

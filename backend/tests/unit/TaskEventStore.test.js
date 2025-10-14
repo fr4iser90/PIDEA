@@ -183,7 +183,7 @@ describe("TaskEventStore", () => {
         event_type: "status_change",
         from_status: "pending",
         to_status: "in_progress",
-        metadata: { reason: "Task started" },
+        reason: "Task started",
       });
 
       expect(mockDatabaseConnection.query).toHaveBeenCalledWith(

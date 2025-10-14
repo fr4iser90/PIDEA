@@ -201,11 +201,9 @@ describe("CreateTaskCommand Integration", () => {
         description: "A task with custom metadata for testing",
         type: "analysis",
         createdBy: "test-user",
-        metadata: {
-          complexity: "high",
-          estimatedHours: "8",
-          tags: ["backend", "performance"],
-        },
+        complexity: "high",
+        estimatedHours: "8",
+        tags: ["backend", "performance"],
       });
 
       const result = await createTaskHandler.handle(command);
@@ -407,7 +405,7 @@ describe("CreateTaskCommand Integration", () => {
         priority: "high",
         status: "active",
         createdBy: "test-user",
-        metadata: { complexity: "high" },
+        complexity: "high",
         dependencies: ["task-123"],
       });
 

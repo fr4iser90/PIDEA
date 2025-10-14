@@ -781,12 +781,10 @@ class TaskCommands {
         type: { value: "testing" },
         priority: { value: "high" },
         status: { value: "pending" },
-        metadata: {
-          testFile: test.ancestorTitles.join(" > "),
-          testName: test.title,
-          error: test.failureMessages?.[0] || "Unknown error",
-          projectPath: process.cwd(),
-        },
+        testFile: test.ancestorTitles.join(" > "),
+        testName: test.title,
+        error: test.failureMessages?.[0] || "Unknown error",
+        projectPath: process.cwd(),
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
@@ -817,10 +815,8 @@ class TaskCommands {
           type: { value: "testing" },
           priority: { value: "high" },
           status: { value: "pending" },
-          metadata: {
-            source: "test-report",
-            projectPath: process.cwd(),
-          },
+          source: "test-report",
+          projectPath: process.cwd(),
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -861,13 +857,11 @@ class TaskCommands {
               type: { value: "testing" },
               priority: { value: "high" },
               status: { value: "pending" },
-              metadata: {
-                testFile: fileName,
-                testName: testName,
-                error: lastError,
-                source: "test-report-full",
-                projectPath: process.cwd(),
-              },
+              testFile: fileName,
+              testName: testName,
+              error: lastError,
+              source: "test-report-full",
+              projectPath: process.cwd(),
               createdAt: new Date(),
               updatedAt: new Date(),
             });
@@ -911,11 +905,9 @@ class TaskCommands {
               type: { value: "testing" },
               priority: { value: "medium" },
               status: { value: "pending" },
-              metadata: {
-                fileName: fileName,
-                source: "coverage-report",
-                projectPath: process.cwd(),
-              },
+              fileName: fileName,
+              source: "coverage-report",
+              projectPath: process.cwd(),
               createdAt: new Date(),
               updatedAt: new Date(),
             });

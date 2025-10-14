@@ -404,11 +404,9 @@ class CursorAnalyzer {
     
     // Generate final library
     const finalLibrary = {
-      metadata: {
-        name: "Cursor Selector Library",
-        version: this.version,
-        timestamp: new Date().toISOString()
-      },
+      name: "Cursor Selector Library",
+      version: this.version,
+      timestamp: new Date().toISOString(),
       categories: {}
     };
     

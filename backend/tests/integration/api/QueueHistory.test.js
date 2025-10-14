@@ -141,7 +141,7 @@ describe("Queue History API Integration Tests", () => {
         createdAt: new Date().toISOString(),
         completedAt: new Date().toISOString(),
         executionTimeMs: 5000,
-        metadata: { test: true },
+        test: true,
         stepsData: [{ step: 1, action: "test" }],
       };
 

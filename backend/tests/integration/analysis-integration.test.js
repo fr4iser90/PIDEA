@@ -54,10 +54,8 @@ describe("Analysis Integration Tests - Techstack & Recommendations", () => {
         projectPath: "/test/project/path",
         analysisType: "techstack",
         priority: "high",
-        metadata: {
-          framework: "react",
-          language: "javascript",
-        },
+        framework: "react",
+        language: "javascript",
       };
 
       const response = await request(server)
@@ -125,10 +123,8 @@ describe("Analysis Integration Tests - Techstack & Recommendations", () => {
         projectPath: "/test/project/path",
         analysisType: "recommendations",
         priority: "medium",
-        metadata: {
-          currentTechstack: ["react", "nodejs"],
-          targetFeatures: ["authentication", "database"],
-        },
+        currentTechstack: ["react", "nodejs"],
+        targetFeatures: ["authentication", "database"],
       };
 
       const response = await request(server)
@@ -155,11 +151,9 @@ describe("Analysis Integration Tests - Techstack & Recommendations", () => {
         projectId: "recommendations-context-789",
         projectPath: "/test/project/path",
         analysisType: "recommendations",
-        metadata: {
-          existingTechstack: ["react", "express", "mongodb"],
-          projectGoals: ["scalability", "performance"],
-          constraints: ["budget", "timeline"],
-        },
+        existingTechstack: ["react", "express", "mongodb"],
+        projectGoals: ["scalability", "performance"],
+        constraints: ["budget", "timeline"],
       };
 
       const response = await request(server)

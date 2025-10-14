@@ -422,10 +422,8 @@ class [StepName] {
 
       return {
         result: result,
-        metadata: {
-          stepName: this.name,
-          timestamp: new Date()
-        }
+        stepName: this.name,
+        timestamp: new Date()
       };
 
     } catch (error) {
@@ -434,10 +432,8 @@ class [StepName] {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: this.name,
-          timestamp: new Date()
-        }
+        stepName: this.name,
+        timestamp: new Date()
       };
     }
   }

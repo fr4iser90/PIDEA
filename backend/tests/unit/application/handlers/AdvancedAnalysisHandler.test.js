@@ -539,7 +539,7 @@ describe("AdvancedAnalysisHandler", () => {
         analysis: { metrics: { overallScore: 85 } },
         report: { summary: "Test" },
         duration: 120000,
-        metadata: { test: "data" },
+        test: "data",
       };
 
       await handler.updateExecutionRecord(mockExecution, mockResult);

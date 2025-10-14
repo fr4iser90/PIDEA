@@ -162,11 +162,9 @@ const useProjectStore = create(
             projectsMap[project.id] = {
               ...project,
               lastUpdate: new Date().toISOString(),
-              metadata: {
-                ...project.metadata,
-                lastAccessed: new Date().toISOString(),
-                accessCount: 0
-              }
+              ...project.metadata,
+              lastAccessed: new Date().toISOString(),
+              accessCount: 0
             };
           });
 
@@ -245,11 +243,9 @@ const useProjectStore = create(
           const newProject = {
             ...response,
             lastUpdate: new Date().toISOString(),
-            metadata: {
-              ...response.metadata,
-              lastAccessed: new Date().toISOString(),
-              accessCount: 0
-            }
+            ...response.metadata,
+            lastAccessed: new Date().toISOString(),
+            accessCount: 0
           };
 
           // Invalidate cache
@@ -467,10 +463,8 @@ const useProjectStore = create(
               ...state.projects,
               [projectId]: {
                 ...project,
-                metadata: {
-                  ...project.metadata,
-                  ...metadataUpdates
-                },
+                ...project.metadata,
+                ...metadataUpdates,
                 lastUpdate: new Date().toISOString()
               }
             }

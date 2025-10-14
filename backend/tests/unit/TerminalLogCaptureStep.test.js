@@ -572,7 +572,7 @@ describe("TerminalLogCaptureStep", () => {
           timestamp: "2024-01-01T10:00:00Z",
           level: "info",
           message: "Info log",
-          metadata: { source: "app" },
+          source: "app",
         },
         {
           timestamp: "2024-01-01T10:01:00Z",

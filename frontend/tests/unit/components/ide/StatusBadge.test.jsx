@@ -38,7 +38,7 @@ describe('StatusBadge Component', () => {
         status: 'running',
         ideType: 'cursor',
         workspacePath: '/test/workspace',
-        metadata: { displayName: 'Cursor' }
+        displayName: 'Cursor'
       }
     ],
     isLoading: false,

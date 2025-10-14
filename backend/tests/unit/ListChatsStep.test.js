@@ -33,7 +33,7 @@ const mockSessions = [
     status: "active",
     createdAt: new Date(),
     isActive: true,
-    metadata: { test: "data1" },
+    test: "data1",
   },
   {
     id: "test-session-2",
@@ -42,7 +42,7 @@ const mockSessions = [
     status: "archived",
     createdAt: new Date(),
     isActive: false,
-    metadata: { test: "data2" },
+    test: "data2",
   },
 ];
 

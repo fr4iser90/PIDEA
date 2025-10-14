@@ -153,12 +153,10 @@ class AISuggestion {
       priority: this.getPriority(),
       estimatedDuration: this._getEstimatedDuration(),
       requiresAI: true,
-      metadata: {
-        ...this._metadata,
-        aiSuggestion: true,
-        confidence: this._confidence,
-        confidenceScore: this.getConfidenceScore(),
-      },
+      ...this._metadata,
+      aiSuggestion: true,
+      confidence: this._confidence,
+      confidenceScore: this.getConfidenceScore(),
     };
   }
 

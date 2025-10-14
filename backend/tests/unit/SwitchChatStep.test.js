@@ -30,7 +30,7 @@ const mockSession = {
   userId: "test-user-123",
   status: "active",
   createdAt: new Date(),
-  metadata: { test: "data" },
+  test: "data",
 };
 
 // Mock context with services

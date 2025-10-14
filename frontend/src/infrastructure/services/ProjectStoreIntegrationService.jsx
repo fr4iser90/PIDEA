@@ -165,13 +165,11 @@ class ProjectStoreIntegrationService {
         framework: this.detectFramework(ideData.workspacePath),
         language: this.detectLanguage(ideData.workspacePath),
         packageManager: this.detectPackageManager(ideData.workspacePath),
-        metadata: {
-          idePort: ideData.port,
-          ideName: ideData.name,
-          createdFromIDE: true,
-          lastAccessed: new Date().toISOString(),
-          accessCount: 1
-        }
+        idePort: ideData.port,
+        ideName: ideData.name,
+        createdFromIDE: true,
+        lastAccessed: new Date().toISOString(),
+        accessCount: 1
       };
 
       const project = await projectStore.createProject(projectData);

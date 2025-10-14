@@ -27,7 +27,7 @@ const mockLogger = {
 const createMockContext = (overrides = {}) => ({
   userId: "test-user-123",
   title: "Test Chat Session",
-  metadata: { test: "data" },
+  test: "data",
   ideType: "cursor",
   getService: jest.fn((serviceName) => {
     switch (serviceName) {
@@ -61,7 +61,7 @@ describe("CreateChatStep", () => {
       userId: "test-user-123",
       status: "active",
       createdAt: new Date(),
-      metadata: { test: "data" },
+      test: "data",
     });
 
     mockEventBus.publish.mockResolvedValue();
@@ -174,7 +174,7 @@ describe("CreateChatStep", () => {
         userId: "test-user-123",
         status: "active",
         createdAt: expect.any(Date),
-        metadata: { test: "data" },
+        test: "data",
       });
       expect(result.message).toBe("Chat session created successfully");
       expect(result.stepId).toMatch(/^create_chat_step_\d+_/);

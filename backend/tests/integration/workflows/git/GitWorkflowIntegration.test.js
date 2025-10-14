@@ -87,10 +87,8 @@ describe("Git Workflow Integration", () => {
         title: "Add user authentication",
         description: "Implement user authentication system",
         type: { value: "feature" },
-        metadata: {
-          projectPath: "/test/project",
-          filePath: "/test/project/src/auth/AuthService.js",
-        },
+        projectPath: "/test/project",
+        filePath: "/test/project/src/auth/AuthService.js",
       };
 
       const context = new GitWorkflowContext({
@@ -121,10 +119,8 @@ describe("Git Workflow Integration", () => {
         title: "Add payment processing",
         description: "Implement payment processing system",
         type: { value: "feature" },
-        metadata: {
-          projectPath: "/test/project",
-          filePath: "/test/project/src/payment/PaymentService.js",
-        },
+        projectPath: "/test/project",
+        filePath: "/test/project/src/payment/PaymentService.js",
       };
 
       const context = new GitWorkflowContext({
@@ -165,9 +161,7 @@ describe("Git Workflow Integration", () => {
         title: "Refactor database layer",
         description: "Refactor the database access layer",
         type: { value: "refactor" },
-        metadata: {
-          projectPath: "/test/project",
-        },
+        projectPath: "/test/project",
       };
 
       // Use WorkflowGitService (which internally uses GitWorkflowManager)
@@ -190,9 +184,7 @@ describe("Git Workflow Integration", () => {
         title: "Fix login bug",
         description: "Fix the login authentication bug",
         type: { value: "bug" },
-        metadata: {
-          projectPath: "/test/project",
-        },
+        projectPath: "/test/project",
       };
 
       // Use WorkflowOrchestrationService (which internally uses GitWorkflowManager)
@@ -212,7 +204,7 @@ describe("Git Workflow Integration", () => {
           id: "task-1",
           title: "Test Task",
           type: { value: "feature" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
           isCompleted: () => false,
         }),
         update: jest.fn().mockResolvedValue(true),
@@ -239,9 +231,7 @@ describe("Git Workflow Integration", () => {
       const task = {
         id: "auto-task-1",
         description: "Automatically implement user registration",
-        metadata: {
-          projectPath: "/test/project",
-        },
+        projectPath: "/test/project",
       };
 
       // Mock cursor IDE response
@@ -270,9 +260,7 @@ describe("Git Workflow Integration", () => {
         id: "error-task-1",
         title: "Test error handling",
         type: { value: "feature" },
-        metadata: {
-          projectPath: "/test/project",
-        },
+        projectPath: "/test/project",
       };
 
       // Test WorkflowGitService fallback
@@ -296,7 +284,6 @@ describe("Git Workflow Integration", () => {
         id: "invalid-task",
         title: "",
         type: null,
-        metadata: {},
       };
 
       const context = new GitWorkflowContext({
@@ -319,9 +306,7 @@ describe("Git Workflow Integration", () => {
         id: "event-task-1",
         title: "Test event system",
         type: { value: "feature" },
-        metadata: {
-          projectPath: "/test/project",
-        },
+        projectPath: "/test/project",
       };
 
       const context = new GitWorkflowContext({
@@ -359,9 +344,7 @@ describe("Git Workflow Integration", () => {
         id: "event-error-task-1",
         title: "Test event error handling",
         type: { value: "feature" },
-        metadata: {
-          projectPath: "/test/project",
-        },
+        projectPath: "/test/project",
       };
 
       const context = new GitWorkflowContext({
@@ -385,19 +368,19 @@ describe("Git Workflow Integration", () => {
           id: "concurrent-task-1",
           title: "Concurrent task 1",
           type: { value: "feature" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
         },
         {
           id: "concurrent-task-2",
           title: "Concurrent task 2",
           type: { value: "bug" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
         },
         {
           id: "concurrent-task-3",
           title: "Concurrent task 3",
           type: { value: "refactor" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
         },
       ];
 

@@ -844,10 +844,8 @@ const recommendationsAnalysis = await fetch('/api/analysis/recommendations', {
     projectId: 'my-project-123',
     projectPath: '/path/to/project',
     analysisType: 'recommendations',
-    metadata: {
-      currentTechstack: ['react', 'nodejs'],
-      targetFeatures: ['authentication', 'database']
-    }
+    currentTechstack: ['react', 'nodejs'],
+    targetFeatures: ['authentication', 'database']
   })
 }).then(res => res.json());
 ```

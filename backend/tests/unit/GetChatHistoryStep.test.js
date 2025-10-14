@@ -31,7 +31,7 @@ const mockMessages = [
     type: "text",
     sender: "assistant",
     timestamp: new Date("2024-01-01T10:00:00Z"),
-    metadata: { model: "gpt-4" },
+    model: "gpt-4",
   },
   {
     id: "msg-2",
@@ -39,7 +39,7 @@ const mockMessages = [
     type: "text",
     sender: "user",
     timestamp: new Date("2024-01-01T10:01:00Z"),
-    metadata: { language: "javascript" },
+    language: "javascript",
   },
   {
     id: "msg-3",
@@ -47,7 +47,7 @@ const mockMessages = [
     type: "text",
     sender: "assistant",
     timestamp: new Date("2024-01-01T10:02:00Z"),
-    metadata: { model: "gpt-4" },
+    model: "gpt-4",
   },
 ];
 

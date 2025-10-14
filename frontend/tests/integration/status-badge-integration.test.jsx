@@ -53,7 +53,7 @@ describe('Status Badge Integration Tests', () => {
           status: 'running',
           ideType: 'cursor',
           workspacePath: '/test/workspace',
-          metadata: { displayName: 'Cursor' }
+          displayName: 'Cursor'
         }
       ],
       isLoading: false,
@@ -112,7 +112,7 @@ describe('Status Badge Integration Tests', () => {
             status: 'starting',
             ideType: 'cursor',
             workspacePath: '/test/workspace',
-            metadata: { displayName: 'Cursor' }
+            displayName: 'Cursor'
           }
         ],
         isLoading: false,
@@ -315,7 +315,7 @@ describe('Status Badge Integration Tests', () => {
             status: 'running',
             ideType: 'cursor',
             workspacePath: '/test/workspace',
-            metadata: { displayName: 'Cursor' }
+            displayName: 'Cursor'
           }
         ],
         isLoading: false,

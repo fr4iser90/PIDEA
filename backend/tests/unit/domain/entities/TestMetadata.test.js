@@ -447,7 +447,7 @@ describe("TestMetadata Entity", () => {
         failureCount: 2,
         averageDuration: 1500,
         tags: ["unit", "fast"],
-        metadata: { framework: "jest" },
+        framework: "jest",
         createdAt: new Date(),
         updatedAt: new Date(),
         legacyScore: 0,

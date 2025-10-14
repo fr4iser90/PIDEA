@@ -99,12 +99,10 @@ describe("Git Workflow E2E Scenarios", () => {
         description:
           "Implement user profile management system with CRUD operations",
         type: { value: "feature" },
-        metadata: {
-          projectPath: "/test/project",
-          filePath: "/test/project/src/user/ProfileService.js",
-          priority: "high",
-          estimatedHours: 8,
-        },
+        projectPath: "/test/project",
+        filePath: "/test/project/src/user/ProfileService.js",
+        priority: "high",
+        estimatedHours: 8,
       };
 
       // Step 2: Execute workflow orchestration
@@ -152,12 +150,10 @@ describe("Git Workflow E2E Scenarios", () => {
         description:
           "Fix the issue where authentication tokens expire prematurely",
         type: { value: "bug" },
-        metadata: {
-          projectPath: "/test/project",
-          filePath: "/test/project/src/auth/TokenService.js",
-          priority: "critical",
-          severity: "high",
-        },
+        projectPath: "/test/project",
+        filePath: "/test/project/src/auth/TokenService.js",
+        priority: "critical",
+        severity: "high",
       };
 
       // Step 2: Execute workflow with hotfix strategy
@@ -208,16 +204,14 @@ describe("Git Workflow E2E Scenarios", () => {
         description:
           "Refactor the database access layer to use repository pattern",
         type: { value: "refactor" },
-        metadata: {
-          projectPath: "/test/project",
-          filePath: "/test/project/src/database/DatabaseService.js",
-          refactoringSteps: [
-            "Extract repository interfaces",
-            "Implement concrete repositories",
-            "Update service layer to use repositories",
-            "Add unit tests for repositories",
-          ],
-        },
+        projectPath: "/test/project",
+        filePath: "/test/project/src/database/DatabaseService.js",
+        refactoringSteps: [
+          "Extract repository interfaces",
+          "Implement concrete repositories",
+          "Update service layer to use repositories",
+          "Add unit tests for repositories",
+        ],
       };
 
       // Step 2: Execute refactoring workflow
@@ -264,10 +258,8 @@ describe("Git Workflow E2E Scenarios", () => {
       const todoTask = {
         id: "todo-e2e-1",
         description: "Implement user registration form validation",
-        metadata: {
-          projectPath: "/test/project",
-          filePath: "/test/project/src/components/RegistrationForm.js",
-        },
+        projectPath: "/test/project",
+        filePath: "/test/project/src/components/RegistrationForm.js",
       };
 
       // Step 2: Mock auto-finish system responses
@@ -308,19 +300,19 @@ describe("Git Workflow E2E Scenarios", () => {
           id: "multi-task-1",
           title: "Add user authentication",
           type: { value: "feature" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
         },
         {
           id: "multi-task-2",
           title: "Add user authorization",
           type: { value: "feature" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
         },
         {
           id: "multi-task-3",
           title: "Add user profile management",
           type: { value: "feature" },
-          metadata: { projectPath: "/test/project" },
+          projectPath: "/test/project",
         },
       ];
 
@@ -360,7 +352,7 @@ describe("Git Workflow E2E Scenarios", () => {
         id: "error-recovery-1",
         title: "Add error handling",
         type: { value: "feature" },
-        metadata: { projectPath: "/test/project" },
+        projectPath: "/test/project",
       };
 
       // Step 2: Simulate git service failure
@@ -401,7 +393,7 @@ describe("Git Workflow E2E Scenarios", () => {
         id: `perf-task-${i + 1}`,
         title: `Performance task ${i + 1}`,
         type: { value: "feature" },
-        metadata: { projectPath: "/test/project" },
+        projectPath: "/test/project",
       }));
 
       // Step 2: Execute workflows concurrently
@@ -442,7 +434,7 @@ describe("Git Workflow E2E Scenarios", () => {
         id: "monitoring-task-1",
         title: "Add monitoring capabilities",
         type: { value: "feature" },
-        metadata: { projectPath: "/test/project" },
+        projectPath: "/test/project",
       };
 
       // Step 2: Execute workflow

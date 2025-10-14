@@ -26,7 +26,7 @@ describe("HandlerResult", () => {
         error: null,
         duration: 150,
         timestamp: new Date("2023-01-01"),
-        metadata: { key: "value" },
+        key: "value",
       };
 
       const result = new HandlerResult(data);
@@ -110,7 +110,7 @@ describe("HandlerResult", () => {
     });
 
     it("should get specific metadata value", () => {
-      const result = new HandlerResult({ metadata: { key1: "value1" } });
+      const result = new HandlerResult({ key1: "value1" });
 
       expect(result.getMetadataValue("key1")).toBe("value1");
       expect(result.getMetadataValue("key2")).toBe(null);
@@ -145,7 +145,7 @@ describe("HandlerResult", () => {
         error: null,
         duration: 1500,
         timestamp: new Date("2023-01-01"),
-        metadata: { key: "value" },
+        key: "value",
       };
 
       const result = new HandlerResult(data);
@@ -159,7 +159,7 @@ describe("HandlerResult", () => {
         duration: 1500,
         formattedDuration: "1.50s",
         timestamp: new Date("2023-01-01"),
-        metadata: { key: "value" },
+        key: "value",
       });
     });
 
@@ -206,7 +206,7 @@ describe("HandlerResult", () => {
         handlerName: "TestHandler",
         result: { data: "test result" },
         duration: 150,
-        metadata: { key: "value" },
+        key: "value",
       };
 
       const result = HandlerResult.success(data);
@@ -226,7 +226,7 @@ describe("HandlerResult", () => {
         handlerId: "test-handler-123",
         handlerName: "TestHandler",
         duration: 150,
-        metadata: { key: "value" },
+        key: "value",
       };
 
       const result = HandlerResult.error(error, data);
@@ -315,7 +315,7 @@ describe("HandlerResult", () => {
     });
 
     it("should handle empty metadata", () => {
-      const result = new HandlerResult({ metadata: {} });
+      const result = new HandlerResult({});
       expect(result.getMetadata()).toEqual({});
       expect(result.getMetadataValue("nonexistent")).toBe(null);
     });

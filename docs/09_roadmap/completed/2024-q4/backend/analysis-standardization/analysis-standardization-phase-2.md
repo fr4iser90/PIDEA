@@ -72,11 +72,9 @@ return {
     tasks: [...],            // ✅ Only standardized fields
     documentation: [...]     // ✅ Only standardized fields
   },
-  metadata: {
-    stepName: this.name,
-    projectPath,
-    timestamp: new Date()
-  }
+  stepName: this.name,
+  projectPath,
+  timestamp: new Date()
 };
 ```
 
@@ -138,11 +136,9 @@ async execute(context = {}) {
         tasks: this.generateTasks(security),
         documentation: this.generateDocumentation(security)
       },
-      metadata: {
-        stepName: this.name,
-        projectPath,
-        timestamp: new Date()
-      }
+      stepName: this.name,
+      projectPath,
+      timestamp: new Date()
     };
 
   } catch (error) {
@@ -155,11 +151,9 @@ async execute(context = {}) {
         tasks: [],
         documentation: []
       },
-      metadata: {
-        stepName: this.name,
-        projectPath: context.projectPath,
-        timestamp: new Date()
-      }
+      stepName: this.name,
+      projectPath: context.projectPath,
+      timestamp: new Date()
     };
   }
 }
@@ -179,11 +173,9 @@ generateIssues(security) {
       file: vuln.file,
       line: vuln.line,
       suggestion: vuln.suggestion,
-      metadata: {
-        cve: vuln.cve,
-        scanner: 'trivy',
-        confidence: vuln.confidence
-      }
+      cve: vuln.cve,
+      scanner: 'trivy',
+      confidence: vuln.confidence
     })));
   }
   

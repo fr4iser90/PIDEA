@@ -266,7 +266,8 @@ describe('RefreshService Performance Tests', () => {
         items: Array.from({ length: 10000 }, (_, i) => ({
           id: i,
           data: `item-${i}`,
-          metadata: { created: Date.now(), updated: Date.now() }
+          created: Date.now(),
+          updated: Date.now()
         }))
       };
       

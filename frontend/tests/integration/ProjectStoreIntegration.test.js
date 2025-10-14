@@ -300,10 +300,8 @@ describe('ProjectStore Integration', () => {
         name: 'Test Project',
         workspacePath: '/test/workspace',
         status: 'active',
-        metadata: {
-          lastAccessed: '2024-01-01T00:00:00.000Z',
-          accessCount: 0
-        }
+        lastAccessed: '2024-01-01T00:00:00.000Z',
+        accessCount: 0
       };
 
       // Setup initial state
@@ -373,10 +371,8 @@ describe('ProjectStore Integration', () => {
           name: `Project ${i}`,
           workspacePath: `/workspace/${i}`,
           status: 'active',
-          metadata: {
-            lastAccessed: new Date().toISOString(),
-            accessCount: i
-          }
+          lastAccessed: new Date().toISOString(),
+          accessCount: i
         };
       }
 
@@ -404,10 +400,8 @@ describe('ProjectStore Integration', () => {
           name: `Project ${i}`,
           workspacePath: `/workspace/${i}`,
           status: 'active',
-          metadata: {
-            lastAccessed: new Date(Date.now() - i * 1000).toISOString(),
-            accessCount: i
-          }
+          lastAccessed: new Date(Date.now() - i * 1000).toISOString(),
+          accessCount: i
         };
       }
 

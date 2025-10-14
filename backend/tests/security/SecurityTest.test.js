@@ -238,11 +238,9 @@ describe("Task Management System Security Tests", () => {
           "Contains sensitive information: password123, API_KEY=abc123",
         type: "analysis",
         createdBy: "test-user",
-        metadata: {
-          apiKey: "secret-api-key-123",
-          password: "user-password-456",
-          token: "jwt-token-789",
-        },
+        apiKey: "secret-api-key-123",
+        password: "user-password-456",
+        token: "jwt-token-789",
       };
 
       const result = await application.commandBus.execute(
@@ -291,11 +289,9 @@ describe("Task Management System Security Tests", () => {
           "Contains sensitive data: password=secret123, token=abc123",
         type: "analysis",
         createdBy: "test-user",
-        metadata: {
-          apiKey: "secret-key-456",
-          privateKey:
-            "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----",
-        },
+        apiKey: "secret-key-456",
+        privateKey:
+          "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----",
       };
 
       // Capture console output

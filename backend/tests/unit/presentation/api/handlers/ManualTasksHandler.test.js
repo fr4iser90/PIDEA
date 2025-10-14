@@ -144,11 +144,9 @@ describe("ManualTasksHandler", () => {
         status: "pending",
         description: "Test task description",
         content: "# Test Task\n\nThis is a test task.",
-        metadata: {
-          filename: "test-task.md",
-          category: "backend",
-          structure: "implementation",
-        },
+        filename: "test-task.md",
+        category: "backend",
+        structure: "implementation",
       };
 
       // Mock taskRepository
@@ -380,10 +378,8 @@ This is a test task description.
           category: "backend",
           description: "This is a test task description.",
           content: content,
-          metadata: {
-            filename: "test-task.md",
-            structure: "implementation",
-          },
+          filename: "test-task.md",
+          structure: "implementation",
         });
       });
 

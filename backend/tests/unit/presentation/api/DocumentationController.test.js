@@ -1255,7 +1255,7 @@ describe("DocumentationController", () => {
           priority: "high",
           type: "documentation",
           createdAt: new Date(),
-          metadata: { estimatedTime: 4 },
+          estimatedTime: 4,
         },
       ];
       controller.tasks = tasks;
@@ -1270,7 +1270,7 @@ describe("DocumentationController", () => {
           priority: "high",
           type: "documentation",
           createdAt: new Date(),
-          metadata: { estimatedTime: 4 },
+          estimatedTime: 4,
         },
       ];
 

@@ -69,10 +69,8 @@ const recommendation = {
   action: 'Specific action to take',
   impact: 'Expected impact',
   effort: 'low|medium|high',
-  metadata: {
-    stepName: this.name,
-    timestamp: new Date()
-  }
+  stepName: this.name,
+  timestamp: new Date()
 };
 ```
 

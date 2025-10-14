@@ -69,11 +69,9 @@ class FrameworkBuilder {
       steps: [],
       dependencies: config.dependencies || [],
       settings: { ...config.settings, ...options.settings },
-      metadata: {
-        builtAt: new Date(),
-        buildOptions: options,
-        originalConfig: config,
-      },
+      builtAt: new Date(),
+      buildOptions: options,
+      originalConfig: config,
     };
 
     // Build steps
@@ -139,9 +137,7 @@ class FrameworkBuilder {
         ...options.stepSettings?.[stepConfig.name],
       },
       dependencies: stepConfig.dependencies || [],
-      metadata: {
-        config: stepConfig,
-      },
+      config: stepConfig,
     };
 
     // Add step-specific properties

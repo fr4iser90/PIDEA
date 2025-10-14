@@ -82,11 +82,9 @@ export const useProjectStoreIntegration = (options = {}) => {
             description: `Project for ${ide.name || 'Unknown IDE'}`,
             workspacePath: ide.workspacePath,
             type: 'development',
-            metadata: {
-              idePort: ide.port,
-              ideName: ide.name,
-              createdFromIDE: true
-            }
+            idePort: ide.port,
+            ideName: ide.name,
+            createdFromIDE: true
           });
           logger.info('Created project from IDE:', project.name);
         } catch (error) {
@@ -238,13 +236,11 @@ export const useProjectCreation = () => {
         framework,
         language,
         packageManager,
-        metadata: {
-          idePort: ide?.port,
-          ideName: ide?.name,
-          createdFromWorkspace: true,
-          lastAccessed: new Date().toISOString(),
-          accessCount: 0
-        }
+        idePort: ide?.port,
+        ideName: ide?.name,
+        createdFromWorkspace: true,
+        lastAccessed: new Date().toISOString(),
+        accessCount: 0
       };
 
       const project = await projectStore.createProject(projectData);

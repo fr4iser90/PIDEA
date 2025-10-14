@@ -109,7 +109,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: null,
         newValues: { name: "John", email: "john@example.com" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 
@@ -138,7 +138,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: { name: "John", email: "john@example.com" },
         newValues: { name: "Jane", email: "jane@example.com" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 
@@ -167,7 +167,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: { name: "John", email: "john@example.com" },
         newValues: null,
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 
@@ -208,7 +208,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: null,
         newValues: { name: "John" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 
@@ -382,7 +382,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: null,
         newValues: { name: "John", email: "john@example.com" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 
@@ -414,7 +414,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: null,
         newValues: { name: "John", email: "john@example.com" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
         tamperFlag: true, // Suspicious field
       };
@@ -499,7 +499,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: null,
         newValues: { name: "John" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 
@@ -563,7 +563,7 @@ describe("AuditTrailManager Unit Tests", () => {
         recordId: "123",
         oldValues: null,
         newValues: { name: "John" },
-        userId: "user123",
+        userId: "me",
         timestamp: new Date().toISOString(),
       };
 

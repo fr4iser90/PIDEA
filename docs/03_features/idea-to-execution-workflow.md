@@ -62,7 +62,7 @@ const workflow = new IdeaToExecutionWorkflow();
 const result = await workflow.execute({
   idea: "Create a REST API for user management",
   projectId: "my-project",
-  userId: "user123",
+  userId: "me",
   automationLevel: "semi_auto"
 });
 

@@ -100,11 +100,9 @@
         file: "src/utils/helper.js:15",
         line: 15,
         suggestion: "Replace with safer alternatives",
-        metadata: {
-          cve: "CWE-78",
-          scanner: "trivy",
-          confidence: 95
-        }
+        cve: "CWE-78",
+        scanner: "trivy",
+        confidence: 95
       }
     ],
     recommendations: [
@@ -116,10 +114,8 @@
         description: "Security score needs improvement",
         action: "Address security vulnerabilities",
         impact: "Enhanced security posture",
-        metadata: {
-          source: "TrivySecurityStep",
-          confidence: 90
-        }
+        source: "TrivySecurityStep",
+        confidence: 90
       }
     ],
     tasks: [

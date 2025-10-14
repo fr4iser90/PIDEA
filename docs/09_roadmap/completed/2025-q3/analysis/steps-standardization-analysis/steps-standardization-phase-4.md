@@ -66,11 +66,9 @@ const documentation = {
   title: 'Document title',
   content: 'Document content',
   filename: 'documentation.md',
-  metadata: {
-    stepName: this.name,
-    timestamp: new Date(),
-    format: 'markdown'
-  }
+  stepName: this.name,
+  timestamp: new Date(),
+  format: 'markdown'
 };
 ```
 

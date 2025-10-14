@@ -59,7 +59,6 @@ describe("QueueTaskExecutionService", () => {
       title: "Test Task",
       description: "Test Description",
       type: { value: "feature" },
-      metadata: {},
     };
 
     const mockWorkflow = {

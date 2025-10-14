@@ -308,7 +308,7 @@ class Analysis {
       startedAt: analysisResult.startedAt,
       completedAt: analysisResult.completedAt,
       result: analysisResult.resultData,
-      metadata: { summary: analysisResult.summary },
+      summary: analysisResult.summary,
       executionTime: analysisResult.durationMs,
       overallScore: analysisResult.overallScore,
       criticalIssuesCount: analysisResult.criticalIssuesCount,

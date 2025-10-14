@@ -612,7 +612,7 @@ describe("MonitorTerminalOutputStep", () => {
           line: "Info message",
           type: "stdout",
           level: "info",
-          metadata: { source: "app" },
+          source: "app",
         },
         {
           timestamp: "2024-01-01T10:01:00Z",

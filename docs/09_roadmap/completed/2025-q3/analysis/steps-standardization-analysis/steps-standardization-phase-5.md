@@ -111,11 +111,9 @@ async execute(context = {}) {
     
     return {
       result: result,
-      metadata: {
-        stepName: this.name,
-        timestamp: new Date(),
-        subStepsExecuted: stepResults.length
-      }
+      stepName: this.name,
+      timestamp: new Date(),
+      subStepsExecuted: stepResults.length
     };
   } catch (error) {
     // ... error handling ...
@@ -153,10 +151,8 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
       
       return {
         result: result,
-        metadata: {
-          stepName: this.name,
-          timestamp: new Date()
-        }
+        stepName: this.name,
+        timestamp: new Date()
       };
     } catch (error) {
       // ... error handling ...
@@ -196,10 +192,8 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
       
       return {
         result: result,
-        metadata: {
-          stepName: this.name,
-          timestamp: new Date()
-        }
+        stepName: this.name,
+        timestamp: new Date()
       };
     } catch (error) {
       // ... error handling ...
@@ -238,10 +232,8 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
       
       return {
         result: result,
-        metadata: {
-          stepName: this.name,
-          timestamp: new Date()
-        }
+        stepName: this.name,
+        timestamp: new Date()
       };
     } catch (error) {
       // ... error handling ...

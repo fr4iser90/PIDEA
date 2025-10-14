@@ -432,11 +432,9 @@ class TestDataManager {
       const exportData = {
         tables: {},
         schema: {},
-        metadata: {
-          exportedAt: new Date().toISOString(),
-          format,
-          includeSchema,
-        },
+        exportedAt: new Date().toISOString(),
+        format,
+        includeSchema,
       };
 
       // Get table list

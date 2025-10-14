@@ -30,12 +30,10 @@ function PlanningStep({ analysisResults, onTasksCreated, workflowData }) {
           status: 'pending',
           source_type: 'framework_generated',
           source_content: `Documentation Framework Analysis Task`,
-          metadata: {
-            estimated_hours: task.estimatedHours,
-            framework: 'documentation-framework',
-            analysis_id: workflowData.analysisId,
-            coverage_area: task.category
-          }
+          estimated_hours: task.estimatedHours,
+          framework: 'documentation-framework',
+          analysis_id: workflowData.analysisId,
+          coverage_area: task.category
         };
 
         // Create task in database using existing API

@@ -68,10 +68,8 @@ const issue = {
   description: 'Issue description',
   location: 'file:line',
   suggestion: 'How to fix',
-  metadata: {
-    stepName: this.name,
-    timestamp: new Date()
-  }
+  stepName: this.name,
+  timestamp: new Date()
 };
 ```
 

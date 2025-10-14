@@ -93,13 +93,11 @@ describe("API Performance Tests", () => {
           description: "A".repeat(1000), // Large description
           type: "web",
           framework: "react",
-          metadata: {
-            tags: Array.from({ length: 100 }, (_, i) => `tag${i}`),
-            config: Array.from({ length: 50 }, (_, i) => ({
-              key: `key${i}`,
-              value: `value${i}`,
-            })),
-          },
+          tags: Array.from({ length: 100 }, (_, i) => `tag${i}`),
+          config: Array.from({ length: 50 }, (_, i) => ({
+            key: `key${i}`,
+            value: `value${i}`,
+          })),
         };
 
         const startTime = Date.now();

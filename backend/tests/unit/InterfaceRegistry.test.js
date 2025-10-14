@@ -335,10 +335,8 @@ describe("InterfaceRegistry", () => {
         version: "1.0.0",
         registeredAt: expect.any(Date),
         lastUpdated: expect.any(Date),
-        metadata: {
-          author: "Test Author",
-          lastUpdated: expect.any(Date),
-        },
+        author: "Test Author",
+        lastUpdated: expect.any(Date),
         constraints: {
           supportedFrameworks: ["react"],
           lastUpdated: expect.any(Date),
@@ -463,7 +461,7 @@ describe("InterfaceRegistry", () => {
 
     test("should search by metadata", () => {
       const results = interfaceRegistry.searchInterfaceTypes({
-        metadata: { author: "React Team" },
+        author: "React Team",
       });
       expect(results).toHaveLength(1);
       expect(results[0].name).toBe("React Interface");
@@ -472,7 +470,7 @@ describe("InterfaceRegistry", () => {
     test("should combine multiple search criteria", () => {
       const results = interfaceRegistry.searchInterfaceTypes({
         category: "frontend",
-        metadata: { author: "Vue Team" },
+        author: "Vue Team",
       });
       expect(results).toHaveLength(1);
       expect(results[0].name).toBe("Vue Interface");

@@ -253,7 +253,7 @@ const result = await orchestrationService.executeWorkflow(
     id: 'task-1',
     title: 'Add user authentication',
     type: { value: 'feature' },
-    metadata: { projectPath: '/path/to/project' }
+    projectPath: '/path/to/project'
   },
   { autoMerge: true, createPullRequest: true }
 );
@@ -321,7 +321,7 @@ const result = await autoFinishSystem.processTask(
   {
     id: 'task-1',
     description: 'Add user authentication',
-    metadata: { projectPath: '/path/to/project' }
+    projectPath: '/path/to/project'
   },
   'session-1',
   { autoMerge: true }

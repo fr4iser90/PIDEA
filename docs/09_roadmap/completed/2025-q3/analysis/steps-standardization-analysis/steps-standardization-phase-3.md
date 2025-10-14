@@ -69,11 +69,9 @@ const task = {
   priority: 'high|medium|low',
   estimatedHours: 2,
   dependencies: [],
-  metadata: {
-    stepName: this.name,
-    timestamp: new Date(),
-    sourceAnalysis: this.name
-  }
+  stepName: this.name,
+  timestamp: new Date(),
+  sourceAnalysis: this.name
 };
 ```
 
@@ -100,11 +98,9 @@ async generateTasksFromViolations(violations, fixes, context) {
       priority: violation.severity === 'critical' ? 'high' : 'medium',
       estimatedHours: this.calculateEstimatedHours([violation]),
       dependencies: [],
-      metadata: {
-        stepName: this.name,
-        violationId: violation.id,
-        timestamp: new Date()
-      }
+      stepName: this.name,
+      violationId: violation.id,
+      timestamp: new Date()
     };
     
     tasks.push(task);

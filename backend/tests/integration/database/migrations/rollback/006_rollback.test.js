@@ -175,7 +175,6 @@ describe("Rollback 006 - Project Interfaces Table", () => {
       connection_count: { type: "INTEGER", nullable: true },
       capabilities: { type: "TEXT", nullable: true },
       supported_operations: { type: "TEXT", nullable: true },
-      metadata: { type: "TEXT", nullable: true },
       created_at: { type: "TEXT", nullable: false },
       updated_at: { type: "TEXT", nullable: false },
       created_by: { type: "TEXT", nullable: false },

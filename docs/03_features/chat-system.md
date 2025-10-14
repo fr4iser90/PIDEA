@@ -129,10 +129,8 @@ Responses from the IDE or system:
   content: "Response content",
   timestamp: "2024-01-01T12:00:00.000Z",
   sessionId: "session-id",
-  metadata: {
-    action: "file_created",
-    filePath: "/path/to/file.js"
-  }
+  action: "file_created",
+  filePath: "/path/to/file.js"
 }
 ```
 

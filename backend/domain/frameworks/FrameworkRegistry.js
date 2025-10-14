@@ -49,11 +49,9 @@ class FrameworkRegistry {
         category: finalCategory,
         registeredAt: new Date(),
         status: "active",
-        metadata: {
-          type: "framework",
-          category: finalCategory,
-          version: config.version || "1.0.0",
-        },
+        type: "framework",
+        category: finalCategory,
+        version: config.version || "1.0.0",
       });
 
       // Add to category

@@ -424,9 +424,7 @@ describe('ProjectStore Cache Integration', () => {
         manyProjects[`project-${i}`] = {
           id: `project-${i}`,
           name: `Project ${i}`,
-          metadata: {
-            lastAccessed: new Date(Date.now() - i * 1000).toISOString()
-          }
+          lastAccessed: new Date(Date.now() - i * 1000).toISOString()
         };
       }
 
