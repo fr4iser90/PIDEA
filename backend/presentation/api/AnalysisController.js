@@ -1444,7 +1444,7 @@ class AnalysisController {
         logger.warn(
           `⚠️ [AnalysisController] No analyses found for project: ${projectId}`,
         );
-        return res.json({ issues: [] });
+        return res.success({ issues: [] });
       }
 
       const latestAnalysis = analyses[0];
@@ -1475,10 +1475,10 @@ class AnalysisController {
       logger.info(
         `📤 [AnalysisController] Sending ${issues.length} issues to frontend`,
       );
-      res.json({ issues });
+      res.success({ issues });
     } catch (error) {
       logger.error(`❌ Error getting security issues:`, error);
-      res.status(500).json({ error: "Failed to get security issues" });
+      res.internalError("Failed to get security issues");
     }
   }
 
@@ -1501,7 +1501,7 @@ class AnalysisController {
         logger.warn(
           `⚠️ [AnalysisController] No analyses found for project: ${projectId}`,
         );
-        return res.json({ recommendations: [] });
+        return res.success({ recommendations: [] });
       }
 
       const latestAnalysis = analyses[0];
@@ -1536,10 +1536,10 @@ class AnalysisController {
       logger.info(
         `📤 [AnalysisController] Sending ${recommendations.length} recommendations to frontend`,
       );
-      res.json({ recommendations });
+      res.success({ recommendations });
     } catch (error) {
       logger.error(`❌ Error getting security recommendations:`, error);
-      res.status(500).json({ error: "Failed to get security recommendations" });
+      res.internalError("Failed to get security recommendations");
     }
   }
 
@@ -1560,7 +1560,7 @@ class AnalysisController {
         this.logger.warn(
           `⚠️ [AnalysisController] No analyses found for project: ${projectId}`,
         );
-        return res.json({ metrics: {} });
+        return res.success({ metrics: {} });
       }
 
       const latestAnalysis = analyses[0];
@@ -1596,10 +1596,10 @@ class AnalysisController {
         `📤 [AnalysisController] Sending metrics to frontend:`,
         JSON.stringify(metrics, null, 2),
       );
-      res.json({ metrics });
+      res.success({ metrics });
     } catch (error) {
       this.logger.error(`❌ Error getting security metrics:`, error);
-      res.status(500).json({ error: "Failed to get security metrics" });
+      res.internalError("Failed to get security metrics");
     }
   }
 
@@ -1620,7 +1620,7 @@ class AnalysisController {
         this.logger.warn(
           `⚠️ [AnalysisController] No analyses found for project: ${projectId}`,
         );
-        return res.json({ summary: {} });
+        return res.success({ summary: {} });
       }
 
       const latestAnalysis = analyses[0];
@@ -1656,10 +1656,10 @@ class AnalysisController {
         `📤 [AnalysisController] Sending summary to frontend:`,
         JSON.stringify(summary, null, 2),
       );
-      res.json({ summary });
+      res.success({ summary });
     } catch (error) {
       this.logger.error(`❌ Error getting security summary:`, error);
-      res.status(500).json({ error: "Failed to get security summary" });
+      res.internalError("Failed to get security summary");
     }
   }
 
@@ -1674,7 +1674,7 @@ class AnalysisController {
         this.logger.warn(
           `⚠️ [AnalysisController] No analyses found for project: ${projectId}`,
         );
-        return res.json({ results: {} });
+        return res.success({ results: {} });
       }
 
       const latestAnalysis = analyses[0];
@@ -1682,10 +1682,10 @@ class AnalysisController {
       this.logger.info(
         `📤 [AnalysisController] Sending full results to frontend`,
       );
-      res.json({ results: latestAnalysis.result });
+      res.success({ results: latestAnalysis.result });
     } catch (error) {
       this.logger.error(`❌ Error getting security results:`, error);
-      res.status(500).json({ error: "Failed to get security results" });
+      res.internalError("Failed to get security results");
     }
   }
 }

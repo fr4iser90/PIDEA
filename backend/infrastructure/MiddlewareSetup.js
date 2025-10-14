@@ -116,11 +116,8 @@ class MiddlewareSetup {
           req.path.includes("/api/prompts") ||
           req.path.includes("/api/templates")
         ) {
-          return res.status(429).json({
-           
-            error: "Rate limit exceeded for content library",
-            message:
-              "Please visit our GitHub repository for direct access to frameworks, prompts, and templates",
+          return res.tooManyRequests("Rate limit exceeded for content library", {
+            message: "Please visit our GitHub repository for direct access to frameworks, prompts, and templates",
             githubUrl: "https://github.com/fr4iser90/PIDEA",
           });
         }

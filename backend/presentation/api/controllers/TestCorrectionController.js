@@ -180,12 +180,9 @@ class TestCorrectionController {
         const autoFix = new AutoFixTests(options);
         const result = await autoFix.run();
         
-        res.json({
-          success: result.success,
-          data: {
-            commandId: command.id,
-            result: result
-          }
+        res.success({
+          commandId: command.id,
+          result: result
         });
       }
       
@@ -214,16 +211,13 @@ class TestCorrectionController {
       
       const result = await improver.run();
       
-      res.json({
-        success: result.success,
-        data: {
-          initialCoverage: result.results.initialCoverage,
-          finalCoverage: result.results.finalCoverage,
-          improvement: result.results.improvement,
-          targetCoverage,
-          testGeneration: result.testGenerationResults,
-          testImprovement: result.testImprovementResults
-        }
+      res.success({
+        initialCoverage: result.results.initialCoverage,
+        finalCoverage: result.results.finalCoverage,
+        improvement: result.results.improvement,
+        targetCoverage,
+        testGeneration: result.testGenerationResults,
+        testImprovement: result.testImprovementResults
       });
       
     } catch (error) {

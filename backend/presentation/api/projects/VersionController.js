@@ -65,9 +65,9 @@ class VersionController {
         const result = await this.handler.handle(command);
 
         if (result.success) {
-          res.status(200).json(result);
+          res.ok(result);
         } else {
-          res.status(400).json(result);
+          res.badRequest(result);
         }
       } else {
         // Create normal bump version command
@@ -86,9 +86,9 @@ class VersionController {
         const result = await this.handler.handle(command);
 
         if (result.success) {
-          res.status(200).json(result);
+          res.ok(result);
         } else {
-          res.status(400).json(result);
+          res.badRequest(result);
         }
       }
     } catch (error) {
@@ -124,9 +124,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in getCurrentVersion endpoint", {
@@ -153,9 +153,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in getVersionHistory endpoint", {
@@ -186,9 +186,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in validateVersion endpoint", {
@@ -224,9 +224,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in compareVersions endpoint", {
@@ -263,9 +263,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in determineBumpType endpoint", {
@@ -290,9 +290,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in getLatestVersion endpoint", {
@@ -324,9 +324,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in updateConfiguration endpoint", {
@@ -351,9 +351,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in getConfiguration endpoint", {
@@ -414,9 +414,9 @@ class VersionController {
       const result = await this.handler.handle(command);
 
       if (result.success) {
-        res.status(200).json(result);
+        res.ok(result);
       } else {
-        res.status(400).json(result);
+        res.badRequest(result);
       }
     } catch (error) {
       this.logger.error("Error in getAIAnalysis endpoint", {

@@ -173,22 +173,15 @@ class SecurityConfig {
           req.path.includes("/api/prompts") ||
           req.path.includes("/api/templates")
         ) {
-          return res.status(429).json({
-           
-            error: "Rate limit exceeded for content library",
-            message:
-              "Please visit our GitHub repository for direct access to frameworks, prompts, and templates",
+          return res.tooManyRequests("Rate limit exceeded for content library", {
+            message: "Please visit our GitHub repository for direct access to frameworks, prompts, and templates",
             githubUrl: "https://github.com/fr4iser90/PIDEA",
             retryAfter: Math.ceil((15 * 60) / 1000), // 15 minutes in seconds
           });
         }
 
         // For other endpoints, show standard message
-        res.status(429).json({
-         
-          error: "Rate limit exceeded",
-          retryAfter: Math.ceil((15 * 60) / 1000), // 15 minutes in seconds
-        });
+        res.tooManyRequests("Rate limit exceeded", { retryAfter: Math.ceil((15 * 60) / 1000) });
       },
     };
 
@@ -274,11 +267,7 @@ class SecurityConfig {
       refreshTimeoutOnRequest: false,
       failCallback: (req, res, next, nextValidRequestDate) => {
         logger.warn(`Brute force attempt detected from ${req.ip}`);
-        res.status(429).json({
-         
-          error: "Too many failed attempts",
-          retryAfter: nextValidRequestDate,
-        });
+        res.tooManyRequests("Too many failed attempts", { retryAfter: nextValidRequestDate });
       },
       handleStoreError: (error) => {
         logger.error("Brute force store error:", error);

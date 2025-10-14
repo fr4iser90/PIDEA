@@ -95,7 +95,7 @@ class AuthController {
       });
 
       logger.info("✅ [AuthController] Cookies set successfully");
-      res.status(200).json(responseData);
+      res.ok(responseData);
     } catch (error) {
       logger.error("Login error:", error);
       res.unauthorized("Invalid credentials");
@@ -142,7 +142,7 @@ class AuthController {
         userEmail: result.data.user.email,
       });
 
-      res.status(200).json({
+      res.ok({
         user: result.data.user,
       });
     } catch (error) {
@@ -216,7 +216,7 @@ class AuthController {
         req.user.id,
       );
 
-      res.status(200).json({
+      res.ok({
         user: result.data.user,
       });
     } catch (error) {
@@ -259,7 +259,7 @@ class AuthController {
             logger.info(
               "✅ [AuthController] Access token validation successful",
             );
-            return res.status(200).json({
+            return res.ok({
               user: result.data.user,
             });
           }
@@ -301,7 +301,7 @@ class AuthController {
             logger.info(
               "✅ [AuthController] Token refreshed and validated successfully",
             );
-            return res.status(200).json({
+            return res.ok({
               user: result.data.user,
             });
           }
@@ -351,7 +351,7 @@ class AuthController {
         profileData,
       );
 
-      res.status(200).json({
+      res.ok({
         user: result.data.user,
       });
     } catch (error) {
@@ -381,7 +381,7 @@ class AuthController {
         req.user.id,
       );
 
-      res.status(200).json({
+      res.ok({
         sessions: result.data.sessions,
       });
     } catch (error) {

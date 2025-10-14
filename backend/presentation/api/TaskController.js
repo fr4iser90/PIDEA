@@ -866,7 +866,7 @@ class TaskController {
             },
           );
 
-          return res.status(200).json({
+          return res.ok({
             success: successCount > 0,
             message: `Task check-state completed: ${successCount}/${totalCount} tasks processed successfully`,
             data: {
@@ -991,7 +991,7 @@ class TaskController {
             userId,
           });
 
-          return res.status(200).json({
+          return res.ok({
             success: successCount > 0,
             message: `Bulk task review completed: ${successCount}/${totalCount} tasks processed successfully`,
             data: {

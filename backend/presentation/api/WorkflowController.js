@@ -649,15 +649,12 @@ class WorkflowController {
                     const successCount = results.filter(r => !r.error).length;
                     const totalCount = results.length;
                     
-                    return res.json({
-                        success: successCount > 0,
-                        data: {
-                            results,
-                            summary: {
-                                total: totalCount,
-                                successful: successCount,
-                                failed: totalCount - successCount
-                            }
+                    return res.success({
+                        results,
+                        summary: {
+                            total: totalCount,
+                            successful: successCount,
+                            failed: totalCount - successCount
                         },
                         message: `Individual analysis completed: ${successCount}/${totalCount} successful`,
                         analysisType: 'individual'
@@ -943,13 +940,11 @@ class WorkflowController {
                         console.log(`WorkflowController: Task review workflow completed - ${successCount}/${totalCount} successful`);
                     }
                     
-                    return res.status(200).json({
-                        success: successCount > 0,
+                    return res.ok({
                         message: `Task review completed: ${successCount}/${totalCount} tasks processed successfully`,
-                        data: {
-                            results,
-                            summary: {
-                                totalTasks: totalCount,
+                        results,
+                        summary: {
+                            totalTasks: totalCount,
                                 completedTasks: successCount,
                                 failedTasks: totalCount - successCount,
                                 workflowPrompt: 'task-check-state.md'

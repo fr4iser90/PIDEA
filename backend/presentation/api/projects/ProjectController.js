@@ -47,7 +47,7 @@ class ProjectController {
       });
 
       this.logger.info("Project created:", { projectId: project.id, name });
-      res.status(201).json(project);
+      res.created(project);
     } catch (error) {
       this.logger.error("Failed to create project:", error);
       res.error("Internal server error", 500);
@@ -122,7 +122,7 @@ class ProjectController {
       }
 
       this.logger.info("Project deleted:", { projectId });
-      res.status(200).json({
+      res.ok({
         message: "Project deleted successfully",
       });
     } catch (error) {
@@ -157,7 +157,7 @@ class ProjectController {
         firstProject: result.projects?.[0] || "none",
       });
 
-      res.json({
+      res.success({
         data: result.projects,
         pagination: {
           page: parseInt(page),

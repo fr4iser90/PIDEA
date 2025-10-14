@@ -36,14 +36,14 @@ class InterfaceMiddleware {
       const { projectId, interfaceId } = req.params;
 
       if (!interfaceId || typeof interfaceId !== "string") {
-        return res.status(400).json({ error: "Invalid interface ID" });
+        return res.badRequest("Invalid interface ID");
       }
 
       // Check if project exists
       const project =
         await this.projectApplicationService.getProject(projectId);
       if (!project) {
-        return res.status(404).json({ error: "Project not found" });
+        return res.notFound("Project not found");
       }
 
       // Check if interface exists within project context
@@ -52,7 +52,7 @@ class InterfaceMiddleware {
         interfaceId,
       );
       if (!interfaceInstance) {
-        return res.status(404).json({ error: "Interface not found" });
+        return res.notFound("Interface not found");
       }
 
       // Add interface and project to request for downstream middleware
@@ -63,7 +63,7 @@ class InterfaceMiddleware {
       next();
     } catch (error) {
       this.logger.error("Interface validation error:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   };
 
@@ -95,7 +95,7 @@ class InterfaceMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors });
+      return res.badRequest(errors );
     }
 
     next();
@@ -143,7 +143,7 @@ class InterfaceMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors });
+      return res.badRequest(errors );
     }
 
     next();
@@ -202,7 +202,7 @@ class InterfaceMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors });
+      return res.badRequest(errors );
     }
 
     next();

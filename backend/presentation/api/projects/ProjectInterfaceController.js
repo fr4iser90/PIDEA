@@ -43,14 +43,14 @@ class ProjectInterfaceController {
         configuration,
       });
       if (!validation.isValid) {
-        return res.status(400).json({ error: validation.errors });
+        return res.badRequest(validation.errors );
       }
 
       // Verify project exists
       const project =
         await this.projectApplicationService.getProject(projectId);
       if (!project) {
-        return res.status(404).json({ error: "Project not found" });
+        return res.notFound("Project not found");
       }
 
       // Create interface within project context
@@ -69,10 +69,10 @@ class ProjectInterfaceController {
         interfaceId: interfaceInstance.id,
         name,
       });
-      res.status(201).json({ interface: interfaceInstance });
+      res.created({ interface: interfaceInstance });
     } catch (error) {
       this.logger.error("Failed to create interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -89,13 +89,13 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({ error: "Interface not found" });
+        return res.notFound("Interface not found");
       }
 
-      res.json({ interface: interfaceInstance });
+      res.success({ interface: interfaceInstance });
     } catch (error) {
       this.logger.error("Failed to get interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -111,7 +111,7 @@ class ProjectInterfaceController {
       // Validate updates
       const validation = this.validateInterfaceData(updates, true);
       if (!validation.isValid) {
-        return res.status(400).json({ error: validation.errors });
+        return res.badRequest(validation.errors );
       }
 
       const interfaceInstance = await this.interfaceManager.updateInterface(
@@ -121,7 +121,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({ error: "Interface not found" });
+        return res.notFound("Interface not found");
       }
 
       this.logger.info("Interface updated:", {
@@ -129,10 +129,10 @@ class ProjectInterfaceController {
         interfaceId,
         updates,
       });
-      res.json({ interface: interfaceInstance });
+      res.success({ interface: interfaceInstance });
     } catch (error) {
       this.logger.error("Failed to update interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -149,14 +149,14 @@ class ProjectInterfaceController {
       );
 
       if (!deleted) {
-        return res.status(404).json({ error: "Interface not found" });
+        return res.notFound("Interface not found");
       }
 
       this.logger.info("Interface deleted:", { projectId, interfaceId });
       res.status(204).send();
     } catch (error) {
       this.logger.error("Failed to delete interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -176,7 +176,7 @@ class ProjectInterfaceController {
         status,
       });
 
-      res.json({
+      res.success({
         interfaces: result.interfaces,
         pagination: {
           page: parseInt(page),
@@ -187,7 +187,7 @@ class ProjectInterfaceController {
       });
     } catch (error) {
       this.logger.error("Failed to list interfaces:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -204,17 +204,17 @@ class ProjectInterfaceController {
       );
 
       if (!result.success) {
-        return res.status(400).json({ error: result.error });
+        return res.badRequest(result.error );
       }
 
       this.logger.info("Interface started:", { projectId, interfaceId });
-      res.json({
+      res.success({
         message: "Interface started successfully",
         interface: result.interface,
       });
     } catch (error) {
       this.logger.error("Failed to start interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -231,17 +231,17 @@ class ProjectInterfaceController {
       );
 
       if (!result.success) {
-        return res.status(400).json({ error: result.error });
+        return res.badRequest(result.error );
       }
 
       this.logger.info("Interface stopped:", { projectId, interfaceId });
-      res.json({
+      res.success({
         message: "Interface stopped successfully",
         interface: result.interface,
       });
     } catch (error) {
       this.logger.error("Failed to stop interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -258,17 +258,17 @@ class ProjectInterfaceController {
       );
 
       if (!result.success) {
-        return res.status(400).json({ error: result.error });
+        return res.badRequest(result.error );
       }
 
       this.logger.info("Interface restarted:", { projectId, interfaceId });
-      res.json({
+      res.success({
         message: "Interface restarted successfully",
         interface: result.interface,
       });
     } catch (error) {
       this.logger.error("Failed to restart interface:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -285,13 +285,13 @@ class ProjectInterfaceController {
       );
 
       if (!status) {
-        return res.status(404).json({ error: "Interface not found" });
+        return res.notFound("Interface not found");
       }
 
-      res.json({ status });
+      res.success({ status });
     } catch (error) {
       this.logger.error("Failed to get interface status:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -313,13 +313,13 @@ class ProjectInterfaceController {
       );
 
       if (!logs) {
-        return res.status(404).json({ error: "Interface not found" });
+        return res.notFound("Interface not found");
       }
 
-      res.json({ logs });
+      res.success({ logs });
     } catch (error) {
       this.logger.error("Failed to get interface logs:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   }
 
@@ -337,10 +337,7 @@ class ProjectInterfaceController {
       res.success(availableIDEs);
     } catch (error) {
       this.logger.error("Failed to get available IDEs:", error);
-      res.status(500).json({
-        error: "Failed to get available IDEs",
-        message: error.message,
-      });
+      res.internalError("Failed to get available IDEs", { message: error.message });
     }
   }
 
@@ -360,10 +357,7 @@ class ProjectInterfaceController {
       res.success({ availableIDEs });
     } catch (error) {
       this.logger.error("Failed to get available IDEs:", error);
-      res.status(500).json({
-        error: "Failed to get available IDEs",
-        message: error.message,
-      });
+      res.internalError("Failed to get available IDEs", { message: error.message });
     }
   }
 
@@ -386,10 +380,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({
-          error: "Interface not found",
-          message: `Interface ${interfaceId} not found`,
-        });
+        return res.notFound("Interface not found", { message: `Interface ${interfaceId} not found` });
       }
 
       // Get IDE features
@@ -398,10 +389,7 @@ class ProjectInterfaceController {
       res.success({ interfaceId, features });
     } catch (error) {
       this.logger.error("Failed to get IDE features:", error);
-      res.status(500).json({
-        error: "Failed to get IDE features",
-        message: error.message,
-      });
+      res.internalError("Failed to get IDE features", { message: error.message });
     }
   }
 
@@ -424,10 +412,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({
-          error: "Interface not found",
-          message: `Interface ${interfaceId} not found`,
-        });
+        return res.notFound("Interface not found", { message: `Interface ${interfaceId} not found` });
       }
 
       // Get IDE version
@@ -436,10 +421,7 @@ class ProjectInterfaceController {
       res.success({ interfaceId, version });
     } catch (error) {
       this.logger.error("Failed to get IDE version:", error);
-      res.status(500).json({
-        error: "Failed to get IDE version",
-        message: error.message,
-      });
+      res.internalError("Failed to get IDE version", { message: error.message });
     }
   }
 
@@ -462,10 +444,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({
-          error: "Interface not found",
-          message: `Interface ${interfaceId} not found`,
-        });
+        return res.notFound("Interface not found", { message: `Interface ${interfaceId} not found` });
       }
 
       // Get workspace info
@@ -475,10 +454,7 @@ class ProjectInterfaceController {
       res.success({ interfaceId, workspaceInfo });
     } catch (error) {
       this.logger.error("Failed to get workspace info:", error);
-      res.status(500).json({
-        error: "Failed to get workspace info",
-        message: error.message,
-      });
+      res.internalError("Failed to get workspace info", { message: error.message });
     }
   }
 
@@ -502,10 +478,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({
-          error: "Interface not found",
-          message: `Interface ${interfaceId} not found`,
-        });
+        return res.notFound("Interface not found", { message: `Interface ${interfaceId} not found` });
       }
 
       // Set workspace path
@@ -517,10 +490,7 @@ class ProjectInterfaceController {
       res.success({ interfaceId, result });
     } catch (error) {
       this.logger.error("Failed to set workspace path:", error);
-      res.status(500).json({
-        error: "Failed to set workspace path",
-        message: error.message,
-      });
+      res.internalError("Failed to set workspace path", { message: error.message });
     }
   }
 
@@ -543,10 +513,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({
-          error: "Interface not found",
-          message: `Interface ${interfaceId} not found`,
-        });
+        return res.notFound("Interface not found", { message: `Interface ${interfaceId} not found` });
       }
 
       // Detect workspace paths
@@ -556,10 +523,7 @@ class ProjectInterfaceController {
       res.success({ interfaceId, workspacePaths });
     } catch (error) {
       this.logger.error("Failed to detect workspace paths:", error);
-      res.status(500).json({
-        error: "Failed to detect workspace paths",
-        message: error.message,
-      });
+      res.internalError("Failed to detect workspace paths", { message: error.message });
     }
   }
 
@@ -583,10 +547,7 @@ class ProjectInterfaceController {
       );
 
       if (!interfaceInstance) {
-        return res.status(404).json({
-          error: "Interface not found",
-          message: `Interface ${interfaceId} not found`,
-        });
+        return res.notFound("Interface not found", { message: `Interface ${interfaceId} not found` });
       }
 
       // Monitor terminal
@@ -598,10 +559,7 @@ class ProjectInterfaceController {
       res.success({ interfaceId, result });
     } catch (error) {
       this.logger.error("Failed to monitor terminal:", error);
-      res.status(500).json({
-        error: "Failed to monitor terminal",
-        message: error.message,
-      });
+      res.internalError("Failed to monitor terminal", { message: error.message });
     }
   }
 

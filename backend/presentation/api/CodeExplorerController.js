@@ -21,7 +21,7 @@ class CodeExplorerController {
       const result =
         await this.codeExplorerApplicationService.getFileTree(userId);
 
-      res.json({
+      res.success({
         success: result.success,
         data: result.data,
       });
@@ -42,7 +42,7 @@ class CodeExplorerController {
         userId,
       );
 
-      res.json({
+      res.success({
         success: result.success,
         data: result.data,
       });
@@ -60,7 +60,7 @@ class CodeExplorerController {
       const result =
         await this.codeExplorerApplicationService.getCurrentFileInfo(userId);
 
-      res.json({
+      res.success({
         success: result.success,
         data: result.data,
       });
@@ -78,7 +78,7 @@ class CodeExplorerController {
       const result =
         await this.codeExplorerApplicationService.refreshExplorer(userId);
 
-      res.json({
+      res.success({
         success: result.success,
         data: result.data,
       });

@@ -47,7 +47,7 @@ class StreamingController {
         userId,
       );
 
-      res.status(200).json({
+      res.ok({
         success: result.success,
         port: port,
         data: result.data,
@@ -83,7 +83,7 @@ class StreamingController {
         userId,
       );
 
-      res.status(200).json({
+      res.ok({
         success: result.success,
         port: port,
         data: result.data,

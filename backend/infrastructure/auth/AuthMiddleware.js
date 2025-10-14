@@ -137,12 +137,7 @@ class AuthMiddleware {
           logger.warn(
             `❌ IP ${clientIp} is blocked due to brute force attempts`,
           );
-          return res.status(429).json({
-           
-            error: "Too many failed attempts. Please try again later.",
-            code: "BRUTE_FORCE_BLOCKED",
-            retryAfter: retryAfter,
-          });
+          return res.tooManyRequests("Too many failed attempts. Please try again later.", { code: "BRUTE_FORCE_BLOCKED", retryAfter: retryAfter });
         }
 
         // Track validation attempts for legitimate requests
@@ -157,11 +152,7 @@ class AuthMiddleware {
 
         if (!token) {
           logger.info("❌ No token found");
-          return res.status(401).json({
-           
-            error: "Access token required",
-            code: "TOKEN_MISSING",
-          });
+          return res.unauthorized("Access token required", { code: "TOKEN_MISSING" });
         }
 
         // Check cache first
@@ -183,11 +174,7 @@ class AuthMiddleware {
         // Check if user account is locked
         if (user.isLocked) {
           logger.warn(`❌ User ${user.email} account is locked`);
-          return res.status(403).json({
-           
-            error: "Account is locked. Please contact support.",
-            code: "ACCOUNT_LOCKED",
-          });
+          return res.forbidden("Account is locked. Please contact support.", { code: "ACCOUNT_LOCKED" });
         }
 
         // Cache successful authentication
@@ -213,11 +200,7 @@ class AuthMiddleware {
         const clientIp = req.ip || req.connection.remoteAddress;
         this.recordFailedAttempt(clientIp);
 
-        return res.status(401).json({
-         
-          error: "Invalid or expired access token",
-          code: "TOKEN_INVALID",
-        });
+        return res.unauthorized("Invalid or expired access token", { code: "TOKEN_INVALID" });
       }
     };
   }
@@ -226,17 +209,11 @@ class AuthMiddleware {
   requirePermission(permission) {
     return (req, res, next) => {
       if (!req.user) {
-        return res.status(401).json({
-         
-          error: "Authentication required",
-        });
+        return res.unauthorized("Authentication required");
       }
 
       if (!req.user.hasPermission(permission)) {
-        return res.status(403).json({
-         
-          error: "Insufficient permissions",
-        });
+        return res.forbidden("Insufficient permissions");
       }
 
       next();
@@ -247,17 +224,11 @@ class AuthMiddleware {
   requireAdmin() {
     return (req, res, next) => {
       if (!req.user) {
-        return res.status(401).json({
-         
-          error: "Authentication required",
-        });
+        return res.unauthorized("Authentication required");
       }
 
       if (!req.user.isAdmin()) {
-        return res.status(403).json({
-         
-          error: "Admin access required",
-        });
+        return res.forbidden("Admin access required");
       }
 
       next();
@@ -268,20 +239,14 @@ class AuthMiddleware {
   requireOwnership(resourceType) {
     return (req, res, next) => {
       if (!req.user) {
-        return res.status(401).json({
-         
-          error: "Authentication required",
-        });
+        return res.unauthorized("Authentication required");
       }
 
       const resourceOwnerId =
         req.params.userId || req.body.userId || req.query.userId;
 
       if (!req.user.canAccessResource(resourceType, resourceOwnerId)) {
-        return res.status(403).json({
-         
-          error: "Access denied to this resource",
-        });
+        return res.forbidden("Access denied to this resource");
       }
 
       next();
@@ -397,12 +362,8 @@ class AuthMiddleware {
 
       if (validRequests.length >= maxRequests) {
         logger.warn(`❌ Rate limit exceeded for user: ${req.user.email}`);
-        return res.status(429).json({
-         
-          error: "Rate limit exceeded for this user",
-          code: "USER_RATE_LIMIT_EXCEEDED",
-          retryAfter: Math.ceil(windowMs / 1000),
-        });
+        return res.tooManyRequests("Rate limit exceeded for this user", { code: "USER_RATE_LIMIT_EXCEEDED", retryAfter: Math.ceil(windowMs / 1000),
+         });
       }
 
       validRequests.push(now);
@@ -418,12 +379,8 @@ class AuthMiddleware {
       if (this.isBlocked(clientIp)) {
         const retryAfter = this.getRetryAfter(clientIp);
         logger.warn(`❌ Brute force protection blocked IP: ${clientIp}`);
-        return res.status(429).json({
-         
-          error: "Too many failed attempts. Please try again later.",
-          code: "BRUTE_FORCE_BLOCKED",
-          retryAfter: retryAfter,
-        });
+        return res.tooManyRequests("Too many failed attempts. Please try again later.", { code: "BRUTE_FORCE_BLOCKED", retryAfter: retryAfter,
+         });
       }
 
       next();

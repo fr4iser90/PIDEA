@@ -30,14 +30,14 @@ class ProjectMiddleware {
       const { projectId } = req.params;
 
       if (!projectId || typeof projectId !== "string") {
-        return res.status(400).json({ error: "Invalid project ID" });
+        return res.badRequest("Invalid project ID");
       }
 
       // Check if project exists
       const project =
         await this.projectApplicationService.getProject(projectId);
       if (!project) {
-        return res.status(404).json({ error: "Project not found" });
+        return res.notFound("Project not found");
       }
 
       // Add project to request for downstream middleware
@@ -46,7 +46,7 @@ class ProjectMiddleware {
       next();
     } catch (error) {
       this.logger.error("Project validation error:", error);
-      res.status(500).json({ error: "Internal server error" });
+      res.internalError("Internal server error");
     }
   };
 
@@ -73,7 +73,7 @@ class ProjectMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors });
+      return res.badRequest(errors );
     }
 
     next();
@@ -111,7 +111,7 @@ class ProjectMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors });
+      return res.badRequest(errors );
     }
 
     next();
@@ -146,7 +146,7 @@ class ProjectMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ error: errors });
+      return res.badRequest(errors );
     }
 
     next();
