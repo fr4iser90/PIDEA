@@ -21,7 +21,7 @@ class UserService {
     const result = await responseManager.get(`${this.baseUrl}/${id}`);
     
     if (result.success) {
-      // ✅ Success - data is direct (2025 standard)
+      // ✅ Success - data is direct
       return result.data; // { id: 123, name: "John", email: "john@example.com" }
     } else {
       // ❌ Error - structured error object

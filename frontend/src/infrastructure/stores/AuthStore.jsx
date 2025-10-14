@@ -134,13 +134,12 @@ const useAuthStore = create(
           logger.info('🔍 [AuthStore] Login response received, checking cookies...');
           logger.info('🔍 [AuthStore] Login response:', data);
 
-          if (!data.success) {
-            throw new Error(data.error || data.message || 'Login failed');
+          if (!data || !data.user) {
+            throw new Error('Login failed - invalid response');
           }
 
-          // Backend returns: { success: true, data: { user } }
-          const userData = data.data || data;
-          const user = userData.user || userData.data?.user || { id: 'me', email, role: 'admin' };
+          // Backend returns: { user: {...}, accessToken: "...", refreshToken: "...", expiresAt: {...} }
+          const user = data.user;
 
           logger.info('🔍 [AuthStore] Login successful, cookies set by backend');
           logger.info('🔍 [AuthStore] User data:', user);
@@ -156,7 +155,7 @@ const useAuthStore = create(
             error: null,
             redirectToLogin: false,
             lastAuthCheck: new Date(),
-            sessionExpiry: userData.expiresAt || null
+            sessionExpiry: data.expiresAt || null
           });
 
           // Start session monitoring services
@@ -183,13 +182,13 @@ const useAuthStore = create(
             body: JSON.stringify({ email, password, username }),
           });
 
-          if (!data.success) {
-            throw new Error(data.error || data.message || 'Registration failed');
+          // Backend now sends data directly - no success wrapper
+          if (!data || !data.user) {
+            throw new Error('Registration failed - invalid response');
           }
 
-          // Backend returns: { success: true, user: ... } for register
+          // Backend returns: { user: {...} } for register
           // Authentication handled via httpOnly cookies
-          const userData = data.data || data;
 
           // CRITICAL FIX: Add delay to ensure cookies are properly set
           logger.info('🔍 [AuthStore] Waiting for cookies to be properly set after registration...');
@@ -206,7 +205,7 @@ const useAuthStore = create(
           logger.info('✅ [AuthStore] Authentication validated successfully after registration');
 
           set({
-            user: userData.user,
+            user: data.user,
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -315,9 +314,10 @@ const useAuthStore = create(
           
           logger.info('🔍 [AuthStore] Validation response received:', data);
           
-          // Check if validation was successful
-          if (!data.success) {
-            logger.error('❌ [AuthStore] Validation failed:', data.error);
+          // Backend now sends data directly - no success wrapper
+          // If we get here, validation was successful (no error thrown)
+          if (!data || !data.user) {
+            logger.error('❌ [AuthStore] Validation failed - no user data:', data);
             
             // If validation failed, try to refresh the token
             logger.info('🔄 [AuthStore] Trying to refresh token...');
@@ -325,10 +325,10 @@ const useAuthStore = create(
               const refreshData = await apiService.call('/api/auth/refresh');
               logger.info('🔍 [AuthStore] Refresh response:', refreshData);
               
-              if (refreshData.success && refreshData.data?.user) {
+              if (refreshData && refreshData.user) {
                 logger.info('✅ [AuthStore] Token refreshed successfully');
                 set({ 
-                  user: refreshData.data.user, 
+                  user: refreshData.user, 
                   isAuthenticated: true, 
                   lastAuthCheck: now,
                   redirectToLogin: false,
@@ -342,13 +342,13 @@ const useAuthStore = create(
             }
             
             // All authentication attempts failed
-            throw new Error(data.error || 'Authentication validation failed');
+            throw new Error('Authentication validation failed');
           }
           
           // Simple validation - if we get here, we're authenticated
           logger.info('✅ [AuthStore] Authentication validation successful');
           set({ 
-            user: data.data?.user || data.user || null, 
+            user: data.user, 
             isAuthenticated: true, 
             lastAuthCheck: now,
             redirectToLogin: false,
@@ -435,14 +435,15 @@ const useAuthStore = create(
             credentials: 'include', // Include cookies
           });
           
-          if (!data.success) {
+          // Backend now sends data directly
+          if (!data || !data.user) {
             logger.info('❌ [AuthStore] Authentication refresh failed');
             set({ isAuthenticated: false, user: null });
             return false;
           }
           
           logger.info('✅ [AuthStore] Authentication refreshed successfully (cookies updated)');
-          set({ isAuthenticated: true });
+          set({ isAuthenticated: true, user: data.user });
           return true;
         } catch (error) {
           logger.error('❌ [AuthStore] Authentication refresh error:', error);
@@ -616,15 +617,16 @@ const useAuthStore = create(
             credentials: 'include'
           });
 
-          if (data.success) {
+          // Backend now sends data directly
+          if (data && data.expiresAt) {
             set({ 
-              sessionExpiry: data.data.expiresAt,
+              sessionExpiry: data.expiresAt,
               sessionWarningShown: false 
             });
             
             // Broadcast to other tabs
             crossTabSyncService.broadcastSessionExtended({
-              expiresAt: data.data.expiresAt
+              expiresAt: data.expiresAt
             });
             
             logger.info('✅ [AuthStore] Session extended successfully');
@@ -655,10 +657,11 @@ const useAuthStore = create(
             credentials: 'include'
           });
 
-          if (data.success) {
-            return data.data;
+          // Backend now sends data directly
+          if (data) {
+            return data;
           } else {
-            throw new Error(data.error || 'Failed to get session status');
+            throw new Error('Failed to get session status');
           }
           
         } catch (error) {

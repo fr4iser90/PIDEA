@@ -8,6 +8,7 @@ import { logger } from "@/infrastructure/logging/Logger";
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import etagManager from '@/infrastructure/services/ETagManager.js';
 import TimeoutConfig from '@/config/timeout-config.js';
+import responseManager from '@/utils/ResponseManager.js';
 
 class ApiService {
   constructor() {
@@ -16,6 +17,7 @@ class ApiService {
 
   /**
    * Centralized API call with built-in authentication check
+   * Uses ResponseManager for consistent response handling
    * @param {string} endpoint - API endpoint
    * @param {Object} options - Request options
    * @param {string} projectId - Project ID for ETag support
@@ -36,7 +38,7 @@ class ApiService {
     const { isAuthenticated, getAuthHeaders } = useAuthStore.getState();
     if (!isAuthEndpoint && !isAuthenticated) {
       logger.info('🔐 [ApiService] User not authenticated, skipping API call to:', url);
-      return { success: false, error: 'User not authenticated' };
+      throw new Error('User not authenticated');
     }
     
     // Get authentication headers (only if authenticated)
@@ -100,41 +102,33 @@ class ApiService {
         logger.info('❌ [ApiService] 401 Unauthorized - user not authenticated');
         const { handleAuthFailure } = useAuthStore.getState();
         handleAuthFailure('Session expired. Please log in again.');
-        return { success: false, error: 'Authentication failed' };
+        throw new Error('Authentication failed');
       }
 
-      // Handle other HTTP errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        logger.error(`❌ [ApiService] HTTP ${response.status} error for ${endpoint}:`, errorText);
-        return { success: false, error: `HTTP ${response.status}: ${errorText}` };
-      }
-
-      // Parse response
-      const contentType = response.headers.get('content-type');
-      let data;
+      // Use ResponseManager for consistent response handling
+      const result = await responseManager.handleResponse(response);
       
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
+      if (result.success) {
+        logger.info('✅ [ApiService] API call successful');
+        logger.info('🔍 [ApiService] Response data:', { 
+          dataType: typeof result.data, 
+          hasData: !!result.data, 
+          dataKeys: result.data ? Object.keys(result.data) : 'null',
+          dataLength: Array.isArray(result.data) ? result.data.length : 'not array'
+        });
+        
+        // Handle backend response format: { data: [...], pagination: {...} }
+        if (result.data && typeof result.data === 'object' && result.data.data !== undefined) {
+          return result.data.data; // Return just the data array
+        }
+        
+        // Return data directly
+        return result.data;
       } else {
-        data = await response.text();
+        // ResponseManager handles error formatting
+        logger.error('❌ [ApiService] API call failed:', result.error);
+        throw new Error(result.error.message || 'API call failed');
       }
-
-      logger.info('✅ [ApiService] API call successful');
-      logger.info('🔍 [ApiService] Response data:', { 
-        dataType: typeof data, 
-        hasData: !!data, 
-        dataKeys: data ? Object.keys(data) : 'null',
-        dataLength: Array.isArray(data) ? data.length : 'not array'
-      });
-      
-      // Handle backend response format: { data: [...], pagination: {...} }
-      if (data && typeof data === 'object' && data.data !== undefined) {
-        return data.data; // Return just the data array
-      }
-      
-      // Return data directly if no wrapper
-      return data;
 
     } catch (error) {
       // Clear timeout on error
@@ -144,11 +138,11 @@ class ApiService {
 
       if (error.name === 'AbortError') {
         logger.error(`⏰ [ApiService] Request aborted (timeout) for ${endpoint}`);
-        return { success: false, error: 'Request timeout' };
+        throw new Error('Request timeout');
       }
 
       logger.error(`❌ [ApiService] API call failed for ${endpoint}:`, error);
-      return { success: false, error: error.message };
+      throw error; // Re-throw to let calling code handle
     }
   }
 

@@ -21,7 +21,7 @@ class ResponseManager {
       const data = await response.json();
       
       if (response.ok) {
-        // Success response - data is direct (2025 standard)
+        // Success response - data is direct
         return {
           success: true,
           data: data,

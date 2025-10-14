@@ -13,15 +13,15 @@ class DatabaseMigrationService {
         this.logger.info('🔧 Initializing database migration service...');
         
         try {
-            // Create migrations table if it doesn't exist
-            this.logger.info('🔧 Creating migrations table...');
+            // Create migrations table if it doesn't exist (idempotent)
             await this.createMigrationsTable();
-            this.logger.info('✅ Migrations table created successfully');
             
-            // Run pending migrations
-            this.logger.info('🔧 Running pending migrations...');
+            // Get applied migrations first
+            const appliedMigrations = await this.getAppliedMigrations();
+            this.logger.info('🔍 Found applied migrations:', appliedMigrations);
+            
+            // Run pending migrations (idempotent)
             await this.runPendingMigrations();
-            this.logger.info('✅ Pending migrations completed');
             
             this.logger.info('✅ Database migration service initialized');
         } catch (error) {
@@ -133,10 +133,21 @@ class DatabaseMigrationService {
                 resultType: typeof result,
                 hasRows: !!result.rows,
                 rowCount: result.rows?.length || 0,
-                firstRow: result.rows?.[0] || 'none'
+                firstRow: result.rows?.[0] || 'none',
+                resultKeys: Object.keys(result)
             });
             
-            const rows = result.rows || result;
+            // Handle different result formats
+            let rows;
+            if (result.rows) {
+                rows = result.rows;
+            } else if (Array.isArray(result)) {
+                rows = result;
+            } else {
+                this.logger.warn('🔍 [getAppliedMigrations] Unexpected result format:', result);
+                rows = [];
+            }
+            
             const migrationNames = rows.map(row => row.migration_name);
             
             this.logger.info('🔍 [getAppliedMigrations] Found applied migrations:', migrationNames);
@@ -194,8 +205,27 @@ class DatabaseMigrationService {
                     }
                 }
             } else {
-                // Execute migration directly for PostgreSQL
-                await this.databaseConnection.execute(migrationSQL);
+                // Execute migration directly for PostgreSQL with idempotent error handling
+                try {
+                    await this.databaseConnection.execute(migrationSQL);
+                } catch (error) {
+                    // Handle idempotent errors - if constraint/table already exists, that's OK
+                    if (error.message.includes('already exists') || 
+                        error.message.includes('duplicate key value violates unique constraint') ||
+                        error.message.includes('constraint') && error.message.includes('already exists')) {
+                        this.logger.warn(`⚠️ Migration ${migrationFile} skipped - constraint/table already exists: ${error.message}`);
+                        
+                        // For PostgreSQL, we need to reset the transaction after an error
+                        try {
+                            await this.databaseConnection.execute('ROLLBACK');
+                            await this.databaseConnection.execute('BEGIN');
+                        } catch (rollbackError) {
+                            this.logger.warn('⚠️ Could not reset transaction:', rollbackError.message);
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
             }
             
             // Record migration as applied
@@ -206,6 +236,17 @@ class DatabaseMigrationService {
             
         } catch (error) {
             const executionTime = Date.now() - startTime;
+            
+            // For PostgreSQL, reset transaction before recording failure
+            if (this.databaseConnection.getType() === 'postgresql') {
+                try {
+                    await this.databaseConnection.execute('ROLLBACK');
+                    await this.databaseConnection.execute('BEGIN');
+                } catch (rollbackError) {
+                    this.logger.warn('⚠️ Could not reset transaction after error:', rollbackError.message);
+                }
+            }
+            
             await this.recordMigration(migrationFile, 'failed', executionTime);
             
             this.logger.error(`❌ Migration failed: ${migrationFile}`, error);
@@ -218,10 +259,22 @@ class DatabaseMigrationService {
             let query, params;
             
             if (this.databaseConnection.getType() === 'postgresql') {
-                query = 'INSERT INTO migrations (migration_name, status, execution_time_ms) VALUES ($1, $2, $3)';
+                // Use INSERT ... ON CONFLICT for idempotent behavior
+                query = `
+                    INSERT INTO migrations (migration_name, status, execution_time_ms, applied_at) 
+                    VALUES ($1, $2, $3, NOW())
+                    ON CONFLICT (migration_name) 
+                    DO UPDATE SET status = EXCLUDED.status, 
+                                  execution_time_ms = EXCLUDED.execution_time_ms,
+                                  applied_at = NOW()
+                `;
                 params = [migrationName, status, executionTime];
             } else {
-                query = 'INSERT INTO migrations (migration_name, status, execution_time_ms) VALUES (?, ?, ?)';
+                // SQLite: Use INSERT OR REPLACE for idempotent behavior
+                query = `
+                    INSERT OR REPLACE INTO migrations (migration_name, status, execution_time_ms, applied_at) 
+                    VALUES (?, ?, ?, datetime('now'))
+                `;
                 params = [migrationName, status, executionTime];
             }
             
