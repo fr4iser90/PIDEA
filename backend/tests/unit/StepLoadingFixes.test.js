@@ -28,7 +28,7 @@ describe("Step Loading Fixes", () => {
           }
 
           async execute(context) {
-            return { success: true };
+            return {  };
           }
         };
 
@@ -46,7 +46,7 @@ describe("Step Loading Fixes", () => {
       it("should validate a proper step object", () => {
         const mockStepObject = {
           name: "TestStep",
-          execute: async (context) => ({ success: true }),
+          execute: async (context) => ({  }),
         };
 
         const result = StepValidator.validateStepModule(
@@ -203,7 +203,7 @@ describe("Step Loading Fixes", () => {
           name: "test_step",
           config: { name: "test_step" },
           module: {
-            execute: async () => ({ success: true }),
+            execute: async () => ({  }),
           },
         };
 
@@ -223,7 +223,7 @@ describe("Step Loading Fixes", () => {
           name: "test_step",
           config: { name: "test_step" },
           module: {
-            execute: async () => ({ success: true }),
+            execute: async () => ({  }),
           },
         };
 

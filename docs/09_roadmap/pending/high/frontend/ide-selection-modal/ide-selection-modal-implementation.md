@@ -36,7 +36,7 @@
 - **Data Structure Mismatch**: ProjectRepository.detectProjects() expects `ide.active` but API returns `ide.status`
 - **Direct DOM Manipulation**: Current button handler uses direct DOM manipulation instead of React state
 - **Missing Error Handling**: No proper error handling for edge cases
-- **API Response Structure**: `/api/interfaces/available-ides` returns `{success: true, data: [...]}` format
+- **API Response Structure**: `/api/interfaces/available-ides` returns `{, data: [...]}` format
 
 ## Implementation Phases
 
@@ -52,7 +52,7 @@
 - [ ] Modify "Detect from IDE" button handler to open modal instead of direct form fill
 - [ ] Implement IDE selection callback to fill form using React state
 - [ ] Add proper error handling for IDE detection and API failures
-- [ ] Handle API response structure: `{success: true, data: [...]}`
+- [ ] Handle API response structure: `{, data: [...]}`
 
 ### Phase 3: Form Integration and Error Handling (1 hour)
 - [ ] Implement form auto-fill functionality when IDE is selected
@@ -152,7 +152,7 @@
 - [x] Error handling works for edge cases (no IDEs, API failures, network issues)
 - [x] Modal styling matches existing design system
 - [x] Data structure mismatch fixed (use `ide.status` instead of `ide.active`)
-- [x] API response structure handled correctly (`{success: true, data: [...]}`)
+- [x] API response structure handled correctly (`{, data: [...]}`)
 - [x] Loading states and user feedback implemented
 - [x] Accessibility requirements met (ARIA attributes, keyboard navigation)
 
@@ -347,7 +347,7 @@ docs/09_roadmap/pending/high/frontend/ide-selection-modal/
 - [ ] **Data Structure Mismatch**: ProjectRepository.detectProjects() expects `ide.active` but API returns `ide.status`
 - [ ] **Direct DOM Manipulation**: Current button handler uses direct DOM manipulation instead of React state
 - [ ] **Missing Error Handling**: No proper error handling for edge cases
-- [ ] **API Response Structure**: Need to handle `{success: true, data: [...]}` format correctly
+- [ ] **API Response Structure**: Need to handle `{, data: [...]}` format correctly
 
 ### 🔧 Improvements Made
 - Updated implementation phases with specific technical details

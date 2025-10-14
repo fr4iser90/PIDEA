@@ -96,7 +96,7 @@ describe("Framework E2E Tests", () => {
         .returns({
           createTask: sandbox
             .stub()
-            .resolves({ id: "task-123", success: true }),
+            .resolves({ id: "task-123",  }),
           getTask: sandbox
             .stub()
             .resolves({ id: "task-123", status: "completed" }),

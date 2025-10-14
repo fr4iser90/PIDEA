@@ -160,7 +160,7 @@ describe('TestRunnerComponent', () => {
   });
 
   test('executes tests when run button is clicked', async () => {
-    const mockExecuteTest = jest.fn().mockResolvedValue({ success: true });
+    const mockExecuteTest = jest.fn().mockResolvedValue({});
     useTestRunner.mockReturnValue({
       ...mockTestRunner,
       executeTest: mockExecuteTest
@@ -267,7 +267,7 @@ describe('TestRunnerComponent', () => {
 
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ success: true })
+      json: async () => ({})
     });
 
     render(<TestRunnerComponent eventBus={mockEventBus} activePort={mockActivePort} />);
@@ -302,7 +302,7 @@ describe('TestRunnerComponent', () => {
 
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ success: true })
+      json: async () => ({})
     });
 
     render(<TestRunnerComponent eventBus={mockEventBus} activePort={mockActivePort} />);

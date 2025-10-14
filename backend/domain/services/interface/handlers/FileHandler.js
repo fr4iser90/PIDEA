@@ -222,7 +222,7 @@ class FileHandler {
       const result = await this.fileSystem.deleteFile(fileSystem.access, filePath);
       
       // Store operation in history
-      this.recordOperation(fsId, 'delete', filePath, { success: true });
+      this.recordOperation(fsId, 'delete', filePath, {});
       
       return result;
 

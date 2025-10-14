@@ -144,7 +144,7 @@ export const usePortConfiguration = () => {
       setError(null);
       setLastValidation({ isValid: false, error: null, port: null });
       logger.info('Custom port cleared');
-      return { success: true };
+      return {};
     } catch (error) {
       logger.error('Error clearing custom port:', error);
       return { error: 'Failed to clear port' };

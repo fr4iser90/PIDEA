@@ -11,7 +11,7 @@
 - [ ] Modify "Detect from IDE" button handler to open modal instead of direct form fill
 - [ ] Implement IDE selection callback to fill form using React state
 - [ ] Add proper error handling for IDE detection and API failures
-- [ ] Handle API response structure: `{success: true, data: [...]}`
+- [ ] Handle API response structure: `{, data: [...]}`
 
 ## Implementation Details
 

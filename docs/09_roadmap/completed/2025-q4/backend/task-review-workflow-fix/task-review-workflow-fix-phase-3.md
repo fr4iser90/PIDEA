@@ -46,7 +46,7 @@
 ```javascript
 describe('TasksPanelComponent Sync Integration', () => {
   beforeEach(() => {
-    mockApiCall.mockResolvedValue({ success: true });
+    mockApiCall.mockResolvedValue({  });
   });
 
   it('should sync task status before opening review modal', async () => {

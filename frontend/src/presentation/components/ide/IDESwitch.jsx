@@ -59,7 +59,7 @@ const IDESwitch = ({
         from: currentPort,
         to: data.targetPort,
         timestamp: new Date(),
-        success: true
+        {}
       }]);
 
       if (onSwitchComplete) {

@@ -67,8 +67,7 @@ class PerformanceAnalyzer {
                 
                 results.resolutionTimes.push({
                     service: serviceName,
-                    time: resolutionTime,
-                    success: true
+                    time: resolutionTime
                 });
                 
                 if (resolutionTime > results.maxTime) {
@@ -92,14 +91,14 @@ class PerformanceAnalyzer {
         }
 
         // Calculate statistics
-        const successfulResolutions = results.resolutionTimes.filter(r => r.success);
+        const successfulResolutions = results.resolutionTimes.filter(r => !r.error);
         if (successfulResolutions.length > 0) {
             results.averageTime = successfulResolutions.reduce((sum, r) => sum + r.time, 0) / successfulResolutions.length;
         }
 
         // Find slowest services
         results.slowestServices = results.resolutionTimes
-            .filter(r => r.success)
+            .filter(r => !r.error)
             .sort((a, b) => b.time - a.time)
             .slice(0, 5);
 
@@ -190,8 +189,8 @@ class PerformanceAnalyzer {
         console.log(chalk.yellow('\n⚡ Measuring lifecycle operations...'));
         
         const results = {
-            startup: { time: 0, success: false },
-            shutdown: { time: 0, success: false }
+            startup: { time: 0 },
+            shutdown: { time: 0 }
         };
 
         // Measure startup
@@ -200,7 +199,6 @@ class PerformanceAnalyzer {
             await this.serviceContainer.startAllServices();
             const startupEnd = process.hrtime.bigint();
             results.startup.time = Number(startupEnd - startupStart) / 1000000;
-            results.startup.success = true;
         } catch (error) {
             results.startup.error = error.message;
         }
@@ -211,7 +209,6 @@ class PerformanceAnalyzer {
             await this.serviceContainer.stopAllServices();
             const shutdownEnd = process.hrtime.bigint();
             results.shutdown.time = Number(shutdownEnd - shutdownStart) / 1000000;
-            results.shutdown.success = true;
         } catch (error) {
             results.shutdown.error = error.message;
         }
@@ -274,7 +271,7 @@ class PerformanceAnalyzer {
             });
         }
 
-        const failedResolutions = results.resolutionTimes.filter(r => !r.success);
+        const failedResolutions = results.resolutionTimes.filter(r => r.error);
         if (failedResolutions.length > 0) {
             console.log(chalk.red(`\n❌ Failed Resolutions: ${failedResolutions.length}`));
             failedResolutions.forEach(failure => {
@@ -327,13 +324,13 @@ class PerformanceAnalyzer {
         console.log(chalk.blue.bold('\n⚡ Lifecycle Performance'));
         console.log(chalk.gray('-'.repeat(40)));
 
-        if (results.startup.success) {
+        if (!results.startup.error) {
             console.log(chalk.green(`✅ Startup: ${chalk.bold(results.startup.time.toFixed(3))}ms`));
         } else {
             console.log(chalk.red(`❌ Startup Failed: ${results.startup.error}`));
         }
 
-        if (results.shutdown.success) {
+        if (!results.shutdown.error) {
             console.log(chalk.green(`✅ Shutdown: ${chalk.bold(results.shutdown.time.toFixed(3))}ms`));
         } else {
             console.log(chalk.red(`❌ Shutdown Failed: ${results.shutdown.error}`));

@@ -36,16 +36,16 @@ describe("DependencyAnalysisOrchestrator", () => {
     it("should load dependency analysis steps", async () => {
       // Mock the step modules
       jest.doMock("./dependencies/OutdatedDependenciesStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./dependencies/VulnerableDependenciesStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./dependencies/UnusedDependenciesStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./dependencies/LicenseAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
 
       await orchestrator.loadDependencySteps();

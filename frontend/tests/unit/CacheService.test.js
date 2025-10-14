@@ -170,7 +170,7 @@ describe('CacheService', () => {
         if (url.includes('/git/status')) {
           return Promise.resolve({ data: { branch: 'main' } });
         }
-        return Promise.resolve({ success: false });
+        return Promise.resolve({  });
       });
       
       const results = await cacheService.warmCache(patterns, port, projectId);

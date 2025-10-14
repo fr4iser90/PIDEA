@@ -20,13 +20,13 @@ class MockCursorIDE {
     return true;
   }
   async start() {
-    return { success: true };
+    return {  };
   }
   async stop() {
-    return { success: true };
+    return {  };
   }
   async getStatus() {
-    return { success: true };
+    return {  };
   }
   async getVersion() {
     return "1.0.0";
@@ -35,22 +35,22 @@ class MockCursorIDE {
     return ["feature1"];
   }
   async executeCommand() {
-    return { success: true };
+    return {  };
   }
   async getDOM() {
-    return { success: true };
+    return {  };
   }
   async interact() {
-    return { success: true };
+    return {  };
   }
   async sendMessage() {
-    return { success: true };
+    return {  };
   }
   async getWorkspacePath() {
     return "/workspace";
   }
   async switchToPort() {
-    return { success: true };
+    return {  };
   }
   getActivePort() {
     return 3000;
@@ -65,13 +65,13 @@ class MockCursorIDE {
     return null;
   }
   async applyRefactoring() {
-    return { success: true };
+    return {  };
   }
   async sendTask() {
-    return { success: true };
+    return {  };
   }
   async sendAutoModeTasks() {
-    return { success: true };
+    return {  };
   }
 }
 
@@ -86,13 +86,13 @@ class MockVSCodeIDE {
     return true;
   }
   async start() {
-    return { success: true };
+    return {  };
   }
   async stop() {
-    return { success: true };
+    return {  };
   }
   async getStatus() {
-    return { success: true };
+    return {  };
   }
   async getVersion() {
     return "1.0.0";
@@ -101,22 +101,22 @@ class MockVSCodeIDE {
     return ["feature1"];
   }
   async executeCommand() {
-    return { success: true };
+    return {  };
   }
   async getDOM() {
-    return { success: true };
+    return {  };
   }
   async interact() {
-    return { success: true };
+    return {  };
   }
   async sendMessage() {
-    return { success: true };
+    return {  };
   }
   async getWorkspacePath() {
     return "/workspace";
   }
   async switchToPort() {
-    return { success: true };
+    return {  };
   }
   getActivePort() {
     return 4000;
@@ -131,13 +131,13 @@ class MockVSCodeIDE {
     return null;
   }
   async applyRefactoring() {
-    return { success: true };
+    return {  };
   }
   async sendTask() {
-    return { success: true };
+    return {  };
   }
   async sendAutoModeTasks() {
-    return { success: true };
+    return {  };
   }
 }
 

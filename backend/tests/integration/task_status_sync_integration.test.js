@@ -108,10 +108,10 @@ describe("TaskStatusSyncStep Integration Tests", () => {
       // Mock status transition service
       statusTransitionService.moveTaskToInProgress = jest
         .fn()
-        .mockResolvedValue({ success: true });
+        .mockResolvedValue({  });
 
       // Mock event bus
-      eventBus.emit = jest.fn().mockResolvedValue({ success: true });
+      eventBus.emit = jest.fn().mockResolvedValue({  });
 
       // Execute sync
       const options = {
@@ -169,10 +169,10 @@ describe("TaskStatusSyncStep Integration Tests", () => {
       // Mock status transition service
       statusTransitionService.moveTaskToInProgress = jest
         .fn()
-        .mockResolvedValue({ success: true });
+        .mockResolvedValue({  });
 
       // Mock event bus
-      eventBus.emit = jest.fn().mockResolvedValue({ success: true });
+      eventBus.emit = jest.fn().mockResolvedValue({  });
 
       // Execute batch sync
       const options = {
@@ -265,10 +265,10 @@ describe("TaskStatusSyncStep Integration Tests", () => {
       // Mock status transition service
       statusTransitionService.moveTaskToPending = jest
         .fn()
-        .mockResolvedValue({ success: true });
+        .mockResolvedValue({  });
 
       // Mock event bus
-      eventBus.emit = jest.fn().mockResolvedValue({ success: true });
+      eventBus.emit = jest.fn().mockResolvedValue({  });
 
       // Execute rollback
       const options = {
@@ -343,10 +343,10 @@ describe("TaskStatusSyncStep Integration Tests", () => {
       // Mock status transition service
       statusTransitionService.moveTaskToInProgress = jest
         .fn()
-        .mockResolvedValue({ success: true });
+        .mockResolvedValue({  });
 
       // Mock event bus
-      eventBus.emit = jest.fn().mockResolvedValue({ success: true });
+      eventBus.emit = jest.fn().mockResolvedValue({  });
 
       // Execute batch sync
       const options = {
@@ -392,10 +392,10 @@ describe("TaskStatusSyncStep Integration Tests", () => {
       // Mock status transition service
       statusTransitionService.moveTaskToInProgress = jest
         .fn()
-        .mockResolvedValue({ success: true });
+        .mockResolvedValue({  });
 
       // Mock event bus
-      eventBus.emit = jest.fn().mockResolvedValue({ success: true });
+      eventBus.emit = jest.fn().mockResolvedValue({  });
 
       // Execute batch sync
       const options = {

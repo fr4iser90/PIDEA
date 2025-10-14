@@ -24,12 +24,12 @@ describe("Git Workflow Integration", () => {
     // Create mock dependencies
     mockGitService = {
       getCurrentBranch: jest.fn().mockResolvedValue("main"),
-      createBranch: jest.fn().mockResolvedValue({ success: true }),
-      checkoutBranch: jest.fn().mockResolvedValue({ success: true }),
-      addFiles: jest.fn().mockResolvedValue({ success: true }),
-      commitChanges: jest.fn().mockResolvedValue({ success: true }),
-      pushChanges: jest.fn().mockResolvedValue({ success: true }),
-      mergeBranch: jest.fn().mockResolvedValue({ success: true }),
+      createBranch: jest.fn().mockResolvedValue({  }),
+      checkoutBranch: jest.fn().mockResolvedValue({  }),
+      addFiles: jest.fn().mockResolvedValue({  }),
+      commitChanges: jest.fn().mockResolvedValue({  }),
+      pushChanges: jest.fn().mockResolvedValue({  }),
+      mergeBranch: jest.fn().mockResolvedValue({  }),
       getBranches: jest.fn().mockResolvedValue(["main", "develop"]),
     };
 

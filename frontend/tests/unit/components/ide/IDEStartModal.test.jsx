@@ -60,7 +60,7 @@ describe('IDEStartModal Component', () => {
           data: { port: 9222, ideType: 'cursor' }
         });
       }
-      return Promise.resolve({ success: false });
+      return Promise.resolve({  });
     });
   });
 

@@ -37,18 +37,18 @@ describe("IDE Phase 3: Browser/IDE Commands & Handlers", () => {
 
     mockDependencies = {
       ideAutomationService: {
-        switchIDEPort: sinon.stub().resolves({ success: true }),
-        openFileExplorer: sinon.stub().resolves({ success: true }),
-        openCommandPalette: sinon.stub().resolves({ success: true }),
-        executeIDEAction: sinon.stub().resolves({ success: true }),
-        getIDESelectors: sinon.stub().resolves({ success: true }),
+        switchIDEPort: sinon.stub().resolves({  }),
+        openFileExplorer: sinon.stub().resolves({  }),
+        openCommandPalette: sinon.stub().resolves({  }),
+        executeIDEAction: sinon.stub().resolves({  }),
+        getIDESelectors: sinon.stub().resolves({  }),
       },
       browserManager: {
-        switchToPort: sinon.stub().resolves({ success: true }),
-        openFileExplorer: sinon.stub().resolves({ success: true }),
-        openCommandPalette: sinon.stub().resolves({ success: true }),
-        executeIDEAction: sinon.stub().resolves({ success: true }),
-        getIDESelectors: sinon.stub().resolves({ success: true }),
+        switchToPort: sinon.stub().resolves({  }),
+        openFileExplorer: sinon.stub().resolves({  }),
+        openCommandPalette: sinon.stub().resolves({  }),
+        executeIDEAction: sinon.stub().resolves({  }),
+        getIDESelectors: sinon.stub().resolves({  }),
       },
       ideManager: {
         switchToIDE: sinon.stub().resolves(),

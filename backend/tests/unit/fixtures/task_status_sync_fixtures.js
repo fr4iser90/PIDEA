@@ -136,26 +136,26 @@ module.exports = {
 
     statusTransitionService: {
       moveTaskToCompleted: {
-        success: () => Promise.resolve({ success: true }),
+        success: () => Promise.resolve({  }),
         error: () => Promise.reject(new Error("File move failed")),
       },
       moveTaskToInProgress: {
-        success: () => Promise.resolve({ success: true }),
+        success: () => Promise.resolve({  }),
         error: () => Promise.reject(new Error("File move failed")),
       },
       moveTaskToPending: {
-        success: () => Promise.resolve({ success: true }),
+        success: () => Promise.resolve({  }),
         error: () => Promise.reject(new Error("File move failed")),
       },
       moveTaskToCancelled: {
-        success: () => Promise.resolve({ success: true }),
+        success: () => Promise.resolve({  }),
         error: () => Promise.reject(new Error("File move failed")),
       },
     },
 
     eventBus: {
       emit: {
-        success: () => Promise.resolve({ success: true }),
+        success: () => Promise.resolve({  }),
         error: () => Promise.reject(new Error("Event emission failed")),
       },
     },

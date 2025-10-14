@@ -99,7 +99,7 @@ describe("AutoFinishController", () => {
     it("should process TODO list successfully", async () => {
       const mockResult = {
         sessionId: "session-123",
-        result: { success: true },
+        result: {  },
         duration: 5000,
       };
       mockCommandBus.execute.mockResolvedValue(mockResult);
@@ -131,7 +131,7 @@ describe("AutoFinishController", () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         sessionId: "session-123",
-        result: { success: true },
+        result: {  },
         duration: 5000,
       });
     });
@@ -210,7 +210,7 @@ describe("AutoFinishController", () => {
 
       const mockResult = {
         sessionId: "session-123",
-        result: { success: true },
+        result: {  },
         duration: 5000,
       };
       mockCommandBus.execute.mockResolvedValue(mockResult);
@@ -230,7 +230,7 @@ describe("AutoFinishController", () => {
 
       const mockResult = {
         sessionId: "session-123",
-        result: { success: true },
+        result: {  },
         duration: 5000,
       };
       mockCommandBus.execute.mockResolvedValue(mockResult);

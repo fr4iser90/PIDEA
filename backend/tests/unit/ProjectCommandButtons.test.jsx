@@ -114,7 +114,7 @@ describe('ProjectCommandButtons', () => {
 
     // Mock a delayed response
     mockApiRepository.executeProjectCommand.mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
+      new Promise(resolve => setTimeout(() => resolve({}), 100))
     );
 
     render(<ProjectCommandButtons {...defaultProps} />);
@@ -315,7 +315,7 @@ describe('ProjectCommandButtons', () => {
 
     // Mock a delayed response
     mockApiRepository.executeProjectCommand.mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
+      new Promise(resolve => setTimeout(() => resolve({}), 100))
     );
 
     render(<ProjectCommandButtons {...defaultProps} />);

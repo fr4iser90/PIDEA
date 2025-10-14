@@ -305,7 +305,7 @@ describe('TaskReviewService', () => {
 
       const mockWorkflowResult = {
         workflowId: 'test-workflow',
-        success: true
+        
       };
 
       taskReviewService.taskWorkflowRepository.executeWorkflow = jest.fn().mockResolvedValue(mockWorkflowResult);

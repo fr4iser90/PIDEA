@@ -41,16 +41,16 @@ describe("TechStackAnalysisOrchestrator", () => {
     it("should load tech stack analysis steps", async () => {
       // Mock the step modules
       jest.doMock("./tech-stack/FrameworkDetectionStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./tech-stack/LibraryAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./tech-stack/ToolDetectionStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./tech-stack/VersionAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
 
       await orchestrator.loadTechStackSteps();

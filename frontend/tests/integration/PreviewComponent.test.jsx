@@ -54,9 +54,9 @@ describe('PreviewComponent Integration Tests', () => {
       activePort: null,
       customPort: 3000,
       validatePort: jest.fn().mockResolvedValue(true),
-      setCustomPort: jest.fn().mockResolvedValue({ success: true }),
+      setCustomPort: jest.fn().mockResolvedValue({}),
       getCustomPort: jest.fn().mockReturnValue(3000),
-      clearCustomPort: jest.fn().mockResolvedValue({ success: true })
+      clearCustomPort: jest.fn().mockResolvedValue({})
     };
 
     useIDEStore.mockReturnValue(mockIDEStore);

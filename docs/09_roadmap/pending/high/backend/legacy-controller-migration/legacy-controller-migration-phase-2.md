@@ -38,7 +38,7 @@ Migrate all analysis-related controllers to modern response patterns. These cont
 
 ## Success Criteria
 - [ ] All analysis controllers use modern response patterns
-- [ ] No legacy `{ success: true/false }` patterns remain in analysis controllers
+- [ ] No legacy `{ /false }` patterns remain in analysis controllers
 - [ ] All analysis controllers pass response tests
 - [ ] Consistent error handling across all analysis controllers
 - [ ] Proper HTTP status codes used for all analysis responses

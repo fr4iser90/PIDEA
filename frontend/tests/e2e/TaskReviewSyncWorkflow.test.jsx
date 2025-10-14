@@ -64,8 +64,8 @@ jest.mock('@/application/services/TaskReviewService', () => {
       data: { 
         summary: { completedTasks: 2, totalTasks: 2 },
         results: [
-          { taskId: 'task-1', success: true },
-          { taskId: 'task-3', success: true }
+          { taskId: 'task-1' },
+          { taskId: 'task-3' }
         ]
       }
     }),

@@ -242,7 +242,7 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
     it('handles loading states correctly across operations', async () => {
       mockAPIRepository.pullPideaAgentBranch.mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
+        () => new Promise(resolve => setTimeout(() => resolve({}), 100))
       );
 
       render(<PideaAgentBranchComponent />);
@@ -284,7 +284,7 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
     it('handles rapid user interactions correctly', async () => {
       mockAPIRepository.pullPideaAgentBranch.mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({ success: true }), 200))
+        () => new Promise(resolve => setTimeout(() => resolve({}), 200))
       );
 
       render(<PideaAgentBranchComponent />);
@@ -332,9 +332,9 @@ describe('PIDEA Agent Branch Integration Tests', () => {
 
   describe('Performance Integration', () => {
     it('handles multiple operations efficiently', async () => {
-      mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({ success: true });
-      mockAPIRepository.mergePideaAgentBranch.mockResolvedValue({ success: true });
-      mockAPIRepository.comparePideaAgentBranch.mockResolvedValue({ success: true });
+      mockAPIRepository.pullPideaAgentBranch.mockResolvedValue({});
+      mockAPIRepository.mergePideaAgentBranch.mockResolvedValue({});
+      mockAPIRepository.comparePideaAgentBranch.mockResolvedValue({});
 
       render(<PideaAgentBranchComponent />);
 

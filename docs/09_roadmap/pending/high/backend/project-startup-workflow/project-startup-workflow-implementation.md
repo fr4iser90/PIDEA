@@ -316,7 +316,7 @@ class ProjectStartupWorkflow extends BaseWorkflowStep {
     return this.createSuccessResult({
       orchestration: orchestrationResult,
       ideSetup: ideSetupResult,
-      success: true
+      
     });
   }
 }

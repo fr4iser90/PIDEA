@@ -160,7 +160,7 @@ setCustomPort: async (port) => {
         });
         set({ portPreferences: [...portPreferences] });
       }
-      return { success: true };
+      return {  };
     } else {
       return { error: 'Invalid port' };
     }
@@ -181,7 +181,7 @@ validateCustomPort: async (port) => {
 
 clearCustomPort: () => {
   set({ customPort: null });
-  return { success: true };
+  return {  };
 },
 
 // New project command methods (optional - can use existing terminal services)

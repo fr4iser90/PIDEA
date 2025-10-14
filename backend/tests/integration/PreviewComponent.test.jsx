@@ -36,9 +36,9 @@ describe('PreviewComponent Integration Tests', () => {
       activePort: null,
       customPort: 3000,
       validatePort: vi.fn().mockResolvedValue(true),
-      setCustomPort: vi.fn().mockResolvedValue({ success: true }),
+      setCustomPort: vi.fn().mockResolvedValue({}),
       getCustomPort: vi.fn().mockReturnValue(3000),
-      clearCustomPort: vi.fn().mockResolvedValue({ success: true })
+      clearCustomPort: vi.fn().mockResolvedValue({})
     };
 
     useIDEStore.mockReturnValue(mockIDEStore);

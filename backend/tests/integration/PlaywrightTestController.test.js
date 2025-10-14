@@ -213,8 +213,8 @@ describe("TestManagementController - Playwright Endpoints", () => {
       const mockResult = {
         result: {
           results: [
-            { testId: "test-1", success: true },
-            { testId: "test-2", success: false },
+            { testId: "test-1",  },
+            { testId: "test-2" },
           ],
           count: 2,
         },

@@ -947,7 +947,7 @@ class WorkflowGitService {
       // Git operations handled by Playwright via CDP
       this.logger.info(`Merge requested - handled by Playwright`);
       const currentBranch = "current-branch"; // Placeholder
-      const mergeResult = { success: true };
+      const mergeResult = {  };
 
       const result = {
         sourceBranch: currentBranch,

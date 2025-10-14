@@ -155,7 +155,7 @@ describe('FrameworkStepRegistry', () => {
           description: 'Test step'
         },
         module: {
-          execute: jest.fn().mockResolvedValue({ success: true })
+          execute: jest.fn().mockResolvedValue({  })
         }
       };
       

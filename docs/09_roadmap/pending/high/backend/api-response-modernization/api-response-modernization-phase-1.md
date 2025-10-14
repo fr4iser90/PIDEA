@@ -13,7 +13,7 @@ Remove all 409 files with legacy patterns. Implement 2025 standards like GitHub,
 ## 📝 Tasks
 
 ### Task 1.1: Remove Legacy Patterns from 409 Files (6 hours)
-- [ ] Remove all 409 files with `success: true/false` patterns
+- [ ] Remove all 409 files with `/false` patterns
 - [ ] Use direct JSON responses with HTTP status codes
 - [ ] Remove all wrapper objects
 - [ ] Follow GitHub, Stripe, AWS API standards
@@ -63,7 +63,7 @@ res.status(400).json({
 
 ## Validation Criteria
 - [ ] All 409 files updated to use direct responses
-- [ ] No legacy `{ success: true/false }` patterns remaining
+- [ ] No legacy `{ /false }` patterns remaining
 - [ ] All files pass ESLint checks
 - [ ] All files pass Node.js syntax checks
 - [ ] Server starts without errors

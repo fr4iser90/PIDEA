@@ -296,7 +296,7 @@ test.describe("Form Submission Tests", () => {
           route.fulfill({
             status: 200,
             contentType: "application/json",
-            body: JSON.stringify({ success: true }),
+            body: JSON.stringify({  }),
           });
         }, 10000); // 10 second delay
       });

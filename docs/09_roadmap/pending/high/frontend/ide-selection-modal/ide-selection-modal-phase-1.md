@@ -28,7 +28,7 @@
 
 ### Data Structure Fix
 - Update ProjectRepository.detectProjects() to use `ide.status` instead of `ide.active`
-- Handle API response structure: `{success: true, data: [...]}`
+- Handle API response structure: `{, data: [...]}`
 - Filter IDEs with workspace paths and active status
 
 ### Styling Requirements

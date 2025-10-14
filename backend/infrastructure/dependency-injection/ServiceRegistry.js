@@ -2063,8 +2063,8 @@ class ServiceRegistry {
         // TODO: Implement actual ContentRepository
         return {
           getContent: async () => [],
-          saveContent: async () => ({ success: true }),
-          deleteContent: async () => ({ success: true }),
+          saveContent: async () => ({  }),
+          deleteContent: async () => ({  }),
         };
       },
       { singleton: true, dependencies: ["databaseConnection"] },

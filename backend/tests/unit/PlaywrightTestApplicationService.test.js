@@ -196,8 +196,8 @@ describe("PlaywrightTestApplicationService", () => {
 
   describe("getAllTestResults", () => {
     const mockResults = [
-      { testId: "test-1", success: true },
-      { testId: "test-2", success: false },
+      { testId: "test-1",  },
+      { testId: "test-2" },
     ];
 
     test("should get all test results successfully", async () => {

@@ -36,16 +36,16 @@ describe("CodeQualityAnalysisOrchestrator", () => {
     it("should load code quality steps", async () => {
       // Mock the step modules
       jest.doMock("./code-quality/LintingCodeQualityStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./code-quality/ComplexityCodeQualityStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./code-quality/CoverageCodeQualityStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./code-quality/DocumentationCodeQualityStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
 
       await orchestrator.loadCodeQualitySteps();

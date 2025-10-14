@@ -617,7 +617,7 @@ class TaskService {
       },
       validate: async (context) => ({ isValid: true }),
       canExecute: async (context) => true,
-      rollback: async (context, stepId) => ({ success: true }),
+      rollback: async (context, stepId) => ({}),
     };
 
     return workflow;

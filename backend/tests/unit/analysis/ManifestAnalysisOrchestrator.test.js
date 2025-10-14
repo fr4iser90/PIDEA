@@ -36,16 +36,16 @@ describe("ManifestAnalysisOrchestrator", () => {
     it("should load manifest analysis steps", async () => {
       // Mock the step modules
       jest.doMock("./manifest/PackageJsonAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./manifest/DockerfileAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./manifest/CIConfigAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
       jest.doMock("./manifest/EnvironmentAnalysisStep", () => ({
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       }));
 
       await orchestrator.loadManifestSteps();

@@ -177,7 +177,7 @@ describe("FrameworkStepRegistry Unit Tests", () => {
 
     test("should load framework steps successfully", async () => {
       const mockStepModule = {
-        execute: jest.fn().mockResolvedValue({ success: true }),
+        execute: jest.fn().mockResolvedValue({  }),
       };
 
       jest.spyOn(fs, "access").mockResolvedValue();
@@ -261,7 +261,7 @@ describe("FrameworkStepRegistry Unit Tests", () => {
           description: "Test step",
         },
         module: {
-          execute: jest.fn().mockResolvedValue({ success: true }),
+          execute: jest.fn().mockResolvedValue({  }),
         },
         filePath: "/path/to/test_step.js",
         loadedAt: new Date(),

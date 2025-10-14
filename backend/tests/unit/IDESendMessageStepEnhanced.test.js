@@ -285,7 +285,7 @@ describe("IDESendMessageStepEnhanced", () => {
 
     test("should publish events correctly", async () => {
       const context = createMockContext();
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockResolvedValue();
 
       await stepInstance.execute(context);
@@ -324,7 +324,7 @@ describe("IDESendMessageStepEnhanced", () => {
         },
       });
 
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockResolvedValue();
 
       await stepInstance.execute(context);
@@ -345,7 +345,7 @@ describe("IDESendMessageStepEnhanced", () => {
         },
       });
 
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockResolvedValue();
 
       const result = await stepInstance.execute(context);
@@ -367,7 +367,7 @@ describe("IDESendMessageStepEnhanced", () => {
         },
       });
 
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockResolvedValue();
 
       await stepInstance.execute(context);
@@ -381,7 +381,7 @@ describe("IDESendMessageStepEnhanced", () => {
       });
 
       mockChatService.calculateConfidence.mockResolvedValue(0.3); // Low confidence
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockResolvedValue();
 
       const result = await stepInstance.execute(context);
@@ -402,7 +402,7 @@ describe("IDESendMessageStepEnhanced", () => {
       mockChatService.detectIntent.mockRejectedValue(
         new Error("Intent detection failed"),
       );
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockResolvedValue();
 
       const result = await stepInstance.execute(context);
@@ -427,7 +427,7 @@ describe("IDESendMessageStepEnhanced", () => {
 
     test("should handle event bus failure gracefully", async () => {
       const context = createMockContext();
-      mockIDEService.sendMessage.mockResolvedValue({ success: true });
+      mockIDEService.sendMessage.mockResolvedValue({  });
       mockEventBus.publish.mockRejectedValue(new Error("Event bus error"));
 
       const result = await stepInstance.execute(context);

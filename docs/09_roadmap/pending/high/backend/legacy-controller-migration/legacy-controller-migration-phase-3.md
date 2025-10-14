@@ -42,7 +42,7 @@ Migrate all remaining supporting controllers to modern response patterns. These 
 
 ## Success Criteria
 - [ ] All supporting controllers use modern response patterns
-- [ ] No legacy `{ success: true/false }` patterns remain in supporting controllers
+- [ ] No legacy `{ /false }` patterns remain in supporting controllers
 - [ ] All supporting controllers pass response tests
 - [ ] Consistent error handling across all supporting controllers
 - [ ] Proper HTTP status codes used for all supporting responses

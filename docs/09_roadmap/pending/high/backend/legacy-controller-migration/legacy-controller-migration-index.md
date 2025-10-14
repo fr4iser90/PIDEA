@@ -68,7 +68,7 @@ docs/09_roadmap/pending/high/backend/legacy-controller-migration/
 ### 2025-01-14T10:30:00.000Z - Analysis Complete
 - Verified API Response Modernization infrastructure is complete
 - Confirmed ResponseMiddleware, ResponseFormatter, ErrorFormatter are implemented
-- Identified 41 controllers still using legacy `{ success: true/false }` patterns
+- Identified 41 controllers still using legacy `{ /false }` patterns
 - Confirmed frontend ApiService already handles both formats
 - Ready to proceed with controller migration
 

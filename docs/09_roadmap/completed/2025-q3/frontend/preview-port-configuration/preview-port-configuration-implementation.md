@@ -397,7 +397,7 @@ setCustomPort: async (port) => {
   const isValid = await get().validatePort(port);
   if (isValid) {
     set({ customPort: port });
-    return { success: true };
+    return {  };
   }
   return { error: 'Invalid port' };
 }

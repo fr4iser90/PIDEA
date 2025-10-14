@@ -245,7 +245,7 @@ describe('IDEStore Cache Integration', () => {
       const port = '9222';
       const workspacePath = '/path/to/project';
       const projectId = 'project';
-      const switchResponse = { success: true };
+      const switchResponse = {};
 
       // Mock API call
       mockApiCall.mockResolvedValue(switchResponse);

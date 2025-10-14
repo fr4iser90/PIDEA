@@ -139,8 +139,8 @@ describe("PlaywrightTestHandler", () => {
   describe("handleGetAllTestResults", () => {
     const mockResult = {
       results: [
-        { testId: "test-1", success: true },
-        { testId: "test-2", success: false },
+        { testId: "test-1",  },
+        { testId: "test-2" },
       ],
       count: 2,
     };

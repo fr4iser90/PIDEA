@@ -214,7 +214,7 @@ jest.mock('../utils/logger', () => ({
 // Mocking with implementation
 jest.mock('../services/EmailService', () => ({
   EmailService: jest.fn().mockImplementation(() => ({
-    sendEmail: jest.fn().mockResolvedValue({ success: true }),
+    sendEmail: jest.fn().mockResolvedValue({}),
     validateEmail: jest.fn().mockReturnValue(true)
   }))
 }));

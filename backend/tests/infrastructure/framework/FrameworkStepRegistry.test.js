@@ -308,7 +308,7 @@ describe("FrameworkStepRegistry", () => {
         },
         module: {
           config: { name: "refactor_step" },
-          execute: async () => ({ success: true }),
+          execute: async () => ({  }),
         },
         filePath: "/test/path/steps/refactor_step.js",
       };
@@ -332,7 +332,7 @@ describe("FrameworkStepRegistry", () => {
         config: { name: "error_step" },
         module: {
           config: { name: "error_step" },
-          execute: async () => ({ success: true }),
+          execute: async () => ({  }),
         },
         filePath: "/test/path/steps/error_step.js",
       };
@@ -355,7 +355,7 @@ describe("FrameworkStepRegistry", () => {
         config: { name: "test_step" },
         module: {
           config: { name: "test_step" },
-          execute: async () => ({ success: true }),
+          execute: async () => ({  }),
         },
         filePath: "/test/path/steps/test_step.js",
       };

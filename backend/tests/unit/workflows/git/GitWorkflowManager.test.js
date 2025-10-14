@@ -81,7 +81,7 @@ describe("GitWorkflowManager", () => {
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue("main");
-      mockGitService.createBranch.mockResolvedValue({ success: true });
+      mockGitService.createBranch.mockResolvedValue({  });
 
       const result = await gitWorkflowManager.createBranch(context);
 
@@ -146,9 +146,9 @@ describe("GitWorkflowManager", () => {
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue("main");
-      mockGitService.createBranch.mockResolvedValue({ success: true });
-      mockGitService.addFiles.mockResolvedValue({ success: true });
-      mockGitService.commitChanges.mockResolvedValue({ success: true });
+      mockGitService.createBranch.mockResolvedValue({  });
+      mockGitService.addFiles.mockResolvedValue({  });
+      mockGitService.commitChanges.mockResolvedValue({  });
 
       const result = await gitWorkflowManager.executeWorkflow(context);
 
@@ -200,10 +200,10 @@ describe("GitWorkflowManager", () => {
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue("feature/test-task");
-      mockGitService.addFiles.mockResolvedValue({ success: true });
-      mockGitService.commitChanges.mockResolvedValue({ success: true });
-      mockGitService.checkoutBranch.mockResolvedValue({ success: true });
-      mockGitService.mergeBranch.mockResolvedValue({ success: true });
+      mockGitService.addFiles.mockResolvedValue({  });
+      mockGitService.commitChanges.mockResolvedValue({  });
+      mockGitService.checkoutBranch.mockResolvedValue({  });
+      mockGitService.mergeBranch.mockResolvedValue({  });
 
       const result = await gitWorkflowManager.completeWorkflow(context);
 
@@ -230,8 +230,8 @@ describe("GitWorkflowManager", () => {
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue("feature/test-task");
-      mockGitService.addFiles.mockResolvedValue({ success: true });
-      mockGitService.commitChanges.mockResolvedValue({ success: true });
+      mockGitService.addFiles.mockResolvedValue({  });
+      mockGitService.commitChanges.mockResolvedValue({  });
 
       const result = await gitWorkflowManager.completeWorkflow(context);
 
@@ -339,7 +339,7 @@ describe("GitWorkflowManager", () => {
       });
 
       mockGitService.getCurrentBranch.mockResolvedValue("main");
-      mockGitService.createBranch.mockResolvedValue({ success: true });
+      mockGitService.createBranch.mockResolvedValue({  });
 
       await gitWorkflowManager.createBranch(context);
 

@@ -246,7 +246,7 @@ class WebChatHandler {
 
       this.logger.info(`Chat session ${sessionId} closed`);
 
-      return { success: true };
+      return {};
     } catch (error) {
       this.logger.error("Failed to close chat:", error);
       throw new Error(`Failed to close chat: ${error.message}`);

@@ -31,7 +31,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
       if (selectedIDE.projectId) {
         try {
           await loadCategoryAnalysisData(selectedIDE.projectId);
-          return { success: true };
+          return {};
         } catch (error) {
           logger.error('Failed to fetch analysis data:', error);
           throw error;

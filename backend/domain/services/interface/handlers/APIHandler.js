@@ -146,7 +146,7 @@ class APIHandler {
       config,
       request: async (method, endpoint, data) => {
         this.logger.info(`REST ${method} ${endpoint}`);
-        return { status: 200, data: { message: "Mock response" } };
+        return { status: 200, message: "Mock response" };
       },
     };
   }
@@ -163,11 +163,11 @@ class APIHandler {
       config,
       query: async (query, variables) => {
         this.logger.info(`GraphQL Query: ${query}`);
-        return { data: { message: "Mock GraphQL response" } };
+        return { message: "Mock GraphQL response" };
       },
       mutate: async (mutation, variables) => {
         this.logger.info(`GraphQL Mutation: ${mutation}`);
-        return { data: { message: "Mock GraphQL mutation response" } };
+        return { message: "Mock GraphQL mutation response" };
       },
     };
   }

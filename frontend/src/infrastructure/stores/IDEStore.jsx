@@ -1426,7 +1426,7 @@ const useIDEStore = create(
               });
               set({ portPreferences: [...portPreferences] });
             }
-            return { success: true };
+            return {};
           } else {
             return { error: 'Invalid port' };
           }
@@ -1447,7 +1447,7 @@ const useIDEStore = create(
 
       clearCustomPort: () => {
         set({ customPort: null });
-        return { success: true };
+        return {};
       },
 
       // Project command methods (optional - can use existing terminal services)

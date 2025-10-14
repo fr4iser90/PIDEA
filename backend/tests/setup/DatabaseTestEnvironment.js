@@ -389,10 +389,10 @@ class DatabaseTestEnvironment {
           });
 
           await this.cleanupIsolatedDatabase(testName);
-          return { name: testName, result, success: true };
+          return { name: testName, result,  };
         } catch (error) {
           await this.cleanupIsolatedDatabase(testName);
-          return { name: testName, error, success: false };
+          return { name: testName, error };
         }
       });
 

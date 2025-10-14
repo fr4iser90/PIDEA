@@ -225,7 +225,7 @@ describe("TaskService - Phase Grouping", () => {
       taskService.autoFinishSystem = null;
 
       // Mock direct execution
-      taskService.executeTask = jest.fn().mockResolvedValue({ success: true });
+      taskService.executeTask = jest.fn().mockResolvedValue({  });
 
       const result = await taskService.executePhase("project1", "setup");
 

@@ -28,7 +28,7 @@
 ### ✅ Technical Improvements
 - **Fixed Data Structure Mismatch**: Changed `ide.active` to `ide.status`
 - **Replaced DOM Manipulation**: Now uses React state management
-- **API Response Handling**: Properly handles `{success: true, data: [...]}` format
+- **API Response Handling**: Properly handles `{, data: [...]}` format
 - **Form State Management**: All form fields connected to React state
 - **Error Recovery**: Retry functionality for failed API calls
 
@@ -84,7 +84,7 @@
 
 ### API Integration
 - Uses `/api/interfaces/available-ides` endpoint
-- Handles `{success: true, data: [...]}` response format
+- Handles `{, data: [...]}` response format
 - Filters IDEs with workspace paths
 - Supports retry on API failures
 

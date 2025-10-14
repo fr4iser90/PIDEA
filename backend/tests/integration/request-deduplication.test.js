@@ -120,7 +120,7 @@ describe("Request Deduplication Integration", () => {
               () =>
                 resolve({
                   ok: true,
-                  json: async () => ({ success: true }),
+                  json: async () => ({  }),
                 }),
               5000,
             ),
@@ -361,7 +361,7 @@ describe("Request Deduplication Integration", () => {
         }
         return Promise.resolve({
           ok: true,
-          json: async () => ({ success: true }),
+          json: async () => ({  }),
         });
       });
 

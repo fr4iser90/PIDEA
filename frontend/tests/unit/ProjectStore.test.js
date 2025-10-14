@@ -310,7 +310,7 @@ describe('ProjectStore', () => {
 
     it('should delete project successfully', async () => {
       mockApiCall.mockResolvedValue({
-        success: true
+        
       });
 
       const { result } = renderHook(() => useProjectStore());

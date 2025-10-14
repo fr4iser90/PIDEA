@@ -63,7 +63,7 @@ describe("RequestMonitoringService", () => {
     test("should track request completion", () => {
       const requestId = service.trackRequestStart("/api/test", "user123");
 
-      service.trackRequestComplete(requestId, true, 150, { success: true });
+      service.trackRequestComplete(requestId, true, 150, {  });
 
       const request = service.requests.get(requestId);
       expect(request.status).toBe("completed");
@@ -103,7 +103,7 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test1", "user1");
       const req2 = service.trackRequestStart("/api/test2", "user2");
 
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
       service.trackRequestComplete(req2, false, 200, new Error("Error"));
 
       const stats = service.getStats();
@@ -119,7 +119,7 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test", "user1");
       const req2 = service.trackRequestStart("/api/test", "user2");
 
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
       service.trackRequestComplete(req2, false, 200, new Error("Error"));
 
       const stats = service.getStats();
@@ -135,8 +135,8 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test", "user1");
       const req2 = service.trackRequestStart("/api/test", "user1");
 
-      service.trackRequestComplete(req1, true, 100, { success: true });
-      service.trackRequestComplete(req2, true, 150, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
+      service.trackRequestComplete(req2, true, 150, {  });
 
       const stats = service.getStats();
       const userStats = stats.users["user1"];
@@ -153,7 +153,7 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test1", "user1");
       const req2 = service.trackRequestStart("/api/test2", "user2");
 
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
       service.trackRequestComplete(req2, false, 200, new Error("Error"));
 
       const recent = service.getRecentRequests(10);
@@ -165,8 +165,8 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test1", "user1");
       const req2 = service.trackRequestStart("/api/test2", "user2");
 
-      service.trackRequestComplete(req1, true, 500, { success: true });
-      service.trackRequestComplete(req2, true, 1500, { success: true });
+      service.trackRequestComplete(req1, true, 500, {  });
+      service.trackRequestComplete(req2, true, 1500, {  });
 
       const slow = service.getSlowRequests(1000);
       expect(slow.length).toBe(1);
@@ -177,7 +177,7 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test1", "user1");
       const req2 = service.trackRequestStart("/api/test2", "user2");
 
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
       service.trackRequestComplete(req2, false, 200, new Error("Error"));
 
       const failed = service.getFailedRequests();
@@ -189,7 +189,7 @@ describe("RequestMonitoringService", () => {
   describe("Data Export", () => {
     test("should export data as JSON", () => {
       const req1 = service.trackRequestStart("/api/test", "user1");
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
 
       const jsonData = service.exportData("json");
       const parsed = JSON.parse(jsonData);
@@ -201,7 +201,7 @@ describe("RequestMonitoringService", () => {
 
     test("should export data as CSV", () => {
       const req1 = service.trackRequestStart("/api/test", "user1");
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
 
       const csvData = service.exportData("csv");
       expect(csvData).toContain(",");
@@ -222,7 +222,7 @@ describe("RequestMonitoringService", () => {
       Date.now = jest.fn(() => 1000);
 
       const req1 = service.trackRequestStart("/api/test", "user1");
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
 
       // Advance time to make request old
       Date.now = jest.fn(() => 25 * 60 * 60 * 1000); // 25 hours later
@@ -239,7 +239,7 @@ describe("RequestMonitoringService", () => {
   describe("Statistics Reset", () => {
     test("should reset all statistics", () => {
       const req1 = service.trackRequestStart("/api/test", "user1");
-      service.trackRequestComplete(req1, true, 100, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
 
       service.resetStats();
 
@@ -253,7 +253,7 @@ describe("RequestMonitoringService", () => {
   describe("Request Details", () => {
     test("should get request details", () => {
       const requestId = service.trackRequestStart("/api/test", "user1");
-      service.trackRequestComplete(requestId, true, 100, { success: true });
+      service.trackRequestComplete(requestId, true, 100, {  });
 
       const details = service.getRequestDetails(requestId);
       expect(details).toBeDefined();
@@ -272,8 +272,8 @@ describe("RequestMonitoringService", () => {
       const req1 = service.trackRequestStart("/api/test1", "user1");
       const req2 = service.trackRequestStart("/api/test2", "user2");
 
-      service.trackRequestComplete(req1, true, 100, { success: true });
-      service.trackRequestComplete(req2, true, 300, { success: true });
+      service.trackRequestComplete(req1, true, 100, {  });
+      service.trackRequestComplete(req2, true, 300, {  });
 
       const stats = service.getStats();
       expect(stats.performance.averageResponseTime).toBe(200);

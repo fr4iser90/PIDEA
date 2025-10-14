@@ -272,7 +272,7 @@ describe('ProjectStore Cache Integration', () => {
 
     it('should invalidate cache when deleting project', async () => {
       mockApiCall.mockResolvedValue({
-        success: true
+        
       });
 
       const { result } = renderHook(() => useProjectStore());

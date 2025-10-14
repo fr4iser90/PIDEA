@@ -86,13 +86,13 @@ return branches;
 **Expected Logs:**
 ```
 [GitService] getBranches() called with projectPath: /home/fr4iser/Documents/Git/PIDEA
-[GitService] Step execution result: { result: {...}, success: true }
+[GitService] Step execution result: { result: {...},  }
 [GitService] Extracted branches: { local: [...], remote: [...], all: [...] }
 [GitService] Returning to controller: { local: [...], remote: [...], all: [...] }
 
 [GitGetBranchesStep] execute() called with context: { projectPath: "...", includeRemote: true, includeLocal: true }
 [GitGetBranchesStep] Handler execution result: { local: [...], remote: [...], all: [...] }
-[GitGetBranchesStep] Returning step result: { result: {...}, success: true }
+[GitGetBranchesStep] Returning step result: { result: {...},  }
 
 [GitBranchHandler] handle() called with command: { projectPath: "...", includeRemote: true, includeLocal: true }
 [GitBranchHandler] Git command output: "main\npidea-agent\nfeature/..."

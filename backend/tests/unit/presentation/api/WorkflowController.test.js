@@ -149,7 +149,7 @@ describe("WorkflowController", () => {
         commandId: "test-command-123",
       };
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -183,7 +183,7 @@ describe("WorkflowController", () => {
         message: "Workflow execution completed successfully",
         data: expect.objectContaining({
           commandId: expect.stringContaining("auto-mode-"),
-          result: { success: true },
+          result: {  },
         }),
       });
     });
@@ -197,7 +197,7 @@ describe("WorkflowController", () => {
       mockReq.body.mode = "analysis";
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -221,7 +221,7 @@ describe("WorkflowController", () => {
       mockReq.body.mode = "refactor";
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -249,7 +249,7 @@ describe("WorkflowController", () => {
 
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -280,7 +280,7 @@ describe("WorkflowController", () => {
 
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -307,7 +307,7 @@ describe("WorkflowController", () => {
 
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -362,7 +362,7 @@ describe("WorkflowController", () => {
         message: "Task executed successfully",
         data: {
           taskId: "task-123",
-          result: { success: true },
+          result: {  },
           gitBranch: "feature/test",
           newChat: true,
         },
@@ -524,7 +524,7 @@ describe("WorkflowController", () => {
       mockReq.user = undefined;
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 
@@ -932,7 +932,7 @@ describe("WorkflowController", () => {
 
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       // This should throw an error due to null/undefined handling in the controller
       await expect(
@@ -949,7 +949,7 @@ describe("WorkflowController", () => {
 
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       // This should throw an error due to null/undefined handling in the controller
       await expect(
@@ -966,7 +966,7 @@ describe("WorkflowController", () => {
 
       const mockCommandInstance = {};
       VibeCoderModeCommand.mockImplementation(() => mockCommandInstance);
-      mockCommandBus.execute.mockResolvedValue({ success: true });
+      mockCommandBus.execute.mockResolvedValue({  });
 
       await controller.executeAutoMode(mockReq, mockRes);
 

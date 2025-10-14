@@ -191,7 +191,7 @@ describe("Optimization and Resource Management Components", () => {
       // Simulate some execution time
       setTimeout(() => {}, 10);
 
-      executionMetrics.recordExecutionEnd("test-execution", { success: true });
+      executionMetrics.recordExecutionEnd("test-execution", {  });
 
       const metrics = executionMetrics.getExecutionMetrics("test-execution");
       expect(metrics.status).toBe("completed");

@@ -33,7 +33,7 @@ describe("PhaseExecutionService", () => {
       const phaseNames = ["setup", "implementation"];
 
       // Mock Git workflow success
-      gitWorkflowManager.executeWorkflow.mockResolvedValue({ success: true });
+      gitWorkflowManager.executeWorkflow.mockResolvedValue({  });
 
       // Mock phase execution results
       taskService.executePhase
@@ -110,7 +110,7 @@ describe("PhaseExecutionService", () => {
       const phaseNames = ["setup"];
 
       // Mock Git workflow success but phase execution failure
-      gitWorkflowManager.executeWorkflow.mockResolvedValue({ success: true });
+      gitWorkflowManager.executeWorkflow.mockResolvedValue({  });
       taskService.executePhase.mockRejectedValue(
         new Error("Phase execution failed"),
       );
@@ -129,7 +129,7 @@ describe("PhaseExecutionService", () => {
       const phaseNames = ["setup", "implementation", "testing"];
 
       // Mock Git workflow success for all phases
-      gitWorkflowManager.executeWorkflow.mockResolvedValue({ success: true });
+      gitWorkflowManager.executeWorkflow.mockResolvedValue({  });
 
       // Mock phase execution with one failure
       taskService.executePhase

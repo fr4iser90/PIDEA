@@ -26,7 +26,7 @@ Migrate the most critical controllers to modern response patterns. These control
 
 ## Success Criteria
 - [ ] All core controllers use modern response patterns
-- [ ] No legacy `{ success: true/false }` patterns remain in core controllers
+- [ ] No legacy `{ /false }` patterns remain in core controllers
 - [ ] All controllers pass individual tests
 - [ ] ResponseMiddleware methods properly utilized
 - [ ] Error handling follows modern patterns

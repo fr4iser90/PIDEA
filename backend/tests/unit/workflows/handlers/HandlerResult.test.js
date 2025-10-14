@@ -44,8 +44,8 @@ describe("HandlerResult", () => {
 
   describe("success status methods", () => {
     it("should check if result is successful", () => {
-      const successResult = new HandlerResult({ success: true });
-      const failureResult = new HandlerResult({ success: false });
+      const successResult = new HandlerResult({  });
+      const failureResult = new HandlerResult({});
 
       expect(successResult.isSuccess()).toBe(true);
       expect(failureResult.isSuccess()).toBe(false);

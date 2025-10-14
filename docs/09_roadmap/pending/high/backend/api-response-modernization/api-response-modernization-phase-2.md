@@ -100,7 +100,7 @@ async call(endpoint, options = {}, projectId = null) {
     return data;
     
   } catch (error) {
-    // Throw error instead of returning success: false
+    // Throw error instead of returning 
     throw error;
   }
 }

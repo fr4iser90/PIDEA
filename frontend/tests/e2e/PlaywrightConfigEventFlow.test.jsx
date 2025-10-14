@@ -163,7 +163,7 @@ describe('Playwright Config Event Flow E2E', () => {
     it('should initiate configuration save without manual notifications', async () => {
       // Arrange
       const mockApiRepository = require('@/infrastructure/repositories/ChatRepository.jsx');
-      const mockUpdateConfig = jest.fn().mockResolvedValue({ success: true });
+      const mockUpdateConfig = jest.fn().mockResolvedValue({});
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,
         getBrowserEnvironment: jest.fn().mockResolvedValue({ data: {} })
@@ -340,7 +340,7 @@ describe('Playwright Config Event Flow E2E', () => {
     it('should handle multiple rapid configuration saves', async () => {
       // Arrange
       const mockApiRepository = require('@/infrastructure/repositories/ChatRepository.jsx');
-      const mockUpdateConfig = jest.fn().mockResolvedValue({ success: true });
+      const mockUpdateConfig = jest.fn().mockResolvedValue({});
       mockApiRepository.mockImplementation(() => ({
         updatePlaywrightTestConfig: mockUpdateConfig,
         getBrowserEnvironment: jest.fn().mockResolvedValue({ data: {} })

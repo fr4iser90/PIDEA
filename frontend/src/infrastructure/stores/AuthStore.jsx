@@ -162,7 +162,7 @@ const useAuthStore = create(
           await get().startSessionMonitoring();
 
           logger.info('✅ [AuthStore] Login successful, state updated');
-          return { success: true };
+          return {};
         } catch (error) {
           logger.error('❌ [AuthStore] Login failed:', error);
           set({
@@ -213,7 +213,7 @@ const useAuthStore = create(
             lastAuthCheck: new Date()
           });
 
-          return { success: true };
+          return {};
         } catch (error) {
           set({
             isLoading: false,

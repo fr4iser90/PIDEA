@@ -92,7 +92,8 @@ class ConfirmationStep {
           );
           return {
             message: "Confirmation skipped - no AI response",
-            data: { confirmed: true, reason: "no_ai_response" },
+            confirmed: true, 
+            reason: "no_ai_response"
           };
         }
       }
