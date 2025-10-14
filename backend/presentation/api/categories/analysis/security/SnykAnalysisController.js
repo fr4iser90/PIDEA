@@ -7,95 +7,42 @@
  */
 
 const express = require("express");
-const Logger = require("@logging/Logger");
+const BaseController = require("@infrastructure/api/BaseController");
 const {
   SnykAnalysisService,
 } = require("@application/services/categories/analysis/security");
 
-class SnykAnalysisController {
+class SnykAnalysisController extends BaseController {
   constructor() {
-    this.logger = new Logger("SnykAnalysisController");
-    this.snykService = new SnykAnalysisService();
+    super("SnykAnalysis", new SnykAnalysisService());
     this.router = express.Router();
     this.setupRoutes();
   }
 
   setupRoutes() {
-    this.router.post("/analyze", this.analyze.bind(this));
-    this.router.get("/config", this.getConfiguration.bind(this));
-    this.router.get("/status", this.getStatus.bind(this));
+    this.router.post("/analyze", this.wrapAsync(this.analyze.bind(this), "Snyk analysis"));
+    this.router.get("/config", this.wrapAsync(this.getConfiguration.bind(this), "Get configuration"));
+    this.router.get("/status", this.wrapAsync(this.getStatus.bind(this), "Get status"));
   }
 
   async analyze(req, res) {
-    try {
-      this.logger.info("Snyk analysis request received", {
-        projectId: req.body.projectId,
-        userId: req.user?.id,
-      });
-
-      const { projectId, projectPath, config = {} } = req.body;
-
-      if (!projectId || !projectPath) {
-        return res.badRequest(
-          "Missing required parameters: projectId and projectPath",
-          { data: null },
-        );
-      }
-
-      const result = await this.snykService.analyze({
-        projectId,
-        projectPath,
-        config,
-      });
-
-      this.logger.info("Snyk analysis completed", {
-        projectId,
-        vulnerabilities: result.data?.vulnerabilities?.length || 0,
-      });
-
-      res.success({
-        data: {
-          projectId: projectId,
-          timestamp: new Date().toISOString(),
-          scanner: "snyk",
-          results: result.data || {},
-          metadata: result.metadata || {},
-        },
-      });
-    } catch (error) {
-      this.logger.error("Snyk analysis failed", {
-        projectId: req.body.projectId,
-        error: error.message,
-      });
-
-      res.error("Snyk analysis failed", 500, { details: error.message });
-    }
+    await this.handleAnalysis(req, res, this.service.analyze.bind(this.service));
   }
 
   async getConfiguration(req, res) {
-    try {
-      const config = await this.snykService.getConfiguration();
-
-      res.success(config);
-    } catch (error) {
-      this.logger.error("Failed to get Snyk configuration", {
-        error: error.message,
-      });
-
-      res.error("Failed to get configuration", 500, { details: error.message });
-    }
+    await this.handleGetConfiguration(req, res, {
+      severity: ["critical", "high", "medium", "low"],
+      includeLicenses: true,
+      includeDependencies: true
+    });
   }
 
   async getStatus(req, res) {
-    try {
-      const status = await this.snykService.getStatus();
-
-      res.success(status);
-    } catch (error) {
-      this.logger.error("Failed to get Snyk status", { error: error.message });
-
-      res.error("Failed to get status", 500, { details: error.message });
-    }
+    await this.handleGetStatus(req, res, {
+      activeScans: 0,
+      lastScan: null,
+      vulnerabilitiesFound: 0
+    });
   }
 
   getRouter() {

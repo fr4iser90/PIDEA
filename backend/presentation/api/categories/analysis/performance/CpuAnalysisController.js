@@ -7,94 +7,41 @@
  */
 
 const express = require("express");
-const Logger = require("@logging/Logger");
+const BaseController = require("@infrastructure/api/BaseController");
 const {
   CpuAnalysisService,
 } = require("@application/services/categories/analysis/performance");
 
-class CpuAnalysisController {
+class CpuAnalysisController extends BaseController {
   constructor() {
-    this.logger = new Logger("CpuAnalysisController");
-    this.cpuService = new CpuAnalysisService();
+    super("CpuAnalysis", new CpuAnalysisService());
     this.router = express.Router();
     this.setupRoutes();
   }
 
   setupRoutes() {
-    this.router.post("/analyze", this.analyze.bind(this));
-    this.router.get("/config", this.getConfiguration.bind(this));
-    this.router.get("/status", this.getStatus.bind(this));
+    this.router.post("/analyze", this.wrapAsync(this.analyze.bind(this), "CPU analysis"));
+    this.router.get("/config", this.wrapAsync(this.getConfiguration.bind(this), "Get configuration"));
+    this.router.get("/status", this.wrapAsync(this.getStatus.bind(this), "Get status"));
   }
 
   async analyze(req, res) {
-    try {
-      this.logger.info("CPU analysis request received", {
-        projectId: req.body.projectId,
-        userId: req.user?.id,
-      });
-
-      const { projectId, projectPath, config = {} } = req.body;
-
-      if (!projectId || !projectPath) {
-        return res.badRequest(
-          "Missing required parameters: projectId and projectPath",
-        );
-      }
-
-      const result = await this.cpuService.analyze({
-        projectId,
-        projectPath,
-        config,
-      });
-
-      this.logger.info("CPU analysis completed", {
-        projectId,
-        samples: result.data?.samples?.length || 0,
-      });
-
-      res.success({
-        data: {
-          projectId: projectId,
-          timestamp: new Date().toISOString(),
-          scanner: "cpu",
-          results: result.data || {},
-          metadata: result.metadata || {},
-        },
-      });
-    } catch (error) {
-      this.logger.error("CPU analysis failed", {
-        projectId: req.body.projectId,
-        error: error.message,
-      });
-
-      res.error("CPU analysis failed", 500, { details: error.message });
-    }
+    await this.handleAnalysis(req, res, this.service.analyze.bind(this.service));
   }
 
   async getConfiguration(req, res) {
-    try {
-      const config = await this.cpuService.getConfiguration();
-
-      res.success(config);
-    } catch (error) {
-      this.logger.error("Failed to get CPU configuration", {
-        error: error.message,
-      });
-
-      res.error("Failed to get configuration", 500, { details: error.message });
-    }
+    await this.handleGetConfiguration(req, res, {
+      samplingInterval: 1000,
+      duration: 30000,
+      includeProcesses: true
+    });
   }
 
   async getStatus(req, res) {
-    try {
-      const status = await this.cpuService.getStatus();
-
-      res.success(status);
-    } catch (error) {
-      this.logger.error("Failed to get CPU status", { error: error.message });
-
-      res.error("Failed to get status", 500, { details: error.message });
-    }
+    await this.handleGetStatus(req, res, {
+      activeMonitoring: false,
+      lastSample: null
+    });
   }
 
   getRouter() {

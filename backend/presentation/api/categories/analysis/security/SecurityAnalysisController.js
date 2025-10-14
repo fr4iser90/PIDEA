@@ -7,100 +7,44 @@
  */
 
 const express = require("express");
-const Logger = require("@logging/Logger");
+const BaseController = require("@infrastructure/api/BaseController");
 const {
   SecurityAnalysisOrchestratorService,
 } = require("@application/services/categories/analysis/security");
 
-class SecurityAnalysisController {
+class SecurityAnalysisController extends BaseController {
   constructor() {
-    this.logger = new Logger("SecurityAnalysisController");
-    this.securityService = new SecurityAnalysisOrchestratorService();
+    super("SecurityAnalysis", new SecurityAnalysisOrchestratorService());
     this.router = express.Router();
     this.setupRoutes();
   }
 
   setupRoutes() {
-    this.router.post("/analyze", this.analyze.bind(this));
-    this.router.get("/config", this.getConfiguration.bind(this));
-    this.router.get("/status", this.getStatus.bind(this));
-    this.router.get("/results/:id", this.getResults.bind(this));
-    this.router.delete("/results/:id", this.deleteResults.bind(this));
+    this.router.post("/analyze", this.wrapAsync(this.analyze.bind(this), "Security analysis"));
+    this.router.get("/config", this.wrapAsync(this.getConfiguration.bind(this), "Get configuration"));
+    this.router.get("/status", this.wrapAsync(this.getStatus.bind(this), "Get status"));
+    this.router.get("/results/:id", this.wrapAsync(this.getResults.bind(this), "Get results"));
+    this.router.delete("/results/:id", this.wrapAsync(this.deleteResults.bind(this), "Delete results"));
   }
 
   async analyze(req, res) {
-    try {
-      this.logger.info("Security analysis request received", {
-        projectId: req.body.projectId,
-        userId: req.user?.id,
-      });
-
-      const { projectId, projectPath, config = {} } = req.body;
-
-      if (!projectId || !projectPath) {
-        return res.badRequest(
-          "Missing required parameters: projectId and projectPath",
-          { data: null },
-        );
-      }
-
-      const result = await this.securityService.analyze({
-        projectId,
-        projectPath,
-        config,
-      });
-
-      this.logger.info("Security analysis completed", {
-        projectId,
-        vulnerabilities: result.data?.vulnerabilities?.length || 0,
-      });
-
-      res.success({
-        data: {
-          projectId: projectId,
-          timestamp: new Date().toISOString(),
-          score: result.data?.score || 0,
-          results: result.data?.results || {},
-          recommendations: result.data?.recommendations || [],
-          summary: result.data?.summary || {},
-        },
-      });
-    } catch (error) {
-      this.logger.error("Security analysis failed", {
-        projectId: req.body.projectId,
-        error: error.message,
-      });
-
-      res.error("Security analysis failed", 500, { details: error.message });
-    }
+    await this.handleAnalysis(req, res, this.service.analyze.bind(this.service));
   }
 
   async getConfiguration(req, res) {
-    try {
-      const config = await this.securityService.getConfiguration();
-
-      res.success(config);
-    } catch (error) {
-      this.logger.error("Failed to get security configuration", {
-        error: error.message,
-      });
-
-      res.error("Failed to get configuration", 500, { details: error.message });
-    }
+    await this.handleGetConfiguration(req, res, {
+      scanners: ["trivy", "snyk", "semgrep", "zap"],
+      severity: ["critical", "high", "medium", "low"],
+      includeSecrets: true
+    });
   }
 
   async getStatus(req, res) {
-    try {
-      const status = await this.securityService.getStatus();
-
-      res.success(status);
-    } catch (error) {
-      this.logger.error("Failed to get security status", {
-        error: error.message,
-      });
-
-      res.error("Failed to get status", 500, { details: error.message });
-    }
+    await this.handleGetStatus(req, res, {
+      activeScans: 0,
+      lastScan: null,
+      vulnerabilitiesFound: 0
+    });
   }
 
   async getResults(req, res) {

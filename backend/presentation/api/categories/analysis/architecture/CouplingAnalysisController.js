@@ -7,96 +7,42 @@
  */
 
 const express = require("express");
-const Logger = require("@logging/Logger");
+const BaseController = require("@infrastructure/api/BaseController");
 const {
   CouplingAnalysisService,
 } = require("@application/services/categories/analysis/architecture");
 
-class CouplingAnalysisController {
+class CouplingAnalysisController extends BaseController {
   constructor() {
-    this.logger = new Logger("CouplingAnalysisController");
-    this.couplingService = new CouplingAnalysisService();
+    super("CouplingAnalysis", new CouplingAnalysisService());
     this.router = express.Router();
     this.setupRoutes();
   }
 
   setupRoutes() {
-    this.router.post("/analyze", this.analyze.bind(this));
-    this.router.get("/config", this.getConfiguration.bind(this));
-    this.router.get("/status", this.getStatus.bind(this));
+    this.router.post("/analyze", this.wrapAsync(this.analyze.bind(this), "Coupling analysis"));
+    this.router.get("/config", this.wrapAsync(this.getConfiguration.bind(this), "Get configuration"));
+    this.router.get("/status", this.wrapAsync(this.getStatus.bind(this), "Get status"));
   }
 
   async analyze(req, res) {
-    try {
-      this.logger.info("Coupling analysis request received", {
-        projectId: req.body.projectId,
-        userId: req.user?.id,
-      });
-
-      const { projectId, projectPath, config = {} } = req.body;
-
-      if (!projectId || !projectPath) {
-        return res.badRequest(
-          "Missing required parameters: projectId and projectPath",
-        );
-      }
-
-      const result = await this.couplingService.analyze({
-        projectId,
-        projectPath,
-        config,
-      });
-
-      this.logger.info("Coupling analysis completed", {
-        projectId,
-        components: result.data?.components?.length || 0,
-      });
-
-      res.success({
-        data: {
-          projectId: projectId,
-          timestamp: new Date().toISOString(),
-          scanner: "coupling",
-          results: result.data || {},
-          metadata: result.metadata || {},
-        },
-      });
-    } catch (error) {
-      this.logger.error("Coupling analysis failed", {
-        projectId: req.body.projectId,
-        error: error.message,
-      });
-
-      res.error("Coupling analysis failed", 500, { details: error.message });
-    }
+    await this.handleAnalysis(req, res, this.service.analyze.bind(this.service));
   }
 
   async getConfiguration(req, res) {
-    try {
-      const config = await this.couplingService.getConfiguration();
-
-      res.success(config);
-    } catch (error) {
-      this.logger.error("Failed to get coupling analysis configuration", {
-        error: error.message,
-      });
-
-      res.error("Failed to get configuration", 500, { details: error.message });
-    }
+    await this.handleGetConfiguration(req, res, {
+      metrics: ["afferent", "efferent", "instability"],
+      depth: 3,
+      includeMetrics: true
+    });
   }
 
   async getStatus(req, res) {
-    try {
-      const status = await this.couplingService.getStatus();
-
-      res.success(status);
-    } catch (error) {
-      this.logger.error("Failed to get coupling analysis status", {
-        error: error.message,
-      });
-
-      res.error("Failed to get status", 500, { details: error.message });
-    }
+    await this.handleGetStatus(req, res, {
+      activeAnalyses: 0,
+      lastAnalysis: null,
+      couplingViolations: 0
+    });
   }
 
   getRouter() {
