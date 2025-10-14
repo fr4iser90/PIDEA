@@ -270,7 +270,7 @@ class ServiceRegistry {
         terminalLogCaptureService,
         terminalLogReader,
       ) => {
-        const IDEController = require("@presentation/api/IDEController");
+        const IDEController = require("@presentation/api/ide-integration/controllers/IDEController");
         return new IDEController(
           ideManager,
           eventBus,
@@ -297,7 +297,7 @@ class ServiceRegistry {
     this.container.register(
       "authController",
       (authApplicationService) => {
-        const AuthController = require("@presentation/api/AuthController");
+        const AuthController = require("@presentation/api/system/controllers/AuthController");
         return new AuthController({ authApplicationService });
       },
       { singleton: true, dependencies: ["authApplicationService"] },
@@ -2577,7 +2577,7 @@ class ServiceRegistry {
             terminalLogCaptureService,
             terminalLogReader,
           ) => {
-            const IDEController = require("@presentation/api/IDEController");
+            const IDEController = require("@presentation/api/ide-integration/controllers/IDEController");
             return new IDEController(
               ideManager,
               eventBus,
@@ -2604,7 +2604,7 @@ class ServiceRegistry {
         this.container.register(
           "authController",
           (authApplicationService) => {
-            const AuthController = require("@presentation/api/AuthController");
+            const AuthController = require("@presentation/api/system/controllers/AuthController");
             return new AuthController({ authApplicationService });
           },
           { singleton: true, dependencies: ["authApplicationService"] },

@@ -3,7 +3,7 @@
  * REST API endpoints for database performance monitoring
  */
 const express = require("express");
-const PerformanceMonitoringController = require("../PerformanceMonitoringController");
+const PerformanceMonitoringController = require("../controllers/PerformanceMonitoringController");
 
 const router = express.Router();
 

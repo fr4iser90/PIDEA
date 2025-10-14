@@ -174,7 +174,7 @@ class TestCorrectionController {
           });
       } else {
         // Fallback to direct execution
-        const AutoFixTests = require('../../../scripts/test-correction/auto-fix-tests');
+        const AutoFixTests = require('../../../../scripts/test-correction/auto-fix-tests');
         const autoFix = new AutoFixTests(options);
         const result = await autoFix.run();
         
@@ -201,7 +201,7 @@ class TestCorrectionController {
       
       logger.info('Starting coverage improvement', { targetCoverage, options });
       
-      const CoverageImprover = require('../../../scripts/test-correction/coverage-improver');
+      const CoverageImprover = require('../../../../scripts/test-correction/coverage-improver');
       const improver = new CoverageImprover({
         targetCoverage,
         ...options

@@ -5,8 +5,8 @@
  * including CRUD operations, validation, and sub-resource routing.
  */
 const express = require("express");
-const ProjectController = require("../projects/ProjectController");
-const projectMiddleware = require("../../middleware/projectMiddleware");
+const ProjectController = require("../controllers/ProjectController");
+const projectMiddleware = require("../../../middleware/projectMiddleware");
 
 class ProjectRoutes {
   constructor(projectApplicationService, interfaceManager, authMiddleware) {
@@ -75,7 +75,7 @@ class ProjectRoutes {
         req.projectId = req.params.projectId;
         next();
       },
-      require("./interfaceRoutes"),
+      require("../../ide-integration/routes/interfaceRoutes"),
     );
 
     // Project tasks (existing)
@@ -85,7 +85,7 @@ class ProjectRoutes {
         req.projectId = req.params.projectId;
         next();
       },
-      require("./taskRoutes"),
+      require("../../task-management/routes/taskRoutes"),
     );
 
     // Project analysis (existing)
@@ -95,7 +95,7 @@ class ProjectRoutes {
         req.projectId = req.params.projectId;
         next();
       },
-      require("./analysisRoutes"),
+      require("../../analysis/routes/analysisRoutes"),
     );
 
     // Project git operations (existing)
@@ -105,7 +105,7 @@ class ProjectRoutes {
         req.projectId = req.params.projectId;
         next();
       },
-      require("./gitRoutes"),
+      require("../../tools/routes/gitRoutes"),
     );
   }
 }

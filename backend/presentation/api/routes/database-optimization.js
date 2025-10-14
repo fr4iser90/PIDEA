@@ -3,7 +3,7 @@
  * Handles database optimization endpoints
  */
 const express = require("express");
-const DatabaseOptimizationController = require("../controllers/DatabaseOptimizationController");
+const DatabaseOptimizationController = require("../tools/controllers/DatabaseOptimizationController");
 
 function createDatabaseOptimizationRoutes(databaseOptimizationService) {
   const router = express.Router();

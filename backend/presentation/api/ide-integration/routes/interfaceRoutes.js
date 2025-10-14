@@ -5,8 +5,8 @@
  * within project context, including CRUD operations and control operations.
  */
 const express = require("express");
-const ProjectInterfaceController = require("../projects/ProjectInterfaceController");
-const InterfaceMiddleware = require("../../middleware/interfaceMiddleware");
+const ProjectInterfaceController = require("../../project-management/controllers/ProjectInterfaceController");
+const InterfaceMiddleware = require("../../../middleware/interfaceMiddleware");
 
 class InterfaceRoutes {
   constructor(interfaceManager, projectApplicationService, authMiddleware) {

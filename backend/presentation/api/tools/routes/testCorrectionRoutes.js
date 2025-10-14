@@ -1,8 +1,8 @@
 const express = require("express");
 const TestCorrectionController = require("../controllers/TestCorrectionController");
-const AuthMiddleware = require("../../middleware/AuthMiddleware");
-const ValidationMiddleware = require("../../middleware/ValidationMiddleware");
-const RateLimitMiddleware = require("../../middleware/RateLimitMiddleware");
+const AuthMiddleware = require("../../../middleware/AuthMiddleware");
+const ValidationMiddleware = require("../../../middleware/ValidationMiddleware");
+const RateLimitMiddleware = require("../../../middleware/RateLimitMiddleware");
 const Logger = require("@logging/Logger");
 const logger = new Logger("Logger");
 

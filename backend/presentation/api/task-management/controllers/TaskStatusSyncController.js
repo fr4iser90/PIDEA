@@ -4,7 +4,7 @@
  * Created: 2025-09-28T17:54:16.000Z
  */
 
-const TaskStatusSyncStep = require("../../domain/steps/categories/task/task_status_sync_step");
+const TaskStatusSyncStep = require("../../../../domain/steps/categories/task/task_status_sync_step");
 const Logger = require("@logging/Logger");
 
 class TaskStatusSyncController {
