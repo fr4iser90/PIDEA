@@ -44,10 +44,7 @@ class ProjectController {
       });
       
       this.logger.info('Project created:', { projectId: project.id, name });
-      res.status(201).json({ 
-        success: true,
-        data: project 
-      });
+      res.status(201).json(project);
       
     } catch (error) {
       this.logger.error('Failed to create project:', error);
@@ -74,10 +71,7 @@ class ProjectController {
         });
       }
       
-      res.json({ 
-        success: true,
-        data: project 
-      });
+      res.json(project);
       
     } catch (error) {
       this.logger.error('Failed to get project:', error);
@@ -116,10 +110,7 @@ class ProjectController {
       }
       
       this.logger.info('Project updated:', { projectId, updates });
-      res.json({ 
-        success: true,
-        data: project 
-      });
+      res.json(project);
       
     } catch (error) {
       this.logger.error('Failed to update project:', error);
@@ -148,7 +139,6 @@ class ProjectController {
       
       this.logger.info('Project deleted:', { projectId });
       res.status(200).json({ 
-        success: true,
         message: 'Project deleted successfully' 
       });
       
@@ -183,14 +173,13 @@ class ProjectController {
         firstProject: result.projects?.[0] || 'none'
       });
       
-      res.json({ 
-        success: true,
+      res.json({
         data: result.projects,
-        pagination: { 
-          page: parseInt(page), 
-          limit: parseInt(limit), 
-          total: result.total 
-        } 
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: result.total
+        }
       });
       
     } catch (error) {
@@ -213,10 +202,7 @@ class ProjectController {
 
       const updatedProject = await this.projectApplicationService.saveProjectPort(id, port, portType);
       
-      res.json({
-        success: true,
-        data: updatedProject
-      });
+      res.json(updatedProject);
     } catch (error) {
       this.logger.error('Failed to save project port:', error);
       
@@ -259,10 +245,7 @@ class ProjectController {
 
       const updatedProject = await this.projectApplicationService.updateProjectPort(id, port, portType);
       
-      res.json({
-        success: true,
-        data: updatedProject
-      });
+      res.json(updatedProject);
     } catch (error) {
       this.logger.error('Failed to update project port:', error);
       

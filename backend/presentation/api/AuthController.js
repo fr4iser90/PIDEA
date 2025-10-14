@@ -80,7 +80,7 @@ class AuthController {
         httpOnly: false, // Set to false in development to allow JavaScript access for debugging
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        // No domain in development - allows JavaScript to read cookies and cross-port sharing
+        // Remove domain restriction to allow cross-port access in development
       };
 
       logger.info('🔍 [AuthController] Setting cookies with options:', cookieOptions);
@@ -128,7 +128,7 @@ class AuthController {
         httpOnly: false, // Set to false in development to allow JavaScript access for debugging
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        // No domain specified to allow cookies to work with Vite proxy
+        // Remove domain restriction to allow cross-port access in development
       };
 
       res.cookie('accessToken', result.data.session.accessToken, {
@@ -175,10 +175,10 @@ class AuthController {
 
       // ALWAYS clear cookies, regardless of authentication status
       const cookieOptions = {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-        // Note: No domain specified for development to allow cross-port cookies
+        // Remove domain restriction to allow cross-port access in development
       };
 
       res.clearCookie('accessToken', cookieOptions);
@@ -196,10 +196,10 @@ class AuthController {
       // Even if there's an error, try to clear cookies
       try {
         const cookieOptions = {
-          httpOnly: true,
+          httpOnly: false,
           secure: process.env.NODE_ENV === 'production',
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-          // Note: No domain specified for development to allow cross-port cookies
+          // Remove domain restriction to allow cross-port access in development
         };
 
         res.clearCookie('accessToken', cookieOptions);
@@ -286,17 +286,18 @@ class AuthController {
         }
       }
 
-      // Try refresh token if access token failed
+      // Try to refresh token if access token validation failed
       if (refreshToken) {
         try {
+          logger.info('🔄 [AuthController] Attempting to refresh token...');
           const result = await this.authApplicationService.refresh(refreshToken);
           if (result.success) {
             // Set new cookies
             const cookieOptions = {
-              httpOnly: true,
+              httpOnly: false,
               secure: process.env.NODE_ENV === 'production',
               sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-              // Note: No domain specified for development to allow cross-port cookies
+              // Remove domain restriction to allow cross-port access in development
             };
 
             res.cookie('accessToken', result.data.session.accessToken, {
@@ -318,7 +319,7 @@ class AuthController {
             });
           }
         } catch (error) {
-          logger.debug('❌ [AuthController] Refresh token validation failed');
+          logger.debug('❌ [AuthController] Refresh token validation failed:', error.message);
         }
       }
 

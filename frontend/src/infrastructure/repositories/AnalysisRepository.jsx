@@ -19,25 +19,13 @@ class AnalysisRepository {
   async getAnalysisIssues(projectId, category = 'security') {
     try {
       const url = `${this.baseURL}/projects/${projectId}/analysis/${category}/issues`;
-      console.log(`🔍 [FRONTEND] Fetching ${category} issues for project: ${projectId}`);
-      console.log(`🔍 [FRONTEND] Request URL: ${url}`);
       
       const data = await apiCall(url, {}, projectId);
-      console.log(`🔍 [FRONTEND] ${category} issues raw response:`, JSON.stringify(data, null, 2));
-      console.log(`🔍 [FRONTEND] ${category} issues response structure:`, {
-        success: data.success,
-        hasData: !!data.data,
-        dataKeys: data.data ? Object.keys(data.data) : 'NO_DATA',
-        issuesCount: data.data?.issues ? data.data.issues.length : 'NO_ISSUES',
-        category: data.data?.category,
-        count: data.data?.count
-      });
       
       const issues = data.data?.issues || [];
-      console.log(`🔍 [FRONTEND] ${category} issues extracted: ${issues.length} items`);
       return issues;
     } catch (error) {
-      console.error(`🔍 [FRONTEND] Error fetching ${category} issues:`, error);
+      console.error(`Error fetching ${category} issues:`, error);
       return [];
     }
   }

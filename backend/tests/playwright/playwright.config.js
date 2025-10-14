@@ -103,14 +103,16 @@ module.exports = defineConfig({
   globalTeardown: require.resolve('./utils/global-teardown.js'),
   
   // Test environment configuration
-  testMatch: '**/*.test.js',
+  testMatch: 'tests/**/*.test.js',
   
   // Ignore patterns
   testIgnore: [
     '**/node_modules/**',
     '**/coverage/**',
     '**/dist/**',
-    '**/build/**'
+    '**/build/**',
+    '../unit/**', // Ignore Jest unit tests
+    '../../tests/unit/**' // Ignore Jest unit tests from parent directory
   ],
   
   // Web server configuration (if needed)

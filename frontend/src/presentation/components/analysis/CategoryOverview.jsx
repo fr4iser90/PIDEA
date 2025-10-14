@@ -2,11 +2,6 @@ import React from 'react';
 import '@/scss/components/_category-overview.scss';;
 
 const CategoryOverview = ({ data, category, categoryName, loading, onAnalysisSelect }) => {
-  // DEBUG: Log the data being passed
-  console.log('🔍 [CategoryOverview] Received data:', data);
-  console.log('🔍 [CategoryOverview] Category:', category);
-  console.log('🔍 [CategoryOverview] Data type:', typeof data);
-  console.log('🔍 [CategoryOverview] Data keys:', data ? Object.keys(data) : 'null');
 
   if (loading) {
     return (

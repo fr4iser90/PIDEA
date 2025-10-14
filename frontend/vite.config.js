@@ -14,48 +14,12 @@ export default defineConfig(({ mode }) => {
     Object.assign(process.env, parsed);
   }
 
-  // Automatische Port-Erkennung: Docker vs npm run dev
-  const isDocker = process.env.DOCKER_ENV === 'true' || 
-                   process.env.KUBERNETES_SERVICE_HOST ||
-                   process.env.DOCKER_CONTAINER ||
-                   process.env.HOSTNAME?.includes('container') ||
-                   process.env.HOSTNAME?.includes('docker');
-  
-  let frontendPort = isDocker ? 80 : 4000;
-  if (process.env.VITE_FRONTEND_URL) {
-    const match = process.env.VITE_FRONTEND_URL.match(/:(\d+)(?:$|\/)/);
-    if (match) {
-      frontendPort = Number(match[1]);
-    }
-  }
+  // Frontend wird nur über Backend (Port 3000) serviert
+  // Kein separater Dev Server mehr nötig
 
   return {
   plugins: [react()],
-  server: {
-      port: frontendPort,
-    proxy: {
-      '/api': {
-          target: process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.DOMAIN}`,
-        changeOrigin: true,
-        secure: false,
-        configure: (proxy, options) => {
-          proxy.on('proxyRes', (proxyRes, req, res) => {
-            // Ensure cookies are properly forwarded with domain preserved
-            if (proxyRes.headers['set-cookie']) {
-              proxyRes.headers['set-cookie'] = proxyRes.headers['set-cookie'].map(cookie => {
-                // Keep domain for localhost to ensure cookie persistence
-                return cookie;
-              });
-            }
-          });
-        }
-      },
-      '/ws': {
-          target: process.env.NODE_ENV === 'development' ? 'ws://localhost:3000' : `wss://${process.env.DOMAIN}`,
-        ws: true,
-      }
-    }
-  },
+  // Kein Dev Server mehr - Frontend wird nur über Backend serviert
   build: {
     outDir: 'dist',
     sourcemap: true,
@@ -68,9 +32,6 @@ export default defineConfig(({ mode }) => {
         }
       }
     }
-  },
-  preview: {
-      port: frontendPort
   },
   resolve: {
     alias: {
@@ -96,8 +57,17 @@ export default defineConfig(({ mode }) => {
     }
   },
     define: {
-      'import.meta.env.VITE_BACKEND_URL': JSON.stringify(process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : `https://${process.env.DOMAIN}`),
-      'import.meta.env.VITE_FRONTEND_URL': JSON.stringify(process.env.NODE_ENV === 'development' ? 'http://localhost:4000' : `https://${process.env.DOMAIN}`),
+      // Frontend läuft nur über Backend (Port 3000) - same-origin URLs
+      'import.meta.env.VITE_BACKEND_URL': JSON.stringify(
+        process.env.NODE_ENV === 'development' 
+          ? 'http://localhost:3000' 
+          : `https://${process.env.DOMAIN}`
+      ),
+      'import.meta.env.VITE_FRONTEND_URL': JSON.stringify(
+        process.env.NODE_ENV === 'development' 
+          ? 'http://localhost:3000' 
+          : `https://${process.env.DOMAIN}`
+      ),
     }
   };
 });

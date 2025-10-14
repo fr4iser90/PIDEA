@@ -14,9 +14,9 @@ import ProjectAddComponent from './ProjectAddComponent.jsx';
 import '@/scss/components/_project-management.scss';
 
 const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onCloseAddModal, onOpenAddModal }) => {
-  logger.info('🔍 ProjectListComponent RENDERING!', { showAddModal });
+  // Removed render log to prevent spam during typing
   
-  const { projects, isLoading, error, refresh, stopLoading } = useProjectManagement(false); // NO AUTO-LOAD!
+  const { projects, isLoading, error, refresh, stopLoading } = useProjectManagement(false);
   const selectedProject = useSelectedProject();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -43,13 +43,12 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
 
 
   const handleProjectSelect = (projectId) => {
-    logger.info('Project selected:', projectId);
     onProjectSelect?.(projectId);
     eventBus?.emit('project-selected', { projectId });
   };
 
   const handleProjectCreated = (project) => {
-    logger.info('Project created:', project);
+    logger.info('✅ New project created:', project.name);
     onCloseAddModal?.();
     eventBus?.emit('project-created', { project });
   };

@@ -239,7 +239,7 @@ const useAuthStore = create(
           await get().stopSessionMonitoring();
           
           // Call logout endpoint to clear httpOnly cookies
-          await apiCall('/api/auth/logout', {
+          await apiService.call('/api/auth/logout', {
             method: 'POST',
             credentials: 'include',
           });
@@ -586,7 +586,7 @@ const useAuthStore = create(
           const { user } = get();
           if (!user) return;
 
-          await apiCall('/api/session/activity', {
+          await apiService.call('/api/session/activity', {
             method: 'POST',
             body: JSON.stringify({
               type: 'user-interaction',

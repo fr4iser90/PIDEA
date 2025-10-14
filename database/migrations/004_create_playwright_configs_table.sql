@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS playwright_configs (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_playwright_configs_project_id ON playwright_configs(project_id);
-CREATE INDEX idx_playwright_configs_created_at ON playwright_configs(created_at);
-CREATE INDEX idx_playwright_configs_updated_at ON playwright_configs(updated_at);
+CREATE INDEX IF NOT EXISTS idx_playwright_configs_project_id ON playwright_configs(project_id);
+CREATE INDEX IF NOT EXISTS idx_playwright_configs_created_at ON playwright_configs(created_at);
+CREATE INDEX IF NOT EXISTS idx_playwright_configs_updated_at ON playwright_configs(updated_at);
 

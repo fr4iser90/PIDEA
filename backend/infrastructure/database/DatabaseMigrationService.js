@@ -128,8 +128,20 @@ class DatabaseMigrationService {
             
             const result = await this.databaseConnection.query(query, params);
             
+            // DEBUG: Log what we got
+            this.logger.info('🔍 [getAppliedMigrations] Query result:', { 
+                resultType: typeof result,
+                hasRows: !!result.rows,
+                rowCount: result.rows?.length || 0,
+                firstRow: result.rows?.[0] || 'none'
+            });
+            
             const rows = result.rows || result;
-            return rows.map(row => row.migration_name);
+            const migrationNames = rows.map(row => row.migration_name);
+            
+            this.logger.info('🔍 [getAppliedMigrations] Found applied migrations:', migrationNames);
+            
+            return migrationNames;
         } catch (error) {
             this.logger.error('❌ Error getting applied migrations:', error);
             return [];

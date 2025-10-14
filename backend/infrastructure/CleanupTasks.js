@@ -44,15 +44,20 @@ class CleanupTasks {
   }
 
   setupSessionCleanup() {
-    const sessionCleanupInterval = this.autoSecurityManager.getConfig().session?.cleanupInterval || 900000;
-    setInterval(async () => {
-      try {
-        const result = await this.authService.cleanupExpiredSessions();
-        this.logger.info(`Cleaned up ${result.expired} expired and ${result.orphaned} orphaned sessions`);
-      } catch (error) {
-        this.logger.error('Failed to cleanup expired sessions:', error);
-      }
-    }, sessionCleanupInterval);
+    // DISABLED: Session cleanup was causing sessions to be deleted immediately after login
+    // This was causing the "redirect to login on refresh" issue
+    this.logger.info('Session cleanup DISABLED to prevent immediate session deletion');
+    
+    // Original code (commented out):
+    // const sessionCleanupInterval = this.autoSecurityManager.getConfig().session?.cleanupInterval || 900000;
+    // setInterval(async () => {
+    //   try {
+    //     const result = await this.authService.cleanupExpiredSessions();
+    //     this.logger.info(`Cleaned up ${result.expired} expired and ${result.orphaned} orphaned sessions`);
+    //   } catch (error) {
+    //     this.logger.error('Failed to cleanup expired sessions:', error);
+    //   }
+    // }, sessionCleanupInterval);
   }
 
   setupSecretCleanup() {

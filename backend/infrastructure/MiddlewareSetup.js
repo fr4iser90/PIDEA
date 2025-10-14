@@ -182,14 +182,21 @@ class MiddlewareSetup {
               timeout: 120000 // 2 minutes timeout
             });
             
-            this.logger.info('🔨 Building frontend...');
+            this.logger.info('🔨 Building frontend for backend serving...');
             execSync('npm run build', { 
               cwd: frontendPath, 
               stdio: 'inherit',
-              timeout: 180000 // 3 minutes timeout
+              timeout: 180000, // 3 minutes timeout
+              env: {
+                ...process.env,
+                VITE_SERVE_FROM_BACKEND: 'true' // Tell Vite to use relative URLs
+              }
             });
             
             this.logger.info('✅ Frontend built successfully!');
+            
+            // Start file watcher for automatic rebuilds
+            this.startFrontendWatcher(frontendPath);
           } else {
             this.logger.warn('⚠️ Frontend package.json not found, skipping auto-build');
           }
@@ -205,6 +212,61 @@ class MiddlewareSetup {
       } else {
         this.logger.warn('⚠️ Frontend dist still not found, serving fallback');
       }
+    }
+  }
+
+  /**
+   * Start file watcher for automatic frontend rebuilds
+   */
+  startFrontendWatcher(frontendPath) {
+    try {
+      const chokidar = require('chokidar');
+      
+      this.logger.info('👀 Starting frontend file watcher...');
+      
+      const watcher = chokidar.watch([
+        `${frontendPath}/src/**/*.{js,jsx,ts,tsx,css,scss}`,
+        `${frontendPath}/public/**/*`
+      ], {
+        ignored: /node_modules/,
+        persistent: true,
+        ignoreInitial: true
+      });
+
+      let buildTimeout;
+      
+      watcher.on('change', (path) => {
+        this.logger.info(`🔄 Frontend file changed: ${path}`);
+        
+        // Debounce builds to avoid multiple rapid builds
+        if (buildTimeout) {
+          clearTimeout(buildTimeout);
+        }
+        
+        buildTimeout = setTimeout(() => {
+          this.logger.info('🔨 Auto-rebuilding frontend...');
+          
+          try {
+            execSync('npm run build', { 
+              cwd: frontendPath, 
+              stdio: 'inherit',
+              timeout: 180000
+            });
+            this.logger.info('✅ Frontend auto-rebuild successful!');
+          } catch (error) {
+            this.logger.error('❌ Frontend auto-rebuild failed:', error.message);
+          }
+        }, 1000); // Wait 1 second before rebuilding
+      });
+
+      watcher.on('error', (error) => {
+        this.logger.error('❌ Frontend watcher error:', error);
+      });
+
+      this.logger.info('✅ Frontend file watcher started');
+      
+    } catch (error) {
+      this.logger.warn('⚠️ Could not start frontend watcher (chokidar not available):', error.message);
     }
   }
 }

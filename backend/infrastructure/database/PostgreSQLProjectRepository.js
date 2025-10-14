@@ -66,7 +66,17 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     ];
 
     await this.databaseConnection.execute(sql, params);
-    return projectData;
+    
+    // Return the created project with generated ID
+    const createdProject = {
+      ...projectData,
+      id: params[0], // The generated or provided ID
+      createdAt: now,
+      updatedAt: now,
+      createdBy: params[23] // The createdBy value
+    };
+    
+    return createdProject;
   }
 
   /**

@@ -189,13 +189,14 @@ class AuthService {
       if (!validationResult.isValid) {
         logger.warn('❌ Token validation failed:', validationResult.reason);
         
-        // Automatically clean up invalid sessions
-        try {
-          await this.userSessionRepository.delete(session.id);
-          logger.info('🧹 [AuthService] Automatically cleaned up invalid session:', session.id);
-        } catch (cleanupError) {
-          logger.error('❌ [AuthService] Failed to cleanup invalid session:', cleanupError.message);
-        }
+        // DISABLED: Don't automatically clean up invalid sessions
+        // This was causing sessions to be deleted immediately after login
+        // try {
+        //   await this.userSessionRepository.delete(session.id);
+        //   logger.info('🧹 [AuthService] Automatically cleaned up invalid session:', session.id);
+        // } catch (cleanupError) {
+        //   logger.error('❌ [AuthService] Failed to cleanup invalid session:', cleanupError.message);
+        // }
         
         throw new Error('Invalid authentication');
       }

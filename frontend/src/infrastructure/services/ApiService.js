@@ -26,8 +26,11 @@ class ApiService {
     
     logger.info('🔍 [ApiService] Making API call to:', url);
     
-    // SECURITY: Skip auth check for login/register endpoints
-    const isAuthEndpoint = url.includes('/api/auth/login') || url.includes('/api/auth/register');
+    // SECURITY: Skip auth check for auth endpoints (login, register, validate, refresh)
+    const isAuthEndpoint = url.includes('/api/auth/login') || 
+                          url.includes('/api/auth/register') || 
+                          url.includes('/api/auth/validate') || 
+                          url.includes('/api/auth/refresh');
     
     // Centralized authentication check (except for auth endpoints)
     const { isAuthenticated, getAuthHeaders } = useAuthStore.getState();
@@ -118,7 +121,20 @@ class ApiService {
       }
 
       logger.info('✅ [ApiService] API call successful');
-      return { success: true, data };
+      logger.info('🔍 [ApiService] Response data:', { 
+        dataType: typeof data, 
+        hasData: !!data, 
+        dataKeys: data ? Object.keys(data) : 'null',
+        dataLength: Array.isArray(data) ? data.length : 'not array'
+      });
+      
+      // Handle backend response format: { data: [...], pagination: {...} }
+      if (data && typeof data === 'object' && data.data !== undefined) {
+        return data.data; // Return just the data array
+      }
+      
+      // Return data directly if no wrapper
+      return data;
 
     } catch (error) {
       // Clear timeout on error

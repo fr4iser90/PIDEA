@@ -126,22 +126,24 @@ const useProjectStore = create(
               'Content-Type': 'application/json'
             }
           });
-          logger.info('🔍 [ProjectStore] API response received:', { success: response?.success, error: response?.error });
+          logger.info('🔍 [ProjectStore] API response received:', { 
+            hasData: !!response?.data, 
+            hasPagination: !!response?.pagination,
+            responseType: typeof response,
+            responseKeys: response ? Object.keys(response) : 'null'
+          });
 
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to load projects');
-          }
-
-          // DEBUG: Log the actual response structure
-          logger.info('🔍 [ProjectStore] Full API response:', response);
-          
-          // Simple parsing - no nesting
+          // Handle modern API response format
+          // Backend returns: { data: [projects], pagination: {...} }
+          // ApiService returns data directly
           const projects = response.data || [];
+          
           logger.info('🔍 [ProjectStore] Extracted projects:', { 
             count: projects.length, 
             projects,
             isArray: Array.isArray(projects),
-            type: typeof projects
+            type: typeof projects,
+            backendResponse: response
           });
           
           // SAFETY CHECK: Ensure projects is an array
@@ -149,7 +151,8 @@ const useProjectStore = create(
             logger.error('❌ [ProjectStore] Projects is not an array!', { 
               projects, 
               type: typeof projects,
-              isArray: Array.isArray(projects)
+              isArray: Array.isArray(projects),
+              backendResponse: response
             });
             throw new Error('Projects data is not in expected array format');
           }
@@ -235,8 +238,9 @@ const useProjectStore = create(
             })
           });
 
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to create project');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
 
           const newProject = {
@@ -302,8 +306,9 @@ const useProjectStore = create(
             body: JSON.stringify(updates)
           });
 
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to update project');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
 
           const updatedProject = {
@@ -359,8 +364,9 @@ const useProjectStore = create(
             }
           });
 
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to delete project');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
 
           // Invalidate cache
@@ -641,8 +647,9 @@ const useProjectStore = create(
             method: 'GET'
           });
           
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to load git status');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
           
           const gitData = {
@@ -725,8 +732,9 @@ const useProjectStore = create(
             method: 'GET'
           });
           
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to load analysis data');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
           
           const analysisData = {
@@ -792,8 +800,9 @@ const useProjectStore = create(
             method: 'GET'
           });
           
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to load chat data');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
           
           const chatData = {
@@ -857,8 +866,9 @@ const useProjectStore = create(
             method: 'GET'
           });
           
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to load project tasks');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
           
           const tasksData = {
@@ -922,8 +932,9 @@ const useProjectStore = create(
             method: 'GET'
           });
           
-          if (!response.success) {
-            throw new Error(response.error || `Failed to load ${category} analysis data`);
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
           
           const categoryData = {
@@ -1139,8 +1150,9 @@ const useProjectStore = create(
             method: 'GET'
           });
 
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to get project commands');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
 
           return response.data;
@@ -1164,8 +1176,9 @@ const useProjectStore = create(
             body: JSON.stringify({ commandType })
           });
 
-          if (!response.success) {
-            throw new Error(response.error || 'Failed to execute project command');
+          // Handle direct data response (no success wrapper)
+          if (!response) {
+            throw new Error('No response received from server');
           }
 
           return response.data;

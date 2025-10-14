@@ -10,7 +10,7 @@ import { logger } from '@/infrastructure/logging/Logger';
 import { useProjectManagement } from '@/infrastructure/stores/hooks/useProjectStore';
 
 const ProjectAddComponent = ({ isOpen, onClose, onProjectCreated }) => {
-  logger.info('🔍 ProjectAddComponent RENDERING!', { isOpen });
+  // Removed render log to prevent spam during typing
   
   const { createProject } = useProjectManagement();
   const [formData, setFormData] = useState({
@@ -57,19 +57,23 @@ const ProjectAddComponent = ({ isOpen, onClose, onProjectCreated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    logger.info('🚀 FORM SUBMITTED!', formData);
     
     if (!validateForm()) {
+      logger.warn('❌ Form validation failed');
       return;
     }
 
+    logger.info('✅ Form validation passed, creating project...');
     setIsLoading(true);
     
     try {
+      logger.info('📤 Calling createProject with:', formData);
       const project = await createProject(formData);
-      logger.info('Project created successfully:', project);
+      logger.info('✅ Project created successfully:', project);
       onProjectCreated?.(project);
     } catch (error) {
-      logger.error('Failed to create project:', error);
+      logger.error('❌ Failed to create project:', error);
       setErrors({ submit: error.message || 'Failed to create project' });
     } finally {
       setIsLoading(false);
