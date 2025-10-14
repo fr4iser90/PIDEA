@@ -108,27 +108,22 @@ class ApiService {
       // Use ResponseManager for consistent response handling
       const result = await responseManager.handleResponse(response);
       
-      if (result.success) {
-        logger.info('✅ [ApiService] API call successful');
-        logger.info('🔍 [ApiService] Response data:', { 
-          dataType: typeof result.data, 
-          hasData: !!result.data, 
-          dataKeys: result.data ? Object.keys(result.data) : 'null',
-          dataLength: Array.isArray(result.data) ? result.data.length : 'not array'
-        });
-        
-        // Handle backend response format: { data: [...], pagination: {...} }
-        if (result.data && typeof result.data === 'object' && result.data.data !== undefined) {
-          return result.data.data; // Return just the data array
-        }
-        
-        // Return data directly
-        return result.data;
-      } else {
-        // ResponseManager handles error formatting
-        logger.error('❌ [ApiService] API call failed:', result.error);
-        throw new Error(result.error.message || 'API call failed');
+      // Modern API: Direct data response (no success wrapper)
+      logger.info('✅ [ApiService] API call successful');
+      logger.info('🔍 [ApiService] Response data:', { 
+        dataType: typeof result, 
+        hasData: !!result, 
+        dataKeys: result ? Object.keys(result) : 'null',
+        dataLength: Array.isArray(result) ? result.length : 'not array'
+      });
+      
+      // Handle backend response format: { data: [...], pagination: {...} }
+      if (result && typeof result === 'object' && result.data !== undefined) {
+        return result.data; // Return just the data array
       }
+      
+      // Return data directly
+      return result;
 
     } catch (error) {
       // Clear timeout on error

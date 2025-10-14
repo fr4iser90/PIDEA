@@ -21,37 +21,15 @@ class ResponseManager {
       const data = await response.json();
       
       if (response.ok) {
-        // Success response - data is direct
-        return {
-          data: data,
-          status: response.status,
-          headers: response.headers
-        };
+        // Modern API: Direct data response (no wrapper)
+        return data;
       } else {
         // Error response - structured error object
-        return {
-         
-          error: data.error || {
-            message: 'Unknown error',
-            code: 'UNKNOWN_ERROR',
-            statusCode: response.status
-          },
-          status: response.status,
-          headers: response.headers
-        };
+        throw new Error(data.error?.message || 'API call failed');
       }
     } catch (error) {
-      // JSON parsing error
-      return {
-       
-        error: {
-          message: 'Failed to parse response',
-          code: 'PARSE_ERROR',
-          statusCode: response.status,
-          details: error.message
-        },
-        status: response.status
-      };
+      // JSON parsing error or API error
+      throw new Error(error.message || 'Failed to parse response');
     }
   }
 
