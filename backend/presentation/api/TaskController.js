@@ -660,7 +660,7 @@ class TaskController {
                   userId: userId,
                   title: "New Chat",
                   clickNewChat: true,
-                  metadata: { port: activeIDE.port },
+                  port: activeIDE.port,
                 });
 
                 // Create handler with all required dependencies
@@ -1047,10 +1047,8 @@ class TaskController {
               status: "pending",
               estimatedHours: taskData.estimatedHours || 1,
               category: taskData.category || "general",
-              metadata: {
-                creationMode: creationOptions.creationMode || "normal",
+              creationMode: creationOptions.creationMode || "normal",
                 originalDescription: taskData.description,
-              },
             },
             projectId,
             userId,

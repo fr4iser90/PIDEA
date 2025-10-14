@@ -133,11 +133,9 @@ class OpenFileExplorerHandler {
         browserResult: browserResult,
         automationResult: automationResult,
         message: `Successfully opened file explorer${command.path ? ` at ${command.path}` : ""}`,
-        metadata: {
-          handlerId: this.handlerId,
-          executionTime: new Date(),
-          options: options,
-        },
+        handlerId: this.handlerId,
+        executionTime: new Date(),
+        options: options,
       };
 
       // Publish success event

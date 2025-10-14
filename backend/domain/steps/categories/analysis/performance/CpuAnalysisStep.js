@@ -99,11 +99,9 @@ class CpuAnalysisStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "CpuAnalysisStep",
-          projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "CpuAnalysisStep",
+        projectPath,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ CPU performance analysis failed: ${error.message}`);
@@ -111,11 +109,9 @@ class CpuAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "CpuAnalysisStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "CpuAnalysisStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -608,14 +604,10 @@ class CpuAnalysisStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "CpuAnalysisStep",
+      source: "CpuAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -638,12 +630,9 @@ class CpuAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "CpuAnalysisStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "CpuAnalysisStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -666,10 +655,8 @@ class CpuAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "CpuAnalysisStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "CpuAnalysisStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

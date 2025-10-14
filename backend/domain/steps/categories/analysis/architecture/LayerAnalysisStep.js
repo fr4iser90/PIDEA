@@ -99,11 +99,9 @@ class LayerAnalysisStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "LayerAnalysisStep",
-          projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "LayerAnalysisStep",
+        projectPath,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Layer analysis failed: ${error.message}`);
@@ -111,11 +109,9 @@ class LayerAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "LayerAnalysisStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "LayerAnalysisStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -671,14 +667,10 @@ class LayerAnalysisStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "LayerAnalysisStep",
+      source: "LayerAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -701,12 +693,9 @@ class LayerAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "LayerAnalysisStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "LayerAnalysisStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -729,10 +718,8 @@ class LayerAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "LayerAnalysisStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "LayerAnalysisStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

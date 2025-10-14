@@ -193,11 +193,9 @@ class ApplicationIntegration {
       ...taskCommand,
       projectPath,
       projectId,
-      metadata: {
-        ...taskCommand.metadata,
-        projectPath,
-        projectId,
-      },
+      ...taskCommand.metadata,
+      projectPath,
+      projectId,
     });
 
     return result;

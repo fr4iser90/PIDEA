@@ -298,12 +298,10 @@ class ScreenshotStreamingService {
         format: compressedFrame.format,
         quality: compressedFrame.quality,
         frameNumber: frameNumber,
-        metadata: {
-          port: port,
-          compressionTime: compressedFrame.compressionTime,
-          originalSize: compressedFrame.originalSize,
-          compressionRatio: compressedFrame.compressionRatio,
-        },
+        port: port,
+        compressionTime: compressedFrame.compressionTime,
+        originalSize: compressedFrame.originalSize,
+        compressionRatio: compressedFrame.compressionRatio,
       };
 
       const bufferSuccess = this.frameBuffer.addFrame(port, frameData);

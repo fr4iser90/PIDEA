@@ -70,11 +70,9 @@ class CpuOptimizationStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
+        executionTime: Date.now() - context.startTime || 0,
           optimizationsApplied: result.optimization.optimizations.length,
           recommendationsGenerated: result.optimization.recommendations.length,
-        },
       };
     } catch (error) {
       this.logger.error("❌ CPU optimization failed:", error.message);

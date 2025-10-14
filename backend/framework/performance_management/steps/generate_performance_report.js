@@ -74,12 +74,10 @@ class GeneratePerformanceReportStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
+        executionTime: Date.now() - context.startTime || 0,
           reportFormat,
           metricsCollected: Object.keys(result.report.metrics).length,
           recommendationsGenerated: result.report.recommendations.length,
-        },
       };
     } catch (error) {
       this.logger.error(

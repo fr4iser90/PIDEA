@@ -87,12 +87,10 @@ async function execute(context, options = {}) {
       analysisResults,
       largeFiles,
       recommendations: generateRecommendations(largeFiles),
-      metadata: {
-        projectPath,
+      projectPath,
         analysisTimestamp: new Date().toISOString(),
         totalFiles: largeFiles.length,
         framework: "refactoring_management",
-      },
     };
 
     logger.info(`🔍 [RefactorAnalyze] Returning result with largeFiles`);

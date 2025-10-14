@@ -447,7 +447,7 @@ class GitWorkflowResult {
         : null,
       reviewResult: this.reviewResult ? { ...this.reviewResult } : null,
       mergeResult: this.mergeResult ? { ...this.mergeResult } : null,
-      metadata: { ...this.metadata },
+      ...this.metadata,
       context: { ...this.context },
       metrics: { ...this.metrics },
       phases: [...this.phases],

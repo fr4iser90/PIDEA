@@ -120,11 +120,9 @@ class OpenCommandPaletteCommand {
         ideType: this.ideType,
         searchTerm: this.searchTerm,
         message: `Successfully opened command palette${this.searchTerm ? ` with search term: ${this.searchTerm}` : ""}`,
-        metadata: {
-          ...this.metadata,
-          executionTime: new Date(),
-          context: context,
-        },
+        ...this.metadata,
+        executionTime: new Date(),
+        context: context,
       };
 
       // Publish success event

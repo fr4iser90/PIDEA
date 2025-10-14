@@ -136,11 +136,9 @@ class GetIDESelectorsCommand {
         selectorType: this.selectorType,
         selectors: selectors,
         message: `Successfully retrieved selectors for ${this.selectorType || "all"} components`,
-        metadata: {
-          ...this.metadata,
-          executionTime: new Date(),
-          context: context,
-        },
+        ...this.metadata,
+        executionTime: new Date(),
+        context: context,
       };
 
       // Publish success event

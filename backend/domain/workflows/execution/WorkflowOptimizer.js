@@ -753,14 +753,12 @@ class WorkflowOptimizer {
       name: `combined_${type}`,
       description: `Combined ${steps.length} ${type} steps`,
       parameters: this.mergeStepParameters(steps),
-      metadata: {
-        originalSteps: steps.length,
-        combined: true,
-        estimatedDuration: steps.reduce((total, step) => {
-          const metadata = step.getMetadata ? step.getMetadata() : step;
-          return total + (metadata.estimatedDuration || 1000);
-        }, 0),
-      },
+      originalSteps: steps.length,
+      combined: true,
+      estimatedDuration: steps.reduce((total, step) => {
+        const metadata = step.getMetadata ? step.getMetadata() : step;
+        return total + (metadata.estimatedDuration || 1000);
+      }, 0),
     };
   }
 

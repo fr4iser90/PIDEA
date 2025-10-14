@@ -278,10 +278,8 @@ class WindsurfIDE extends BaseIDE {
             sender: isUser ? "user" : "ai",
             type: "text",
             timestamp: new Date().toISOString(),
-            metadata: {
-              ideType: "windsurf",
-              elementId: el.id || null,
-            },
+            ideType: "windsurf",
+            elementId: el.id || null,
           };
         });
       });

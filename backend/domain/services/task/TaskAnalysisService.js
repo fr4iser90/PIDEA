@@ -54,7 +54,6 @@ class TaskAnalysisService {
         performance: {},
         suggestions: [],
         tasks: [],
-        metadata: {},
       };
 
       // Phase 1: Project Type Detection
@@ -795,7 +794,7 @@ class TaskAnalysisService {
         type: TaskType.OPTIMIZATION,
         priority: TaskPriority.HIGH,
         estimatedDuration: 3600,
-        metadata: { category: "monorepo" },
+        category: "monorepo",
       });
     }
 
@@ -815,11 +814,9 @@ class TaskAnalysisService {
           type: suggestion.type,
           priority: suggestion.getPriority(),
           estimatedDuration: suggestion._getEstimatedDuration(),
-          metadata: {
-            aiGenerated: true,
-            suggestionId: suggestion.id,
-            confidence: suggestion.confidence,
-          },
+          aiGenerated: true,
+          suggestionId: suggestion.id,
+          confidence: suggestion.confidence,
         });
       });
 
@@ -837,7 +834,7 @@ class TaskAnalysisService {
         type: TaskType.REFACTORING,
         priority: TaskPriority.MEDIUM,
         estimatedDuration: 1800,
-        metadata: { category: "quality" },
+        category: "quality",
       });
     }
 
@@ -854,7 +851,7 @@ class TaskAnalysisService {
       type: TaskType.TESTING,
       priority: TaskPriority.MEDIUM,
       estimatedDuration: 2400,
-      metadata: { category: "testing" },
+      category: "testing",
     });
 
     return tasks;

@@ -105,11 +105,9 @@ class DatabaseAnalysisStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "DatabaseAnalysisStep",
-          projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "DatabaseAnalysisStep",
+        projectPath,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Database performance analysis failed: ${error.message}`);
@@ -117,11 +115,9 @@ class DatabaseAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "DatabaseAnalysisStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "DatabaseAnalysisStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -810,14 +806,10 @@ class DatabaseAnalysisStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "DatabaseAnalysisStep",
+      source: "DatabaseAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -840,12 +832,9 @@ class DatabaseAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "DatabaseAnalysisStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "DatabaseAnalysisStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -868,10 +857,8 @@ class DatabaseAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "DatabaseAnalysisStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "DatabaseAnalysisStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

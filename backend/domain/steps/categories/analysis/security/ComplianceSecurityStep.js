@@ -99,12 +99,10 @@ class ComplianceSecurityStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "ComplianceSecurityStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "ComplianceSecurityStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Compliance security analysis failed: ${error.message}`);
@@ -112,11 +110,9 @@ class ComplianceSecurityStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "ComplianceSecurityStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "ComplianceSecurityStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -776,14 +772,10 @@ class ComplianceSecurityStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "ComplianceSecurityStep",
+      source: "ComplianceSecurityStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -806,12 +798,9 @@ class ComplianceSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "ComplianceSecurityStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "ComplianceSecurityStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -834,10 +823,8 @@ class ComplianceSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "ComplianceSecurityStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "ComplianceSecurityStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

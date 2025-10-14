@@ -230,13 +230,11 @@ class AnalysisController {
 
       this.markRequestCompleted(requestKey);
       res.success({
-        data: {
-          history,
-          pagination: {
-            limit: parsedLimit,
-            offset: parsedOffset,
-            total: history.length,
-          },
+        history,
+        pagination: {
+          limit: parsedLimit,
+          offset: parsedOffset,
+          total: history.length,
         },
         projectId,
         timestamp: new Date().toISOString(),
@@ -1029,18 +1027,16 @@ class AnalysisController {
           `No analyses found for project: ${projectId}, returning empty metrics`,
         );
         return res.success({
-          data: {
-            category,
-            metrics: {
-              totalAnalyses: 0,
-              completedAnalyses: 0,
-              failedAnalyses: 0,
-              averageExecutionTime: 0,
-              lastAnalysis: null,
-            },
-            projectId,
-            timestamp: new Date().toISOString(),
+          category,
+          metrics: {
+            totalAnalyses: 0,
+            completedAnalyses: 0,
+            failedAnalyses: 0,
+            averageExecutionTime: 0,
+            lastAnalysis: null,
           },
+          projectId,
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -1148,12 +1144,10 @@ class AnalysisController {
           `⚠️ [AnalysisController] No analyses found for project: ${projectId}, returning empty summary`,
         );
         return res.success({
-          data: {
-            category,
-            summary: {},
-            projectId,
-            timestamp: new Date().toISOString(),
-          },
+          category,
+          summary: {},
+          projectId,
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -1248,12 +1242,10 @@ class AnalysisController {
           `No analyses found for project: ${projectId}, returning empty results`,
         );
         return res.success({
-          data: {
-            category,
-            results: {},
-            projectId,
-            timestamp: new Date().toISOString(),
-          },
+          category,
+          results: {},
+          projectId,
+          timestamp: new Date().toISOString(),
         });
       }
 

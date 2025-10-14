@@ -28,10 +28,10 @@ class TestCorrectionController {
       const status = this.testCorrectionService.getStatus();
       
       res.success({
-          ...status,
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime()
-        });
+        ...status,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      });
       
     } catch (error) {
       logger.error('Failed to get test correction status', { error: error.message });
@@ -79,14 +79,12 @@ class TestCorrectionController {
       }
       
       res.success({
-        data: {
-          corrections: corrections.map(c => c.toJSON()),
-          summary: {
-            total: corrections.length,
-            failing: corrections.filter(c => c.originalError && c.originalError !== 'Legacy test pattern detected').length,
-            legacy: corrections.filter(c => c.originalError === 'Legacy test pattern detected').length,
-            complex: corrections.filter(c => c.originalError === 'High complexity test detected').length
-          }
+        corrections: corrections.map(c => c.toJSON()),
+        summary: {
+          total: corrections.length,
+          failing: corrections.filter(c => c.originalError && c.originalError !== 'Legacy test pattern detected').length,
+          legacy: corrections.filter(c => c.originalError === 'Legacy test pattern detected').length,
+          complex: corrections.filter(c => c.originalError === 'High complexity test detected').length
         }
       });
       

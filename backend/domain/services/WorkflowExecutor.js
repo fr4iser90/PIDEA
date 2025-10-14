@@ -278,10 +278,8 @@ class WorkflowExecutor {
           executionTime: executionTime,
           successRate: totalSteps > 0 ? (successCount / totalSteps) * 100 : 0,
         },
-        metadata: {
-          executionTime: new Date(),
-          context: context,
-        },
+        executionTime: new Date(),
+        context: context,
       };
 
       this.logger.info("WorkflowExecutor: Workflow execution completed", {

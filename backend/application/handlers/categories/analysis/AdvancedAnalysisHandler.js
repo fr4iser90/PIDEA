@@ -197,12 +197,10 @@ class AdvancedAnalysisHandler {
       createdAt: new Date(),
       scheduledAt: command.scheduledAt,
       estimatedDuration: command.getEstimatedDuration(),
-      metadata: {
-        commandId: command.commandId,
-        projectPath: command.projectPath,
-        analysisOptions: command.getAnalysisOptions(),
-        resourceRequirements: command.getResourceRequirements(),
-      },
+      commandId: command.commandId,
+      projectPath: command.projectPath,
+      analysisOptions: command.getAnalysisOptions(),
+      resourceRequirements: command.getResourceRequirements(),
     };
 
     await this.taskRepository.save(task);
@@ -224,11 +222,9 @@ class AdvancedAnalysisHandler {
       startedAt: new Date(),
       currentStep: "Initializing advanced analysis",
       progress: 0,
-      metadata: {
-        handlerId: this.handlerId,
-        projectPath: command.projectPath,
-        analysisOptions: command.getAnalysisOptions(),
-      },
+      handlerId: this.handlerId,
+      projectPath: command.projectPath,
+      analysisOptions: command.getAnalysisOptions(),
     };
 
     await this.executionRepository.save(execution);
@@ -309,13 +305,11 @@ class AdvancedAnalysisHandler {
         analysis,
         report,
         duration,
-        metadata: {
-          handlerId: this.handlerId,
-          executionId: execution.id,
-          projectPath: command.projectPath,
-          analysisOptions: command.getAnalysisOptions(),
-          outputConfiguration: command.getOutputConfiguration(),
-        },
+        handlerId: this.handlerId,
+        executionId: execution.id,
+        projectPath: command.projectPath,
+        analysisOptions: command.getAnalysisOptions(),
+        outputConfiguration: command.getOutputConfiguration(),
       };
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -469,19 +463,17 @@ class AdvancedAnalysisHandler {
         commandId: command.commandId,
         data: result.analysis,
         report: result.report,
-        metadata: {
-          handlerId: this.handlerId,
-          executionId: result.metadata?.executionId,
-          analysisOptions: command.getAnalysisOptions(),
-          outputConfiguration: command.getOutputConfiguration(),
-          duration: result.duration,
-          overallScore: result.analysis.metrics?.overallScore || 0,
-          violations:
-            (result.analysis.layerValidation?.violations?.length || 0) +
+        handlerId: this.handlerId,
+        executionId: result.metadata?.executionId,
+        analysisOptions: command.getAnalysisOptions(),
+        outputConfiguration: command.getOutputConfiguration(),
+        duration: result.duration,
+        overallScore: result.analysis.metrics?.overallScore || 0,
+        violations:
+          (result.analysis.layerValidation?.violations?.length || 0) +
             (result.analysis.logicValidation?.violations?.length || 0),
-          lastUpdated: new Date().toISOString(),
-          updateReason: existingAnalysis ? "data_changed" : "new_analysis",
-        },
+        lastUpdated: new Date().toISOString(),
+        updateReason: existingAnalysis ? "data_changed" : "new_analysis",
         timestamp: new Date(),
         status: "completed",
       };

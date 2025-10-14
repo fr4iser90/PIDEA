@@ -128,11 +128,9 @@ class TaskGenerationService {
         projectPath: projectAnalysis.projectPath,
         estimatedTime: 30, // minutes
         tags: ["code-review", "human"],
-        metadata: {
-          context,
-          projectType: projectAnalysis.projectType,
-          filesToReview: projectAnalysis.modifiedFiles || [],
-        },
+        context,
+        projectType: projectAnalysis.projectType,
+        filesToReview: projectAnalysis.modifiedFiles || [],
       });
       tasks.push(reviewTask);
     }
@@ -148,11 +146,9 @@ class TaskGenerationService {
         projectPath: projectAnalysis.projectPath,
         estimatedTime: 45,
         tags: ["testing", "human"],
-        metadata: {
-          context,
-          projectType: projectAnalysis.projectType,
-          testFramework: projectAnalysis.testFramework,
-        },
+        context,
+        projectType: projectAnalysis.projectType,
+        testFramework: projectAnalysis.testFramework,
       });
       tasks.push(testTask);
     }
@@ -168,10 +164,8 @@ class TaskGenerationService {
         projectPath: projectAnalysis.projectPath,
         estimatedTime: 20,
         tags: ["documentation", "human"],
-        metadata: {
-          context,
-          projectType: projectAnalysis.projectType,
-        },
+        context,
+        projectType: projectAnalysis.projectType,
       });
       tasks.push(docTask);
     }
@@ -199,12 +193,10 @@ class TaskGenerationService {
       projectPath: projectAnalysis.projectPath,
       estimatedTime: 15,
       tags: ["ai", "analysis"],
-      metadata: {
-        context,
-        projectType: projectAnalysis.projectType,
-        aiModel: options.aiModel || "gpt-4",
-        analysisType: options.analysisType || "comprehensive",
-      },
+      context,
+      projectType: projectAnalysis.projectType,
+      aiModel: options.aiModel || "gpt-4",
+      analysisType: options.analysisType || "comprehensive",
     });
     tasks.push(analysisTask);
 
@@ -219,11 +211,9 @@ class TaskGenerationService {
         projectPath: projectAnalysis.projectPath,
         estimatedTime: 25,
         tags: ["ai", "optimization"],
-        metadata: {
-          context,
-          projectType: projectAnalysis.projectType,
-          optimizationTarget: options.optimizationTarget || "performance",
-        },
+        context,
+        projectType: projectAnalysis.projectType,
+        optimizationTarget: options.optimizationTarget || "performance",
       });
       tasks.push(optimizationTask);
     }
@@ -239,11 +229,9 @@ class TaskGenerationService {
         projectPath: projectAnalysis.projectPath,
         estimatedTime: 30,
         tags: ["ai", "refactoring"],
-        metadata: {
-          context,
-          projectType: projectAnalysis.projectType,
-          refactoringType: options.refactoringType || "code-quality",
-        },
+        context,
+        projectType: projectAnalysis.projectType,
+        refactoringType: options.refactoringType || "code-quality",
       });
       tasks.push(refactorTask);
     }
@@ -271,13 +259,11 @@ class TaskGenerationService {
       projectPath: projectAnalysis.projectPath,
       estimatedTime: 60,
       tags: ["ai", "development", "collaborative"],
-      metadata: {
-        context,
-        projectType: projectAnalysis.projectType,
-        collaborationMode: "ai-assisted",
-        humanRole: "reviewer",
-        aiRole: "developer",
-      },
+      context,
+      projectType: projectAnalysis.projectType,
+      collaborationMode: "ai-assisted",
+      humanRole: "reviewer",
+      aiRole: "developer",
     });
     tasks.push(aiDevTask);
 
@@ -291,13 +277,11 @@ class TaskGenerationService {
       projectPath: projectAnalysis.projectPath,
       estimatedTime: 90,
       tags: ["ai", "pair-programming", "collaborative"],
-      metadata: {
-        context,
-        projectType: projectAnalysis.projectType,
-        collaborationMode: "pair-programming",
-        humanRole: "driver",
-        aiRole: "navigator",
-      },
+      context,
+      projectType: projectAnalysis.projectType,
+      collaborationMode: "pair-programming",
+      humanRole: "driver",
+      aiRole: "navigator",
     });
     tasks.push(pairTask);
 
@@ -311,13 +295,11 @@ class TaskGenerationService {
       projectPath: projectAnalysis.projectPath,
       estimatedTime: 40,
       tags: ["ai", "code-review", "collaborative"],
-      metadata: {
-        context,
-        projectType: projectAnalysis.projectType,
-        collaborationMode: "ai-enhanced-review",
-        humanRole: "final-approver",
-        aiRole: "initial-reviewer",
-      },
+      context,
+      projectType: projectAnalysis.projectType,
+      collaborationMode: "ai-enhanced-review",
+      humanRole: "final-approver",
+      aiRole: "initial-reviewer",
     });
     tasks.push(aiReviewTask);
 
@@ -353,12 +335,10 @@ class TaskGenerationService {
         projectPath: params.projectPath,
         estimatedTime: template.estimatedTime,
         tags: [...template.tags, ...(params.tags || [])],
-        metadata: {
-          ...template.metadata,
-          ...params.metadata,
-          templateId,
-          templateVersion: template.version,
-        },
+        ...template.metadata,
+        ...params.metadata,
+        templateId,
+        templateVersion: template.version,
       };
 
       const task = new Task(taskData);
@@ -407,12 +387,10 @@ class TaskGenerationService {
         projectPath: suggestion.projectPath,
         estimatedTime: suggestion.estimatedTime,
         tags: [...suggestion.tags, "ai-suggested"],
-        metadata: {
-          ...suggestion.metadata,
-          suggestionId: suggestion.id,
-          aiConfidence: suggestion.confidence,
-          aiReasoning: suggestion.reasoning,
-        },
+        ...suggestion.metadata,
+        suggestionId: suggestion.id,
+        aiConfidence: suggestion.confidence,
+        aiReasoning: suggestion.reasoning,
       });
 
       tasks.push(task);

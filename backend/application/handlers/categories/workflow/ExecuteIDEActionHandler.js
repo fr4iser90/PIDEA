@@ -143,11 +143,9 @@ class ExecuteIDEActionHandler {
         browserResult: browserResult,
         automationResult: automationResult,
         message: `Successfully executed IDE action: ${command.action}`,
-        metadata: {
-          handlerId: this.handlerId,
-          executionTime: new Date(),
-          options: options,
-        },
+        handlerId: this.handlerId,
+        executionTime: new Date(),
+        options: options,
       };
 
       // Publish success event

@@ -132,11 +132,9 @@ class OpenCommandPaletteHandler {
         browserResult: browserResult,
         automationResult: automationResult,
         message: `Successfully opened command palette${command.searchTerm ? ` with search term: ${command.searchTerm}` : ""}`,
-        metadata: {
-          handlerId: this.handlerId,
-          executionTime: new Date(),
-          options: options,
-        },
+        handlerId: this.handlerId,
+        executionTime: new Date(),
+        options: options,
       };
 
       // Publish success event

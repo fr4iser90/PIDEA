@@ -232,16 +232,14 @@ class TaskSyncStep {
         status: parsedTask.status, // ← NUR Datei-Werte!
         priority: parsedTask.priority, // ← NUR Datei-Werte!
         lastSyncedAt: new Date().toISOString(),
-        metadata: {
-          ...task.metadata,
-          ...parsedTask.metadata,
-          content: content,
-          htmlContent: content,
-          steps: parsedTask.steps || [],
-          requirements: parsedTask.requirements || [],
-          acceptanceCriteria: parsedTask.acceptanceCriteria || [],
-          syncedAt: new Date().toISOString(),
-        },
+        ...task.metadata,
+        ...parsedTask.metadata,
+        content: content,
+        htmlContent: content,
+        steps: parsedTask.steps || [],
+        requirements: parsedTask.requirements || [],
+        acceptanceCriteria: parsedTask.acceptanceCriteria || [],
+        syncedAt: new Date().toISOString(),
       };
 
       logger.info(`📝 Updated task object:`, {
@@ -437,7 +435,6 @@ class TaskSyncStep {
         steps: [],
         requirements: [],
         acceptanceCriteria: [],
-        metadata: {},
       };
 
       logger.info(`📋 Parsed task content (MANUAL SYNC LOGIC):`, {
@@ -461,7 +458,6 @@ class TaskSyncStep {
         steps: [],
         requirements: [],
         acceptanceCriteria: [],
-        metadata: {},
       };
     }
   }
@@ -918,17 +914,15 @@ class TaskSyncStep {
         category: "manual",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        metadata: {
-          ...parsedTask.metadata,
-          content: content,
-          htmlContent: content,
-          steps: parsedTask.steps || [],
-          requirements: parsedTask.requirements || [],
-          acceptanceCriteria: parsedTask.acceptanceCriteria || [],
-          syncedAt: new Date().toISOString(),
-          sourceFile: path.basename(filePath),
-          sourcePath: filePath,
-        },
+        ...parsedTask.metadata,
+        content: content,
+        htmlContent: content,
+        steps: parsedTask.steps || [],
+        requirements: parsedTask.requirements || [],
+        acceptanceCriteria: parsedTask.acceptanceCriteria || [],
+        syncedAt: new Date().toISOString(),
+        sourceFile: path.basename(filePath),
+        sourcePath: filePath,
       };
 
       logger.info(`📝 Created new task object:`, {

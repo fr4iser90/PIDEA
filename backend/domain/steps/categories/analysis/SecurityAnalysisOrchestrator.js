@@ -187,13 +187,11 @@ class SecurityAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "security-analysis",
-          category: "security",
-          stepsExecuted: results.summary.totalSteps,
-          securityScore: securityScore,
-          tasksCreated: tasks.length,
-        },
+        type: "security-analysis",
+        category: "security",
+        stepsExecuted: results.summary.totalSteps,
+        securityScore: securityScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Security analysis failed:", error.message);

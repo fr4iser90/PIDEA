@@ -44,11 +44,9 @@ class DatabaseService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "database",
-          timestamp: new Date().toISOString(),
-          config: dbConfig,
-        },
+        scanner: "database",
+        timestamp: new Date().toISOString(),
+        config: dbConfig,
       };
     } catch (error) {
       this.logger.error("Database analysis failed", {

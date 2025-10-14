@@ -66,11 +66,9 @@ class SetupMonitoringStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
+        executionTime: Date.now() - context.startTime || 0,
           toolsConfigured: result.monitoring.tools.length,
           configurationsApplied: result.monitoring.configurations.length,
-        },
       };
     } catch (error) {
       this.logger.error("❌ Monitoring setup failed:", error.message);

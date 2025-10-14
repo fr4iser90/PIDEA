@@ -58,12 +58,10 @@ class TaskQueueStore {
             .length,
         },
         statistics,
-        metadata: {
-          lastUpdated: new Date().toISOString(),
-          queueHealth: this.calculateQueueHealth(activeItems),
-          estimatedWaitTime: this.calculateEstimatedWaitTime(activeItems),
-          priorityDistribution: this.calculatePriorityDistribution(activeItems),
-        },
+        lastUpdated: new Date().toISOString(),
+        queueHealth: this.calculateQueueHealth(activeItems),
+        estimatedWaitTime: this.calculateEstimatedWaitTime(activeItems),
+        priorityDistribution: this.calculatePriorityDistribution(activeItems),
       };
 
       this.logger.debug("Queue status retrieved", {

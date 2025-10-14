@@ -44,12 +44,7 @@ class InterfaceController {
         metadata: interfaceInstance.getMetadata(),
       }));
 
-      res.success(interfaceData, 200, {
-        meta: {
-          total: interfaceData.length,
-          timestamp: new Date().toISOString(),
-        },
-      });
+      res.success(interfaceData);
     } catch (error) {
       this.logger.error("Failed to get all interfaces:", error);
       res.error(error.message, 500);

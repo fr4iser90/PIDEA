@@ -44,11 +44,9 @@ class MemoryService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "memory",
-          timestamp: new Date().toISOString(),
-          config: memoryConfig,
-        },
+        scanner: "memory",
+        timestamp: new Date().toISOString(),
+        config: memoryConfig,
       };
     } catch (error) {
       this.logger.error("Memory analysis failed", {

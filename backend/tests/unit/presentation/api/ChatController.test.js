@@ -98,11 +98,9 @@ describe("WebChatController", () => {
         requestedBy: "user-123",
         sessionId: "session-123",
         timestamp: expect.any(Date),
-        metadata: {
-          userAgent: "test-user-agent",
-          ipAddress: "127.0.0.1",
-          userRole: "user",
-        },
+        userAgent: "test-user-agent",
+        ipAddress: "127.0.0.1",
+        userRole: "user",
       });
       expect(mockRes.json).toHaveBeenCalledWith({
         data: {
@@ -436,11 +434,9 @@ describe("WebChatController", () => {
         "user-123",
         {
           title: "New Chat Session",
-          metadata: {
-            createdBy: "user-123",
-            userAgent: "test-user-agent",
-            ipAddress: "127.0.0.1",
-          },
+          createdBy: "user-123",
+          userAgent: "test-user-agent",
+          ipAddress: "127.0.0.1",
         },
       );
       expect(mockRes.status).toHaveBeenCalledWith(201);
@@ -472,11 +468,9 @@ describe("WebChatController", () => {
         "user-123",
         {
           title: "New Chat",
-          metadata: {
-            createdBy: "user-123",
-            userAgent: "test-user-agent",
-            ipAddress: "127.0.0.1",
-          },
+          createdBy: "user-123",
+          userAgent: "test-user-agent",
+          ipAddress: "127.0.0.1",
         },
       );
     });

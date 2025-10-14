@@ -118,12 +118,10 @@ class ExecutionCache {
       timestamp: Date.now(),
       ttl,
       size: this.calculateResultSize(cachedResult),
-      metadata: {
-        workflowName: workflow.getMetadata().name,
-        workflowVersion: workflow.getMetadata().version,
-        contextHash: this.hashContext(context),
-        cachedAt: new Date(),
-      },
+      workflowName: workflow.getMetadata().name,
+      workflowVersion: workflow.getMetadata().version,
+      contextHash: this.hashContext(context),
+      cachedAt: new Date(),
     });
 
     this.accessTimes.set(cacheKey, Date.now());

@@ -151,14 +151,12 @@ class IDETypesUpdater {
         commandSelectors: selectors.commands || {},
         panelSelectors: selectors.panels || {},
         otherSelectors: selectors.other || {},
-        metadata: {
-          version: "auto-detected",
-          collectedAt: new Date().toISOString(),
-          totalSelectors: Object.values(selectors).reduce(
-            (sum, cat) => sum + Object.keys(cat).length,
-            0,
-          ),
-        },
+        version: "auto-detected",
+        collectedAt: new Date().toISOString(),
+        totalSelectors: Object.values(selectors).reduce(
+          (sum, cat) => sum + Object.keys(cat).length,
+          0,
+        ),
       };
 
       // Convert to properly formatted string

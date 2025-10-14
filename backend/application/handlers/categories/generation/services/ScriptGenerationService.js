@@ -45,13 +45,11 @@ class ScriptGenerationService {
         scriptPath: null, // Will be set by processing service
         status: "completed",
         duration,
-        metadata: {
-          ...scriptResult.metadata,
-          scriptType: command.scriptType,
-          generationMethod: "ai_powered",
-          projectType: projectContext.projectType,
-          buildTools: projectContext.buildTools,
-        },
+        ...scriptResult.metadata,
+        scriptType: command.scriptType,
+        generationMethod: "ai_powered",
+        projectType: projectContext.projectType,
+        buildTools: projectContext.buildTools,
         warnings: scriptResult.warnings || [],
         errors: scriptResult.errors || [],
       };
@@ -73,11 +71,9 @@ class ScriptGenerationService {
         scriptPath: null,
         status: "failed",
         duration,
-        metadata: {
-          scriptType: command.scriptType,
-          error: error.message,
-          errorType: error.constructor.name,
-        },
+        scriptType: command.scriptType,
+        error: error.message,
+        errorType: error.constructor.name,
         warnings: [],
         errors: [error.message],
       };

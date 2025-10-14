@@ -73,11 +73,9 @@ class GenerateStructureDocsStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          format,
-          filesGenerated: result.filesGenerated.length,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        format,
+        filesGenerated: result.filesGenerated.length,
       };
     } catch (error) {
       logger.error(

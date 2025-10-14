@@ -369,13 +369,11 @@ class GeneratedScript {
       environment: { ...this._environment },
       dependencies: [...this._dependencies],
       validationRules: [...this._validationRules],
-      metadata: {
-        ...this._metadata,
-        scriptId: this._id,
-        scriptName: this._name,
-        scriptVersion: this._version,
-        parameterValues,
-      },
+      ...this._metadata,
+      scriptId: this._id,
+      scriptName: this._name,
+      scriptVersion: this._version,
+      parameterValues,
     };
   }
 

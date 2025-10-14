@@ -285,7 +285,7 @@ class CommandRegistry {
       );
     }
 
-    // Store command
+    // Store command - 2025 Clean REST: Flat structure, no nesting
     instance.commands.set(name, {
       name,
       config,
@@ -293,11 +293,8 @@ class CommandRegistry {
       executor,
       registeredAt: new Date(),
       status: "active",
-      metadata: {
-        type: "command",
-        category: finalCategory,
-        version: config.version || "1.0.0",
-      },
+      type: "command",
+      version: config.version || "1.0.0",
     });
 
     // Add to category
@@ -441,7 +438,16 @@ class CommandRegistry {
   static getMetadata(name) {
     const instance = new CommandRegistry();
     const command = instance.commands.get(name);
-    return command?.metadata || {};
+    if (!command) return {};
+    
+    // 2025 Clean REST: Return flat structure, no metadata nesting
+    return {
+      type: command.type,
+      category: command.category,
+      version: command.version,
+      status: command.status,
+      registeredAt: command.registeredAt,
+    };
   }
 
   /**
@@ -458,7 +464,8 @@ class CommandRegistry {
       return false;
     }
 
-    command.metadata = { ...command.metadata, ...metadata };
+    // 2025 Clean REST: Update flat properties directly
+    Object.assign(command, metadata);
     command.updatedAt = new Date();
     return true;
   }

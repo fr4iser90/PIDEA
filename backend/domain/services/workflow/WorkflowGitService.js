@@ -175,14 +175,12 @@ class WorkflowGitService {
         strategy: branchStrategy,
         status: "created",
         message: `Created ${branchStrategy.type} branch: ${branchName}`,
-        metadata: {
-          taskId: task.id,
-          taskType: task.type?.value,
-          taskMode: branchStrategy.type,
-          startPoint: branchStrategy.startPoint || "main",
-          mergeTarget: branchStrategy.mergeTarget || "main",
-          timestamp: new Date(),
-        },
+        taskId: task.id,
+        taskType: task.type?.value,
+        taskMode: branchStrategy.type,
+        startPoint: branchStrategy.startPoint || "main",
+        mergeTarget: branchStrategy.mergeTarget || "main",
+        timestamp: new Date(),
       };
 
       // Emit workflow branch created event
@@ -810,14 +808,12 @@ class WorkflowGitService {
         mergeResult,
         status: "completed",
         message: `Workflow completed for branch: ${branchName}`,
-        metadata: {
-          taskId: task.id,
-          taskType: task.type?.value,
-          taskMode: strategy.type,
-          autoMerged: strategy.autoMerge,
-          mergeTarget: strategy.mergeTarget,
-          timestamp: new Date(),
-        },
+        taskId: task.id,
+        taskType: task.type?.value,
+        taskMode: strategy.type,
+        autoMerged: strategy.autoMerge,
+        mergeTarget: strategy.mergeTarget,
+        timestamp: new Date(),
       };
 
       // Emit workflow completed event
@@ -898,11 +894,9 @@ class WorkflowGitService {
         branchName,
         status: "rolled_back",
         message: `Successfully rolled back workflow and deleted branch: ${branchName}`,
-        metadata: {
-          taskId: task.id,
-          taskType: task.type?.value,
-          timestamp: new Date(),
-        },
+        taskId: task.id,
+        taskType: task.type?.value,
+        timestamp: new Date(),
       };
 
       // Emit workflow rollback event
@@ -954,12 +948,10 @@ class WorkflowGitService {
         targetBranch: targetBranch,
         mergeResult,
         message: `Successfully merged ${currentBranch} into ${targetBranch}`,
-        metadata: {
-          taskId: task.id,
-          taskType: task.type?.value,
-          mergeStrategy: options.mergeStrategy || "recursive",
-          timestamp: new Date(),
-        },
+        taskId: task.id,
+        taskType: task.type?.value,
+        mergeStrategy: options.mergeStrategy || "recursive",
+        timestamp: new Date(),
       };
 
       // Emit merge completed event

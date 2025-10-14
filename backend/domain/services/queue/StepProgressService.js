@@ -53,13 +53,11 @@ class StepProgressService {
           status: step.status || "pending",
         })),
         history: stepHistory.slice(-10), // Last 10 history entries
-        metadata: {
-          startedAt: stepProgress.startedAt,
-          lastUpdated: stepProgress.lastUpdated,
-          status: stepProgress.status,
-          errorCount: stepProgress.errorCount,
-          retryCount: stepProgress.retryCount,
-        },
+        startedAt: stepProgress.startedAt,
+        lastUpdated: stepProgress.lastUpdated,
+        status: stepProgress.status,
+        errorCount: stepProgress.errorCount,
+        retryCount: stepProgress.retryCount,
       };
 
       this.logger.debug("Step progress retrieved", {

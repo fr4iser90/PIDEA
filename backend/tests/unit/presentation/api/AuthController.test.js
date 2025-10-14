@@ -35,14 +35,12 @@ describe("AuthController", () => {
       role: "user",
       createdAt: new Date(),
       updatedAt: new Date(),
-      metadata: {},
       toJSON: jest.fn().mockReturnValue({
         id: "user-123",
         email: "test@example.com",
         role: "user",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        metadata: {},
       }),
       verifyPassword: jest.fn(),
       updateLastActivity: jest.fn(),
@@ -58,7 +56,8 @@ describe("AuthController", () => {
       refreshToken: "refresh-token-123",
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       isActive: jest.fn().mockReturnValue(true),
-      metadata: { userAgent: "web", ipAddress: "unknown" },
+      userAgent: "web",
+      ipAddress: "unknown",
     };
 
     // Create mock request and response objects
@@ -612,14 +611,14 @@ describe("AuthController", () => {
           createdAt: new Date(),
           expiresAt: new Date(Date.now() + 15 * 60 * 1000),
           isActive: jest.fn().mockReturnValue(true),
-          metadata: { userAgent: "web" },
+          userAgent: "web",
         },
         {
           id: "session-2",
           createdAt: new Date(),
           expiresAt: new Date(Date.now() - 15 * 60 * 1000),
           isActive: jest.fn().mockReturnValue(false),
-          metadata: { userAgent: "mobile" },
+          userAgent: "mobile",
         },
       ];
       const sessionsResult = {

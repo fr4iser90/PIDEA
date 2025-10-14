@@ -170,12 +170,10 @@ class JSONSelectorManager {
       // Add metadata
       const selectorsWithMetadata = {
         ...selectors,
-        metadata: {
-          version: version,
-          ideType: ideType,
-          savedAt: new Date().toISOString(),
-          totalSelectors: this.countSelectors(selectors),
-        },
+        version: version,
+        ideType: ideType,
+        savedAt: new Date().toISOString(),
+        totalSelectors: this.countSelectors(selectors),
       };
 
       // Write JSON file

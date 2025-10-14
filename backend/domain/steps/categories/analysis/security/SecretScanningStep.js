@@ -99,12 +99,10 @@ class SecretScanningStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "SecretScanningStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "SecretScanningStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Secret scanning analysis failed: ${error.message}`);
@@ -112,11 +110,9 @@ class SecretScanningStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "SecretScanningStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "SecretScanningStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -762,14 +758,10 @@ class SecretScanningStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "SecretScanningStep",
+      source: "SecretScanningStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -792,12 +784,9 @@ class SecretScanningStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "SecretScanningStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "SecretScanningStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -820,10 +809,8 @@ class SecretScanningStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "SecretScanningStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "SecretScanningStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

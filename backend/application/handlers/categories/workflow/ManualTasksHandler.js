@@ -131,7 +131,7 @@ class ManualTasksHandler {
       try {
         parsedMetadata = JSON.parse(task.metadata || "{}");
       } catch (error) {
-        logger.warn("Failed to parse task metadata:", error.message);
+        logger.warn("Failed to parse task ", error.message);
       }
 
       // Convert markdown content to HTML
@@ -147,7 +147,7 @@ class ManualTasksHandler {
         status: task.status,
         content: content,
         htmlContent: htmlContent,
-        metadata: task.metadata,
+        task.metadata,
         // ✅ FIXED: Add new status-based path structure
         filePath:
           parsedMetadata.newPath ||

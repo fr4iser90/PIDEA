@@ -491,12 +491,10 @@ class GenerateScriptHandler {
         priority: "medium",
         projectPath: command.projectPath,
         status: "pending",
-        metadata: {
-          scriptType: command.scriptType,
-          options: command.options || {},
-          commandId: command.commandId,
-          handlerId: this.handlerId,
-        },
+        scriptType: command.scriptType,
+        options: command.options || {},
+        commandId: command.commandId,
+        handlerId: this.handlerId,
         createdBy: command.requestedBy,
         estimatedTime: this.getEstimatedTime(
           command.scriptType,
@@ -542,12 +540,10 @@ class GenerateScriptHandler {
         startedAt: new Date(),
         requestedBy: command.requestedBy,
         options: command.options || {},
-        metadata: {
-          commandId: command.commandId,
-          handlerId: this.handlerId,
-          scriptType: command.scriptType,
-          projectPath: command.projectPath,
-        },
+        commandId: command.commandId,
+        handlerId: this.handlerId,
+        scriptType: command.scriptType,
+        projectPath: command.projectPath,
       });
 
       this.logger.info("GenerateScriptHandler: Created execution record", {
@@ -615,13 +611,11 @@ class GenerateScriptHandler {
         scriptPath: savedScript.path,
         status: "completed",
         duration,
-        metadata: {
-          ...savedScript.metadata,
-          scriptType: command.scriptType,
-          generationMethod: "ai_powered",
-          projectType: projectContext.projectType,
-          buildTools: projectContext.buildTools,
-        },
+        ...savedScript.metadata,
+        scriptType: command.scriptType,
+        generationMethod: "ai_powered",
+        projectType: projectContext.projectType,
+        buildTools: projectContext.buildTools,
         warnings: processedScript.warnings || [],
         errors: processedScript.errors || [],
       };
@@ -644,11 +638,9 @@ class GenerateScriptHandler {
         scriptPath: null,
         status: "failed",
         duration,
-        metadata: {
-          scriptType: command.scriptType,
-          error: error.message,
-          errorType: error.constructor.name,
-        },
+        scriptType: command.scriptType,
+        error: error.message,
+        errorType: error.constructor.name,
         warnings: [],
         errors: [error.message],
       };
@@ -704,15 +696,13 @@ class GenerateScriptHandler {
         content: finalContent,
         path: scriptPath,
         type: command.scriptType,
-        metadata: {
-          ...scriptResult.metadata,
-          generatedBy: "ai",
-          generationMethod: "cursor_ide",
-          projectContext: {
-            projectType: projectContext.projectType,
-            buildTools: projectContext.buildTools,
-            existingScripts: projectContext.existingScripts.length,
-          },
+        ...scriptResult.metadata,
+        generatedBy: "ai",
+        generationMethod: "cursor_ide",
+        projectContext: {
+          projectType: projectContext.projectType,
+          buildTools: projectContext.buildTools,
+          existingScripts: projectContext.existingScripts.length,
         },
         warnings: scriptResult.warnings || [],
         errors: scriptResult.errors || [],
@@ -1038,12 +1028,10 @@ ${enhancedContent}`;
           scriptName: result.scriptName,
           scriptPath: result.scriptPath,
         },
-        metadata: {
-          ...execution.metadata,
-          result: result.metadata,
-          warnings: result.warnings,
-          errors: result.errors,
-        },
+        ...execution.metadata,
+        result: result.metadata,
+        warnings: result.warnings,
+        errors: result.errors,
       });
 
       this.logger.info("GenerateScriptHandler: Updated execution record", {

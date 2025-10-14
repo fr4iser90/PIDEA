@@ -62,11 +62,9 @@ class GitWorkflowAudit {
       success: results.success,
       duration: results.duration,
       stepResults: results.getAllStepResults(),
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        sessionId: options.sessionId,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      sessionId: options.sessionId,
     };
 
     this.addAuditEntry(auditEntry);
@@ -108,11 +106,9 @@ class GitWorkflowAudit {
         stack: error.stack,
         recoverable: error.recoverable,
       },
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        sessionId: options.sessionId,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      sessionId: options.sessionId,
     };
 
     this.addAuditEntry(auditEntry);
@@ -147,11 +143,9 @@ class GitWorkflowAudit {
       branchName: branchResult.branchName,
       baseBranch: branchResult.baseBranch,
       success: branchResult.success,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        strategy: branchResult.strategy,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      strategy: branchResult.strategy,
     };
 
     this.addAuditEntry(auditEntry);
@@ -180,11 +174,9 @@ class GitWorkflowAudit {
       targetBranch: mergeResult.targetBranch,
       mergeStrategy: mergeResult.strategy,
       success: mergeResult.success,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        method: mergeResult.method,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      method: mergeResult.method,
     };
 
     this.addAuditEntry(auditEntry);
@@ -215,11 +207,9 @@ class GitWorkflowAudit {
       targetBranch: prResult.targetBranch,
       reviewers: prResult.reviewers,
       success: prResult.success,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        labels: prResult.labels,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      labels: prResult.labels,
     };
 
     this.addAuditEntry(auditEntry);
@@ -248,11 +238,9 @@ class GitWorkflowAudit {
       reviewScore: reviewResult.score,
       reviewDepth: reviewResult.reviewDepth,
       success: reviewResult.success,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        recommendations: reviewResult.recommendations,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      recommendations: reviewResult.recommendations,
     };
 
     this.addAuditEntry(auditEntry);
@@ -281,11 +269,9 @@ class GitWorkflowAudit {
       resource: permissionResult.resource,
       granted: permissionResult.granted,
       reason: permissionResult.reason,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        permissions: permissionResult.permissions,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      permissions: permissionResult.permissions,
     };
 
     this.addAuditEntry(auditEntry);
@@ -323,11 +309,9 @@ class GitWorkflowAudit {
       projectPath: task.metadata?.projectPath,
       errors: validationResult.errors,
       warnings: validationResult.warnings,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        validationDuration: validationResult.duration,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      validationDuration: validationResult.duration,
     };
 
     this.addAuditEntry(auditEntry);
@@ -363,12 +347,10 @@ class GitWorkflowAudit {
       violationType: violation.type,
       violationDetails: violation.details,
       severity: violation.severity,
-      metadata: {
-        ...options,
-        auditId: this.generateAuditId(),
-        ipAddress: violation.ipAddress,
-        userAgent: violation.userAgent,
-      },
+      ...options,
+      auditId: this.generateAuditId(),
+      ipAddress: violation.ipAddress,
+      userAgent: violation.userAgent,
     };
 
     this.addAuditEntry(auditEntry);

@@ -44,11 +44,9 @@ class StructureAnalysisService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "structure",
-          timestamp: new Date().toISOString(),
-          config: structureConfig,
-        },
+        scanner: "structure",
+        timestamp: new Date().toISOString(),
+        config: structureConfig,
       };
     } catch (error) {
       this.logger.error("Structure analysis failed", {

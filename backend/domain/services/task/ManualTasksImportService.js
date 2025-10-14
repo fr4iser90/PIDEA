@@ -495,25 +495,23 @@ class ManualTasksImportService {
               : null,
             filePath: filePath, // Store current file path for metadata tracking
             lastSyncedAt: new Date().toISOString(),
-            metadata: {
-              ...taskMetadata,
-              ...taskDetails.metadata,
-              sourceFile: filename,
-              sourcePath: filePath,
-              // ✅ FIXED: Add content for frontend display
-              content: content,
-              htmlContent: content,
-              steps: taskDetails.metadata.steps || [],
-              requirements: taskDetails.metadata.requirements || [],
-              acceptanceCriteria: taskDetails.metadata.acceptanceCriteria || [],
-              // ✅ FIXED: Add new status-based path structure
-              newPath: this.generateNewStatusBasedPath(
-                taskStatus,
-                taskPriority,
-                taskCategory,
-                name,
-              ),
-            },
+            ...taskMetadata,
+            ...taskDetails.metadata,
+            sourceFile: filename,
+            sourcePath: filePath,
+            // ✅ FIXED: Add content for frontend display
+            content: content,
+            htmlContent: content,
+            steps: taskDetails.metadata.steps || [],
+            requirements: taskDetails.metadata.requirements || [],
+            acceptanceCriteria: taskDetails.metadata.acceptanceCriteria || [],
+            // ✅ FIXED: Add new status-based path structure
+            newPath: this.generateNewStatusBasedPath(
+              taskStatus,
+              taskPriority,
+              taskCategory,
+              name,
+            ),
           };
 
           if (progressInfo.createdDate) {
@@ -730,7 +728,6 @@ class ManualTasksImportService {
         type,
         category,
         structure, // ✅ Return structure for metadata
-        metadata: {},
       };
     } catch (error) {
       logger.error(
@@ -1373,13 +1370,11 @@ class ManualTasksImportService {
 
       return {
         description,
-        metadata: {
-          ...metadata,
-          steps: steps,
-          requirements: requirements,
-          acceptanceCriteria: acceptanceCriteria,
-          extractedAt: new Date().toISOString(),
-        },
+        ...metadata,
+        steps: steps,
+        requirements: requirements,
+        acceptanceCriteria: acceptanceCriteria,
+        extractedAt: new Date().toISOString(),
       };
     } catch (error) {
       logger.error(
@@ -1388,10 +1383,8 @@ class ManualTasksImportService {
       );
       return {
         description: `Manual task imported from ${filename}`,
-        metadata: {
-          extractionError: error.message,
-          extractedAt: new Date().toISOString(),
-        },
+        extractionError: error.message,
+        extractedAt: new Date().toISOString(),
       };
     }
   }

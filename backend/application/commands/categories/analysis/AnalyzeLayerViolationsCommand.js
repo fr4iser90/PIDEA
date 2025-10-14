@@ -105,11 +105,9 @@ class AnalyzeLayerViolationsCommand {
       category: "backend",
       projectId: this.projectId,
       projectPath: this.projectPath,
-      metadata: {
-        ...this.getMetadata(),
-        analysisType: "layer-violations",
-        source: "AnalyzeLayerViolationsCommand",
-      },
+      ...this.getMetadata(),
+      analysisType: "layer-violations",
+      source: "AnalyzeLayerViolationsCommand",
       estimatedHours: 1, // Quick analysis
       dependencies: [],
       tags: ["analysis", "layer-violations", "architecture", "ddd"],

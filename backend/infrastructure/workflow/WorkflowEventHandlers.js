@@ -162,7 +162,7 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "timing",
-        metadata: { event: "execution_started" },
+        event: "execution_started",
       });
 
       this.logger.debug(
@@ -222,7 +222,7 @@ class WorkflowEventHandlers {
             metricUnit: "timestamp",
             metricType: "performance",
             metricCategory: "timing",
-            metadata: { event: "execution_completed" },
+            event: "execution_completed",
           },
         );
 
@@ -234,7 +234,7 @@ class WorkflowEventHandlers {
             metricUnit: "milliseconds",
             metricType: "performance",
             metricCategory: "duration",
-            metadata: { event: "execution_completed" },
+            event: "execution_completed",
           },
         );
       }
@@ -300,7 +300,8 @@ class WorkflowEventHandlers {
             metricUnit: "timestamp",
             metricType: "performance",
             metricCategory: "timing",
-            metadata: { event: "execution_failed", error: event.error },
+            event: "execution_failed",
+            error: event.error,
           },
         );
       }
@@ -350,11 +351,9 @@ class WorkflowEventHandlers {
           status: "cancelled",
           endTime,
           actualDuration,
-          metadata: {
-            ...execution.metadata,
-            cancelledBy: event.cancelledBy,
-            cancellationReason: event.reason,
-          },
+          ...execution.metadata,
+          cancelledBy: event.cancelledBy,
+          cancellationReason: event.reason,
         });
 
         // Record cancellation metrics
@@ -366,7 +365,8 @@ class WorkflowEventHandlers {
             metricUnit: "timestamp",
             metricType: "performance",
             metricCategory: "timing",
-            metadata: { event: "execution_cancelled", reason: event.reason },
+            event: "execution_cancelled",
+            reason: event.reason,
           },
         );
       }
@@ -410,11 +410,9 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "step_timing",
-        metadata: {
-          stepId: event.stepId,
-          stepName: event.stepName,
-          event: "step_started",
-        },
+        stepId: event.stepId,
+        stepName: event.stepName,
+        event: "step_started",
       });
 
       this.logger.debug(
@@ -458,11 +456,9 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "step_timing",
-        metadata: {
-          stepId: event.stepId,
-          stepName: event.stepName,
-          event: "step_completed",
-        },
+        stepId: event.stepId,
+        stepName: event.stepName,
+        event: "step_completed",
       });
 
       if (event.duration) {
@@ -474,10 +470,8 @@ class WorkflowEventHandlers {
             metricUnit: "milliseconds",
             metricType: "performance",
             metricCategory: "step_duration",
-            metadata: {
-              stepId: event.stepId,
-              stepName: event.stepName,
-            },
+            stepId: event.stepId,
+            stepName: event.stepName,
           },
         );
       }
@@ -523,12 +517,10 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "step_timing",
-        metadata: {
-          stepId: event.stepId,
-          stepName: event.stepName,
-          error: event.error,
-          event: "step_failed",
-        },
+        stepId: event.stepId,
+        stepName: event.stepName,
+        error: event.error,
+        event: "step_failed",
       });
 
       this.logger.debug(
@@ -571,10 +563,8 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "handler_timing",
-        metadata: {
-          handlerType: event.handlerType,
-          event: "handler_started",
-        },
+        handlerType: event.handlerType,
+        event: "handler_started",
       });
 
       this.logger.debug(
@@ -617,10 +607,8 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "handler_timing",
-        metadata: {
-          handlerType: event.handlerType,
-          event: "handler_completed",
-        },
+        handlerType: event.handlerType,
+        event: "handler_completed",
       });
 
       if (event.duration) {
@@ -632,9 +620,7 @@ class WorkflowEventHandlers {
             metricUnit: "milliseconds",
             metricType: "performance",
             metricCategory: "handler_duration",
-            metadata: {
-              handlerType: event.handlerType,
-            },
+            handlerType: event.handlerType,
           },
         );
       }
@@ -679,11 +665,9 @@ class WorkflowEventHandlers {
         metricUnit: "timestamp",
         metricType: "performance",
         metricCategory: "handler_timing",
-        metadata: {
-          handlerType: event.handlerType,
-          error: event.error,
-          event: "handler_failed",
-        },
+        handlerType: event.handlerType,
+        error: event.error,
+        event: "handler_failed",
       });
 
       this.logger.debug(
@@ -771,12 +755,10 @@ class WorkflowEventHandlers {
         metricUnit: event.metricUnit,
         metricType: "performance",
         metricCategory: "alerts",
-        metadata: {
-          alertType: event.alertType,
-          threshold: event.threshold,
-          actualValue: event.actualValue,
-          severity: event.severity,
-        },
+        alertType: event.alertType,
+        threshold: event.threshold,
+        actualValue: event.actualValue,
+        severity: event.severity,
       });
 
       // Emit alert event for external systems

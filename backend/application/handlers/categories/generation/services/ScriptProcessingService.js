@@ -60,15 +60,13 @@ class ScriptProcessingService {
         content: finalContent,
         path: scriptPath,
         type: command.scriptType,
-        metadata: {
-          ...scriptResult.metadata,
-          generatedBy: "ai",
-          generationMethod: "cursor_ide",
-          projectContext: {
-            projectType: projectContext.projectType,
-            buildTools: projectContext.buildTools,
-            existingScripts: projectContext.existingScripts.length,
-          },
+        ...scriptResult.metadata,
+        generatedBy: "ai",
+        generationMethod: "cursor_ide",
+        projectContext: {
+          projectType: projectContext.projectType,
+          buildTools: projectContext.buildTools,
+          existingScripts: projectContext.existingScripts.length,
         },
         warnings: scriptResult.warnings || [],
         errors: scriptResult.errors || [],

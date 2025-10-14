@@ -41,11 +41,9 @@ class TrivyService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "trivy",
-          timestamp: new Date().toISOString(),
-          config: scanConfig,
-        },
+        scanner: "trivy",
+        timestamp: new Date().toISOString(),
+        config: scanConfig,
       };
     } catch (error) {
       this.logger.error("Trivy analysis failed", {

@@ -280,11 +280,9 @@ class HandlerRegistry {
       executor,
       registeredAt: new Date(),
       status: "active",
-      metadata: {
-        type: "handler",
-        category: finalCategory,
-        version: config.version || "1.0.0",
-      },
+      type: "handler",
+      category: finalCategory,
+      version: config.version || "1.0.0",
     });
 
     // Add to category

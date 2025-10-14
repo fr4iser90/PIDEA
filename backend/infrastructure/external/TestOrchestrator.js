@@ -94,11 +94,9 @@ class TestOrchestrator {
         id: testId,
         type: testType,
         result,
-        metadata: {
-          startTime: testInfo?.startTime,
-          endTime: testInfo?.endTime,
-          duration: testInfo?.duration,
-        },
+        startTime: testInfo?.startTime,
+        endTime: testInfo?.endTime,
+        duration: testInfo?.duration,
       };
     } catch (error) {
       this.logger.error(`❌ Test failed: ${testType}`, {
@@ -126,10 +124,8 @@ class TestOrchestrator {
         type: testType,
        
         error: error.message,
-        metadata: {
-          startTime: testInfo?.startTime,
-          endTime: testInfo?.endTime,
-        },
+        startTime: testInfo?.startTime,
+        endTime: testInfo?.endTime,
       };
     }
   }
@@ -176,12 +172,10 @@ class TestOrchestrator {
       batchId,
       tests: results,
       summary: aggregatedResult,
-      metadata: {
-        totalTests: tests.length,
-        successful: results.filter((r) => r.success).length,
-        failed: results.filter((r) => !r.success).length,
-        parallel,
-      },
+      totalTests: tests.length,
+      successful: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
+      parallel,
     };
   }
 

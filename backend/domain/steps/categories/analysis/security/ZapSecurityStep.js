@@ -100,12 +100,10 @@ class ZapSecurityStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "ZapSecurityStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "ZapSecurityStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(
@@ -115,11 +113,9 @@ class ZapSecurityStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "ZapSecurityStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "ZapSecurityStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -749,14 +745,10 @@ class ZapSecurityStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "ZapSecurityStep",
+      source: "ZapSecurityStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -779,12 +771,9 @@ class ZapSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "ZapSecurityStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "ZapSecurityStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -807,10 +796,8 @@ class ZapSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "ZapSecurityStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "ZapSecurityStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

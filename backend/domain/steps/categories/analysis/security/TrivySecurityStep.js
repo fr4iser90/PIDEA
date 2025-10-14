@@ -92,12 +92,10 @@ class TrivySecurityStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "TrivySecurityStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "TrivySecurityStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Trivy security analysis failed: ${error.message}`);
@@ -105,11 +103,9 @@ class TrivySecurityStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "TrivySecurityStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "TrivySecurityStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -352,11 +348,9 @@ class TrivySecurityStep {
           line: vuln.line || 0,
           suggestion:
             vuln.suggestion || "Review and fix security vulnerability",
-          metadata: {
-            cve: vuln.cve || "N/A",
-            scanner: "trivy",
-            confidence: vuln.confidence || 80,
-          },
+          cve: vuln.cve || "N/A",
+        scanner: "trivy",
+        confidence: vuln.confidence || 80,
         })),
       );
     }
@@ -375,10 +369,8 @@ class TrivySecurityStep {
           file: bp.file || "unknown",
           line: bp.line || 0,
           suggestion: bp.suggestion || "Follow security best practices",
-          metadata: {
-            scanner: "trivy",
-            confidence: bp.confidence || 90,
-          },
+          scanner: "trivy",
+        confidence: bp.confidence || 90,
         })),
       );
     }
@@ -620,14 +612,10 @@ class TrivySecurityStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "TrivySecurityStep",
+      source: "TrivySecurityStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -650,12 +638,9 @@ class TrivySecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "TrivySecurityStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "TrivySecurityStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -678,10 +663,8 @@ class TrivySecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "TrivySecurityStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "TrivySecurityStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

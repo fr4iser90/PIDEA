@@ -126,11 +126,9 @@ class SwitchIDEPortCommand {
         port: this.port,
         ideType: this.ideType,
         message: `Successfully switched to IDE port ${this.port}`,
-        metadata: {
-          ...this.metadata,
-          executionTime: new Date(),
-          context: context,
-        },
+        ...this.metadata,
+        executionTime: new Date(),
+        context: context,
       };
 
       // Publish success event

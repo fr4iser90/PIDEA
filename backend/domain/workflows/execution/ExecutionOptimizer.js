@@ -788,10 +788,8 @@ class ExecutionOptimizer {
         name: `combined_${metadata.type}`,
         type: metadata.type,
         description: `Combined ${steps.length} ${metadata.type} steps`,
-        metadata: {
-          originalSteps: steps.length,
-          combined: true,
-        },
+        originalSteps: steps.length,
+        combined: true,
       }),
       execute: async (context) => {
         const results = [];
@@ -891,11 +889,9 @@ class ExecutionOptimizer {
       ...step,
       getMetadata: () => ({
         ...metadata,
-        metadata: {
-          ...metadata.metadata,
-          resourceOptimized: true,
-          preallocatedResources: requirements,
-        },
+        ...metadata.metadata,
+        resourceOptimized: true,
+        preallocatedResources: requirements,
       }),
       execute: async (context) => {
         // Pre-allocate resources
@@ -969,10 +965,8 @@ class ExecutionOptimizer {
         name: `parallel_${metadata.type}`,
         type: metadata.type,
         description: `Parallel execution of ${steps.length} steps`,
-        metadata: {
-          parallelSteps: steps.length,
-          parallel: true,
-        },
+        parallelSteps: steps.length,
+        parallel: true,
       }),
       execute: async (context) => {
         const promises = steps.map((step) => step.execute(context));

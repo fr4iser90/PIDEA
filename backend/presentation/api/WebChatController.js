@@ -26,11 +26,9 @@ class WebChatController {
         requestedBy: requestedBy,
         sessionId: sessionId,
         timestamp: new Date(),
-        metadata: {
-          userAgent: req.get('User-Agent'),
+        userAgent: req.get('User-Agent'),
           ipAddress: req.ip,
           userRole: req.user?.role
-        }
       };
       
       const result = await this.webChatApplicationService.sendMessage(messageData, req.user?.id);
@@ -148,11 +146,9 @@ class WebChatController {
       // Create new chat session for user via application service
       const sessionData = {
         title: title || 'New Chat',
-        metadata: {
-          createdBy: userId,
+        createdBy: userId,
           userAgent: req.get('User-Agent'),
           ipAddress: req.ip
-        }
       };
 
       const result = await this.webChatApplicationService.createChatSession(sessionData, { userId });

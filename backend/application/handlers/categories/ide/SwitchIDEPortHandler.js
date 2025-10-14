@@ -124,11 +124,9 @@ class SwitchIDEPortHandler {
         ideType: command.ideType,
         automationResult: automationResult,
         message: `Successfully switched to IDE port ${command.port}`,
-        metadata: {
-          handlerId: this.handlerId,
-          executionTime: new Date(),
-          options: options,
-        },
+        handlerId: this.handlerId,
+        executionTime: new Date(),
+        options: options,
       };
 
       // Publish success event

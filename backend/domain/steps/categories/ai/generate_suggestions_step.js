@@ -74,11 +74,9 @@ class GenerateSuggestionsStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          suggestionTypes: suggestionTypes.length,
-          suggestionsGenerated: result.suggestions.length,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        suggestionTypes: suggestionTypes.length,
+        suggestionsGenerated: result.suggestions.length,
       };
     } catch (error) {
       logger.error("❌ Suggestion generation failed:", error.message);

@@ -102,11 +102,9 @@ class RepositoryTypeAnalysisStep {
 
       return {
         result: result,
-        metadata: {
-          stepName: "RepositoryTypeAnalysisStep",
-          duration: result.detectionTime,
-          cacheTTL: this.settings.cacheTTL,
-        },
+        stepName: "RepositoryTypeAnalysisStep",
+        duration: result.detectionTime,
+        cacheTTL: this.settings.cacheTTL,
       };
     } catch (error) {
       logger.error(
@@ -116,9 +114,7 @@ class RepositoryTypeAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "RepositoryTypeAnalysisStep",
-        },
+        stepName: "RepositoryTypeAnalysisStep",
       };
     }
   }

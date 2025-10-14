@@ -86,11 +86,9 @@ class AnalyzeCodeStructureStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          filesAnalyzed: this.countFiles(result.analysis.structure),
-          depth: scanDepth,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        filesAnalyzed: this.countFiles(result.analysis.structure),
+        depth: scanDepth,
       };
     } catch (error) {
       logger.error("❌ Code structure analysis failed:", error.message);

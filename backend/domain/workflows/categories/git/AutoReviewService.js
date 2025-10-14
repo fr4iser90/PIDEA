@@ -143,11 +143,9 @@ class AutoReviewService {
         recommendations,
         duration,
         timestamp: new Date(),
-        metadata: {
-          taskType: options.taskType,
-          automationLevel: options.automationLevel,
-          reviewConfig,
-        },
+        taskType: options.taskType,
+        automationLevel: options.automationLevel,
+        reviewConfig,
       };
 
       // Emit review completed event

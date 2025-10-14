@@ -35,12 +35,10 @@ class CentralVersionManager {
         sinceVersion: "v1.0.0",
         generated: new Date().toISOString(),
       },
-      metadata: {
-        system: "PIDEA Unified Version Management System",
+      system: "PIDEA Unified Version Management System",
         branchStrategy: "Unified Branch Strategy",
         gitIntegration: "Automated changelog generation",
         releaseType: "Patch",
-      },
     };
   }
 

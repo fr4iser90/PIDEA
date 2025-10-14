@@ -737,9 +737,9 @@ const useProjectStore = create(
           }
           
           const analysisData = {
-            status: response.data.status,
-            metrics: response.data.metrics,
-            history: response.data.history || [],
+            status: response.status,
+            metrics: response.metrics,
+            history: response.history || [],
             lastUpdate: new Date().toISOString()
           };
           
@@ -805,7 +805,7 @@ const useProjectStore = create(
           }
           
           const chatData = {
-            messages: response.data.messages || [],
+            messages: response.messages || [],
             lastUpdate: new Date().toISOString()
           };
           
@@ -871,7 +871,7 @@ const useProjectStore = create(
           }
           
           const tasksData = {
-            tasks: response.data.tasks || [],
+            tasks: response.tasks || [],
             lastUpdate: new Date().toISOString()
           };
           
@@ -937,11 +937,11 @@ const useProjectStore = create(
           }
           
           const categoryData = {
-            recommendations: response.data.recommendations || null,
-            issues: response.data.issues || null,
-            metrics: response.data.metrics || null,
-            summary: response.data.summary || null,
-            results: response.data.results || null,
+            recommendations: response.recommendations || null,
+            issues: response.issues || null,
+            metrics: response.metrics || null,
+            summary: response.summary || null,
+            results: response.results || null,
             lastUpdate: new Date().toISOString()
           };
           

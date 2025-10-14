@@ -64,10 +64,8 @@ class RunUnitTestsStep {
           coverage,
           validation,
         },
-        metadata: {
-          framework: "testing_management",
+        framework: "testing_management",
           timestamp: new Date().toISOString(),
-        },
       };
     } catch (error) {
       logger.error(`❌ ${this.name} failed:`, error.message);
@@ -75,10 +73,8 @@ class RunUnitTestsStep {
        
         step: this.name,
         error: error.message,
-        metadata: {
-          framework: "testing_management",
+        framework: "testing_management",
           timestamp: new Date().toISOString(),
-        },
       };
     }
   }

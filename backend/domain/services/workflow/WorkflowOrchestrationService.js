@@ -146,10 +146,8 @@ class WorkflowOrchestrationService {
         workflow: workflowResult,
         completion: completionResult,
         message: `Workflow completed successfully for task: ${task.title}`,
-        metadata: {
-          executionTime: Date.now() - (workflowResult.startedAt || Date.now()),
-          timestamp: new Date(),
-        },
+        executionTime: Date.now() - (workflowResult.startedAt || Date.now()),
+        timestamp: new Date(),
       };
 
       // Emit workflow completed event

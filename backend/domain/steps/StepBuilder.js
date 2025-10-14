@@ -69,11 +69,9 @@ class StepBuilder {
         required: config.required !== false,
         dependencies: config.dependencies || [],
         settings: config.settings || {},
-        metadata: {
-          builtAt: new Date(),
-          buildContext: context,
-          originalConfig: config,
-        },
+        builtAt: new Date(),
+        buildContext: context,
+        originalConfig: config,
       };
 
       // Validate instance
@@ -116,12 +114,10 @@ class StepBuilder {
       dependencies: config.dependencies || [],
       settings: { ...config.settings, ...options.settings },
       executor: step.executor,
-      metadata: {
-        builtAt: new Date(),
-        buildOptions: options,
-        originalConfig: config,
-        registryStep: step,
-      },
+      builtAt: new Date(),
+      buildOptions: options,
+      originalConfig: config,
+      registryStep: step,
     };
 
     // Add custom properties
@@ -314,11 +310,9 @@ class StepBuilder {
       steps: instances,
       dependencies: this.resolveDependencies(instances),
       executionOrder: this.calculateExecutionOrder(instances),
-      metadata: {
-        createdAt: new Date(),
-        totalSteps: instances.length,
-        buildOptions: options,
-      },
+      createdAt: new Date(),
+      totalSteps: instances.length,
+      buildOptions: options,
     };
 
     return chain;

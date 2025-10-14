@@ -187,13 +187,11 @@ class TechStackAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "tech-stack-analysis",
-          category: "tech-stack",
-          stepsExecuted: results.summary.totalSteps,
-          techStackMaturityScore: techStackMaturityScore,
-          tasksCreated: tasks.length,
-        },
+        type: "tech-stack-analysis",
+        category: "tech-stack",
+        stepsExecuted: results.summary.totalSteps,
+        techStackMaturityScore: techStackMaturityScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Tech stack analysis failed:", error.message);

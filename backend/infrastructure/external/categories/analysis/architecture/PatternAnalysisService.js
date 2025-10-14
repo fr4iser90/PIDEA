@@ -45,11 +45,9 @@ class PatternAnalysisService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "pattern",
-          timestamp: new Date().toISOString(),
-          config: patternConfig,
-        },
+        scanner: "pattern",
+        timestamp: new Date().toISOString(),
+        config: patternConfig,
       };
     } catch (error) {
       this.logger.error("Pattern analysis failed", {

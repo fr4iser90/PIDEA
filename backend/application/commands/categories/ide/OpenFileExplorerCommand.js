@@ -124,11 +124,9 @@ class OpenFileExplorerCommand {
         ideType: this.ideType,
         path: this.path,
         message: `Successfully opened file explorer${this.path ? ` at ${this.path}` : ""}`,
-        metadata: {
-          ...this.metadata,
-          executionTime: new Date(),
-          context: context,
-        },
+        ...this.metadata,
+        executionTime: new Date(),
+        context: context,
       };
 
       // Publish success event

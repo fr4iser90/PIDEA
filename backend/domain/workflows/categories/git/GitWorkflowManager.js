@@ -232,10 +232,8 @@ class GitWorkflowManager {
         strategy: strategy.constructor.name,
         duration: Date.now() - context.timestamps.get("created").getTime(),
         timestamp: new Date(),
-        metadata: {
-          validation,
-          configuration: strategy.getConfiguration(),
-        },
+        validation,
+        configuration: strategy.getConfiguration(),
       };
 
       // Record branch creation metrics
@@ -379,10 +377,8 @@ class GitWorkflowManager {
         steps,
         duration: Date.now() - startTime,
         timestamp: new Date(),
-        metadata: {
-          taskType: task.type?.value,
-          branchName: context.get("branchName"),
-        },
+        taskType: task.type?.value,
+        branchName: context.get("branchName"),
       };
     } catch (error) {
       return {
@@ -392,10 +388,8 @@ class GitWorkflowManager {
         duration: Date.now() - startTime,
         timestamp: new Date(),
         error: error.message,
-        metadata: {
-          taskType: task.type?.value,
-          branchName: context.get("branchName"),
-        },
+        taskType: task.type?.value,
+        branchName: context.get("branchName"),
       };
     }
   }
@@ -565,10 +559,8 @@ class GitWorkflowManager {
         recommendations: result.recommendations || [],
         duration: Date.now() - context.timestamps.get("created").getTime(),
         timestamp: new Date(),
-        metadata: {
-          reviewDepth: this.getReviewDepth(automationLevel),
-          automationLevel,
-        },
+        reviewDepth: this.getReviewDepth(automationLevel),
+        automationLevel,
       };
 
       // Record review metrics
@@ -672,10 +664,8 @@ class GitWorkflowManager {
         mergeCommit: result.mergeCommit,
         duration: Date.now() - context.timestamps.get("created").getTime(),
         timestamp: new Date(),
-        metadata: {
-          automationLevel,
-          mergeConfig,
-        },
+        automationLevel,
+        mergeConfig,
       };
 
       // Record merge metrics

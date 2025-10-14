@@ -932,10 +932,8 @@ class AnalysisApplicationService {
       const Analysis = require("@domain/entities/Analysis");
       const analysis = Analysis.create(projectId, analysisType, {
         result: cleanResult,
-        metadata: {
-          ...metadata,
-          timestamp: new Date().toISOString(),
-        },
+        ...metadata,
+        timestamp: new Date().toISOString(),
       });
 
       // Save to database

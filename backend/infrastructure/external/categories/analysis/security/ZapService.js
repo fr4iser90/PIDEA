@@ -42,11 +42,9 @@ class ZapService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "zap",
-          timestamp: new Date().toISOString(),
-          config: scanConfig,
-        },
+        scanner: "zap",
+        timestamp: new Date().toISOString(),
+        config: scanConfig,
       };
     } catch (error) {
       this.logger.error("ZAP analysis failed", {

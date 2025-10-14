@@ -48,11 +48,9 @@ class LayerAnalysisService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "layer",
-          timestamp: new Date().toISOString(),
-          config: layerConfig,
-        },
+        scanner: "layer",
+        timestamp: new Date().toISOString(),
+        config: layerConfig,
       };
     } catch (error) {
       this.logger.error("Layer analysis failed", {

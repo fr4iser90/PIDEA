@@ -145,11 +145,9 @@ class WorkflowAnalyzer {
         analysisResults,
         recommendations: this.prioritizeRecommendations(recommendations),
         summary: this.createAnalysisSummary(analysisResults),
-        metadata: {
-          analyzedAt: new Date(),
-          contextHash: this.hashContext(context),
-          stepCount: workflow.getMetadata().steps?.length || 0,
-        },
+        analyzedAt: new Date(),
+        contextHash: this.hashContext(context),
+        stepCount: workflow.getMetadata().steps?.length || 0,
       };
 
       // Cache analysis
@@ -1122,11 +1120,9 @@ class WorkflowAnalyzer {
         optimizationScore: 50,
         keyFindings: ["Analysis disabled"],
       },
-      metadata: {
-        analyzedAt: new Date(),
-        contextHash: this.hashContext(context),
-        stepCount: steps.length,
-      },
+      analyzedAt: new Date(),
+      contextHash: this.hashContext(context),
+      stepCount: steps.length,
     };
   }
 

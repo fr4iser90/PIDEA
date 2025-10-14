@@ -99,11 +99,9 @@ class CouplingAnalysisStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "CouplingAnalysisStep",
-          projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "CouplingAnalysisStep",
+        projectPath,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Coupling analysis failed: ${error.message}`);
@@ -111,11 +109,9 @@ class CouplingAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "CouplingAnalysisStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "CouplingAnalysisStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -737,14 +733,10 @@ class CouplingAnalysisStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "CouplingAnalysisStep",
+      source: "CouplingAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -767,12 +759,9 @@ class CouplingAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "CouplingAnalysisStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "CouplingAnalysisStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -795,10 +784,8 @@ class CouplingAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "CouplingAnalysisStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "CouplingAnalysisStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

@@ -73,12 +73,10 @@ class ImplementAutomationStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
+        executionTime: Date.now() - context.startTime || 0,
           automationsGenerated: result.automations.length,
           changesApplied: result.changes.length,
           status: result.status,
-        },
       };
     } catch (error) {
       logger.error("❌ Automation implementation failed:", error.message);

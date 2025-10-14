@@ -71,11 +71,9 @@ class LoadTestingStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
+        executionTime: Date.now() - context.startTime || 0,
           scenariosExecuted: result.testing.scenarios.length,
           recommendationsGenerated: result.testing.recommendations.length,
-        },
       };
     } catch (error) {
       this.logger.error("❌ Load testing failed:", error.message);

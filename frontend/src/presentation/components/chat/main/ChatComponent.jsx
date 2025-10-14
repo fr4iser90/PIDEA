@@ -48,7 +48,7 @@ async function fetchPromptContent(promptFile) {
   const response = await apiCall(url);
   // Robust: prüfe alle sinnvollen Felder
   if (response.content) return response.content;
-  if (response.data && response.data.content) return response.data.content;
+  if (response && response.content) return response.content;
   if (typeof response.data === 'string') return response.data;
   if (typeof response === 'string') return response;
   throw new Error(`Prompt content not found for ${promptFile}`);

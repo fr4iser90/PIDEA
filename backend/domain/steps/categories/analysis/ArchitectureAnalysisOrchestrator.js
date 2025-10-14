@@ -186,13 +186,11 @@ class ArchitectureAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "architecture-analysis",
-          category: "architecture",
-          stepsExecuted: results.summary.totalSteps,
-          architectureScore: architectureScore,
-          tasksCreated: tasks.length,
-        },
+        type: "architecture-analysis",
+        category: "architecture",
+        stepsExecuted: results.summary.totalSteps,
+        architectureScore: architectureScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Architecture analysis failed:", error.message);

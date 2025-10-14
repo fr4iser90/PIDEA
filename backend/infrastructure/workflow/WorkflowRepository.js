@@ -35,7 +35,7 @@ class WorkflowRepository {
         metricUnit: "count",
         metricType: "performance",
         metricCategory: "execution_status",
-        metadata: { status: "started" },
+        status: "started",
       });
 
       this.logger.info(
@@ -84,7 +84,7 @@ class WorkflowRepository {
           metricUnit: "milliseconds",
           metricType: "performance",
           metricCategory: "execution_time",
-          metadata: { status: "completed" },
+          status: "completed",
         });
 
         await this.recordExecutionMetrics(executionId, {
@@ -93,7 +93,7 @@ class WorkflowRepository {
           metricUnit: "count",
           metricType: "performance",
           metricCategory: "execution_status",
-          metadata: { status: "completed" },
+          status: "completed",
         });
       }
 
@@ -105,7 +105,8 @@ class WorkflowRepository {
           metricUnit: "count",
           metricType: "performance",
           metricCategory: "execution_status",
-          metadata: { status: "failed", error: updates.errorData },
+          status: "failed",
+          error: updates.errorData,
         });
       }
 

@@ -157,10 +157,8 @@ class TodoParsingStep {
           status: "pending",
           projectId,
           createdAt: new Date(),
-          metadata: {
-            originalLine: line,
-            pattern: pattern.toString(),
-          },
+          originalLine: line,
+          pattern: pattern.toString(),
         };
       }
     }
@@ -174,10 +172,8 @@ class TodoParsingStep {
       status: "pending",
       projectId,
       createdAt: new Date(),
-      metadata: {
-        originalLine: line,
-        pattern: "none",
-      },
+      originalLine: line,
+      pattern: "none",
     };
   }
 }

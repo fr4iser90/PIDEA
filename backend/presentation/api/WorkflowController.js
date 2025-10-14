@@ -256,7 +256,7 @@ class WorkflowController {
                                 userId: userId,
                                 title: 'New Chat',
                                 clickNewChat: true,
-                                metadata: { port: activeIDE.port }
+                                port: activeIDE.port
                             });
                             
                             // Create handler with all required dependencies
@@ -996,14 +996,12 @@ class WorkflowController {
                         // Create new analysis entry with proper metadata
                         const analysis = Analysis.create(projectId, stepOptions.analysisType, {
                             result: result.result,
-                            metadata: {
-                                stepName,
-                                projectPath: workspacePath,
-                                workflow,
-                                executionMethod: 'categories',
-                                timestamp: new Date().toISOString(),
-                                executionTime: result.duration || null
-                            }
+                            stepName,
+                            projectPath: workspacePath,
+                            workflow,
+                            executionMethod: 'categories',
+                            timestamp: new Date().toISOString(),
+                            executionTime: result.duration || null
                         });
                         
                         // Set as completed
@@ -1049,13 +1047,11 @@ class WorkflowController {
                         endTime: new Date(),
                         resultData: result.result || result,
                         errorData: result.success ? null : { error: result.error },
-                        metadata: {
-                            projectPath: workspacePath,
+                        projectPath: workspacePath,
                             projectId,
                             workflow,
                             executionMethod: 'categories',
                             stepOptions: Object.keys(stepOptions)
-                        }
                     };
 
                     await this.application.workflowExecutionRepository.create(executionData);
@@ -1638,13 +1634,11 @@ class WorkflowController {
             completedAt: new Date(),
             executionTimeMs: results.duration,
             userId: userId,
-            metadata: {
-              workflowName: workflow.name,
+            workflowName: workflow.name,
               totalSteps: workflow.steps.length,
               completedSteps: results.steps.filter((s) => s.success).length,
               failedSteps: results.steps.filter((s) => !s.success).length,
               errors: results.errors,
-            },
             stepsData: results.steps,
           });
 
@@ -1876,8 +1870,7 @@ class WorkflowController {
             // Create new analysis entry with proper metadata
             const analysis = Analysis.create(projectId, stepName, {
               result: result.result || result.data,
-              metadata: {
-                stepName,
+              stepName,
                 projectPath: workspacePath,
                 workflowExecution: true,
                 executionMethod: "workflow",
@@ -1885,7 +1878,6 @@ class WorkflowController {
                 executionTime: result.duration || null,
                 stepType: step.type,
                 stepOptions: Object.keys(stepOptions),
-              },
             });
 
             // Set as completed
@@ -1952,8 +1944,7 @@ class WorkflowController {
                   stepName,
                   {
                     result: stepResult,
-                    metadata: {
-                      stepName,
+                    stepName,
                       projectPath: workspacePath,
                       workflowExecution: true,
                       executionMethod: "workflow",
@@ -1961,7 +1952,6 @@ class WorkflowController {
                       timestamp: new Date().toISOString(),
                       executionTime: stepResult.duration || null,
                       stepType: "individual",
-                    },
                   },
                 );
 

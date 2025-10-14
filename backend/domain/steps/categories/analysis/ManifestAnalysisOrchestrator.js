@@ -172,13 +172,11 @@ class ManifestAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "manifest-analysis",
-          category: "manifest",
-          stepsExecuted: results.summary.totalSteps,
-          manifestQualityScore: manifestQualityScore,
-          tasksCreated: tasks.length,
-        },
+        type: "manifest-analysis",
+        category: "manifest",
+        stepsExecuted: results.summary.totalSteps,
+        manifestQualityScore: manifestQualityScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Manifest analysis failed:", error.message);

@@ -52,11 +52,9 @@ class SecretScanningService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "secret-scan",
-          timestamp: new Date().toISOString(),
-          config: scanConfig,
-        },
+        scanner: "secret-scan",
+        timestamp: new Date().toISOString(),
+        config: scanConfig,
       };
     } catch (error) {
       this.logger.error("Secret scanning failed", {

@@ -83,11 +83,9 @@ class GenerateCodeDocsStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          filesAnalyzed: result.filesAnalyzed.length,
-          filesGenerated: result.filesGenerated.length,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        filesAnalyzed: result.filesAnalyzed.length,
+        filesGenerated: result.filesGenerated.length,
       };
     } catch (error) {
       logger.error("❌ Code documentation generation failed:", error.message);

@@ -21,7 +21,7 @@ const AnalysisFilters = ({ filters, onFilterChange, projectId }) => {
       const response = await apiRepository.getAnalysisHistory(currentProjectId);
       
       if (response.success && response.data) {
-        const types = [...new Set(response.data.map(item => item.type).filter(Boolean))];
+        const types = [...new Set(response.map(item => item.type).filter(Boolean))];
         setAvailableTypes(types);
       }
     } catch (err) {

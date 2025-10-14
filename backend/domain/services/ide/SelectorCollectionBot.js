@@ -628,14 +628,12 @@ class SelectorCollectionBot {
         projectManagementSelectors: selectors.projectManagementSelectors || {},
         welcomeScreenSelectors: selectors.welcomeScreenSelectors || {},
         workspaceSelectors: selectors.workspaceSelectors || {},
-        metadata: {
-          version,
-          collectedAt: new Date().toISOString(),
-          totalSelectors: Object.values(selectors).reduce(
-            (sum, cat) => sum + Object.keys(cat).length,
-            0,
-          ),
-        },
+        version,
+        collectedAt: new Date().toISOString(),
+        totalSelectors: Object.values(selectors).reduce(
+          (sum, cat) => sum + Object.keys(cat).length,
+          0,
+        ),
       };
 
       // Save to IDETypes.js using IDETypesUpdater

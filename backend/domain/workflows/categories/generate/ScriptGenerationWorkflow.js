@@ -62,11 +62,9 @@ class ScriptGenerationWorkflow extends IWorkflow {
           scriptType: context.scriptType,
           metadata: result.metadata,
         },
-        metadata: {
-          taskMode: "script_generation",
-          executionTime: Date.now(),
-          scriptSize: scriptContent.length,
-        },
+        taskMode: "script_generation",
+        executionTime: Date.now(),
+        scriptSize: scriptContent.length,
       };
     } catch (error) {
       this.logger.error("ScriptGenerationWorkflow: Script generation failed", {
@@ -78,10 +76,8 @@ class ScriptGenerationWorkflow extends IWorkflow {
       return {
        
         error: error.message,
-        metadata: {
-          taskMode: "script_generation",
-          executionTime: Date.now(),
-        },
+        taskMode: "script_generation",
+        executionTime: Date.now(),
       };
     }
   }
@@ -176,12 +172,10 @@ class ScriptGenerationWorkflow extends IWorkflow {
 
     return {
       path: fullPath,
-      metadata: {
-        size: scriptContent.length,
-        extension,
-        scriptType,
-        savedAt: new Date(),
-      },
+      size: scriptContent.length,
+      extension,
+      scriptType,
+      savedAt: new Date(),
     };
   }
 

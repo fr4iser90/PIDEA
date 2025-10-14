@@ -185,13 +185,11 @@ class PerformanceAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "performance-analysis",
-          category: "performance",
-          stepsExecuted: results.summary.totalSteps,
-          performanceScore: performanceScore,
-          tasksCreated: tasks.length,
-        },
+        type: "performance-analysis",
+        category: "performance",
+        stepsExecuted: results.summary.totalSteps,
+        performanceScore: performanceScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Performance analysis failed:", error.message);

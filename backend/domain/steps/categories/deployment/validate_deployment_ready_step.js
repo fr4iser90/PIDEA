@@ -80,12 +80,10 @@ class ValidateDeploymentReadyStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          checksPerformed: Object.keys(result.validation.checks).length,
-          issuesFound: result.validation.issues.length,
-          score: result.validation.score,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        checksPerformed: Object.keys(result.validation.checks).length,
+        issuesFound: result.validation.issues.length,
+        score: result.validation.score,
       };
     } catch (error) {
       logger.error("❌ Deployment readiness validation failed:", error.message);

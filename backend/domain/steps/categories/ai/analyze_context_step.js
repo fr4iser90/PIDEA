@@ -92,12 +92,10 @@ class AnalyzeContextStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          contextWindow,
-          analysisDepth,
-          insightsGenerated: result.analysis.insights.length,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        contextWindow,
+        analysisDepth,
+        insightsGenerated: result.analysis.insights.length,
       };
     } catch (error) {
       this.logger.error("❌ Context analysis failed:", error.message);

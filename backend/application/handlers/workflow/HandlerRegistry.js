@@ -370,7 +370,6 @@ class HandlerRegistry {
   exportState() {
     const state = {
       handlers: {},
-      metadata: {},
       statistics: {},
       options: this.options,
     };

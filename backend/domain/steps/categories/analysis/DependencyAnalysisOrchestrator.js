@@ -173,13 +173,11 @@ class DependencyAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "dependency-analysis",
-          category: "dependencies",
-          stepsExecuted: results.summary.totalSteps,
-          dependencyHealthScore: dependencyHealthScore,
-          tasksCreated: tasks.length,
-        },
+        type: "dependency-analysis",
+        category: "dependencies",
+        stepsExecuted: results.summary.totalSteps,
+        dependencyHealthScore: dependencyHealthScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Dependency analysis failed:", error.message);

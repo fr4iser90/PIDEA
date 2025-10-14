@@ -99,11 +99,9 @@ class PatternAnalysisStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "PatternAnalysisStep",
-          projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "PatternAnalysisStep",
+        projectPath,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Pattern analysis failed: ${error.message}`);
@@ -111,11 +109,9 @@ class PatternAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "PatternAnalysisStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "PatternAnalysisStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -852,14 +848,10 @@ class PatternAnalysisStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "PatternAnalysisStep",
+      source: "PatternAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -882,12 +874,9 @@ class PatternAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "PatternAnalysisStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "PatternAnalysisStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -910,10 +899,8 @@ class PatternAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "PatternAnalysisStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "PatternAnalysisStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

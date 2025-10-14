@@ -344,11 +344,9 @@ class ProjectContextService {
           name: projectName,
           description: `Project detected at ${projectPath}`,
           type: projectType,
-          metadata: {
-            detectedBy: "ProjectContextService",
-            detectedAt: new Date().toISOString(),
-            detectionMethod: "auto_detect",
-          },
+          detectedBy: "ProjectContextService",
+          detectedAt: new Date().toISOString(),
+          detectionMethod: "auto_detect",
         },
       );
 

@@ -219,11 +219,9 @@ class ExecutionPredictor {
           actualTime,
         ),
         timestamp: Date.now(),
-        metadata: {
-          stepCount: workflow.getMetadata().steps?.length || 0,
-          strategy: result.strategy,
-          model: prediction.model,
-        },
+        stepCount: workflow.getMetadata().steps?.length || 0,
+        strategy: result.strategy,
+        model: prediction.model,
       };
 
       this.executionHistory.set(executionId, executionData);

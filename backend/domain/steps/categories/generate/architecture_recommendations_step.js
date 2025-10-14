@@ -63,13 +63,11 @@ class ArchitectureRecommendationsStep {
         recommendations: [],
         insights: [],
         summary: "",
-        metadata: {
-          totalRecommendations: 0,
-          criticalCount: 0,
-          highCount: 0,
-          mediumCount: 0,
-          lowCount: 0,
-        },
+        totalRecommendations: 0,
+        criticalCount: 0,
+        highCount: 0,
+        mediumCount: 0,
+        lowCount: 0,
       };
 
       // Generate architecture recommendations

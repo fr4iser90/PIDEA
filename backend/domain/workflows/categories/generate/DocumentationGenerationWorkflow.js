@@ -72,11 +72,9 @@ class DocumentationGenerationWorkflow extends IWorkflow {
           docType: context.docType,
           metadata: result.metadata,
         },
-        metadata: {
-          taskMode: "documentation_generation",
-          executionTime: Date.now(),
-          docSize: docContent.length,
-        },
+        taskMode: "documentation_generation",
+        executionTime: Date.now(),
+        docSize: docContent.length,
       };
     } catch (error) {
       this.logger.error(
@@ -91,10 +89,8 @@ class DocumentationGenerationWorkflow extends IWorkflow {
       return {
        
         error: error.message,
-        metadata: {
-          taskMode: "documentation_generation",
-          executionTime: Date.now(),
-        },
+        taskMode: "documentation_generation",
+        executionTime: Date.now(),
       };
     }
   }
@@ -227,12 +223,10 @@ class DocumentationGenerationWorkflow extends IWorkflow {
 
     return {
       path: fullPath,
-      metadata: {
-        size: docContent.length,
-        extension,
-        docType,
-        savedAt: new Date(),
-      },
+      size: docContent.length,
+      extension,
+      docType,
+      savedAt: new Date(),
     };
   }
 

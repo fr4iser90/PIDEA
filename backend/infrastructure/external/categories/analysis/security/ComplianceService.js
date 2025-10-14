@@ -42,11 +42,9 @@ class ComplianceService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "compliance",
-          timestamp: new Date().toISOString(),
-          config: complianceConfig,
-        },
+        scanner: "compliance",
+        timestamp: new Date().toISOString(),
+        config: complianceConfig,
       };
     } catch (error) {
       this.logger.error("Compliance analysis failed", {

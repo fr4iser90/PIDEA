@@ -512,18 +512,16 @@ class TaskService {
         success: result.isSuccess(),
         taskId: task.id,
         taskType: task.type?.value,
-        result: result.toJSON(),
         message: result.isSuccess()
           ? `Task completed successfully: ${task.title}`
           : `Task failed: ${task.title}`,
-        metadata: {
-          executionTime: result.getDuration(),
-          formattedDuration: result.getFormattedDuration(),
-          strategy: result.getStrategy(),
-          stepCount: result.getStepCount(),
-          successRate: result.getSuccessRate(),
-          timestamp: new Date(),
-        },
+        executionTime: result.getDuration(),
+        formattedDuration: result.getFormattedDuration(),
+        strategy: result.getStrategy(),
+        stepCount: result.getStepCount(),
+        successRate: result.getSuccessRate(),
+        timestamp: new Date(),
+        ...result.toJSON(),
       };
     } catch (error) {
       logger.error(
@@ -684,7 +682,7 @@ class TaskService {
         id: "temp-task",
         title: "Temporary task",
         type: { value: "refactoring" },
-        metadata: { projectPath },
+        projectPath,
       };
 
       return await this.workflowGitService.createWorkflowBranch(
@@ -739,7 +737,7 @@ class TaskService {
           id: task.id,
           description: task.title || task.description,
           type: task.type?.value || "refactoring",
-          metadata: task.metadata || {},
+          ...task.metadata,
         };
 
         // Process with Auto-Finish confirmation loops and fallback detection

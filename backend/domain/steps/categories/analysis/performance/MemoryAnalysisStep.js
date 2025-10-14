@@ -95,12 +95,10 @@ class MemoryAnalysisStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "MemoryAnalysisStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "MemoryAnalysisStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Memory performance analysis failed: ${error.message}`);
@@ -108,11 +106,9 @@ class MemoryAnalysisStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "MemoryAnalysisStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "MemoryAnalysisStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -641,10 +637,8 @@ class MemoryAnalysisStep {
           line: opt.line || 0,
           suggestion:
             opt.suggestion || "Consider implementing performance optimization",
-          metadata: {
-            scanner: "memory-analysis",
-            confidence: opt.confidence || 80,
-          },
+          scanner: "memory-analysis",
+        confidence: opt.confidence || 80,
         })),
       );
     }
@@ -662,10 +656,8 @@ class MemoryAnalysisStep {
           file: bottleneck.file || "unknown",
           line: bottleneck.line || 0,
           suggestion: bottleneck.suggestion || "Address performance bottleneck",
-          metadata: {
-            scanner: "memory-analysis",
-            confidence: bottleneck.confidence || 85,
-          },
+          scanner: "memory-analysis",
+        confidence: bottleneck.confidence || 85,
         })),
       );
     }
@@ -882,14 +874,10 @@ class MemoryAnalysisStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "MemoryAnalysisStep",
+      source: "MemoryAnalysisStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -912,12 +900,9 @@ class MemoryAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "MemoryAnalysisStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "MemoryAnalysisStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -940,10 +925,8 @@ class MemoryAnalysisStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "MemoryAnalysisStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "MemoryAnalysisStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

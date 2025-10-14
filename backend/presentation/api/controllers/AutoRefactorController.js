@@ -42,7 +42,7 @@ class AutoRefactorController {
       const command = new AutoRefactorCommand({
         projectPath,
         requestedBy: userId,
-        metadata: { projectId },
+        projectId,
       });
 
       const result = await this.commandBus.execute(

@@ -166,7 +166,6 @@ class GitChangelogGenerationStep {
       return {
         content: "",
         entries: [],
-        metadata: {},
       };
     }
   }
@@ -360,18 +359,16 @@ class GitChangelogGenerationStep {
         date: entry.date,
         breaking: entry.breaking,
       })),
-      metadata: {
-        totalEntries: entries.length,
-        breakingChanges: entries.filter((e) => e.breaking).length,
-        task: task
-          ? {
-              id: task.id,
-              type: task.type?.value || task.type,
-              priority: task.priority?.value || task.priority,
-              description: task.description,
-            }
-          : null,
-      },
+      totalEntries: entries.length,
+      breakingChanges: entries.filter((e) => e.breaking).length,
+      task: task
+        ? {
+            id: task.id,
+            type: task.type?.value || task.type,
+            priority: task.priority?.value || task.priority,
+            description: task.description,
+          }
+        : null,
     };
 
     return JSON.stringify(changelog, null, 2);

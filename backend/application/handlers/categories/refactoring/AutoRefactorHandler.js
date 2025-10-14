@@ -283,11 +283,9 @@ class AutoRefactorHandler {
           largestFile: largeFiles.length > 0 ? largeFiles[0] : null,
           scanTimestamp: new Date().toISOString(),
         },
-        metadata: {
-          source: "auto-refactor-handler",
-          scanMethod: "file-system-scan",
-          threshold: 200,
-        },
+        source: "auto-refactor-handler",
+        scanMethod: "file-system-scan",
+        threshold: 200,
       });
 
       // Save to database
@@ -492,20 +490,18 @@ class AutoRefactorHandler {
       status: "pending",
       priority: fileInfo.priority,
       type: "refactor",
-      metadata: {
-        refactoringType: "file-split",
-        originalFile: fileInfo.path,
-        filePath: fileInfo.path,
-        projectPath: projectPath,
-        fileSize: fileInfo.lines,
-        package: fileInfo.package,
-        lines: fileInfo.lines,
-        currentLines: fileInfo.lines,
-        targetLines: "<500",
-        estimatedTime: fileInfo.estimatedTime,
-        refactoringSteps: this.generateRefactoringSteps(fileInfo),
-        analysisId: `auto_refactor_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      },
+      refactoringType: "file-split",
+      originalFile: fileInfo.path,
+      filePath: fileInfo.path,
+      projectPath: projectPath,
+      fileSize: fileInfo.lines,
+      package: fileInfo.package,
+      lines: fileInfo.lines,
+      currentLines: fileInfo.lines,
+      targetLines: "<500",
+      estimatedTime: fileInfo.estimatedTime,
+      refactoringSteps: this.generateRefactoringSteps(fileInfo),
+      analysisId: `auto_refactor_handler_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     };
 
     this.logger.info(

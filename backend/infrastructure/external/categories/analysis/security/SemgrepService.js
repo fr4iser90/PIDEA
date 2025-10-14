@@ -46,11 +46,9 @@ class SemgrepService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "semgrep",
-          timestamp: new Date().toISOString(),
-          config: scanConfig,
-        },
+        scanner: "semgrep",
+        timestamp: new Date().toISOString(),
+        config: scanConfig,
       };
     } catch (error) {
       this.logger.error("Semgrep analysis failed", {

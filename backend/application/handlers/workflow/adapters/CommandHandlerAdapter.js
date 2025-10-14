@@ -174,21 +174,17 @@ class CommandHandlerAdapter extends IHandlerAdapter {
 
           return {
             data: result,
-            metadata: {
-              commandHandler: true,
-              commandType: command.constructor.name,
-              originalRequest: context.getRequest(),
-            },
+            commandHandler: true,
+            commandType: command.constructor.name,
+            originalRequest: context.getRequest(),
           };
         } catch (error) {
           return {
            
             error: error.message,
-            metadata: {
-              commandHandler: true,
-              commandType: command.constructor.name,
-              originalRequest: context.getRequest(),
-            },
+            commandHandler: true,
+            commandType: command.constructor.name,
+            originalRequest: context.getRequest(),
           };
         }
       },

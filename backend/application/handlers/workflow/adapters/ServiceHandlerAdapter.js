@@ -231,8 +231,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
             if (serviceMethod === "executeWorkflow" && request.workflow) {
               // Pass the workflow object directly to the service method
               result = await serviceInstance[serviceMethod](request.workflow, {
-                metadata: request.metadata || {},
-                data: request.data || {},
+                ...request.metadata,
+                ...request.data,
                 task: request.task,
                 taskId: request.taskId,
                 userId: request.userId,
@@ -257,8 +257,8 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
           ) {
             // Fallback for WorkflowService
             result = await serviceInstance.executeWorkflow(request.workflow, {
-              metadata: request.metadata || {},
-              data: request.data || {},
+              ...request.metadata,
+              ...request.data,
               task: request.task,
               taskId: request.taskId,
               userId: request.userId,
@@ -270,25 +270,15 @@ class ServiceHandlerAdapter extends IHandlerAdapter {
             );
           }
 
-          return {
-            data: result,
-            metadata: {
-              serviceHandler: true,
-              serviceName: service.name,
-              serviceMethod: service.method,
-              originalRequest: request,
-            },
-          };
+          return result;
         } catch (error) {
           return {
            
             error: error.message,
-            metadata: {
-              serviceHandler: true,
-              serviceName: service.name,
-              serviceMethod: service.method,
-              originalRequest: context.getRequest(),
-            },
+            serviceHandler: true,
+            serviceName: service.name,
+            serviceMethod: service.method,
+            originalRequest: context.getRequest(),
           };
         }
       },

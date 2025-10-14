@@ -306,7 +306,7 @@ class TestMetadata {
       failureCount: this._failureCount,
       averageDuration: this._averageDuration,
       tags: [...this._tags],
-      metadata: { ...this._metadata },
+      ...this._metadata,
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
       legacyScore: this._legacyScore,

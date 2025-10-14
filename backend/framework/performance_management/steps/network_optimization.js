@@ -72,11 +72,9 @@ class NetworkOptimizationStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
+        executionTime: Date.now() - context.startTime || 0,
           optimizationsApplied: result.optimization.optimizations.length,
           recommendationsGenerated: result.optimization.recommendations.length,
-        },
       };
     } catch (error) {
       this.logger.error("❌ Network optimization failed:", error.message);

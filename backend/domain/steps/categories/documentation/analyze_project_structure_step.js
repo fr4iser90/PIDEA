@@ -77,11 +77,9 @@ class AnalyzeProjectStructureStep {
 
       return {
         data: analysis,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          filesAnalyzed: this.countFiles(analysis.structure),
-          documentationNeeds: analysis.documentationNeeds.length,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        filesAnalyzed: this.countFiles(analysis.structure),
+        documentationNeeds: analysis.documentationNeeds.length,
       };
     } catch (error) {
       logger.error("❌ Project structure analysis failed:", error.message);

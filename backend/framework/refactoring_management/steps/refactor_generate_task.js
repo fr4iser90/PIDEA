@@ -66,12 +66,10 @@ async function execute(context, options = {}) {
     return {
       tasks: createdTasks,
       taskCount: createdTasks.length,
-      metadata: {
-        projectPath,
+      projectPath,
         generationTimestamp: new Date().toISOString(),
         processedFiles: largeFiles.length,
         framework: "refactoring_management",
-      },
     };
   } catch (error) {
     logger.error("❌ [RefactorGenerateTask] Task generation failed:", error);

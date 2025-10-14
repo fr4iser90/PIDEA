@@ -100,12 +100,10 @@ class SemgrepSecurityStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "SemgrepSecurityStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "SemgrepSecurityStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Semgrep code analysis failed: ${error.message}`);
@@ -113,11 +111,9 @@ class SemgrepSecurityStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "SemgrepSecurityStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "SemgrepSecurityStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -674,14 +670,10 @@ class SemgrepSecurityStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "SemgrepSecurityStep",
+      source: "SemgrepSecurityStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -704,12 +696,9 @@ class SemgrepSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "SemgrepSecurityStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "SemgrepSecurityStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -732,10 +721,8 @@ class SemgrepSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "SemgrepSecurityStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "SemgrepSecurityStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

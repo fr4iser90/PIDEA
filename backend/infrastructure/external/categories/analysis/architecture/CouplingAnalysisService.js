@@ -43,11 +43,9 @@ class CouplingAnalysisService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "coupling",
-          timestamp: new Date().toISOString(),
-          config: couplingConfig,
-        },
+        scanner: "coupling",
+        timestamp: new Date().toISOString(),
+        config: couplingConfig,
       };
     } catch (error) {
       this.logger.error("Coupling analysis failed", {

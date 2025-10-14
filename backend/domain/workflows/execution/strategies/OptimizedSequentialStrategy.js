@@ -779,10 +779,8 @@ class OptimizedSequentialStrategy {
         type,
         name: `combined_${type}`,
         description: `Combined ${steps.length} ${type} steps`,
-        metadata: {
-          originalSteps: steps.length,
-          combined: true,
-        },
+        originalSteps: steps.length,
+        combined: true,
       }),
       execute: async (context) => {
         const results = [];

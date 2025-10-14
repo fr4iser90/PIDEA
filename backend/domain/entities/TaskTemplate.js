@@ -151,13 +151,11 @@ class TaskTemplate {
       estimatedDuration:
         instantiatedTemplate.estimatedDuration ||
         this._type.getEstimatedDuration(),
-      metadata: {
-        ...instantiatedTemplate.metadata,
-        templateId: this._id,
-        templateName: this._name,
-        templateVersion: this._version,
-        variableValues,
-      },
+      ...instantiatedTemplate.metadata,
+      templateId: this._id,
+      templateName: this._name,
+      templateVersion: this._version,
+      variableValues,
     };
   }
 

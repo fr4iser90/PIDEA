@@ -29,12 +29,10 @@ class TaskManagementService {
         priority: "medium",
         projectPath: command.projectPath,
         status: "pending",
-        metadata: {
-          scriptType: command.scriptType,
-          options: command.options || {},
-          commandId: command.commandId,
-          handlerId: handlerId,
-        },
+        scriptType: command.scriptType,
+        options: command.options || {},
+        commandId: command.commandId,
+        handlerId: handlerId,
         createdBy: command.requestedBy,
         estimatedTime: this.getEstimatedTime(
           command.scriptType,
@@ -79,12 +77,10 @@ class TaskManagementService {
         startedAt: new Date(),
         requestedBy: command.requestedBy,
         options: command.options || {},
-        metadata: {
-          commandId: command.commandId,
-          handlerId: handlerId,
-          scriptType: command.scriptType,
-          projectPath: command.projectPath,
-        },
+        commandId: command.commandId,
+        handlerId: handlerId,
+        scriptType: command.scriptType,
+        projectPath: command.projectPath,
       });
 
       this.logger.info("TaskManagementService: Created execution record", {
@@ -117,17 +113,13 @@ class TaskManagementService {
         status: result.status,
         completedAt: new Date(),
         duration: result.duration,
-        output: {
-          scriptId: result.scriptId,
-          scriptName: result.scriptName,
-          scriptPath: result.scriptPath,
-        },
-        metadata: {
-          ...execution.metadata,
-          result: result.metadata,
-          warnings: result.warnings,
-          errors: result.errors,
-        },
+        scriptId: result.scriptId,
+        scriptName: result.scriptName,
+        scriptPath: result.scriptPath,
+        ...execution.metadata,
+        result: result.metadata,
+        warnings: result.warnings,
+        errors: result.errors,
       });
 
       this.logger.info("TaskManagementService: Updated execution record", {

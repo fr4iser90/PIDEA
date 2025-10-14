@@ -88,13 +88,11 @@ async function execute(context, options = {}) {
       largeFiles: largeFiles, // Pass the largeFiles data through
       analysis: analyzeResult,
       tasks: taskResult,
-      metadata: {
-        projectPath,
+      projectPath,
         orchestrationTimestamp: new Date().toISOString(),
         totalFiles: largeFiles.length,
         totalTasks: taskCount,
         framework: "refactoring_management",
-      },
     };
   } catch (error) {
     logger.error(

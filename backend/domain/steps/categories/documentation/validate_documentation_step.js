@@ -85,12 +85,10 @@ class ValidateDocumentationStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: Date.now() - context.startTime || 0,
-          filesValidated: result.validation.files.length,
-          issuesFound: result.validation.issues.length,
-          score: result.validation.score,
-        },
+        executionTime: Date.now() - context.startTime || 0,
+        filesValidated: result.validation.files.length,
+        issuesFound: result.validation.issues.length,
+        score: result.validation.score,
       };
     } catch (error) {
       logger.error("❌ Documentation validation failed:", error.message);

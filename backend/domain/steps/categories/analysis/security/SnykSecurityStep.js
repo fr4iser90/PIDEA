@@ -96,12 +96,10 @@ class SnykSecurityStep {
 
       return {
         result: cleanResult,
-        metadata: {
-          stepName: "SnykSecurityStep",
-          projectPath,
-          projectId,
-          timestamp: new Date(),
-        },
+        stepName: "SnykSecurityStep",
+        projectPath,
+        projectId,
+        timestamp: new Date(),
       };
     } catch (error) {
       logger.error(`❌ Snyk dependency analysis failed: ${error.message}`);
@@ -109,11 +107,9 @@ class SnykSecurityStep {
       return {
        
         error: error.message,
-        metadata: {
-          stepName: "SnykSecurityStep",
-          projectPath: context.projectPath,
-          timestamp: new Date(),
-        },
+        stepName: "SnykSecurityStep",
+        projectPath: context.projectPath,
+        timestamp: new Date(),
       };
     }
   }
@@ -616,14 +612,10 @@ class SnykSecurityStep {
       priority: "medium",
       status: "pending",
       projectId: projectId,
-      metadata: {
-        source: "SnykSecurityStep",
+      source: "SnykSecurityStep",
         score: result.score || 0,
         issues: result.issues ? result.issues.length : 0,
-        recommendations: result.recommendations
-          ? result.recommendations.length
-          : 0,
-      },
+        recommendations: result.recommendations ? result.recommendations.length : 0,
       estimatedHours: 4,
       phase: "improvement",
       stage: "planning",
@@ -646,12 +638,9 @@ class SnykSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "SnykSecurityStep",
-          issues: result.issues.filter(
-            (issue) => issue.severity === "critical",
-          ),
-        },
+        source: "SnykSecurityStep",
+        issues: result.issues.filter( (issue) => issue.severity === "critical",
+        ),
         estimatedHours: 4,
         phase: "critical-fixes",
         stage: "implementation",
@@ -674,10 +663,8 @@ class SnykSecurityStep {
         status: "pending",
         projectId: projectId,
         parentTaskId: mainTask.id,
-        metadata: {
-          source: "SnykSecurityStep",
-          issues: result.issues.filter((issue) => issue.severity === "high"),
-        },
+        source: "SnykSecurityStep",
+        issues: result.issues.filter((issue) => issue.severity === "high"),
         estimatedHours: 3,
         phase: "high-fixes",
         stage: "implementation",

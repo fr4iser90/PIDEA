@@ -47,11 +47,9 @@ class NetworkService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "network",
-          timestamp: new Date().toISOString(),
-          config: networkConfig,
-        },
+        scanner: "network",
+        timestamp: new Date().toISOString(),
+        config: networkConfig,
       };
     } catch (error) {
       this.logger.error("Network analysis failed", {

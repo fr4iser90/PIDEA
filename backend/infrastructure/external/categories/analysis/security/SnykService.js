@@ -41,11 +41,9 @@ class SnykService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "snyk",
-          timestamp: new Date().toISOString(),
-          config: scanConfig,
-        },
+        scanner: "snyk",
+        timestamp: new Date().toISOString(),
+        config: scanConfig,
       };
     } catch (error) {
       this.logger.error("Snyk analysis failed", {

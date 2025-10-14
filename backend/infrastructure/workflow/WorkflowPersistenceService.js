@@ -641,15 +641,13 @@ class WorkflowPersistenceService {
       const aggregatedMetrics = await this.getAggregatedMetrics(filters);
 
       const exportData = {
-        metadata: {
-          exportedAt: new Date().toISOString(),
-          filters,
-          options,
-          summary: {
-            executions: executions.length,
-            statistics,
-            metrics: aggregatedMetrics.length,
-          },
+        exportedAt: new Date().toISOString(),
+        filters,
+        options,
+        summary: {
+          executions: executions.length,
+          statistics,
+          metrics: aggregatedMetrics.length,
         },
         executions,
         statistics,

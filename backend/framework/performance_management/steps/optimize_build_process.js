@@ -74,11 +74,9 @@ class OptimizeBuildProcessStep {
 
       return {
         data: result,
-        metadata: {
-          executionTime: endTime - startTime,
+        executionTime: endTime - startTime,
           optimizationsApplied: result.optimization.optimizations.length,
           recommendationsGenerated: result.optimization.recommendations.length,
-        },
       };
     } catch (error) {
       this.logger.error("❌ Build process optimization failed:", error.message);

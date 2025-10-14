@@ -104,13 +104,11 @@ class StepRegistry {
         status: "active",
         executionCount: 0,
         lastExecuted: null,
-        metadata: {
-          type: "step",
-          category: finalCategory,
-          version: config.version || "1.0.0",
-          isFrameworkStep: config.framework ? true : false,
-          framework: config.framework || null,
-        },
+        type: "step",
+        category: finalCategory,
+        version: config.version || "1.0.0",
+        isFrameworkStep: config.framework ? true : false,
+        framework: config.framework || null,
       });
 
       // Add to category

@@ -150,11 +150,9 @@ class ProjectApplicationService {
         type: type || detectedWorkspace?.type || "unknown",
         framework: framework || detectedWorkspace?.framework || null,
         userId: userId || "system", // Default to system if no user provided
-        metadata: {
-          detectedWorkspace,
-          createdBy: userId || "system",
-          createdAt: new Date().toISOString(),
-        },
+        detectedWorkspace,
+        createdBy: userId || "system",
+        createdAt: new Date().toISOString(),
       });
 
       this.logger.info(`✅ Project created: ${project.id}`);

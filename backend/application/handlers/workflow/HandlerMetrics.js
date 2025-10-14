@@ -63,12 +63,10 @@ class HandlerMetrics {
         success: data.result?.isSuccess() || false,
         duration: data.duration || 0,
         timestamp,
-        metadata: {
-          requestSize: JSON.stringify(data.request || {}).length,
-          responseSize: JSON.stringify(data.result || {}).length,
-          error: data.result?.getError() || null,
-          ...data.metadata,
-        },
+        requestSize: JSON.stringify(data.request || {}).length,
+        responseSize: JSON.stringify(data.result || {}).length,
+        error: data.result?.getError() || null,
+        ...data.metadata,
       };
 
       // Update global metrics
@@ -110,11 +108,9 @@ class HandlerMetrics {
         timestamp,
         error: data.error?.message || "Unknown error",
         errorType: data.error?.constructor?.name || "Error",
-        metadata: {
-          requestSize: JSON.stringify(data.request || {}).length,
-          stack: data.error?.stack || null,
-          ...data.metadata,
-        },
+        requestSize: JSON.stringify(data.request || {}).length,
+        stack: data.error?.stack || null,
+        ...data.metadata,
       };
 
       // Update global metrics

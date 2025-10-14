@@ -135,11 +135,9 @@ class GetIDESelectorsHandler {
         browserResult: browserResult,
         automationResult: automationResult,
         message: `Successfully retrieved selectors for ${command.selectorType || "all"} components`,
-        metadata: {
-          handlerId: this.handlerId,
-          executionTime: new Date(),
-          options: options,
-        },
+        handlerId: this.handlerId,
+        executionTime: new Date(),
+        options: options,
       };
 
       // Publish success event

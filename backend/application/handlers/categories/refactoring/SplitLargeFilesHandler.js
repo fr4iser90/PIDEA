@@ -165,11 +165,9 @@ class SplitLargeFilesHandler {
 
     const analysis = Analysis.create(command.projectId, "file-split", {
       result: result,
-      metadata: {
-        ...command.getMetadata(),
-        commandId: command.commandId,
-        type: "SplitLargeFilesCommand",
-      },
+      ...command.getMetadata(),
+      commandId: command.commandId,
+      type: "SplitLargeFilesCommand",
     });
 
     await this.analysisRepository.save(analysis);

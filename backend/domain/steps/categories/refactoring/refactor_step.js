@@ -85,12 +85,10 @@ async function execute(context, options = {}) {
       largeFiles: largeFiles, // Pass the largeFiles data through
       analysis: analyzeResult,
       tasks: taskResult,
-      metadata: {
-        projectPath,
-        orchestrationTimestamp: new Date().toISOString(),
-        totalFiles: largeFiles.length,
-        totalTasks: taskCount,
-      },
+      projectPath,
+      orchestrationTimestamp: new Date().toISOString(),
+      totalFiles: largeFiles.length,
+      totalTasks: taskCount,
     };
   } catch (error) {
     logger.error(

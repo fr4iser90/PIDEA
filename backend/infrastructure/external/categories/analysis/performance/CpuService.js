@@ -44,11 +44,9 @@ class CpuService {
 
       return {
         data: result,
-        metadata: {
-          scanner: "cpu",
-          timestamp: new Date().toISOString(),
-          config: cpuConfig,
-        },
+        scanner: "cpu",
+        timestamp: new Date().toISOString(),
+        config: cpuConfig,
       };
     } catch (error) {
       this.logger.error("CPU analysis failed", {

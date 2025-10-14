@@ -186,13 +186,11 @@ class CodeQualityAnalysisOrchestrator extends StepBuilder {
 
       return {
         result: results,
-        metadata: {
-          type: "code-quality-analysis",
-          category: "code-quality",
-          stepsExecuted: results.summary.totalSteps,
-          codeQualityScore: codeQualityScore,
-          tasksCreated: tasks.length,
-        },
+        type: "code-quality-analysis",
+        category: "code-quality",
+        stepsExecuted: results.summary.totalSteps,
+        codeQualityScore: codeQualityScore,
+        tasksCreated: tasks.length,
       };
     } catch (error) {
       logger.error("❌ Code quality analysis failed:", error.message);

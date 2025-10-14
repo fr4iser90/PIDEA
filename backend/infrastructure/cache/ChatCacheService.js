@@ -154,11 +154,9 @@ class ChatCacheService {
       const cacheEntry = {
         messages: messages,
         timestamp: Date.now(),
-        metadata: {
-          port: portKey,
-          messageCount: messages.length,
-          ...metadata,
-        },
+        port: portKey,
+        messageCount: messages.length,
+        ...metadata,
       };
 
       this.memoryCache.set(portKey, cacheEntry);

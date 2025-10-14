@@ -171,11 +171,9 @@ class ExecuteIDEActionCommand {
         actionType: this.actionType,
         parameters: this.parameters,
         message: `Successfully executed IDE action: ${this.action}`,
-        metadata: {
-          ...this.metadata,
-          executionTime: new Date(),
-          context: context,
-        },
+        ...this.metadata,
+        executionTime: new Date(),
+        context: context,
       };
 
       // Publish success event

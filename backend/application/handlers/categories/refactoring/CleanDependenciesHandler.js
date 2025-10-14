@@ -146,19 +146,15 @@ class CleanDependenciesHandler {
         : null;
 
       const dependencies = {
-        direct: {
-          dependencies: packageJson.dependencies || {},
-          devDependencies: packageJson.devDependencies || {},
-          peerDependencies: packageJson.peerDependencies || {},
-          optionalDependencies: packageJson.optionalDependencies || {},
-        },
+        dependencies: packageJson.dependencies || {},
+        devDependencies: packageJson.devDependencies || {},
+        peerDependencies: packageJson.peerDependencies || {},
+        optionalDependencies: packageJson.optionalDependencies || {},
         transitive: {},
-        metadata: {
-          totalDirect: 0,
-          totalTransitive: 0,
-          totalSize: 0,
-          vulnerabilities: 0,
-        },
+        totalDirect: 0,
+        totalTransitive: 0,
+        totalSize: 0,
+        vulnerabilities: 0,
       };
 
       // Calculate totals
