@@ -297,9 +297,9 @@ ${
 router.post('/', async (req, res) => {
   try {
     // Implementation here
-    res.status(201).json({ message: '${entityLower} created successfully' });
+    res.created({ message: '${entityLower} created successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.internalError(error.message);
   }
 });
 `
@@ -315,7 +315,7 @@ router.get('/', async (req, res) => {
     // Implementation here
     res.json({ ${entityLower}s: [] });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.internalError(error.message);
   }
 });
 
@@ -325,7 +325,7 @@ router.get('/:id', async (req, res) => {
     // Implementation here
     res.json({ ${entityLower}: {} });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.internalError(error.message);
   }
 });
 `
@@ -339,9 +339,9 @@ ${
 router.put('/:id', async (req, res) => {
   try {
     // Implementation here
-    res.json({ message: '${entityLower} updated successfully' });
+    res.ok({ message: '${entityLower} updated successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.internalError(error.message);
   }
 });
 `
@@ -355,9 +355,9 @@ ${
 router.delete('/:id', async (req, res) => {
   try {
     // Implementation here
-    res.json({ message: '${entityLower} deleted successfully' });
+    res.noContent();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.internalError(error.message);
   }
 });
 `

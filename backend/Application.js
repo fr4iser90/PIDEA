@@ -665,11 +665,11 @@ class Application {
       // Error handling middleware
       this.app.use((error, req, res, next) => {
         this.logger.error("Unhandled error:", error);
-        res.status(500).json({
-          error: this.autoSecurityManager.isProduction()
+        res.internalError(
+          this.autoSecurityManager.isProduction()
             ? "Internal server error"
-            : error.message,
-        });
+            : error.message
+        );
       });
 
       this.logger.info("Routes setup complete");

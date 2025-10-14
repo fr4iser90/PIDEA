@@ -57,10 +57,7 @@ class ManualTasksHandler {
       const projectId = req.params.projectId || req.query.projectId;
 
       if (!this.taskRepository) {
-        return res.status(500).json({
-         
-          error: "Task repository not available",
-        });
+        return res.internalError("Task repository not available");
       }
 
       // Get tasks from database (already imported by TaskController)
@@ -94,16 +91,13 @@ class ManualTasksHandler {
 
       logger.info(`Found ${tasks.length} manual tasks from database`);
 
-      res.json({
+      res.success({
         data: tasks,
         count: tasks.length,
       });
     } catch (error) {
       logger.error("Error getting manual tasks:", error);
-      res.status(500).json({
-       
-        error: "Failed to retrieve manual tasks",
-      });
+      res.internalError("Failed to retrieve manual tasks");
     }
   }
 
@@ -118,27 +112,18 @@ class ManualTasksHandler {
       const projectId = req.params.projectId || req.query.projectId;
 
       if (!taskId) {
-        return res.status(400).json({
-         
-          error: "Task ID parameter is required",
-        });
+        return res.badRequest("Task ID parameter is required");
       }
 
       if (!this.taskRepository) {
-        return res.status(500).json({
-         
-          error: "Task repository not available",
-        });
+        return res.internalError("Task repository not available");
       }
 
       // Get task from database
       const task = await this.taskRepository.findById(taskId);
 
       if (!task) {
-        return res.status(404).json({
-         
-          error: "Task not found",
-        });
+        return res.notFound("Task not found");
       }
 
       // Parse metadata to extract content and details
@@ -179,15 +164,12 @@ class ManualTasksHandler {
 
       logger.info(`Successfully retrieved task details for: ${task.title}`);
 
-      res.json({
+      res.success({
         data: taskDetails,
       });
     } catch (error) {
       logger.error("Error getting task details:", error);
-      res.status(500).json({
-       
-        error: "Failed to retrieve task details",
-      });
+      res.internalError("Failed to retrieve task details");
     }
   }
 

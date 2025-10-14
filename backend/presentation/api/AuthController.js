@@ -55,19 +55,17 @@ class AuthController {
       const result = await this.authApplicationService.login(credentials);
 
       const responseData = {
-        data: {
-          user: result.data.user,
-          accessToken: result.data.session.accessToken,
-          refreshToken: result.data.session.refreshToken,
-          expiresAt: result.data.session.expiresAt,
-        },
+        user: result.data.user,
+        accessToken: result.data.session.accessToken,
+        refreshToken: result.data.session.refreshToken,
+        expiresAt: result.data.session.expiresAt,
       };
 
       logger.info("✅ [AuthController] Login successful, sending response:", {
-        userId: responseData.data.user.id,
-        userEmail: responseData.data.user.email,
-        accessTokenLength: responseData.data.accessToken.length,
-        refreshTokenLength: responseData.data.refreshToken.length,
+        userId: responseData.user.id,
+        userEmail: responseData.user.email,
+        accessTokenLength: responseData.accessToken.length,
+        refreshTokenLength: responseData.refreshToken.length,
       });
 
       // Set httpOnly cookies for security with cross-port support
@@ -83,7 +81,7 @@ class AuthController {
         cookieOptions,
       );
 
-      res.cookie("accessToken", result.data.session.accessToken, {
+      res.cookie("accessToken", responseData.accessToken, {
         ...cookieOptions,
         maxAge:
           process.env.NODE_ENV === "development"
@@ -91,13 +89,13 @@ class AuthController {
             : 15 * 60 * 1000, // 2h dev, 15m prod
       });
 
-      res.cookie("refreshToken", result.data.session.refreshToken, {
+      res.cookie("refreshToken", responseData.refreshToken, {
         ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
       logger.info("✅ [AuthController] Cookies set successfully");
-      res.success(responseData.data);
+      res.status(200).json(responseData);
     } catch (error) {
       logger.error("Login error:", error);
       res.unauthorized("Invalid credentials");
@@ -126,7 +124,7 @@ class AuthController {
         // Remove domain restriction to allow cross-port access in development
       };
 
-      res.cookie("accessToken", result.data.session.accessToken, {
+      res.cookie("accessToken", responseData.accessToken, {
         ...cookieOptions,
         maxAge:
           process.env.NODE_ENV === "development"
@@ -134,7 +132,7 @@ class AuthController {
             : 15 * 60 * 1000, // 2h dev, 15m prod
       });
 
-      res.cookie("refreshToken", result.data.session.refreshToken, {
+      res.cookie("refreshToken", responseData.refreshToken, {
         ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
@@ -144,7 +142,7 @@ class AuthController {
         userEmail: result.data.user.email,
       });
 
-      res.success({
+      res.status(200).json({
         user: result.data.user,
       });
     } catch (error) {
@@ -180,7 +178,7 @@ class AuthController {
 
       logger.info("✅ [AuthController] Cookies cleared successfully");
 
-      res.success({ message: "Logged out successfully" });
+      res.ok({ message: "Logged out successfully" });
     } catch (error) {
       logger.error("❌ [AuthController] Logout error:", error);
 
@@ -218,7 +216,7 @@ class AuthController {
         req.user.id,
       );
 
-      res.success({
+      res.status(200).json({
         user: result.data.user,
       });
     } catch (error) {
@@ -261,7 +259,7 @@ class AuthController {
             logger.info(
               "✅ [AuthController] Access token validation successful",
             );
-            return res.success({
+            return res.status(200).json({
               user: result.data.user,
             });
           }
@@ -287,7 +285,7 @@ class AuthController {
               // Remove domain restriction to allow cross-port access in development
             };
 
-            res.cookie("accessToken", result.data.session.accessToken, {
+            res.cookie("accessToken", responseData.accessToken, {
               ...cookieOptions,
               maxAge:
                 process.env.NODE_ENV === "development"
@@ -295,7 +293,7 @@ class AuthController {
                   : 15 * 60 * 1000, // 2h dev, 15m prod
             });
 
-            res.cookie("refreshToken", result.data.session.refreshToken, {
+            res.cookie("refreshToken", responseData.refreshToken, {
               ...cookieOptions,
               maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
@@ -303,7 +301,7 @@ class AuthController {
             logger.info(
               "✅ [AuthController] Token refreshed and validated successfully",
             );
-            return res.success({
+            return res.status(200).json({
               user: result.data.user,
             });
           }
@@ -353,7 +351,7 @@ class AuthController {
         profileData,
       );
 
-      res.success({
+      res.status(200).json({
         user: result.data.user,
       });
     } catch (error) {
@@ -383,7 +381,7 @@ class AuthController {
         req.user.id,
       );
 
-      res.success({
+      res.status(200).json({
         sessions: result.data.sessions,
       });
     } catch (error) {

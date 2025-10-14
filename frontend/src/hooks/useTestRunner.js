@@ -55,9 +55,9 @@ const useTestRunner = () => {
 
       const data = await response.json();
       
-      if (data.success) {
+      if (data) {
         // Add new result to results array
-        setResults(prev => [...prev, data.data]);
+        setResults(prev => [...prev, data]);
         
         // Update status
         setStatus(prev => ({
@@ -67,9 +67,9 @@ const useTestRunner = () => {
           totalResults: prev.totalResults + 1
         }));
         
-        return data.data;
+        return data;
       } else {
-        throw new Error(data.error || 'Test execution failed');
+        throw new Error('Test execution failed');
       }
       
     } catch (err) {

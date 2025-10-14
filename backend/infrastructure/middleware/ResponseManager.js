@@ -190,6 +190,79 @@ class ResponseManager {
   }
 
   /**
+   * Create OK response (200) - Synonym for success
+   * @param {Object} res - Express response object
+   * @param {*} data - Response data
+   */
+  ok(res, data) {
+    return this.success(res, data, 200);
+  }
+
+  /**
+   * Create accepted response (202) - Request accepted for processing
+   * @param {Object} res - Express response object
+   * @param {*} data - Response data
+   */
+  accepted(res, data) {
+    return this.success(res, data, 202);
+  }
+
+  /**
+   * Create unprocessable entity response (422) - Validation failed
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   * @param {Object} validation - Validation errors
+   */
+  unprocessableEntity(res, message = "Validation failed", validation = {}) {
+    return this.error(res, message, 422, { validation });
+  }
+
+  /**
+   * Create too many requests response (429) - Rate limiting
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  tooManyRequests(res, message = "Too many requests") {
+    return this.error(res, message, 429);
+  }
+
+  /**
+   * Create service unavailable response (503) - Service down
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  serviceUnavailable(res, message = "Service unavailable") {
+    return this.error(res, message, 503);
+  }
+
+  /**
+   * Create bad gateway response (502) - Upstream error
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  badGateway(res, message = "Bad gateway") {
+    return this.error(res, message, 502);
+  }
+
+  /**
+   * Create method not allowed response (405) - HTTP method not supported
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  methodNotAllowed(res, message = "Method not allowed") {
+    return this.error(res, message, 405);
+  }
+
+  /**
+   * Create gone response (410) - Resource permanently removed
+   * @param {Object} res - Express response object
+   * @param {string} message - Error message
+   */
+  gone(res, message = "Resource gone") {
+    return this.error(res, message, 410);
+  }
+
+  /**
    * Get error code from status code
    * @param {number} statusCode - HTTP status code
    * @returns {string} Error code
@@ -200,8 +273,11 @@ class ResponseManager {
       401: "UNAUTHORIZED",
       403: "FORBIDDEN",
       404: "NOT_FOUND",
+      405: "METHOD_NOT_ALLOWED",
       409: "CONFLICT",
+      410: "GONE",
       422: "UNPROCESSABLE_ENTITY",
+      429: "TOO_MANY_REQUESTS",
       500: "INTERNAL_SERVER_ERROR",
       502: "BAD_GATEWAY",
       503: "SERVICE_UNAVAILABLE",
@@ -260,6 +336,15 @@ class ResponseManager {
     res.conflict = (message) => this.conflict(res, message);
     res.internalError = (message, details) =>
       this.internalError(res, message, details);
+    res.ok = (data) => this.ok(res, data);
+    res.accepted = (data) => this.accepted(res, data);
+    res.unprocessableEntity = (message, validation) =>
+      this.unprocessableEntity(res, message, validation);
+    res.tooManyRequests = (message) => this.tooManyRequests(res, message);
+    res.serviceUnavailable = (message) => this.serviceUnavailable(res, message);
+    res.badGateway = (message) => this.badGateway(res, message);
+    res.methodNotAllowed = (message) => this.methodNotAllowed(res, message);
+    res.gone = (message) => this.gone(res, message);
 
     next();
   }

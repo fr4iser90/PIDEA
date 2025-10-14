@@ -59,30 +59,30 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
         })
       });
 
-              if (response.success) {
-          logger.info('✅ [AnalysisStep] Documentation analysis completed:', response.data);
-          logger.info('✅ [AnalysisStep] Created tasks:', response.data.createdTasks);
-          
-          // Parse analysis results for documentation framework
-          const results = parseAnalysisResults(response.data);
-          setAnalysisResults(results);
-          
-          // Update workflow data with created tasks
-          setWorkflowData(prev => ({
-            ...prev,
-            projectId: currentProject.id,
-            projectName: currentProject.name,
-            projectPath: currentProject.path,
-            analysisComplete: true,
-            createdTasks: response.data.createdTasks || [],
-            taskCount: response.data.createdTasks?.length || 0
-          }));
-          
-          // Notify parent component
-          onAnalysisComplete(results);
-        } else {
-          throw new Error(response.error || 'Documentation analysis failed');
-        }
+      if (response) {
+        logger.info('✅ [AnalysisStep] Documentation analysis completed:', response);
+        logger.info('✅ [AnalysisStep] Created tasks:', response.createdTasks);
+        
+        // Parse analysis results for documentation framework
+        const results = parseAnalysisResults(response);
+        setAnalysisResults(results);
+        
+        // Update workflow data with created tasks
+        setWorkflowData(prev => ({
+          ...prev,
+          projectId: currentProject.id,
+          projectName: currentProject.name,
+          projectPath: currentProject.path,
+          analysisComplete: true,
+          createdTasks: response.createdTasks || [],
+          taskCount: response.createdTasks?.length || 0
+        }));
+        
+        // Notify parent component
+        onAnalysisComplete(results);
+      } else {
+        throw new Error('Documentation analysis failed');
+      }
     } catch (error) {
       logger.error('❌ [AnalysisStep] Documentation analysis error:', error);
       setAnalysisError('Error during analysis: ' + error.message);

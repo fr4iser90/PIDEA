@@ -623,13 +623,13 @@ function TasksPanelComponent({ eventBus, activePort }) {
         })
       });
       
-      if (response && response.success) {
+      if (response) {
         // Reload tasks after creation
         await loadProjectTasks(selectedIDE?.workspacePath);
         setFeedback('Task created successfully');
         setShowTaskCreationModal(false);
       } else {
-        throw new Error(response?.error || 'Task creation failed');
+        throw new Error('Task creation failed');
       }
     } catch (error) {
       logger.error('Error creating task:', error);
