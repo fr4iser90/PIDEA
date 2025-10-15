@@ -13,13 +13,15 @@ class TaskRoutes {
     this.taskController = taskController;
     this.taskStatusSyncController = taskStatusSyncController;
     this.authMiddleware = authMiddleware;
+    this.router = express.Router();
+    this.setupRoutes(this.router);
   }
 
   /**
    * Setup all task routes
-   * @param {Express.Router} app - Express app instance
+   * @param {Express.Router} router - Express router instance
    */
-  setupRoutes(app) {
+  setupRoutes(router) {
     // Authentication handled by global middleware
 
     // ========================================
@@ -27,27 +29,27 @@ class TaskRoutes {
     // ========================================
 
     // Create new task
-    app.post("/api/projects/:projectId/tasks", (req, res) =>
+    router.post("/api/projects/:projectId/tasks", (req, res) =>
       this.taskController.createTask(req, res),
     );
 
     // Get all tasks for project
-    app.get("/api/projects/:projectId/tasks", (req, res) =>
+    router.get("/api/projects/:projectId/tasks", (req, res) =>
       this.taskController.getProjectTasks(req, res),
     );
 
     // Get specific task
-    app.get("/api/projects/:projectId/tasks/:id", (req, res) =>
+    router.get("/api/projects/:projectId/tasks/:id", (req, res) =>
       this.taskController.getTask(req, res),
     );
 
     // Update task
-    app.put("/api/projects/:projectId/tasks/:id", (req, res) =>
+    router.put("/api/projects/:projectId/tasks/:id", (req, res) =>
       this.taskController.updateTask(req, res),
     );
 
     // Delete task
-    app.delete("/api/projects/:projectId/tasks/:id", (req, res) =>
+    router.delete("/api/projects/:projectId/tasks/:id", (req, res) =>
       this.taskController.deleteTask(req, res),
     );
 
@@ -56,17 +58,17 @@ class TaskRoutes {
     // ========================================
 
     // Get task execution details
-    app.get("/api/projects/:projectId/tasks/:id/execution", (req, res) =>
+    router.get("/api/projects/:projectId/tasks/:id/execution", (req, res) =>
       this.taskController.getTaskExecution(req, res),
     );
 
     // Cancel task execution
-    app.post("/api/projects/:projectId/tasks/:id/cancel", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/:id/cancel", (req, res) =>
       this.taskController.cancelTask(req, res),
     );
 
     // Enqueue task for execution (NEW QUEUE-BASED SYSTEM)
-    app.post("/api/projects/:projectId/tasks/enqueue", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/enqueue", (req, res) =>
       this.taskController.enqueueTask(req, res),
     );
 
@@ -75,12 +77,12 @@ class TaskRoutes {
     // ========================================
 
     // Sync manual tasks
-    app.post("/api/projects/:projectId/tasks/sync-manual", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/sync-manual", (req, res) =>
       this.taskController.syncManualTasks(req, res),
     );
 
     // Clean manual tasks
-    app.post("/api/projects/:projectId/tasks/clean-manual", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/clean-manual", (req, res) =>
       this.taskController.cleanManualTasks(req, res),
     );
 
@@ -89,17 +91,17 @@ class TaskRoutes {
     // ========================================
 
     // Sync task statuses
-    app.post("/api/projects/:projectId/tasks/sync-status", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/sync-status", (req, res) =>
       this.taskStatusSyncController.syncTaskStatuses(req, res),
     );
 
     // Validate task statuses
-    app.post("/api/projects/:projectId/tasks/validate-status", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/validate-status", (req, res) =>
       this.taskStatusSyncController.validateTaskStatuses(req, res),
     );
 
     // Rollback task statuses
-    app.post("/api/projects/:projectId/tasks/rollback-status", (req, res) =>
+    router.post("/api/projects/:projectId/tasks/rollback-status", (req, res) =>
       this.taskStatusSyncController.rollbackTaskStatuses(req, res),
     );
 
@@ -110,19 +112,27 @@ class TaskRoutes {
     // Authentication handled by global middleware
 
     // Generate script from task
-    app.post("/api/projects/:projectId/scripts/generate", (req, res) =>
+    router.post("/api/projects/:projectId/scripts/generate", (req, res) =>
       this.taskController.generateScript(req, res),
     );
 
     // Get generated scripts
-    app.get("/api/projects/:projectId/scripts", (req, res) =>
+    router.get("/api/projects/:projectId/scripts", (req, res) =>
       this.taskController.getGeneratedScripts(req, res),
     );
 
     // Execute script
-    app.post("/api/projects/:projectId/scripts/:id/execute", (req, res) =>
+    router.post("/api/projects/:projectId/scripts/:id/execute", (req, res) =>
       this.taskController.executeScript(req, res),
     );
+  }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    return this.router;
   }
 }
 

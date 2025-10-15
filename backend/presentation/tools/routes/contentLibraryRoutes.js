@@ -12,39 +12,41 @@ class ContentLibraryRoutes {
   constructor(contentLibraryController, authMiddleware) {
     this.contentLibraryController = contentLibraryController;
     this.authMiddleware = authMiddleware;
+    this.router = express.Router();
+    this.setupRoutes(this.router);
   }
 
   /**
    * Setup all content library routes
-   * @param {Express.Router} app - Express app instance
+   * @param {Express.Router} router - Express router instance
    */
-  setupRoutes(app) {
+  setupRoutes(router) {
     // ========================================
     // FRAMEWORK ROUTES - Framework Management
     // ========================================
 
     // Get all frameworks
-    app.get("/api/frameworks", (req, res) =>
+    router.get("/api/frameworks", (req, res) =>
       this.contentLibraryController.getFrameworks(req, res),
     );
 
     // Get framework prompts
-    app.get("/api/frameworks/:frameworkId/prompts", (req, res) =>
+    router.get("/api/frameworks/:frameworkId/prompts", (req, res) =>
       this.contentLibraryController.getFrameworkPrompts(req, res),
     );
 
     // Get framework templates
-    app.get("/api/frameworks/:frameworkId/templates", (req, res) =>
+    router.get("/api/frameworks/:frameworkId/templates", (req, res) =>
       this.contentLibraryController.getFrameworkTemplates(req, res),
     );
 
     // Get specific framework prompt file
-    app.get("/api/frameworks/:frameworkId/prompts/:filename", (req, res) =>
+    router.get("/api/frameworks/:frameworkId/prompts/:filename", (req, res) =>
       this.contentLibraryController.getFrameworkPromptFile(req, res),
     );
 
     // Get specific framework template file
-    app.get("/api/frameworks/:frameworkId/templates/:filename", (req, res) =>
+    router.get("/api/frameworks/:frameworkId/templates/:filename", (req, res) =>
       this.contentLibraryController.getFrameworkTemplateFile(req, res),
     );
 
@@ -53,12 +55,12 @@ class ContentLibraryRoutes {
     // ========================================
 
     // Get all prompts
-    app.get("/api/prompts", (req, res) =>
+    router.get("/api/prompts", (req, res) =>
       this.contentLibraryController.getPrompts(req, res),
     );
 
     // Get specific prompt file
-    app.get("/api/prompts/:category/:filename", (req, res) =>
+    router.get("/api/prompts/:category/:filename", (req, res) =>
       this.contentLibraryController.getPromptFile(req, res),
     );
 
@@ -67,14 +69,22 @@ class ContentLibraryRoutes {
     // ========================================
 
     // Get all templates
-    app.get("/api/templates", (req, res) =>
+    router.get("/api/templates", (req, res) =>
       this.contentLibraryController.getTemplates(req, res),
     );
 
     // Get specific template file
-    app.get("/api/templates/:category/:filename", (req, res) =>
+    router.get("/api/templates/:category/:filename", (req, res) =>
       this.contentLibraryController.getTemplateFile(req, res),
     );
+  }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    return this.router;
   }
 }
 
@@ -82,8 +92,6 @@ module.exports = ContentLibraryRoutes;
 
 // Export getRouter function for route registry
 module.exports.getRouter = () => {
-  const router = express.Router();
   const contentLibraryRoutes = new ContentLibraryRoutes();
-  contentLibraryRoutes.setupRoutes(router);
-  return router;
+  return contentLibraryRoutes.getRouter();
 };

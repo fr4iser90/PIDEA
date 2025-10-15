@@ -13,13 +13,15 @@ class FileRoutes {
     this.browserManager = browserManager;
     this.authMiddleware = authMiddleware;
     this.logger = logger;
+    this.router = express.Router();
+    this.setupRoutes(this.router);
   }
 
   /**
    * Setup all file routes
-   * @param {Express.Router} app - Express app instance
+   * @param {Express.Router} router - Express router instance
    */
-  setupRoutes(app) {
+  setupRoutes(router) {
     // Authentication handled by global middleware
 
     // ========================================
@@ -27,7 +29,7 @@ class FileRoutes {
     // ========================================
 
     // Get file tree
-    app.get("/api/files", async (req, res) => {
+    router.get("/api/files", async (req, res) => {
       try {
         const fileTree = await this.browserManager.getFileExplorerTree();
         res.success(fileTree);
@@ -38,7 +40,7 @@ class FileRoutes {
     });
 
     // Get file content
-    app.get("/api/files/content", async (req, res) => {
+    router.get("/api/files/content", async (req, res) => {
       try {
         const filePath = req.query.path;
         this.logger.info(
@@ -59,14 +61,20 @@ class FileRoutes {
       }
     });
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    return this.router;
+  }
 }
 
 module.exports = FileRoutes;
 
 // Export getRouter function for route registry
 module.exports.getRouter = () => {
-  const router = express.Router();
   const fileRoutes = new FileRoutes();
-  fileRoutes.setupRoutes(router);
-  return router;
+  return fileRoutes.getRouter();
 };
