@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import IDERepository from '@/infrastructure/repositories/IDERepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import IDERequirementService from '@/infrastructure/services/IDERequirementService.jsx';

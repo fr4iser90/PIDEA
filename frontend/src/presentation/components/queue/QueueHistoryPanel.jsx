@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import TaskModeBadge from './TaskModeBadge.jsx';
@@ -35,7 +35,7 @@ const QueueHistoryPanel = ({ eventBus, activePort }) => {
     const [exporting, setExporting] = useState(false);
     const [cleanupLoading, setCleanupLoading] = useState(false);
 
-    const queueRepository = useMemo(() => new QueueRepository(), []);
+    const queueRepository = useMemo(() => new ApiService(), []);
     const webSocketService = WebSocketService;
     const { projectId } = useSelectedIDE();
 

@@ -11,6 +11,7 @@ const BaseInterface = require("./BaseInterface");
 const InterfaceManager = require("./InterfaceManager");
 const InterfaceFactory = require("./InterfaceFactory");
 const InterfaceRegistry = require("./InterfaceRegistry");
+const InterfaceDetectionService = require("./InterfaceDetectionService");
 
 // Specific Interface Implementations
 const IDEInterface = require("./IDEInterface");
@@ -22,6 +23,7 @@ module.exports = {
   InterfaceManager,
   InterfaceFactory,
   InterfaceRegistry,
+  InterfaceDetectionService,
 
   // Specific Interface Implementations
   IDEInterface,
@@ -32,6 +34,7 @@ module.exports = {
     InterfaceManager,
     InterfaceFactory,
     InterfaceRegistry,
+    InterfaceDetectionService,
   },
 
   implementations: {

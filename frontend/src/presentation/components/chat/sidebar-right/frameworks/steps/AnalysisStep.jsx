@@ -1,7 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository.jsx';
-import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflowData }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -10,7 +9,7 @@ function AnalysisStep({ framework, onAnalysisComplete, workflowData, setWorkflow
   const [currentProject, setCurrentProject] = useState(null);
   const [analysisError, setAnalysisError] = useState(null);
   const [bulkAnalysisResults, setBulkAnalysisResults] = useState(null);
-  const api = new AnalysisRepository();
+  const api = new ApiService();
 
   useEffect(() => {
     loadCurrentProject();

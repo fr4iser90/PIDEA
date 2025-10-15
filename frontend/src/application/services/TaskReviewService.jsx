@@ -1,12 +1,8 @@
-import TaskRepository from '@/infrastructure/repositories/TaskRepository';
-import TaskWorkflowRepository from '@/infrastructure/repositories/TaskWorkflowRepository';
-import ChatRepository from '@/infrastructure/repositories/ChatRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 class TaskReviewService {
   constructor() {
-    this.TaskRepository = new TaskRepository();
-    this.taskWorkflowRepository = new TaskWorkflowRepository();
-    this.ChatRepository = new ChatRepository();
+    this.apiService = new ApiService();
   }
 
   /**
@@ -18,7 +14,10 @@ class TaskReviewService {
     try {
       const prompt = await this.buildReviewPrompt(taskData);
       
-      const response = await this.ChatRepository.sendMessage(prompt);
+      const response = await this.apiService.call('/api/chat', { 
+        method: 'POST', 
+        body: JSON.stringify({ message: prompt }) 
+      });
 
       const plan = response.content;
       const analysis = this.analyzePlan(plan, taskData);
@@ -206,7 +205,10 @@ Always provide structured, well-formatted responses in Markdown.`;
     try {
       const prompt = this.buildSplitPrompt(reviewData);
       
-      const response = await this.ChatRepository.sendMessage(prompt);
+      const response = await this.apiService.call('/api/chat', { 
+        method: 'POST', 
+        body: JSON.stringify({ message: prompt }) 
+      });
 
       const subtasks = this.parseSubtasks(response.content);
       
@@ -349,7 +351,10 @@ Provide structured, actionable subtasks that can be executed independently.`;
     try {
       const prompt = this.buildModifyPrompt(reviewData, modificationRequest);
       
-      const response = await this.ChatRepository.sendMessage(prompt);
+      const response = await this.apiService.call('/api/chat', { 
+        method: 'POST', 
+        body: JSON.stringify({ message: prompt }) 
+      });
 
       const modifiedPlan = response.content;
       const updatedAnalysis = this.analyzePlan(modifiedPlan, reviewData.taskData);

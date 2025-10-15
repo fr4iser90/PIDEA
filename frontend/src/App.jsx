@@ -16,8 +16,7 @@ import NotificationSystem from '@/presentation/components/common/NotificationSys
 import SessionWarningModal from '@/presentation/components/auth/SessionWarningModal.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
-import ProjectRepository from '@/infrastructure/repositories/ProjectRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import { IDEProvider } from '@/presentation/components/ide/IDEContext.jsx';
 import refreshService from '@/infrastructure/services/RefreshService';
 import IDESelectionModal from '@/presentation/components/project/IDESelectionModal.jsx';

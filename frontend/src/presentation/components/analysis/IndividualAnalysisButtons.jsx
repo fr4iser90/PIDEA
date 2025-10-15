@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import '@/scss/components/_individual-analysis-buttons.scss';;
 
@@ -12,7 +12,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const [runAllLoading, setRunAllLoading] = useState(false);
   const [runAllProgress, setRunAllProgress] = useState(0);
 
-  const apiRepository = new AnalysisRepository();
+  const apiService = new ApiService();
   
   // ✅ FIX: Use useSelectedIDE to get the correct projectId
   const { projectId: selectedProjectId } = useSelectedIDE();
@@ -181,7 +181,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       }
       
       // Use the analysis status endpoint instead of non-existent active steps endpoint
-      const response = await apiRepository.getAnalysisStatus(currentProjectId);
+      const response = await apiService.call(`/api/projects/${currentProjectId}/analysis/status`);
       
       if (response.success && response.data) {
         // Check if any analysis is currently running
@@ -368,7 +368,9 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       // ✅ OPTIMIZATION: Use workflow execution for complex analysis runs
       // This maintains the StepRegistry approach for actual analysis execution
-      const response = await apiRepository.executeAnalysisWorkflow(currentProjectId, analysisType);
+      const response = await apiService.call(`/api/projects/${currentProjectId}/analysis/workflow/${analysisType}`, {
+        method: 'POST'
+      });
       
       if (response.success) {
         logger.info(`Started ${analysisType} analysis workflow:`, response);
@@ -392,7 +394,9 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       }
       
       // Call the cancel endpoint
-      const response = await apiRepository.cancelAnalysis(currentProjectId, analysisType);
+      const response = await apiService.call(`/api/projects/${currentProjectId}/analysis/cancel/${analysisType}`, {
+        method: 'POST'
+      });
       
       if (response.success) {
         logger.info(`Cancelled ${analysisType} analysis:`, response);

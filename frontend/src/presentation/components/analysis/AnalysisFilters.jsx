@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import '@/scss/components/_analysis-filters.scss';;
 
 const AnalysisFilters = ({ filters, onFilterChange, projectId }) => {
@@ -8,7 +8,7 @@ const AnalysisFilters = ({ filters, onFilterChange, projectId }) => {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const apiRepository = new AnalysisRepository();
+  const apiRepository = new ApiService();
 
   useEffect(() => {
     loadAvailableTypes();
@@ -18,7 +18,7 @@ const AnalysisFilters = ({ filters, onFilterChange, projectId }) => {
     try {
       setLoading(true);
       const currentProjectId = projectId || await apiRepository.getCurrentProjectId();
-      const response = await apiRepository.getAnalysisHistory(currentProjectId);
+      const response = await apiRepository.call(`/api/projects/currentProjectId/analysis/history`);
       
       if (response.success && response.data) {
         const types = [...new Set(response.map(item => item.type).filter(Boolean))];

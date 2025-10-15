@@ -31,7 +31,7 @@ class InterfaceMiddleware {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next function
    */
-  validateInterfaceId = async (req, res, next) => {
+  async validateInterfaceId(req, res, next) {
     try {
       const { projectId, interfaceId } = req.params;
 
@@ -73,7 +73,7 @@ class InterfaceMiddleware {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next function
    */
-  validateCreate = (req, res, next) => {
+  validateCreate(req, res, next) {
     const { name, type, configuration } = req.body;
     const errors = [];
 
@@ -95,7 +95,7 @@ class InterfaceMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.badRequest(errors );
+      return res.badRequest(errors);
     }
 
     next();
@@ -107,7 +107,7 @@ class InterfaceMiddleware {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next function
    */
-  validateUpdate = (req, res, next) => {
+  validateUpdate(req, res, next) {
     const updates = req.body;
     const errors = [];
 
@@ -143,7 +143,7 @@ class InterfaceMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.badRequest(errors );
+      return res.badRequest(errors);
     }
 
     next();
@@ -155,7 +155,7 @@ class InterfaceMiddleware {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next function
    */
-  validateQuery = (req, res, next) => {
+  validateQuery(req, res, next) {
     const { page, limit, type, status } = req.query;
     const errors = [];
 
@@ -202,7 +202,7 @@ class InterfaceMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.badRequest(errors );
+      return res.badRequest(errors);
     }
 
     next();
@@ -214,7 +214,7 @@ class InterfaceMiddleware {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next function
    */
-  injectInterfaceContext = (req, res, next) => {
+  injectInterfaceContext(req, res, next) {
     const { projectId, interfaceId } = req.params;
 
     if (projectId) {

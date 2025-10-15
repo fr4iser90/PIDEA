@@ -215,6 +215,16 @@ class ServiceRegistry {
       { singleton: true, dependencies: ["ideManager", "eventBus", "logger"] },
     );
 
+    // Register AuthMiddleware
+    this.container.register(
+      "authMiddleware",
+      (authService) => {
+        const AuthMiddleware = require("../../infrastructure/auth/AuthMiddleware");
+        return new AuthMiddleware(authService);
+      },
+      { singleton: true, dependencies: ["authService"] },
+    );
+
     this.registeredServices.add("infrastructure");
   }
 
@@ -1095,6 +1105,16 @@ class ServiceRegistry {
           "logger",
         ],
       },
+    );
+
+    // Register InterfaceRoutes - AFTER projectApplicationService is available
+    this.container.register(
+      "interfaceRoutes",
+      (interfaceManager, projectApplicationService, authMiddleware) => {
+        const InterfaceRoutes = require("../../presentation/api/ide-integration/routes/interfaceRoutes");
+        return new InterfaceRoutes(interfaceManager, projectApplicationService, authMiddleware);
+      },
+      { singleton: true, dependencies: ["interfaceManager", "projectApplicationService", "authMiddleware"] },
     );
 
     // Task Application Service - coordinates task management use cases

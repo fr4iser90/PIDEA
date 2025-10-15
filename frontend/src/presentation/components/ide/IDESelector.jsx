@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import '@/scss/components/_ide-selector.scss';;
 

@@ -1,7 +1,7 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
-import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 // Create IDE Context
@@ -127,7 +127,8 @@ export const IDEProvider = ({ children, eventBus }) => {
     if (!port) return;
 
     try {
-      const result = await apiCall(`/api/ide/features?port=${port}`);
+      const apiService = new ApiService();
+      const result = await apiService.call(`/api/ide/features?port=${port}`);
       if (result.success) {
         setIdeFeatures(result.data);
       }
@@ -143,7 +144,8 @@ export const IDEProvider = ({ children, eventBus }) => {
     if (!port) return;
 
     try {
-      const result = await apiCall(`/api/ide/status?port=${port}`);
+      const apiService = new ApiService();
+      const result = await apiService.call(`/api/ide/status?port=${port}`);
       if (result.success) {
         setIdeStatus(result.data);
       }
@@ -157,7 +159,8 @@ export const IDEProvider = ({ children, eventBus }) => {
    */
   const startNewIDE = async () => {
     try {
-      const result = await apiCall('/api/ide/start', {
+      const apiService = new ApiService();
+      const result = await apiService.call('/api/ide/start', {
         method: 'POST',
         body: JSON.stringify({})
       });
@@ -184,7 +187,8 @@ export const IDEProvider = ({ children, eventBus }) => {
    */
   const stopIDE = async (port) => {
     try {
-      const result = await apiCall('/api/ide/stop', {
+      const apiService = new ApiService();
+      const result = await apiService.call('/api/ide/stop', {
         method: 'POST',
         body: JSON.stringify({ port })
       });
@@ -236,7 +240,8 @@ export const IDEProvider = ({ children, eventBus }) => {
 
     try {
       const currentState = ideFeatures[featureName]?.enabled || false;
-      const result = await apiCall('/api/ide/features/toggle', {
+      const apiService = new ApiService();
+      const result = await apiService.call('/api/ide/features/toggle', {
         method: 'POST',
         body: JSON.stringify({
           port: activePort,

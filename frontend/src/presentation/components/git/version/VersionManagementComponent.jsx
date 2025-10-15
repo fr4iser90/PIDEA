@@ -6,13 +6,13 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import '@/scss/pages/_version-management.scss';;
-import VersionManagementRepository from '@/infrastructure/repositories/VersionManagementRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import AIRecommendationDisplay from './AIRecommendationDisplay.jsx';
 
 // Initialize repository
-const versionRepository = new VersionManagementRepository();
+const versionRepository = new ApiService();
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {

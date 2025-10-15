@@ -551,22 +551,14 @@ class Application {
       }
 
       // Interface routes - Using modular route file (NEW PROJECT-CENTRIC API)
-      try {
-        const InterfaceRoutes = require("./presentation/api/ide-integration/routes/interfaceRoutes");
-        const interfaceRoutes = new InterfaceRoutes(
-          this.interfaceManager,
-          this.projectApplicationService,
-          this.authMiddlewareInstance,
-        );
-        interfaceRoutes.setupRoutes(this.app);
-        routeModules.push("InterfaceRoutes");
-        totalRoutes++;
-      } catch (error) {
-        this.logger.error("❌ Failed to load InterfaceRoutes:", error.message);
-        throw error;
-      }
+      const InterfaceRoutes = require("./presentation/api/ide-integration/routes/interfaceRoutes");
+      const interfaceRoutes = new InterfaceRoutes(
+        this.interfaceManager,
+        this.projectApplicationService,
+        this.authMiddlewareInstance,
+      );
+      interfaceRoutes.setupRoutes(this.app);
 
-      // Legacy IDE routes removed - now using project-centric API via /api/projects/:projectId/interfaces/*
 
       // File explorer routes - Using modular route file
       const FileRoutes = require("./presentation/api/routes/fileRoutes");

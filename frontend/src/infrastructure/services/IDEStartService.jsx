@@ -4,7 +4,7 @@
  */
 
 import { cacheService } from '@/infrastructure/services/CacheService';
-import IDERepository from '@/infrastructure/repositories/IDERepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 class IDEStartService {
   constructor() {

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import IDERepository from '@/infrastructure/repositories/IDERepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import '@/scss/components/_ide-switch.scss';;
 
 /**

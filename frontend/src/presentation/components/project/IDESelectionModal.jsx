@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import ProjectRepository from '@/infrastructure/repositories/ProjectRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 const IDESelectionModal = ({ isOpen, onClose, onIDESelected }) => {
   const [ides, setIDEs] = useState([]);
@@ -28,8 +28,8 @@ const IDESelectionModal = ({ isOpen, onClose, onIDESelected }) => {
     setError(null);
     
     try {
-      const projectRepo = new ProjectRepository();
-      const result = await projectRepo.getAvailableIDEs();
+      const apiService = new ApiService();
+      const result = await apiService.call('/api/interfaces/available-ides');
       
       if (result.success && result.data) {
         setIDEs(result.data);

@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import AnalysisRepository from '../../../../infrastructure/repositories/AnalysisRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 const AnalysisPanelComponent = ({ projectId = null }) => {
   const [analysisHistory, setAnalysisHistory] = useState([]);
@@ -10,7 +10,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('history');
 
-  const apiRepository = new AnalysisRepository();
+  const apiService = new ApiService();
 
   useEffect(() => {
     loadAnalysisHistory();
@@ -19,7 +19,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   const loadAnalysisHistory = async () => {
     try {
       setLoading(true);
-      const response = await apiRepository.getAnalysisHistory(projectId);
+      const response = await apiService.call(`/api/projects/${projectId}/analysis/history`);
       if (response.success) {
         setAnalysisHistory(Array.isArray(response.data) ? response.data : []);
       }
@@ -34,7 +34,7 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   const loadAnalysisFile = async (filename) => {
     try {
       setLoading(true);
-      const response = await apiRepository.getAnalysisFile(projectId, filename);
+      const response = await apiService.call(`/api/projects/${projectId}/analysis/file/${filename}`);
       if (response.success) {
         setAnalysisContent(response.data);
         setSelectedAnalysis(filename);
@@ -50,7 +50,9 @@ const AnalysisPanelComponent = ({ projectId = null }) => {
   const generateReport = async () => {
     try {
       setLoading(true);
-      const response = await apiRepository.generateAnalysisReport(projectId);
+      const response = await apiService.call(`/api/projects/${projectId}/analysis/generate`, {
+        method: 'POST'
+      });
       if (response.success) {
         await loadAnalysisHistory(); // Refresh to show new report
       }

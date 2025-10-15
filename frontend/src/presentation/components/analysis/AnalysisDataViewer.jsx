@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import useNotificationStore from '@/infrastructure/stores/NotificationStore.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 import { 
@@ -72,7 +72,7 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     techStack: false
   });
 
-  const apiRepository = new AnalysisRepository();
+  const apiService = new ApiService();
   const { showNotification } = useNotificationStore();
 
   // ✅ NEW: Load only basic analysis status when component mounts (no detailed data)
@@ -120,7 +120,10 @@ const AnalysisDataViewer = ({ projectId = null, eventBus = null }) => {
     try {
       logger.info(`Executing ${analysisType} analysis for workspace:`, selectedIDE.workspacePath);
       
-      const result = await apiRepository.executeAnalysisStep(null, analysisType, options);
+      const result = await apiService.call(`/api/projects/${projectId}/analysis/${analysisType}`, {
+        method: 'POST',
+        body: JSON.stringify(options)
+      });
       
       if (result.success) {
         showNotification(`${analysisType} analysis completed successfully`, 'success');

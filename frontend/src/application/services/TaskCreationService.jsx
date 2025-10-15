@@ -1,11 +1,10 @@
 import { logger } from '@/infrastructure/logging/Logger';
-import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
-import TaskWorkflowRepository from '@/infrastructure/repositories/TaskWorkflowRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 export default class TaskCreationService {
   constructor() {
-    this.api = new TaskRepository();
-    this.workflowApi = new TaskWorkflowRepository();
+    this.api = new ApiService();
+    this.workflowApi = new ApiService();
     this.activeWorkflows = new Map();
   }
 
@@ -338,14 +337,17 @@ Format the response in Markdown with clear sections and actionable steps.`;
       // Get current project ID
       const projectId = await this.api.getCurrentProjectId();
       
-      // Send message to chat using existing ChatRepository
-      const result = await this.api.sendMessage(prompt);
+      // Send message to chat using existing ApiService
+      const result = await this.api.call('/api/chat', { 
+        method: 'POST', 
+        body: JSON.stringify({ message: prompt }) 
+      });
       
       logger.info('Chat message sent successfully');
       
       return {
         messageId: result.id,
-        timestamp: new Date(),
+        sessionId: timestamp,
         projectId
       };
 

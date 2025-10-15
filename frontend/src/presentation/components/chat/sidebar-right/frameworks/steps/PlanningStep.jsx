@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 function PlanningStep({ analysisResults, onTasksCreated, workflowData }) {
   const [isCreatingTasks, setIsCreatingTasks] = useState(false);
   const [createdTasks, setCreatedTasks] = useState([]);
   const [planningError, setPlanningError] = useState(null);
-  const api = new TaskRepository();
+  const api = new ApiService();
 
   const handleCreateTasks = async () => {
     if (!analysisResults || !workflowData.projectId) {

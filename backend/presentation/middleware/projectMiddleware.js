@@ -73,7 +73,7 @@ class ProjectMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.badRequest(errors );
+      return res.badRequest(errors);
     }
 
     next();
@@ -111,7 +111,7 @@ class ProjectMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.badRequest(errors );
+      return res.badRequest(errors);
     }
 
     next();
@@ -146,7 +146,7 @@ class ProjectMiddleware {
     }
 
     if (errors.length > 0) {
-      return res.badRequest(errors );
+      return res.badRequest(errors);
     }
 
     next();

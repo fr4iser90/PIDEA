@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { apiCall, API_CONFIG } from '@/infrastructure/repositories/ChatRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import VoiceInput from '../../common/VoiceInput';
 import '@/scss/pages/_chat.scss';;
@@ -45,7 +45,8 @@ async function fetchPromptContent(promptFile) {
     const category = pathParts.join('/');
     url = `/api/prompts/${category}/${filename}`;
   }
-  const response = await apiCall(url);
+  const apiService = new ApiService();
+  const response = await apiService.call(url);
   // Robust: prüfe alle sinnvollen Felder
   if (response.content) return response.content;
   if (response && response.content) return response.content;
@@ -141,7 +142,8 @@ function ChatComponent({ eventBus, activePort, attachedPrompts = [] }) {
     
     try {
       // Send message to active IDE via backend API
-      const result = await apiCall(API_CONFIG.endpoints.chat.send, {
+      const apiService = new ApiService();
+      const result = await apiService.call('/api/chat', {
         method: 'POST',
         body: JSON.stringify({ 
           message: finalMessage.trim(), 

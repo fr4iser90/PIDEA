@@ -5,7 +5,7 @@
  */
 
 import { cacheService } from '@/infrastructure/services/CacheService';
-import IDERepository from '@/infrastructure/repositories/IDERepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 import TimeoutConfig from '@/config/timeout-config.js';
 

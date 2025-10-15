@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import { useSelectedIDE } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
@@ -25,7 +25,7 @@ const QueueManagementPanel = ({ eventBus, activePort }) => {
 
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'history'
 
-    const queueRepository = new QueueRepository();
+    const queueRepository = new ApiService();
     const webSocketService = WebSocketService; // Use the singleton instance
 
     // ✅ NEW: Integrate with RefreshService

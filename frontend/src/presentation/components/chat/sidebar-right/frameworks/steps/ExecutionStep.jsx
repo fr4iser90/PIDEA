@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 function ExecutionStep({ tasks, onTaskProgress, workflowData }) {
   const [taskStatuses, setTaskStatuses] = useState({});
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionError, setExecutionError] = useState(null);
-  const api = new TaskRepository();
+  const api = new ApiService();
 
   useEffect(() => {
     // Initialize task statuses

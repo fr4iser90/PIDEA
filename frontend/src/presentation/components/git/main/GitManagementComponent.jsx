@@ -1,14 +1,14 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
 import '@/scss/pages/_git.scss';;
-import GitRepository from '@/infrastructure/repositories/GitRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import PideaAgentBranchComponent from '../pidea-agent/PideaAgentBranchComponent.jsx';
 import VersionManagementComponent from '../version/VersionManagementComponent.jsx';
 import { useGitStatus, useGitBranches, useSelectedIDE, useProjectDataActions } from '@/infrastructure/stores/selectors/ProjectSelectors.jsx';
 import { useRefreshService } from '@/hooks/useRefreshService';
 
-// Initialize API repository
-const apiRepository = new GitRepository();
+// Initialize API service
+const apiService = new ApiService();
 
 // Utility function to convert workspace path to project ID
 const getProjectIdFromWorkspace = (workspacePath) => {
@@ -34,7 +34,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   //   fetchData: async () => {
   //     if (selectedIDE.workspacePath) {
   //       const projectId = getProjectIdFromWorkspace(selectedIDE.workspacePath);
-  //       return await apiRepository.getGitStatus(projectId);
+  //       return await apiRepository.call(`/api/projects/projectId/git/status`);
   //     }
   //     return null;
   //   },
@@ -155,7 +155,10 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
       
-      const result = await apiRepository.performGitOperation(projectId, workspacePath, operation, options);
+      const result = await apiService.call(`/api/projects/${projectId}/git/${operation}`, {
+        method: 'POST',
+        body: JSON.stringify(options)
+      });
       setOperationResult({ type: 'success', message: result.message, data: result.data });
       
       // ✅ FIXED: No need to reload - global state will update via WebSocket
@@ -186,7 +189,10 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       // Get project ID from workspace path
       const projectId = getProjectIdFromWorkspace(workspacePath);
       
-      const result = await apiRepository.compareBranches(projectId, workspacePath, currentBranch, 'main');
+      const result = await apiService.call(`/api/projects/${projectId}/git/compare`, {
+        method: 'POST',
+        body: JSON.stringify({ currentBranch, targetBranch: 'main' })
+      });
       setDiffContent(result.diff);
       setShowDiff(true);
     } catch (error) {

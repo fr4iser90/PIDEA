@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import WebSocketService from '@/infrastructure/services/WebSocketService.jsx';
 import TaskModeBadge from './TaskModeBadge.jsx';
 
@@ -16,7 +16,7 @@ const StepTimeline = ({ stepProgress, onToggleStepStatus, taskId, projectId, tas
     const [taskMode, settaskMode] = useState(null);
     const [lastUpdate, setLastUpdate] = useState(null);
 
-    const queueRepository = new QueueRepository();
+    const queueRepository = new ApiService();
     const webSocketService = WebSocketService;
 
     /**

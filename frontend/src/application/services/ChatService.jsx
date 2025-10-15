@@ -1,20 +1,22 @@
-import ChatRepository from '@/infrastructure/repositories/ChatRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import ChatSession from '@/domain/entities/ChatSession.jsx';
 import ChatMessage from '@/domain/entities/ChatMessage.jsx';
 import useAuthStore from '@/infrastructure/stores/AuthStore.jsx';
 
 export default class ChatService {
   constructor() {
-    this.api = new ChatRepository();
+    this.api = new ApiService();
   }
 
   async loadSession(sessionId) {
-    return await this.api.fetchChatHistory(sessionId);
+    return await this.api.call(`/api/chat/history/${sessionId}`);
   }
 
   async sendMessage(content, sessionId) {
-    // type wird im Backend bestimmt, hier nur weiterleiten
-    return await this.api.sendMessage(content, sessionId);
+    return await this.api.call('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: content, sessionId })
+    });
   }
 
   // Get authenticated headers for API calls

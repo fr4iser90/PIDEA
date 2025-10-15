@@ -675,24 +675,25 @@ export class CacheService {
    */
   async loadDataForPattern(pattern, port, projectId) {
     try {
-      // Import apiCall dynamically to avoid circular dependencies
-      const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
+      // Import ApiService dynamically to avoid circular dependencies
+      const { ApiService } = await import('@/infrastructure/services/ApiService.js');
+      const apiService = new ApiService();
       
       switch (pattern.dataType) {
         case 'tasks':
-          const tasksResponse = await apiCall(`/api/projects/${projectId}/tasks`);
+          const tasksResponse = await apiService.call(`/api/projects/${projectId}/tasks`);
           return tasksResponse?.success ? tasksResponse.data : null;
           
         case 'git':
-          const gitResponse = await apiCall(`/api/projects/${projectId}/git/status`);
+          const gitResponse = await apiService.call(`/api/projects/${projectId}/git/status`);
           return gitResponse?.success ? gitResponse.data : null;
           
         case 'analysis':
-          const analysisResponse = await apiCall(`/api/projects/${projectId}/analysis`);
+          const analysisResponse = await apiService.call(`/api/projects/${projectId}/analysis`);
           return analysisResponse?.success ? analysisResponse.data : null;
           
         case 'ide':
-          const ideResponse = await apiCall(`/api/ide/status?port=${port}`);
+          const ideResponse = await apiService.call(`/api/ide/status?port=${port}`);
           return ideResponse?.success ? ideResponse.data : null;
           
         default:
@@ -726,11 +727,12 @@ export class CacheService {
       return { data: data };
     }
     
-    // Import apiCall dynamically to avoid circular dependencies
-    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
+    // Import ApiService dynamically
+    const { ApiService } = await import('@/infrastructure/services/ApiService.js');
+    const apiService = new ApiService();
     
     try {
-      const result = await apiCall('/api/interfaces/available-ides');
+      const result = await apiService.call('/api/interfaces/available-ides');
       
       // Cache the result if successful
       if (result.success) {
@@ -769,11 +771,12 @@ export class CacheService {
       return { data: cachedResult };
     }
     
-    // Import apiCall dynamically
-    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
+    // Import ApiService dynamically
+    const { ApiService } = await import('@/infrastructure/services/ApiService.js');
+    const apiService = new ApiService();
     
     try {
-      const result = await apiCall(`/api/projects/${projectId}/git/status`, { 
+      const result = await apiService.call(`/api/projects/${projectId}/git/status`, { 
         method: 'POST',
         body: JSON.stringify({ projectPath: workspacePath })
       });
@@ -805,11 +808,12 @@ export class CacheService {
       return { data: cachedResult };
     }
     
-    // Import apiCall dynamically
-    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
+    // Import ApiService dynamically
+    const { ApiService } = await import('@/infrastructure/services/ApiService.js');
+    const apiService = new ApiService();
     
     try {
-      const result = await apiCall(`/api/chat/port/${port}/history`);
+      const result = await apiService.call(`/api/chat/port/${port}/history`);
       
       // Cache the result if successful
       if (result.success) {
@@ -838,12 +842,13 @@ export class CacheService {
       return { data: cachedResult };
     }
     
-    // Import apiCall dynamically
-    const { apiCall } = await import('@/infrastructure/repositories/ChatRepository.jsx');
+    // Import ApiService dynamically
+    const { ApiService } = await import('@/infrastructure/services/ApiService.js');
+    const apiService = new ApiService();
     
     try {
       // Get projectId from port
-      const ideResponse = await apiCall('/api/interfaces/available-ides');
+      const ideResponse = await apiService.call('/api/interfaces/available-ides');
       if (!ideResponse.success) {
         return { error: 'Failed to get IDE data' };
       }
@@ -855,7 +860,7 @@ export class CacheService {
       
       const projectId = ide.workspacePath.split('/').pop(); // Get project name from path
       
-      const result = await apiCall(`/api/projects/${projectId}/tasks`);
+      const result = await apiService.call(`/api/projects/${projectId}/tasks`);
       
       // Cache the result if successful
       if (result.success) {

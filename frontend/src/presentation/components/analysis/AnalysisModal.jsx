@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import '@/scss/components/_analysis-modal.scss';;
 
 const AnalysisModal = ({ analysis, onClose, projectId }) => {
@@ -9,7 +9,7 @@ const AnalysisModal = ({ analysis, onClose, projectId }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('content');
 
-  const apiRepository = new AnalysisRepository();
+  const apiRepository = new ApiService();
 
   useEffect(() => {
     if (analysis) {

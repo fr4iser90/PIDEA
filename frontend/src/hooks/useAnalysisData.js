@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import AnalysisRepository from '@/infrastructure/repositories/AnalysisRepository';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
-const analysisRepository = new AnalysisRepository();
+const analysisRepository = new ApiService();
 
 /**
  * Custom hook for managing analysis data

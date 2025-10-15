@@ -3,7 +3,7 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import TestConfiguration from './TestConfiguration';
 import TestResultsViewer from './TestResultsViewer';
 import TestStatusBadge from '../common/TestStatusBadge';
-import TestRepository from '@/infrastructure/repositories/TestRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import '@/scss/components/_test-runner.scss';;
 
 /**
@@ -24,7 +24,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const [status, setStatus] = useState('ready');
   
   const { availableIDEs, activePort: storeActivePort } = useIDEStore();
-  const apiRepository = new TestRepository();
+  const apiService = new ApiService();
 
   useEffect(() => {
     const loadWorkspaceInfo = async () => {
@@ -49,7 +49,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const loadTestConfiguration = async () => {
     try {
-      const data = await apiRepository.getPlaywrightTestConfig(projectId);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/config`);
       if (data.success) {
         setTestConfig(data.data.config);
       }
@@ -60,7 +60,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const loadTestProjects = async () => {
     try {
-      const data = await apiRepository.getPlaywrightTestProjects(projectId);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/projects`);
       if (data.success) {
         setTestProjects(data.data.projects || []);
       }
@@ -72,7 +72,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const loadTestResults = async () => {
     console.log('🔍 loadTestResults called with projectId:', projectId);
     try {
-      const data = await apiRepository.getPlaywrightTestResults(projectId);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/results`);
       console.log('🔍 loadTestResults response:', data);
       if (data.success && data.data) {
         console.log('✅ Loaded existing test results:', data.data);

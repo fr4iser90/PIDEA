@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
-import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import TaskModeBadge from './TaskModeBadge.jsx';
 
 /**
@@ -51,7 +51,7 @@ const ActiveTaskItem = ({
     const [taskMode, settaskMode] = useState(null);
     const [currentStepName, setCurrentStepName] = useState(null);
 
-    const queueRepository = new QueueRepository();
+    const queueRepository = new ApiService();
     const formattedItem = queueRepository.formatQueueItem(item);
 
     /**

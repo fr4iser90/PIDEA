@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import QueueRepository from '@/infrastructure/repositories/QueueRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 /**
  * Get display name for queue item
@@ -37,7 +37,7 @@ const getDisplayName = (item) => {
 };
 
 const QueueItem = ({ item, showActions = true }) => {
-    const queueRepository = new QueueRepository();
+    const queueRepository = new ApiService();
     const formattedItem = queueRepository.formatQueueItem(item);
 
     /**

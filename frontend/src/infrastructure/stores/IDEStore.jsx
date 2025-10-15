@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { logger } from '@/infrastructure/logging/Logger';
-import { apiCall } from '@/infrastructure/repositories/ChatRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import useAuthStore from './AuthStore.jsx';
 import { cacheService } from '@/infrastructure/services/CacheService';
 import performanceLogger from '@/infrastructure/services/PerformanceLogger';
@@ -235,7 +235,8 @@ const useIDEStore = create(
           logger.info('🔄 Fetching fresh IDE data from API (cache miss)');
           
           const apiStart = performance.now();
-          const result = await apiCall('/api/interfaces/available-ides');
+          const apiService = new ApiService();
+          const result = await apiService.call('/api/interfaces/available-ides');
           const apiDuration = performance.now() - apiStart;
           
           if (result.success) {
@@ -377,11 +378,12 @@ const useIDEStore = create(
           logger.info('Loading analysis data for workspace:', targetWorkspacePath);
           
           // Load all analysis data in parallel (nur wenn AnalysisView geöffnet wird)
+          const apiService = new ApiService();
           const [recommendationsResult, metricsResult, techStackResult, architectureResult] = await Promise.allSettled([
-            apiCall(`/api/projects/${projectId}/analysis/recommendations`),
-            apiCall(`/api/projects/${projectId}/analysis/metrics`),
-            apiCall(`/api/projects/${projectId}/analysis/techstack`),
-            apiCall(`/api/projects/${projectId}/analysis/architecture`)
+            apiService.call(`/api/projects/${projectId}/analysis/recommendations`),
+            apiService.call(`/api/projects/${projectId}/analysis/metrics`),
+            apiService.call(`/api/projects/${projectId}/analysis/techstack`),
+            apiService.call(`/api/projects/${projectId}/analysis/architecture`)
           ]);
           
           set(state => ({
@@ -433,7 +435,8 @@ const useIDEStore = create(
             
             logger.info(`Loading ${category}/${endpoint} data for workspace:`, targetWorkspacePath);
             
-            const result = await apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId);
+            const apiService = new ApiService();
+            const result = await apiService.call(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId);
             
             set(state => ({
               categoryAnalysisData: {
@@ -461,8 +464,9 @@ const useIDEStore = create(
             
             logger.info(`Loading all ${category} data for workspace:`, targetWorkspacePath);
             
+            const apiService = new ApiService();
             const promises = validEndpoints.map(endpoint => 
-              apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
+              apiService.call(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
                 .then(result => ({ endpoint, result }))
                 .catch(error => ({ endpoint, error }))
             );
@@ -501,9 +505,10 @@ const useIDEStore = create(
           
           // Only load security category initially, others will be loaded on demand
           const defaultCategory = 'security';
+          const apiService = new ApiService();
           const allPromises = [defaultCategory].flatMap(category => 
             validEndpoints.map(endpoint => 
-              apiCall(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
+              apiService.call(`/api/projects/${projectId}/analysis/${category}/${endpoint}`, {}, projectId)
                 .then(result => ({ category, endpoint, result }))
                 .catch(error => ({ category, endpoint, error }))
             )
@@ -688,7 +693,8 @@ const useIDEStore = create(
           logger.info('Cache miss for tasks, loading from API:', { workspacePath, projectId, port: selectedPort });
           
           // Load tasks from API
-          const response = await apiCall(`/api/projects/${projectId}/tasks`);
+          const apiService = new ApiService();
+          const response = await apiService.call(`/api/projects/${projectId}/tasks`);
           
           const taskData = {
             tasks: response && response.success ? (Array.isArray(response.data) ? response.data : []) : [],
@@ -1269,11 +1275,11 @@ const useIDEStore = create(
           }
 
           // Use CacheService for IDE switching
+          const apiService = new ApiService();
           const result = await cacheService.fetchWithCache(
             cacheKey,
-            () => apiCall(`/api/ides/switch/${port}`, {
+            () => apiService.call(`/api/ides/switch/${port}`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ reason })
             }),
             'ideSwitch',
@@ -1452,13 +1458,13 @@ const useIDEStore = create(
 
       // Project command methods (optional - can use existing terminal services)
       getProjectCommands: async (projectId) => {
-        // Use existing ChatRepository patterns
-        return apiCall(`/api/projects/${projectId}/commands`);
+        const apiService = new ApiService();
+        return apiService.call(`/api/projects/${projectId}/commands`);
       },
 
       executeProjectCommand: async (projectId, commandType) => {
-        // Use existing terminal execution services
-        return apiCall(`/api/projects/${projectId}/execute-command`, {
+        const apiService = new ApiService();
+        return apiService.call(`/api/projects/${projectId}/execute-command`, {
           method: 'POST',
           body: JSON.stringify({ commandType })
         });

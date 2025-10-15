@@ -1,6 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect } from 'react';
-import FrameworkRepository from '@/infrastructure/repositories/FrameworkRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import DocumentationFrameworkModal from './frameworks/DocumentationFrameworkModal.jsx';
 
 function FrameworksPanelComponent({ onFrameworkSelect, onNavigateToPrompts, onNavigateToTemplates }) {

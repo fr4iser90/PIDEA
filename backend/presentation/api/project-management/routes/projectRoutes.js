@@ -67,16 +67,8 @@ class ProjectRoutes {
     // PROJECT SUB-RESOURCES - Nested Resources
     // ========================================
 
-    // Project interfaces
-    app.use(
-      "/api/projects/:projectId/interfaces",
-      (req, res, next) => {
-        // Add project context to request
-        req.projectId = req.params.projectId;
-        next();
-      },
-      require("../../ide-integration/routes/interfaceRoutes"),
-    );
+    // Project interfaces - handled by InterfaceRoutes in Application.js
+    // The InterfaceRoutes class handles all /api/projects/:projectId/interfaces/* routes
 
     // Project tasks (existing)
     app.use(

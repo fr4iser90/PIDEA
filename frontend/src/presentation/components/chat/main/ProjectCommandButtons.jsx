@@ -1,7 +1,6 @@
 import { logger } from "@/infrastructure/logging/Logger";
 import React, { useState, useEffect, useCallback } from 'react';
-import ProjectRepository from '@/infrastructure/repositories/ProjectRepository.jsx';
-import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 /**
  * ProjectCommandButtons Component
@@ -26,7 +25,7 @@ const ProjectCommandButtons = ({
   const [commandStatus, setCommandStatus] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   
-  const apiRepository = new TaskRepository();
+  const apiRepository = new ApiService();
 
   // Load project commands on mount
   useEffect(() => {

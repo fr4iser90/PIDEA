@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import TaskRepository from '@/infrastructure/repositories/TaskRepository.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 
 function TrackingStep({ tasks, analysisResults, workflowData }) {
   const [projectTasks, setProjectTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [trackingError, setTrackingError] = useState(null);
-  const api = new TaskRepository();
+  const api = new ApiService();
 
   useEffect(() => {
     loadProjectTasks();
