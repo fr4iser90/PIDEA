@@ -4,7 +4,7 @@
  * Tests for ProjectController functionality including CRUD operations,
  * validation, error handling, and integration with ProjectApplicationService.
  */
-const ProjectController = require("@/presentation/api/projects/ProjectController");
+const ProjectController = require("../../presentation/api/projects/ProjectController");
 
 describe("ProjectController", () => {
   let controller;

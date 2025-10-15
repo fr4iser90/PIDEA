@@ -3,7 +3,7 @@
  */
 
 const SelectorCollectionBot = require("@domain/services/ide/SelectorCollectionBot");
-const SelectorCollector = require("@infrastructure/external/ide/SelectorCollector");
+const SelectorCollector = require("@infrastructure/api/ide/SelectorCollector");
 const SelectorVersionManager = require("@domain/services/ide/SelectorVersionManager");
 
 describe("Chat Selector Collection Integration", () => {

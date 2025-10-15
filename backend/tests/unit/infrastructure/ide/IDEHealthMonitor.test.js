@@ -1,4 +1,4 @@
-const IDEHealthMonitor = require("@external/ide/IDEHealthMonitor");
+const IDEHealthMonitor = require("@api/ide/IDEHealthMonitor");
 
 describe("IDEHealthMonitor", () => {
   let monitor;

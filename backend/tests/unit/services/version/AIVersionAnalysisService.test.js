@@ -4,7 +4,7 @@
  */
 
 const AIVersionAnalysisService = require("@domain/services/version/AIVersionAnalysisService");
-const AIService = require("@external/AIService");
+const AIService = require("@infrastructure/analysis/api/AIService");
 const CursorIDEService = require("@domain/services/ide/CursorIDEService");
 
 describe("AIVersionAnalysisService", () => {

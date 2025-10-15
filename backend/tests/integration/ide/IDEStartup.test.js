@@ -1,7 +1,7 @@
-const IDEStarterFactory = require("@external/ide/IDEStarterFactory");
-const CursorStarter = require("@external/ide/starters/CursorStarter");
-const VSCodeStarter = require("@external/ide/starters/VSCodeStarter");
-const WindsurfStarter = require("@external/ide/starters/WindsurfStarter");
+const IDEStarterFactory = require("@api/ide/IDEStarterFactory");
+const CursorStarter = require("@api/ide/starters/CursorStarter");
+const VSCodeStarter = require("@api/ide/starters/VSCodeStarter");
+const WindsurfStarter = require("@api/ide/starters/WindsurfStarter");
 
 describe("IDE Startup Integration", () => {
   let starterFactory;

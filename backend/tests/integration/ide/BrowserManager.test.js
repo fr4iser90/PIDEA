@@ -1,5 +1,5 @@
-const BrowserManager = require("@infrastructure/external/BrowserManager");
-const ConnectionPool = require("@infrastructure/external/ConnectionPool");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
+const ConnectionPool = require("@infrastructure/ide-integration/api/ConnectionPool");
 
 // Mock Playwright
 jest.mock("playwright", () => {

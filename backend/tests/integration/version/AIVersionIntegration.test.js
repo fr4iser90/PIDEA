@@ -6,7 +6,7 @@
 const AIVersionAnalysisService = require("@domain/services/version/AIVersionAnalysisService");
 const HybridVersionDetector = require("@domain/services/version/HybridVersionDetector");
 const VersionManagementService = require("@domain/services/version/VersionManagementService");
-const VersionAIIntegration = require("@infrastructure/external/VersionAIIntegration");
+const VersionAIIntegration = require("@infrastructure/api/VersionAIIntegration");
 
 describe("AI Version Integration", () => {
   let aiAnalysisService;

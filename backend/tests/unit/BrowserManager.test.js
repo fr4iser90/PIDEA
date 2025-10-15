@@ -3,7 +3,7 @@
  * Tests for IDE detection and selector management functionality
  */
 
-const BrowserManager = require("@infrastructure/external/BrowserManager");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
 const IDESelectorManager = require("@domain/services/ide/IDESelectorManager");
 
 describe("BrowserManager IDE Detection", () => {

@@ -28,6 +28,23 @@ class ServiceRegistry {
   }
 
   /**
+   * Safely register a service with error handling
+   * @param {string} serviceName - Name of the service
+   * @param {Function} factory - Factory function
+   * @param {Object} options - Registration options
+   */
+  safeRegister(serviceName, factory, options = {}) {
+    try {
+      this.container.register(serviceName, factory, options);
+      this.registeredServices.add(serviceName);
+      this.logger.debug(`✅ Registered service: ${serviceName}`);
+    } catch (error) {
+      this.logger.error(`❌ Failed to register service '${serviceName}': ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Register core infrastructure services
    */
   registerInfrastructureServices() {
@@ -82,11 +99,61 @@ class ServiceRegistry {
       { singleton: true },
     );
 
+    // Event Store
+    this.container.register(
+      "eventStore",
+      (logger, eventBus) => {
+        const EventStore = require("../events/EventStore");
+        return new EventStore({ logger, eventBus });
+      },
+      { singleton: true, dependencies: ["logger", "eventBus"] },
+    );
+
+    // Circuit Breaker
+    this.container.register(
+      "circuitBreaker",
+      (logger, eventBus) => {
+        const CircuitBreaker = require("../resilience/CircuitBreaker");
+        return new CircuitBreaker({ logger, eventBus });
+      },
+      { singleton: true, dependencies: ["logger", "eventBus"] },
+    );
+
+    // Configuration Service
+    this.container.register(
+      "configurationService",
+      (logger, eventBus) => {
+        const ConfigurationService = require("../configuration/ConfigurationService");
+        return new ConfigurationService({ logger, eventBus });
+      },
+      { singleton: true, dependencies: ["logger", "eventBus"] },
+    );
+
+    // Monitoring Service
+    this.container.register(
+      "monitoringService",
+      (logger, eventBus) => {
+        const MonitoringService = require("../monitoring/MonitoringService");
+        return new MonitoringService({ logger, eventBus });
+      },
+      { singleton: true, dependencies: ["logger", "eventBus"] },
+    );
+
+    // Anti-Corruption Layer
+    this.container.register(
+      "antiCorruptionLayer",
+      (logger, eventBus) => {
+        const AntiCorruptionLayer = require("../anti-corruption/AntiCorruptionLayer");
+        return new AntiCorruptionLayer({ logger, eventBus });
+      },
+      { singleton: true, dependencies: ["logger", "eventBus"] },
+    );
+
     // File system service
     this.container.register(
       "fileSystemService",
       () => {
-        const FileSystemService = require("../external/FileSystemService");
+        const FileSystemService = require("../task-execution/api/FileSystemService");
         return new FileSystemService();
       },
       { singleton: true },
@@ -96,7 +163,7 @@ class ServiceRegistry {
     this.container.register(
       "browserManager",
       () => {
-        const BrowserManager = require("../external/BrowserManager");
+        const BrowserManager = require("../ide-integration/api/BrowserManager");
         return new BrowserManager();
       },
       { singleton: true },
@@ -118,7 +185,7 @@ class ServiceRegistry {
     this.container.register(
       "ideManager",
       (browserManager, projectRepository, eventBus, gitService) => {
-        const IDEManager = require("../external/ide/IDEManager");
+        const IDEManager = require("../ide-integration/services/IDEManager");
         const manager = new IDEManager(browserManager, eventBus, gitService);
         // Inject project repository for automatic database operations
         manager.projectRepository = projectRepository;
@@ -307,7 +374,7 @@ class ServiceRegistry {
     this.container.register(
       "authController",
       (authApplicationService) => {
-        const AuthController = require("@presentation/api/system/controllers/AuthController");
+        const AuthController = require("../../presentation/system/controllers/AuthController");
         return new AuthController({ authApplicationService });
       },
       { singleton: true, dependencies: ["authApplicationService"] },
@@ -347,7 +414,7 @@ class ServiceRegistry {
     this.container.register(
       "versionAIIntegration",
       () => {
-        const VersionAIIntegration = require("@infrastructure/external/VersionAIIntegration");
+        const VersionAIIntegration = require("@infrastructure/version/api/VersionAIIntegration");
         return new VersionAIIntegration();
       },
       { singleton: true },
@@ -436,7 +503,7 @@ class ServiceRegistry {
     this.container.register(
       "cdpConnectionManager",
       () => {
-        const CDPConnectionManager = require("@external/cdp/CDPConnectionManager");
+        const CDPConnectionManager = require("@infrastructure/ide-integration/api/CDPConnectionManager");
         return new CDPConnectionManager({
           maxConnections: 5,
           connectionTimeout: 15000,
@@ -690,7 +757,7 @@ class ServiceRegistry {
     this.container.register(
       "taskProcessor",
       (workflowExecutor, taskQueueStore, eventBus, ideManager, logger) => {
-        const TaskProcessor = require("@infrastructure/external/task-execution/handlers/TaskProcessor");
+        const TaskProcessor = require("@infrastructure/task-execution/services/handlers/TaskProcessor");
         return new TaskProcessor(
           workflowExecutor,
           logger,
@@ -1111,7 +1178,7 @@ class ServiceRegistry {
     this.container.register(
       "interfaceRoutes",
       (interfaceManager, projectApplicationService, authMiddleware) => {
-        const InterfaceRoutes = require("../../presentation/api/ide-integration/routes/interfaceRoutes");
+        const InterfaceRoutes = require("../../presentation/ide-integration/routes/interfaceRoutes");
         return new InterfaceRoutes(interfaceManager, projectApplicationService, authMiddleware);
       },
       { singleton: true, dependencies: ["interfaceManager", "projectApplicationService", "authMiddleware"] },
@@ -1693,10 +1760,20 @@ class ServiceRegistry {
     this.container.register(
       "aiService",
       () => {
-        const AIService = require("../external/AIService");
+        const AIService = require("../analysis/api/AIService");
         return new AIService();
       },
       { singleton: true },
+    );
+
+    // Task Notification Gateway
+    this.container.register(
+      "taskNotificationGateway",
+      (logger, eventBus) => {
+        const TaskNotificationGateway = require("../task-management/external/TaskNotificationGateway");
+        return new TaskNotificationGateway({ logger, eventBus });
+      },
+      { singleton: true, dependencies: ["logger", "eventBus"] },
     );
 
     // Analysis Orchestrator (Phase 2: Step delegation)
@@ -1706,7 +1783,7 @@ class ServiceRegistry {
     this.container.register(
       "testOrchestrator",
       (stepRegistry, eventBus, logger) => {
-        const TestOrchestrator = require("../external/TestOrchestrator");
+        const TestOrchestrator = require("../task-execution/services/TestOrchestrator");
         return new TestOrchestrator({
           stepRegistry,
           eventBus,
@@ -1761,37 +1838,37 @@ class ServiceRegistry {
 
     // Code quality analyzer - REMOVED (using CodeQualityAnalysisStep instead)
     // this.container.register('codeQualityAnalyzer', () => {
-    //     const CodeQualityAnalyzer = require('../external/CodeQualityAnalyzer');
+    //     const CodeQualityAnalyzer = require('../api/CodeQualityAnalyzer');
     //     return new CodeQualityAnalyzer();
     // }, { singleton: true });
 
     // Security analyzer - REMOVED (using SecurityAnalysisStep instead)
     // this.container.register('securityAnalyzer', () => {
-    //     const SecurityAnalyzer = require('../external/SecurityAnalyzer');
+    //     const SecurityAnalyzer = require('../api/SecurityAnalyzer');
     //     return new SecurityAnalyzer();
     // }, { singleton: true });
 
     // Performance analyzer - REMOVED (using PerformanceAnalysisStep instead)
     // this.container.register('performanceAnalyzer', () => {
-    //     const PerformanceAnalyzer = require('../external/PerformanceAnalyzer');
+    //     const PerformanceAnalyzer = require('../api/PerformanceAnalyzer');
     //     return new PerformanceAnalyzer();
     // }, { singleton: true });
 
     // Architecture analyzer - REMOVED (using ArchitectureAnalysisStep instead)
     // this.container.register('architectureAnalyzer', () => {
-    //     const ArchitectureAnalyzer = require('../external/ArchitectureAnalyzer');
+    //     const ArchitectureAnalyzer = require('../api/ArchitectureAnalyzer');
     //     return new ArchitectureAnalyzer();
     // }, { singleton: true });
 
     // Tech stack analyzer - REMOVED (using TechStackAnalysisStep instead)
     // this.container.register('techStackAnalyzer', () => {
-    //     const TechStackAnalyzer = require('../external/TechStackAnalyzer');
+    //     const TechStackAnalyzer = require('../api/TechStackAnalyzer');
     //     return new TechStackAnalyzer();
     // }, { singleton: true });
 
     // Dependency analyzer - REMOVED (using DependencyAnalysisStep instead)
     // this.container.register('dependencyAnalyzer', (monorepoStrategy, singleRepoStrategy) => {
-    //     const DependencyAnalyzer = require('../external/OLD6');
+    //     const DependencyAnalyzer = require('../api/OLD6');
     //     return new DependencyAnalyzer({ monorepoStrategy, singleRepoStrategy });
     // }, { singleton: true, dependencies: ['monorepoStrategy', 'singleRepoStrategy'] });
 
@@ -1809,7 +1886,7 @@ class ServiceRegistry {
     this.container.register(
       "gitService",
       (logger, eventBus, stepRegistry) => {
-        const GitService = require("../external/GitService");
+        const GitService = require("../git/services/GitService");
         return new GitService({ logger, eventBus, stepRegistry });
       },
       { singleton: true, dependencies: ["logger", "eventBus", "stepRegistry"] },
@@ -1819,7 +1896,7 @@ class ServiceRegistry {
     this.container.register(
       "dockerService",
       (logger, eventBus) => {
-        const DockerService = require("../external/DockerService");
+        const DockerService = require("../task-execution/api/DockerService");
         return new DockerService({ logger, eventBus });
       },
       { singleton: true, dependencies: ["logger", "eventBus"] },
@@ -1842,7 +1919,7 @@ class ServiceRegistry {
     this.container.register(
       "testFixer",
       () => {
-        const TestFixer = require("../external/TestFixer");
+        const TestFixer = require("../api/TestFixer");
         return new TestFixer();
       },
       { singleton: true },
@@ -1850,13 +1927,13 @@ class ServiceRegistry {
 
     // Test Analyzer - REMOVED (using TestOrchestrator instead)
     // this.container.register('testAnalyzer', () => {
-    //     const TestAnalyzer = require('../external/OLD9');
+    //     const TestAnalyzer = require('../api/OLD9');
     //     return new TestAnalyzer();
     // }, { singleton: true });
 
     // Coverage Analyzer - REMOVED (using TestOrchestrator instead)
     // this.container.register('coverageAnalyzer', () => {
-    //     const CoverageAnalyzer = require('../external/OLD3');
+    //     const CoverageAnalyzer = require('../api/OLD3');
     //     return new CoverageAnalyzer();
     // }, { singleton: true });
 
@@ -2165,7 +2242,7 @@ class ServiceRegistry {
         this.container.register(
           "fileSystemService",
           () => {
-            const FileSystemService = require("../external/FileSystemService");
+            const FileSystemService = require("../task-execution/api/FileSystemService");
             return new FileSystemService();
           },
           { singleton: true },
@@ -2175,7 +2252,7 @@ class ServiceRegistry {
         this.container.register(
           "browserManager",
           () => {
-            const BrowserManager = require("../external/BrowserManager");
+            const BrowserManager = require("../ide-integration/api/BrowserManager");
             return new BrowserManager();
           },
           { singleton: true },
@@ -2197,7 +2274,7 @@ class ServiceRegistry {
         this.container.register(
           "ideManager",
           (browserManager, projectRepository, eventBus, gitService) => {
-            const IDEManager = require("../external/ide/IDEManager");
+            const IDEManager = require("../ide-integration/services/IDEManager");
             const manager = new IDEManager(
               browserManager,
               eventBus,
@@ -2361,7 +2438,7 @@ class ServiceRegistry {
         this.container.register(
           "aiService",
           () => {
-            const AIService = require("../external/AIService");
+            const AIService = require("../analysis/api/AIService");
             return new AIService();
           },
           { singleton: true },
@@ -2377,7 +2454,7 @@ class ServiceRegistry {
         this.container.register(
           "testOrchestrator",
           (stepRegistry, eventBus, logger) => {
-            const TestOrchestrator = require("../external/TestOrchestrator");
+            const TestOrchestrator = require("../task-execution/services/TestOrchestrator");
             return new TestOrchestrator({
               stepRegistry,
               eventBus,
@@ -2448,7 +2525,7 @@ class ServiceRegistry {
         this.container.register(
           "gitService",
           (logger, eventBus, stepRegistry) => {
-            const GitService = require("../external/GitService");
+            const GitService = require("../git/services/GitService");
             return new GitService({ logger, eventBus, stepRegistry });
           },
           {
@@ -2624,7 +2701,7 @@ class ServiceRegistry {
         this.container.register(
           "authController",
           (authApplicationService) => {
-            const AuthController = require("@presentation/api/system/controllers/AuthController");
+            const AuthController = require("../../presentation/system/controllers/AuthController");
             return new AuthController({ authApplicationService });
           },
           { singleton: true, dependencies: ["authApplicationService"] },
@@ -3172,6 +3249,13 @@ class ServiceRegistry {
     this.addServiceDefinition("fileSystemService", [], "infrastructure");
     this.addServiceDefinition("browserManager", [], "infrastructure");
     this.addServiceDefinition("terminalService", [], "infrastructure");
+    
+    // New Infrastructure Services
+    this.addServiceDefinition("eventStore", ["logger", "eventBus"], "infrastructure");
+    this.addServiceDefinition("circuitBreaker", ["logger", "eventBus"], "infrastructure");
+    this.addServiceDefinition("configurationService", ["logger", "eventBus"], "infrastructure");
+    this.addServiceDefinition("monitoringService", ["logger", "eventBus"], "infrastructure");
+    this.addServiceDefinition("antiCorruptionLayer", ["logger", "eventBus"], "infrastructure");
     this.addServiceDefinition(
       "ideManager",
       ["browserManager", "projectRepository", "eventBus", "gitService"],
@@ -3254,6 +3338,7 @@ class ServiceRegistry {
 
     // External services
     this.addServiceDefinition("aiService", [], "external");
+    this.addServiceDefinition("taskNotificationGateway", ["logger", "eventBus"], "external");
     // AnalysisOrchestrator service definition removed - redundant
     this.addServiceDefinition(
       "testOrchestrator",
@@ -3627,18 +3712,45 @@ class ServiceRegistry {
   registerAllServices() {
     this.logger.info("🔧 Registering all services...");
 
+    const registrationStats = {
+      total: 0,
+      successful: 0,
+      failed: 0,
+      errors: []
+    };
+
     try {
       // Collect all service definitions first
       this.collectServiceDefinitions();
 
-      // Register services by category using bulk registration methods
-      this.registerInfrastructureServices();
-      this.registerRepositoryServices();
-      this.registerExternalServices();
-      this.registerStrategyServices();
-      this.registerDomainServices();
-      this.registerApplicationServices();
-      // Note: Handlers are managed by HandlerRegistry, not ServiceRegistry
+      // Register services by category using bulk registration methods with error tracking
+      const categories = [
+        { name: 'Infrastructure', method: () => this.registerInfrastructureServices() },
+        { name: 'Repository', method: () => this.registerRepositoryServices() },
+        { name: 'External', method: () => this.registerExternalServices() },
+        { name: 'Strategy', method: () => this.registerStrategyServices() },
+        { name: 'Domain', method: () => this.registerDomainServices() },
+        { name: 'Application', method: () => this.registerApplicationServices() }
+      ];
+
+      for (const category of categories) {
+        try {
+          const beforeCount = this.registeredServices.size;
+          category.method();
+          const afterCount = this.registeredServices.size;
+          const categoryCount = afterCount - beforeCount;
+          registrationStats.total += categoryCount;
+          registrationStats.successful += categoryCount;
+          this.logger.debug(`✅ ${category.name} services: ${categoryCount} registered`);
+        } catch (error) {
+          this.logger.error(`❌ Failed to register ${category.name} services:`, error.message);
+          registrationStats.errors.push({
+            category: category.name,
+            error: error.message,
+            stack: error.stack
+          });
+        }
+      }
 
       // Initialize project context service after all services are registered
       try {
@@ -3655,6 +3767,27 @@ class ServiceRegistry {
           "Project context initialization failed:",
           error.message,
         );
+        registrationStats.errors.push({
+          category: 'ProjectContext',
+          error: error.message,
+          stack: error.stack
+        });
+      }
+
+      // Log detailed registration statistics
+      this.logger.info(`📊 Service Registration Summary:`);
+      this.logger.info(`   Total Services Attempted: ${registrationStats.total}`);
+      this.logger.info(`   Successfully Registered: ${registrationStats.successful}`);
+      this.logger.info(`   Failed Registrations: ${registrationStats.errors.length}`);
+      
+      if (registrationStats.errors.length > 0) {
+        this.logger.warn(`⚠️  Failed Service Registrations:`);
+        registrationStats.errors.forEach((error, index) => {
+          this.logger.warn(`   ${index + 1}. ${error.category}: ${error.error}`);
+          if (process.env.LOG_LEVEL === 'debug') {
+            this.logger.debug(`      Stack: ${error.stack}`);
+          }
+        });
       }
 
       this.logger.info("✅ All services registered successfully");

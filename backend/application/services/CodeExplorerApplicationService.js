@@ -1,4 +1,4 @@
-const BrowserManager = require("@external/BrowserManager");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
 const Logger = require("@logging/Logger");
 
 class CodeExplorerApplicationService {

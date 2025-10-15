@@ -190,6 +190,14 @@ class ApiService {
   async delete(endpoint, options = {}, projectId = null) {
     return this.call(endpoint, { ...options, method: 'DELETE' }, projectId);
   }
+
+  /**
+   * Get browser environment information
+   * @returns {Promise<Object>} Browser environment data
+   */
+  async getBrowserEnvironment() {
+    return this.get('/api/tests/browser-environment');
+  }
 }
 
 // Create singleton instance

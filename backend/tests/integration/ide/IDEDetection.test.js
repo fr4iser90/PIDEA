@@ -1,7 +1,7 @@
-const IDEDetectorFactory = require("@external/ide/IDEDetectorFactory");
-const CursorDetector = require("@external/ide/detectors/CursorDetector");
-const VSCodeDetector = require("@external/ide/detectors/VSCodeDetector");
-const WindsurfDetector = require("@external/ide/detectors/WindsurfDetector");
+const IDEDetectorFactory = require("@api/ide/IDEDetectorFactory");
+const CursorDetector = require("@api/ide/detectors/CursorDetector");
+const VSCodeDetector = require("@api/ide/detectors/VSCodeDetector");
+const WindsurfDetector = require("@api/ide/detectors/WindsurfDetector");
 
 describe("IDE Detection Integration", () => {
   let detectorFactory;

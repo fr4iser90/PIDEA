@@ -3,7 +3,7 @@
  * Created: 2025-09-29T19:51:09.000Z
  */
 
-const IDEConfigurationController = require("@/presentation/api/ide/IDEConfigurationController");
+const IDEConfigurationController = require("../../presentation/api/ide/IDEConfigurationController");
 const IDEConfigurationService = require("@/application/services/IDEConfigurationService");
 
 // Mock IDEConfigurationService

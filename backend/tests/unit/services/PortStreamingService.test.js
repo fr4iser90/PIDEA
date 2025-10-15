@@ -11,8 +11,8 @@ const Logger = require("@logging/Logger");
 const logger = new Logger("Logger");
 
 // Mock dependencies
-jest.mock("@/infrastructure/external/BrowserManager");
-jest.mock("@/infrastructure/external/WebSocketManager");
+jest.mock("@/infrastructure/api/BrowserManager");
+jest.mock("@/infrastructure/api/WebSocketManager");
 
 describe("ScreenshotStreamingService - Port-Based", () => {
   let service;

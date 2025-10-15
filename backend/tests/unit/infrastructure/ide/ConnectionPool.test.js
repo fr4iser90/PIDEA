@@ -1,4 +1,4 @@
-const ConnectionPool = require("@infrastructure/external/ConnectionPool");
+const ConnectionPool = require("@infrastructure/api/ConnectionPool");
 const { chromium } = require("playwright");
 
 // Mock Playwright

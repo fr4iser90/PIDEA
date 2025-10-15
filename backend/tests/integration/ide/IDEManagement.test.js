@@ -1,14 +1,14 @@
-const IDEManager = require("@external/ide/IDEManager");
-const IDEDetectorFactory = require("@external/ide/IDEDetectorFactory");
-const IDEStarterFactory = require("@external/ide/IDEStarterFactory");
-const IDEConfigManager = require("@external/ide/IDEConfigManager");
-const IDEHealthMonitor = require("@external/ide/IDEHealthMonitor");
+const IDEManager = require("@infrastructure/ide-integration/services/IDEManager");
+const IDEDetectorFactory = require("@infrastructure/ide-integration/services/IDEDetectorFactory");
+const IDEStarterFactory = require("@infrastructure/ide-integration/services/IDEStarterFactory");
+const IDEConfigManager = require("@infrastructure/ide-integration/services/IDEConfigManager");
+const IDEHealthMonitor = require("@infrastructure/ide-integration/services/IDEHealthMonitor");
 
 // Mock dependencies
-jest.mock("../../../infrastructure/external/ide/IDEDetectorFactory");
-jest.mock("../../../infrastructure/external/ide/IDEStarterFactory");
-jest.mock("../../../infrastructure/external/ide/IDEConfigManager");
-jest.mock("../../../infrastructure/external/ide/IDEHealthMonitor");
+jest.mock("../../../infrastructure/api/ide/IDEDetectorFactory");
+jest.mock("../../../infrastructure/api/ide/IDEStarterFactory");
+jest.mock("../../../infrastructure/api/ide/IDEConfigManager");
+jest.mock("../../../infrastructure/api/ide/IDEHealthMonitor");
 
 describe("IDE Management Integration", () => {
   let manager;

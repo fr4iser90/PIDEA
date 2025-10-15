@@ -2,14 +2,14 @@
  * Integration tests for IDEManager with factory integration
  */
 
-const IDEManager = require("@external/ide/IDEManager");
-const IDEDetectorFactory = require("@external/ide/IDEDetectorFactory");
-const IDEStarterFactory = require("@external/ide/IDEStarterFactory");
-const IDEConfigManager = require("@external/ide/IDEConfigManager");
+const IDEManager = require("@infrastructure/ide-integration/services/IDEManager");
+const IDEDetectorFactory = require("@infrastructure/ide-integration/services/IDEDetectorFactory");
+const IDEStarterFactory = require("@infrastructure/ide-integration/services/IDEStarterFactory");
+const IDEConfigManager = require("@infrastructure/ide-integration/services/IDEConfigManager");
 
 // Mock the CDP workspace detector
 jest.mock("../../../domain/services/workspace/CDPWorkspaceDetector");
-jest.mock("../../../infrastructure/external/cdp/CDPConnectionManager");
+jest.mock("../../../infrastructure/api/cdp/CDPConnectionManager");
 
 describe("IDEManager Integration", () => {
   let ideManager;

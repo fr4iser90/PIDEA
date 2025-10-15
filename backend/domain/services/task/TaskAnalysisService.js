@@ -6,7 +6,7 @@ const ProjectType = require("../../value-objects/ProjectType");
 const TaskType = require("../../value-objects/TaskType");
 const TaskPriority = require("../../value-objects/TaskPriority");
 const AISuggestion = require("../../value-objects/AISuggestion");
-const AIService = require("@external/AIService");
+const AIService = require("@infrastructure/analysis/api/AIService");
 // Phase 2: Using AnalysisOrchestrator instead of OLD7
 const Task = require("../../entities/Task");
 const Logger = require("@logging/Logger");

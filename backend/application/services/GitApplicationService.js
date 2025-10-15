@@ -1,4 +1,4 @@
-const GitService = require("@external/GitService");
+const GitService = require("@infrastructure/git/services/GitService");
 const Logger = require("@logging/Logger");
 const CommandRegistry = require("@application/commands/CommandRegistry");
 const HandlerRegistry = require("@application/handlers/HandlerRegistry");

@@ -11,36 +11,66 @@ class ServiceInitialization {
   }
 
   /**
-   * Initialize infrastructure services
+   * Initialize infrastructure services with modern service management
    * @returns {Object} Infrastructure services
    */
   async initializeInfrastructure() {
-    this.logger.info("🏗️ Initializing infrastructure...");
+    this.logger.info("🏗️ Initializing infrastructure with modern service management...");
 
     // Initialize Step Registry FIRST (before DI)
     const { initializeSteps } = require("../../domain/steps");
     await initializeSteps();
     const stepRegistry = require("../../domain/steps").getStepRegistry();
 
-    // Initialize DI system
+    // Initialize DI system with modern components
     const { getServiceRegistry } = require("./ServiceRegistry");
     const { getProjectContextService } = require("./ProjectContextService");
+    const { getServiceContainer } = require("./ServiceContainer");
 
     const serviceRegistry = getServiceRegistry();
     const projectContext = getProjectContextService();
+    const serviceContainer = getServiceContainer();
+
+    // Enable modern service management features
+    serviceContainer.setLazyLoading(true);
+    serviceContainer.setHealthMonitoring(true);
+    serviceContainer.setMetricsCollection(true);
+    serviceContainer.setAutoDiscovery(true);
+    serviceContainer.setLifecycleManagement(true);
+
+    // Scan for services and auto-register them
+    this.logger.info("🔍 Scanning for services...");
+    const scanResults = await serviceContainer.scanForServices();
+    this.logger.info(`📊 Discovered ${scanResults.services.length} services, ${scanResults.errors.length} errors`);
 
     // Register all services (including handlers)
     serviceRegistry.registerAllServices();
 
+    // Initialize new infrastructure services
+    const InfrastructureServiceInitialization = require("./InfrastructureServiceInitialization");
+    const infrastructureInit = new InfrastructureServiceInitialization(serviceRegistry);
+    await infrastructureInit.initializeNewInfrastructureServices();
+
     // Get services from DI container with consistent error handling
     const services = await this.getInfrastructureServices(serviceRegistry);
 
-    this.logger.info("✅ Infrastructure initialized with DI");
+    // Start health monitoring
+    this.logger.info("🏥 Starting health monitoring...");
+    serviceContainer.setHealthMonitoring(true);
+
+    // Start metrics collection
+    this.logger.info("📈 Starting metrics collection...");
+    serviceContainer.setMetricsCollection(true);
+
+    this.logger.info("✅ Infrastructure initialized with modern service management");
 
     return {
       stepRegistry,
       serviceRegistry,
       projectContext,
+      serviceContainer,
+      modernServiceStatus: serviceContainer.getModernServiceStatus(),
+      scanResults,
       ...services,
     };
   }
@@ -64,6 +94,14 @@ class ServiceInitialization {
         fileSystemService: serviceRegistry.getService("fileSystemService"),
         monorepoStrategy: serviceRegistry.getService("monorepoStrategy"),
         singleRepoStrategy: serviceRegistry.getService("singleRepoStrategy"),
+        
+        // New Infrastructure Services
+        eventStore: serviceRegistry.getService("eventStore"),
+        circuitBreaker: serviceRegistry.getService("circuitBreaker"),
+        configurationService: serviceRegistry.getService("configurationService"),
+        monitoringService: serviceRegistry.getService("monitoringService"),
+        antiCorruptionLayer: serviceRegistry.getService("antiCorruptionLayer"),
+        taskNotificationGateway: serviceRegistry.getService("taskNotificationGateway"),
       };
 
       return services;
@@ -87,19 +125,26 @@ class ServiceInitialization {
       "🔧 Initializing domain services with automatic dependency resolution...",
     );
 
-    // Debug: Log service count only (detailed lists moved to debug level)
+    // Debug: Log service count and detailed analysis
     const container = serviceRegistry.getContainer();
     const allServices = Array.from(container.factories.keys());
     const graphNodes = Array.from(container.dependencyGraph.nodes.keys());
 
-    // Only log summary in production, detailed info in debug mode
+    // Log detailed service analysis
+    this.logger.info(`📊 Service Analysis:`);
+    this.logger.info(`   Total Services Registered: ${allServices.length}`);
+    this.logger.info(`   Dependency Graph Nodes: ${graphNodes.length}`);
+    
+    // Check for missing dependencies
+    const missingDeps = graphNodes.filter(node => !allServices.includes(node));
+    if (missingDeps.length > 0) {
+      this.logger.warn(`⚠️  Missing Dependencies (${missingDeps.length}):`, missingDeps);
+    }
+
+    // Only log detailed lists in debug mode
     if (process.env.LOG_LEVEL === "debug") {
       this.logger.debug("🔍 All registered services:", allServices);
       this.logger.debug("🔍 Dependency graph nodes:", graphNodes);
-    } else {
-      this.logger.info(
-        `[ServiceRegistry] Registered ${allServices.length} services`,
-      );
     }
 
     // Validate dependency resolution before getting services
@@ -114,20 +159,48 @@ class ServiceInitialization {
     // Get services through DI container with automatic dependency resolution
     const services = await this.getDomainServices(serviceRegistry);
 
-    // Log dependency statistics only in debug mode
+    // Log dependency statistics
     const stats = serviceRegistry.getContainer().getDependencyStats();
+    this.logger.info(`📈 Dependency Statistics:`);
+    this.logger.info(`   Total Dependencies: ${stats.totalDependencies || 'N/A'}`);
+    this.logger.info(`   Resolved Dependencies: ${stats.resolvedDependencies || 'N/A'}`);
+    this.logger.info(`   Circular Dependencies: ${stats.circularDependencies || 0}`);
+    
     if (process.env.LOG_LEVEL === "debug") {
-      this.logger.debug("Dependency resolution statistics:", stats);
+      this.logger.debug("Detailed dependency resolution statistics:", stats);
     }
 
     // Start all services with lifecycle hooks
-    this.logger.info("Starting services with lifecycle hooks...");
+    this.logger.info("🚀 Starting services with lifecycle hooks...");
     const startupResults = await serviceRegistry
       .getContainer()
       .startAllServices();
 
-    if (startupResults.failed.length > 0) {
-      this.logger.warn("Some services failed to start:", startupResults.failed);
+    // Log detailed startup results
+    this.logger.info(`📊 Service Startup Results:`);
+    this.logger.info(`   Total Services: ${startupResults.total || 0}`);
+    this.logger.info(`   Successfully Started: ${startupResults.started || 0}`);
+    this.logger.info(`   Failed to Start: ${startupResults.failed || 0}`);
+    this.logger.info(`   Skipped (No Lifecycle): ${startupResults.skipped || 0}`);
+
+    if (startupResults.failed && startupResults.failed.length > 0) {
+      this.logger.warn(`⚠️  Services that failed to start:`);
+      startupResults.failed.forEach((failure, index) => {
+        this.logger.warn(`   ${index + 1}. ${failure.serviceName}: ${failure.error}`);
+      });
+    }
+
+    if (startupResults.details && startupResults.details.length > 0) {
+      this.logger.info(`📋 Detailed Startup Results:`);
+      startupResults.details.forEach((result, index) => {
+        const status = result.status === 'started' ? '✅' : 
+                      result.status === 'failed' ? '❌' : 
+                      result.status === 'skipped' ? '⏭️' : '❓';
+        this.logger.info(`   ${status} ${result.service}: ${result.status}`);
+        if (result.error) {
+          this.logger.warn(`      Error: ${result.error}`);
+        }
+      });
     }
 
     this.logger.info(

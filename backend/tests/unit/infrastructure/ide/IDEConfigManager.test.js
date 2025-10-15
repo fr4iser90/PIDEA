@@ -1,4 +1,4 @@
-const IDEConfigManager = require("@external/ide/IDEConfigManager");
+const IDEConfigManager = require("@infrastructure/ide-integration/services/IDEConfigManager");
 const path = require("path");
 
 // Mock fs.promises module

@@ -16,7 +16,7 @@ module.exports = {
     "^@/domain/(.*)$": "<rootDir>/domain/$1",
     "^@/application/(.*)$": "<rootDir>/application/$1",
     "^@/infrastructure/(.*)$": "<rootDir>/infrastructure/$1",
-    "^@/presentation/(.*)$": "<rootDir>/presentation/$1",
+    "^../../presentation/(.*)$": "<rootDir>/presentation/$1",
   },
 
   transform: {

@@ -90,7 +90,7 @@ module.exports = {
     "^@messaging$": "<rootDir>/infrastructure/messaging",
     "^@database/(.*)$": "<rootDir>/infrastructure/database/$1",
     "^@database$": "<rootDir>/infrastructure/database",
-    "^@external/(.*)$": "<rootDir>/infrastructure/external/$1",
+    "^@api/(.*)$": "<rootDir>/infrastructure/api/$1",
     "^@external$": "<rootDir>/infrastructure/external",
     "^@auth/(.*)$": "<rootDir>/infrastructure/auth/$1",
     "^@auth$": "<rootDir>/infrastructure/auth",

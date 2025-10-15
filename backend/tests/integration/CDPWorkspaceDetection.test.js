@@ -1,4 +1,4 @@
-const CDPConnectionManager = require("@external/cdp/CDPConnectionManager");
+const CDPConnectionManager = require("@infrastructure/ide-integration/api/CDPConnectionManager");
 const CDPWorkspaceDetector = require("@services/workspace/CDPWorkspaceDetector");
 const Logger = require("@logging/Logger");
 

@@ -9,7 +9,7 @@ const {
   PatternAnalysisStep,
   CouplingAnalysisStep,
   LayerAnalysisStep,
-} = require("@domain/steps/categories/analysis/architecture");
+} = require("../../../../domain/steps/categories/analysis/architecture");
 
 class ArchitectureAnalysisService {
   constructor() {

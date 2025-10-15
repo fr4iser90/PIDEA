@@ -1,8 +1,8 @@
 const CodeExplorerController = require("@api/CodeExplorerController");
-const BrowserManager = require("@external/BrowserManager");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
 
 // Mock BrowserManager
-jest.mock("../../../../infrastructure/external/BrowserManager");
+jest.mock("../../../../infrastructure/api/BrowserManager");
 
 describe("CodeExplorerController", () => {
   let controller;

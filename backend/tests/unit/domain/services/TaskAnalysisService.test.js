@@ -5,8 +5,8 @@ const TaskAnalysisService = require("@/tests/domain/services/TaskAnalysisService
 const ProjectType = require("@/tests/domain/value-objects/ProjectType");
 
 // Mock dependencies
-jest.mock("@/infrastructure/external/AIService");
-jest.mock("@/infrastructure/external/ProjectAnalyzer");
+jest.mock("@/infrastructure/api/AIService");
+jest.mock("@/infrastructure/api/ProjectAnalyzer");
 
 describe("TaskAnalysisService", () => {
   let taskAnalysisService;

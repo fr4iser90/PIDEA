@@ -4,7 +4,7 @@
  * Tests for ProjectInterfaceController functionality including CRUD operations,
  * interface control operations, validation, and error handling.
  */
-const ProjectInterfaceController = require("@/presentation/api/projects/ProjectInterfaceController");
+const ProjectInterfaceController = require("../../presentation/api/projects/ProjectInterfaceController");
 
 describe("ProjectInterfaceController", () => {
   let controller;

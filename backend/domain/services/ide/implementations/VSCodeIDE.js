@@ -4,7 +4,7 @@
  */
 const BaseIDE = require("../BaseIDE");
 const IDETypes = require("../IDETypes");
-const VSCodeExtensionManager = require("@external/VSCodeExtensionManager");
+const VSCodeExtensionManager = require("@infrastructure/ide-integration/services/VSCodeExtensionManager");
 
 class VSCodeIDE extends BaseIDE {
   constructor(browserManager, ideManager, eventBus = null) {

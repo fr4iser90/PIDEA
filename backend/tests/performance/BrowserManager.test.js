@@ -1,4 +1,4 @@
-const BrowserManager = require("@infrastructure/external/BrowserManager");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
 
 describe("BrowserManager Performance", () => {
   let browserManager;

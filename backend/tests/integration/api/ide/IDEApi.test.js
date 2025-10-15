@@ -4,7 +4,7 @@ const { EventEmitter } = require("events");
 
 // Mock dependencies
 jest.mock("../../../infrastructure/database/DatabaseConnection");
-jest.mock("../../../infrastructure/external/AIService");
+jest.mock("../../../infrastructure/api/AIService");
 jest.mock("../../../infrastructure/messaging/CommandBus");
 jest.mock("../../../infrastructure/messaging/QueryBus");
 

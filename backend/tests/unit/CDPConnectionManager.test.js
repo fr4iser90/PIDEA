@@ -1,4 +1,4 @@
-const CDPConnectionManager = require("@external/cdp/CDPConnectionManager");
+const CDPConnectionManager = require("@infrastructure/ide-integration/api/CDPConnectionManager");
 const Logger = require("@logging/Logger");
 
 // Mock dependencies

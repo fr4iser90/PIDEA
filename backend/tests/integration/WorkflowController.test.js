@@ -16,8 +16,8 @@ jest.mock("@logging/Logger", () => ({
   })),
 }));
 
-const WorkflowController = require("@/presentation/api/WorkflowController");
-const TaskController = require("@/presentation/api/TaskController");
+const WorkflowController = require("../../presentation/api/WorkflowController");
+const TaskController = require("../../presentation/api/TaskController");
 
 describe("WorkflowController - Task Review Mode", () => {
   let app;

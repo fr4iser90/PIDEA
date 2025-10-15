@@ -10,7 +10,7 @@ require("module-alias/register");
 const { chromium } = require("playwright");
 const IDETypes = require("../domain/services/ide/IDETypes");
 const VersionDetectionService = require("../domain/services/ide/VersionDetectionService");
-const VersionDetector = require("../infrastructure/external/ide/VersionDetector");
+const VersionDetector = require("../infrastructure/api/ide/VersionDetector");
 const JSONSelectorManager = require("../domain/services/ide/JSONSelectorManager");
 
 // Detect IDE type from User-Agent

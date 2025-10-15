@@ -49,15 +49,23 @@ const DatabaseConnection = require("./infrastructure/database/DatabaseConnection
 const AuthMiddleware = require("./infrastructure/auth/AuthMiddleware");
 
 // Presentation - Only keep what's not in DI
-const IDEMirrorController = require("./presentation/api/ide-integration/controllers/IDEMirrorController");
-const ContentLibraryController = require("./presentation/api/tools/controllers/ContentLibraryController");
-const AuthController = require("./presentation/api/system/controllers/AuthController");
-const TaskController = require("./presentation/api/task-management/controllers/TaskController");
-const TaskStatusSyncController = require("./presentation/api/task-management/controllers/TaskStatusSyncController");
-const WorkflowController = require("./presentation/api/task-management/controllers/WorkflowController");
-const AnalysisController = require("./presentation/api/analysis/controllers/AnalysisController");
-const GitController = require("./presentation/api/tools/controllers/GitController");
-const WebSocketManager = require("./presentation/websocket/WebSocketManager");
+const IDEMirrorController = require("./presentation/ide-integration/controllers/IDEMirrorController");
+const ContentLibraryController = require("./presentation/tools/controllers/ContentLibraryController");
+const AuthController = require("./presentation/system/controllers/AuthController");
+const TaskController = require("./presentation/task-management/controllers/TaskController");
+const TaskStatusSyncController = require("./presentation/task-management/controllers/TaskStatusSyncController");
+const WorkflowController = require("./presentation/task-management/controllers/WorkflowController");
+const AnalysisController = require("./presentation/analysis/controllers/AnalysisController");
+const GitController = require("./presentation/tools/controllers/GitController");
+const WebSocketManager = require("./presentation/system/websocket/WebSocketManager");
+
+// Modern Service Management Routes
+const ServiceHealthRoutes = require("./presentation/system/routes/ServiceHealthRoutes");
+const ServiceMetricsRoutes = require("./presentation/system/routes/ServiceMetricsRoutes");
+
+// New Registries
+const ControllerRegistry = require("./presentation/registries/ControllerRegistry");
+const RouteRegistry = require("./presentation/registries/RouteRegistry");
 
 class Application {
   constructor(config = {}) {
@@ -69,6 +77,10 @@ class Application {
     this.app = null;
     this.server = null;
     this.isRunning = false;
+    
+    // Initialize new registries
+    this.controllerRegistry = null;
+    this.routeRegistry = null;
 
     // Get services from DI Container
     const {
@@ -113,6 +125,19 @@ class Application {
       const serviceInitialization = new ServiceInitialization(this.logger);
       const infrastructureServices =
         await serviceInitialization.initializeInfrastructure();
+      
+      // Store service container reference
+      this.serviceContainer = infrastructureServices.serviceContainer;
+
+      // Initialize new registries
+      this.logger.info("🔧 Initializing Controller and Route Registries...");
+      this.controllerRegistry = new ControllerRegistry({ logger: this.logger });
+      this.routeRegistry = new RouteRegistry({ logger: this.logger });
+      
+      // Register all controllers and routes
+      await this.controllerRegistry.registerAllControllers();
+      await this.routeRegistry.registerAllRoutes();
+      this.logger.info("✅ Controller and Route Registries initialized");
 
       // Assign infrastructure services
       this.stepRegistry = infrastructureServices.stepRegistry;
@@ -280,7 +305,7 @@ class Application {
       }
 
       // Event handlers - Using modular handler file
-      const EventHandlers = require("./presentation/api/routes/eventHandlers");
+      const EventHandlers = require("./presentation/routes/eventHandlers");
       const eventHandlers = new EventHandlers(
         this.eventBus,
         this.webSocketManager,
@@ -338,7 +363,7 @@ class Application {
     );
 
     // Initialize Session Controller
-    const SessionController = require("./presentation/api/system/controllers/SessionController");
+    const SessionController = require("./presentation/system/controllers/SessionController");
     this.sessionController = new SessionController({
       sessionActivityService: this.serviceRegistry.getService(
         "sessionActivityService",
@@ -350,7 +375,7 @@ class Application {
     // WebChatController removed - webChatApplicationService doesn't exist
 
     // Initialize IDE Mirror Controller (kept for UI automation)
-    const IDEMirrorController = require("./presentation/api/ide-integration/controllers/IDEMirrorController");
+    const IDEMirrorController = require("./presentation/ide-integration/controllers/IDEMirrorController");
     this.ideMirrorController = new IDEMirrorController({
       ideMirrorApplicationService: this.serviceRegistry.getService(
         "ideMirrorApplicationService",
@@ -358,7 +383,7 @@ class Application {
       logger: this.serviceRegistry.getService("logger"),
     });
 
-    const ContentLibraryController = require("./presentation/api/tools/controllers/ContentLibraryController");
+    const ContentLibraryController = require("./presentation/tools/controllers/ContentLibraryController");
     this.ContentLibraryController = new ContentLibraryController({
       contentLibraryApplicationService: this.serviceRegistry.getService(
         "contentLibraryApplicationService",
@@ -366,21 +391,21 @@ class Application {
       logger: this.serviceRegistry.getService("logger"),
     });
 
-    const TaskController = require("./presentation/api/task-management/controllers/TaskController");
+    const TaskController = require("./presentation/task-management/controllers/TaskController");
     this.taskController = new TaskController(
       this.serviceRegistry.getService("taskApplicationService"),
       this.eventBus,
     );
 
     // 🆕 NEW: Initialize TaskStatusSyncController
-    const TaskStatusSyncController = require("./presentation/api/task-management/controllers/TaskStatusSyncController");
+    const TaskStatusSyncController = require("./presentation/task-management/controllers/TaskStatusSyncController");
     this.taskStatusSyncController = new TaskStatusSyncController(
       this.serviceRegistry.getService("taskRepository"),
       this.serviceRegistry.getService("taskService")?.statusTransitionService,
       this.eventBus,
     );
 
-    const WorkflowController = require("./presentation/api/task-management/controllers/WorkflowController");
+    const WorkflowController = require("./presentation/task-management/controllers/WorkflowController");
     this.workflowController = new WorkflowController({
       workflowApplicationService: this.serviceRegistry.getService(
         "workflowApplicationService",
@@ -407,7 +432,7 @@ class Application {
     });
 
     // Initialize QueueController
-    const QueueController = require("./presentation/api/system/controllers/QueueController");
+    const QueueController = require("./presentation/system/controllers/QueueController");
     this.queueController = new QueueController({
       taskQueueStore: this.serviceRegistry.getService("taskQueueStore"),
       stepProgressService: this.serviceRegistry.getService(
@@ -422,7 +447,7 @@ class Application {
     });
 
     // Initialize TestManagementController - CLEAN VERSION
-    const TestManagementController = require("./presentation/api/tools/controllers/TestManagementController");
+    const TestManagementController = require("./presentation/tools/controllers/TestManagementController");
     const PlaywrightTestHandler = require("./application/handlers/categories/testing/PlaywrightTestHandler");
     const PlaywrightTestApplicationService = require("./application/services/PlaywrightTestApplicationService");
 
@@ -445,13 +470,13 @@ class Application {
     });
 
     // Initialize AnalysisController
-    const AnalysisController = require("./presentation/api/analysis/controllers/AnalysisController");
+    const AnalysisController = require("./presentation/analysis/controllers/AnalysisController");
     this.analysisController = new AnalysisController(
       this.serviceRegistry.getService("analysisApplicationService"),
       this.workflowController,
     );
 
-    const GitController = require("./presentation/api/tools/controllers/GitController");
+    const GitController = require("./presentation/tools/controllers/GitController");
     this.gitController = new GitController({
       gitApplicationService: this.serviceRegistry.getService(
         "gitApplicationService",
@@ -462,7 +487,7 @@ class Application {
     });
 
     // Initialize Interface Controller
-    const InterfaceController = require("./presentation/api/ide-integration/controllers/InterfaceController");
+    const InterfaceController = require("./presentation/ide-integration/controllers/InterfaceController");
     this.interfaceController = new InterfaceController(this.interfaceManager);
 
     this.logger.info("Presentation layer initialized");
@@ -475,9 +500,23 @@ class Application {
       let totalRoutes = 0;
       const routeModules = [];
 
+      // Apply routes from RouteRegistry
+      try {
+        this.logger.info("🔗 Applying routes from RouteRegistry...");
+        this.routeRegistry.applyRoutes(this.app);
+        const registeredRoutes = this.routeRegistry.getRegisteredRoutes();
+        routeModules.push(...registeredRoutes);
+        totalRoutes += registeredRoutes.length;
+        this.logger.info(`✅ Applied ${registeredRoutes.length} routes from RouteRegistry`);
+      } catch (error) {
+        this.logger.error("❌ Failed to apply routes from RouteRegistry:", error.message);
+        // Continue with manual route setup as fallback
+      }
+
+      // Legacy route setup (as fallback)
       // Main routes - Using modular route file
       try {
-        const MainRoutes = require("./presentation/api/routes/mainRoutes");
+        const MainRoutes = require("./presentation/routes/mainRoutes");
         const mainRoutes = new MainRoutes();
         mainRoutes.setupRoutes(this.app);
         routeModules.push("MainRoutes");
@@ -489,7 +528,7 @@ class Application {
 
       // Health check routes - Using modular route file
       try {
-        const HealthRoutes = require("./presentation/api/routes/healthRoutes");
+        const HealthRoutes = require("./presentation/routes/healthRoutes");
         const healthRoutes = new HealthRoutes(
           this.autoSecurityManager,
           this.databaseConnection,
@@ -502,9 +541,35 @@ class Application {
         throw error;
       }
 
+      // Modern Service Management Routes
+      try {
+        // Service Health Routes
+        const serviceHealthRoutes = new ServiceHealthRoutes(
+          this.serviceContainer.healthMonitor,
+          { logger: this.logger }
+        );
+        this.app.use("/api/health", serviceHealthRoutes.getRouter());
+        routeModules.push("ServiceHealthRoutes");
+        totalRoutes++;
+
+        // Service Metrics Routes
+        const serviceMetricsRoutes = new ServiceMetricsRoutes(
+          this.serviceContainer.metrics,
+          { logger: this.logger }
+        );
+        this.app.use("/api/metrics", serviceMetricsRoutes.getRouter());
+        routeModules.push("ServiceMetricsRoutes");
+        totalRoutes++;
+
+        this.logger.info("✅ Modern service management routes loaded");
+      } catch (error) {
+        this.logger.error("❌ Failed to load modern service management routes:", error.message);
+        throw error;
+      }
+
       // Auth routes - Using modular route file
       try {
-        const AuthRoutes = require("./presentation/api/system/routes/authRoutes");
+        const AuthRoutes = require("./presentation/system/routes/authRoutes");
         const authRoutes = new AuthRoutes(
           this.authController,
           this.authMiddlewareInstance,
@@ -519,7 +584,7 @@ class Application {
 
       // Session management routes - Using modular route file
       try {
-        const SessionRoutes = require("./presentation/api/system/routes/sessionRoutes");
+        const SessionRoutes = require("./presentation/system/routes/sessionRoutes");
         const sessionRoutes = new SessionRoutes(
           this.sessionController,
           this.authMiddlewareInstance,
@@ -536,7 +601,7 @@ class Application {
 
       // Project routes - Using modular route file (NEW PROJECT-CENTRIC API)
       try {
-        const ProjectRoutes = require("./presentation/api/project-management/routes/projectRoutes");
+        const ProjectRoutes = require("./presentation/project-management/routes/projectRoutes");
         const projectRoutes = new ProjectRoutes(
           this.projectApplicationService,
           this.interfaceManager,
@@ -551,7 +616,7 @@ class Application {
       }
 
       // Interface routes - Using modular route file (NEW PROJECT-CENTRIC API)
-      const InterfaceRoutes = require("./presentation/api/ide-integration/routes/interfaceRoutes");
+      const InterfaceRoutes = require("./presentation/ide-integration/routes/interfaceRoutes");
       const interfaceRoutes = new InterfaceRoutes(
         this.interfaceManager,
         this.projectApplicationService,
@@ -561,7 +626,7 @@ class Application {
 
 
       // File explorer routes - Using modular route file
-      const FileRoutes = require("./presentation/api/routes/fileRoutes");
+      const FileRoutes = require("./presentation/routes/fileRoutes");
       const fileRoutes = new FileRoutes(
         this.browserManager,
         this.authMiddlewareInstance,
@@ -570,7 +635,7 @@ class Application {
       fileRoutes.setupRoutes(this.app);
 
       // Content Library routes - Using modular route file
-      const ContentLibraryRoutes = require("./presentation/api/tools/routes/contentLibraryRoutes");
+      const ContentLibraryRoutes = require("./presentation/tools/routes/contentLibraryRoutes");
       const contentLibraryRoutes = new ContentLibraryRoutes(
         this.ContentLibraryController,
         this.authMiddlewareInstance,
@@ -578,7 +643,7 @@ class Application {
       contentLibraryRoutes.setupRoutes(this.app);
 
       // Task Management routes - Using modular route file
-      const TaskRoutes = require("./presentation/api/task-management/routes/taskRoutes");
+      const TaskRoutes = require("./presentation/task-management/routes/taskRoutes");
       const taskRoutes = new TaskRoutes(
         this.taskController,
         this.taskStatusSyncController,
@@ -587,7 +652,7 @@ class Application {
       taskRoutes.setupRoutes(this.app);
 
       // Project Analysis routes (protected) - PROJECT-BASED
-      const AnalysisRoutes = require("./presentation/api/analysis/routes/analysisRoutes");
+      const AnalysisRoutes = require("./presentation/analysis/routes/analysisRoutes");
       const analysisRoutes = new AnalysisRoutes(
         this.workflowController,
         this.analysisController,
@@ -606,7 +671,7 @@ class Application {
       // REMOVED: DocumentationController routes - using WorkflowController + Steps instead
 
       // Git Management routes - Using modular route file
-      const GitRoutes = require("./presentation/api/tools/routes/gitRoutes");
+      const GitRoutes = require("./presentation/tools/routes/gitRoutes");
       const gitRoutes = new GitRoutes(
         this.gitController,
         this.authMiddlewareInstance,
@@ -617,7 +682,7 @@ class Application {
       this.ideMirrorController.setupRoutes(this.app);
 
       // Version Management routes - Using modular route file
-      const VersionRoutes = require("./presentation/api/project-management/routes/versionRoutes");
+      const VersionRoutes = require("./presentation/project-management/routes/versionRoutes");
       const versionRoutes = new VersionRoutes(
         this.authMiddlewareInstance,
         this.serviceRegistry,
@@ -625,7 +690,7 @@ class Application {
       versionRoutes.setupRoutes(this.app);
 
       // Test Management routes - Using modular route file
-      const TestRoutes = require("./presentation/api/tools/routes/testRoutes");
+      const TestRoutes = require("./presentation/tools/routes/testRoutes");
       const testRoutes = new TestRoutes(
         this.testManagementController,
         this.authMiddlewareInstance,
@@ -633,7 +698,7 @@ class Application {
       testRoutes.setupRoutes(this.app);
 
       // Workflow routes - Using modular route file (DEPRECATED)
-      const WorkflowRoutes = require("./presentation/api/task-management/routes/workflowRoutes");
+      const WorkflowRoutes = require("./presentation/task-management/routes/workflowRoutes");
       const workflowRoutes = new WorkflowRoutes(
         this.workflowController,
         this.authMiddlewareInstance,
@@ -641,7 +706,7 @@ class Application {
       workflowRoutes.setupRoutes(this.app);
 
       // Queue Management routes - Using modular route file
-      const QueueRoutes = require("./presentation/api/system/routes/queueRoutes");
+      const QueueRoutes = require("./presentation/system/routes/queueRoutes");
       const queueRoutes = new QueueRoutes(
         this.queueController,
         this.authMiddlewareInstance,

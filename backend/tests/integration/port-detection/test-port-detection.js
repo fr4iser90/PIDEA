@@ -1,8 +1,8 @@
 require("module-alias/register");
 
-const IDEDetector = require("@external/IDEDetector");
-const IDEManager = require("@external/IDEManager");
-const BrowserManager = require("@external/BrowserManager");
+const IDEDetector = require("@infrastructure/ide-integration/services/IDEDetector");
+const IDEManager = require("@infrastructure/ide-integration/services/IDEManager");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
 const Logger = require("@logging/Logger");
 const logger = new Logger("Logger");
 

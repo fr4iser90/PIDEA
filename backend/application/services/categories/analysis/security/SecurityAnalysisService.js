@@ -11,7 +11,7 @@ const {
   ZapSecurityStep,
   SecretScanningStep,
   ComplianceSecurityStep,
-} = require("@domain/steps/categories/analysis/security");
+} = require("../../../../domain/steps/categories/analysis/security");
 
 class SecurityAnalysisService {
   constructor() {

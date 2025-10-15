@@ -4,7 +4,7 @@
  */
 
 const Logger = require("@logging/Logger");
-const VersionAIIntegration = require("@infrastructure/external/VersionAIIntegration");
+const VersionAIIntegration = require("@infrastructure/version/api/VersionAIIntegration");
 
 class AIVersionAnalysisService {
   constructor(dependencies = {}) {

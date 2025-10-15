@@ -14,8 +14,8 @@ const Logger = require("@logging/Logger");
 const logger = new Logger("Logger");
 
 // Mock external dependencies
-jest.mock("@/infrastructure/external/BrowserManager");
-jest.mock("@/presentation/websocket/WebSocketManager");
+jest.mock("@/infrastructure/api/BrowserManager");
+jest.mock("../../presentation/websocket/WebSocketManager");
 
 describe("StreamingWorkflow Integration", () => {
   // Global cleanup after all tests

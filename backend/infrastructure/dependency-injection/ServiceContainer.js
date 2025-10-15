@@ -7,6 +7,12 @@ const path = require("path");
 const fs = require("fs").promises;
 const Logger = require("@logging/Logger");
 const DependencyGraph = require("./DependencyGraph");
+const LazyServiceLoader = require("./LazyServiceLoader");
+const ServiceHealthMonitor = require("./ServiceHealthMonitor");
+const ServiceMetrics = require("./ServiceMetrics");
+const ServiceFactory = require("./ServiceFactory");
+const ServiceDiscovery = require("./ServiceDiscovery");
+const ServiceLifecycleManager = require("./ServiceLifecycleManager");
 const logger = new Logger("DIServiceContainer");
 
 class ServiceContainer {
@@ -24,6 +30,21 @@ class ServiceContainer {
       workspacePath: null,
     };
 
+    // Initialize modern service management components
+    this.lazyLoader = new LazyServiceLoader(this);
+    this.healthMonitor = new ServiceHealthMonitor(this);
+    this.metrics = new ServiceMetrics();
+    this.serviceFactory = new ServiceFactory(this);
+    this.serviceDiscovery = new ServiceDiscovery(this);
+    this.lifecycleManager = new ServiceLifecycleManager(this);
+
+    // Configuration options
+    this.enableLazyLoading = true;
+    this.enableHealthMonitoring = true;
+    this.enableMetricsCollection = true;
+    this.enableAutoDiscovery = true;
+    this.enableLifecycleManagement = true;
+
     // Register optimization services (disabled for now due to SQL syntax errors)
     // this.registerOptimizationServices();
   }
@@ -35,7 +56,7 @@ class ServiceContainer {
    * @param {Object} options - Registration options
    */
   register(name, factory, options = {}) {
-    const { singleton = false, dependencies = [], lifecycle = {} } = options;
+    const { singleton = false, dependencies = [], lifecycle = {}, lazy = false } = options;
 
     // Add to dependency graph for circular dependency detection
     this.dependencyGraph.addNode(name, dependencies);
@@ -44,6 +65,7 @@ class ServiceContainer {
       factory,
       singleton,
       dependencies,
+      lazy,
     });
 
     // Store lifecycle hooks if provided
@@ -61,8 +83,26 @@ class ServiceContainer {
       lastError: null,
     });
 
+    // Register with lazy loader if lazy loading is enabled
+    if (lazy && this.enableLazyLoading) {
+      this.lazyLoader.registerLazyService(name, factory, dependencies, options);
+      logger.debug(`Registered lazy service: ${name}`);
+    }
+
+    // Register with lifecycle manager if lifecycle management is enabled
+    if (this.enableLifecycleManagement && lifecycle) {
+      this.lifecycleManager.registerService(name, lifecycle, options);
+      logger.debug(`Registered service with lifecycle manager: ${name}`);
+    }
+
+    // Register health check if health monitoring is enabled
+    if (this.enableHealthMonitoring && options.healthCheck) {
+      this.healthMonitor.registerHealthCheck(name, options.healthCheck, options.healthOptions);
+      logger.debug(`Registered health check for service: ${name}`);
+    }
+
     logger.debug(
-      `Registered service: ${name} (singleton: ${singleton}) with dependencies: [${dependencies.join(", ")}]`,
+      `Registered service: ${name} (singleton: ${singleton}, lazy: ${lazy}) with dependencies: [${dependencies.join(", ")}]`,
     );
   }
 
@@ -96,7 +136,12 @@ class ServiceContainer {
 
     // Check if factory exists
     if (this.factories.has(name)) {
-      const { factory, singleton, dependencies } = this.factories.get(name);
+      const { factory, singleton, dependencies, lazy } = this.factories.get(name);
+
+      // Use lazy loader if service is marked as lazy
+      if (lazy && this.enableLazyLoading) {
+        return this.lazyLoader.resolve(name);
+      }
 
       try {
         // Add to resolution stack to detect cycles
@@ -118,10 +163,28 @@ class ServiceContainer {
           this.singletons.set(name, instance);
         }
 
+        // Record metrics if enabled
+        if (this.enableMetricsCollection) {
+          this.metrics.recordInitialization(name, {
+            success: true,
+            duration: 0, // Would need timing implementation
+            dependencies,
+          });
+        }
+
         return instance;
       } catch (error) {
         // Remove from resolution stack on error
         this.resolutionStack.delete(name);
+
+        // Record metrics if enabled
+        if (this.enableMetricsCollection) {
+          this.metrics.recordInitialization(name, {
+            success: false,
+            error: error.message,
+            dependencies,
+          });
+        }
 
         logger.error(`Failed to resolve service '${name}':`, error.message);
         logger.error(`Dependencies for '${name}': ${dependencies.join(", ")}`);
@@ -140,6 +203,210 @@ class ServiceContainer {
       `Available singletons: ${Array.from(this.singletons.keys()).join(", ")}`,
     );
     throw new Error(`Service not found: ${name}`);
+  }
+
+  /**
+   * Enable or disable lazy loading
+   * @param {boolean} enabled - Whether to enable lazy loading
+   */
+  setLazyLoading(enabled) {
+    this.enableLazyLoading = enabled;
+    logger.info(`Lazy loading ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Enable or disable health monitoring
+   * @param {boolean} enabled - Whether to enable health monitoring
+   */
+  setHealthMonitoring(enabled) {
+    this.enableHealthMonitoring = enabled;
+    if (enabled) {
+      this.healthMonitor.startMonitoring();
+    } else {
+      this.healthMonitor.stopMonitoring();
+    }
+    logger.info(`Health monitoring ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Enable or disable metrics collection
+   * @param {boolean} enabled - Whether to enable metrics collection
+   */
+  setMetricsCollection(enabled) {
+    this.enableMetricsCollection = enabled;
+    if (enabled) {
+      this.metrics.startMetricsCollection();
+    } else {
+      this.metrics.stopMetricsCollection();
+    }
+    logger.info(`Metrics collection ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Enable or disable auto-discovery
+   * @param {boolean} enabled - Whether to enable auto-discovery
+   */
+  setAutoDiscovery(enabled) {
+    this.enableAutoDiscovery = enabled;
+    logger.info(`Auto-discovery ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Enable or disable lifecycle management
+   * @param {boolean} enabled - Whether to enable lifecycle management
+   */
+  setLifecycleManagement(enabled) {
+    this.enableLifecycleManagement = enabled;
+    logger.info(`Lifecycle management ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Scan for services and auto-register them
+   * @param {Array} directories - Optional specific directories to scan
+   * @returns {Promise<Object>} Scan results
+   */
+  async scanForServices(directories = null) {
+    if (!this.enableAutoDiscovery) {
+      throw new Error("Auto-discovery is disabled. Enable it first with setAutoDiscovery(true)");
+    }
+
+    return await this.serviceDiscovery.scanForServices(directories);
+  }
+
+  /**
+   * Get service health status
+   * @param {string} serviceName - Optional specific service name
+   * @returns {Object} Health status
+   */
+  getServiceHealth(serviceName = null) {
+    if (!this.enableHealthMonitoring) {
+      throw new Error("Health monitoring is disabled. Enable it first with setHealthMonitoring(true)");
+    }
+
+    return serviceName 
+      ? this.healthMonitor.getServiceHealth(serviceName)
+      : this.healthMonitor.getOverallHealth();
+  }
+
+  /**
+   * Get service metrics
+   * @param {string} serviceName - Optional specific service name
+   * @returns {Object} Service metrics
+   */
+  getServiceMetrics(serviceName = null) {
+    if (!this.enableMetricsCollection) {
+      throw new Error("Metrics collection is disabled. Enable it first with setMetricsCollection(true)");
+    }
+
+    return serviceName 
+      ? this.metrics.getServiceMetrics(serviceName)
+      : this.metrics.getAggregatedMetrics();
+  }
+
+  /**
+   * Get service lifecycle information
+   * @param {string} serviceName - Optional specific service name
+   * @returns {Object} Lifecycle information
+   */
+  getServiceLifecycle(serviceName = null) {
+    if (!this.enableLifecycleManagement) {
+      throw new Error("Lifecycle management is disabled. Enable it first with setLifecycleManagement(true)");
+    }
+
+    return serviceName 
+      ? this.lifecycleManager.getServiceStateInfo(serviceName)
+      : this.lifecycleManager.getAllServiceStates();
+  }
+
+  /**
+   * Start all services with lifecycle management
+   * @param {Object} options - Start options
+   * @returns {Promise<Object>} Start results
+   */
+  async startAllServices(options = {}) {
+    if (!this.enableLifecycleManagement) {
+      throw new Error("Lifecycle management is disabled. Enable it first with setLifecycleManagement(true)");
+    }
+
+    return await this.lifecycleManager.startAllServices(options);
+  }
+
+  /**
+   * Stop all services with lifecycle management
+   * @param {Object} options - Stop options
+   * @returns {Promise<Object>} Stop results
+   */
+  async stopAllServices(options = {}) {
+    if (!this.enableLifecycleManagement) {
+      throw new Error("Lifecycle management is disabled. Enable it first with setLifecycleManagement(true)");
+    }
+
+    return await this.lifecycleManager.stopAllServices(options);
+  }
+
+  /**
+   * Graceful shutdown of all services
+   * @param {Object} options - Shutdown options
+   * @returns {Promise<void>}
+   */
+  async gracefulShutdown(options = {}) {
+    logger.info("Starting graceful shutdown...");
+
+    try {
+      // Stop lifecycle management
+      if (this.enableLifecycleManagement) {
+        await this.lifecycleManager.gracefulShutdown(options);
+      }
+
+      // Stop health monitoring
+      if (this.enableHealthMonitoring) {
+        this.healthMonitor.stopMonitoring();
+      }
+
+      // Stop metrics collection
+      if (this.enableMetricsCollection) {
+        this.metrics.stopMetricsCollection();
+      }
+
+      // Shutdown lazy loader
+      if (this.enableLazyLoading) {
+        await this.lazyLoader.shutdown();
+      }
+
+      logger.info("Graceful shutdown completed");
+    } catch (error) {
+      logger.error("Graceful shutdown failed:", error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get modern service management status
+   * @returns {Object} Status information
+   */
+  getModernServiceStatus() {
+    return {
+      lazyLoading: {
+        enabled: this.enableLazyLoading,
+        metrics: this.lazyLoader.getMetrics(),
+      },
+      healthMonitoring: {
+        enabled: this.enableHealthMonitoring,
+        metrics: this.healthMonitor.getMetrics(),
+      },
+      metricsCollection: {
+        enabled: this.enableMetricsCollection,
+        metrics: this.metrics.getAggregatedMetrics(),
+      },
+      autoDiscovery: {
+        enabled: this.enableAutoDiscovery,
+        metrics: this.serviceDiscovery.getMetrics(),
+      },
+      lifecycleManagement: {
+        enabled: this.enableLifecycleManagement,
+        metrics: this.lifecycleManager.getMetrics(),
+      },
+    };
   }
 
   /**

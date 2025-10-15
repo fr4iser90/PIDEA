@@ -12,8 +12,8 @@ const {
 } = require("@infrastructure/dependency-injection/ServiceContainer");
 
 // Import middleware
-const ProjectMiddleware = require("@presentation/middleware/projectMiddleware");
-const InterfaceMiddleware = require("@presentation/middleware/interfaceMiddleware");
+const ProjectMiddleware = require("@presentation/api/project-management/middleware/projectMiddleware");
+const InterfaceMiddleware = require("@presentation/api/ide-integration/middleware/interfaceMiddleware");
 
 // Import controllers
 const ProjectController = require("@presentation/api/projects/ProjectController");

@@ -1,5 +1,5 @@
-const IDEManager = require("@external/ide/IDEManager");
-const BrowserManager = require("@external/BrowserManager");
+const IDEManager = require("@infrastructure/ide-integration/services/IDEManager");
+const BrowserManager = require("@infrastructure/ide-integration/api/BrowserManager");
 const Logger = require("@logging/Logger");
 const logger = new Logger("Logger");
 
