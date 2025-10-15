@@ -35,9 +35,22 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
     }
   }, [projects, searchQuery]);
 
-  // MANUAL LOAD ONLY - NO AUTO-LOAD!
+  // Auto-load projects on component mount
+  useEffect(() => {
+    const loadProjects = async () => {
+      logger.info('🔍 [ProjectListComponent] AUTO-LOADING PROJECTS ON MOUNT');
+      await refresh();
+    };
+    
+    // Only load if we don't have projects yet and we're not already loading
+    if (Object.keys(projects).length === 0 && !isLoading) {
+      loadProjects();
+    }
+  }, []); // Only run once on mount
+
+  // MANUAL LOAD for refresh button
   const handleManualLoad = async () => {
-    logger.info('🔍 [ProjectListComponent] MANUAL LOAD TRIGGERED - ONCE ONLY!');
+    logger.info('🔍 [ProjectListComponent] MANUAL LOAD TRIGGERED');
     await refresh();
   };
 

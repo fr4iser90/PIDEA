@@ -7,19 +7,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import { useProjectManagement, useProjectSelection, useProjectValidation } from '@/infrastructure/stores/hooks/useProjectStore';
-import { useProjects, useActiveProject, useProjectStats } from '@/infrastructure/stores/selectors/ProjectSelectors';
+import { useProjects, useSelectedProject, useProjectStats } from '@/infrastructure/stores/selectors/ProjectSelectors';
 
 const ProjectManagementComponent = ({ onProjectSelect, onProjectCreate, onProjectUpdate, onProjectDelete }) => {
   // Store hooks
   const {
     projects,
-    activeProject,
+    selectedProject,
     isLoading,
     error,
     createProject,
     updateProject,
     deleteProject,
-    setActiveProject,
+    setSelectedProject,
     refresh,
     clearError
   } = useProjectManagement();
@@ -186,7 +186,7 @@ const ProjectManagementComponent = ({ onProjectSelect, onProjectCreate, onProjec
           <span className="stat-value">{projectStats.total}</span>
         </div>
         <div className="stat-item">
-          <span className="stat-label">Active Projects:</span>
+          <span className="stat-label">Selected Projects:</span>
           <span className="stat-value">{projectStats.active}</span>
         </div>
         <div className="stat-item">
@@ -233,7 +233,7 @@ const ProjectManagementComponent = ({ onProjectSelect, onProjectCreate, onProjec
           filteredProjects.map(project => (
             <div 
               key={project.id} 
-              className={`project-item ${activeProject === project.id ? 'active' : ''}`}
+              className={`project-item ${selectedProject === project.id ? 'active' : ''}`}
               onClick={() => handleProjectSelect(project.id)}
             >
               <div className="project-info">

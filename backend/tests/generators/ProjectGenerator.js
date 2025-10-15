@@ -100,7 +100,7 @@ function generateProject(properties = {}) {
  * Generate active project
  * @returns {Object} Active project
  */
-function generateActiveProject() {
+function generateSelectedProject() {
   return generateProject({
     status: "active",
     visibility: "private",
@@ -168,7 +168,7 @@ function generateProjectWithVisibility(visibility) {
 module.exports = {
   generateProjects,
   generateProject,
-  generateActiveProject,
+  generateSelectedProject,
   generatePublicProject,
   generateArchivedProject,
   generateProjectForOwner,

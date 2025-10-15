@@ -23,7 +23,7 @@ Integrate new project and interface management components with SidebarLeft, upda
 **Updated Structure**:
 ```javascript
 const SidebarLeft = ({ eventBus, activePort, onActivePortChange, mode = 'chat' }) => {
-  const { activeProjectId, setActiveProject } = useProjectStore();
+  const { selectedProjectId, setSelectedProject } = useProjectStore();
   const [currentView, setCurrentView] = useState('projects'); // projects, interfaces, chat
   
   const renderMainContent = () => {
@@ -32,14 +32,14 @@ const SidebarLeft = ({ eventBus, activePort, onActivePortChange, mode = 'chat' }
         return (
           <ProjectListComponent 
             eventBus={eventBus}
-            onProjectSelect={setActiveProject}
+            onProjectSelect={setSelectedProject}
           />
         );
       case 'interfaces':
         return (
           <InterfaceManagerComponent 
             eventBus={eventBus}
-            activeProjectId={activeProjectId}
+            selectedProjectId={selectedProjectId}
           />
         );
       case 'chat':

@@ -17,13 +17,13 @@ import useProjectStore from '@/infrastructure/stores/ProjectStore.jsx';
 function MyComponent() {
   const {
     projects,
-    activeProject,
+    selectedProject,
     isLoading,
     error,
     createProject,
     updateProject,
     deleteProject,
-    setActiveProject
+    setSelectedProject
   } = useProjectStore();
 
   // Load projects on component mount
@@ -57,14 +57,14 @@ function MyComponent() {
 ```javascript
 import { 
   useProjects, 
-  useActiveProject, 
+  useSelectedProject, 
   useProjectStats,
   useProjectSearch 
 } from '@/infrastructure/stores/selectors/ProjectSelectors';
 
 function ProjectList() {
   const projects = useProjects();
-  const activeProject = useActiveProject();
+  const selectedProject = useSelectedProject();
   const stats = useProjectStats();
   const [searchQuery, setSearchQuery] = useState('');
   const searchResults = useProjectSearch(searchQuery);
@@ -79,7 +79,7 @@ function ProjectList() {
         onChange={(e) => setSearchQuery(e.target.value)}
       />
       {searchResults.map(project => (
-        <div key={project.id} className={activeProject?.id === project.id ? 'active' : ''}>
+        <div key={project.id} className={selectedProject?.id === project.id ? 'active' : ''}>
           {project.name}
         </div>
       ))}
@@ -96,13 +96,13 @@ import { useProjectManagement } from '@/infrastructure/stores/hooks/useProjectSt
 function ProjectManager() {
   const {
     projects,
-    activeProject,
+    selectedProject,
     isLoading,
     error,
     createProject,
     updateProject,
     deleteProject,
-    setActiveProject,
+    setSelectedProject,
     refresh,
     clearError
   } = useProjectManagement(true); // autoLoad = true
@@ -149,7 +149,7 @@ import { useProjectStoreIntegration } from '@/hooks/useProjectStoreIntegration';
 
 function ProjectIDEIntegration() {
   const {
-    activeProject,
+    selectedProject,
     activeIDE,
     isSynchronized,
     syncProjectWithIDE,
@@ -162,8 +162,8 @@ function ProjectIDEIntegration() {
   });
 
   const handleSyncProject = async () => {
-    if (activeProject) {
-      await syncProjectWithIDE(activeProject.id);
+    if (selectedProject) {
+      await syncProjectWithIDE(selectedProject.id);
     }
   };
 
@@ -178,7 +178,7 @@ function ProjectIDEIntegration() {
       <div className={`sync-status ${isSynchronized ? 'synced' : 'unsynced'}`}>
         {isSynchronized ? 'Synchronized' : 'Not Synchronized'}
       </div>
-      <button onClick={handleSyncProject} disabled={!activeProject}>
+      <button onClick={handleSyncProject} disabled={!selectedProject}>
         Sync Project → IDE
       </button>
       <button onClick={handleSyncIDE} disabled={!activeIDE}>
@@ -210,7 +210,7 @@ function App() {
 // Use the context in components
 function MyComponent() {
   const {
-    activeProject,
+    selectedProject,
     activeIDE,
     isSynchronized,
     createProject,
@@ -226,7 +226,7 @@ function MyComponent() {
       <h2>Project Statistics</h2>
       <p>Total Projects: {stats.total}</p>
       <p>Active Projects: {stats.active}</p>
-      <p>Current Project: {activeProject?.name || 'None'}</p>
+      <p>Current Project: {selectedProject?.name || 'None'}</p>
       <p>Current IDE: {activeIDE?.name || 'None'}</p>
       <p>Status: {isSynchronized ? 'Synchronized' : 'Not Synchronized'}</p>
     </div>
@@ -450,15 +450,15 @@ function ExistingComponent() {
   const { activePort, availableIDEs } = useIDEStore();
   
   // Add ProjectStore integration
-  const { activeProject, syncProjectWithIDE } = useProjectStoreIntegration();
+  const { selectedProject, syncProjectWithIDE } = useProjectStoreIntegration();
   
   const handlePortChange = async (port) => {
     // Existing logic
     await setActivePort(port);
     
     // New integration logic
-    if (activeProject) {
-      await syncProjectWithIDE(activeProject.id);
+    if (selectedProject) {
+      await syncProjectWithIDE(selectedProject.id);
     }
   };
 
@@ -529,7 +529,7 @@ console.log('Sync data:', syncData);
 - `createProject(data)`: Create a new project
 - `updateProject(id, updates)`: Update an existing project
 - `deleteProject(id)`: Delete a project
-- `setActiveProject(id)`: Set the active project
+- `setSelectedProject(id)`: Set the selected project
 - `getProject(id)`: Get project by ID
 - `getProjectByWorkspace(path)`: Get project by workspace path
 - `searchProjects(query)`: Search projects
@@ -539,7 +539,7 @@ console.log('Sync data:', syncData);
 ### Selectors
 
 - `useProjects()`: Get all projects
-- `useActiveProject()`: Get active project
+- `useSelectedProject()`: Get selected project
 - `useProject(id)`: Get specific project
 - `useProjectByWorkspace(path)`: Get project by workspace
 - `useProjectStats()`: Get project statistics

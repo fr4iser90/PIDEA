@@ -67,9 +67,9 @@ export const useProjectStoreCache = (options = {}) => {
       // Pre-cache project statistics
       projectStore.getProjectStats();
       
-      // Pre-cache active project if available
-      if (projectStore.activeProject) {
-        projectStore.getProject(projectStore.activeProject);
+      // Pre-cache selected project if available
+      if (projectStore.selectedProject) {
+        projectStore.getProject(projectStore.selectedProject);
       }
       
       logger.info('ProjectStore cache warmed successfully');
@@ -354,19 +354,19 @@ export const useProjectStoreCacheWarming = () => {
     }
   }, [projectStore]);
 
-  // Warm cache with active project data
-  const warmActiveProject = useCallback(async () => {
+  // Warm cache with selected project data
+  const warmSelectedProject = useCallback(async () => {
     try {
-      if (!projectStore.activeProject) return;
+      if (!projectStore.selectedProject) return;
       
-      logger.info('Warming cache with active project...');
+      logger.info('Warming cache with selected project...');
       
-      // Pre-cache active project
-      projectStore.getProject(projectStore.activeProject);
+      // Pre-cache selected project
+      projectStore.getProject(projectStore.selectedProject);
       
-      logger.info('Active project cache warmed');
+      logger.info('Selected project cache warmed');
     } catch (error) {
-      logger.error('Failed to warm active project cache:', error);
+      logger.error('Failed to warm selected project cache:', error);
     }
   }, [projectStore]);
 
@@ -381,9 +381,9 @@ export const useProjectStoreCacheWarming = () => {
       // Warm statistics
       projectStore.getProjectStats();
       
-      // Warm active project if available
-      if (projectStore.activeProject) {
-        projectStore.getProject(projectStore.activeProject);
+      // Warm selected project if available
+      if (projectStore.selectedProject) {
+        projectStore.getProject(projectStore.selectedProject);
       }
       
       logger.info('Frequent data cache warmed');
@@ -403,9 +403,9 @@ export const useProjectStoreCacheWarming = () => {
       // Warm statistics
       projectStore.getProjectStats();
       
-      // Warm active project
-      if (projectStore.activeProject) {
-        projectStore.getProject(projectStore.activeProject);
+      // Warm selected project
+      if (projectStore.selectedProject) {
+        projectStore.getProject(projectStore.selectedProject);
       }
       
       // Warm recently accessed projects (if metadata available)
@@ -427,7 +427,7 @@ export const useProjectStoreCacheWarming = () => {
 
   return {
     warmUserProjects,
-    warmActiveProject,
+    warmSelectedProject,
     warmFrequentData,
     smartWarmCache
   };

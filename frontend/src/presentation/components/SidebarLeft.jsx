@@ -40,7 +40,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
   const { availableIDEs, loadAvailableIDEs } = useIDEStore();
   
   // Use ProjectStore for project management
-  const { activeProject, setActiveProject } = useProjectManagement();
+  const { selectedProject, setSelectedProject } = useProjectManagement();
 
   // EventBus-Listener for sidebar-level events
   useEffect(() => {
@@ -68,7 +68,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
 
     const handleProjectSelected = (data) => {
       logger.info('Project selected:', data.projectId);
-      setActiveProject(data.projectId);
+      setSelectedProject(data.projectId);
       setSelectedProject(data.projectId);
       setShowInterfaces(true);
       setShowChats(false);
@@ -104,7 +104,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
       eventBus.off('project-created', handleProjectCreated);
       eventBus.off('interface-switched', handleInterfaceSwitched);
     };
-  }, [eventBus, onActivePortChange, setActiveProject]);
+  }, [eventBus, onActivePortChange]);
 
   // Load IDE list on component mount ONLY if authenticated
   useEffect(() => {
@@ -211,7 +211,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
         return (
           <ProjectListComponent 
             eventBus={eventBus}
-            onProjectSelect={setActiveProject}
+            onProjectSelect={setSelectedProject}
             showAddModal={showProjectAddModal}
             onCloseAddModal={() => onShowProjectAddModal(false)}
             onOpenAddModal={onShowProjectAddModal}
@@ -221,7 +221,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
         return (
           <InterfaceManagerComponent 
             eventBus={eventBus}
-            activeProjectId={selectedProject}
+            selectedProjectId={selectedProject}
           />
         );
       case 'chat':

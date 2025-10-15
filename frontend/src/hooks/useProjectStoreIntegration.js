@@ -25,18 +25,18 @@ export const useProjectStoreIntegration = (options = {}) => {
   const ideStore = useIDEStore();
 
   // Derived state
-  const activeProject = useMemo(() => {
-    return projectStore.activeProject ? projectStore.getProject(projectStore.activeProject) : null;
-  }, [projectStore.activeProject, projectStore.projects]);
+  const selectedProject = useMemo(() => {
+    return projectStore.selectedProject ? projectStore.getProject(projectStore.selectedProject) : null;
+  }, [projectStore.selectedProject, projectStore.projects]);
 
   const activeIDE = useMemo(() => {
     return ideStore.availableIDEs.find(ide => ide.active) || null;
   }, [ideStore.availableIDEs]);
 
   const isSynchronized = useMemo(() => {
-    if (!activeProject || !activeIDE) return false;
-    return activeProject.workspacePath === activeIDE.workspacePath;
-  }, [activeProject, activeIDE]);
+    if (!selectedProject || !activeIDE) return false;
+    return selectedProject.workspacePath === activeIDE.workspacePath;
+  }, [selectedProject, activeIDE]);
 
   // Integration actions
   const syncProjectWithIDE = useCallback(async (projectId) => {
@@ -94,7 +94,7 @@ export const useProjectStoreIntegration = (options = {}) => {
       }
 
       if (project) {
-        projectStore.setActiveProject(project.id);
+        projectStore.setSelectedProject(project.id);
         logger.info('Synced IDE with project:', project.name);
       }
     } catch (error) {
@@ -104,11 +104,11 @@ export const useProjectStoreIntegration = (options = {}) => {
 
   const getSynchronizedData = useCallback(() => {
     return {
-      project: activeProject,
+      project: selectedProject,
       ide: activeIDE,
       isSynchronized,
       projectStore: {
-        activeProject: projectStore.activeProject,
+        selectedProject: projectStore.selectedProject,
         projects: projectStore.projects,
         isLoading: projectStore.isLoading,
         error: projectStore.error
@@ -120,7 +120,7 @@ export const useProjectStoreIntegration = (options = {}) => {
         error: ideStore.error
       }
     };
-  }, [activeProject, activeIDE, isSynchronized, projectStore, ideStore]);
+  }, [selectedProject, activeIDE, isSynchronized, projectStore, ideStore]);
 
   // Auto-sync effect
   useEffect(() => {
@@ -155,7 +155,7 @@ export const useProjectStoreIntegration = (options = {}) => {
 
   return {
     // State
-    activeProject,
+    selectedProject,
     activeIDE,
     isSynchronized,
     
@@ -186,12 +186,12 @@ export const useProjectWorkspace = (workspacePath) => {
   }, [workspacePath, ideStore.availableIDEs]);
 
   const isActive = useMemo(() => {
-    return project && projectStore.activeProject === project.id;
-  }, [project, projectStore.activeProject]);
+    return project && projectStore.selectedProject === project.id;
+  }, [project, projectStore.selectedProject]);
 
   const activateWorkspace = useCallback(async () => {
     if (project) {
-      projectStore.setActiveProject(project.id);
+      projectStore.setSelectedProject(project.id);
     } else if (ide) {
       await ideStore.setActivePort(ide.port);
     }

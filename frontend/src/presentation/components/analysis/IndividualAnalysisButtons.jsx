@@ -15,7 +15,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
   const apiRepository = new AnalysisRepository();
   
   // ✅ FIX: Use useSelectedIDE to get the correct projectId
-  const { projectId: activeProjectId } = useSelectedIDE();
+  const { projectId: selectedProjectId } = useSelectedIDE();
 
   // Core Analysis Types - Only the main analysis steps
   const analysisTypes = [
@@ -172,8 +172,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const loadActiveSteps = async () => {
     try {
-      // ✅ FIX: Use activeProjectId from useActiveIDE, NO FALLBACKS!
-      const currentProjectId = projectId || activeProjectId;
+      // ✅ FIX: Use selectedProjectId from useActiveIDE, NO FALLBACKS!
+      const currentProjectId = projectId || selectedProjectId;
       
       if (!currentProjectId) {
         logger.warn('No project ID available for loading active steps');
@@ -360,7 +360,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       setErrorStates(prev => new Map(prev.set(analysisType, null)));
       
 
-      const currentProjectId = projectId || activeProjectId;
+      const currentProjectId = projectId || selectedProjectId;
       
       if (!currentProjectId) {
         throw new Error('No project ID available');
@@ -384,8 +384,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
 
   const handleCancelAnalysis = async (analysisType) => {
     try {
-      // ✅ FIX: Use activeProjectId from useActiveIDE, NO FALLBACKS!
-      const currentProjectId = projectId || activeProjectId;
+      // ✅ FIX: Use selectedProjectId from useActiveIDE, NO FALLBACKS!
+      const currentProjectId = projectId || selectedProjectId;
       
       if (!currentProjectId) {
         throw new Error('No project ID available');
@@ -431,8 +431,8 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       setRunAllLoading(true);
       setRunAllProgress(0);
       
-      // ✅ FIX: Use activeProjectId from useActiveIDE, NO FALLBACKS!
-      const currentProjectId = projectId || activeProjectId;
+      // ✅ FIX: Use selectedProjectId from useActiveIDE, NO FALLBACKS!
+      const currentProjectId = projectId || selectedProjectId;
       
       if (!currentProjectId) {
         throw new Error('No project ID available');

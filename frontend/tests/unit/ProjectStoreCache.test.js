@@ -63,7 +63,7 @@ describe('ProjectStore Cache Integration', () => {
     // Reset store state
     act(() => {
       useProjectStore.getState().projects = {};
-      useProjectStore.getState().activeProject = null;
+      useProjectStore.getState().selectedProject = null;
       useProjectStore.getState().error = null;
       useProjectStore.getState().isLoading = false;
     });

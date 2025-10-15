@@ -23,7 +23,7 @@ Add loading states, error handling, smooth animations, keyboard shortcuts, acces
 **Loading States Implementation**:
 ```javascript
 const ProjectListComponent = ({ eventBus, onProjectSelect }) => {
-  const { projects, activeProjectId, isLoading, error } = useProjectStore();
+  const { projects, selectedProjectId, isLoading, error } = useProjectStore();
   
   if (isLoading) {
     return (

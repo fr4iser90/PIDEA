@@ -22,15 +22,15 @@ Create interface management UI components for managing IDE interfaces within pro
 
 **Component Structure**:
 ```javascript
-const InterfaceManagerComponent = ({ eventBus, activeProjectId }) => {
-  const { activeProject } = useProjectStore();
+const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
+  const { selectedProject } = useProjectStore();
   const { interfaces, loadInterfaces, switchInterface } = useInterfaceManager();
   
   useEffect(() => {
-    if (activeProjectId) {
-      loadInterfaces(activeProjectId);
+    if (selectedProjectId) {
+      loadInterfaces(selectedProjectId);
     }
-  }, [activeProjectId]);
+  }, [selectedProjectId]);
   
   return (
     <div className="interface-manager">

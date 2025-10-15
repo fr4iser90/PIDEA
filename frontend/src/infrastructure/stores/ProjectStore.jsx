@@ -375,7 +375,7 @@ const useProjectStore = create(
             const { [projectId]: deleted, ...remainingProjects } = state.projects;
             return {
               projects: remainingProjects,
-              activeProject: state.activeProject === projectId ? null : state.activeProject,
+              selectedProject: state.selectedProject === projectId ? null : state.selectedProject,
               isLoading: false,
               lastUpdate: new Date().toISOString()
             };

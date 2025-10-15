@@ -2,7 +2,7 @@
  * InterfaceManagerComponent - Interface management for sidebar
  * 
  * This component provides interface management functionality for the sidebar,
- * including interface listing, switching, and management for the active project.
+ * including interface listing, switching, and management for the selected project.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -12,25 +12,25 @@ import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import InterfaceItemComponent from './InterfaceItemComponent.jsx';
 import '@/scss/components/_interface-management.scss';
 
-const InterfaceManagerComponent = ({ eventBus, activeProjectId }) => {
-  const { activeProject } = useProjectManagement();
+const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
+  const { selectedProject } = useProjectManagement();
   const { availableIDEs, switchIDE, loadAvailableIDEs } = useIDEStore();
   const [interfaces, setInterfaces] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load interfaces for active project
+  // Load interfaces for selected project
   useEffect(() => {
-    if (activeProjectId) {
-      loadProjectInterfaces(activeProjectId);
+    if (selectedProjectId) {
+      loadProjectInterfaces(selectedProjectId);
     }
-  }, [activeProjectId]);
+  }, [selectedProjectId]);
 
   // Listen for IDE updates
   useEffect(() => {
     if (eventBus) {
       const handleIDEListUpdated = () => {
-        loadProjectInterfaces(activeProjectId);
+        loadProjectInterfaces(selectedProjectId);
       };
 
       eventBus.on('ideListUpdated', handleIDEListUpdated);
@@ -38,7 +38,7 @@ const InterfaceManagerComponent = ({ eventBus, activeProjectId }) => {
         eventBus.off('ideListUpdated', handleIDEListUpdated);
       };
     }
-  }, [eventBus, activeProjectId]);
+  }, [eventBus, selectedProjectId]);
 
   const loadProjectInterfaces = async (projectId) => {
     if (!projectId) return;
@@ -78,7 +78,7 @@ const InterfaceManagerComponent = ({ eventBus, activeProjectId }) => {
     eventBus?.emit('sidebar-left:new-ide');
   };
 
-  if (!activeProjectId) {
+  if (!selectedProjectId) {
     return (
       <div className="interface-manager-empty">
         <div className="empty-state">
@@ -102,7 +102,7 @@ const InterfaceManagerComponent = ({ eventBus, activeProjectId }) => {
       <div className="interface-manager-error">
         <div className="error-icon">⚠️</div>
         <p>Failed to load interfaces</p>
-        <button onClick={() => loadProjectInterfaces(activeProjectId)} className="btn btn-secondary">
+        <button onClick={() => loadProjectInterfaces(selectedProjectId)} className="btn btn-secondary">
           Retry
         </button>
       </div>
@@ -125,8 +125,8 @@ const InterfaceManagerComponent = ({ eventBus, activeProjectId }) => {
 
       {/* Project Info */}
       <div className="project-info">
-        <p className="project-name">Project: {activeProject?.name || 'Unknown'}</p>
-        <p className="project-path">{activeProject?.workspacePath || ''}</p>
+        <p className="project-name">Project: {selectedProject?.name || 'Unknown'}</p>
+        <p className="project-path">{selectedProject?.workspacePath || ''}</p>
       </div>
 
       {/* Interface List */}

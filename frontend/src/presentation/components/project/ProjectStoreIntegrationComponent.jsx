@@ -8,12 +8,12 @@ import React, { useState, useEffect } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import { useProjectStoreIntegration, useProjectSyncStatus } from '@/hooks/useProjectStoreIntegration';
 import { useProjectManagement } from '@/infrastructure/stores/hooks/useProjectStore';
-import { useProjects, useActiveProject } from '@/infrastructure/stores/selectors/ProjectSelectors';
+import { useProjects, useSelectedProject } from '@/infrastructure/stores/selectors/ProjectSelectors';
 
 const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
   // Hooks
   const {
-    activeProject,
+    selectedProject,
     activeIDE,
     isSynchronized,
     syncProjectWithIDE,
@@ -23,7 +23,7 @@ const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
 
   const syncStatus = useProjectSyncStatus();
   const { projects, isLoading, error } = useProjectManagement();
-  const activeProjectData = useActiveProject();
+  const selectedProjectData = useSelectedProject();
 
   // Local state
   const [lastSyncTime, setLastSyncTime] = useState(null);
@@ -54,11 +54,11 @@ const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
 
   // Auto-sync when synchronization status changes
   useEffect(() => {
-    if (!isSynchronized && activeProject && activeIDE) {
+    if (!isSynchronized && selectedProject && activeIDE) {
       logger.info('Auto-syncing project with IDE');
-      handleSync('project', activeProject.id);
+      handleSync('project', selectedProject.id);
     }
-  }, [isSynchronized, activeProject, activeIDE]);
+  }, [isSynchronized, selectedProject, activeIDE]);
 
   // Render sync status indicator
   const renderSyncStatus = () => {
@@ -95,12 +95,12 @@ const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
 
   // Render project info
   const renderProjectInfo = () => {
-    if (!activeProjectData) {
+    if (!selectedProjectData) {
       return (
         <div className="project-info">
           <div className="info-item">
             <span className="label">Project:</span>
-            <span className="value">No active project</span>
+            <span className="value">No selected project</span>
           </div>
         </div>
       );
@@ -110,20 +110,20 @@ const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
       <div className="project-info">
         <div className="info-item">
           <span className="label">Project:</span>
-          <span className="value">{activeProjectData.name}</span>
+          <span className="value">{selectedProjectData.name}</span>
         </div>
         <div className="info-item">
           <span className="label">Workspace:</span>
-          <span className="value">{activeProjectData.workspacePath}</span>
+          <span className="value">{selectedProjectData.workspacePath}</span>
         </div>
         <div className="info-item">
           <span className="label">Type:</span>
-          <span className="value">{activeProjectData.type}</span>
+          <span className="value">{selectedProjectData.type}</span>
         </div>
-        {activeProjectData.framework && (
+        {selectedProjectData.framework && (
           <div className="info-item">
             <span className="label">Framework:</span>
-            <span className="value">{activeProjectData.framework}</span>
+            <span className="value">{selectedProjectData.framework}</span>
           </div>
         )}
       </div>
@@ -166,8 +166,8 @@ const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
     return (
       <div className="sync-controls">
         <button
-          onClick={() => handleSync('project', activeProject?.id)}
-          disabled={!activeProject || syncInProgress}
+          onClick={() => handleSync('project', selectedProject?.id)}
+          disabled={!selectedProject || syncInProgress}
           className="btn btn-primary btn-sm"
         >
           {syncInProgress ? 'Syncing...' : 'Sync Project → IDE'}
@@ -204,8 +204,8 @@ const ProjectStoreIntegrationComponent = ({ onSync, onError }) => {
         <div className="detail-section">
           <h5>Project Store</h5>
           <div className="detail-item">
-            <span className="label">Active Project:</span>
-            <span className="value">{synchronizedData.projectStore.activeProject || 'None'}</span>
+            <span className="label">Selected Project:</span>
+            <span className="value">{synchronizedData.projectStore.selectedProject || 'None'}</span>
           </div>
           <div className="detail-item">
             <span className="label">Total Projects:</span>

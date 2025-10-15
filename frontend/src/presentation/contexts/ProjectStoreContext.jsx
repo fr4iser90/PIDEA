@@ -32,7 +32,7 @@ export const ProjectStoreProvider = ({ children, options = {} }) => {
   
   // Integration hook
   const {
-    activeProject,
+    selectedProject,
     activeIDE,
     isSynchronized,
     syncProjectWithIDE,
@@ -93,7 +93,7 @@ export const ProjectStoreProvider = ({ children, options = {} }) => {
     ideStore,
     
     // Integration state
-    activeProject,
+    selectedProject,
     activeIDE,
     isSynchronized,
     
@@ -106,7 +106,7 @@ export const ProjectStoreProvider = ({ children, options = {} }) => {
     createProject: projectStore.createProject,
     updateProject: projectStore.updateProject,
     deleteProject: projectStore.deleteProject,
-    setActiveProject: projectStore.setActiveProject,
+    setSelectedProject: projectStore.setSelectedProject,
     getProject: projectStore.getProject,
     getProjectByWorkspace: projectStore.getProjectByWorkspace,
     searchProjects: projectStore.searchProjects,

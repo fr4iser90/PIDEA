@@ -43,7 +43,7 @@ describe('ProjectStore', () => {
     // Reset store state
     act(() => {
       useProjectStore.getState().projects = {};
-      useProjectStore.getState().activeProject = null;
+      useProjectStore.getState().selectedProject = null;
       useProjectStore.getState().error = null;
       useProjectStore.getState().isLoading = false;
     });
@@ -58,7 +58,7 @@ describe('ProjectStore', () => {
       const { result } = renderHook(() => useProjectStore());
       
       expect(result.current.projects).toEqual({});
-      expect(result.current.activeProject).toBeNull();
+      expect(result.current.selectedProject).toBeNull();
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
       expect(result.current.projectConfig).toEqual({
@@ -303,7 +303,7 @@ describe('ProjectStore', () => {
               status: 'active'
             }
           },
-          activeProject: 'project-1'
+          selectedProject: 'project-1'
         });
       });
     });
@@ -320,7 +320,7 @@ describe('ProjectStore', () => {
       });
 
       expect(result.current.projects).not.toHaveProperty('project-1');
-      expect(result.current.activeProject).toBeNull();
+      expect(result.current.selectedProject).toBeNull();
       expect(result.current.isLoading).toBe(false);
     });
 
@@ -369,21 +369,21 @@ describe('ProjectStore', () => {
       });
     });
 
-    it('should set active project', () => {
+    it('should set selected project', () => {
       const { result } = renderHook(() => useProjectStore());
 
       act(() => {
-        result.current.setActiveProject('project-1');
+        result.current.setSelectedProject('project-1');
       });
 
-      expect(result.current.activeProject).toBe('project-1');
+      expect(result.current.selectedProject).toBe('project-1');
     });
 
-    it('should update project metadata when setting active project', () => {
+    it('should update project metadata when setting selected project', () => {
       const { result } = renderHook(() => useProjectStore());
 
       act(() => {
-        result.current.setActiveProject('project-1');
+        result.current.setSelectedProject('project-1');
       });
 
       const project = result.current.getProject('project-1');

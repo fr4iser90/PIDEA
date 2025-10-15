@@ -75,7 +75,7 @@ Successfully implemented a complete Project Store system for the PIDEA frontend 
 ProjectStore {
   // State
   projects: { [projectId]: projectData }
-  activeProject: projectId
+  selectedProject: projectId
   isLoading: boolean
   error: string
   projectConfig: object
@@ -85,7 +85,7 @@ ProjectStore {
   createProject(data)
   updateProject(id, updates)
   deleteProject(id)
-  setActiveProject(id)
+  setSelectedProject(id)
   searchProjects(query)
   // ... more actions
 }
@@ -163,11 +163,11 @@ function ProjectManager() {
 import { useProjectStoreIntegration } from '@/hooks/useProjectStoreIntegration';
 
 function IntegratedComponent() {
-  const { activeProject, activeIDE, isSynchronized } = useProjectStoreIntegration();
+  const { selectedProject, activeIDE, isSynchronized } = useProjectStoreIntegration();
   
   return (
     <div>
-      <p>Project: {activeProject?.name}</p>
+      <p>Project: {selectedProject?.name}</p>
       <p>IDE: {activeIDE?.name}</p>
       <p>Status: {isSynchronized ? 'Synced' : 'Not Synced'}</p>
     </div>

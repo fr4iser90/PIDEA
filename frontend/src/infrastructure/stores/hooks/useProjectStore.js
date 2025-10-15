@@ -230,8 +230,8 @@ export const useProjectAnalytics = () => {
     if (projectList.length === 0) {
       return {
         totalProjects: 0,
-        activeProjects: 0,
-        inactiveProjects: 0,
+        selectedProjects: 0,
+        inselectedProjects: 0,
         averageAccessCount: 0,
         mostAccessedProject: null,
         leastAccessedProject: null,
@@ -240,8 +240,8 @@ export const useProjectAnalytics = () => {
       };
     }
 
-    const activeProjects = projectList.filter(p => p.status === 'active');
-    const inactiveProjects = projectList.filter(p => p.status === 'inactive');
+    const selectedProjects = projectList.filter(p => p.status === 'active');
+    const inselectedProjects = projectList.filter(p => p.status === 'inactive');
     
     const accessCounts = projectList.map(p => p.metadata?.accessCount || 0);
     const averageAccessCount = accessCounts.reduce((sum, count) => sum + count, 0) / accessCounts.length;
@@ -268,8 +268,8 @@ export const useProjectAnalytics = () => {
 
     return {
       totalProjects: projectList.length,
-      activeProjects: activeProjects.length,
-      inactiveProjects: inactiveProjects.length,
+      selectedProjects: selectedProjects.length,
+      inselectedProjects: inselectedProjects.length,
       averageAccessCount: Math.round(averageAccessCount),
       mostAccessedProject,
       leastAccessedProject,

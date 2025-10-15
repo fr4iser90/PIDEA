@@ -85,7 +85,7 @@ const useProjectStore = create(
     (set, get) => ({
       // State
       projects: {}, // { projectId: projectData }
-      activeProject: null,
+      selectedProject: null,
       isLoading: false,
       error: null,
       
@@ -94,14 +94,14 @@ const useProjectStore = create(
       createProject: async (projectData) => {},
       updateProject: async (projectId, updates) => {},
       deleteProject: async (projectId) => {},
-      setActiveProject: (projectId) => {},
+      setSelectedProject: (projectId) => {},
       // ... more actions
     }),
     {
       name: 'project-storage',
       partialize: (state) => ({
         projects: state.projects,
-        activeProject: state.activeProject
+        selectedProject: state.selectedProject
       })
     }
   )

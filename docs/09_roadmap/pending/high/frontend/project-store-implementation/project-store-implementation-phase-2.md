@@ -57,7 +57,7 @@ import useProjectStore from '@/infrastructure/stores/ProjectStore.jsx';
 const { activePort, availableIDEs, loadAvailableIDEs } = useIDEStore();
 
 // After
-const { activeProjectId, activeProject, projects, setActiveProject } = useProjectStore();
+const { selectedProjectId, selectedProject, projects, setSelectedProject } = useProjectStore();
 ```
 
 ### Header Component Changes
@@ -66,7 +66,7 @@ const { activeProjectId, activeProject, projects, setActiveProject } = useProjec
 const { activePort, availableIDEs } = useIDEStore();
 
 // After
-const { activeProject, projects } = useProjectStore();
+const { selectedProject, projects } = useProjectStore();
 ```
 
 ### Footer Component Changes
@@ -75,7 +75,7 @@ const { activeProject, projects } = useProjectStore();
 const { activePort } = useIDEStore();
 
 // After
-const { activeProject } = useProjectStore();
+const { selectedProject } = useProjectStore();
 ```
 
 ## 🧪 Testing Strategy

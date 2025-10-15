@@ -45,7 +45,7 @@ describe('ProjectStore Integration', () => {
     // Reset store states
     act(() => {
       useProjectStore.getState().projects = {};
-      useProjectStore.getState().activeProject = null;
+      useProjectStore.getState().selectedProject = null;
       useIDEStore.getState().activePort = null;
       useIDEStore.getState().availableIDEs = [];
     });
@@ -105,7 +105,7 @@ describe('ProjectStore Integration', () => {
       const project = projectStore.current.getProjectByWorkspace('/test/workspace');
       expect(project).toBeDefined();
       expect(project.name).toBe('Test IDE');
-      expect(projectStore.current.activeProject).toBe(project.id);
+      expect(projectStore.current.selectedProject).toBe(project.id);
     });
 
     it('should update active project when IDE changes', async () => {
@@ -150,7 +150,7 @@ describe('ProjectStore Integration', () => {
             'project-1': mockProjects[0],
             'project-2': mockProjects[1]
           },
-          activeProject: 'project-1'
+          selectedProject: 'project-1'
         });
       });
 
@@ -170,7 +170,7 @@ describe('ProjectStore Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check if active project changed
-      expect(projectStore.current.activeProject).toBe('project-2');
+      expect(projectStore.current.selectedProject).toBe('project-2');
     });
 
     it('should handle missing IDE gracefully', async () => {
@@ -199,7 +199,7 @@ describe('ProjectStore Integration', () => {
 
       // Should not crash and maintain current state
       expect(projectStore.current.projects).toEqual({});
-      expect(projectStore.current.activeProject).toBeNull();
+      expect(projectStore.current.selectedProject).toBeNull();
     });
   });
 
@@ -314,7 +314,7 @@ describe('ProjectStore Integration', () => {
           projects: {
             'test-project': mockProject
           },
-          activeProject: 'test-project'
+          selectedProject: 'test-project'
         });
       });
 
@@ -454,7 +454,7 @@ describe('ProjectStore Integration', () => {
       act(() => {
         useProjectStore.setState({
           projects: null,
-          activeProject: 'invalid-id'
+          selectedProject: 'invalid-id'
         });
       });
 

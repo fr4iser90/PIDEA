@@ -24,7 +24,7 @@ Create the core ProjectStore with basic project state management, project select
 {
   // Project-centric state
   projects: {}, // { 'project-id': { id, name, workspacePath, git, analysis, tasks, interfaces } }
-  activeProjectId: null,
+  selectedProjectId: null,
   isLoading: false,
   error: null,
   
@@ -39,17 +39,17 @@ Create the core ProjectStore with basic project state management, project select
 ```
 
 ### Task 1.2: Implement Project Selection Logic (45 minutes)
-- [ ] Add `setActiveProject(projectId)` action
-- [ ] Add `getActiveProject()` selector
+- [ ] Add `setSelectedProject(projectId)` action
+- [ ] Add `getSelectedProject()` selector
 - [ ] Add `getProject(projectId)` selector
 - [ ] Add `getAllProjects()` selector
 - [ ] Implement project validation logic
 
 **Key Actions**:
 ```javascript
-setActiveProject: (projectId) => {
+setSelectedProject: (projectId) => {
   // Validate project exists
-  // Set active project
+  // Set selected project
   // Trigger data loading if needed
   // Update last accessed timestamp
 }
@@ -102,7 +102,7 @@ const useProjectStore = create(
       name: 'project-storage',
       partialize: (state) => ({
         projects: state.projects,
-        activeProjectId: state.activeProjectId,
+        selectedProjectId: state.selectedProjectId,
         projectData: state.projectData
       })
     }
@@ -127,7 +127,7 @@ const useProjectStore = create(
 1. **Project Selection**:
    - Valid project selection
    - Invalid project handling
-   - Active project persistence
+   - Selected project persistence
 
 2. **Data Loading**:
    - Successful data loading

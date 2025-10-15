@@ -247,7 +247,7 @@ const QueueHistoryPanel = ({ eventBus, activePort }) => {
         return (
             <div className="queue-history-panel">
                 <div className="no-project-message">
-                    <h3>No Active Project</h3>
+                    <h3>No Selected Project</h3>
                     <p>Please select a project to view queue history.</p>
                 </div>
             </div>

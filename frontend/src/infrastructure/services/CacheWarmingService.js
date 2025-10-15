@@ -231,10 +231,10 @@ export class CacheWarmingService {
   async performBackgroundWarming() {
     logger.debug('Performing background cache warming');
 
-    // Get active projects and ports from cache
-    const activeProjects = this.getActiveProjects();
+    // Get selected projects and ports from cache
+    const selectedProjects = this.getSelectedProjects();
     
-    for (const { port, projectId } of activeProjects) {
+    for (const { port, projectId } of selectedProjects) {
       try {
         // Warm common patterns in background
         await this.warmForTrigger('project:load', port, projectId, { priority: 'high' });
@@ -301,10 +301,10 @@ export class CacheWarmingService {
   }
 
   /**
-   * Get active projects from cache
-   * @returns {Array} Active projects
+   * Get selected projects from cache
+   * @returns {Array} Selected projects
    */
-  getActiveProjects() {
+  getSelectedProjects() {
     // This would typically come from IDEStore or similar
     // For now, return empty array - would be implemented based on actual usage
     return [];

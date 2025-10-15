@@ -58,10 +58,10 @@ class ProjectStoreIntegrationService {
 
     // Listen for ProjectStore changes
     useProjectStore.subscribe(
-      (state) => state.activeProject,
-      (activeProject, previousActiveProject) => {
-        if (activeProject !== previousActiveProject) {
-          this.handleActiveProjectChange(activeProject);
+      (state) => state.selectedProject,
+      (selectedProject, previousSelectedProject) => {
+        if (selectedProject !== previousSelectedProject) {
+          this.handleSelectedProjectChange(selectedProject);
         }
       }
     );
@@ -104,9 +104,9 @@ class ProjectStoreIntegrationService {
         });
       }
 
-      // Set active project in ProjectStore
+      // Set selected project in ProjectStore
       if (project) {
-        projectStore.setActiveProject(project.id);
+        projectStore.setSelectedProject(project.id);
       }
     } catch (error) {
       this.logger.error('Failed to handle active port change:', error);
@@ -114,21 +114,21 @@ class ProjectStoreIntegrationService {
   }
 
   /**
-   * Handle active project change from ProjectStore
+   * Handle selected project change from ProjectStore
    */
-  async handleActiveProjectChange(activeProjectId) {
+  async handleSelectedProjectChange(selectedProjectId) {
     try {
-      this.logger.info('Active project changed:', activeProjectId);
+      this.logger.info('Selected project changed:', selectedProjectId);
       
-      if (!activeProjectId) {
+      if (!selectedProjectId) {
         return;
       }
 
       const projectStore = useProjectStore.getState();
-      const project = projectStore.getProject(activeProjectId);
+      const project = projectStore.getProject(selectedProjectId);
       
       if (!project) {
-        this.logger.warn('Active project not found:', activeProjectId);
+        this.logger.warn('Selected project not found:', selectedProjectId);
         return;
       }
 
@@ -146,7 +146,7 @@ class ProjectStoreIntegrationService {
         this.logger.warn('No corresponding IDE found for project:', project.name);
       }
     } catch (error) {
-      this.logger.error('Failed to handle active project change:', error);
+      this.logger.error('Failed to handle selected project change:', error);
     }
   }
 
@@ -274,8 +274,8 @@ class ProjectStoreIntegrationService {
       }
 
       // Sync project data from ProjectStore to IDEStore
-      if (projectStore.activeProject) {
-        const project = projectStore.getProject(projectStore.activeProject);
+      if (projectStore.selectedProject) {
+        const project = projectStore.getProject(projectStore.selectedProject);
         if (project) {
           const correspondingIDE = ideStore.availableIDEs.find(ide => 
             ide.workspacePath === project.workspacePath
@@ -306,9 +306,9 @@ class ProjectStoreIntegrationService {
         activeIDE: ideStore.availableIDEs.find(ide => ide.active)
       },
       project: {
-        activeProject: projectStore.activeProject,
+        selectedProject: projectStore.selectedProject,
         projects: projectStore.projects,
-        activeProjectData: projectStore.activeProject ? projectStore.getProject(projectStore.activeProject) : null
+        selectedProjectData: projectStore.selectedProject ? projectStore.getProject(projectStore.selectedProject) : null
       },
       synchronized: this.isInitialized
     };

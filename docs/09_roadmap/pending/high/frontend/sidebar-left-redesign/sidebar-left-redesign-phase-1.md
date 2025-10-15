@@ -23,7 +23,7 @@ Create project management UI components including project list, add project func
 **Component Structure**:
 ```javascript
 const ProjectListComponent = ({ eventBus, onProjectSelect }) => {
-  const { projects, activeProjectId, isLoading } = useProjectStore();
+  const { projects, selectedProjectId, isLoading } = useProjectStore();
   
   return (
     <div className="project-list">
@@ -36,7 +36,7 @@ const ProjectListComponent = ({ eventBus, onProjectSelect }) => {
           <ProjectItemComponent 
             key={project.id} 
             project={project}
-            isActive={project.id === activeProjectId}
+            isActive={project.id === selectedProjectId}
             onClick={() => onProjectSelect(project.id)}
           />
         ))}
@@ -103,7 +103,7 @@ const ProjectAddComponent = ({ onClose, onProjectCreated }) => {
 **Component Structure**:
 ```javascript
 const ProjectItemComponent = ({ project, isActive, onClick }) => {
-  const { deleteProject, setActiveProject } = useProjectStore();
+  const { deleteProject, setSelectedProject } = useProjectStore();
   
   const handleDelete = async (e) => {
     e.stopPropagation();
