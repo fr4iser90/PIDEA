@@ -45,6 +45,22 @@ class WorkflowRoutes {
       this.workflowController.healthCheck(req, res),
     );
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = WorkflowRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const workflowRoutes = new WorkflowRoutes();
+  return workflowRoutes.getRouter();
+};

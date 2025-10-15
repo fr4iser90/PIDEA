@@ -122,6 +122,22 @@ class QueueRoutes {
       this.queueController.clearCompletedItems(req, res),
     );
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = QueueRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const queueRoutes = new QueueRoutes();
+  return queueRoutes.getRouter();
+};

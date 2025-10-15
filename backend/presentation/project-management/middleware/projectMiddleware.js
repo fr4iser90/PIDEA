@@ -11,12 +11,16 @@ class ProjectMiddleware {
   constructor(projectApplicationService) {
     this.projectApplicationService = projectApplicationService;
     this.logger = logger;
+  }
 
+  // Lazy validation - only check when actually used
+  get _validatedProjectApplicationService() {
     if (!this.projectApplicationService) {
       throw new Error(
         "ProjectMiddleware requires projectApplicationService dependency",
       );
     }
+    return this.projectApplicationService;
   }
 
   /**
@@ -35,7 +39,7 @@ class ProjectMiddleware {
 
       // Check if project exists
       const project =
-        await this.projectApplicationService.getProject(projectId);
+        await this._validatedProjectApplicationService.getProject(projectId);
       if (!project) {
         return res.notFound("Project not found");
       }

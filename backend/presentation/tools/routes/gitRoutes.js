@@ -98,6 +98,22 @@ class GitRoutes {
       this.gitController.compareWithPideaAgent(req, res),
     );
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = GitRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const gitRoutes = new GitRoutes();
+  return gitRoutes.getRouter();
+};

@@ -73,6 +73,22 @@ class SessionRoutes {
       this.sessionController.healthCheck(req, res),
     );
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = SessionRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const sessionRoutes = new SessionRoutes();
+  return sessionRoutes.getRouter();
+};

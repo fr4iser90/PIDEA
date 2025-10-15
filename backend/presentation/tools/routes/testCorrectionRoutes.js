@@ -2,124 +2,125 @@ const express = require("express");
 const TestCorrectionController = require("../controllers/TestCorrectionController");
 const AuthMiddleware = require("@infrastructure/auth/AuthMiddleware");
 const Logger = require("@logging/Logger");
-const logger = new Logger("Logger");
 
-const router = express.Router();
+/**
+ * Test Correction Routes - Professional RESTful API Design
+ *
+ * This module provides a clean, modular approach to test correction endpoints
+ * including test analysis, fixing, and coverage improvement.
+ */
 
-// Initialize controller with default dependencies
-const testCorrectionController = new TestCorrectionController();
+class TestCorrectionRoutes {
+  constructor(testCorrectionService, coverageAnalyzer, commandBus, eventBus, authMiddleware) {
+    this.testCorrectionService = testCorrectionService;
+    this.coverageAnalyzer = coverageAnalyzer;
+    this.commandBus = commandBus;
+    this.eventBus = eventBus;
+    this.authMiddleware = authMiddleware;
+    this.logger = new Logger("TestCorrectionRoutes");
 
-// Middleware
-const authMiddleware = new AuthMiddleware();
+    // Lazy initialization - only create when needed
+    this._testCorrectionController = null;
+  }
 
-// Health check endpoint (no auth required)
-router.get(
-  "/health",
-  testCorrectionController.healthCheck.bind(testCorrectionController),
-);
+  get testCorrectionController() {
+    if (!this._testCorrectionController) {
+      this._testCorrectionController = new TestCorrectionController({
+        testCorrectionService: this.testCorrectionService,
+        coverageAnalyzer: this.coverageAnalyzer,
+        commandBus: this.commandBus,
+        eventBus: this.eventBus
+      });
+    }
+    return this._testCorrectionController;
+  }
 
-// Apply authentication to all other routes
-router.use(authMiddleware.authenticate);
+  /**
+   * Setup all test correction routes
+   * @param {Express.Router} app - Express app instance
+   */
+  setupRoutes(app) {
+    // Authentication handled by global middleware
 
-// GET /api/test-correction/status
-// Get current status of test correction system
-router.get(
-  "/status",
-  testCorrectionController.getStatus.bind(testCorrectionController),
-);
+    // ========================================
+    // TEST CORRECTION ROUTES - Test Operations
+    // ========================================
 
-// POST /api/test-correction/analyze
-// Analyze failing tests and create correction tasks
-router.post(
-  "/analyze",
-  testCorrectionController.analyzeTests.bind(testCorrectionController),
-);
+    // Health check endpoint (no auth required)
+    app.get("/api/test-correction/health", (req, res) =>
+      this.testCorrectionController.healthCheck(req, res),
+    );
 
-// POST /api/test-correction/fix
-// Apply fixes to tests
-router.post(
-  "/fix",
-  testCorrectionController.fixTests.bind(testCorrectionController),
-);
+    // GET /api/test-correction/status
+    // Get current status of test correction system
+    app.get("/api/test-correction/status", (req, res) =>
+      this.testCorrectionController.getStatus(req, res),
+    );
 
-// POST /api/test-correction/auto-fix
-// Run complete auto-fix workflow
-router.post(
-  "/auto-fix",
-  testCorrectionController.autoFix.bind(testCorrectionController),
-);
+    // POST /api/test-correction/analyze
+    // Analyze failing tests and create correction tasks
+    app.post("/api/test-correction/analyze", (req, res) =>
+      this.testCorrectionController.analyzeTests(req, res),
+    );
 
-// POST /api/test-correction/improve-coverage
-// Improve test coverage
-router.post(
-  "/improve-coverage",
-  testCorrectionController.improveCoverage.bind(testCorrectionController),
-);
+    // POST /api/test-correction/fix
+    // Apply fixes to tests
+    app.post("/api/test-correction/fix", (req, res) =>
+      this.testCorrectionController.fixTests(req, res),
+    );
 
-// GET /api/test-correction/coverage
-// Get current test coverage
-router.get(
-  "/coverage",
-  testCorrectionController.getCoverage.bind(testCorrectionController),
-);
+    // POST /api/test-correction/auto-fix
+    // Run complete auto-fix workflow
+    app.post("/api/test-correction/auto-fix", (req, res) =>
+      this.testCorrectionController.autoFix(req, res),
+    );
 
-// POST /api/test-correction/refactor
-// Refactor specific test types
-router.post(
-  "/refactor",
-  testCorrectionController.refactorTests.bind(testCorrectionController),
-);
+    // POST /api/test-correction/improve-coverage
+    // Improve test coverage
+    app.post("/api/test-correction/improve-coverage", (req, res) =>
+      this.testCorrectionController.improveCoverage(req, res),
+    );
 
-// POST /api/test-correction/stop
-// Stop all active corrections
-router.post(
-  "/stop",
-  testCorrectionController.stopCorrections.bind(testCorrectionController),
-);
+    // GET /api/test-correction/coverage
+    // Get current test coverage
+    app.get("/api/test-correction/coverage", (req, res) =>
+      this.testCorrectionController.getCoverage(req, res),
+    );
 
-// GET /api/test-correction/report
-// Get test correction report
-router.get(
-  "/report",
-  testCorrectionController.getReport.bind(testCorrectionController),
-);
+    // POST /api/test-correction/refactor
+    // Refactor specific test types
+    app.post("/api/test-correction/refactor", (req, res) =>
+      this.testCorrectionController.refactorTests(req, res),
+    );
 
-// Error handling middleware
-router.use((error, req, res, next) => {
-  logger.error("Test correction route error", {
-    error: error.message,
-    stack: error.stack,
-    url: req.url,
-    method: req.method,
-  });
+    // POST /api/test-correction/stop
+    // Stop all active corrections
+    app.post("/api/test-correction/stop", (req, res) =>
+      this.testCorrectionController.stopCorrections(req, res),
+    );
 
-  res.error("Internal server error", 500, {
-    details:
-      process.env.NODE_ENV === "development"
-        ? error.message
-        : "Something went wrong",
-  });
-});
+    // GET /api/test-correction/report
+    // Get test correction report
+    app.get("/api/test-correction/report", (req, res) =>
+      this.testCorrectionController.getReport(req, res),
+    );
+  }
 
-// 404 handler for undefined routes
-router.use("*", (req, res) => {
-  res.notFound("Route not found", {
-    availableRoutes: [
-      "GET /health",
-      "GET /status",
-      "POST /analyze",
-      "POST /fix",
-      "POST /auto-fix",
-      "POST /improve-coverage",
-      "GET /coverage",
-      "POST /refactor",
-      "POST /stop",
-      "GET /report",
-    ],
-  });
-});
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
+}
 
-module.exports = router;
+module.exports = TestCorrectionRoutes;
 
 // Export getRouter function for route registry
-module.exports.getRouter = () => router;
+module.exports.getRouter = () => {
+  const testCorrectionRoutes = new TestCorrectionRoutes();
+  return testCorrectionRoutes.getRouter();
+};

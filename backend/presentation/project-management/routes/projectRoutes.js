@@ -14,8 +14,23 @@ class ProjectRoutes {
     this.interfaceManager = interfaceManager;
     this.authMiddleware = authMiddleware;
 
-    this.projectController = new ProjectController(projectApplicationService);
-    this.projectMiddleware = new projectMiddleware(projectApplicationService);
+    // Lazy initialization - only create when needed
+    this._projectController = null;
+    this._projectMiddleware = null;
+  }
+
+  get projectController() {
+    if (!this._projectController) {
+      this._projectController = new ProjectController(this.projectApplicationService);
+    }
+    return this._projectController;
+  }
+
+  get projectMiddleware() {
+    if (!this._projectMiddleware) {
+      this._projectMiddleware = new projectMiddleware(this.projectApplicationService);
+    }
+    return this._projectMiddleware;
   }
 
   /**
@@ -100,6 +115,22 @@ class ProjectRoutes {
       require("../../tools/routes/gitRoutes"),
     );
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = ProjectRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const projectRoutes = new ProjectRoutes();
+  return projectRoutes.getRouter();
+};

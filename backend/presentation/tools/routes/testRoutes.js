@@ -93,6 +93,22 @@ class TestRoutes {
       this.testManagementController.getBrowserEnvironment(req, res),
     );
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = TestRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const testRoutes = new TestRoutes();
+  return testRoutes.getRouter();
+};

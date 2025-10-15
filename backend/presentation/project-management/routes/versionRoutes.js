@@ -15,19 +15,27 @@ class VersionRoutes {
     this.serviceRegistry = serviceRegistry;
     this.logger = new Logger("VersionRoutes");
 
-    // Get VersionManagementHandler from DI container
-    const versionManagementHandler = serviceRegistry.getService(
-      "versionManagementHandler",
-    );
-    if (!versionManagementHandler) {
-      throw new Error("VersionManagementHandler not found in DI container");
-    }
+    // Lazy initialization - only create when needed
+    this._versionController = null;
+  }
 
-    // Create VersionController with proper dependencies
-    this.versionController = new VersionController({
-      handler: versionManagementHandler,
-      logger: serviceRegistry.getService("logger"),
-    });
+  get versionController() {
+    if (!this._versionController) {
+      // Get VersionManagementHandler from DI container
+      const versionManagementHandler = this.serviceRegistry.getService(
+        "versionManagementHandler",
+      );
+      if (!versionManagementHandler) {
+        throw new Error("VersionManagementHandler not found in DI container");
+      }
+
+      // Create VersionController with proper dependencies
+      this._versionController = new VersionController({
+        handler: versionManagementHandler,
+        logger: this.serviceRegistry.getService("logger"),
+      });
+    }
+    return this._versionController;
   }
 
   /**
@@ -88,6 +96,22 @@ class VersionRoutes {
       this.versionController.updateConfiguration(req, res);
     });
   }
+
+  /**
+   * Get router instance for Express app
+   * @returns {Express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
+  }
 }
 
 module.exports = VersionRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const versionRoutes = new VersionRoutes();
+  return versionRoutes.getRouter();
+};
