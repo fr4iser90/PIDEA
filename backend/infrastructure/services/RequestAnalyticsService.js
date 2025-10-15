@@ -615,7 +615,4 @@ class RequestAnalyticsService {
   }
 }
 
-// Create singleton instance
-const requestAnalyticsService = new RequestAnalyticsService();
-
-module.exports = requestAnalyticsService;
+module.exports = RequestAnalyticsService;

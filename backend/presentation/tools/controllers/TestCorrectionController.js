@@ -1,7 +1,7 @@
 const Logger = require('@logging/Logger');
 const logger = new Logger('Logger');
 const TestCorrectionService = require('@domain/services/testing/TestCorrectionService');
-const AutoRefactorCommand = require('@categories/management/AutoRefactorCommand');
+const AutoRefactorCommand = require('@categories/refactoring/AutoRefactorCommand');
 const CoverageAnalyzerService = require('@domain/services/analysis/CoverageAnalyzerService');
 const fs = require('fs-extra');
 const path = require('path');
@@ -35,8 +35,7 @@ class TestCorrectionController {
       
     } catch (error) {
       logger.error('Failed to get test correction status', { error: error.message });
-      res.error('Failed to get status', 500, { details: error.message
-       });
+      res.error('Failed to get status', 500, { details: error.message });
     }
   }
 
@@ -90,8 +89,7 @@ class TestCorrectionController {
       
     } catch (error) {
       logger.error('Failed to analyze tests', { error: error.message });
-      res.error('Failed to analyze tests', 500, { details: error.message
-       });
+      res.error('Failed to analyze tests', 500, { details: error.message });
     }
   }
 
@@ -130,17 +128,15 @@ class TestCorrectionController {
       };
       
       res.success({
-          results: results.map(r => ({
-            success: r.success
-          })),
-          summary
-        }
+        results: results.map(r => ({
+          success: r.success
+        })),
+        summary
       });
       
     } catch (error) {
       logger.error('Failed to fix tests', { error: error.message });
-      res.error('Failed to fix tests', 500, { details: error.message
-       });
+      res.error('Failed to fix tests', 500, { details: error.message });
     }
   }
 

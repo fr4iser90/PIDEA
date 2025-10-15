@@ -127,3 +127,9 @@ class TaskRoutes {
 }
 
 module.exports = TaskRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const taskRoutes = new TaskRoutes();
+  return taskRoutes.getRouter();
+};

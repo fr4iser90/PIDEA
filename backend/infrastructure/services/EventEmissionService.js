@@ -1,4 +1,5 @@
-const { logger } = require("../../infrastructure/logging/Logger");
+const Logger = require("@logging/Logger");
+const logger = new Logger("EventEmissionService");
 
 /**
  * EventEmissionService - Centralized service to emit refresh events

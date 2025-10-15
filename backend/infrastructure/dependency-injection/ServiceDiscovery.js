@@ -25,6 +25,10 @@ class ServiceDiscovery extends EventEmitter {
       "**/*.spec.js",
       "**/node_modules/**",
       "**/coverage/**",
+      // Exclude services that are manually registered in ServiceRegistry
+      "**/RequestAnalyticsService.js",
+      "**/RequestQueuingService.js",
+      "**/EventEmissionService.js",
     ];
     this.servicePatterns = options.servicePatterns || [
       /Service\.js$/,

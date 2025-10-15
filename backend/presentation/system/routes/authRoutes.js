@@ -116,3 +116,9 @@ class AuthRoutes {
 }
 
 module.exports = AuthRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const authRoutes = new AuthRoutes();
+  return authRoutes.getRouter();
+};

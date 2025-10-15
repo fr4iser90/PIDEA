@@ -292,6 +292,59 @@ class ServiceRegistry {
       { singleton: true, dependencies: ["authService"] },
     );
 
+    // Request Analytics Service
+    this.container.register(
+      "requestAnalyticsService",
+      () => {
+        const RequestAnalyticsService = require("../services/RequestAnalyticsService");
+        return new RequestAnalyticsService();
+      },
+      { singleton: true },
+    );
+
+    // Request Queuing Service
+    this.container.register(
+      "requestQueuingService",
+      () => {
+        const RequestQueuingService = require("../services/RequestQueuingService");
+        return new RequestQueuingService();
+      },
+      { singleton: true },
+    );
+
+    // WebSocket Manager - Placeholder that will be replaced by Application.js
+    this.container.register(
+      "webSocketManager",
+      () => {
+        // Return a placeholder that will be replaced when Application.js registers the real one
+        return {
+          initialize: () => {},
+          setIDEMirrorController: () => {},
+          // Add other methods that EventEmissionService might need
+        };
+      },
+      { singleton: true },
+    );
+
+    // Event Emission Service - Will be initialized after webSocketManager is registered
+    this.container.register(
+      "eventEmissionService",
+      (eventBus, webSocketManager, ideManager, taskRepository, analysisRepository) => {
+        const EventEmissionService = require("../services/EventEmissionService");
+        return new EventEmissionService({
+          eventBus,
+          webSocketManager,
+          ideManager,
+          taskRepository,
+          analysisRepository,
+        });
+      },
+      { 
+        singleton: true, 
+        dependencies: ["eventBus", "webSocketManager", "ideManager", "taskRepository", "analysisRepository"] 
+      },
+    );
+
     this.registeredServices.add("infrastructure");
   }
 
@@ -1779,17 +1832,25 @@ class ServiceRegistry {
     // Analysis Orchestrator (Phase 2: Step delegation)
     // AnalysisOrchestrator REMOVED - redundant with AnalysisApplicationService
 
-    // Test Orchestrator (Step delegation)
+    // Test Orchestrator (Step delegation) - Optional service
     this.container.register(
       "testOrchestrator",
       (stepRegistry, eventBus, logger) => {
-        const TestOrchestrator = require("../task-execution/services/TestOrchestrator");
-        return new TestOrchestrator({
-          stepRegistry,
-          eventBus,
-          logger,
-          testRepository: null, // Not needed for step delegation
-        });
+        try {
+          const TestOrchestrator = require("../task-execution/services/TestOrchestrator");
+          return new TestOrchestrator({
+            stepRegistry,
+            eventBus,
+            logger,
+            testRepository: null, // Not needed for step delegation
+          });
+        } catch (error) {
+          this.logger.warn("TestOrchestrator not available, using fallback:", error.message);
+          return {
+            executeTest: async () => ({ error: "TestOrchestrator not available" }),
+            executeMultipleTests: async () => ({ error: "TestOrchestrator not available" }),
+          };
+        }
       },
       { singleton: true, dependencies: ["stepRegistry", "eventBus", "logger"] },
     );
@@ -3269,6 +3330,10 @@ class ServiceRegistry {
     this.addServiceDefinition("stepRegistry", [], "infrastructure");
     this.addServiceDefinition("chatCacheService", [], "infrastructure");
     this.addServiceDefinition("handlerRegistry", [], "infrastructure");
+    this.addServiceDefinition("requestAnalyticsService", [], "infrastructure");
+    this.addServiceDefinition("requestQueuingService", [], "infrastructure");
+    this.addServiceDefinition("webSocketManager", [], "infrastructure");
+    this.addServiceDefinition("eventEmissionService", ["eventBus", "webSocketManager", "ideManager", "taskRepository", "analysisRepository"], "infrastructure");
 
     // Repository services
     this.addServiceDefinition("chatRepository", [], "repositories");
@@ -3874,6 +3939,20 @@ class ServiceRegistry {
     this.container.clear();
     this.registeredServices.clear();
     this.logger.info("All services cleared");
+  }
+
+  /**
+   * Initialize EventEmissionService after webSocketManager is available
+   * This should be called from Application.js after webSocketManager registration
+   */
+  async initializeEventEmissionService() {
+    try {
+      const eventEmissionService = this.getService("eventEmissionService");
+      await eventEmissionService.initialize();
+      this.logger.info("✅ EventEmissionService initialized successfully");
+    } catch (error) {
+      this.logger.warn("⚠️ EventEmissionService initialization failed, continuing without it:", error?.message || error);
+    }
   }
 }
 

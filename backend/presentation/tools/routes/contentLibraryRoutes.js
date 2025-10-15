@@ -79,3 +79,11 @@ class ContentLibraryRoutes {
 }
 
 module.exports = ContentLibraryRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const router = express.Router();
+  const contentLibraryRoutes = new ContentLibraryRoutes();
+  contentLibraryRoutes.setupRoutes(router);
+  return router;
+};

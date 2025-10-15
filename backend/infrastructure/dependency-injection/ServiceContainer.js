@@ -220,9 +220,9 @@ class ServiceContainer {
    */
   setHealthMonitoring(enabled) {
     this.enableHealthMonitoring = enabled;
-    if (enabled) {
+    if (enabled && !this.healthMonitor.isMonitoring) {
       this.healthMonitor.startMonitoring();
-    } else {
+    } else if (!enabled && this.healthMonitor.isMonitoring) {
       this.healthMonitor.stopMonitoring();
     }
     logger.info(`Health monitoring ${enabled ? 'enabled' : 'disabled'}`);
@@ -234,9 +234,9 @@ class ServiceContainer {
    */
   setMetricsCollection(enabled) {
     this.enableMetricsCollection = enabled;
-    if (enabled) {
+    if (enabled && !this.metrics.isCollecting) {
       this.metrics.startMetricsCollection();
-    } else {
+    } else if (!enabled && this.metrics.isCollecting) {
       this.metrics.stopMetricsCollection();
     }
     logger.info(`Metrics collection ${enabled ? 'enabled' : 'disabled'}`);

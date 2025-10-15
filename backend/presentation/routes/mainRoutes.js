@@ -48,3 +48,9 @@ class MainRoutes {
 }
 
 module.exports = MainRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const mainRoutes = new MainRoutes();
+  return mainRoutes.getRouter();
+};

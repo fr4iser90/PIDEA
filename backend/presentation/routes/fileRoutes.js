@@ -62,3 +62,11 @@ class FileRoutes {
 }
 
 module.exports = FileRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const router = express.Router();
+  const fileRoutes = new FileRoutes();
+  fileRoutes.setupRoutes(router);
+  return router;
+};

@@ -51,3 +51,9 @@ class ServiceMetricsRoutes {
 }
 
 module.exports = ServiceMetricsRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const serviceMetricsRoutes = new ServiceMetricsRoutes();
+  return serviceMetricsRoutes.getRouter();
+};

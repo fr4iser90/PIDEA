@@ -326,7 +326,4 @@ class RequestQueuingService {
   }
 }
 
-// Create singleton instance
-const requestQueuingService = new RequestQueuingService();
-
-module.exports = requestQueuingService;
+module.exports = RequestQueuingService;

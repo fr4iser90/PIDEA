@@ -127,9 +127,9 @@ class WebChatController {
       const result = await this.webChatApplicationService.getUserSessions(queryData, { userId });
 
       res.success({
-          sessions: result.sessions.map(session => ({
-            id: session.id))
-        }
+        sessions: result.sessions.map(session => ({
+          id: session.id
+        }))
       });
     } catch (error) {
       logger.error('Get user sessions error:', error);

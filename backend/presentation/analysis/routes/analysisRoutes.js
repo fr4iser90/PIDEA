@@ -447,3 +447,9 @@ class AnalysisRoutes {
 }
 
 module.exports = AnalysisRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const analysisRoutes = new AnalysisRoutes();
+  return analysisRoutes.getRouter();
+};

@@ -1,28 +1,16 @@
 const express = require("express");
 const TestCorrectionController = require("../controllers/TestCorrectionController");
-const AuthMiddleware = require("../../../middleware/AuthMiddleware");
-const ValidationMiddleware = require("../../../middleware/ValidationMiddleware");
-const RateLimitMiddleware = require("../../../middleware/RateLimitMiddleware");
+const AuthMiddleware = require("@infrastructure/auth/AuthMiddleware");
 const Logger = require("@logging/Logger");
 const logger = new Logger("Logger");
 
 const router = express.Router();
 
-// Initialize controller
+// Initialize controller with default dependencies
 const testCorrectionController = new TestCorrectionController();
 
 // Middleware
 const authMiddleware = new AuthMiddleware();
-const validationMiddleware = new ValidationMiddleware();
-const rateLimitMiddleware = new RateLimitMiddleware();
-
-// Apply rate limiting to all routes
-router.use(
-  rateLimitMiddleware.limit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
-  })
-);
 
 // Health check endpoint (no auth required)
 router.get(
@@ -44,12 +32,6 @@ router.get(
 // Analyze failing tests and create correction tasks
 router.post(
   "/analyze",
-  validationMiddleware.validate({
-    body: {
-      testResults: { type: "object", required: true },
-      options: { type: "object", required: false },
-    },
-  }),
   testCorrectionController.analyzeTests.bind(testCorrectionController),
 );
 
@@ -57,12 +39,6 @@ router.post(
 // Apply fixes to tests
 router.post(
   "/fix",
-  validationMiddleware.validate({
-    body: {
-      corrections: { type: "array", required: true },
-      options: { type: "object", required: false },
-    },
-  }),
   testCorrectionController.fixTests.bind(testCorrectionController),
 );
 
@@ -70,11 +46,6 @@ router.post(
 // Run complete auto-fix workflow
 router.post(
   "/auto-fix",
-  validationMiddleware.validate({
-    body: {
-      options: { type: "object", required: false },
-    },
-  }),
   testCorrectionController.autoFix.bind(testCorrectionController),
 );
 
@@ -82,12 +53,6 @@ router.post(
 // Improve test coverage
 router.post(
   "/improve-coverage",
-  validationMiddleware.validate({
-    body: {
-      targetCoverage: { type: "number", min: 0, max: 100, required: false },
-      options: { type: "object", required: false },
-    },
-  }),
   testCorrectionController.improveCoverage.bind(testCorrectionController),
 );
 
@@ -95,15 +60,6 @@ router.post(
 // Get current test coverage
 router.get(
   "/coverage",
-  validationMiddleware.validate({
-    query: {
-      scope: {
-        type: "string",
-        enum: ["all", "unit", "integration", "e2e"],
-        required: false,
-      },
-    },
-  }),
   testCorrectionController.getCoverage.bind(testCorrectionController),
 );
 
@@ -111,21 +67,6 @@ router.get(
 // Refactor specific test types
 router.post(
   "/refactor",
-  validationMiddleware.validate({
-    body: {
-      refactorType: {
-        type: "string",
-        enum: ["complex_tests", "legacy_tests", "slow_tests", "all"],
-        required: true,
-      },
-      scope: {
-        type: "string",
-        enum: ["all", "unit", "integration", "e2e"],
-        required: false,
-      },
-      options: { type: "object", required: false },
-    },
-  }),
   testCorrectionController.refactorTests.bind(testCorrectionController),
 );
 
@@ -140,11 +81,6 @@ router.post(
 // Get test correction report
 router.get(
   "/report",
-  validationMiddleware.validate({
-    query: {
-      format: { type: "string", enum: ["json", "markdown"], required: false },
-    },
-  }),
   testCorrectionController.getReport.bind(testCorrectionController),
 );
 
@@ -184,3 +120,6 @@ router.use("*", (req, res) => {
 });
 
 module.exports = router;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => router;
