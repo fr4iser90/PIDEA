@@ -6,7 +6,7 @@
 const Logger = require("@logging/Logger");
 const TestCorrectionService = require("@domain/services/testing/TestCorrectionService");
 const TestFixer = require("@infrastructure/task-execution/services/TestFixer");
-const TestOrchestrator = require("@api/TestOrchestrator");
+const TestOrchestrator = require("@infrastructure/task-execution/services/TestOrchestrator");
 
 class AutoTestFixSystem {
   constructor(dependencies = {}) {

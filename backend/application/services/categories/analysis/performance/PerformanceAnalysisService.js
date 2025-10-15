@@ -9,7 +9,7 @@ const {
   CpuAnalysisStep,
   NetworkAnalysisStep,
   DatabaseAnalysisStep,
-} = require("../../../../domain/steps/categories/analysis/performance");
+} = require("@domain/steps/categories/analysis/performance");
 
 class PerformanceAnalysisService {
   constructor() {
