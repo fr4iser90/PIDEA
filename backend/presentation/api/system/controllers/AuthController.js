@@ -239,6 +239,8 @@ class AuthController {
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
         accessTokenLength: accessToken ? accessToken.length : 0,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
       });
 
       if (!accessToken && !refreshToken) {
@@ -252,15 +254,17 @@ class AuthController {
 
       // Try to validate access token first
       if (accessToken) {
+        logger.info("🔍 [AuthController] About to validate access token...");
         try {
           const result =
             await this.authApplicationService.validateAccessToken(accessToken);
+          logger.info("🔍 [AuthController] validateAccessToken result:", result);
           if (result.success) {
             logger.info(
               "✅ [AuthController] Access token validation successful",
             );
             return res.ok({
-              user: result.data.user,
+              user: result.user,
             });
           }
         } catch (error) {
@@ -285,7 +289,7 @@ class AuthController {
               // Remove domain restriction to allow cross-port access in development
             };
 
-            res.cookie("accessToken", responseData.accessToken, {
+            res.cookie("accessToken", result.accessToken, {
               ...cookieOptions,
               maxAge:
                 process.env.NODE_ENV === "development"
@@ -293,7 +297,7 @@ class AuthController {
                   : 15 * 60 * 1000, // 2h dev, 15m prod
             });
 
-            res.cookie("refreshToken", responseData.refreshToken, {
+            res.cookie("refreshToken", result.refreshToken, {
               ...cookieOptions,
               maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
@@ -302,7 +306,7 @@ class AuthController {
               "✅ [AuthController] Token refreshed and validated successfully",
             );
             return res.ok({
-              user: result.data.user,
+              user: result.user,
             });
           }
         } catch (error) {

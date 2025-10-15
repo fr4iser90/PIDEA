@@ -131,7 +131,8 @@ class TestCorrectionController {
       
       res.success({
           results: results.map(r => ({
-            success: r.success)),
+            success: r.success
+          })),
           summary
         }
       });

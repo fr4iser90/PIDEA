@@ -73,6 +73,7 @@ class AuthApplicationService {
 
       const result = await this.authService.validateAccessToken(accessToken);
       return {
+        success: true,
         user: result.user,
         session: result.session,
       };
@@ -111,19 +112,16 @@ class AuthApplicationService {
       );
 
       return {
-        data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            name: user.name,
-          },
-          session: {
-            accessToken: newSession.accessToken,
-            refreshToken: newSession.refreshToken,
-            expiresAt: newSession.expiresAt,
-          },
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          name: user.name,
         },
+        accessToken: newSession.accessToken,
+        refreshToken: newSession.refreshToken,
+        expiresAt: newSession.expiresAt,
       };
     } catch (error) {
       this.logger.error("Error refreshing authentication:", error);

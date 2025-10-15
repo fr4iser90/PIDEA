@@ -41,8 +41,8 @@ class ApiService {
       throw new Error('User not authenticated');
     }
     
-    // Get authentication headers (only if authenticated)
-    const authHeaders = isAuthenticated ? getAuthHeaders() : {};
+    // Get authentication headers (only if authenticated AND not an auth endpoint)
+    const authHeaders = (isAuthenticated && !isAuthEndpoint) ? getAuthHeaders() : {};
     
     logger.info('🔍 [ApiService] Auth headers:', authHeaders);
     

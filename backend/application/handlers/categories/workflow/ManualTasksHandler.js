@@ -147,7 +147,7 @@ class ManualTasksHandler {
         status: task.status,
         content: content,
         htmlContent: htmlContent,
-        task.metadata,
+        ...task.metadata,
         // ✅ FIXED: Add new status-based path structure
         filePath:
           parsedMetadata.newPath ||
