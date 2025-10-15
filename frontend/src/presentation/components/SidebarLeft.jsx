@@ -31,7 +31,6 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
   useEffect(() => {
     logger.info('🔍 currentView changed to:', currentView);
   }, [currentView]);
-  const [selectedProject, setSelectedProject] = useState(null);
   const [showInterfaces, setShowInterfaces] = useState(false);
   const [showChats, setShowChats] = useState(false);
   const { isAuthenticated } = useAuthStore();

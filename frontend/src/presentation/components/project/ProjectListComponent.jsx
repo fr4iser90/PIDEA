@@ -9,9 +9,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import { useProjectManagement } from '@/infrastructure/stores/hooks/useProjectStore';
 import { useProjects, useSelectedProject } from '@/infrastructure/stores/selectors/ProjectSelectors';
-import ProjectItemComponent from './ProjectItemComponent.jsx';
+import ProjectCardComponent from './ProjectCardComponent.jsx';
 import ProjectAddComponent from './ProjectAddComponent.jsx';
-import '@/scss/components/_project-management.scss';
+import '@/scss/components/_project-card.scss';
 
 const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onCloseAddModal, onOpenAddModal }) => {
   // Removed render log to prevent spam during typing
@@ -54,16 +54,21 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
     await refresh();
   };
 
+  const handleProjectCreated = async (newProject) => {
+    logger.info('🔍 [ProjectListComponent] Project created:', newProject);
+    await refresh(); // Refresh the project list
+    onCloseAddModal?.(false); // Close the modal
+  };
+
 
   const handleProjectSelect = (projectId) => {
     onProjectSelect?.(projectId);
     eventBus?.emit('project-selected', { projectId });
   };
 
-  const handleProjectCreated = (project) => {
-    logger.info('✅ New project created:', project.name);
-    onCloseAddModal?.();
-    eventBus?.emit('project-created', { project });
+  const handleInterfaceSwitch = (interfaceItem) => {
+    logger.info('Interface switch requested:', interfaceItem);
+    // Handle interface switching logic here
   };
 
   const handleSearchChange = (e) => {
@@ -145,11 +150,13 @@ const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onClose
           </div>
         ) : (
           filteredProjects.map(project => (
-            <ProjectItemComponent
+            <ProjectCardComponent
               key={project.id}
               project={project}
               isActive={project.id === selectedProject?.id}
               onClick={() => handleProjectSelect(project.id)}
+              eventBus={eventBus}
+              onInterfaceSwitch={handleInterfaceSwitch}
             />
           ))
         )}

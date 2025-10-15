@@ -300,6 +300,8 @@ class MiddlewareSetup {
               "❌ Frontend auto-rebuild failed:",
               error.message,
             );
+            // THROW ERROR TO STOP DEV SERVER ON BUILD FAILURE
+            throw new Error(`Frontend build failed: ${error.message}`);
           }
         }, 1000); // Wait 1 second before rebuilding
       });
