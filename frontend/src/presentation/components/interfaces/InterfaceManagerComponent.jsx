@@ -10,6 +10,7 @@ import { logger } from '@/infrastructure/logging/Logger';
 import { useProjectManagement } from '@/infrastructure/stores/hooks/useProjectStore';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import InterfaceItemComponent from './InterfaceItemComponent.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import '@/scss/components/_interface-management.scss';
 
 const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
@@ -47,18 +48,21 @@ const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
     setError(null);
 
     try {
-      // Filter IDEs that belong to this project
-      const projectInterfaces = availableIDEs.filter(ide => 
-        ide.workspacePath && 
-        ide.workspacePath.includes(projectId) ||
-        ide.projectId === projectId
-      );
+      const apiService = new ApiService();
+      const result = await apiService.call(`/api/projects/${projectId}/interfaces`);
 
-      setInterfaces(projectInterfaces);
-      logger.info('Loaded interfaces for project:', projectId, projectInterfaces);
+      if (result.success !== false) {
+        const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
+        setInterfaces(projectInterfaces);
+        logger.info('Loaded project interfaces:', projectId, projectInterfaces);
+      } else {
+        logger.warn('Failed to load project interfaces:', result.error);
+        setInterfaces([]);
+      }
     } catch (error) {
-      logger.error('Failed to load project interfaces:', error);
+      logger.error('Error loading project interfaces:', error);
       setError(error.message);
+      setInterfaces([]);
     } finally {
       setIsLoading(false);
     }
@@ -141,7 +145,7 @@ const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
         ) : (
           interfaces.map(interfaceItem => (
             <InterfaceItemComponent
-              key={interfaceItem.port}
+              key={interfaceItem.port || interfaceItem.id}
               interface={interfaceItem}
               isActive={interfaceItem.active}
               onClick={() => handleInterfaceSwitch(interfaceItem.port)}

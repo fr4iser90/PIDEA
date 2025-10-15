@@ -11,6 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { logger } from '@/infrastructure/logging/Logger';
 import useIDEStore from '@/infrastructure/stores/IDEStore.jsx';
 import InterfaceItemComponent from '../interfaces/InterfaceItemComponent.jsx';
+import { ApiService } from '@/infrastructure/services/ApiService.js';
 import '@/scss/components/_project-card.scss';
 
 const ProjectCardComponent = ({ 
@@ -20,6 +21,17 @@ const ProjectCardComponent = ({
   eventBus,
   onInterfaceSwitch 
 }) => {
+  // DEBUG: Log project data
+  useEffect(() => {
+    logger.info('🔍 [ProjectCardComponent] Project data:', {
+      project,
+      hasProject: !!project,
+      projectName: project?.name,
+      projectId: project?.id,
+      projectWorkspacePath: project?.workspacePath
+    });
+  }, [project]);
+
   const { availableIDEs } = useIDEStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [interfaces, setInterfaces] = useState({
@@ -31,34 +43,46 @@ const ProjectCardComponent = ({
   // Load interfaces for this project
   useEffect(() => {
     loadProjectInterfaces();
-  }, [project, availableIDEs]);
+  }, [project]);
 
-  const loadProjectInterfaces = () => {
+  const loadProjectInterfaces = async () => {
     if (!project) return;
 
-    // Filter IDEs that belong to this project
-    const projectInterfaces = availableIDEs.filter(ide => 
-      ide.workspacePath && 
-      (ide.workspacePath.includes(project.id) || 
-       ide.workspacePath === project.workspacePath ||
-       ide.projectId === project.id)
-    );
+    try {
+      // Use correct project interfaces route - 2025 Standard
+      const apiService = new ApiService();
+      const result = await apiService.call(`/api/projects/${project.id}/interfaces`);
+      
+      if (result.success !== false) {
+        // 2025 Standard: Flat structure, interfaces are direct array
+        const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
+        
+        // Categorize interfaces
+        const categorized = {
+          ide: projectInterfaces.filter(ide => {
+            const ideType = ide.ideType || ide.type;
+            return ideType && ['cursor', 'vscode', 'webstorm', 'sublime', 'atom'].includes(ideType.toLowerCase());
+          }),
+          api: projectInterfaces.filter(ide => {
+            const ideType = ide.ideType || ide.type;
+            return ideType && ['api', 'rest', 'graphql', 'grpc'].includes(ideType.toLowerCase());
+          }),
+          web: projectInterfaces.filter(ide => {
+            const ideType = ide.ideType || ide.type;
+            return ideType && ['websocket', 'http', 'web'].includes(ideType.toLowerCase());
+          })
+        };
 
-    // Categorize interfaces
-    const categorized = {
-      ide: projectInterfaces.filter(ide => 
-        ide.ideType && ['cursor', 'vscode', 'webstorm', 'sublime', 'atom'].includes(ide.ideType.toLowerCase())
-      ),
-      api: projectInterfaces.filter(ide => 
-        ide.ideType && ['api', 'rest', 'graphql', 'grpc'].includes(ide.ideType.toLowerCase())
-      ),
-      web: projectInterfaces.filter(ide => 
-        ide.ideType && ['websocket', 'http', 'web'].includes(ide.ideType.toLowerCase())
-      )
-    };
-
-    setInterfaces(categorized);
-    logger.info('Loaded interfaces for project:', project.name, categorized);
+        setInterfaces(categorized);
+        logger.info('Loaded project interfaces:', project.name, categorized);
+      } else {
+        logger.warn('Failed to load project interfaces:', result.error);
+        setInterfaces({ ide: [], api: [], web: [] });
+      }
+    } catch (error) {
+      logger.error('Error loading project interfaces:', error);
+      setInterfaces({ ide: [], api: [], web: [] });
+    }
   };
 
   const handleCardClick = () => {
@@ -147,8 +171,8 @@ const ProjectCardComponent = ({
                 </div>
               ) : (
                 interfaces.ide.map(interfaceItem => (
-                  <div key={interfaceItem.port} className="interface-item">
-                    {interfaceItem.ideType} - Port {interfaceItem.port}
+                  <div key={interfaceItem.port || interfaceItem.id} className="interface-item">
+                    {(interfaceItem.ideType || interfaceItem.type || 'Unknown')} - Port {interfaceItem.port}
                   </div>
                 ))
               )}

@@ -176,14 +176,13 @@ class ProjectInterfaceController {
         status,
       });
 
+      // 2025 Standard: Flat structure, no nested pagination
       res.success({
-        interfaces: result.interfaces,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: result.total,
-          projectId,
-        },
+        ...result.interfaces,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: result.total,
+        projectId,
       });
     } catch (error) {
       this.logger.error("Failed to list interfaces:", error);
