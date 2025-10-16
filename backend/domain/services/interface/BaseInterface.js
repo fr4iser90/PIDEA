@@ -27,8 +27,8 @@ class BaseInterface {
     this.interfaceConfig = config;
     this.dependencies = dependencies;
     this.currentStatus = "created";
-    this.createdAt = new Date();
-    this.lastActivity = new Date();
+    this._createdAt = new Date();
+    this._lastActivity = new Date();
 
     // Validate required properties
     this._validateConfiguration();
@@ -108,7 +108,7 @@ class BaseInterface {
    * @returns {Date} Creation timestamp
    */
   get createdAt() {
-    return this.createdAt;
+    return this._createdAt;
   }
 
   /**
@@ -116,7 +116,7 @@ class BaseInterface {
    * @returns {Date} Last activity timestamp
    */
   get lastActivity() {
-    return this.lastActivity;
+    return this._lastActivity;
   }
 
   /**
@@ -142,7 +142,7 @@ class BaseInterface {
     }
 
     this.currentStatus = status;
-    this.lastActivity = new Date();
+    this._lastActivity = new Date();
   }
 
   /**
@@ -150,7 +150,7 @@ class BaseInterface {
    * @returns {void}
    */
   updateActivity() {
-    this.lastActivity = new Date();
+    this._lastActivity = new Date();
   }
 
   /**

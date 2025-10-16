@@ -569,14 +569,14 @@ class InterfaceManager {
    * @param {Object} interfaceData - Interface creation data
    * @returns {Promise<Object>} Created interface
    */
-  async createInterface(projectId, interfaceData) {
+  async createProjectInterface(projectId, interfaceData) {
     try {
       const { name, type, configuration = {} } = interfaceData;
 
       // Generate unique interface ID
       const interfaceId = `interface_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Create interface instance
+      // Create interface instance using the correct method
       const interfaceInstance = await this.createInterface(
         type,
         {
@@ -794,7 +794,10 @@ class InterfaceManager {
 
       // Filter interfaces by project
       let projectInterfaces = Array.from(this.activeInterfaces.values()).filter(
-        (interfaceInstance) => interfaceInstance.projectId === projectId,
+        (interfaceInstance) => {
+          const config = interfaceInstance.config || {};
+          return config.projectId === projectId || interfaceInstance.projectId === projectId;
+        },
       );
 
       // Apply filters
@@ -817,16 +820,26 @@ class InterfaceManager {
         offset + limit,
       );
 
-      const interfaces = paginatedInterfaces.map((interfaceInstance) => ({
-        id: interfaceInstance.interfaceId || interfaceInstance.id,
-        name: interfaceInstance.name,
-        type: interfaceInstance.type,
-        projectId: interfaceInstance.projectId,
-        configuration: interfaceInstance.configuration,
-        status: interfaceInstance.status,
-        createdAt: interfaceInstance.createdAt,
-        updatedAt: interfaceInstance.updatedAt,
-      }));
+      const interfaces = paginatedInterfaces.map((interfaceInstance) => {
+        const config = interfaceInstance.config || {};
+        return {
+          id: interfaceInstance.interfaceId || interfaceInstance.id,
+          name: interfaceInstance.name,
+          type: interfaceInstance.type,
+          projectId: config.projectId || interfaceInstance.projectId,
+          configuration: interfaceInstance.configuration,
+          status: interfaceInstance.status,
+          createdAt: interfaceInstance.createdAt,
+          updatedAt: interfaceInstance.updatedAt,
+          // Map config properties to top level for frontend compatibility
+          port: config.port,
+          workspacePath: config.workspacePath,
+          ideType: config.ideType,
+          version: config.version,
+          url: config.url,
+          webSocketUrl: config.webSocketUrl,
+        };
+      });
 
       return {
         interfaces,

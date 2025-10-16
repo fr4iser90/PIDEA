@@ -455,6 +455,45 @@ class ServiceRegistry {
       { singleton: true, dependencies: ["ideManager", "projectRepository"] },
     );
 
+    // Interface Detection Service - automatically converts IDEs to project interfaces
+    this.container.register(
+      "interfaceDetectionService",
+      (interfaceManager, projectApplicationService, ideManager, eventBus, logger) => {
+        const InterfaceDetectionService = require("@domain/services/interface/InterfaceDetectionService");
+        return new InterfaceDetectionService({
+          interfaceManager,
+          projectApplicationService,
+          ideManager,
+          eventBus,
+          logger
+        });
+      },
+      { 
+        singleton: true, 
+        dependencies: ["interfaceManager", "projectApplicationService", "ideManager", "eventBus", "logger"] 
+      },
+    );
+
+    // Register interface types in InterfaceManager
+    this.container.register(
+      "interfaceTypeRegistrar",
+      (interfaceManager) => {
+        const { IDEInterface } = require("@domain/services/interface");
+        
+        // Register IDE interface type
+        interfaceManager.registerInterface("ide", IDEInterface, {
+          defaultConfig: {
+            port: 3000,
+            workspacePath: "/workspace",
+            autoStart: false,
+          },
+        });
+        
+        return interfaceManager;
+      },
+      { singleton: true, dependencies: ["interfaceManager"] }
+    );
+
     // Version AI Integration
     this.container.register(
       "versionAIIntegration",

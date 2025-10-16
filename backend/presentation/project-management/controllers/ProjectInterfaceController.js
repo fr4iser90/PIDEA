@@ -62,7 +62,7 @@ class ProjectInterfaceController {
       }
 
       // Create interface within project context
-      const interfaceInstance = await this.interfaceManager.createInterface(
+      const interfaceInstance = await this.interfaceManager.createProjectInterface(
         projectId,
         {
           name,
@@ -186,7 +186,7 @@ class ProjectInterfaceController {
 
       // 2025 Standard: Flat structure, no nested pagination
       res.success({
-        ...result.interfaces,
+        interfaces: result.interfaces,
         page: parseInt(page),
         limit: parseInt(limit),
         total: result.total,

@@ -208,6 +208,23 @@ class ServiceInitialization {
     taskProcessor.startQueueProcessor();
     this.logger.info("✅ TaskProcessor initialized and started");
 
+    // Initialize InterfaceDetectionService
+    const interfaceDetectionService = serviceRegistry.getService("interfaceDetectionService");
+    if (interfaceDetectionService) {
+      await interfaceDetectionService.startDetection();
+      this.logger.info("✅ InterfaceDetectionService initialized and started");
+    } else {
+      this.logger.warn("⚠️ InterfaceDetectionService not found in service registry");
+    }
+
+    // Initialize Interface Type Registrar
+    const interfaceTypeRegistrar = serviceRegistry.getService("interfaceTypeRegistrar");
+    if (interfaceTypeRegistrar) {
+      this.logger.info("✅ Interface types registered successfully");
+    } else {
+      this.logger.warn("⚠️ InterfaceTypeRegistrar not found in service registry");
+    }
+
     // Initialize Framework Infrastructure
     const frameworkInfrastructure =
       await this.initializeFrameworkInfrastructure(services.stepRegistry);
@@ -223,6 +240,8 @@ class ServiceInitialization {
       ...services,
       taskProcessor,
       taskSessionRepository,
+      interfaceDetectionService,
+      interfaceTypeRegistrar,
       ...frameworkInfrastructure,
     };
   }
@@ -273,6 +292,8 @@ class ServiceInitialization {
         interfaceFactory: serviceRegistry.getService("interfaceFactory"),
         interfaceRegistry: serviceRegistry.getService("interfaceRegistry"),
         ideHandler: serviceRegistry.getService("ideHandler"),
+        interfaceDetectionService: serviceRegistry.getService("interfaceDetectionService"),
+        interfaceTypeRegistrar: serviceRegistry.getService("interfaceTypeRegistrar"),
       };
 
       return services;

@@ -185,6 +185,7 @@ class Application {
         domainServices.workflowOrchestrationService;
       this.gitService = domainServices.gitService;
       this.testOrchestrator = domainServices.testOrchestrator;
+      this.interfaceDetectionService = domainServices.interfaceDetectionService;
       this.workflowLoaderService = domainServices.workflowLoaderService;
       this.taskProcessor = domainServices.taskProcessor;
       this.taskSessionRepository = domainServices.taskSessionRepository;
@@ -199,16 +200,7 @@ class Application {
       this.interfaceFactory = domainServices.interfaceFactory;
       this.interfaceRegistry = domainServices.interfaceRegistry;
       this.ideHandler = domainServices.ideHandler;
-
-      // Register interface types
-      const { IDEInterface } = require("./domain/services/interface");
-      this.interfaceManager.registerInterface("ide", IDEInterface, {
-        defaultConfig: {
-          port: 3000,
-          workspacePath: "/workspace",
-          autoStart: false,
-        },
-      });
+      this.interfaceTypeRegistrar = domainServices.interfaceTypeRegistrar;
 
       // Initialize application handlers
       const applicationHandlers =

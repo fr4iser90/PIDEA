@@ -101,26 +101,48 @@ class InterfaceDetectionService {
   async findWorkspaceMatches(availableIDEs, projects) {
     const matches = [];
 
+    this.logger.info(`🔍 Finding workspace matches: ${availableIDEs.length} IDEs, ${projects.length} projects`);
+
     for (const ide of availableIDEs) {
+      this.logger.info(`🔍 Processing IDE: ${ide.type || 'unknown'}:${ide.port}`);
+      
       // Get workspace info for this IDE
       const workspaceInfo = await this.ideManager.getWorkspaceInfo(ide.port);
       
-      if (!workspaceInfo || !workspaceInfo.workspace) {
-        this.logger.debug(`No workspace info for IDE on port ${ide.port}`);
+      if (!workspaceInfo) {
+        this.logger.warn(`❌ No workspace info for IDE on port ${ide.port}`);
         continue;
       }
 
-      const ideWorkspacePath = workspaceInfo.workspace;
-      this.logger.debug(`IDE ${ide.port} workspace: ${ideWorkspacePath}`);
+      // Handle different workspace info structures
+      const ideWorkspacePath = workspaceInfo.workspacePath || workspaceInfo.workspace;
+      
+      if (!ideWorkspacePath) {
+        this.logger.warn(`❌ No workspace path found in workspace info for IDE on port ${ide.port}:`, workspaceInfo);
+        continue;
+      }
+      this.logger.info(`🔍 IDE ${ide.port} workspace: ${ideWorkspacePath}`);
+
+      // Log all project workspaces for comparison
+      this.logger.info(`🔍 Available project workspaces:`);
+      projects.forEach(project => {
+        this.logger.info(`  - Project ${project.id}: "${project.workspacePath}"`);
+      });
 
       // Find matching project
-      const matchingProject = projects.find(project => 
-        project.workspacePath === ideWorkspacePath
-      );
+      const matchingProject = projects.find(project => {
+        const match = project.workspacePath === ideWorkspacePath;
+        this.logger.info(`🔍 Comparing "${project.workspacePath}" === "${ideWorkspacePath}" = ${match}`);
+        return match;
+      });
 
       if (matchingProject) {
+        this.logger.info(`✅ Found matching project: ${matchingProject.id}`);
+        
         // Check if interface already exists for this IDE-project combination
         const existingInterfaces = await this.getProjectInterfaces(matchingProject.id);
+        this.logger.info(`🔍 Existing interfaces for project ${matchingProject.id}: ${existingInterfaces.length}`);
+        
         const interfaceExists = existingInterfaces.some(iface => 
           iface.config && iface.config.port === ide.port
         );
@@ -131,15 +153,16 @@ class InterfaceDetectionService {
             project: matchingProject,
             workspacePath: ideWorkspacePath
           });
-          this.logger.info(`Found match: IDE ${ide.port} ↔ Project ${matchingProject.id} (${ideWorkspacePath})`);
+          this.logger.info(`✅ Found match: IDE ${ide.port} ↔ Project ${matchingProject.id} (${ideWorkspacePath})`);
         } else {
-          this.logger.debug(`Interface already exists for IDE ${ide.port} and project ${matchingProject.id}`);
+          this.logger.info(`⚠️ Interface already exists for IDE ${ide.port} and project ${matchingProject.id}`);
         }
       } else {
-        this.logger.debug(`No matching project found for IDE workspace: ${ideWorkspacePath}`);
+        this.logger.warn(`❌ No matching project found for IDE workspace: ${ideWorkspacePath}`);
       }
     }
 
+    this.logger.info(`🔍 Workspace matching completed: ${matches.length} matches found`);
     return matches;
   }
 
@@ -198,16 +221,9 @@ class InterfaceDetectionService {
    * Map IDE type to interface type
    */
   mapIDETypeToInterfaceType(ideType) {
-    // Use the IDE type directly as interface type
-    // The system expects specific IDE types: cursor, vscode, windsurf, jetbrains, sublime
-    const validTypes = ['cursor', 'vscode', 'windsurf', 'jetbrains', 'sublime'];
-    
-    if (validTypes.includes(ideType)) {
-      return ideType;
-    }
-    
-    // Default to cursor if unknown type
-    return 'cursor';
+    // All IDE types map to the generic 'ide' interface type
+    // The InterfaceManager only has 'ide' registered, not specific IDE types
+    return 'ide';
   }
 
   /**
