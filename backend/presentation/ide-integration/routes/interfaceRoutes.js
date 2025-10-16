@@ -14,14 +14,39 @@ class InterfaceRoutes {
     this.projectApplicationService = projectApplicationService;
     this.authMiddleware = authMiddleware;
 
-    this.interfaceController = new ProjectInterfaceController(
-      interfaceManager,
-      projectApplicationService,
-    );
-    this.interfaceMiddleware = new InterfaceMiddleware(
-      interfaceManager,
-      projectApplicationService,
-    );
+    // Lazy initialization - only create when needed
+    this._interfaceController = null;
+    this._interfaceMiddleware = null;
+  }
+
+  get interfaceController() {
+    if (!this._interfaceController) {
+      this._interfaceController = new ProjectInterfaceController(
+        this.interfaceManager,
+        this.projectApplicationService,
+      );
+    }
+    return this._interfaceController;
+  }
+
+  get interfaceMiddleware() {
+    if (!this._interfaceMiddleware) {
+      this._interfaceMiddleware = new InterfaceMiddleware(
+        this.interfaceManager,
+        this.projectApplicationService,
+      );
+    }
+    return this._interfaceMiddleware;
+  }
+
+  /**
+   * Get router instance
+   * @returns {express.Router} Router instance
+   */
+  getRouter() {
+    const router = express.Router();
+    this.setupRoutes(router);
+    return router;
   }
 
   /**
@@ -171,3 +196,10 @@ class InterfaceRoutes {
 }
 
 module.exports = InterfaceRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const interfaceRoutes = new InterfaceRoutes();
+  return interfaceRoutes.getRouter();
+};
+

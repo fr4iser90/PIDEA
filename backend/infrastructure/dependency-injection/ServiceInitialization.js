@@ -35,13 +35,7 @@ class ServiceInitialization {
     serviceContainer.setLazyLoading(true);
     serviceContainer.setHealthMonitoring(true);
     serviceContainer.setMetricsCollection(true);
-    serviceContainer.setAutoDiscovery(true);
     serviceContainer.setLifecycleManagement(true);
-
-    // Scan for services and auto-register them
-    this.logger.info("🔍 Scanning for services...");
-    const scanResults = await serviceContainer.scanForServices();
-    this.logger.info(`📊 Discovered ${scanResults.services.length} services, ${scanResults.errors.length} errors`);
 
     // Register all services (including handlers)
     serviceRegistry.registerAllServices();
@@ -70,7 +64,6 @@ class ServiceInitialization {
       projectContext,
       serviceContainer,
       modernServiceStatus: serviceContainer.getModernServiceStatus(),
-      scanResults,
       ...services,
     };
   }

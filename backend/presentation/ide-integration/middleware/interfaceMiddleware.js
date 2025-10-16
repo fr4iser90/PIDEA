@@ -12,17 +12,25 @@ class InterfaceMiddleware {
     this.interfaceManager = interfaceManager;
     this.projectApplicationService = projectApplicationService;
     this.logger = logger;
+  }
 
+  // Lazy validation - only check when actually used
+  get _validatedInterfaceManager() {
     if (!this.interfaceManager) {
       throw new Error(
         "InterfaceMiddleware requires interfaceManager dependency",
       );
     }
+    return this.interfaceManager;
+  }
+
+  get _validatedProjectApplicationService() {
     if (!this.projectApplicationService) {
       throw new Error(
         "InterfaceMiddleware requires projectApplicationService dependency",
       );
     }
+    return this.projectApplicationService;
   }
 
   /**

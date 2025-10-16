@@ -132,7 +132,10 @@ class Application {
       // Initialize new registries
       this.logger.info("🔧 Initializing Controller and Route Registries...");
       this.controllerRegistry = new ControllerRegistry({ logger: this.logger });
-      this.routeRegistry = new RouteRegistry({ logger: this.logger });
+      this.routeRegistry = new RouteRegistry({ 
+        logger: this.logger,
+        controllerRegistry: this.controllerRegistry 
+      });
       
       // Register all controllers and routes
       await this.controllerRegistry.registerAllControllers();
@@ -331,7 +334,7 @@ class Application {
     );
 
     // Initialize controllers with Application Services
-    this.authController = this.serviceRegistry.getService("authController");
+    this.authController = this.serviceRegistry.getService("authApplicationService");
 
     // Initialize Project Application Service
     this.projectApplicationService = this.serviceRegistry.getService(
@@ -489,74 +492,8 @@ class Application {
         // Continue with manual route setup as fallback
       }
 
-      // Legacy route setup (as fallback)
-      // Main routes - Using modular route file
-      try {
-        const MainRoutes = require("./presentation/routes/mainRoutes");
-        const mainRoutes = new MainRoutes();
-        mainRoutes.setupRoutes(this.app);
-        routeModules.push("MainRoutes");
-        totalRoutes++;
-      } catch (error) {
-        this.logger.error("❌ Failed to load MainRoutes:", error.message);
-        throw error;
-      }
+      this.logger.info("✅ Core routes loaded via RouteRegistry");
 
-      // Health check routes - Using modular route file
-      try {
-        const HealthRoutes = require("./presentation/routes/healthRoutes");
-        const healthRoutes = new HealthRoutes(
-          this.autoSecurityManager,
-          this.databaseConnection,
-        );
-        healthRoutes.setupRoutes(this.app);
-        routeModules.push("HealthRoutes");
-        totalRoutes++;
-      } catch (error) {
-        this.logger.error("❌ Failed to load HealthRoutes:", error.message);
-        throw error;
-      }
-
-      // Modern Service Management Routes
-      try {
-        // Service Health Routes
-        const serviceHealthRoutes = new ServiceHealthRoutes(
-          this.serviceContainer.healthMonitor,
-          { logger: this.logger }
-        );
-        this.app.use("/api/health", serviceHealthRoutes.getRouter());
-        routeModules.push("ServiceHealthRoutes");
-        totalRoutes++;
-
-        // Service Metrics Routes
-        const serviceMetricsRoutes = new ServiceMetricsRoutes(
-          this.serviceContainer.metrics,
-          { logger: this.logger }
-        );
-        this.app.use("/api/metrics", serviceMetricsRoutes.getRouter());
-        routeModules.push("ServiceMetricsRoutes");
-        totalRoutes++;
-
-        this.logger.info("✅ Modern service management routes loaded");
-      } catch (error) {
-        this.logger.error("❌ Failed to load modern service management routes:", error.message);
-        throw error;
-      }
-
-      // Auth routes - Using modular route file
-      try {
-        const AuthRoutes = require("./presentation/system/routes/authRoutes");
-        const authRoutes = new AuthRoutes(
-          this.authController,
-          this.authMiddlewareInstance,
-        );
-        authRoutes.setupRoutes(this.app);
-        routeModules.push("AuthRoutes");
-        totalRoutes++;
-      } catch (error) {
-        this.logger.error("❌ Failed to load AuthRoutes:", error.message);
-        throw error;
-      }
 
       // Session management routes - Using modular route file
       try {
@@ -573,7 +510,6 @@ class Application {
         throw error;
       }
 
-      // Chat routes removed - webChatController doesn't exist
 
       // Project routes - Using modular route file (NEW PROJECT-CENTRIC API)
       try {

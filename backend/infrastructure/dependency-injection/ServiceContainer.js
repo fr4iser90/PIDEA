@@ -5,15 +5,14 @@
  */
 const path = require("path");
 const fs = require("fs").promises;
-const Logger = require("@logging/Logger");
+const { getLogger } = require("@logging/Logger");
 const DependencyGraph = require("./DependencyGraph");
 const LazyServiceLoader = require("./LazyServiceLoader");
 const ServiceHealthMonitor = require("./ServiceHealthMonitor");
 const ServiceMetrics = require("./ServiceMetrics");
 const ServiceFactory = require("./ServiceFactory");
-const ServiceDiscovery = require("./ServiceDiscovery");
 const ServiceLifecycleManager = require("./ServiceLifecycleManager");
-const logger = new Logger("DIServiceContainer");
+const logger = getLogger("DIServiceContainer");
 
 class ServiceContainer {
   constructor() {
@@ -35,14 +34,12 @@ class ServiceContainer {
     this.healthMonitor = new ServiceHealthMonitor(this);
     this.metrics = new ServiceMetrics();
     this.serviceFactory = new ServiceFactory(this);
-    this.serviceDiscovery = new ServiceDiscovery(this);
     this.lifecycleManager = new ServiceLifecycleManager(this);
 
     // Configuration options
     this.enableLazyLoading = true;
     this.enableHealthMonitoring = true;
     this.enableMetricsCollection = true;
-    this.enableAutoDiscovery = true;
     this.enableLifecycleManagement = true;
 
     // Register optimization services (disabled for now due to SQL syntax errors)
@@ -243,34 +240,12 @@ class ServiceContainer {
   }
 
   /**
-   * Enable or disable auto-discovery
-   * @param {boolean} enabled - Whether to enable auto-discovery
-   */
-  setAutoDiscovery(enabled) {
-    this.enableAutoDiscovery = enabled;
-    logger.info(`Auto-discovery ${enabled ? 'enabled' : 'disabled'}`);
-  }
-
-  /**
    * Enable or disable lifecycle management
    * @param {boolean} enabled - Whether to enable lifecycle management
    */
   setLifecycleManagement(enabled) {
     this.enableLifecycleManagement = enabled;
     logger.info(`Lifecycle management ${enabled ? 'enabled' : 'disabled'}`);
-  }
-
-  /**
-   * Scan for services and auto-register them
-   * @param {Array} directories - Optional specific directories to scan
-   * @returns {Promise<Object>} Scan results
-   */
-  async scanForServices(directories = null) {
-    if (!this.enableAutoDiscovery) {
-      throw new Error("Auto-discovery is disabled. Enable it first with setAutoDiscovery(true)");
-    }
-
-    return await this.serviceDiscovery.scanForServices(directories);
   }
 
   /**
@@ -397,10 +372,6 @@ class ServiceContainer {
       metricsCollection: {
         enabled: this.enableMetricsCollection,
         metrics: this.metrics.getAggregatedMetrics(),
-      },
-      autoDiscovery: {
-        enabled: this.enableAutoDiscovery,
-        metrics: this.serviceDiscovery.getMetrics(),
       },
       lifecycleManagement: {
         enabled: this.enableLifecycleManagement,

@@ -9,7 +9,7 @@ const router = express.Router();
  */
 
 class AuthRoutes {
-  constructor(authController = null, authMiddleware = null) {
+  constructor(authController, authMiddleware) {
     this.authController = authController;
     this.authMiddleware = authMiddleware;
     this.router = express.Router();
@@ -34,7 +34,7 @@ class AuthRoutes {
 
     // Login with brute force protection
     this.router.post(
-      "/api/auth/login",
+      "/login",
       (req, res) => {
         if (this.authController) {
           this.authController.login(req, res);
@@ -46,7 +46,7 @@ class AuthRoutes {
 
     // Refresh token with brute force protection
     this.router.post(
-      "/api/auth/refresh",
+      "/refresh",
       (req, res) => {
         if (this.authController) {
           this.authController.refresh(req, res);
@@ -57,7 +57,7 @@ class AuthRoutes {
     );
 
     // Validate token (public endpoint)
-    this.router.get("/api/auth/validate", (req, res) => {
+    this.router.get("/validate", (req, res) => {
       if (this.authController) {
         this.authController.validateToken(req, res);
       } else {
@@ -72,14 +72,14 @@ class AuthRoutes {
     // Authentication handled by global middleware
 
     // Profile management
-    this.router.get("/api/auth/profile", (req, res) => {
+    this.router.get("/profile", (req, res) => {
       if (this.authController) {
         this.authController.getProfile(req, res);
       } else {
         res.status(501).json({ error: "Auth controller not available" });
       }
     });
-    this.router.put("/api/auth/profile", (req, res) => {
+    this.router.put("/profile", (req, res) => {
       if (this.authController) {
         this.authController.updateProfile(req, res);
       } else {
@@ -88,7 +88,7 @@ class AuthRoutes {
     });
 
     // Session management
-    this.router.get("/api/auth/sessions", (req, res) => {
+    this.router.get("/sessions", (req, res) => {
       if (this.authController) {
         this.authController.getSessions(req, res);
       } else {
@@ -97,7 +97,7 @@ class AuthRoutes {
     });
 
     // Logout
-    this.router.post("/api/auth/logout", (req, res) => {
+    this.router.post("/logout", (req, res) => {
       if (this.authController) {
         this.authController.logout(req, res);
       } else {

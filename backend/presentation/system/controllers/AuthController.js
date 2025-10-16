@@ -3,8 +3,8 @@ const ServiceLogger = require("@logging/ServiceLogger");
 const logger = new ServiceLogger("AuthController");
 
 class AuthController {
-  constructor(dependencies = {}) {
-    this.authApplicationService = dependencies.authApplicationService;
+  constructor(authApplicationService) {
+    this.authApplicationService = authApplicationService;
     if (!this.authApplicationService) {
       throw new Error(
         "AuthController requires authApplicationService dependency",

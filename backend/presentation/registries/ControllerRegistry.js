@@ -93,9 +93,14 @@ class ControllerRegistry {
 
     try {
       // Resolve dependencies
-      const dependencies = controllerConfig.dependencies.map(dep => 
-        this.container.resolve(dep)
-      );
+      const dependencies = controllerConfig.dependencies.map(dep => {
+        try {
+          return this.container.resolve(dep);
+        } catch (error) {
+          this.logger.error(`❌ Failed to resolve dependency '${dep}' for controller '${controllerName}': ${error.message}`);
+          throw error;
+        }
+      });
 
       // Create controller instance
       const controllerInstance = new controllerConfig.class(...dependencies);
@@ -207,12 +212,6 @@ class ControllerRegistry {
     };
 
     try {
-      // Auto-discover controllers first
-      const discoveryResults = await this.discoverControllers();
-      registrationStats.total += discoveryResults.controllers.length;
-      registrationStats.successful += discoveryResults.controllers.length;
-      registrationStats.errors.push(...discoveryResults.errors);
-
       // Register core controllers manually
       await this.registerCoreControllers();
 
@@ -254,6 +253,17 @@ class ControllerRegistry {
       });
     } catch (error) {
       this.logger.warn(`Failed to register ServiceMetricsController: ${error.message}`);
+    }
+
+    // Auth Controller
+    try {
+      const AuthController = require("../system/controllers/AuthController");
+      this.registerController("AuthController", AuthController, {
+        dependencies: ["authApplicationService"],
+        singleton: true,
+      });
+    } catch (error) {
+      this.logger.warn(`Failed to register AuthController: ${error.message}`);
     }
   }
 

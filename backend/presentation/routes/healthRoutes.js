@@ -63,3 +63,9 @@ class HealthRoutes {
 }
 
 module.exports = HealthRoutes;
+
+// Export getRouter function for route registry
+module.exports.getRouter = () => {
+  const healthRoutes = new HealthRoutes();
+  return healthRoutes.getRouter();
+};

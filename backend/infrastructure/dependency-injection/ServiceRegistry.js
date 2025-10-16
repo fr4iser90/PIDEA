@@ -423,15 +423,7 @@ class ServiceRegistry {
       },
     );
 
-    // AuthController - coordinates authentication endpoints
-    this.container.register(
-      "authController",
-      (authApplicationService) => {
-        const AuthController = require("../../presentation/system/controllers/AuthController");
-        return new AuthController({ authApplicationService });
-      },
-      { singleton: true, dependencies: ["authApplicationService"] },
-    );
+    // AuthController - coordinates authentication endpoints (moved to registerServiceByName to avoid duplication)
 
     // Project Mapping Service
     this.container.register(
@@ -2759,14 +2751,9 @@ class ServiceRegistry {
         );
         break;
       case "authController":
-        this.container.register(
-          "authController",
-          (authApplicationService) => {
-            const AuthController = require("../../presentation/system/controllers/AuthController");
-            return new AuthController({ authApplicationService });
-          },
-          { singleton: true, dependencies: ["authApplicationService"] },
-        );
+        // AuthController should be registered in ControllerRegistry, not ServiceRegistry
+        // This is a presentation layer component, not a domain service
+        throw new Error("AuthController should be registered in ControllerRegistry, not ServiceRegistry");
         break;
       case "projectMappingService":
         this.container.register(

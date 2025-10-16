@@ -14,6 +14,7 @@ class RouteRegistry {
     this.logger = options.logger || new ServiceLogger("RouteRegistry");
     this.registeredRoutes = new Map();
     this.routeMiddleware = new Map();
+    this.controllerRegistry = options.controllerRegistry || null;
     
     // Configuration
     this.enableAutoDiscovery = options.enableAutoDiscovery !== false;
@@ -80,6 +81,11 @@ class RouteRegistry {
       this.metrics.registeredRoutes++;
       
       this.logger.debug(`✅ Registered route: ${routeName} at ${routeConfig.path}`);
+      if (routeName === "AuthRoutes") {
+        this.logger.info(`🔍 [RouteRegistry] AuthRoutes registered successfully at ${routeConfig.path}`);
+        this.logger.info(`🔍 [RouteRegistry] AuthRoutes module: ${routeInstance ? 'EXISTS' : 'NULL'}`);
+        this.logger.info(`🔍 [RouteRegistry] AuthRoutes getRouter: ${routeInstance.getRouter ? 'EXISTS' : 'NULL'}`);
+      }
       return this;
     } catch (error) {
       this.logger.error(`❌ Failed to register route '${routeName}': ${error.message}`);
@@ -97,9 +103,28 @@ class RouteRegistry {
     const dependencies = [];
     
     try {
-      // For now, try to instantiate routes without dependencies to avoid errors
-      // This can be enhanced later when all services are properly registered
-      this.logger.debug(`Instantiating ${routeName} without dependencies for now`);
+      // Get dependencies based on route name
+      if (routeName === "AuthRoutes") {
+        // Use the injected controllerRegistry if available, otherwise create one
+        let controllerRegistry = this.controllerRegistry;
+        if (!controllerRegistry) {
+          const ControllerRegistry = require("./ControllerRegistry");
+          controllerRegistry = new ControllerRegistry({ logger: this.logger });
+          // Register core controllers
+          controllerRegistry.registerCoreControllers();
+        }
+        
+        const authController = controllerRegistry.getController("AuthController");
+        const authMiddleware = this.container.resolve("authMiddleware");
+        dependencies.push(authController, authMiddleware);
+      }
+      
+      this.logger.debug(`Instantiating ${routeName} with ${dependencies.length} dependencies`);
+      if (routeName === "AuthRoutes") {
+        this.logger.info(`🔍 [RouteRegistry] AuthRoutes dependencies: ${dependencies.length}`);
+        this.logger.info(`🔍 [RouteRegistry] authController: ${dependencies[0] ? 'EXISTS' : 'NULL'}`);
+        this.logger.info(`🔍 [RouteRegistry] authMiddleware: ${dependencies[1] ? 'EXISTS' : 'NULL'}`);
+      }
     } catch (error) {
       this.logger.debug(`Could not get dependencies for ${routeName}: ${error.message}`);
     }
@@ -258,12 +283,6 @@ class RouteRegistry {
     };
 
     try {
-      // Auto-discover routes first
-      const discoveryResults = await this.discoverRoutes();
-      registrationStats.total += discoveryResults.routes.length;
-      registrationStats.successful += discoveryResults.routes.length;
-      registrationStats.errors.push(...discoveryResults.errors);
-
       // Register core routes manually
       await this.registerCoreRoutes();
 
@@ -278,6 +297,8 @@ class RouteRegistry {
     } catch (error) {
       this.logger.error("❌ Failed to register routes:", error.message);
       throw new Error(`Route registration failed: ${error.message}`);
+    } finally {
+      this._isRegistering = false;
     }
   }
 
@@ -285,6 +306,8 @@ class RouteRegistry {
    * Register core routes manually
    */
   async registerCoreRoutes() {
+    this.logger.info("🔍 [RouteRegistry] Starting registerCoreRoutes...");
+    
     // Main Routes
     try {
       const MainRoutes = require("../routes/mainRoutes");
@@ -376,6 +399,10 @@ class RouteRegistry {
 
         appliedCount++;
         this.logger.debug(`✅ Applied route: ${name} at ${path}`);
+        if (name === "AuthRoutes") {
+          this.logger.info(`🔍 [RouteRegistry] AuthRoutes applied to Express at ${path}`);
+          this.logger.info(`🔍 [RouteRegistry] AuthRoutes router: ${router ? 'EXISTS' : 'NULL'}`);
+        }
       } catch (error) {
         this.logger.error(`❌ Failed to apply route '${routeConfig.name}': ${error.message}`);
         failedCount++;
