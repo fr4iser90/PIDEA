@@ -3,10 +3,9 @@
  * CLEAN VERSION - Uses DI Container properly
  */
 const Logger = require("@logging/Logger");
-const centralizedConfig = require("@config/centralized-config");
+const config = require("@config");
 const BrowserEnvironmentService = require("@services/testing/BrowserEnvironmentService");
 const logger = new Logger("TestManagementController");
-const config = centralizedConfig;
 
 class TestManagementController {
   constructor(dependencies = {}) {

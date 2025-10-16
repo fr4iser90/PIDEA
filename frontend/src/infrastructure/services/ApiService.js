@@ -24,7 +24,8 @@ class ApiService {
    * @returns {Promise<Object>} API response
    */
   async call(endpoint, options = {}, projectId = null) {
-    const url = typeof endpoint === 'function' ? endpoint() : endpoint;
+    const endpointUrl = typeof endpoint === 'function' ? endpoint() : endpoint;
+    const url = `${this.baseURL}${endpointUrl}`;
     
     logger.info('🔍 [ApiService] Making API call to:', url);
     

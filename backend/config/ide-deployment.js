@@ -9,7 +9,7 @@
 const path = require("path");
 const Logger = require("@logging/Logger");
 const logger = new Logger("IDE-Deployment-Config");
-const centralizedConfig = require("./centralized-config");
+const config = require("./index");
 
 // Environment detection
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -21,10 +21,10 @@ const isDevelopment = NODE_ENV === "development";
 const baseConfig = {
   // API Configuration
   api: {
-    port: centralizedConfig.backendPort,
-    host: centralizedConfig.backendUrl?.split("://")[1]?.split(":")[0],
+    port: config.app.backendPort,
+    host: config.app.backendUrl?.split("://")[1]?.split(":")[0],
     cors: {
-      origin: centralizedConfig.frontendUrl,
+      origin: config.app.frontendUrl,
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -43,7 +43,7 @@ const baseConfig = {
 
   // WebSocket Configuration
   websocket: {
-    port: centralizedConfig.websocketPort,
+    port: config.app.websocketPort,
     path: "/ws",
     pingInterval: 25000,
     pingTimeout: 5000,
@@ -67,7 +67,7 @@ const baseConfig = {
   },
 
   // Database Configuration
-  database: centralizedConfig.databaseConfig,
+  database: config.database.databaseConfig,
 
   // Logging Configuration
   logging: {
@@ -95,7 +95,7 @@ const baseConfig = {
     },
     cors: {
       enabled: true,
-      origin: centralizedConfig.frontendUrl,
+      origin: config.app.frontendUrl,
       credentials: true,
     },
     helmet: {
@@ -136,7 +136,7 @@ const baseConfig = {
     enabled: isProduction,
     metrics: {
       enabled: true,
-      port: centralizedConfig.monitoringConfig.metrics.port,
+      port: config.monitoring.monitoringConfig.metrics.port,
     },
     healthCheck: {
       enabled: true,
@@ -256,10 +256,10 @@ const config = {
 function validateConfig() {
   const errors = [];
 
-  // Use centralized config validation
-  const centralizedValidation = centralizedConfig.validate();
-  if (!centralizedValidation.isValid) {
-    errors.push(...centralizedValidation.errors);
+  // Use config validation
+  const configValidation = config.validate();
+  if (!configValidation.isValid) {
+    errors.push(...configValidation.errors);
   }
 
   // Additional required environment variables for this config

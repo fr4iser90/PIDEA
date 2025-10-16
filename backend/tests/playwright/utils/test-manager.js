@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const path = require("path");
 const { glob } = require("glob"); // ✅ NEUE GLOB SYNTAX!
 const Logger = require("@logging/Logger");
-const centralizedConfig = require("@config/centralized-config");
+const config = require("@config");
 
 const logger = new Logger("PlaywrightTestManager");
 
@@ -18,11 +18,11 @@ const logger = new Logger("PlaywrightTestManager");
 class PlaywrightTestManager {
   constructor(options = {}) {
     this.options = {
-      testDir: options.testDir || centralizedConfig.pathConfig.tests.playwright,
-      configDir: options.configDir || centralizedConfig.pathConfig.config.root,
+      testDir: options.testDir || config.app.pathConfig.tests.playwright,
+      configDir: options.configDir || config.app.pathConfig.config.root,
       fixturesDir: options.fixturesDir || "./fixtures",
       outputDir:
-        options.outputDir || centralizedConfig.pathConfig.output.reports,
+        options.outputDir || config.app.pathConfig.output.reports,
       ...options,
     };
 
@@ -251,23 +251,23 @@ class PlaywrightTestManager {
         additionalFields: {},
       },
       tests: {
-        directory: centralizedConfig.pathConfig.tests.playwright,
+        directory: config.app.pathConfig.tests.playwright,
         pattern: "**/*.test.js",
         exclude: ["**/node_modules/**"],
       },
       screenshots: {
         enabled: true,
-        path: centralizedConfig.pathConfig.output.screenshots,
+        path: config.app.pathConfig.output.screenshots,
         onFailure: true,
       },
       videos: {
         enabled: false,
-        path: centralizedConfig.pathConfig.output.videos,
+        path: config.app.pathConfig.output.videos,
         onFailure: true,
       },
       reports: {
         enabled: true,
-        path: centralizedConfig.pathConfig.output.reports,
+        path: config.app.pathConfig.output.reports,
         format: "html",
       },
     };

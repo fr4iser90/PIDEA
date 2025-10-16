@@ -1,6 +1,6 @@
 const Logger = require("@logging/Logger");
 const PlaywrightTestApplicationService = require("@application/services/PlaywrightTestApplicationService");
-const centralizedConfig = require("@config/centralized-config");
+const config = require("@config");
 
 const logger = new Logger("PlaywrightTestHandler");
 

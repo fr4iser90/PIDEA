@@ -224,11 +224,34 @@ class Application {
 
       // Middleware setup - Using modular setup file
       const MiddlewareSetup = require("./infrastructure/MiddlewareSetup");
-      const middlewareSetup = new MiddlewareSetup(
+      const FrontendBuildManager = require("./infrastructure/FrontendBuildManager");
+      const StaticFileServer = require("./infrastructure/StaticFileServer");
+      
+      this.middlewareSetup = new MiddlewareSetup(
         this.autoSecurityManager,
         this.logger,
       );
-      middlewareSetup.setupMiddleware(this.app, this.authMiddleware);
+      this.frontendBuildManager = new FrontendBuildManager(
+        this.config,
+        this.logger,
+      );
+      this.staticFileServer = new StaticFileServer(
+        this.config,
+        this.logger,
+      );
+      
+      this.middlewareSetup.setupMiddleware(this.app, this.authMiddleware);
+
+      // Setup frontend building and static file serving
+      const config = require("@config");
+      const pathConfig = config.app.pathConfig.project;
+      const frontendPath = path.join(pathConfig.root, pathConfig.frontend);
+      
+      // Initialize frontend building
+      await this.frontendBuildManager.initializeFrontendBuilding(frontendPath);
+      
+      // Setup static file serving
+      this.staticFileServer.setupStaticFileServing(this.app);
 
       this.setupRoutes();
 
@@ -276,7 +299,7 @@ class Application {
       }
 
       // Event handlers - Using modular handler file
-      const EventHandlers = require("./presentation/routes/eventHandlers");
+      const EventHandlers = require("./presentation/system/eventHandlers");
       const eventHandlers = new EventHandlers(
         this.eventBus,
         this.webSocketManager,
@@ -530,7 +553,7 @@ class Application {
 
 
       // File explorer routes - Using modular route file
-      const FileRoutes = require("./presentation/routes/fileRoutes");
+      const FileRoutes = require("./presentation/tools/routes/fileRoutes");
       const fileRoutes = new FileRoutes(
         this.browserManager,
         this.authMiddlewareInstance,
@@ -545,6 +568,22 @@ class Application {
         this.authMiddlewareInstance,
       );
       contentLibraryRoutes.setupRoutes(this.app);
+
+      // Development routes (development only)
+      if (process.env.NODE_ENV === "development") {
+        try {
+          const DevRoutes = require("./presentation/system/routes/devRoutes");
+          const devRoutes = new DevRoutes(
+            this.middlewareSetup,
+            this.logger,
+          );
+          devRoutes.setupRoutes(this.app);
+          routeModules.push("DevRoutes");
+          totalRoutes++;
+        } catch (error) {
+          this.logger.error("Failed to load DevRoutes:", error.message);
+        }
+      }
 
       // Task Management routes - Using modular route file
       const TaskRoutes = require("./presentation/task-management/routes/taskRoutes");
@@ -671,6 +710,11 @@ class Application {
     this.logger.info("Stopping...");
 
     this.isRunning = false;
+
+    // Cleanup frontend build manager
+    if (this.frontendBuildManager) {
+      this.frontendBuildManager.cleanup();
+    }
 
     // Stop all services with lifecycle hooks
     if (this.serviceRegistry && this.serviceRegistry.getContainer()) {

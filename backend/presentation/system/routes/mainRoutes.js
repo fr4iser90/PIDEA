@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const centralizedConfig = require("../../config/centralized-config");
+const { app } = require("@config");
 
 /**
  * Main Routes - Professional RESTful API Design
@@ -26,9 +26,9 @@ class MainRoutes {
 
     // Serve the main page
     this.router.get("/", (req, res) => {
-      const config = centralizedConfig.pathConfig.project;
-      const frontendDistPath = path.join(config.root, config.frontend, "dist");
-      const frontendIndexPath = path.join(config.root, config.frontend, "index.html");
+      const pathConfig = app.pathConfig.project;
+      const frontendDistPath = path.join(pathConfig.root, pathConfig.frontend, "dist");
+      const frontendIndexPath = path.join(pathConfig.root, pathConfig.frontend, "index.html");
       
       if (process.env.NODE_ENV === "development" && fs.existsSync(frontendDistPath)) {
         res.sendFile(path.join(frontendDistPath, "index.html"));

@@ -16,12 +16,22 @@ import '@/scss/components/_project-card.scss';
 const ProjectListComponent = ({ eventBus, onProjectSelect, showAddModal, onCloseAddModal, onOpenAddModal }) => {
   // Removed render log to prevent spam during typing
   
-  const { projects, isLoading, error, refresh, stopLoading } = useProjectManagement(false);
+  const { projects, isLoading, error, refresh, stopLoading } = useProjectManagement(true);
   const selectedProject = useSelectedProject();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProjects, setFilteredProjects] = useState([]);
 
-  // Filter projects based on search query
+  // Manual load trigger for testing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (Object.keys(projects).length === 0 && !isLoading) {
+        logger.info('🔍 [ProjectListComponent] MANUAL LOAD TRIGGERED');
+        refresh();
+      }
+    }, 2000); // Wait 2 seconds after mount
+    
+    return () => clearTimeout(timer);
+  }, [projects, isLoading, refresh]);
   useEffect(() => {
     if (!searchQuery) {
       setFilteredProjects(Object.values(projects));

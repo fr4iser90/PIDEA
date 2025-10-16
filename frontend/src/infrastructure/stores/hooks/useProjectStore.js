@@ -86,6 +86,7 @@ export const useProjectManagement = (autoLoad = false) => { // CHANGED: Default 
 
   const handleRefresh = useCallback(async () => {
     try {
+      logger.info('🔍 [useProjectStore] handleRefresh called');
       clearError();
       // Check if already loading - USE STRICT DEDUPLICATION!
       const currentState = useProjectStoreCore.getState();
@@ -96,11 +97,13 @@ export const useProjectManagement = (autoLoad = false) => { // CHANGED: Default 
         });
         return;
       }
-      await refresh();
+      logger.info('🔍 [useProjectStore] About to call loadProjects');
+      await loadProjects();
+      logger.info('🔍 [useProjectStore] loadProjects completed successfully');
     } catch (error) {
       logger.error('Failed to refresh projects:', error);
     }
-  }, [refresh, clearError]);
+  }, [loadProjects, clearError]);
 
   return {
     // State

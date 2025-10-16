@@ -4,7 +4,7 @@
  */
 
 const path = require("path");
-const centralizedConfig = require("./centralized-config");
+const config = require("./index");
 
 class DeploymentConfig {
   constructor() {
@@ -24,27 +24,27 @@ class DeploymentConfig {
   getDevelopmentConfig() {
     return {
       // IDE API Configuration
-      ide: centralizedConfig.ideConfig,
+      ide: config.ide.ideConfig,
 
       // Frontend Configuration
       frontend: {
-        port: centralizedConfig.frontendPort,
+        port: config.app.frontendPort,
         hotReload: true,
         sourceMaps: true,
         devTools: true,
       },
 
       // Database Configuration
-      database: centralizedConfig.databaseConfig,
+      database: config.database.databaseConfig,
 
       // WebSocket Configuration
-      websocket: centralizedConfig.websocketConfig,
+      websocket: config.app.websocketConfig,
 
       // Security Configuration
-      security: centralizedConfig.securityConfig,
+      security: config.security,
 
       // Monitoring Configuration
-      monitoring: centralizedConfig.monitoringConfig,
+      monitoring: config.monitoring.monitoringConfig,
 
       // Git Workflow Configuration
       gitWorkflow: {
@@ -88,27 +88,27 @@ class DeploymentConfig {
   getStagingConfig() {
     return {
       // IDE API Configuration
-      ide: centralizedConfig.ideConfig,
+      ide: config.ideConfig,
 
       // Frontend Configuration
       frontend: {
-        port: centralizedConfig.frontendPort,
+        port: config.frontendPort,
         hotReload: false,
         sourceMaps: false,
         devTools: false,
       },
 
       // Database Configuration
-      database: centralizedConfig.databaseConfig,
+      database: config.databaseConfig,
 
       // WebSocket Configuration
-      websocket: centralizedConfig.websocketConfig,
+      websocket: config.websocketConfig,
 
       // Security Configuration
-      security: centralizedConfig.securityConfig,
+      security: config.securityConfig,
 
       // Monitoring Configuration
-      monitoring: centralizedConfig.monitoringConfig,
+      monitoring: config.monitoringConfig,
 
       // Git Workflow Configuration
       gitWorkflow: {
@@ -152,27 +152,27 @@ class DeploymentConfig {
   getProductionConfig() {
     return {
       // IDE API Configuration
-      ide: centralizedConfig.ideConfig,
+      ide: config.ideConfig,
 
       // Frontend Configuration
       frontend: {
-        port: centralizedConfig.frontendPort,
+        port: config.frontendPort,
         hotReload: false,
         sourceMaps: false,
         devTools: false,
       },
 
       // Database Configuration
-      database: centralizedConfig.databaseConfig,
+      database: config.databaseConfig,
 
       // WebSocket Configuration
-      websocket: centralizedConfig.websocketConfig,
+      websocket: config.websocketConfig,
 
       // Security Configuration
-      security: centralizedConfig.securityConfig,
+      security: config.securityConfig,
 
       // Monitoring Configuration
-      monitoring: centralizedConfig.monitoringConfig,
+      monitoring: config.monitoringConfig,
 
       // Git Workflow Configuration
       gitWorkflow: {

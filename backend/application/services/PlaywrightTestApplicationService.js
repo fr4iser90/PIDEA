@@ -3,7 +3,7 @@ const PlaywrightTestRunner = require("@tests/playwright/utils/test-runner");
 const PlaywrightTestManager = require("@tests/playwright/utils/test-manager");
 const path = require("path");
 const fs = require("fs-extra");
-const centralizedConfig = require("@config/centralized-config");
+const config = require("@config");
 
 const logger = new Logger("PlaywrightTestApplicationService");
 

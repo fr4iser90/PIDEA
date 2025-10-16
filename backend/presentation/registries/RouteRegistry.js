@@ -310,7 +310,7 @@ class RouteRegistry {
     
     // Main Routes
     try {
-      const MainRoutes = require("../routes/mainRoutes");
+      const MainRoutes = require("../system/routes/mainRoutes");
       this.registerRoute("MainRoutes", MainRoutes, {
         path: "/",
         priority: 1,
@@ -321,7 +321,7 @@ class RouteRegistry {
 
     // Health Routes
     try {
-      const HealthRoutes = require("../routes/healthRoutes");
+      const HealthRoutes = require("../system/routes/healthRoutes");
       this.registerRoute("HealthRoutes", HealthRoutes, {
         path: "/api/health",
         priority: 2,

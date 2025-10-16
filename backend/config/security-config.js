@@ -429,7 +429,11 @@ class SecurityConfig {
     }
 
     logger.info("✅ Security configuration validated successfully");
-    return true;
+    return {
+      isValid: true,
+      errors: [],
+      warnings: [],
+    };
   }
 
   /**

@@ -26,7 +26,7 @@ export class ProjectRepository extends IProjectRepository {
       }
 
       // Fetch from API
-      const response = await this._apiService.get(`/projects/${id}`);
+      const response = await this._apiService.get(`/api/projects/${id}`);
       if (!response.success) {
         return null;
       }
@@ -45,7 +45,7 @@ export class ProjectRepository extends IProjectRepository {
 
   async findByName(name) {
     try {
-      const response = await this._apiService.get(`/projects/search?name=${encodeURIComponent(name)}`);
+      const response = await this._apiService.get(`/api/projects/search?name=${encodeURIComponent(name)}`);
       if (!response.success || !response.data.length) {
         return null;
       }
@@ -59,7 +59,7 @@ export class ProjectRepository extends IProjectRepository {
 
   async findByWorkspacePath(workspacePath) {
     try {
-      const response = await this._apiService.get(`/projects/search?workspacePath=${encodeURIComponent(workspacePath)}`);
+      const response = await this._apiService.get(`/api/projects/search?workspacePath=${encodeURIComponent(workspacePath)}`);
       if (!response.success || !response.data.length) {
         return null;
       }
@@ -82,12 +82,10 @@ export class ProjectRepository extends IProjectRepository {
       if (options.sortBy) queryParams.append('sortBy', options.sortBy);
       if (options.sortOrder) queryParams.append('sortOrder', options.sortOrder);
 
-      const response = await this._apiService.get(`/projects?${queryParams.toString()}`);
-      if (!response.success) {
-        return [];
-      }
-
-      return response.data.map(data => Project.fromJSON(data));
+      const response = await this._apiService.get(`/api/projects?${queryParams.toString()}`);
+      
+      // Backend returns direct array - no nested structure
+      return response.map(data => Project.fromJSON(data));
     } catch (error) {
       console.error('Error finding all projects:', error);
       return [];
@@ -96,7 +94,7 @@ export class ProjectRepository extends IProjectRepository {
 
   async findActive() {
     try {
-      const response = await this._apiService.get('/projects?status=active');
+      const response = await this._apiService.get('/api/projects?status=active');
       if (!response.success) {
         return [];
       }
@@ -110,7 +108,7 @@ export class ProjectRepository extends IProjectRepository {
 
   async save(project) {
     try {
-      const response = await this._apiService.post('/projects', project.toJSON());
+      const response = await this._apiService.post('/api/projects', project.toJSON());
       if (!response.success) {
         throw new Error(response.error || 'Failed to save project');
       }
@@ -132,7 +130,7 @@ export class ProjectRepository extends IProjectRepository {
 
   async update(project) {
     try {
-      const response = await this._apiService.put(`/projects/${project.id.value}`, project.toJSON());
+      const response = await this._apiService.put(`/api/projects/${project.id.value}`, project.toJSON());
       if (!response.success) {
         throw new Error(response.error || 'Failed to update project');
       }
@@ -156,7 +154,7 @@ export class ProjectRepository extends IProjectRepository {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
       
-      const response = await this._apiService.delete(`/projects/${id}`);
+      const response = await this._apiService.delete(`/api/projects/${id}`);
       if (!response.success) {
         throw new Error(response.error || 'Failed to delete project');
       }
@@ -175,7 +173,7 @@ export class ProjectRepository extends IProjectRepository {
   async hasActiveTasks(projectId) {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
-      const response = await this._apiService.get(`/projects/${id}/tasks?status=running`);
+      const response = await this._apiService.get(`/api/projects/${id}/tasks?status=running`);
       return response.success && response.data.length > 0;
     } catch (error) {
       console.error('Error checking active tasks:', error);
@@ -186,7 +184,7 @@ export class ProjectRepository extends IProjectRepository {
   async hasActiveAnalysis(projectId) {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
-      const response = await this._apiService.get(`/projects/${id}/analysis?status=running`);
+      const response = await this._apiService.get(`/api/projects/${id}/analysis?status=running`);
       return response.success && response.data.length > 0;
     } catch (error) {
       console.error('Error checking active analysis:', error);
@@ -197,7 +195,7 @@ export class ProjectRepository extends IProjectRepository {
   async getTaskCount(projectId) {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
-      const response = await this._apiService.get(`/projects/${id}/tasks/count`);
+      const response = await this._apiService.get(`/api/projects/${id}/tasks/count`);
       return response.success ? response.data.count : 0;
     } catch (error) {
       console.error('Error getting task count:', error);
@@ -208,7 +206,7 @@ export class ProjectRepository extends IProjectRepository {
   async getAnalysisCount(projectId) {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
-      const response = await this._apiService.get(`/projects/${id}/analysis/count`);
+      const response = await this._apiService.get(`/api/projects/${id}/analysis/count`);
       return response.success ? response.data.count : 0;
     } catch (error) {
       console.error('Error getting analysis count:', error);
@@ -219,7 +217,7 @@ export class ProjectRepository extends IProjectRepository {
   async getChatSessionCount(projectId) {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
-      const response = await this._apiService.get(`/projects/${id}/chat-sessions/count`);
+      const response = await this._apiService.get(`/api/projects/${id}/chat-sessions/count`);
       return response.success ? response.data.count : 0;
     } catch (error) {
       console.error('Error getting chat session count:', error);
@@ -235,7 +233,7 @@ export class ProjectRepository extends IProjectRepository {
       if (options.limit) queryParams.append('limit', options.limit);
       if (options.offset) queryParams.append('offset', options.offset);
 
-      const response = await this._apiService.get(`/projects/search?${queryParams.toString()}`);
+      const response = await this._apiService.get(`/api/projects/search?${queryParams.toString()}`);
       if (!response.success) {
         return [];
       }
@@ -250,7 +248,7 @@ export class ProjectRepository extends IProjectRepository {
   async getStatistics(projectId) {
     try {
       const id = projectId instanceof ProjectId ? projectId.value : projectId;
-      const response = await this._apiService.get(`/projects/${id}/statistics`);
+      const response = await this._apiService.get(`/api/projects/${id}/statistics`);
       return response.success ? response.data : {};
     } catch (error) {
       console.error('Error getting project statistics:', error);

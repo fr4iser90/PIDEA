@@ -145,10 +145,10 @@ async function main() {
   // Ensure PIDEA project exists before starting application
   await ensurePIDEAProject();
 
-  const centralizedConfig = require("./config/centralized-config");
+  const config = require("@config");
 
   // Validate configuration before starting
-  const validation = centralizedConfig.validate();
+  const validation = config.validate();
   if (!validation.isValid) {
     logger.error("❌ Configuration validation failed:");
     validation.errors.forEach((error) => logger.error(`  - ${error}`));
@@ -161,7 +161,7 @@ async function main() {
   }
 
   const app = new Application({
-    port: centralizedConfig.backendPort,
+    port: config.app.backendPort,
   });
 
   // Handle graceful shutdown

@@ -135,24 +135,31 @@ const useProjectStore = create(
 
       loadProjects: async () => {
         try {
+          console.log('🔍 [ProjectStore] loadProjects called');
           set({ isLoading: true, error: null });
           
           const state = get();
           state.initializeServices();
           
+          console.log('🔍 [ProjectStore] About to call ProjectApplicationService.listProjects()');
           const projects = await state._projectApplicationService.listProjects();
+          console.log('🔍 [ProjectStore] ProjectApplicationService returned:', projects);
           
           const projectsMap = {};
           projects.forEach(project => {
+            console.log('🔍 [ProjectStore] Processing project:', project);
             projectsMap[project.id] = project;
           });
           
+          console.log('🔍 [ProjectStore] Final projectsMap:', projectsMap);
           set({
             projects: projectsMap,
             isLoading: false,
             lastUpdate: new Date()
           });
+          console.log('🔍 [ProjectStore] loadProjects completed successfully');
         } catch (error) {
+          console.error('🔍 [ProjectStore] loadProjects error:', error);
           set({ isLoading: false, error: error.message });
           throw error;
         }
