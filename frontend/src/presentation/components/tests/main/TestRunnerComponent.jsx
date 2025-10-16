@@ -49,7 +49,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const loadTestConfiguration = async () => {
     try {
-      const data = await apiService.call(`/api/projects/${projectId}/tests/config`);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/playwright/config`);
       if (data.success) {
         setTestConfig(data.data.config);
       }
@@ -60,7 +60,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const loadTestProjects = async () => {
     try {
-      const data = await apiService.call(`/api/projects/${projectId}/tests/projects`);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/playwright/projects`);
       if (data.success) {
         setTestProjects(data.data.projects || []);
       }
@@ -72,7 +72,7 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
   const loadTestResults = async () => {
     console.log('🔍 loadTestResults called with projectId:', projectId);
     try {
-      const data = await apiService.call(`/api/projects/${projectId}/tests/results`);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/playwright/results`);
       console.log('🔍 loadTestResults response:', data);
       if (data.success && data.data) {
         console.log('✅ Loaded existing test results:', data.data);
@@ -100,12 +100,15 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
     
     setIsRunning(true);
     try {
-      const data = await apiRepository.executePlaywrightTests(projectId, {
-        testNames: selectedTests.map(test => test.name),
-        options: {
-          workspacePath,
-          config: testConfig
-        }
+      const data = await apiService.call(`/api/projects/${projectId}/tests/playwright/execute`, {
+        method: 'POST',
+        body: JSON.stringify({
+          testNames: selectedTests.map(test => test.name),
+          options: {
+            workspacePath,
+            config: testConfig
+          }
+        })
       });
       
       if (data.success) {
@@ -125,7 +128,10 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleStopTest = async () => {
     try {
-      await apiRepository.stopPlaywrightTests(projectId, { testIds: selectedTests.map(test => test.id) });
+      await apiService.call(`/api/projects/${projectId}/tests/playwright/stop`, {
+        method: 'POST',
+        body: JSON.stringify({ testIds: selectedTests.map(test => test.id) })
+      });
       setIsRunning(false);
     } catch (error) {
       console.error('Failed to stop test:', error);
@@ -134,7 +140,10 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleConfigUpdate = async (newConfig) => {
     try {
-      const data = await apiRepository.updatePlaywrightTestConfig(projectId, newConfig);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/playwright/config`, {
+        method: 'PUT',
+        body: JSON.stringify(newConfig)
+      });
       if (data.success) {
         setTestConfig(newConfig);
       }
@@ -145,7 +154,10 @@ const TestRunnerComponent = ({ eventBus, activePort }) => {
 
   const handleCreateTest = async (testData) => {
     try {
-      const data = await apiRepository.createPlaywrightTestProject(projectId, testData);
+      const data = await apiService.call(`/api/projects/${projectId}/tests/playwright/projects`, {
+        method: 'POST',
+        body: JSON.stringify(testData)
+      });
       if (data.success) {
         console.log('Test created successfully');
         loadTestProjects();

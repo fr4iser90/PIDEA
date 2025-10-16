@@ -142,7 +142,7 @@ const TestConfiguration = ({
   const loadBrowserEnvironment = async () => {
     try {
       setLoadingEnvironment(true);
-      const response = await apiRepository.getBrowserEnvironment();
+      const response = await apiRepository.call('/api/tests/browser-environment');
       if (response.success) {
         setBrowserEnvironment(response.data);
         // Don't update configForm here - let it be loaded from database
@@ -156,7 +156,7 @@ const TestConfiguration = ({
 
   const loadConfigurationFromDatabase = async () => {
     try {
-      const response = await apiRepository.getPlaywrightTestConfig(projectId);
+      const response = await apiRepository.call(`/api/projects/${projectId}/tests/playwright/config`);
       if (response.success && response.data) {
         const configData = response.data.config || response.data;
         const config = {
@@ -212,7 +212,10 @@ const TestConfiguration = ({
       setConfigMessage('');
       
       // Save configuration to database via API
-      const response = await apiRepository.updatePlaywrightTestConfig(projectId, configForm);
+      const response = await apiRepository.call(`/api/projects/${projectId}/tests/playwright/config`, {
+        method: 'PUT',
+        body: JSON.stringify(configForm)
+      });
       if (response.success) {
         // Configuration save initiated - WebSocket events will handle notifications and UI updates
         console.log('Configuration save initiated successfully');

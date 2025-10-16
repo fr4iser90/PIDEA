@@ -6,7 +6,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ProjectApplicationService } from '../../application/services/ProjectApplicationService.js';
 import { ProjectRepository } from '../repositories/ProjectRepository.js';
-import { EventBus } from '../events/EventBus.js';
+import EventBus from '../events/EventBus.jsx';
 import { ApiService } from '../services/ApiService.js';
 import { CacheService } from '../services/CacheService.js';
 

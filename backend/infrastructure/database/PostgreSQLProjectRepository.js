@@ -391,11 +391,11 @@ class PostgreSQLProjectRepository extends ProjectRepository {
     try {
       const { limit = 10, offset = 0, search } = options;
 
-      console.log("🔍 [PostgreSQLProjectRepository] findAll called with:", {
-        limit,
-        offset,
-        search,
-      });
+      // console.log("🔍 [PostgreSQLProjectRepository] findAll called with:", {
+      //   limit,
+      //   offset,
+      //   search,
+      // });
 
       let query = `
         SELECT * FROM ${this.tableName}
@@ -411,40 +411,36 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
       params.push(limit, offset);
 
-      console.log("🔍 [PostgreSQLProjectRepository] Executing query:", query);
-      console.log("🔍 [PostgreSQLProjectRepository] With params:", params);
+      //console.log("🔍 [PostgreSQLProjectRepository] Executing query:", query);
+      //console.log("🔍 [PostgreSQLProjectRepository] With params:", params);
 
-      console.log("🔍 [PostgreSQLProjectRepository] About to execute query...");
       const result = await this.databaseConnection.query(query, params);
-      console.log(
-        "🔍 [PostgreSQLProjectRepository] Query executed successfully",
-      );
 
-      console.log("🔍 [PostgreSQLProjectRepository] Raw result:", {
-        resultType: typeof result,
-        isArray: Array.isArray(result),
-        hasRows: !!(result && result.rows),
-        resultLength: Array.isArray(result)
-          ? result.length
-          : result?.rows?.length || 0,
-        resultKeys: result ? Object.keys(result) : "null",
-        resultValue: result,
-      });
+      // console.log("🔍 [PostgreSQLProjectRepository] Raw result:", {
+      //   resultType: typeof result,
+      //   isArray: Array.isArray(result),
+      //   hasRows: !!(result && result.rows),
+      //   resultLength: Array.isArray(result)
+      //     ? result.length
+      //     : result?.rows?.length || 0,
+      //   resultKeys: result ? Object.keys(result) : "null",
+      //   resultValue: result,
+      // });
 
       // PostgreSQL result object
       const rows = result.rows;
 
-      console.log("🔍 [PostgreSQLProjectRepository] Processed rows:", {
-        rowsCount: rows.length,
-        firstRow: rows[0] || "none",
-      });
+      // console.log("🔍 [PostgreSQLProjectRepository] Processed rows:", {
+      //   rowsCount: rows.length,
+      //   firstRow: rows[0] || "none",
+      // });
 
       const projects = rows.map((row) => this._rowToProject(row));
 
-      console.log("🔍 [PostgreSQLProjectRepository] Final result:", {
-        count: projects.length,
-        firstProject: projects[0] || "none",
-      });
+      // console.log("🔍 [PostgreSQLProjectRepository] Final result:", {
+      //   count: projects.length,
+      //   firstProject: projects[0] || "none",
+      // });
 
       return projects;
     } catch (error) {
