@@ -90,7 +90,7 @@
 ### Environment Variables
 ```yaml
 environment:
-  DOCKER_ENV: "true"
+  # Container: /.dockerenv (backend/config/docker-runtime.js)
   DATABASE_OPTIMIZATION_ENABLED: "true"
   PERFORMANCE_MONITORING_ENABLED: "true"
 ```

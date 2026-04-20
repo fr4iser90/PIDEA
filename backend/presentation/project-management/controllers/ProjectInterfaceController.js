@@ -169,7 +169,8 @@ class ProjectInterfaceController {
   }
 
   /**
-   * List all interfaces for a project
+   * List all interfaces for a project (project-specific interface management)
+   * Returns interfaces that are associated with a specific project
    * GET /api/projects/:projectId/interfaces
    */
   async listInterfaces(req, res) {
@@ -331,7 +332,8 @@ class ProjectInterfaceController {
   }
 
   /**
-   * Get available IDE types (general - without projectId)
+   * Get available IDE types (general detection - for IDE selection modals)
+   * Returns all detected/running IDEs on the system
    * GET /api/interfaces/available-ides
    */
   async getAvailableIDEsGeneral(req, res) {
@@ -349,7 +351,8 @@ class ProjectInterfaceController {
   }
 
   /**
-   * Get available IDE types (project-specific)
+   * Get available IDE types (project-specific detection)
+   * Returns IDEs that are associated with a specific project
    * GET /api/projects/:projectId/interfaces/available-ides
    */
   async getAvailableIDEs(req, res) {

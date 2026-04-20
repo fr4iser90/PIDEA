@@ -104,7 +104,7 @@ class DevSetup {
     console.clear();
     logger.info("👤 User Management");
     logger.info("==================");
-    logger.info("1. ➕ Create Test User");
+    logger.info("1. ➕ Create default admin user (same as server bootstrap)");
     logger.info("2. ➕ Create Custom User");
     logger.info("3. 🗑️  Clear All Users");
     logger.info("4. 📋 List Users");
@@ -115,7 +115,7 @@ class DevSetup {
 
     switch (choice.trim()) {
       case "1":
-        await this.createTestUser();
+        await this.runCreateDefaultUser();
         break;
       case "2":
         await this.createCustomUser();
@@ -219,16 +219,16 @@ class DevSetup {
     }
   }
 
-  async createTestUser() {
-    logger.debug("👤 Creating test user...");
+  async runCreateDefaultUser() {
+    logger.debug("👤 Creating default admin via create-default-user.js...");
     try {
       const { execSync } = require("child_process");
-      execSync("node scripts/create-test-user.js", {
+      execSync("node scripts/create-default-user.js", {
         stdio: "inherit",
         cwd: path.join(__dirname, ".."),
       });
     } catch (error) {
-      logger.error("❌ Failed to create test user:", error.message);
+      logger.error("❌ Failed to create default user:", error.message);
     }
   }
 
@@ -419,7 +419,7 @@ class DevSetup {
     logger.info("==========================");
     logger.info("This will:");
     logger.info("1. Reset the database");
-    logger.debug("2. Create a test user");
+    logger.debug("2. Create default admin user");
     logger.info("3. Show status");
     logger.info("");
 
@@ -432,8 +432,8 @@ class DevSetup {
     logger.info("🔄 Resetting database...");
     await this.resetDatabase();
 
-    logger.debug("👤 Creating test user...");
-    await this.createTestUser();
+    logger.debug("👤 Creating default admin user...");
+    await this.runCreateDefaultUser();
 
     logger.info("📋 Checking status...");
     await this.statusCheck();

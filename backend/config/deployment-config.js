@@ -233,7 +233,6 @@ class DeploymentConfig {
     // Validate required environment variables for production
     if (this.currentEnv === "production") {
       const requiredEnvVars = [
-        "DB_HOST",
         "DB_NAME",
         "DB_USER",
         "DB_PASSWORD",

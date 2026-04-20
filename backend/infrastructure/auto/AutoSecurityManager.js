@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const { isDockerRuntime } = require("../../config/docker-runtime");
 const Logger = require("@logging/Logger");
 const logger = new Logger("AutoSecurityManager");
 
@@ -43,9 +44,9 @@ class AutoSecurityManager {
     // Automatische Erkennung: Docker vs npm run dev
     let env = process.env.NODE_ENV || "development";
 
-    // Docker-Erkennung
+    // Docker-Erkennung (u. a. /.dockerenv über isDockerRuntime)
     const isDocker =
-      process.env.DOCKER_ENV === "true" ||
+      isDockerRuntime() ||
       process.env.KUBERNETES_SERVICE_HOST ||
       process.env.DOCKER_CONTAINER ||
       process.env.HOSTNAME?.includes("container") ||
@@ -156,11 +157,12 @@ class AutoSecurityManager {
     const databaseType = process.env.DATABASE_TYPE || "sqlite";
 
     if (databaseType === "postgres" || databaseType === "postgresql") {
-      // PostgreSQL configuration
+      const databaseConfig = require("../../config/database-config");
+      // PostgreSQL configuration (host/port resolved in database-config — no required DB_HOST in .env)
       return {
         type: "postgresql",
-        host: process.env.DB_HOST || "localhost",
-        port: process.env.DB_PORT || 5432,
+        host: databaseConfig.resolvePostgresHost(),
+        port: Number(databaseConfig.resolvePostgresPort()) || 5432,
         database: process.env.DB_NAME || "pidea_dev",
         username: process.env.DB_USER || "postgres",
         password: process.env.DB_PASSWORD || "postgres",

@@ -1,34 +1,22 @@
-FROM node:20-alpine
+# Stage 1: install deps only — avoids COPY backend/ merging/overwriting node_modules
+FROM node:20-alpine AS deps
+WORKDIR /app/backend
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci && node -e "require('module-alias/register')"
 
+FROM node:20-alpine
 WORKDIR /app
 
-# Copy root package.json and workspace config
-COPY package.json ./
-COPY package-lock.json* ./
-
-# Copy backend package files
-COPY backend/package*.json ./backend/
-
-# Install root dependencies (includes module-alias)
-RUN npm install
-
-# Install backend dependencies
-RUN cd backend && npm install
-
-# Copy backend source code
+COPY --from=deps /app/backend/node_modules ./backend/node_modules
 COPY backend/ ./backend/
+COPY database/migrations ./database/migrations
+COPY database/init-postgres.sql database/init-sqlite.sql ./database/
 
-# Copy environment file
-COPY .env ./
-
-# Copy database migration files
-COPY database/migrations/ ./database/migrations/
-
-# Set working directory to backend
 WORKDIR /app/backend
 
-# Expose port (will be set from environment)
+RUN chown -R node:node /app
+USER node
+
 EXPOSE 3000
 
-# Start directly with node
 CMD ["node", "server.js"]

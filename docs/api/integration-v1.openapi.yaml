@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: PIDEA Integration API
+  version: "1.0.0"
+  description: |
+    Service-to-service API for external orchestrators (e.g. AgentLayer).
+    Tasks and queue state remain authoritative in PIDEA; `job_id` is the PIDEA task id.
+
+servers:
+  - url: https://{host}/api/v1
+    variables:
+      host:
+        default: localhost
+
+security:
+  - IntegrationApiKey: []
+
+paths:
+  /integration/jobs:
+    post:
+      operationId: createIntegrationJob
+      summary: Create task and enqueue execution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateJobResponse"
+        "400":
+          description: Bad request
+        "503":
+          description: Integration API not configured
+
+  /integration/jobs/{jobId}:
+    get:
+      operationId: getIntegrationJob
+      summary: Get job status (task + queue)
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStatusResponse"
+        "404":
+          description: Not found
+
+  /integration/jobs/{jobId}/cancel:
+    post:
+      operationId: cancelIntegrationJob
+      summary: Cancel queued/running job or mark task canceled
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  status:
+                    type: string
+                    example: canceled
+
+  /integration/webhook:
+    get:
+      operationId: getIntegrationWebhook
+      summary: Whether a callback URL is configured (masked)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookInfo"
+    put:
+      operationId: putIntegrationWebhook
+      summary: Register callback URL at runtime (only if env allows)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookRegisterRequest"
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Registration disabled
+
+components:
+  securitySchemes:
+    IntegrationApiKey:
+      type: apiKey
+      in: header
+      name: X-PIDEA-Integration-Key
+    BearerIntegration:
+      type: http
+      scheme: bearer
+      bearerFormat: PIDEA_INTEGRATION_API_KEY
+
+  schemas:
+    CreateJobRequest:
+      type: object
+      required:
+        - project_id
+        - goal
+      properties:
+        project_id:
+          type: string
+          description: PIDEA project id
+        goal:
+          type: string
+        context:
+          description: Arbitrary context; string or object with e.g. markdown
+          oneOf:
+            - type: string
+            - type: object
+        project_ref:
+          type: object
+          properties:
+            repo_url:
+              type: string
+            branch:
+              type: string
+        priority:
+          type: string
+          enum: [low, normal, high]
+          default: normal
+        correlation:
+          type: object
+          additionalProperties: true
+          description: Opaque ids for your UI (tenant_id, client_request_id, …)
+        auto_enqueue:
+          type: boolean
+          default: true
+
+    CreateJobResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        project_id:
+          type: string
+        status:
+          type: string
+        queue_item_id:
+          type: string
+          nullable: true
+        correlation:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+
+    JobStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        project_id:
+          type: string
+        status:
+          type: string
+          description: queued | running | success | failed | canceled
+        progress:
+          type: object
+          properties:
+            pct:
+              type: number
+            phase:
+              type: string
+        error:
+          type: object
+          nullable: true
+        artifacts:
+          type: object
+          properties:
+            logs_url:
+              type: string
+              nullable: true
+            pr_url:
+              type: string
+              nullable: true
+        correlation:
+          type: object
+          additionalProperties: true
+        queue_item_id:
+          type: string
+          nullable: true
+
+    WebhookInfo:
+      type: object
+      properties:
+        configured:
+          type: boolean
+        callback_url:
+          type: string
+          nullable: true
+        register_allowed:
+          type: boolean
+
+    WebhookRegisterRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+        secret:
+          type: string
+          description: Optional; random generated if omitted

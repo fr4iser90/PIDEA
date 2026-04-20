@@ -1,0 +1,138 @@
+{
+  "$comment": "Triage policy for security scans (CodeQL, GitLeaks, Semgrep). CI should load via FINDING_POLICY_FILE and match tool + ruleIdPattern + pathPattern (and optional messagePattern) per finding.",
+  "version": 1,
+  "resolvedByCodeChanges": [
+    {
+      "change": "Glob suffix: use replace(/\\*/g, '') instead of replace('*', '') in task-execution services/utils",
+      "addressesRules": ["js/incomplete-sanitization (CodeQL)", "path differs: external/task-execution vs backend/infrastructure/task-execution"]
+    },
+    {
+      "change": "Removed no-op .replace('-', '-') in IndividualAnalysisButtons.jsx",
+      "addressesRules": ["js/identity-replacement (CodeQL)"]
+    },
+    {
+      "change": "cleanup-branches.yml: pass github.head_ref through env MERGED_HEAD_REF and use \"$MERGED_HEAD_REF\" in run script",
+      "addressesRules": ["yaml.github-actions.security.run-shell-injection (Semgrep)"]
+    },
+    {
+      "change": "backend/Dockerfile: chown /app to user node and USER node",
+      "addressesRules": ["dockerfile.security.missing-user (Semgrep)"]
+    },
+    {
+      "change": "FrameworkConfig.set() rejects __proto__, constructor, prototype path segments",
+      "addressesRules": ["js/prototype-pollution-utility (CodeQL)"]
+    }
+  ],
+  "matching": {
+    "pathPatternIsRegex": true,
+    "ruleIdPatternIsRegex": true,
+    "messagePatternIsRegex": true,
+    "toolMatch": "case-insensitive"
+  },
+  "suppressions": [
+    {
+      "id": "gitleaks-markdown-docs-examples",
+      "tools": ["gitleaks", "Gitleaks"],
+      "ruleIdPattern": "^(generic-api-key|jwt|curl-auth-header|private-key)$",
+      "pathPattern": "^(.*/)?content-library/.*\\.(md|mdx)$",
+      "reason": "Markdown prompts and guides include example JWTs, API key placeholders, curl -H Authorization samples, and PEM fragments for illustration; they are not live credentials in the application."
+    },
+    {
+      "id": "gitleaks-reference-docs-api",
+      "tools": ["gitleaks", "Gitleaks"],
+      "ruleIdPattern": "^curl-auth-header$",
+      "pathPattern": "^(.*/)?docs/.*\\.(md|mdx)$",
+      "reason": "API reference docs show example curl commands with placeholder Authorization headers."
+    },
+    {
+      "id": "gitleaks-security-tests-fixtures",
+      "tools": ["gitleaks", "Gitleaks"],
+      "ruleIdPattern": "^(generic-api-key|private-key)$",
+      "pathPattern": "^(.*/)?backend/tests/security/.*\\.(js|ts)$",
+      "reason": "Security tests intentionally include fake secrets, PEM-shaped strings, and metadata payloads to assert redaction and sanitization; not production secrets."
+    },
+    {
+      "id": "codeql-chatmessage-clean-content-display",
+      "tools": ["codeql", "CodeQL"],
+      "ruleIdPattern": "^js/incomplete-multi-character-sanitization$",
+      "pathPattern": ".*/(domain/entities/ChatMessage\\.js|domain/entities/ChatMessage\\.jsx)$",
+      "reason": "getCleanContent is a coarse display helper stripping angle-bracket chunks; chat UI renders via React text nodes or a sanitized markdown pipeline, not raw HTML interpolation of this string alone."
+    },
+    {
+      "id": "codeql-cookie-parser-csrf-api-jwt",
+      "tools": ["codeql", "CodeQL"],
+      "ruleIdPattern": "^js/missing-token-validation$",
+      "pathPattern": ".*/Application\\.js$",
+      "messagePattern": "cookie middleware|CSRF",
+      "reason": "cookie-parser supports optional cookies; state-changing API routes use JWT bearer auth and CORS policy rather than cookie-based session CSRF for browser form posts. Global CSRF middleware would not match this API-first design."
+    },
+    {
+      "id": "codeql-test-correction-route-stale-or-dev",
+      "tools": ["codeql", "CodeQL"],
+      "ruleIdPattern": "^js/missing-rate-limiting$",
+      "pathPattern": ".*/test-correction\\.js$",
+      "reason": "If this route exists only for local or test environments, rate limiting may be intentionally omitted; confirm file is not mounted in production or gate behind NODE_ENV."
+    },
+    {
+      "id": "codeql-ide-configuration-path-note",
+      "tools": ["codeql", "CodeQL"],
+      "ruleIdPattern": "^js/path-injection$",
+      "pathPattern": ".*/IDEConfigurationController\\.js$",
+      "reason": "Scanner note: validate that resolved paths stay under the configured workspace root; suppress only after confirming path.resolve + prefix check (or equivalent) is present."
+    },
+    {
+      "id": "semgrep-express-csurf-not-applicable",
+      "tools": ["semgrep", "Semgrep"],
+      "ruleIdPattern": "express-check-csurf-middleware-usage",
+      "pathPattern": ".*/Application\\.js$",
+      "reason": "REST/API usage with Authorization bearer tokens; not a classic cookie-session form application requiring csurf."
+    },
+    {
+      "id": "semgrep-http-server-tls-terminated-elsewhere",
+      "tools": ["semgrep", "Semgrep"],
+      "ruleIdPattern": "using-http-server",
+      "pathPattern": ".*/Application\\.js$",
+      "reason": "Node listens on HTTP inside the process; TLS termination is expected at reverse proxy, service mesh, or platform ingress in deployment."
+    },
+    {
+      "id": "semgrep-path-join-task-handlers-project-scope",
+      "tools": ["semgrep", "Semgrep"],
+      "ruleIdPattern": "path-join-resolve-traversal",
+      "pathPattern": ".*/backend/application/handlers/categories/(generation|refactoring|workflow)/.*Handler\\.js$",
+      "reason": "Handlers join paths under a project root supplied by authenticated task/CLI flows; organizational acceptance: ensure projectPath is validated and confined to allowed workspace roots at command dispatch (not arbitrary OS paths from anonymous clients)."
+    },
+    {
+      "id": "semgrep-path-join-task-cli",
+      "tools": ["semgrep", "Semgrep"],
+      "ruleIdPattern": "path-join-resolve-traversal",
+      "pathPattern": ".*/backend/cli/TaskCommands\\.js$",
+      "reason": "CLI resolves paths from the invoking user’s machine; path traversal risk is local to the operator, not remote RCE by default."
+    },
+    {
+      "id": "semgrep-playwright-cdp-local-dev-script",
+      "tools": ["semgrep", "Semgrep"],
+      "ruleIdPattern": "playwright-exposed-chrome-devtools",
+      "pathPattern": ".*/backend/cli/test-ide-message-sending\\.js$",
+      "reason": "Development utility connects to localhost CDP for IDE automation; not shipped as a production server surface."
+    },
+    {
+      "id": "semgrep-console-format-string-registry",
+      "tools": ["semgrep", "Semgrep"],
+      "ruleIdPattern": "unsafe-formatstring",
+      "pathPattern": ".*/backend/application/(commands/CommandRegistry|handlers/HandlerRegistry)\\.js$",
+      "reason": "Error logging uses template literals with command category/name from internal registry keys, not end-user-controlled format strings; negligible log-forging risk."
+    }
+  ],
+  "notFalsePositivesRequireReview": [
+    {
+      "ruleIdPattern": "^js/path-injection$",
+      "pathPattern": ".*/ContentLibraryController\\.js$",
+      "note": "Route params used in path.join under content-library can allow traversal via ../ segments unless each resolved path is checked with path.resolve and startsWith(contentLibraryRoot). Do not policy-suppress until fixed or access is strictly authenticated and reviewed."
+    },
+    {
+      "ruleIdPattern": "path-join-resolve-traversal",
+      "pathPattern": ".*/Generate(Configs|Documentation|Tests)Handler\\.js$",
+      "note": "Same as other handler entries unless projectPath is proven trusted and bounded; re-audit if tasks can be created by low-privilege users with arbitrary projectPath."
+    }
+  ]
+}

@@ -63,7 +63,7 @@ const useIDEStore = create(
       setSelectedPort: async (port) => {
         try {
           set({ isLoading: true, error: null });
-          logger.info('Setting active port:', port);
+          //logger.info('Setting active port:', port);
 
           // ✅ FIX: Ensure IDE data is loaded first (only if needed)
           const { availableIDEs, lastUpdate } = get();
@@ -267,6 +267,95 @@ const useIDEStore = create(
           }
         } catch (error) {
           logger.error('Error loading available IDEs:', error);
+          set({ error: error.message, isLoading: false, loadingLock: false });
+          performanceLogger.end(operationId, { error: error.message });
+          return [];
+        }
+      },
+
+      // NEW: Load project-specific interfaces
+      loadProjectInterfaces: async (projectId) => {
+        const operationId = `load_project_interfaces_${Date.now()}`;
+        performanceLogger.start(operationId, 'Load Project Interfaces', { 
+          timestamp: new Date().toISOString(),
+          projectId 
+        });
+        
+        try {
+          const { isLoading, loadingLock } = get();
+          
+          // Prevent concurrent loading
+          if (isLoading || loadingLock) {
+            logger.info('⚠️ Project interface load already in progress, skipping duplicate request');
+            performanceLogger.end(operationId, { skipped: true, reason: 'already_loading' });
+            return [];
+          }
+          
+          // Set loading lock
+          set({ loadingLock: true });
+          
+          set({ isLoading: true, error: null });
+          logger.info(`Loading project interfaces for project: ${projectId}`);
+      
+          // Check cache first
+          const cacheKey = `store_load_project_interfaces_${projectId}`;
+          const cached = cacheService.get(cacheKey);
+          if (cached) {
+            logger.info('Using cached project interface data');
+            const { selectedPort } = get();
+            const projectInterfacesWithActive = cached.map(ide => ({
+              ...ide,
+              active: ide.port === selectedPort
+            }));
+            set({ availableIDEs: projectInterfacesWithActive, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'cache', 
+              interfaceCount: cached.length 
+            });
+            return cached;
+          }
+          
+          logger.info('🔄 Fetching fresh project interface data from API (cache miss)');
+          
+          const apiStart = performance.now();
+          const apiService = new ApiService();
+          const result = await apiService.call(`/api/projects/${projectId}/interfaces`);
+          const apiDuration = performance.now() - apiStart;
+          
+          if (result.success !== false) {
+            const { selectedPort } = get();
+            
+            // Handle both array and object response formats
+            const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
+            
+            // Add active status to fresh data
+            const projectInterfacesWithActive = projectInterfaces.map(ide => ({
+              ...ide,
+              active: ide.port === selectedPort
+            }));
+            
+            // Cache the result
+            cacheService.set(cacheKey, projectInterfaces, 'project-interfaces', 'ideStore');
+            
+            set({ availableIDEs: projectInterfacesWithActive, isLoading: false, lastUpdate: Date.now(), loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'api', 
+              apiDuration: apiDuration,
+              interfaceCount: projectInterfaces.length 
+            });
+            
+            return projectInterfaces;
+          } else {
+            set({ error: result.error || 'Failed to load project interfaces', isLoading: false, loadingLock: false });
+            performanceLogger.end(operationId, { 
+              source: 'api', 
+              apiDuration: apiDuration,
+              error: result.error 
+            });
+            return [];
+          }
+        } catch (error) {
+          logger.error('Error loading project interfaces:', error);
           set({ error: error.message, isLoading: false, loadingLock: false });
           performanceLogger.end(operationId, { error: error.message });
           return [];

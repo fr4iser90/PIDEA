@@ -96,7 +96,7 @@ class ExecutionUtils {
       // Single file or directory
       if (target.endsWith("*")) {
         // Pattern matching
-        const pattern = target.replace("*", "");
+        const pattern = target.replace(/\*/g, "");
         return await fileSystemService.findFilesByPattern(
           pattern,
           execution.options.projectPath,

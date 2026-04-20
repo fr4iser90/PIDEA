@@ -67,7 +67,8 @@ class InterfaceRoutes {
       (req, res) => this.interfaceController.createInterface(req, res),
     );
 
-    // List project interfaces
+    // List project interfaces (project-specific interface management)
+    // Returns interfaces that are associated with a specific project
     app.get("/api/projects/:projectId/interfaces", (req, res) =>
       this.interfaceController.listInterfaces(req, res),
     );
@@ -141,12 +142,14 @@ class InterfaceRoutes {
     // IDE-SPECIFIC ROUTES - IDE Features
     // ========================================
 
-    // Get available IDEs (without projectId - for general IDE detection)
+    // Get available IDEs (general detection - for IDE selection modals)
+    // Returns all detected/running IDEs on the system
     app.get("/api/interfaces/available-ides", (req, res) =>
       this.interfaceController.getAvailableIDEsGeneral(req, res),
     );
 
-    // Get available IDEs (with projectId - for project-specific IDE detection)
+    // Get available IDEs (project-specific detection)
+    // Returns IDEs that are associated with a specific project
     app.get("/api/projects/:projectId/interfaces/available-ides", (req, res) =>
       this.interfaceController.getAvailableIDEs(req, res),
     );

@@ -308,6 +308,7 @@ docs/09_roadmap/pending/[priority]/[category]/[name]/
 
 ### Code Quality Validation
 - **Syntax Check**: All code must be syntactically correct
+- **Architectural Compliance**: Check against `@task-rules.md` (12-Factor App principles)
 - **Pattern Consistency**: Follow established architectural patterns
 - **Error Handling**: Implement proper error handling throughout
 - **Security**: Validate input/output and authentication

@@ -15,10 +15,16 @@ import '@/scss/components/_interface-management.scss';
 
 const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
   const { selectedProject } = useProjectManagement();
-  const { availableIDEs, switchIDE, loadAvailableIDEs } = useIDEStore();
+  const { availableIDEs, switchIDE, loadProjectInterfaces: loadProjectInterfacesFromStore } = useIDEStore();
   const [interfaces, setInterfaces] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Debug logging
+  useEffect(() => {
+    logger.info('InterfaceManagerComponent - selectedProjectId:', selectedProjectId);
+    logger.info('InterfaceManagerComponent - selectedProject:', selectedProject);
+  }, [selectedProjectId, selectedProject]);
 
   // Load interfaces for selected project
   useEffect(() => {
@@ -42,22 +48,35 @@ const InterfaceManagerComponent = ({ eventBus, selectedProjectId }) => {
   }, [eventBus, selectedProjectId]);
 
   const loadProjectInterfaces = async (projectId) => {
-    if (!projectId) return;
+    if (!projectId) {
+      logger.warn('loadProjectInterfaces called without projectId');
+      return;
+    }
 
+    logger.info('loadProjectInterfaces called with projectId:', projectId);
     setIsLoading(true);
     setError(null);
 
     try {
-      const apiService = new ApiService();
-      const result = await apiService.call(`/api/projects/${projectId}/interfaces`);
-
-      if (result.success !== false) {
-        const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
+      // Use the new IDEStore function for project-specific interfaces
+      const projectInterfaces = await loadProjectInterfacesFromStore(projectId);
+      
+      if (projectInterfaces && projectInterfaces.length > 0) {
         setInterfaces(projectInterfaces);
-        logger.info('Loaded project interfaces:', projectId, projectInterfaces);
+        logger.info('Loaded project interfaces via IDEStore:', projectId, projectInterfaces);
       } else {
-        logger.warn('Failed to load project interfaces:', result.error);
-        setInterfaces([]);
+        // Fallback to direct API call if IDEStore doesn't return data
+        const apiService = new ApiService();
+        const result = await apiService.call(`/api/projects/${projectId}/interfaces`);
+
+        if (result.success !== false) {
+          const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
+          setInterfaces(projectInterfaces);
+          logger.info('Loaded project interfaces via API fallback:', projectId, projectInterfaces);
+        } else {
+          logger.warn('Failed to load project interfaces:', result.error);
+          setInterfaces([]);
+        }
       }
     } catch (error) {
       logger.error('Error loading project interfaces:', error);

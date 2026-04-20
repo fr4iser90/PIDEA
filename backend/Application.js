@@ -224,34 +224,13 @@ class Application {
 
       // Middleware setup - Using modular setup file
       const MiddlewareSetup = require("./infrastructure/MiddlewareSetup");
-      const FrontendBuildManager = require("./infrastructure/FrontendBuildManager");
-      const StaticFileServer = require("./infrastructure/StaticFileServer");
       
       this.middlewareSetup = new MiddlewareSetup(
         this.autoSecurityManager,
         this.logger,
       );
-      this.frontendBuildManager = new FrontendBuildManager(
-        this.config,
-        this.logger,
-      );
-      this.staticFileServer = new StaticFileServer(
-        this.config,
-        this.logger,
-      );
       
       this.middlewareSetup.setupMiddleware(this.app, this.authMiddleware);
-
-      // Setup frontend building and static file serving
-      const config = require("@config");
-      const pathConfig = config.app.pathConfig.project;
-      const frontendPath = path.join(pathConfig.root, pathConfig.frontend);
-      
-      // Initialize frontend building
-      await this.frontendBuildManager.initializeFrontendBuilding(frontendPath);
-      
-      // Setup static file serving
-      this.staticFileServer.setupStaticFileServing(this.app);
 
       this.setupRoutes();
 
@@ -306,6 +285,13 @@ class Application {
         this.logger,
       );
       eventHandlers.setupEventHandlers();
+
+      const IntegrationCallbackService = require("./infrastructure/integration/IntegrationCallbackService");
+      const integrationCallbackService = new IntegrationCallbackService({
+        taskRepository: this.serviceRegistry.getService("taskRepository"),
+        logger: this.logger,
+      });
+      integrationCallbackService.subscribe(this.eventBus);
 
       // Cleanup tasks - Using modular handler file
       const CleanupTasks = require("./infrastructure/CleanupTasks");
@@ -390,6 +376,17 @@ class Application {
       this.serviceRegistry.getService("taskApplicationService"),
       this.eventBus,
     );
+
+    const IntegrationJobsController = require("./presentation/integration/controllers/IntegrationJobsController");
+    this.integrationJobsController = new IntegrationJobsController({
+      taskApplicationService: this.serviceRegistry.getService(
+        "taskApplicationService",
+      ),
+      taskService: this.serviceRegistry.getService("taskService"),
+      taskQueueStore: this.serviceRegistry.getService("taskQueueStore"),
+      taskRepository: this.serviceRegistry.getService("taskRepository"),
+      logger: this.serviceRegistry.getService("logger"),
+    });
 
     // 🆕 NEW: Initialize TaskStatusSyncController
     const TaskStatusSyncController = require("./presentation/task-management/controllers/TaskStatusSyncController");
@@ -594,6 +591,12 @@ class Application {
       );
       taskRoutes.setupRoutes(this.app);
 
+      const IntegrationRoutes = require("./presentation/integration/routes/integrationRoutes");
+      const integrationRoutes = new IntegrationRoutes(
+        this.integrationJobsController,
+      );
+      integrationRoutes.setupRoutes(this.app);
+
       // Project Analysis routes (protected) - PROJECT-BASED
       const AnalysisRoutes = require("./presentation/analysis/routes/analysisRoutes");
       const analysisRoutes = new AnalysisRoutes(
@@ -690,10 +693,10 @@ class Application {
         await this.initialize();
       }
 
-      this.server.listen(this.config.port, async () => {
+      this.server.listen(this.config.port, "0.0.0.0", async () => {
         this.isRunning = true;
         this.logger.info(
-          `[Application] Server ready on port ${this.config.port} (${this.autoSecurityManager.getEnvironment()})`,
+          `[Application] Server ready on http://0.0.0.0:${this.config.port} (${this.autoSecurityManager.getEnvironment()})`,
         );
       });
 
@@ -710,11 +713,6 @@ class Application {
     this.logger.info("Stopping...");
 
     this.isRunning = false;
-
-    // Cleanup frontend build manager
-    if (this.frontendBuildManager) {
-      this.frontendBuildManager.cleanup();
-    }
 
     // Stop all services with lifecycle hooks
     if (this.serviceRegistry && this.serviceRegistry.getContainer()) {

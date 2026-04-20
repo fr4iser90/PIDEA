@@ -4,7 +4,7 @@ FROM postgres:16-alpine
 COPY init-postgres.sql /docker-entrypoint-initdb.d/init.sql
 
 # Set locale
-ENV LANG en_US.utf8
+ENV LANG=en_US.utf8
 
 # PostgreSQL image requires the postgres user for system operations
 USER postgres

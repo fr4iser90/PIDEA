@@ -18,7 +18,7 @@ class DatabaseMigrationService {
 
       // Get applied migrations first
       const appliedMigrations = await this.getAppliedMigrations();
-      this.logger.info("🔍 Found applied migrations:", appliedMigrations);
+      this.logger.debug("🔍 Found applied migrations:", appliedMigrations);
 
       // Run pending migrations (idempotent)
       await this.runPendingMigrations();
@@ -160,7 +160,7 @@ class DatabaseMigrationService {
 
       const migrationNames = rows.map((row) => row.migration_name);
 
-      this.logger.info(
+      this.logger.debug(
         "🔍 [getAppliedMigrations] Found applied migrations:",
         migrationNames,
       );

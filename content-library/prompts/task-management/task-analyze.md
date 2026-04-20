@@ -40,7 +40,7 @@ Before saving any content, scan for forbidden terms and replace with simple alte
 
 ### 2. Current State Assessment
 - **Codebase Health**: [Overall assessment - maps to task.metadata.codebase_health]
-- **Architecture Status**: [Current architectural state - maps to task.metadata.architecture_status]
+- **Architecture Status**: [Current architectural state - check against `@task-rules.md` principles - maps to task.metadata.architecture_status]
 - **Test Coverage**: [Current test coverage percentage - maps to task.metadata.test_coverage]
 - **Documentation Status**: [Documentation completeness - maps to task.metadata.documentation_status]
 - **Performance Metrics**: [Current performance indicators - maps to task.metadata.performance_metrics]

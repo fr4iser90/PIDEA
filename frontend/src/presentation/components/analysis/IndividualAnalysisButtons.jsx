@@ -233,7 +233,7 @@ const IndividualAnalysisButtons = ({ projectId = null, eventBus = null, onAnalys
       
       // Also store with analysis type for Individual Analysis buttons
       if (data.progress && data.progress.name) {
-        const analysisType = data.progress.name.replace('-analysis', '').replace('-', '-');
+        const analysisType = data.progress.name.replace('-analysis', '');
         newMap.set(analysisType, progress);
         logger.debug('Updated progress for analysis type', { analysisType, progress });
         

@@ -61,7 +61,18 @@ class DatabaseConnection {
         await this.connectSQLite();
       }
     } catch (error) {
-      logger.warn(`⚠️ Primary connection failed: ${error.message}`);
+      if (this.config.fallback) {
+        logger.warn(
+          `Primary database (${this.config.type}) nicht verfügbar — Fallback wird verwendet.`,
+        );
+        logger.debug("Primary connection error", {
+          message: error && error.message,
+          stack: error && error.stack,
+        });
+      } else {
+        const msg = error && error.message ? error.message : String(error);
+        logger.warn(`Primary connection failed: ${msg}`);
+      }
 
       if (this.config.fallback) {
         logger.info("🔄 Trying fallback database...");
@@ -179,20 +190,20 @@ class DatabaseConnection {
     try {
       // If using SQLite, translate PostgreSQL syntax to SQLite
       if (this.type === "sqlite") {
-        logger.info(
+        logger.debug(
           `🔍 [DatabaseConnection] SQLite detected, checking translation...`,
         );
-        logger.info(
+        logger.debug(
           `🔍 [DatabaseConnection] SQL preview: ${sql.substring(0, 100)}...`,
         );
-        logger.info(
+        logger.debug(
           `🔍 [DatabaseConnection] Can translate: ${this.sqlTranslator.canTranslate(sql)}`,
         );
 
         if (this.sqlTranslator.canTranslate(sql)) {
-          logger.info(`🔄 [DatabaseConnection] Translating SQL...`);
+          logger.debug(`🔄 [DatabaseConnection] Translating SQL...`);
           const translation = this.sqlTranslator.translate(sql, params);
-          logger.info(
+          logger.debug(
             `🔄 [DatabaseConnection] Translation result: ${translation.sql.substring(0, 100)}...`,
           );
           result = await this.dbConnection.execute(
@@ -200,7 +211,7 @@ class DatabaseConnection {
             translation.params,
           );
         } else {
-          logger.info(
+          logger.debug(
             `⚠️ [DatabaseConnection] Cannot translate, executing directly...`,
           );
           result = await this.dbConnection.execute(sql, params);

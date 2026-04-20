@@ -4,6 +4,7 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     # Nur Chromium für Playwright
     chromium
+    socat
   ];
   
   shellHook = ''

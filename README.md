@@ -9,6 +9,16 @@
 
 Choose your preferred setup method:
 
+### Environment and first admin user
+
+Before the database can create the initial admin user, you **must** set these in a `.env` file at the repository root (copy from `.env.example`):
+
+- **`ADMIN_EMAIL`** — login email for the first admin
+- **`ADMIN_USERNAME`** — display/login username
+- **`ADMIN_PASSWORD`** — strong password (never commit real values)
+
+There are **no** built-in defaults such as `test@test.com` / `test123`. If these are missing when the app tries to create user `me`, startup continues without creating that user until you configure `.env` and fix the database state if needed.
+
 ### Option 1: Docker Setup (Recommended for Testing)
 
 **⚠️ WARNING: This setup is for testing only and should NOT be used in production! DO NOT EXPOSE TO WWW! Use it via VPN please!**
@@ -18,42 +28,47 @@ Choose your preferred setup method:
    git clone https://github.com/fr4iser90/PIDEA.git && cd PIDEA
    ```
 
-2. **Start with Docker Compose:**
+2. **Configure environment:** copy `.env.example` to `.env` and set **`ADMIN_EMAIL`**, **`ADMIN_USERNAME`**, and **`ADMIN_PASSWORD`**, plus database variables as needed.
+
+3. **Start with Docker Compose:**
    ```bash
    docker-compose up --build
    ```
 
-3. **Access PIDEA:**
+4. **Access PIDEA:**
    - Frontend: http://localhost
    - Backend API: http://localhost:3000
-   - **Test Credentials:** `test@test.com` / `test123`
+   - Sign in with the admin credentials you set in `.env`.
 
-### Option 2: Development Setup (Monorepo)
+### Option 2: Development Setup (separate `backend/` and `frontend/` packages)
 
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/fr4iser90/PIDEA.git && cd PIDEA
    ```
 
-2. **Install all dependencies (backend & frontend):**
+2. **Configure environment:** copy `.env.example` to `.env` and set **`ADMIN_EMAIL`**, **`ADMIN_USERNAME`**, and **`ADMIN_PASSWORD`** (required for scripts that create the default admin user).
+
+3. **Install dependencies (each package has its own `package-lock.json`):**
    ```bash
-   npm install
+   cd backend && npm ci && cd ..
+   cd frontend && npm ci && cd ..
    ```
 
-3. **Start the interactive dev setup menu:**
+4. **Start the interactive dev setup menu:**
    ```bash
-   npm run setup
-   # or directly: ./setup.js
+   node setup.js
    ```
    The menu allows you to:
    - Reset the database
-   - Create test or custom users
+   - Create default admin or custom users
    - Start backend/frontend
    - Check system status and more
 
-4. **Alternatively, start both backend & frontend together:**
+5. **Start backend or frontend:**
    ```bash
-   npm run dev
+   cd backend && npm run dev
+   # or: cd frontend && npm run dev
    ```
 
 ---

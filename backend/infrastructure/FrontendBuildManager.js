@@ -16,6 +16,14 @@ class FrontendBuildManager {
     this.logger = logger;
     this.watcher = null;
     this.isBuilding = false;
+    
+    // Smart batch detection - Activity Detection
+    this.batchDetection = {
+      activityTimeout: 3000,  // 3 seconds without changes = user stopped editing
+      checkInterval: 1000,    // Check every 1 second if still active
+      lastChangeTime: 0,
+      pendingFiles: new Set()
+    };
   }
 
   /**
@@ -142,41 +150,76 @@ class FrontendBuildManager {
         }
       );
 
-      // Debounced rebuild function with intelligent filtering
+      // Smart batch detection rebuild function
       let rebuildTimeout = null;
       let lastRebuildTime = 0;
       const MIN_REBUILD_INTERVAL = 5000; // Minimum 5 seconds between rebuilds
       
-      const debouncedRebuild = (reason = "File change") => {
+      const smartBatchRebuild = (filePath, reason = "File change") => {
+        const now = Date.now();
+        
+        // Add file to pending set
+        this.batchDetection.pendingFiles.add(filePath);
+        this.batchDetection.lastChangeTime = now;
+        
+        // Clear existing timeout
         if (rebuildTimeout) {
           clearTimeout(rebuildTimeout);
         }
         
+        // Start "activity detection" - check if user is still actively editing
         rebuildTimeout = setTimeout(async () => {
-          const now = Date.now();
-          if (now - lastRebuildTime < MIN_REBUILD_INTERVAL) {
-            this.logger.info(`⏰ Skipping rebuild - too soon (${Math.round((MIN_REBUILD_INTERVAL - (now - lastRebuildTime)) / 1000)}s remaining)`);
-            return;
-          }
+          const timeSinceLastChange = Date.now() - this.batchDetection.lastChangeTime;
           
-          if (isRebuilding) {
-            this.logger.info("🔨 Rebuild already in progress, skipping...");
-            return;
+          // If no changes for activityTimeout = user stopped editing
+          if (timeSinceLastChange >= this.batchDetection.activityTimeout) {
+            await executeBuild(reason);
+          } else {
+            // User still editing, wait and check again
+            rebuildTimeout = setTimeout(async () => {
+              const stillActive = Date.now() - this.batchDetection.lastChangeTime < this.batchDetection.activityTimeout;
+              if (!stillActive) {
+                await executeBuild(reason);
+              }
+            }, this.batchDetection.checkInterval);
           }
+        }, this.batchDetection.activityTimeout);
+        
+        const fileCount = this.batchDetection.pendingFiles.size;
+        this.logger.info(`📁 File queued: ${path.relative(frontendPath, filePath)} | Pending: ${fileCount} | Activity detection: ${this.batchDetection.activityTimeout}ms`);
+      };
+      
+      const executeBuild = async (reason) => {
+        const currentTime = Date.now();
+        if (currentTime - lastRebuildTime < MIN_REBUILD_INTERVAL) {
+          this.logger.info(`⏰ Skipping rebuild - too soon (${Math.round((MIN_REBUILD_INTERVAL - (currentTime - lastRebuildTime)) / 1000)}s remaining)`);
+          return;
+        }
+        
+        if (isRebuilding) {
+          this.logger.info("🔨 Rebuild already in progress, skipping...");
+          return;
+        }
 
-          isRebuilding = true;
-          lastRebuildTime = now;
-          this.logger.info(`🔄 Frontend files changed (${reason}), rebuilding...`);
+        isRebuilding = true;
+        lastRebuildTime = currentTime;
+        
+        // Log batch info
+        const fileCount = this.batchDetection.pendingFiles.size;
+        const files = Array.from(this.batchDetection.pendingFiles);
+        this.logger.info(`🔄 Activity-based batch rebuild: ${fileCount} files (${reason})`);
+        this.logger.info(`📁 Files: ${files.map(f => path.relative(frontendPath, f)).join(', ')}`);
 
-          try {
-            await this.buildFrontend(frontendPath, reason);
-            this.logger.info("✅ Frontend rebuild completed!");
-          } catch (error) {
-            this.logger.error("❌ Frontend rebuild failed:", error.message);
-          } finally {
-            isRebuilding = false;
-          }
-        }, 2000); // 2 second debounce
+        try {
+          await this.buildFrontend(frontendPath, reason);
+          this.logger.info("✅ Frontend rebuild completed!");
+        } catch (error) {
+          this.logger.error("❌ Frontend rebuild failed:", error.message);
+        } finally {
+          isRebuilding = false;
+          // Clear pending files after build
+          this.batchDetection.pendingFiles.clear();
+        }
       };
 
       watcher.on("change", (filePath) => {
@@ -194,7 +237,7 @@ class FrontendBuildManager {
           reason = "Source code changed";
         }
         
-        debouncedRebuild(reason);
+        smartBatchRebuild(filePath, reason);
       });
 
       watcher.on("add", (filePath) => {
@@ -208,7 +251,7 @@ class FrontendBuildManager {
           reason = "New public asset added";
         }
         
-        debouncedRebuild(reason);
+        smartBatchRebuild(filePath, reason);
       });
 
       watcher.on("unlink", (filePath) => {
@@ -222,7 +265,7 @@ class FrontendBuildManager {
           reason = "Public asset removed";
         }
         
-        debouncedRebuild(reason);
+        smartBatchRebuild(filePath, reason);
       });
 
 

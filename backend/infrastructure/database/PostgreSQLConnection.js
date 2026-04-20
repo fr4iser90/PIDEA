@@ -4,6 +4,49 @@ const fs = require("fs");
 const Logger = require("@logging/Logger");
 const logger = new Logger("PostgreSQLConnection");
 
+/** @param {Error & { code?: string; errors?: Array<{ code?: string }> }} err */
+function connectErrorCode(err) {
+  if (err.code) return err.code;
+  if (Array.isArray(err.errors)) {
+    const first = err.errors.find((e) => e && e.code);
+    if (first) return first.code;
+  }
+  return undefined;
+}
+
+/** @param {Error & { code?: string; errors?: Array<{ code?: string }> }} err */
+function describeConnectFailure(err, cfg) {
+  const code = connectErrorCode(err);
+  const where = `${cfg.host}:${cfg.port} (Datenbank „${cfg.database}“)`;
+
+  if (code === "ECONNREFUSED") {
+    return {
+      level: "warn",
+      message: `PostgreSQL nicht erreichbar (Verbindung verweigert). Kein Server auf ${where} — z. B. Docker-Stack starten oder DATABASE_TYPE=sqlite setzen.`,
+      meta: { code },
+    };
+  }
+  if (code === "ETIMEDOUT") {
+    return {
+      level: "warn",
+      message: `PostgreSQL-Zeitüberschreitung bei ${where}. Host/Firewall prüfen.`,
+      meta: { code },
+    };
+  }
+  if (code === "ENOTFOUND" || code === "EAI_AGAIN") {
+    return {
+      level: "warn",
+      message: `PostgreSQL-Host nicht auflösbar (${code}). DB_HOST / Netzwerk prüfen.`,
+      meta: { code },
+    };
+  }
+  return {
+    level: "error",
+    message: `PostgreSQL-Verbindung fehlgeschlagen (${where}): ${err.message || code || "unbekannter Fehler"}`,
+    meta: { code: code || undefined },
+  };
+}
+
 class PostgreSQLConnection {
   constructor(config) {
     this.config = config;
@@ -25,15 +68,32 @@ class PostgreSQLConnection {
       connectionTimeoutMillis: 2000,
     });
 
-    const client = await pool.connect();
-    await client.query("SELECT NOW()");
-    client.release();
+    try {
+      const client = await pool.connect();
+      await client.query("SELECT NOW()");
+      client.release();
 
-    this.connection = pool;
-    this.isConnected = true;
+      this.connection = pool;
+      this.isConnected = true;
 
-    logger.info("✅ PostgreSQL connected successfully");
-    await this.initializeDatabase();
+      logger.info("✅ PostgreSQL connected successfully");
+      await this.initializeDatabase();
+    } catch (error) {
+      const { level, message, meta } = describeConnectFailure(
+        error,
+        this.config,
+      );
+      if (level === "warn") {
+        logger.warn(message, meta);
+      } else {
+        logger.error(message, meta);
+      }
+      logger.debug("PostgreSQL connect error detail", {
+        stack: error.stack,
+        code: connectErrorCode(error),
+      });
+      throw error;
+    }
   }
 
   async initializeDatabase() {

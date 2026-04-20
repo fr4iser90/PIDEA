@@ -121,7 +121,7 @@ class OptimizationService {
       // Single file or directory
       if (target.endsWith("*")) {
         // Pattern matching
-        const pattern = target.replace("*", "");
+        const pattern = target.replace(/\*/g, "");
         return await this.fileSystemService.findFilesByPattern(
           pattern,
           execution.options.projectPath,

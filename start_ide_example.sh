@@ -10,10 +10,13 @@ declare -A CURSOR_VERSIONS=(
   ["1"]="Cursor-1.5.7-x86_64.AppImage"    # Default
   ["2"]="Cursor-1.6.46-x86_64.AppImage"   
   ["3"]="Cursor-1.7.17-x86_64.AppImage"   
+  ["4"]="Cursor-2.0.34-x86_64.AppImage"
+  ["5"]="Cursor-2.3.34-x86_64.AppImage"
+  ["6"]="Cursor-2.6.19-x86_64.AppImage"
 )
 
 # Default Version-Profile (kann geändert werden)
-DEFAULT_CURSOR_VERSION="1"
+DEFAULT_CURSOR_VERSION="6"
 
 # Pfade vom Backend laden
 load_ide_paths() {
@@ -54,6 +57,9 @@ declare -A PORT_RANGES=(
   ["vscode"]="9233:9242"
 )
 
+# Mit socat: Endport $port (9222–9242) = 0.0.0.0:$port → 127.0.0.1:$((port+OFFSET)); IDE nur intern.
+DEVTOOLS_INTERNAL_OFFSET=10000
+
 RUNNER="appimage-run"
 
 # Hilfsfunktion: prüft ob Port frei ist
@@ -88,6 +94,15 @@ port_in_use() {
   fi
 }
 
+# Für Relay: öffentlicher Endport + interner DevTools-Port müssen frei sein.
+relay_ports_free() {
+  local pub=$1
+  local int=$((pub + DEVTOOLS_INTERNAL_OFFSET))
+  if port_in_use "$pub"; then return 1; fi
+  if port_in_use "$int"; then return 1; fi
+  return 0
+}
+
 # Hilfsfunktion: findet freien Port in Range
 find_free_port() {
   local range=$1
@@ -95,9 +110,16 @@ find_free_port() {
   local end_port=$(echo $range | cut -d: -f2)
   
   for port in $(seq $start_port $end_port); do
-    if ! port_in_use "$port"; then
-      echo $port
-      return 0
+    if command -v socat >/dev/null 2>&1; then
+      if relay_ports_free "$port"; then
+        echo $port
+        return 0
+      fi
+    else
+      if ! port_in_use "$port"; then
+        echo $port
+        return 0
+      fi
     fi
   done
   return 1
@@ -187,9 +209,10 @@ show_help() {
   echo "  $0 cursor 3 --version-profile=3 # Cursor version 1.7.17 on port 9224"
   echo "  $0 vscode 3                 # VSCode on port 9235"
   echo ""
-  echo "🔍 PORT RANGES:"
+  echo "🔍 PORT RANGES (PIDEA/Backend = Endport 9222–9242):"
   echo "  Cursor:  9222-9232 (Slots 1-11)"
   echo "  VSCode:  9233-9242 (Slots 1-10)"
+  echo "  Mit socat: zuerst 0.0.0.0:<Endport> → 127.0.0.1:<Endport+$DEVTOOLS_INTERNAL_OFFSET>, dann IDE auf internem Port"
   echo ""
   echo "📁 DIRECTORIES:"
   echo "  Each IDE instance gets its own directory:"
@@ -321,9 +344,16 @@ start_ide() {
       exit 1
     fi
     
-    if port_in_use "$port"; then
-      echo "❌ Port $port (Slot $slot) ist bereits belegt"
-      exit 1
+    if command -v socat >/dev/null 2>&1; then
+      if ! relay_ports_free "$port"; then
+        echo "❌ Endport $port oder intern $((port + DEVTOOLS_INTERNAL_OFFSET)) (Slot $slot) ist belegt"
+        exit 1
+      fi
+    else
+      if port_in_use "$port"; then
+        echo "❌ Port $port (Slot $slot) ist bereits belegt"
+        exit 1
+      fi
     fi
     
     dir="$HOME/.pidea/${ide}_${port}"
@@ -335,6 +365,8 @@ start_ide() {
   # Verzeichnis erstellen falls nicht vorhanden
   mkdir -p "$dir"
   
+  local internal_port=$((port + DEVTOOLS_INTERNAL_OFFSET))
+
   # IDE starten
   if [[ $ide == "cursor" ]]; then
     local version_info=""
@@ -343,26 +375,54 @@ start_ide() {
     else
       version_info=" (Version-Profile $DEFAULT_CURSOR_VERSION - Default)"
     fi
-    echo "🚀 Starte $ide$version_info auf Port $port..."
+    echo "🚀 Starte $ide$version_info — Endport/CDP $port, intern $internal_port..."
     echo "   Datei: $ide_path"
   else
-    echo "🚀 Starte $ide auf Port $port..."
+    echo "🚀 Starte $ide — Endport/CDP $port, intern $internal_port..."
   fi
   
-  if [[ $ide == "cursor" ]]; then
-    $RUNNER "$ide_path" \
-      --user-data-dir="$dir" \
-      --remote-debugging-port=$port &
+  if command -v socat >/dev/null 2>&1; then
+    if port_in_use "$port"; then
+      echo "❌ Endport $port ist belegt — kein socat möglich"
+      exit 1
+    fi
+    socat TCP-LISTEN:"$port",fork,bind=0.0.0.0,reuseaddr TCP:127.0.0.1:"$internal_port" &
+    local socat_pid=$!
+    echo "   socat: 0.0.0.0:$port → 127.0.0.1:$internal_port"
+    if [[ $ide == "cursor" ]]; then
+      $RUNNER "$ide_path" \
+        --user-data-dir="$dir" \
+        --remote-debugging-port=$internal_port &
+    else
+      "$ide_path" \
+        --user-data-dir="$dir" \
+        --remote-debugging-port=$internal_port &
+    fi
+    # Relay beenden, wenn DevTools auf $internal_port weg ist (nicht Wrapper-PID: appimage-run endet oft früher)
+    (
+      set +x 2>/dev/null || true
+      w=0
+      while ! port_in_use "$internal_port" && [[ $w -lt 120 ]]; do sleep 1; w=$((w + 1)); done
+      while port_in_use "$internal_port"; do sleep 1; done
+      kill "$socat_pid" 2>/dev/null
+    ) &
+    echo "   (socat stoppt automatisch, wenn DevTools auf $internal_port endet)"
   else
-    # VSCode mit Remote Debugging starten
-    "$ide_path" \
-      --user-data-dir="$dir" \
-      --remote-debugging-port=$port &
+    echo "⚠️  socat nicht im PATH — IDE direkt auf Endport $port (kein 0.0.0.0-Relay)"
+    if [[ $ide == "cursor" ]]; then
+      $RUNNER "$ide_path" \
+        --user-data-dir="$dir" \
+        --remote-debugging-port=$port &
+    else
+      "$ide_path" \
+        --user-data-dir="$dir" \
+        --remote-debugging-port=$port &
+    fi
   fi
   
-  echo "✅ $ide gestartet auf Port $port"
+  echo "✅ $ide gestartet"
   echo "   Verzeichnis: $dir"
-  echo "   Debug URL: http://localhost:$port"
+  echo "   PIDEA/CDP: http://127.0.0.1:$port (Endport $port)"
 }
 
 # Hilfsfunktion: parst Kommandozeilen-Argumente

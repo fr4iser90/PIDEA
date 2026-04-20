@@ -8,6 +8,24 @@ const AutoSecurityManager = require("@infrastructure/auto/AutoSecurityManager");
 const DatabaseConnection = require("@infrastructure/database/DatabaseConnection");
 const logger = new Logger("CreateDefaultUser");
 
+function requireAdminCredentialsFromEnv() {
+  const missing = [];
+  if (!String(process.env.ADMIN_EMAIL || "").trim()) {
+    missing.push("ADMIN_EMAIL");
+  }
+  if (!String(process.env.ADMIN_PASSWORD || "").trim()) {
+    missing.push("ADMIN_PASSWORD");
+  }
+  if (!String(process.env.ADMIN_USERNAME || "").trim()) {
+    missing.push("ADMIN_USERNAME");
+  }
+  if (missing.length > 0) {
+    const msg = `Refusing to create admin user: set ${missing.join(", ")} in .env (see README). No default credentials are used.`;
+    logger.error(`❌ ${msg}`);
+    throw new Error(msg);
+  }
+}
+
 function getParam(n, dbType) {
   return dbType === "postgresql" ? `$${n}` : "?";
 }
@@ -40,10 +58,12 @@ async function createDefaultUser() {
       return;
     }
 
+    requireAdminCredentialsFromEnv();
+
     // Create default user
-    const email = process.env.ADMIN_EMAIL || "test@test.com";
-    const password = process.env.ADMIN_PASSWORD || "test123";
-    const username = process.env.ADMIN_USERNAME || "test";
+    const email = String(process.env.ADMIN_EMAIL).trim();
+    const password = String(process.env.ADMIN_PASSWORD).trim();
+    const username = String(process.env.ADMIN_USERNAME).trim();
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
     const now = new Date().toISOString();
@@ -101,7 +121,7 @@ async function createDefaultUser() {
 
     logger.info("✅ Default user created successfully!");
     logger.info("📧 Email: " + email);
-    logger.info("🔑 Password: " + password);
+    logger.info("🔑 Password: set via ADMIN_PASSWORD (not logged)");
     logger.info("🆔 User ID: me");
   } catch (error) {
     // Check if it's a duplicate key error (user already exists)

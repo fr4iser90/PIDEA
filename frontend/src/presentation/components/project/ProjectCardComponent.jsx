@@ -32,7 +32,7 @@ const ProjectCardComponent = ({
     });
   }, [project]);
 
-  const { availableIDEs } = useIDEStore();
+  const { availableIDEs, loadProjectInterfaces: loadProjectInterfacesFromStore } = useIDEStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [interfaces, setInterfaces] = useState({
     ide: [],
@@ -49,14 +49,10 @@ const ProjectCardComponent = ({
     if (!project) return;
 
     try {
-      // Use correct project interfaces route - 2025 Standard
-      const apiService = new ApiService();
-      const result = await apiService.call(`/api/projects/${project.id}/interfaces`);
+      // Use the new IDEStore function for project-specific interfaces
+      const projectInterfaces = await loadProjectInterfacesFromStore(project.id);
       
-      if (result.success !== false) {
-        // 2025 Standard: Flat structure, interfaces are direct array
-        const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
-        
+      if (projectInterfaces && projectInterfaces.length > 0) {
         // Categorize interfaces
         const categorized = {
           ide: projectInterfaces.filter(ide => {
@@ -74,10 +70,38 @@ const ProjectCardComponent = ({
         };
 
         setInterfaces(categorized);
-        logger.info('Loaded project interfaces:', project.name, categorized);
+        logger.info('Loaded project interfaces via IDEStore:', project.name, categorized);
       } else {
-        logger.warn('Failed to load project interfaces:', result.error);
-        setInterfaces({ ide: [], api: [], web: [] });
+        // Fallback to direct API call if IDEStore doesn't return data
+        const apiService = new ApiService();
+        const result = await apiService.call(`/api/projects/${project.id}/interfaces`);
+        
+        if (result.success !== false) {
+          // 2025 Standard: Flat structure, interfaces are direct array
+          const projectInterfaces = Array.isArray(result) ? result : result.interfaces || [];
+          
+          // Categorize interfaces
+          const categorized = {
+            ide: projectInterfaces.filter(ide => {
+              const ideType = ide.ideType || ide.type;
+              return ideType && ['cursor', 'vscode', 'webstorm', 'sublime', 'atom'].includes(ideType.toLowerCase());
+            }),
+            api: projectInterfaces.filter(ide => {
+              const ideType = ide.ideType || ide.type;
+              return ideType && ['api', 'rest', 'graphql', 'grpc'].includes(ideType.toLowerCase());
+            }),
+            web: projectInterfaces.filter(ide => {
+              const ideType = ide.ideType || ide.type;
+              return ideType && ['websocket', 'http', 'web'].includes(ideType.toLowerCase());
+            })
+          };
+
+          setInterfaces(categorized);
+          logger.info('Loaded project interfaces via API fallback:', project.name, categorized);
+        } else {
+          logger.warn('Failed to load project interfaces:', result.error);
+          setInterfaces({ ide: [], api: [], web: [] });
+        }
       }
     } catch (error) {
       logger.error('Error loading project interfaces:', error);

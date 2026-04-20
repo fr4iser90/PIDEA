@@ -3,6 +3,8 @@
  * Core application settings: ports, URLs, environment
  */
 
+const { isDockerRuntime } = require("./docker-runtime");
+
 class AppConfig {
   constructor() {
     this.currentEnv = process.env.NODE_ENV || "development";
@@ -33,7 +35,7 @@ class AppConfig {
   // ============================================================================
 
   get backendPort() {
-    if (process.env.DOCKER_ENV === "true") {
+    if (isDockerRuntime()) {
       return 3000;
     }
     return this.extractPortFromUrl(process.env.VITE_BACKEND_URL) || 3000;
@@ -66,7 +68,7 @@ class AppConfig {
   }
 
   get backendUrl() {
-    if (process.env.DOCKER_ENV === "true") {
+    if (isDockerRuntime()) {
       return this.frontendUrl;
     }
     return `${this.frontendUrl}:3000`;

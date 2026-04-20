@@ -7,8 +7,17 @@ const cors = require("cors");
 const hpp = require("hpp");
 const slowDown = require("express-slow-down");
 const cookieParser = require("cookie-parser");
+const crypto = require("crypto");
 const ResponseManager = require("./middleware/ResponseManager");
 const config = require("@config");
+
+function integrationKeysEqual(a, b) {
+  if (a == null || b == null) return false;
+  const bufA = Buffer.from(String(a), "utf8");
+  const bufB = Buffer.from(String(b), "utf8");
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 /**
  * Middleware Setup - Professional Middleware Configuration
@@ -53,10 +62,42 @@ class MiddlewareSetup {
         if (req.path === "/auth/login" || req.path === "/auth/register") {
           return next();
         }
+
+        // Service-to-service (AgentLayer): API key, no end-user JWT
+        if (req.path.startsWith("/v1/integration")) {
+          const expectedKey = process.env.PIDEA_INTEGRATION_API_KEY;
+          if (!expectedKey || String(expectedKey).length < 8) {
+            return res.serviceUnavailable(
+              "Integration API not configured (set PIDEA_INTEGRATION_API_KEY)",
+            );
+          }
+          const provided =
+            req.headers["x-pidea-integration-key"] ||
+            (req.headers.authorization?.startsWith("Bearer ")
+              ? req.headers.authorization.slice(7)
+              : null);
+          if (!integrationKeysEqual(provided, expectedKey)) {
+            return res.unauthorized("Invalid integration credentials");
+          }
+          const integrationUserId =
+            process.env.PIDEA_INTEGRATION_SERVICE_USER_ID ||
+            "pidea-integration-service";
+          req.user = {
+            id: integrationUserId,
+            email: "integration@pidea.local",
+            hasPermission: () => true,
+            isAdmin: () => false,
+            isLocked: false,
+            canAccessResource: () => true,
+          };
+          req.session = { id: "integration-session" };
+          return next();
+        }
+
         return authMiddleware(req, res, next);
       });
       this.logger.info(
-        "Global auth middleware applied to all /api routes except login/register",
+        "Global auth middleware applied to all /api routes except login/register and /v1/integration (API key)",
       );
     }
 
@@ -165,6 +206,37 @@ class MiddlewareSetup {
   }
 
   setupStaticFiles(app, securityConfig) {
+    // Serve frontend dist files (CRITICAL FIX)
+    const pathConfig = this.config.app.pathConfig.project;
+    const frontendDistPath = path.join(pathConfig.root, pathConfig.frontend, "dist");
+    
+    if (fs.existsSync(frontendDistPath)) {
+      app.use(express.static(frontendDistPath, {
+        etag: false,
+        lastModified: false,
+        setHeaders: (res, filePath) => {
+          // Set proper MIME types for JavaScript and CSS files
+          if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+          } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+          }
+          
+          // Cache control for assets
+          if (filePath.includes('/assets/')) {
+            res.setHeader("Cache-Control", "public, max-age=31536000"); // 1 year for assets
+          } else {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            res.setHeader("Pragma", "no-cache");
+            res.setHeader("Expires", "0");
+          }
+        },
+      }));
+      this.logger.info("📁 Serving frontend dist from:", frontendDistPath);
+    } else {
+      this.logger.warn("⚠️ Frontend dist not found at:", frontendDistPath);
+    }
+
     // Serve static files with security headers
     app.use(
       "/web",

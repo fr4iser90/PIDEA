@@ -55,12 +55,12 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
   const [showPideaAgent, setShowPideaAgent] = useState(false);
   const [activeGitTab, setActiveGitTab] = useState('git-operations');
 
-  // ✅ FIXED: No more manual data loading - global state handles it automatically
+  // TODO switch idebased to project based
   useEffect(() => {
-    if (selectedIDE.workspacePath) {
+    if (selectedIDE?.workspacePath) {
       logger.info('GitManagementComponent: active IDE changed to:', selectedIDE.workspacePath);
     }
-  }, [selectedIDE.workspacePath]);
+  }, [selectedIDE?.workspacePath]);
 
   // ✅ REFACTORED: Setup WebSocket listeners for real-time updates
   useEffect(() => {
@@ -99,7 +99,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     const MIN_REFRESH_INTERVAL = 2000; // Minimum 2 seconds between refreshes
 
     const handleVisibilityChange = () => {
-      if (!document.hidden && selectedIDE.workspacePath) {
+      if (!document.hidden && selectedIDE?.workspacePath) {
         const now = Date.now();
         if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
           logger.info('Tab became visible, refreshing git status');
@@ -112,7 +112,7 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
     };
 
     const handleFocus = () => {
-      if (selectedIDE.workspacePath) {
+      if (selectedIDE?.workspacePath) {
         const now = Date.now();
         if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
           logger.info('Window focused, refreshing git status');
@@ -134,14 +134,14 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [selectedIDE.workspacePath, refreshGitStatus]);
+  }, [selectedIDE?.workspacePath, refreshGitStatus]);
 
   // ✅ REMOVED: Old periodic refresh - now handled by RefreshService
 
   // ✅ REFACTORED: Use global state instead of local state
   const currentBranch = gitStatus.currentBranch;
   const branches = gitBranches.branches;
-  const workspacePath = selectedIDE.workspacePath;
+  const workspacePath = selectedIDE?.workspacePath;
 
   const handleGitOperation = async (operation, options = {}) => {
     try {
@@ -243,6 +243,17 @@ const GitManagementComponent = ({ activePort, onGitOperation, onGitStatusChange,
 
   // ✅ REFACTORED: Use global state for branches
   const localBranches = gitBranches.localBranches;
+
+  // Safety check: Don't render if no IDE is selected
+  if (!selectedIDE) {
+    return (
+      <div className="git__git-management">
+        <div className="git__no-ide-message">
+          <p>No IDE selected. Please select an IDE to manage Git operations.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="git__git-management">

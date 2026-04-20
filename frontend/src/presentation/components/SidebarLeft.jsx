@@ -220,7 +220,7 @@ function SidebarLeft({ eventBus, activePort, onActivePortChange, mode = 'chat', 
         return (
           <InterfaceManagerComponent 
             eventBus={eventBus}
-            selectedProjectId={selectedProject}
+            selectedProjectId={selectedProject?.id}
           />
         );
       case 'chat':

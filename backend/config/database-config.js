@@ -3,6 +3,7 @@
  * Database connection settings and environment-specific configurations
  */
 
+const fs = require("fs");
 const path = require("path");
 const appConfig = require("./app-config");
 
@@ -23,16 +24,51 @@ class DatabaseConfig {
     return this.databaseType === "sqlite";
   }
 
+  /** No required DB_HOST in .env: localhost on host, pidea-db (or DB_DOCKER_SERVICE_HOST) in a real container. */
+  isRunningInDockerContainer() {
+    try {
+      return fs.existsSync("/.dockerenv");
+    } catch {
+      return false;
+    }
+  }
+
+  resolvePostgresHost() {
+    const inContainer = this.isRunningInDockerContainer();
+    const defaultHost = inContainer
+      ? process.env.DB_DOCKER_SERVICE_HOST || "pidea-db"
+      : "localhost";
+    let host = process.env.DB_HOST || defaultHost;
+    if (inContainer) {
+      const loopback =
+        host === "localhost" || host === "127.0.0.1" || host === "::1";
+      if (loopback) {
+        host = process.env.DB_DOCKER_SERVICE_HOST || "pidea-db";
+      }
+    }
+    return host;
+  }
+
+  resolvePostgresPort() {
+    return process.env.DB_PORT || "5432";
+  }
+
   // ============================================================================
   // CONNECTION SETTINGS
   // ============================================================================
 
   get host() {
-    return process.env.DB_HOST;
+    if (!this.isPostgreSQL) {
+      return process.env.DB_HOST;
+    }
+    return this.resolvePostgresHost();
   }
 
   get port() {
-    return process.env.DB_PORT;
+    if (!this.isPostgreSQL) {
+      return process.env.DB_PORT;
+    }
+    return this.resolvePostgresPort();
   }
 
   get database() {
@@ -106,17 +142,12 @@ class DatabaseConfig {
     const warnings = [];
 
     if (this.isPostgreSQL) {
-      const required = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"];
-      
+      const required = ["DB_NAME", "DB_USER", "DB_PASSWORD"];
       for (const envVar of required) {
         if (!process.env[envVar]) {
           errors.push(`Missing required PostgreSQL environment variable: ${envVar}`);
         }
       }
-    }
-
-    if (appConfig.isDevelopment && !this.host) {
-      warnings.push("DB_HOST not set for development - using SQLite fallback");
     }
 
     return {

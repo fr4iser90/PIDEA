@@ -5,19 +5,16 @@ services:
       dockerfile: Dockerfile
     image: fr4iser/pidea:db
     container_name: pidea-db
+    # Host port 5452 optional (psql from machine); containers use 5432 via service name
     ports:
       - "5452:5432"
     volumes:
       - pidea-db-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: pidea
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
     env_file:
       - .env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d pidea"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -29,32 +26,29 @@ services:
       dockerfile: backend/Dockerfile
     image: fr4iser/pidea:backend
     container_name: pidea-backend
-    # NO PORTS - Backend läuft nur intern!
+    ports:
+      - "3000:3000"
     depends_on:
       pidea-db:
         condition: service_healthy
-    environment:
-      DOCKER_ENV: "true"
-      DATABASE_OPTIMIZATION_ENABLED: "true"
-      PERFORMANCE_MONITORING_ENABLED: "true"
     env_file:
       - .env
     volumes:
       - pidea-backend_logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp  # <- Host /tmp in Container
-    # Use host network mode for IDE connections
-    network_mode: "host"
+      - /tmp:/tmp # Host /tmp for IDE integrations
     restart: unless-stopped
 
   pidea-frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        DOMAIN: ${DOMAIN:-}
     image: fr4iser/pidea:frontend
     container_name: pidea-frontend
-    # Use host network mode to access backend on localhost
-    network_mode: "host"
+    ports:
+      - "80:80"
     depends_on:
       - pidea-backend
     env_file:

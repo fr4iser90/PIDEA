@@ -12,6 +12,7 @@ content-library/prompts/task-management/
 ├── task-pattern.md          # Task patterns & standards reference
 ├── task-refactor.md         # Large file refactoring
 ├── task-review.md           # Task validation & phase creation
+├── task-rules.md            # 12-Factor App principles (reference when needed)
 ├── test-path-config.md      # Test path resolution
 ├── timestamp-utility.md     # Timestamp generation utility
 └── CONSOLIDATION-SUMMARY.md # This file

@@ -1,5 +1,4 @@
 require("module-alias/register");
-require("dotenv").config({ path: require("path").join(__dirname, "../.env") });
 
 const Application = require("./Application");
 const { getLogger } = require("@logging/Logger");
@@ -138,6 +137,30 @@ async function ensurePIDEAProject() {
   }
 }
 
+async function setupFrontendBuilding(config) {
+  try {
+    logger.info("🔨 Setting up frontend building with file watcher...");
+    
+    const FrontendBuildManager = require("./infrastructure/FrontendBuildManager");
+    const path = require("path");
+    
+    const pathConfig = config.app.pathConfig.project;
+    const frontendPath = path.join(pathConfig.root, pathConfig.frontend);
+    
+    // Initialize FrontendBuildManager with file watcher
+    const frontendBuildManager = new FrontendBuildManager(config, logger);
+    await frontendBuildManager.initializeFrontendBuilding(frontendPath);
+    
+    logger.info("✅ FrontendBuildManager initialized with file watcher!");
+    
+  } catch (error) {
+    logger.error("❌ Failed to setup frontend building:", error.message);
+    logger.info("💡 Please run: cd frontend && npm install && npm run build");
+    logger.error("💥 CRASHING - Frontend build failed!");
+    process.exit(1);
+  }
+}
+
 async function main() {
   // Ensure default user exists before starting application
   await ensureDefaultUser();
@@ -159,6 +182,9 @@ async function main() {
     logger.warn("⚠️ Configuration warnings:");
     validation.warnings.forEach((warning) => logger.warn(`  - ${warning}`));
   }
+
+  // Setup frontend building before starting application
+  await setupFrontendBuilding(config);
 
   const app = new Application({
     port: config.app.backendPort,

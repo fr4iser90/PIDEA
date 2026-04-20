@@ -2,7 +2,7 @@
   "chatSelectors": {
     "input": ".aislash-editor-input[contenteditable=\"true\"]",
     "userMessages": "div.aislash-editor-input-readonly[contenteditable=\"false\"][data-lexical-editor=\"true\"]",
-    "aiMessages": "span.anysphere-markdown-container-root",
+    "aiMessages": "[data-message-role=\"ai\"] .markdown-root, [data-message-role=\"ai\"] .rendered-markdown, [data-message-kind=\"assistant\"] .markdown-root, [data-message-kind=\"assistant\"] .rendered-markdown, .composer-rendered-message[data-message-kind=\"assistant\"] .markdown-root, .composer-rendered-message[data-message-kind=\"assistant\"] .rendered-markdown",
     "messagesContainer": "div[style*=\"display: flex; flex-direction: column\"]",
     "isInputReady": ".aislash-editor-input[contenteditable=\"true\"]",
     "codeBlocks": ".composer-code-block-container",

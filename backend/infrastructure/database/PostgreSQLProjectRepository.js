@@ -427,8 +427,8 @@ class PostgreSQLProjectRepository extends ProjectRepository {
       //   resultValue: result,
       // });
 
-      // PostgreSQL result object
-      const rows = result.rows;
+      // pg: { rows }; SQLite fallback: plain array from DatabaseConnection
+      const rows = Array.isArray(result) ? result : result?.rows || [];
 
       // console.log("🔍 [PostgreSQLProjectRepository] Processed rows:", {
       //   rowsCount: rows.length,

@@ -102,6 +102,7 @@ Before saving any content, scan for forbidden terms and replace with simple alte
 - [ ] Deploy to production
 
 ### 5. Code Standards & Patterns
+- **Architectural Standards**: Follow 12-Factor App principles (see `@task-rules.md`)
 - **Coding Style**: ESLint with existing project rules, Prettier formatting
 - **Naming Conventions**: camelCase for variables/functions, PascalCase for classes, kebab-case for files
 - **Error Handling**: Try-catch with specific error types, proper error logging
