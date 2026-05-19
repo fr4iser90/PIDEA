@@ -1,0 +1,4 @@
+[safe]
+	directory = /code
+[credential]
+	helper = store

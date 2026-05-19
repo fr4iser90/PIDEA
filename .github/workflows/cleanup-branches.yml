@@ -15,10 +15,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Delete merged branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           # Branch löschen (nur wenn gemerged)
-          git push origin --delete ${{ github.head_ref }}
-          echo "Deleted branch: ${{ github.head_ref }}"
+          git push origin --delete "$HEAD_REF"
+          echo "Deleted branch: $HEAD_REF"
       
       - name: Cleanup local branches
         run: |

@@ -347,7 +347,7 @@ class DevSetup {
     const backendProcess = spawn('npm', ['run', 'dev:backend'], {
       cwd: this.projectRoot,
       stdio: 'inherit',
-      shell: true
+      shell: false
     });
 
     backendProcess.on('error', (error) => {
@@ -362,7 +362,7 @@ class DevSetup {
     const frontendProcess = spawn('npm', ['run', 'dev:frontend'], {
       cwd: this.projectRoot,
       stdio: 'inherit',
-      shell: true
+      shell: false
     });
 
     frontendProcess.on('error', (error) => {
@@ -377,7 +377,7 @@ class DevSetup {
     const bothProcess = spawn('npm', ['run', 'dev'], {
       cwd: this.projectRoot,
       stdio: 'inherit',
-      shell: true
+      shell: false
     });
 
     bothProcess.on('error', (error) => {

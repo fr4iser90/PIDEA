@@ -27,5 +27,9 @@ WORKDIR /app/backend
 # Expose port (will be set from environment)
 EXPOSE 3000
 
+\n# Security: Run as non-root user
+RUN addgroup --system pidea && adduser --system --ingroup pidea pidea
+USER pidea
+
 # Start directly with node
 CMD ["node", "server.js"]

@@ -296,12 +296,20 @@ class TerminalService {
 
   async checkCommandExists(command) {
     try {
-      const { exec } = require('child_process');
-      const util = require('util');
-      const execAsync = util.promisify(exec);
+      const { spawnSync } = require('child_process');
       
-      await execAsync(`which ${command}`);
-      return true;
+      // Validate command is a simple binary name only
+      if (typeof command !== 'string' || !/^[a-zA-Z0-9_\-/.]+$/.test(command)) {
+        this.logger.warn('Invalid command format', { command });
+        return false;
+      }
+      
+      const result = spawnSync('which', [command], { 
+        timeout: 3000,
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      
+      return result.status === 0;
     } catch (error) {
       return false;
     }
@@ -309,7 +317,16 @@ class TerminalService {
 
   async getCommandVersion(command) {
     try {
-      const result = await this.executeCommand(`${command} --version`, { timeout: 5000 });
+      // Validate command is a simple binary name only
+      if (typeof command !== 'string' || !/^[a-zA-Z0-9_\-/.]+$/.test(command)) {
+        this.logger.warn('Invalid command format', { command });
+        return null;
+      }
+      
+      const result = await this.executeCommand(command, { 
+        args: ['--version'],
+        timeout: 5000 
+      });
       if (result.success) {
         return result.output.trim();
       }

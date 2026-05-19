@@ -13,7 +13,7 @@ console.log('');
 
 const setupProcess = spawn('node', [setupScript], {
   stdio: 'inherit',
-  shell: true
+  shell: false
 });
 
 setupProcess.on('error', (error) => {
