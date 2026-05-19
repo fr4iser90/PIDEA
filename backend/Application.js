@@ -623,15 +623,74 @@ class Application {
 
     // Import centralized security configuration
     const securityConfig = require('./config/security-config');
+    const ErrorHandlingService = require('./infrastructure/security/ErrorHandlingService');
 
-    // Security middleware
-    this.app.use(helmet(securityConfig.config.helmet));
-    this.app.use(cors({
-      ...securityConfig.config.cors,
-      credentials: true // Allow cookies
+    // SECURITY FIX: Enhanced Helmet configuration with additional security headers
+    this.app.use(helmet({
+      ...securityConfig.config.helmet,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'", "ws:", "wss:"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          workerSrc: ["'self'"],
+          childSrc: ["'self'"],
+          upgradeInsecureRequests: [],
+          blockAllMixedContent: []
+        }
+      },
+      crossOriginEmbedderPolicy: true,
+      crossOriginOpenerPolicy: true,
+      crossOriginResourcePolicy: { policy: "same-origin" },
+      dnsPrefetchControl: { allow: false },
+      frameguard: { action: "deny" },
+      hidePoweredBy: true,
+      hsts: this.autoSecurityManager.isProduction() ? { 
+        maxAge: 31536000, 
+        includeSubDomains: true, 
+        preload: true 
+      } : false,
+      ieNoOpen: true,
+      noSniff: true,
+      referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+      xssFilter: true
     }));
 
-    // HTTP Parameter Pollution protection
+    // SECURITY FIX: Enhanced CORS configuration with strict origin validation
+    const allowedOrigins = securityConfig.config.cors.origin;
+    const isProduction = this.autoSecurityManager.isProduction();
+    
+    this.app.use(cors({
+      origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // SECURITY FIX: Validate origin against whitelist
+        const whitelist = typeof allowedOrigins === 'string' 
+          ? [allowedOrigins] 
+          : allowedOrigins;
+        
+        if (whitelist.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          logger.warn('🚨 CORS violation attempt:', { origin });
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      exposedHeaders: ['X-Auth-Status', 'X-User-ID', 'X-Session-ID'],
+      maxAge: 86400 // 24 hours preflight cache
+    }));
+
+    // SECURITY FIX: HTTP Parameter Pollution protection
     this.app.use(hpp());
 
     // Progressive rate limiting (slow down) - only for unauthenticated users
@@ -713,23 +772,49 @@ class Application {
       if (!fs.existsSync(frontendDistPath)) {
         logger.info('🔨 Frontend dist not found, building automatically...');
         try {
-          const { execSync } = require('child_process');
+          const { execSync, spawnSync } = require('child_process');
+          
+          // SECURITY FIX: Validate frontend path to prevent path traversal
+          const resolvedFrontendPath = path.resolve(frontendPath);
+          const projectRoot = path.resolve(__dirname, '..');
+          if (!resolvedFrontendPath.startsWith(projectRoot)) {
+            logger.error('❌ Invalid frontend path detected - potential path traversal attack');
+            throw new Error('Invalid frontend path - security violation');
+          }
+          
+          // SECURITY FIX: Ensure path is exactly the expected frontend directory
+          if (resolvedFrontendPath !== path.join(projectRoot, 'frontend')) {
+            logger.error('❌ Frontend path validation failed - path traversal attempt detected');
+            throw new Error('Frontend path validation failed');
+          }
           
           // Check if frontend package.json exists
           if (fs.existsSync(path.join(frontendPath, 'package.json'))) {
             logger.info('📦 Installing frontend dependencies...');
-            execSync('npm install', { 
-              cwd: frontendPath, 
+            // SECURITY FIX: Use spawnSync with array args to prevent command injection
+            const installResult = spawnSync('npm', ['install'], { 
+              cwd: resolvedFrontendPath, 
               stdio: 'inherit',
-              timeout: 120000 // 2 minutes timeout
+              timeout: 120000, // 2 minutes timeout
+              env: { ...process.env, NODE_ENV: 'production' } // SECURITY: Force production mode
             });
             
+            if (installResult.status !== 0) {
+              throw new Error('npm install failed');
+            }
+            
             logger.info('🔨 Building frontend...');
-            execSync('npm run build', { 
-              cwd: frontendPath, 
+            // SECURITY FIX: Use spawnSync with array args to prevent command injection
+            const buildResult = spawnSync('npm', ['run', 'build'], { 
+              cwd: resolvedFrontendPath, 
               stdio: 'inherit',
-              timeout: 180000 // 3 minutes timeout
+              timeout: 180000, // 3 minutes timeout
+              env: { ...process.env, NODE_ENV: 'production' } // SECURITY: Force production mode
             });
+            
+            if (buildResult.status !== 0) {
+              throw new Error('npm build failed');
+            }
             
             logger.info('✅ Frontend built successfully!');
           } else {

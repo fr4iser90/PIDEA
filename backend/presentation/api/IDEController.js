@@ -214,7 +214,22 @@ class IDEController {
         });
       }
       
-      const result = await this.ideApplicationService.setWorkspacePath(port, workspacePath, userId);
+      // SECURITY FIX: Validate workspace path to prevent path traversal
+      const sanitizedPath = this.validateWorkspacePath(workspacePath);
+      if (!sanitizedPath) {
+        this.logger.warn('🚨 Invalid workspace path detected - potential path traversal:', {
+          inputPath: workspacePath,
+          userId: userId,
+          ip: req.ip
+        });
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid workspace path - security violation',
+          code: 'INVALID_PATH'
+        });
+      }
+      
+      const result = await this.ideApplicationService.setWorkspacePath(port, sanitizedPath, userId);
       
       res.json({
         success: result.success,
@@ -224,8 +239,121 @@ class IDEController {
       this.logger.error('Error setting workspace path:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to set workspace path'
+        error: 'Failed to set workspace path',
+        code: 'PATH_SET_FAILED'
       });
+    }
+  }
+
+  /**
+   * SECURITY FIX: Validate workspace path to prevent path traversal attacks
+   * @param {string} inputPath - Raw path from user input
+   * @returns {string|null} Validated path or null if invalid
+   */
+  validateWorkspacePath(inputPath) {
+    if (!inputPath || typeof inputPath !== 'string') {
+      return null;
+    }
+
+    try {
+      const path = require('path');
+      const fs = require('fs');
+      
+      // Resolve the path
+      const resolvedPath = path.resolve(inputPath);
+      
+      // SECURITY FIX: Check for path traversal attempts
+      // Get the allowed base directory (project root)
+      const projectRoot = path.resolve(__dirname, '../../../');
+      const frontendPath = path.resolve(__dirname, '../../../frontend');
+      const backendPath = path.resolve(__dirname, '../../../backend');
+      
+      // Allow paths within project root, frontend, or backend
+      if (!resolvedPath.startsWith(projectRoot)) {
+        this.logger.warn('🚨 Path traversal attempt - path outside project root:', {
+          resolvedPath,
+          projectRoot
+        });
+        return null;
+      }
+      
+      // SECURITY FIX: Block access to sensitive directories
+      const blockedPatterns = [
+        /\/etc\//,           // System configuration
+        /\/proc\//,          // Process information
+        /\/sys\//,           // System information
+        /\/root\//,          // Root home directory
+        /\/home\//,          // User home directories
+        /\/var\//,           // Variable data
+        /\/tmp\//,           // Temporary files
+        /\.env$/,            // Environment files
+        /\.git/,             // Git directory
+        /node_modules\//,    // Node modules
+        /.dockerignore$/,    // Docker ignore
+        /.gitignore$/,       // Git ignore
+      ];
+      
+      for (const pattern of blockedPatterns) {
+        if (pattern.test(resolvedPath)) {
+          this.logger.warn('🚨 Blocked access to sensitive path:', {
+            path: resolvedPath,
+            pattern: pattern.toString()
+          });
+          return null;
+        }
+      }
+      
+      // SECURITY FIX: Verify path exists and is a directory
+      if (!fs.existsSync(resolvedPath)) {
+        this.logger.warn('🚨 Path does not exist:', {
+          path: resolvedPath
+        });
+        return null;
+      }
+      
+      const stat = fs.statSync(resolvedPath);
+      if (!stat.isDirectory()) {
+        this.logger.warn('🚨 Path is not a directory:', {
+          path: resolvedPath
+        });
+        return null;
+      }
+      
+      // SECURITY FIX: Limit path depth to prevent excessively long paths
+      const pathDepth = resolvedPath.split(path.sep).length;
+      if (pathDepth > 20) {
+        this.logger.warn('🚨 Path too deep:', {
+          path: resolvedPath,
+          depth: pathDepth
+        });
+        return null;
+      }
+      
+      // SECURITY FIX: Check path length
+      if (resolvedPath.length > 500) {
+        this.logger.warn('🚨 Path too long:', {
+          length: resolvedPath.length
+        });
+        return null;
+      }
+      
+      // SECURITY FIX: Ensure no null bytes or control characters
+      if (/[\x00-\x1f]/.test(resolvedPath)) {
+        this.logger.warn('🚨 Path contains control characters:', {
+          path: resolvedPath
+        });
+        return null;
+      }
+      
+      this.logger.info('✅ Workspace path validated successfully:', {
+        path: resolvedPath
+      });
+      
+      return resolvedPath;
+      
+    } catch (error) {
+      this.logger.error('❌ Error validating workspace path:', error.message);
+      return null;
     }
   }
 
@@ -421,7 +549,28 @@ class IDEController {
         });
       }
       
-      const result = await this.ideApplicationService.executeTerminalCommand(parseInt(port), command, userId);
+      // SECURITY FIX: Validate and sanitize terminal command to prevent command injection
+      const sanitizedCommand = this.sanitizeTerminalCommand(command);
+      
+      if (!sanitizedCommand) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid command detected - potential command injection',
+          code: 'INVALID_COMMAND'
+        });
+      }
+      
+      // SECURITY FIX: Log suspicious commands for security monitoring
+      if (command !== sanitizedCommand) {
+        this.logger.warn(`🚨 Suspicious command blocked for port ${port}:`, {
+          originalCommand: command,
+          sanitizedCommand: sanitizedCommand,
+          userId: userId,
+          ip: req.ip
+        });
+      }
+      
+      const result = await this.ideApplicationService.executeTerminalCommand(parseInt(port), sanitizedCommand, userId);
       
       res.json({
         success: result.success,
@@ -432,9 +581,84 @@ class IDEController {
       res.status(500).json({
         success: false,
         error: 'Failed to execute terminal command',
-        message: error.message
+        code: 'TERMINAL_EXECUTION_FAILED'
       });
     }
+  }
+
+  /**
+   * SECURITY FIX: Sanitize terminal commands to prevent command injection
+   * @param {string} command - Raw command from user input
+   * @returns {string|null} Sanitized command or null if invalid
+   */
+  sanitizeTerminalCommand(command) {
+    if (!command || typeof command !== 'string') {
+      return null;
+    }
+
+    const trimmedCommand = command.trim();
+    
+    // Block dangerous characters and patterns
+    const dangerousPatterns = [
+      /;\s*/,           // Command separator
+      /\|\|/,          // OR operator
+      /&&/,            // AND operator
+      /\$\(.*\)/,      // Command substitution
+      /`.*`/,          // Backtick command substitution
+      />\s*/,          // Output redirection
+      /<\s*/,          // Input redirection
+      /&\s*$/,         // Background execution
+      /;\s*rm\b/i,     // Delete commands
+      /;\s*chmod\b/i,  // Permission changes
+      /;\s*chown\b/i,  // Ownership changes
+      /;\s*wget\b/i,   // Download commands
+      /;\s*curl\b/i,   // Download commands
+      /;\s*nc\b/i,     // Netcat
+      /;\s*nmap\b/i,   // Network scanner
+      /;\s*ssh\b/i,    // SSH
+      /;\s*sudo\b/i,   // Sudo
+      /;\s*su\b/i,     // Switch user
+      /;\s*export\b/i, // Environment modification
+      /\$\{.*\}/,      // Variable substitution
+      /\/etc\/passwd/i, // Sensitive file access
+      /\/etc\/shadow/i, // Sensitive file access
+    ];
+
+    // Check for dangerous patterns
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(trimmedCommand)) {
+        this.logger.warn('🚨 Dangerous command pattern detected:', {
+          pattern: pattern.toString(),
+          command: trimmedCommand
+        });
+        return null;
+      }
+    }
+
+    // Allow only safe commands (alphanumeric, spaces, dots, dashes, underscores, slashes, colons, semicolons for valid use)
+    const safeCommandRegex = /^[a-zA-Z0-9_\-\/\.\:\@\,\+\=\#\%\&\?\*\!\$\(\)\[\]\{\}\s]+$/;
+    
+    if (!safeCommandRegex.test(trimmedCommand)) {
+      this.logger.warn('🚨 Command contains unsafe characters:', {
+        command: trimmedCommand
+      });
+      return null;
+    }
+
+    // Block empty or whitespace-only commands
+    if (trimmedCommand.length === 0) {
+      return null;
+    }
+
+    // Block very long commands (potential DoS)
+    if (trimmedCommand.length > 1000) {
+      this.logger.warn('🚨 Command too long:', {
+        length: trimmedCommand.length
+      });
+      return null;
+    }
+
+    return trimmedCommand;
   }
 
   // REMOVED: getDocsTasks and getDocsTaskDetails methods - MIGRATED TO TASKCONTROLLER
